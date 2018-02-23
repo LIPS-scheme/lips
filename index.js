@@ -80,18 +80,20 @@
         var special_tokens = Object.keys(specials);
         var special_forms = special_tokens.map(s => specials[s].name);
         var parents = 0;
+        var first_value = false;
         tokens.forEach(function(token, i) {
             var top = stack[stack.length-1];
             if (special_tokens.indexOf(token) != -1) {
                 special = token;
             } else if (token === '(') {
+                first_value = true;
                 parents++;
                 if (special) {
                     stack.push([specials[special]]);
                     special = null;
                 }
                 stack.push([]);
-            } else if (token === '.') {
+            } else if (token === '.' && !first_value) {
                 stack[stack.length-1] = Pair.fromArray(top);
             } else if (token === ')') {
                 parents--;
@@ -119,6 +121,7 @@
                     result.push(stack.pop());
                 }
             } else {
+                first_value = false;
                 var value = parse_argument(token);
                 if (special) {
                     value = [specials[special], value];
@@ -269,14 +272,14 @@
         p.cdr = pair;
         return this;
     };
-    
+
     // ----------------------------------------------------------------------
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
     function Nil() {}
     Nil.prototype.toString = function() { return 'nil'; };
     var nil = new Nil();
-    
+
     // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
@@ -286,7 +289,7 @@
     Macro.prototype.invoke = function(code, env) {
         return this.fn.call(env, code);
     };
-    
+
     // ----------------------------------------------------------------------
     // :: Environment constructor (parent argument is optional)
     // ----------------------------------------------------------------------
@@ -370,7 +373,7 @@
                 return list.cdr;
             }
         },
-        
+
         'set-car': function(slot, value) {
             slot.car = value;
         },
@@ -798,6 +801,7 @@
         })
     });
 
+    // ----------------------------------------------------------------------
     // source: https://stackoverflow.com/a/4331218/387194
     function allPossibleCases(arr) {
         if (arr.length == 1) {
@@ -815,6 +819,7 @@
         }
     }
 
+    // ----------------------------------------------------------------------
     function combinations(input, start, end) {
         var result = [];
         for (var i = start; i <= end; ++i) {
@@ -826,6 +831,7 @@
         }
         return result;
     }
+    // ----------------------------------------------------------------------
     // cadr caddr cadadr etc.
     combinations(['d', 'a'], 2, 5).forEach((spec) => {
         var chars = spec.split('').reverse();
@@ -841,6 +847,7 @@
         });
     });
 
+    // ----------------------------------------------------------------------
     function evaluate(code, env) {
         env = env || global_env;
         var value;
@@ -900,6 +907,7 @@
             return code;
         }
     }
+    // ----------------------------------------------------------------------
 
     function balanced(code) {
         var re = /[()]/;
