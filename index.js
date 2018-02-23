@@ -941,7 +941,7 @@
     return {
         parse: parse,
         tokenize: tokenize,
-        evalute: evaluate,
+        evaluate: evaluate,
         Environment: Environment,
         global_environment: global_env,
         balanced_parenthesis: balanced,
