@@ -2,9 +2,9 @@
 
 [![npm](https://img.shields.io/badge/npm-0.1.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 
-Lips is very simple Lisp similar to Scheme writen in JavaScript.
+Lips is very simple Lisp, similar to Scheme writen in JavaScript.
 
-[Demo](https://codepen.io/jcubic/pen/gvvzdp?editors=1010)
+[Demo](https://codepen.io/jcubic/full/LQBaaV/)
 
 ## Installation
 
