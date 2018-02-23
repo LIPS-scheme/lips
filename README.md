@@ -26,6 +26,28 @@ or from rawgit
 https://cdn.rawgit.com/jcubic/lips/master/index.js
 ```
 
+## Usage
+
+```javascript
+var {parse, tokenize, evaluate} = require('lips');
+
+parse(tokenize(code)).forEach(function(code) {
+    evalute(code);
+});
+```
+
+`evaluate` function also accept second argument, which is Environment.
+By default it's `lips.global_environment`. You can use it if you want to
+have separated instances of the interpreter.
+
+You can create new environment using:
+
+```javascript
+var env = new Environment({}, lips.global_environment);
+```
+
+You need to use global environment otherwise you will not have any functions.
+
 ## What's in
 
 ### variables and functions
@@ -146,6 +168,51 @@ or operate on strings
 ### Math and boolean operators
 
 `< > => <= ++ -- + - * / % and or`
+
+## Extending Lips
+
+to create new function from JavaScript you can use:
+
+```javascript
+env.set('replace', function(re, sub, string) {
+   return string.replace(re, sub);
+});
+```
+
+then you can use it in lips:
+
+```scheme
+(replace /(foo|bar)/g "hello" "foo bar baz")
+```
+
+To define a macro in javascript you can use Macro constructor that accept
+single function argument, that should return lisp code (instance of Pair)
+
+```javascript
+
+var {Macro, Pair, Symbol, nil} = lips;
+
+env.set('quote-car', new Macro(function(code) {
+    return new Pair(
+        new Symbol("quote"),
+        new Pair(code.car.car, nil)
+    );
+}));
+```
+
+and you can execute this macro in lips:
+
+```scheme
+(quote-car (foo bar baz))
+```
+
+it will return first symbol and not execute it as function foo.
+
+if you want to create macro like quasiquote that code need to be wrapped with
+Quote instance.
+
+When creating macros in JavaScript you can use helper `Pair.fromArray()`
+and `code.toArray()`.
 
 ## License
 

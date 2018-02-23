@@ -953,6 +953,8 @@
         Environment: Environment,
         global_environment: global_env,
         balanced_parenthesis: balanced,
+        Macro: Macro,
+        Quote: Quote,
         Pair: Pair,
         nil: nil,
         Symbol: Symbol
