@@ -23,7 +23,7 @@ https://unpkg.com/@jcubic/lips
 or from rawgit
 
 ```
-https://rawgit.com/jcubic/lips/master/index.js
+https://cdn.rawgit.com/jcubic/lips/master/index.js
 ```
 
 ## What's in
