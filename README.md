@@ -29,7 +29,7 @@ https://cdn.rawgit.com/jcubic/lips/master/index.js
 ## Usage
 
 ```javascript
-var {parse, tokenize, evaluate} = require('lips');
+var {parse, tokenize, evaluate} = require('@jcubic/lips');
 
 parse(tokenize(code)).forEach(function(code) {
     evalute(code);

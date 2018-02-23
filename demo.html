@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lips Demo</title>
+    <link href="https://rawgit.com/jcubic/jquery.terminal/master/css/jquery.terminal.css" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://rawgit.com/jcubic/jquery.terminal/master/js/jquery.terminal.js"></script>
+    <script src="https://rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
+    <script src="index.js"></script>
+  </head>
+  <body></body>
+  <script>
+   (function() {
+       var {
+           Environment,
+           global_environment,
+           balanced_parenthesis,
+           tokenize,
+           parse,
+           Macro,
+           Symbol,
+           nil,
+           Pair,
+           evaluate
+       } = lips;
+       var env = new Environment({
+           stdout: {
+               write: function(...args) {
+                   args.forEach(term.echo);
+               }
+           },
+           stdin: {
+               read: function() {
+                   return new Promise(function(resolve) {
+                       term.read('', function(command) {
+                           resolve(command);
+                       });
+                   });
+               }
+           }
+       }, global_environment);
+       env.set('replace', function(re, sub, string) {
+           return string.replace(re, sub);
+       });
+       env.set('quote-car', new Macro(function(code) {
+           return new Pair(
+               new Symbol("quote"),
+               new Pair(code.car.car, nil)
+           );
+       }));
+       var term = $('body').terminal(function(code, term) {
+           if (!balanced_parenthesis(code)) {
+               term.error('Unbalanced parenthesis');
+           } else {
+               parse(tokenize(code)).forEach(function(code) {
+                   try {
+                       var ret = evaluate(code, env);
+                       if (ret instanceof Promise) {
+                           ret.then((ret) => {
+                               if (ret !== undefined) {
+                                   env.get('print').call(env, ret)
+                               }
+                           });
+                       } else if (ret !== undefined) {
+                           env.get('print').call(env, ret);
+                       }
+                   } catch (e) {
+                       term.error(e.message);
+                   }
+               });
+           }
+       }, {
+           name: 'lips',
+           greetings: 'Simple, Scheme like Lisp Interpreter\n' +
+                      'type [[b;#fff;](env)] to see environment with ' +
+                      'functions macros and variables\n'
+       });
+   })();
+  </script>
+</html>
