@@ -4,7 +4,8 @@
   "description": "Simple Scheme Like Lisp in JavaScript",
   "main": "index.js",
   "scripts": {
-      "test": "jest"
+      "test": "jest",
+      "coveralls": "cat ./coverage/lcov.info | coveralls"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   },
   "homepage": "https://github.com/jcubic/lips#readme",
   "devDependencies": {
+    "coveralls": "^3.0.0",
     "jest": "^22.4.2"
   }
 }

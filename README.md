@@ -1,6 +1,10 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-0.1.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel)](https://coveralls.io/github/jcubic/lips?branch=devel)
+
+
 
 LIPS is very simple Lisp, similar to Scheme writen in JavaScript.
 
