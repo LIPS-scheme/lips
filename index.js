@@ -701,6 +701,12 @@
                 return nil;
             }
         },
+        reduce: function(fn, list) {
+            var arr = this.get('list->array')(list);
+            return arr.reduce((list, item) => {
+                return fn(list, item);
+            }, nil);
+        },
         // math functions
         '*': function() {
             return [].reduce.call(arguments, function(a, b) {
