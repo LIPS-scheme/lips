@@ -25,10 +25,14 @@
     // ----------------------------------------------------------------------
     function parse_argument(arg) {
         function parse_string(string) {
+            console.log(JSON.stringify(string));
             // remove quotes if before are even number of slashes
             // we don't remove slases becuase they are handled by JSON.parse
             //string = string.replace(/([^\\])['"]$/, '$1');
             if (string.match(/^['"]/)) {
+                if (string === '""' || string === "''") {
+                    return '';
+                }
                 var quote = string[0];
                 var re = new RegExp("((^|[^\\\\])(?:\\\\\\\\)*)" + quote, "g");
                 string = string.replace(re, "$1");
