@@ -170,6 +170,11 @@ or operate on strings
 (filter (lambda (x)
           (== (% x 2) 0))
     (list 1 2 3 4 5))
+
+(define (reverse list)
+    (reduce (lambda (list x) (cons x list)) list))
+
+(reverse '(1 2 3 4))
 ```
 
 ### Working with arrays
