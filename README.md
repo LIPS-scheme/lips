@@ -77,7 +77,7 @@ otherwise you will not have any functions.
    (print (cadaddr lst)))
 ```
 
-all functions that match this regex `c[ad]{2,5}r`
+all functions that match this regex `c[ad]{2,5}r` are defined.
 
 ### ALists
 
