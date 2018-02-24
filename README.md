@@ -137,10 +137,11 @@ presense of the element.
 You can execute jQuery functions
 
 ```scheme
-(let* (($ (. window "$"))
-       (term ($ ".terminal")))
+(let* ((term ($ ".terminal")))
   ((.  term "css") "background" "red"))
 ```
+
+function `$` is available because it's in window object.
 
 or operate on strings
 
@@ -208,7 +209,7 @@ and you can execute this macro in lips:
 
 it will return first symbol and not execute it as function foo.
 
-if you want to create macro like quasiquote that code need to be wrapped with
+if you want to create macro like quasiquote, the returned code need to be wrapped with
 Quote instance.
 
 When creating macros in JavaScript you can use helper `Pair.fromArray()`
