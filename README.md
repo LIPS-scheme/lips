@@ -1,8 +1,8 @@
-## Lips is Pretty Simple
+## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-0.1.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 
-Lips is very simple Lisp, similar to Scheme writen in JavaScript.
+LIPS is very simple Lisp, similar to Scheme writen in JavaScript.
 
 [Demo](https://codepen.io/jcubic/full/LQBaaV/)
 
@@ -31,8 +31,8 @@ https://cdn.rawgit.com/jcubic/lips/master/index.js
 ```javascript
 var {parse, tokenize, evaluate} = require('@jcubic/lips');
 
-parse(tokenize(code)).forEach(function(code) {
-    evalute(code);
+parse(tokenize(string)).forEach(function(code) {
+    evaluate(code);
 });
 ```
 
@@ -46,7 +46,9 @@ You can create new environment using:
 var env = new Environment({}, lips.global_environment);
 ```
 
-You need to use global environment otherwise you will not have any functions.
+First argument is an object with functions, macros and varibles (see Extending LIPS at the end).
+Second argument is parent environment, you need to use global environment (or other that extend global)
+otherwise you will not have any functions.
 
 ## What's in
 
@@ -145,7 +147,7 @@ function `$` is available because it's in window object.
 
 or operate on strings
 
-```scheme
+```
 ((. "foo bar baz" "replace") /^[a-z]+/g "baz")
 
 (let ((match (. "foo bar baz" "match")))
@@ -170,7 +172,7 @@ or operate on strings
 
 `< > => <= ++ -- + - * / % and or`
 
-## Extending Lips
+## Extending LIPS
 
 to create new function from JavaScript you can use:
 
@@ -180,9 +182,9 @@ env.set('replace', function(re, sub, string) {
 });
 ```
 
-then you can use it in lips:
+then you can use it in LIPS:
 
-```scheme
+```
 (replace /(foo|bar)/g "hello" "foo bar baz")
 ```
 
@@ -201,7 +203,7 @@ env.set('quote-car', new Macro(function(code) {
 }));
 ```
 
-and you can execute this macro in lips:
+and you can execute this macro in LIPS:
 
 ```scheme
 (quote-car (foo bar baz))
