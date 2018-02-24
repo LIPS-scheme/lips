@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "Simple Scheme Like Lisp in JavaScript",
   "main": "index.js",
-  "scripts": { },
+  "scripts": {
+      "test": "jest"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jcubic/lips.git"
@@ -19,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/jcubic/lips/issues"
   },
-  "homepage": "https://github.com/jcubic/lips#readme"
+  "homepage": "https://github.com/jcubic/lips#readme",
+  "devDependencies": {
+    "jest": "^22.4.2"
+  }
 }
