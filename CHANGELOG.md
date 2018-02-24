@@ -1,5 +1,10 @@
 ## 0.2.0
-* Add reduce function
+### Features
+* Add reduce and set functions
+* add while, ++ and -- macros
+* ignore comments everything after ; but not inside strings
+
+### Bugs
 * fix parsing empty strings
 
 ## 0.1.0

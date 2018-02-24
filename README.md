@@ -126,7 +126,7 @@ then type S-Expression like `(print 10)`. If function return Promise
 the execution is paused and restored when Promise is resolved
 
 
-### Access JavaScript functions
+### Access JavaScript functions and objects
 
 ```scheme
 ((. window "alert") "hello")
@@ -154,7 +154,7 @@ or operate on strings
     (array->list (match /([a-z]+)/g)))
 ```
 
-### Mapping and filtering
+### Mapping, filtering and reducing
 
 ```scheme
 (map car (list
@@ -166,6 +166,35 @@ or operate on strings
 (filter (lambda (x)
           (== (% x 2) 0))
     (list 1 2 3 4 5))
+```
+
+### Working with arrays
+
+You can modify array with `set` function and to get the value of the array you can use `.` dot function.
+
+```scheme
+(let ((arr (list->array '(1 2 3 4))))
+   (set arr 0 2)
+   (print (array->list arr)))
+
+(let* ((div ((. document "querySelectorAll") ".terminal-output > div"))
+       (len (. div "length"))
+       (i 0))
+    (while (< i len)
+       (print (. (. div i) "innerHTML"))
+       (++ i)))
+```
+
+this equivalent of JavaScript code:
+
+```javascript
+var div = document.querySelectorAll(".terminal div");
+var len = div.length;
+var i = 0;
+while (i < len) {
+   console.log(div[i].innerHTML);
+   ++i;
+}
 ```
 
 ### Math and boolean operators

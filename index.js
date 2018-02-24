@@ -25,7 +25,6 @@
     // ----------------------------------------------------------------------
     function parse_argument(arg) {
         function parse_string(string) {
-            console.log(JSON.stringify(string));
             // remove quotes if before are even number of slashes
             // we don't remove slases becuase they are handled by JSON.parse
             //string = string.replace(/([^\\])['"]$/, '$1');
@@ -57,13 +56,19 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
+    var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
     /* eslint-enable */
     // ----------------------------------------------------------------------
     function tokenize(str) {
-        return str.split(tokens_re).map(function(token) {
-            return token.trim();
-        }).filter(Boolean);
+        return str.split('\n').map(function(line) {
+            return line.split(tokens_re).map(function(token) {
+                if (!token.match(/^;/)) {
+                    return token.trim();
+                }
+            }).filter(Boolean);
+        }).reduce(function(arr, tokens) {
+            return arr.concat(tokens);
+        }, []);
     }
     // ----------------------------------------------------------------------
     var specials = {
@@ -207,6 +212,9 @@
     Pair.fromArray = function(array) {
         if (array instanceof Pair) {
             return array;
+        }
+        if (array.length && !array instanceof Array) {
+            array = [...array];
         }
         if (array.length == 0) {
             return new Pair(nil, nil);
@@ -397,6 +405,40 @@
                 }
             }
         },
+        'while': new Macro(function(code) {
+            var env = this;
+            var begin = new Pair(
+                new Symbol('begin'),
+                code.cdr
+            );
+            return new Promise((resolve) => {
+                var result;
+                (function loop() {
+                    function next(cond) {
+                        if (cond) {
+                            var value = evaluate(begin, env);
+                            if (value instanceof Promise) {
+                                value.then((value) => {
+                                    result = value;
+                                    loop();
+                                });
+                            } else {
+                                result = value;
+                                loop();
+                            }
+                        } else {
+                            resolve(result);
+                        }
+                    }
+                    var cond = evaluate(code.car, env);
+                    if (cond instanceof Promise) {
+                        cond.then(next);
+                    } else {
+                        next(cond);
+                    }
+                })();
+            });
+        }),
         'if': new Macro(function(code) {
             var resolve = (cond) => {
                 if (cond) {
@@ -465,6 +507,9 @@
                 this.env[code.car.name] = value;
             }
         }),
+        set: function(obj, key, value) {
+            obj[key] = value;
+        },
         'eval': function(code) {
             if (code instanceof Pair) {
                 return evaluate(code, this);
@@ -808,6 +853,16 @@
                     }
                 })();
             });
+        }),
+        '++': new Macro(function(code) {
+            var value = this.get(code.car) + 1;
+            this.set(code.car, value);
+            return value;
+        }),
+        '--': new Macro(function(code) {
+            var value = this.get(code.car) - 1;
+            this.set(code.car, value);
+            return value;
         })
     });
 
