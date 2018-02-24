@@ -4,6 +4,7 @@ node_js:
 install:
   - npm install
 script:
-  - npm test
+  - make lint
+  - make test
 after_script:
-  - npm run coveralls
+  - make coveralls

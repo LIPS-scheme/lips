@@ -6,9 +6,6 @@ var lips = require('../index');
 var {
     parse,
     tokenize,
-    Environment,
-    evaluate,
-    global_environment,
     Pair,
     Symbol,
     nil
@@ -25,7 +22,8 @@ describe('tokenizer', function() {
     });
     it('should create tokens for alists', function() {
         expect(tokenize('((foo . 10) (bar . 20) (baz . 30))')).toEqual([
-            '(', '(', 'foo', '.', '10', ')', '(', 'bar', '.', '20', ')', '(', 'baz', '.', '30', ')', ')'
+            '(', '(', 'foo', '.', '10', ')', '(', 'bar', '.', '20', ')', '(',
+            'baz', '.', '30', ')', ')'
         ]);
     });
     it('should ignore comments', function() {
@@ -105,3 +103,49 @@ describe('parser', function() {
         );
     });
 });
+/*
+
+var code = parse(tokenize(`
+    (print (cons 1 (cons 2 (cons 3 nil))))
+    (print (list 1 2 3 4))
+    (print (car (list 1 2 3)))
+    (print (concat "hello" " " "world"))
+    (print (append (list 1 2 3) (list 10)))
+    (print nil)
+    (define x 10)
+    (print (* x x))
+    (print (/ 1 2))
+    (define l1 (list 1 2 3 4))
+    (define l2 (append l1 (list 5 6)))
+    (print l1)
+    (print l2)
+    (defmacro (foo code) \`(print ,(string (car code))))
+    (foo (name baz))
+    (print \`(,(car (list "a" "b" "c")) 2 3))
+    (print \`(,@(list 1 2 3)))
+    (print \`(1 2 3 ,@(list 4 5) 6))
+    (defmacro (xxx code) \`(list 1 ,(car (cdr code)) 2))
+    (print (xxx ("10" "20")))
+    (if (== 10 20) (print "1 true") (print "1 false"))
+    (if (== 10 10) (print "2 true") (print "2 false"))
+    (print (concat "if " (if (== x 10) "10" "20")))
+`));
+
+(function() {
+  var env = new Environment({}, global_environment);
+  var c = parse(tokenize([
+    "(define x '(1 2 3))",
+    "(print x)",
+    "(print `(1 2 ,@x 4 5))",
+    "(print `(foo bar ,@x 4 5))"
+  ].join(' ')));
+  c.forEach(function(code) {
+    console.log(code.toString());
+    try {
+      evaluate(code, env);
+    } catch (e) {
+      console.error(e.message);
+    }
+  })
+})();
+*/
