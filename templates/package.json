@@ -185,6 +185,8 @@
     }
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
     "coveralls": "^3.0.0",
     "eslint": "^4.18.1",
     "jest": "^22.4.2",

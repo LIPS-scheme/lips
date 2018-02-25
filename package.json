@@ -1,8 +1,8 @@
 {
   "name": "@jcubic/lips",
-  "version": "0.1.0",
+  "version": "DEV",
   "description": "Simple Scheme Like Lisp in JavaScript",
-  "main": "index.js",
+  "main": "dist/lips.js",
   "scripts": {},
   "repository": {
     "type": "git",
