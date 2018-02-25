@@ -1,10 +1,12 @@
-/**
- * Lips is Pretty Simple - version 0.1.0
+/**@license
+ * LIPS is Pretty Simple - version {{VER}}
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
+ * build: {{DATE}}
  */
+"use strict";
 /* global define, module, setTimeout, jQuery */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -735,23 +737,23 @@
             }, nil);
         },
         // math functions
-        '*': function() {
-            return [].reduce.call(arguments, function(a, b) {
+        '*': function(...args) {
+            return args.reduce(function(a, b) {
                 return a * b;
             }, 1);
         },
-        '+': function() {
-            return [].reduce.call(arguments, function(a, b) {
+        '+': function(...args) {
+            return args.reduce(function(a, b) {
                 return a + b;
             }, 0);
         },
-        '-': function() {
-            return [].reduce.call(arguments, function(a, b) {
+        '-': function(...args) {
+            return args.reduce(function(a, b) {
                 return a - b;
             });
         },
-        '/': function() {
-            return [].reduce.call(arguments, function(a, b) {
+        '/': function(...args) {
+            return args.reduce(function(a, b) {
                 return a / b;
             });
         },
@@ -993,6 +995,7 @@
         return new Symbol(value.name);
     };
     return {
+        version: '{{VER}}',
         parse: parse,
         tokenize: tokenize,
         evaluate: evaluate,
