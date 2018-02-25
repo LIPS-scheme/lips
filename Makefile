@@ -1,6 +1,6 @@
 .PHONY: publish test coveralls lint
 
-VERSION=DEV
+VERSION=0.1.0
 DATE=`date -uR`
 
 GIT=git

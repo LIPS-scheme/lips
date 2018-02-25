@@ -28,7 +28,7 @@ Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/" templates/Makefile > Makefile
 
 package.json: templates/package.json .$(VERSION)
-	$(TEST) "$(VERSION)" != DEV && $(SED) -e "s/{{VER}}/"$(VERSION)"/" templates/package.json > package.json || true
+	$(SED) -e "s/{{VER}}/"$(VERSION)"/" templates/package.json > package.json || true
 
 README.md: templates/README.md
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/" < templates/README.md > README.md || $(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/" < templates/README.md > README.md

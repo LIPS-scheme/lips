@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 25 Feb 2018 11:44:14 +0000
+ * build: Sun, 25 Feb 2018 15:13:13 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
