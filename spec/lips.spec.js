@@ -182,7 +182,10 @@ describe('evaluate', function() {
             );
         });
         it('should return alist', function() {
-            expect(exec(`'((foo . 1) (bar . 2.1) (baz . "string") (quux . /foo./g))`)).toEqual(
+            expect(exec(`'((foo . 1)
+                           (bar . 2.1)
+                           (baz . "string")
+                           (quux . /foo./g))`)).toEqual(
                 new Pair(
                     new Pair(
                         new Symbol('foo'),
@@ -201,7 +204,7 @@ describe('evaluate', function() {
                             new Pair(
                                 new Pair(
                                     new Symbol('quux'),
-                                        /foo./g
+                                    /foo./g
                                 ),
                                 nil
                             )
@@ -228,13 +231,14 @@ describe('evaluate', function() {
             );
         });
         it('should create alist with values', function() {
-            parse(tokenize('`((1 . ,(car (list 1 2))) (2 . ,(cadr (list 1 "foo"))))'));
-            expect(exec('`((1 . ,(car (list 1 2))) (2 . ,(cadr (list 1 "foo"))))')).toEqual(
+            expect(exec(`\`((1 . ,(car (list 1 2)))
+                            (2 . ,(cadr (list 1 "foo"))))`)).toEqual(
                 new Pair(
-                    new Pair(1,1),
+                    new Pair(1, 1),
                     new Pair(new Pair(2, "foo"), nil))
             );
-            expect(exec('`((,(car (list "foo")) . ,(car (list 1 2))) (2 . ,(cadr (list 1 "foo"))))'))
+            expect(exec(`\`((,(car (list "foo")) . ,(car (list 1 2)))
+                            (2 . ,(cadr (list 1 "foo"))))`))
                 .toEqual(new Pair(
                     new Pair("foo", 1),
                     new Pair(

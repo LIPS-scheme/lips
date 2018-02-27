@@ -124,15 +124,13 @@
                         if (stack[stack.length - 1].length === 0) {
                             stack[stack.length - 1] = top;
                         } else if (stack[stack.length - 1] instanceof Pair) {
-                            console.log(stack[stack.length - 1].toString());
                             if (stack[stack.length - 1].cdr instanceof Pair) {
-                            console.log('top: '+ JSON.stringify(top));
                                 stack[stack.length - 1] = new Pair(
                                     stack[stack.length - 1],
                                     Pair.fromArray(top)
                                 );
                             } else {
-                                stack[stack.length - 1].cdr = Pair.fromArray(top)
+                                stack[stack.length - 1].cdr = Pair.fromArray(top);
                             }
                         } else {
                             stack[stack.length - 1].push(top);
@@ -201,9 +199,9 @@
     Pair.prototype.length = function() {
         var len = 0;
         var node = this;
-        while(true) {
+        while (true) {
             if (node === nil) {
-                return;
+                break;
             }
             len++;
             node = node.cdr;
