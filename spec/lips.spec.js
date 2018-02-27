@@ -227,6 +227,26 @@ describe('evaluate', function() {
                 Pair.fromArray([1, 2, 3, 4, 5, 6])
             );
         });
+        it('should create alist with values', function() {
+            parse(tokenize('`((1 . ,(car (list 1 2))) (2 . ,(cadr (list 1 "foo"))))'));
+            expect(exec('`((1 . ,(car (list 1 2))) (2 . ,(cadr (list 1 "foo"))))')).toEqual(
+                new Pair(
+                    new Pair(1,1),
+                    new Pair(new Pair(2, "foo"), nil))
+            );
+            expect(exec('`((,(car (list "foo")) . ,(car (list 1 2))) (2 . ,(cadr (list 1 "foo"))))'))
+                .toEqual(new Pair(
+                    new Pair("foo", 1),
+                    new Pair(
+                        new Pair(2, "foo"),
+                        nil
+                    )));
+        });
+        it('should process nested backquote', function() {
+            expect(exec('`(1 2 3 ,(cadr `(1 ,(+ "foo" "bar") 3)) 4)')).toEqual(
+                Pair.fromArray([1, 2, 3, "foobar", 4])
+            );
+        });
     });
 });
 

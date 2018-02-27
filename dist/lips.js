@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 25 Feb 2018 15:13:13 +0000
+ * build: Tue, 27 Feb 2018 18:35:56 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -128,6 +128,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         stack.pop();
                         if (stack[stack.length - 1].length === 0) {
                             stack[stack.length - 1] = top;
+                        } else if (stack[stack.length - 1] instanceof Pair) {
+                            console.log(stack[stack.length - 1].toString());
+                            if (stack[stack.length - 1].cdr instanceof Pair) {
+                                console.log('top: ' + JSON.stringify(top));
+                                stack[stack.length - 1] = new Pair(stack[stack.length - 1], Pair.fromArray(top));
+                            } else {
+                                stack[stack.length - 1].cdr = Pair.fromArray(top);
+                            }
                         } else {
                             stack[stack.length - 1].push(top);
                         }
@@ -190,6 +198,18 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         this.car = car;
         this.cdr = cdr;
     }
+    Pair.prototype.length = function () {
+        var len = 0;
+        var node = this;
+        while (true) {
+            if (node === nil) {
+                return;
+            }
+            len++;
+            node = node.cdr;
+        }
+        return len;
+    };
     Pair.prototype.clone = function () {
         var cdr;
         if (this.cdr === nil) {
@@ -272,7 +292,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             arr.push(' ');
             arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
         } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-            arr = arr.concat([' . ', this.cdr]);
+            if (typeof this.cdr === 'string') {
+                arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
+            } else {
+                arr = arr.concat([' . ', this.cdr]);
+            }
         }
         arr.push(')');
         return arr.join('');
@@ -747,7 +771,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
             return args.reduce(function (a, b) {
                 return a * b;
-            }, 1);
+            });
         },
         '+': function _() {
             for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
@@ -756,7 +780,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
             return args.reduce(function (a, b) {
                 return a + b;
-            }, 0);
+            });
         },
         '-': function _() {
             for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {

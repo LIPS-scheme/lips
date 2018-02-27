@@ -123,6 +123,17 @@
                         stack.pop();
                         if (stack[stack.length - 1].length === 0) {
                             stack[stack.length - 1] = top;
+                        } else if (stack[stack.length - 1] instanceof Pair) {
+                            console.log(stack[stack.length - 1].toString());
+                            if (stack[stack.length - 1].cdr instanceof Pair) {
+                            console.log('top: '+ JSON.stringify(top));
+                                stack[stack.length - 1] = new Pair(
+                                    stack[stack.length - 1],
+                                    Pair.fromArray(top)
+                                );
+                            } else {
+                                stack[stack.length - 1].cdr = Pair.fromArray(top)
+                            }
                         } else {
                             stack[stack.length - 1].push(top);
                         }
@@ -187,6 +198,18 @@
         this.car = car;
         this.cdr = cdr;
     }
+    Pair.prototype.length = function() {
+        var len = 0;
+        var node = this;
+        while(true) {
+            if (node === nil) {
+                return;
+            }
+            len++;
+            node = node.cdr;
+        }
+        return len;
+    };
     Pair.prototype.clone = function() {
         var cdr;
         if (this.cdr === nil) {
@@ -269,7 +292,11 @@
             arr.push(' ');
             arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
         } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-            arr = arr.concat([' . ', this.cdr]);
+            if (typeof this.cdr === 'string') {
+                arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
+            } else {
+                arr = arr.concat([' . ', this.cdr]);
+            }
         }
         arr.push(')');
         return arr.join('');
@@ -740,12 +767,12 @@
         '*': function(...args) {
             return args.reduce(function(a, b) {
                 return a * b;
-            }, 1);
+            });
         },
         '+': function(...args) {
             return args.reduce(function(a, b) {
                 return a + b;
-            }, 0);
+            });
         },
         '-': function(...args) {
             return args.reduce(function(a, b) {

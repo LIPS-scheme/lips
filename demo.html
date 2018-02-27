@@ -28,10 +28,9 @@
        }
    };
   </script>
-  <script src="index.js"></script>
+  <script src="src/lips.js"></script>
   <script>
    (function() {
-       try {
        var {
            Environment,
            global_environment,
@@ -73,8 +72,8 @@
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               parse(tokenize(code)).forEach(function(code) {
-                   try {
+               try {
+                   parse(tokenize(code)).forEach(function(code) {
                        var ret = evaluate(code, env);
                        if (ret instanceof Promise) {
                            ret.then((ret) => {
@@ -85,18 +84,15 @@
                        } else if (ret !== undefined) {
                            env.get('print').call(env, ret);
                        }
-                   } catch (e) {
-                       term.error(e.message);
-                   }
-               });
+                   });
+               } catch (e) {
+                   term.exception(e);
+               }
            }
        }, {
            name: 'lips',
            greetings: greetings
        });
-       } catch(e) {
-           console.log(e);
-       }
    })();
   </script>
 </html>

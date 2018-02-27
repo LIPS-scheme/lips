@@ -1,2 +1,7 @@
 spec
 *~
+covarage
+Makefile
+jest.config.js
+version
+templates

@@ -6,6 +6,8 @@
 
 ### Bugs
 * fix parsing empty strings
+* fix various errors catch by lint
+* fix parsing ALists with list as keys and values
 
 ## 0.1.0
 * Initial version
