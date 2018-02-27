@@ -1,12 +1,17 @@
 .PHONY: publish test coveralls lint
 
 VERSION={{VERSION}}
+BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
+SPEC_CHECKSUM=`md5sum spec/lib.spec.js | cut -d' ' -f 1`
+COMMIT=`git log -n 1 | grep commit | sed 's/commit //'`
 
 GIT=git
 SED=sed
 RM=rm
 TEST=test
+CAT=cat
+NPM=npm
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
@@ -31,19 +36,23 @@ package.json: templates/package.json .$(VERSION)
 	$(SED) -e "s/{{VER}}/"$(VERSION)"/" templates/package.json > package.json || true
 
 README.md: templates/README.md
-	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/" < templates/README.md > README.md || $(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/" < templates/README.md > README.md
+	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \
+	"s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" \
+	-e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md || \
+	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e \
+	"s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md
 
 .$(VERSION): Makefile
 	touch .$(VERSION)
 
 publish:
-	npm publish --access=public
+	$(NPM) publish --access=public
 
 test:
 	$(JEST)
 
 coveralls:
-	cat ./coverage/lcov.info | $(COVERALLS)
+	$(CAT) ./coverage/lcov.info | $(COVERALLS)
 
 lint:
 	$(ESLINT) src/lips.js spec/lips.spec.js

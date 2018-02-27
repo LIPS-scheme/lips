@@ -1,4 +1,4 @@
-/* global require, describe, it, expect */
+/* global require, describe, it, expect, jest */
 
 var lips = require('../src/lips');
 
@@ -6,9 +6,12 @@ var lips = require('../src/lips');
 var {
     parse,
     tokenize,
+    evaluate,
     Pair,
     Symbol,
-    nil
+    nil,
+    Environment,
+    global_environment
 } = lips;
 
 describe('tokenizer', function() {
@@ -16,8 +19,8 @@ describe('tokenizer', function() {
         expect(tokenize('(foo bar baz)')).toEqual(['(', 'foo', 'bar', 'baz', ')']);
     });
     it('should create tokens for numbers string and regexes', function() {
-        expect(tokenize('(foo /( \\/)/g "bar baz" 10 10e2)')).toEqual([
-            '(', 'foo', '/( \\/)/g', '"bar baz"', '10', '10e2', ')'
+        expect(tokenize('(foo /( \\/)/g "bar baz" 10 1.1 10e2)')).toEqual([
+            '(', 'foo', '/( \\/)/g', '"bar baz"', '10', '1.1', '10e2', ')'
         ]);
     });
     it('should create tokens for alists', function() {
@@ -56,7 +59,7 @@ describe('parser', function() {
         );
     });
     it('should create regular expressions numbers and strings', function() {
-        var tokens = tokenize('(foo /( \\/)/g "bar baz" 10 10e2)');
+        var tokens = tokenize('(foo /( \\/)/g "bar baz" 10 1.1 10e2)');
         var array = parse(tokens);
         expect(array[0]).toEqual(
             new Pair(
@@ -68,8 +71,11 @@ describe('parser', function() {
                         new Pair(
                             10,
                             new Pair(
-                                10e2,
-                                nil
+                                1.1,
+                                new Pair(
+                                    10e2,
+                                    nil
+                                )
                             )
                         )
                     )
@@ -103,6 +109,128 @@ describe('parser', function() {
         );
     });
 });
+
+describe('Pair', function() {
+    const pairs = new Pair(
+        1,
+        new Pair(
+            2,
+            new Pair(
+                new Pair(
+                    3,
+                    new Pair(
+                        4,
+                        nil)
+                ),
+                new Pair(
+                    new Pair(
+                        5,
+                        new Pair(
+                            6,
+                            nil
+                        )
+                    ),
+                    nil
+                )
+            )
+        )
+    );
+    const array = [1, 2, [3, 4], [5, 6]];
+    it('should create Pair structure from array', function() {
+        expect(Pair.fromArray(array)).toEqual(pairs);
+    });
+    it('should create Array from list structure', function() {
+        expect(pairs.toArray()).toEqual(array);
+    });
+    it('should return same array', function() {
+        var array = [[1], 2, [3, 4], [5, [1, [2, 3]], [1, 2]]];
+        expect(Pair.fromArray(array).toArray()).toEqual(array);
+    });
+});
+
+function exec(string, env) {
+    return evaluate(parse(tokenize(string))[0], env);
+}
+
+describe('evaluate', function() {
+    const rand = Math.random();
+    const env = new Environment({
+        value: rand,
+        fun: (a, b) => a + b,
+        f2: (a, b) => new Pair(a, new Pair(b, nil))
+    }, global_environment);
+    it('should return value', function() {
+        expect(exec('value', env)).toEqual(rand);
+    });
+    it('should call function', function() {
+        expect(exec('(fun 1 2)', env)).toEqual(3);
+        expect(exec('(fun "foo" "bar")', env)).toEqual("foobar");
+    });
+    it('should set environment', function() {
+        exec('(define x "foobar")', env);
+        expect(exec('x', env)).toEqual("foobar");
+        expect(exec('x')).toEqual(undefined);
+    });
+    it('should create list', function() {
+        expect(exec('(cons 1 (cons 2 (cons 3 nil)))'))
+            .toEqual(Pair.fromArray([1, 2, 3]));
+    });
+    describe('quote', function() {
+        it('should return literal list', function() {
+            expect(exec(`'(1 2 3 (4 5))`)).toEqual(
+                Pair.fromArray([1, 2, 3, [4, 5]])
+            );
+        });
+        it('should return alist', function() {
+            expect(exec(`'((foo . 1) (bar . 2.1) (baz . "string") (quux . /foo./g))`)).toEqual(
+                new Pair(
+                    new Pair(
+                        new Symbol('foo'),
+                        1
+                    ),
+                    new Pair(
+                        new Pair(
+                            new Symbol('bar'),
+                            2.1
+                        ),
+                        new Pair(
+                            new Pair(
+                                new Symbol('baz'),
+                                "string"
+                            ),
+                            new Pair(
+                                new Pair(
+                                    new Symbol('quux'),
+                                        /foo./g
+                                ),
+                                nil
+                            )
+                        )
+                    )
+                )
+            );
+        });
+    });
+    describe('quasiquote', function() {
+        it('should create list with function call', function() {
+            expect(exec('`(1 2 3 ,(fun 2 2) 5)', env)).toEqual(
+                Pair.fromArray([1, 2, 3, 4, 5])
+            );
+        });
+        it('should create list with value', function() {
+            expect(exec('`(1 2 3 ,value 4)', env)).toEqual(
+                Pair.fromArray([1, 2, 3, rand, 4])
+            );
+        });
+        it('should create single list using uquote-splice', function() {
+            expect(exec('`(1 2 3 ,@(f2 4 5) 6)', env)).toEqual(
+                Pair.fromArray([1, 2, 3, 4, 5, 6])
+            );
+        });
+    });
+});
+
+
 /*
 
 var code = parse(tokenize(`
