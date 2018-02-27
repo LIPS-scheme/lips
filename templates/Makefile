@@ -3,7 +3,7 @@
 VERSION={{VERSION}}
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
-SPEC_CHECKSUM=`md5sum spec/lib.spec.js | cut -d' ' -f 1`
+SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
 COMMIT=`git log -n 1 | grep commit | sed 's/commit //'`
 
 GIT=git

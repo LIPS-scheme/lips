@@ -234,10 +234,7 @@ single function argument, that should return lisp code (instance of Pair)
 var {Macro, Pair, Symbol, nil} = lips;
 
 env.set('quote-car', new Macro(function(code) {
-    return new Pair(
-        new Symbol("quote"),
-        new Pair(code.car.car, nil)
-    );
+    return Pair.fromArray([new Symbol('quote'), code.car.car]);
 }));
 ```
 

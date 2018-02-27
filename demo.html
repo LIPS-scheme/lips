@@ -63,10 +63,7 @@
            return string.replace(re, sub);
        });
        env.set('quote-car', new Macro(function(code) {
-           return new Pair(
-               new Symbol("quote"),
-               new Pair(code.car.car, nil)
-           );
+           return Pair.fromArray([new Symbol('quote'), code.car.car]);
        }));
        var term = $('body').terminal(function(code, term) {
            if (!balanced_parenthesis(code)) {

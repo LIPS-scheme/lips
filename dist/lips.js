@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Tue, 27 Feb 2018 18:35:56 +0000
+ * build: Tue, 27 Feb 2018 18:55:28 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -129,9 +129,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         if (stack[stack.length - 1].length === 0) {
                             stack[stack.length - 1] = top;
                         } else if (stack[stack.length - 1] instanceof Pair) {
-                            console.log(stack[stack.length - 1].toString());
                             if (stack[stack.length - 1].cdr instanceof Pair) {
-                                console.log('top: ' + JSON.stringify(top));
                                 stack[stack.length - 1] = new Pair(stack[stack.length - 1], Pair.fromArray(top));
                             } else {
                                 stack[stack.length - 1].cdr = Pair.fromArray(top);
@@ -203,7 +201,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         var node = this;
         while (true) {
             if (node === nil) {
-                return;
+                break;
             }
             len++;
             node = node.cdr;
