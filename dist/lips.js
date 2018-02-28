@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Tue, 27 Feb 2018 18:55:28 +0000
+ * build: Wed, 28 Feb 2018 21:43:41 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -386,6 +386,36 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return new Quote(evaluate(output, env));
         });
     }
+    var gensym = function () {
+        var count = 0;
+        return function () {
+            count++;
+            return new _Symbol('#' + count);
+        };
+    }();
+    function request(url) {
+        var method = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'GET';
+        var headers = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+        var data = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url, true);
+        Object.keys(headers).forEach(function (name) {
+            xhr.setRequestHeader(name, headers[name]);
+        });
+        return new Promise(function (resolve) {
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    resolve(xhr.responseText);
+                }
+            };
+            if (data !== null) {
+                xhr.send(data);
+            } else {
+                xhr.send();
+            }
+        });
+    }
     var global_env = new Environment({
         nil: nil,
         window: window,
@@ -418,7 +448,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return list.cdr;
             }
         },
-
         'set-car': function setCar(slot, value) {
             slot.car = value;
         },
@@ -437,6 +466,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 }
             }
         },
+        gensym: gensym,
+        load: function load() {},
         'while': new Macro(function (code) {
             var self = this;
             var begin = new Pair(new _Symbol('begin'), code.cdr);
@@ -620,7 +651,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         return eval_pair;
                     }
                     if (_Symbol.is(pair.car, 'unquote')) {
-                        return evaluate(pair.cdr.car, self);
+                        if (pair.cdr.cdr !== nil) {
+                            return new Pair(evaluate(pair.cdr.car, self), pair.cdr.cdr);
+                        } else {
+                            return evaluate(pair.cdr.car, self);
+                        }
                     }
                     var car = pair.car;
                     if (car instanceof Pair) {
@@ -663,11 +698,27 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
                 return '<#jQuery>';
             }
+            if (obj instanceof Macro) {
+                //return '<#Macro>';
+            }
             if (typeof obj === 'undefined') {
                 return '<#undefined>';
             }
             if (typeof obj === 'function') {
                 return '<#function>';
+            }
+            if (obj instanceof Array || obj === null) {
+                return JSON.stringify(obj);
+            }
+            if (obj instanceof Pair) {
+                return obj.toString();
+            }
+            if ((typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object') {
+                var name = obj.constructor.name;
+                if (name !== '') {
+                    return '<#' + name + '>';
+                }
+                return '<#Object>';
             }
             if (typeof obj !== 'string') {
                 return obj.toString();

@@ -230,6 +230,16 @@ describe('evaluate', function() {
                 Pair.fromArray([1, 2, 3, 4, 5, 6])
             );
         });
+        it('should create single pair', function() {
+            [
+                '`(1 . 2)',
+                '`(,(car (list 1 2 3)) . 2)',
+                '`(1 . ,(cadr (list 1 2 3)))',
+                '`(,(car (list 1 2 3)) . ,(cadr (list 1 2 3)))'
+            ].forEach((code) => {
+                expect(exec(code)).toEqual(new Pair(1, 2))
+            });
+        });
         it('should create alist with values', function() {
             expect(exec(`\`((1 . ,(car (list 1 2)))
                             (2 . ,(cadr (list 1 "foo"))))`)).toEqual(

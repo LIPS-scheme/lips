@@ -384,6 +384,32 @@
             return new Quote(evaluate(output, env));
         });
     }
+    var gensym = (function() {
+        var count = 0;
+        return function() {
+            count++;
+            return new Symbol('#'+count);
+        };
+    })();
+    function request(url, method = 'GET', headers = {}, data = null) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url, true);
+        Object.keys(headers).forEach(name => {
+            xhr.setRequestHeader(name, headers[name]);
+        });
+        return new Promise((resolve) => {
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    resolve(xhr.responseText);
+                }
+            };
+            if (data !== null) {
+                xhr.send(data);
+            } else {
+                xhr.send();
+            }
+        });
+    }
     var global_env = new Environment({
         nil: nil,
         window: window,
@@ -414,7 +440,6 @@
                 return list.cdr;
             }
         },
-
         'set-car': function(slot, value) {
             slot.car = value;
         },
@@ -433,6 +458,9 @@
                     node = node.cdr;
                 }
             }
+        },
+        gensym: gensym,
+        load: function() {
         },
         'while': new Macro(function(code) {
             var self = this;
@@ -628,7 +656,14 @@
                         return eval_pair;
                     }
                     if (Symbol.is(pair.car, 'unquote')) {
-                        return evaluate(pair.cdr.car, self);
+                        if (pair.cdr.cdr !== nil) {
+                            return new Pair(
+                                evaluate(pair.cdr.car, self),
+                                pair.cdr.cdr
+                            );
+                        } else {
+                            return evaluate(pair.cdr.car, self);
+                        }
                     }
                     var car = pair.car;
                     if (car instanceof Pair) {
@@ -672,11 +707,27 @@
                 obj instanceof jQuery.fn.init) {
                 return '<#jQuery>';
             }
+            if (obj instanceof Macro) {
+                //return '<#Macro>';
+            }
             if (typeof obj === 'undefined') {
                 return '<#undefined>';
             }
             if (typeof obj === 'function') {
                 return '<#function>';
+            }
+            if (obj instanceof Array || obj === null) {
+                return JSON.stringify(obj);
+            }
+            if (obj instanceof Pair) {
+                return obj.toString();
+            }
+            if (typeof obj === 'object') {
+                var name = obj.constructor.name;
+                if (name !== '') {
+                    return '<#' + name + '>';
+                }
+                return '<#Object>';
             }
             if (typeof obj !== 'string') {
                 return obj.toString();
