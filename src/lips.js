@@ -6,6 +6,9 @@
  *
  * build: {{DATE}}
  */
+/*
+ * TODO: Pair.prototype.toObject = alist to Object
+ */
 "use strict";
 /* global define, module, setTimeout, jQuery */
 (function(root, factory) {
@@ -388,7 +391,7 @@
         var count = 0;
         return function() {
             count++;
-            return new Symbol('#'+count);
+            return new Symbol('#' + count);
         };
     })();
     function request(url, method = 'GET', headers = {}, data = null) {
@@ -399,7 +402,7 @@
         });
         return new Promise((resolve) => {
             xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4 && xhr.status == 200) {
+                if (xhr.readyState === 4 && xhr.status === 200) {
                     resolve(xhr.responseText);
                 }
             };
@@ -460,7 +463,10 @@
             }
         },
         gensym: gensym,
-        load: function() {
+        load: function(file) {
+            request(file).then((code) => {
+                this.get('eval')(this.get('read')(code));
+            });
         },
         'while': new Macro(function(code) {
             var self = this;

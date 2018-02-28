@@ -2,8 +2,8 @@
 ### Features
 * Add reduce and set functions
 * add while, ++ and -- macros
-* ignore comments everything after ; but not inside strings
-* gensym function
+* ignore comments everything after ; but not inside strings and regexes
+* gensym and load functions
 * better string function
 
 

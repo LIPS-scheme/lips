@@ -237,7 +237,7 @@ describe('evaluate', function() {
                 '`(1 . ,(cadr (list 1 2 3)))',
                 '`(,(car (list 1 2 3)) . ,(cadr (list 1 2 3)))'
             ].forEach((code) => {
-                expect(exec(code)).toEqual(new Pair(1, 2))
+                expect(exec(code)).toEqual(new Pair(1, 2));
             });
         });
         it('should create alist with values', function() {

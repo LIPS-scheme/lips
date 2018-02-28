@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Wed, 28 Feb 2018 21:43:41 +0000
+ * build: Wed, 28 Feb 2018 21:48:32 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -405,7 +405,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         });
         return new Promise(function (resolve) {
             xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4 && xhr.status == 200) {
+                if (xhr.readyState === 4 && xhr.status === 200) {
                     resolve(xhr.responseText);
                 }
             };
@@ -467,7 +467,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         },
         gensym: gensym,
-        load: function load() {},
+        load: function load(file) {
+            var _this2 = this;
+
+            request(file).then(function (code) {
+                _this2.get('eval')(_this2.get('read')(code));
+            });
+        },
         'while': new Macro(function (code) {
             var self = this;
             var begin = new Pair(new _Symbol('begin'), code.cdr);
@@ -500,17 +506,17 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         }),
         'if': new Macro(function (code) {
-            var _this2 = this;
+            var _this3 = this;
 
             var resolve = function resolve(cond) {
                 if (cond) {
-                    var true_value = evaluate(code.cdr.car, _this2);
+                    var true_value = evaluate(code.cdr.car, _this3);
                     if (typeof true_value === 'undefined') {
                         return;
                     }
                     return true_value;
                 } else if (code.cdr.cdr.car instanceof Pair) {
-                    var false_value = evaluate(code.cdr.cdr.car, _this2);
+                    var false_value = evaluate(code.cdr.cdr.car, _this3);
                     if (typeof false_value === 'undefined') {
                         return false;
                     }
@@ -529,19 +535,19 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         'let*': let_macro(true),
         'let': let_macro(false),
         'begin': new Macro(function (code) {
-            var _this3 = this;
+            var _this4 = this;
 
             var arr = this.get('list->array')(code);
             return arr.reduce(function (_, code) {
-                return evaluate(code, _this3);
+                return evaluate(code, _this4);
             }, 0);
         }),
         timer: new Macro(function (code) {
-            var _this4 = this;
+            var _this5 = this;
 
             return new Promise(function (resolve) {
                 setTimeout(function () {
-                    resolve(new Quote(evaluate(code.cdr, _this4)));
+                    resolve(new Quote(evaluate(code.cdr, _this5)));
                 }, code.car);
             });
         }),
@@ -562,7 +568,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             obj[key] = value;
         },
         'eval': function _eval(code) {
-            var _this5 = this;
+            var _this6 = this;
 
             if (code instanceof Pair) {
                 return evaluate(code, this);
@@ -570,16 +576,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             if (code instanceof Array) {
                 var result;
                 code.forEach(function (code) {
-                    result = evaluate(code, _this5);
+                    result = evaluate(code, _this6);
                 });
                 return result;
             }
         },
         lambda: new Macro(function (code) {
-            var _this6 = this;
+            var _this7 = this;
 
             return function () {
-                var env = new Environment({}, _this6);
+                var env = new Environment({}, _this7);
                 var name = code.car;
                 var i = 0;
                 var value;
@@ -748,25 +754,25 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return value;
         },
         read: function read(arg) {
-            var _this7 = this;
+            var _this8 = this;
 
             if (typeof arg === 'string') {
                 return parse(tokenize(arg));
             }
             return this.get('stdin').read().then(function (text) {
-                return _this7.get('read').call(_this7, text);
+                return _this8.get('read').call(_this8, text);
             });
         },
         print: function print() {
             var _get,
-                _this8 = this;
+                _this9 = this;
 
             for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
                 args[_key] = arguments[_key];
             }
 
             (_get = this.get('stdout')).write.apply(_get, _toConsumableArray(args.map(function (arg) {
-                return _this8.get('string')(arg);
+                return _this9.get('string')(arg);
             })));
         },
         'array->list': function arrayList(array) {
