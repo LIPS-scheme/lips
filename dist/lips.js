@@ -4,7 +4,10 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Wed, 28 Feb 2018 21:48:32 +0000
+ * build: Thu, 01 Mar 2018 19:16:43 +0000
+ */
+/*
+ * TODO: Pair.prototype.toObject = alist to Object
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -123,7 +126,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 } else if (stack.length > 1) {
                     var list = stack.pop();
                     top = stack[stack.length - 1];
-                    top.push(list);
+                    if (top instanceof Array) {
+                        top.push(list);
+                    } else if (top instanceof Pair) {
+                        top.append(Pair.fromArray(list));
+                    }
                     if (top instanceof Array && top[0] instanceof _Symbol && special_forms.includes(top[0].name) && stack.length > 1) {
                         stack.pop();
                         if (stack[stack.length - 1].length === 0) {
@@ -300,6 +307,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return arr.join('');
     };
     Pair.prototype.append = function (pair) {
+        if (pair instanceof Array) {
+            return this.append(Pair.fromArray(pair));
+        }
         var p = this;
         while (true) {
             if (p instanceof Pair && p.cdr !== nil) {

@@ -119,7 +119,11 @@
                 } else if (stack.length > 1) {
                     var list = stack.pop();
                     top = stack[stack.length - 1];
-                    top.push(list);
+                    if (top instanceof Array) {
+                        top.push(list);
+                    } else if (top instanceof Pair) {
+                        top.append(Pair.fromArray(list));
+                    }
                     if (top instanceof Array && top[0] instanceof Symbol &&
                         special_forms.includes(top[0].name) &&
                         stack.length > 1) {
@@ -303,6 +307,9 @@
         return arr.join('');
     };
     Pair.prototype.append = function(pair) {
+        if (pair instanceof Array) {
+            return this.append(Pair.fromArray(pair));
+        }
         var p = this;
         while (true) {
             if (p instanceof Pair && p.cdr !== nil) {
