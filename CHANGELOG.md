@@ -5,7 +5,8 @@
 * ignore comments everything after ; but not inside strings and regexes
 * gensym and load functions
 * better string function
-
+* Pair methods for working with ALists + Pair::reduce
+* throw exception on car/cdr with non list
 
 ### Bugs
 * fix parsing empty strings

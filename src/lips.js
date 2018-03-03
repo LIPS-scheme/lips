@@ -112,7 +112,7 @@
             } else if (token === ')') {
                 parents--;
                 if (!stack.length) {
-                    throw new Error('Unbalanced parenthesis 1');
+                    throw new Error('Unbalanced parenthesis');
                 }
                 if (stack.length === 1) {
                     result.push(stack.pop());
@@ -172,7 +172,7 @@
             }
         });
         if (stack.length) {
-            throw new Error('Unbalanced parenthesis 2');
+            throw new Error('Unbalanced parenthesis');
         }
         return result.map((arg) => {
             if (arg instanceof Array) {
@@ -196,6 +196,16 @@
         //return '<#symbol \'' + this.name + '\'>';
         return this.name;
     };
+    
+
+    // ----------------------------------------------------------------------
+    // :: Nil constructor with only once instance
+    // ----------------------------------------------------------------------
+    function Nil() {}
+    Nil.prototype.toString = function() {
+        return 'nil';
+    };
+    var nil = new Nil();
     // ----------------------------------------------------------------------
     // :: Pair constructor
     // ----------------------------------------------------------------------
@@ -262,6 +272,63 @@
             }
         }
     };
+    Pair.prototype.toObject = function() {
+        var node = this;
+        var result = {};
+        while(true) {
+            if (node instanceof Pair && node.car instanceof Pair) {
+                var pair = node.car;
+                var name = pair.car;
+                if (name instanceof Symbol) {
+                    name = name.name;
+                }
+                result[name] = pair.cdr;
+                node = node.cdr;
+            } else {
+                break;
+            }
+        }
+        return result;
+    };
+    Pair.fromPairs = function(array) {
+        return array.reduce((list, pair) => {
+            return new Pair(
+                new Pair(
+                    new Symbol(pair[0]),
+                    pair[1]
+                ),
+                list
+            );
+        }, nil);
+    };
+    Pair.fromObject = function(obj) {
+        var array = Object.keys(obj).map((key) => [key, obj[key]]);
+        return Pair.fromPairs(array);
+    };
+    Pair.prototype.reduce = function(fn) {
+        var node = this;
+        var result = nil;
+        while (true) {
+            if (node !== nil) {
+                result = fn(result, node.car);
+                node = node.cdr;
+            } else {
+                break;
+            }
+        }
+        return result;
+    };
+    Pair.prototype.reverse = function() {
+        var node = this;
+        var prev = nil;
+        while (node !== nil) {
+            var next = node.cdr;
+            node.cdr = prev;
+            prev = node;
+            node = next;
+        }
+        return prev;
+    };
     Pair.prototype.transform = function(fn) {
         var visited = [];
         function recur(pair) {
@@ -321,15 +388,6 @@
         p.cdr = pair;
         return this;
     };
-
-    // ----------------------------------------------------------------------
-    // :: Nil constructor with only once instance
-    // ----------------------------------------------------------------------
-    function Nil() {}
-    Nil.prototype.toString = function() {
-        return 'nil';
-    };
-    var nil = new Nil();
 
     // ----------------------------------------------------------------------
     // :: Macro constructor
@@ -443,11 +501,15 @@
         car: function(list) {
             if (list instanceof Pair) {
                 return list.car;
+            } else {
+                throw new Error('argument to car need to be a list');
             }
         },
         cdr: function(list) {
             if (list instanceof Pair) {
                 return list.cdr;
+            } else {
+                throw new Error('argument to cdr need to be a list');
             }
         },
         'set-car': function(slot, value) {
@@ -728,6 +790,9 @@
             }
             if (typeof obj === 'function') {
                 return '<#function>';
+            }
+            if (obj === nil) {
+                return 'nil';
             }
             if (obj instanceof Array || obj === null) {
                 return JSON.stringify(obj);

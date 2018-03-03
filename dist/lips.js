@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Thu, 01 Mar 2018 19:16:43 +0000
+ * build: Sat, 03 Mar 2018 22:46:52 +0000
  */
 /*
  * TODO: Pair.prototype.toObject = alist to Object
@@ -119,7 +119,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             } else if (token === ')') {
                 parents--;
                 if (!stack.length) {
-                    throw new Error('Unbalanced parenthesis 1');
+                    throw new Error('Unbalanced parenthesis');
                 }
                 if (stack.length === 1) {
                     result.push(stack.pop());
@@ -174,7 +174,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         });
         if (stack.length) {
-            throw new Error('Unbalanced parenthesis 2');
+            throw new Error('Unbalanced parenthesis');
         }
         return result.map(function (arg) {
             if (arg instanceof Array) {
@@ -196,6 +196,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         //return '<#symbol \'' + this.name + '\'>';
         return this.name;
     };
+
+    // ----------------------------------------------------------------------
+    // :: Nil constructor with only once instance
+    // ----------------------------------------------------------------------
+    function Nil() {}
+    Nil.prototype.toString = function () {
+        return 'nil';
+    };
+    var nil = new Nil();
     // ----------------------------------------------------------------------
     // :: Pair constructor
     // ----------------------------------------------------------------------
@@ -262,6 +271,59 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }
     };
+    Pair.prototype.toObject = function () {
+        var node = this;
+        var result = {};
+        while (true) {
+            if (node instanceof Pair && node.car instanceof Pair) {
+                var pair = node.car;
+                var name = pair.car;
+                if (name instanceof _Symbol) {
+                    name = name.name;
+                }
+                result[name] = pair.cdr;
+                node = node.cdr;
+            } else {
+                break;
+            }
+        }
+        return result;
+    };
+    Pair.fromPairs = function (array) {
+        return array.reduce(function (list, pair) {
+            return new Pair(new Pair(new _Symbol(pair[0]), pair[1]), list);
+        }, nil);
+    };
+    Pair.fromObject = function (obj) {
+        var array = Object.keys(obj).map(function (key) {
+            return [key, obj[key]];
+        });
+        return Pair.fromPairs(array);
+    };
+    Pair.prototype.reduce = function (fn) {
+        var node = this;
+        var result = nil;
+        while (true) {
+            if (node !== nil) {
+                result = fn(result, node.car);
+                node = node.cdr;
+            } else {
+                break;
+            }
+        }
+        return result;
+    };
+    Pair.prototype.reverse = function () {
+        var node = this;
+        var prev = nil;
+        while (node !== nil) {
+            var next = node.cdr;
+            node.cdr = prev;
+            prev = node;
+            node = next;
+        }
+        return prev;
+    };
     Pair.prototype.transform = function (fn) {
         var visited = [];
         function recur(pair) {
@@ -321,15 +383,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         p.cdr = pair;
         return this;
     };
-
-    // ----------------------------------------------------------------------
-    // :: Nil constructor with only once instance
-    // ----------------------------------------------------------------------
-    function Nil() {}
-    Nil.prototype.toString = function () {
-        return 'nil';
-    };
-    var nil = new Nil();
 
     // ----------------------------------------------------------------------
     // :: Macro constructor
@@ -451,11 +504,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         car: function car(list) {
             if (list instanceof Pair) {
                 return list.car;
+            } else {
+                throw new Error('argument to car need to be a list');
             }
         },
         cdr: function cdr(list) {
             if (list instanceof Pair) {
                 return list.cdr;
+            } else {
+                throw new Error('argument to cdr need to be a list');
             }
         },
         'set-car': function setCar(slot, value) {
@@ -722,6 +779,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             if (typeof obj === 'function') {
                 return '<#function>';
+            }
+            if (obj === nil) {
+                return 'nil';
             }
             if (obj instanceof Array || obj === null) {
                 return JSON.stringify(obj);
