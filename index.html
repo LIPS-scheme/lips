@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>LIPS Is Pretty Simple</title>
+    <meta name="Description" content=""/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#ff6600"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <meta name="theme-color" content="#ffffff"/>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--
+    <link href="css/style.css" rel="stylesheet"/>
+    -->
+    <style>
+body {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1024px;
+}
+header.main, footer {
+  background: linear-gradient(to right, #ff6600, #ff6600 25%, #d65600 75%);
+}
+header.main {
+  padding: 10px;
+  padding-bottom: 0;
+}
+header img {
+  float: left;
+}
+header h1 {
+  color: white;
+  margin-left: 30px;
+  display: inline-block;
+  letter-spacing: 2px;
+}
+header h1, nav, section header h2 {
+  font-family: 'Play', sans-serif;
+}
+section h3, section p, footer, section ul {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.2em;
+}
+nav {
+  margin-top: 20px;
+}
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+nav li:hover {
+  border-bottom: 10px solid white;
+  padding-bottom: 0;
+}
+nav li {
+  display: inline-block;
+  padding-bottom: 10px;
+}
+nav li a {
+  padding: 5px 15px;
+  background: black;
+  color: white;
+  text-decoration: none;
+  display: block;
+}
+nav li + li {
+  margin-left: 20px;
+}
+nav {
+  font-size: 1.3em;
+  font-family: play;
+  text-transform: uppercase;
+}
+section header h2 {
+  border-bottom: 5px solid #358ccb;
+  padding-bottom: 5px;
+  width: 300px;
+  text-transform: uppercase;
+}
+.term {
+  height: 200px;
+}
+footer {
+  padding: 10px;
+}
+footer p, footer a {
+  color: white;
+}
+footer p {
+  margin: 0;
+  text-align: center;
+}
+    </style>
+    <link href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Play" rel="stylesheet"/>
+</head>
+<body>
+  <header class="main">
+    <a href="/">
+      <img src="https://jcubic.pl/lips/logo.svg"/>
+      <h1>
+        LIPS Is Pretty Simple
+      </h1>
+    </a>
+    <nav>
+      <ul>
+        <li><a href="#demo">Demo</a></li>
+        <li><a href="">Docs</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </nav>
+  </header>
+  <section id="summary">
+    <header><h2>Summary</h2></header>
+    <p>LIPS is Simple Lisp in JavaScript</p>
+    <p>Key features:</p>
+    <ul>
+      <li>Lisp Macros and backquote,</li>
+      <li>Functions in lips are normal javascript functions,</li>
+      <li>Easy extension using JavaScript using Macros or functions,</li>
+      <li>Regexes as first class objects.</li>
+    </ul>
+  </section>
+  <section id="demo">
+    <header><h2>Demo</h2></header>
+    <div class="term"></div>
+  </section>
+  <section id="installation">
+    <header><h2>Installation</h2></header>
+    <h3>Node</h3>
+    <pre>
+npm install @jcubic/lips
+    </pre>
+    <p>then you code use:</p>
+    <pre><code class="language-javascript">
+var {evaluate, parse, tokenize} = require('@jcubic/lips');
+// or
+import {evaluate, parse, tokenize} from '@jcubic/lips';
+    </code></pre>
+    <h3>Browser</h3>
+    <p>When using in browser you need to include the file</p>
+    <pre><code class="language-markup">
+&lt;script src="https://unpkg.com/@jcubic/lips"&gt;&lt;/script&gt;
+    </code></pre>
+    <p>Then you have access to lips object that you can upack with ES6.</p>
+    <pre><code class="language-javascript">
+var {evaluate, parse, tokenize} = lips;
+    </code></pre>
+    <p>then use those functions like this:</p>
+    <pre><code class="language-javascript">
+parse(tokenize(string)).foEach(function(code) {
+    evaluate(code);
+});
+    </code></pre>
+    <p>
+      <code>evaluate</code> function also accept second argument, which is Environment.
+      By default it's <code>lips.global_environment</code>. You can use it if you want to
+      have separated instances of the interpreter.
+    </p>
+  </section>
+  <footer>
+    <p>Copyright (c) 2018 <a href="https://jcubic.pl/me">Jakub Jankiewicz</a></p>
+  </footer>
+  <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+  <!-- <script src="https://unpkg.com/@jcubic/lips"></script>-->
+  <script src="../src/lips.js"></script>
+  <script src="https://cdn.rawgit.com/jcubic/jquery.terminal/master/js/jquery.terminal.min.js"></script>
+  <link href="https://cdn.rawgit.com/jcubic/jquery.terminal/master/css/jquery.terminal.min.css" rel="stylesheet"/>
+  <script src="https://cdn.rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
+  <script src="https://unpkg.com/prismjs/prism.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-scheme.min.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-javascript.min.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-markup.min.js"></script>
+  <link href="https://unpkg.com/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+  <script>
+   (function() {
+       var {
+           Environment,
+           global_environment,
+           balanced_parenthesis,
+           tokenize,
+           parse,
+           evaluate
+       } = lips;
+       var env = new Environment({
+           stdout: {
+               write: function(...args) {
+                   args.forEach((arg) => {
+                       term.echo(arg, {keepWords: true});
+                   });
+               }
+           },
+           stdin: {
+               read: function() {
+                   return new Promise(function(resolve) {
+                       term.read('', function(command) {
+                           resolve(command);
+                       });
+                   });
+               }
+           }
+       }, global_environment);
+       var term = $('.term').terminal(function(code, term) {
+           if (!balanced_parenthesis(code)) {
+               term.error('Unbalanced parenthesis');
+           } else {
+               parse(tokenize(code)).forEach(function(code) {
+                   try {
+                       var ret = evaluate(code, env);
+                       if (ret instanceof Promise) {
+                           ret.then((ret) => {
+                               if (ret !== undefined) {
+                                   env.get('print').call(env, ret)
+                               }
+                           });
+                       } else if (ret !== undefined) {
+                           env.get('print').call(env, ret);
+                       }
+                   } catch (e) {
+                       term.error(e.message);
+                   }
+               });
+           }
+       }, {
+           name: 'lisp',
+           prompt: 'lips> ',
+           enabled: false,
+           greetings: 'LIPS Demo\n' +
+                      'type [[b;#fff;](env)] to see environment with ' +
+                      'functions macros and variables\n'
+       });
+   })();
+  </script>
+</body>
+</html>
