@@ -1,0 +1,79 @@
+body {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1024px;
+}
+header.main, footer {
+  background: linear-gradient(to right, #ff6600, #ff6600 25%, #d65600 75%);
+}
+header.main {
+  padding: 10px;
+  padding-bottom: 0;
+}
+header img {
+  float: left;
+}
+header h1 {
+  color: white;
+  margin-left: 30px;
+  display: inline-block;
+  letter-spacing: 2px;
+}
+header h1, nav, section header h2 {
+  font-family: 'Play', sans-serif;
+}
+section h3, section p, footer, section ul {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.2em;
+}
+nav {
+  margin-top: 20px;
+}
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+nav li:hover {
+  border-bottom: 10px solid white;
+  padding-bottom: 0;
+}
+nav li {
+  display: inline-block;
+  padding-bottom: 10px;
+}
+nav li a {
+  padding: 5px 15px;
+  background: black;
+  color: white;
+  text-decoration: none;
+  display: block;
+}
+nav li + li {
+  margin-left: 20px;
+}
+nav {
+  font-size: 1.3em;
+  font-family: play;
+  text-transform: uppercase;
+}
+section header h2 {
+  border-bottom: 5px solid #358ccb;
+  padding-bottom: 5px;
+  width: 300px;
+  text-transform: uppercase;
+}
+.term {
+  height: 200px;
+}
+footer {
+  padding: 10px;
+}
+footer p, footer a {
+  color: white;
+}
+footer p {
+  margin: 0;
+  text-align: center;
+}

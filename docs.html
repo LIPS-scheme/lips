@@ -1,0 +1,255 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>LIPS Is Pretty Simple</title>
+    <meta name="Description" content=""/>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
+    <link rel="manifest" href="favicon/site.webmanifest"/>
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5"/>
+    <link rel="shortcut icon" href="favicon/favicon.ico"/>
+    <meta name="msapplication-TileColor" content="#ff6600"/>
+    <meta name="msapplication-config" content="favicon/browserconfig.xml"/>
+    <meta name="theme-color" content="#ffffff"/>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link href="/lips/style.css" rel="stylesheet"/>
+    <link href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Play" rel="stylesheet"/>
+</head>
+<body>
+  <header class="main">
+    <a href="/lips/">
+      <img src="/lips/logo.svg"/>
+      <h1>
+        LIPS Is Pretty Simple
+      </h1>
+    </a>
+    <nav>
+      <ul>
+        <li><a href="#demo">Demo</a></li>
+        <li><a href="/lips/docs.html">Docs</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </nav>
+  </header>
+  <section>
+    <h2>variables and functions</h2>
+
+    <pre><code class="language-scheme">
+(define x 10)
+(define square (lambda (x) (* x x)))
+(define (square x) (* x x))
+    </code></pre>
+
+    <h2>Lisp Macros</h2>
+
+    <pre><code class="language-scheme">
+(defmacro (foo x) `(1 2 ,@(car x) 3 4))
+    </code></pre>
+
+    <h2>List operications</h2>
+
+    <pre><code class="language-scheme">
+(cons 1 2)
+(cons 1 (cons 2 nil))
+(list 1 2 3 4)
+'(1 2 3 4)
+
+(let ((lst '(1 2 (3 4 5 6))))
+   (print (car lst))
+   (print (cadaddr lst)))
+    </code></pre>
+
+    <p>all functions that match this regex `c[ad]{2,5}r` are defined.</p>
+
+    <h2>ALists</h2>
+
+    <pre><code class="language-scheme">
+(let ((l '((foo . "lorem") (bar "ipsum"))))
+   (set-cdr (assoc l 'foo) "hello")
+   (set-cdr (assoc l 'bar) "world")
+   (print l))
+    </code></pre>
+
+    <h2>Flow constructs</h2>
+
+    <pre><code class="language-scheme">
+(let ((x 5))
+    (while (> (-- x) 0) (print x)))
+    </code></pre>
+
+    <p>same as in JS</p>
+
+    <pre><code class="language-scheme">
+(if (== "10" 10)
+    (print "equal"))
+
+(let ((x 10))
+  (if (and (> x 1) (< x 20))
+      (begin
+         (print "this is x > 1")
+         (print "and x < 20"))))
+    </code></pre>
+
+    <h2>eval</h2>
+
+    <pre><code class="language-scheme">
+(eval (read "(print \"hello\")"))
+    </code></pre>
+
+    <h2>Async code</h2>
+
+    <pre><code class="language-scheme">
+(eval (read))
+    </code></pre>
+
+    <p>
+      then type S-Expression like <code>(print 10)</code>. If function return Promise
+      the execution is paused and restored when Promise is resolved
+    </p>
+
+
+    <h2>Access JavaScript functions and objects</h2>
+
+    <pre><code class="language-scheme">
+((. window "alert") "hello")
+((. console "log") "hello")
+    </code></pre>
+
+    <p>
+      If object is not found in environment, then window object is tested for
+      presense of the element.
+    </p>
+
+    <p>You can execute jQuery functions</p>
+
+    <pre><code class="language-scheme">
+(let* ((term ($ ".terminal")))
+  ((.  term "css") "background" "red"))
+    </code></pre>
+
+    <p>function <code>$</code> is available because it's in window object.</p>
+
+    <p>or operate on strings</p>
+
+    <pre><code class="language-scheme">
+((. "foo bar baz" "replace") /^[a-z]+/g "baz")
+
+(let ((match (. "foo bar baz" "match")))
+    (array->list (match /([a-z]+)/g)))
+    </code></pre>
+
+    <h2>Mapping, filtering and reducing</h2>
+
+    <pre><code class="language-scheme">
+(map car (list
+            (cons "a" 2)
+            (cons "b" 3)))
+
+(filter odd (list 1 2 3 4 5))
+
+(filter (lambda (x)
+          (== (% x 2) 0))
+    (list 1 2 3 4 5))
+
+(define (reverse list)
+    (reduce (lambda (list x) (cons x list)) list))
+
+(reverse '(1 2 3 4))
+    </code></pre>
+
+    <h2>Working with arrays</h2>
+
+    <p>
+      You can modify array with <code>set</code> function and to get the value of the
+      array you can use <code>.</code> dot function.
+    </p>
+
+    <pre><code class="language-scheme">
+(let ((arr (list->array '(1 2 3 4))))
+   (set arr 0 2)
+   (print (array->list arr)))
+
+(let* ((div ((. document "querySelectorAll") ".terminal-output > div"))
+       (len (. div "length"))
+       (i 0))
+    (while (< i len)
+       (print (. (. div i) "innerHTML"))
+       (++ i)))
+    </code></pre>
+
+    <p>this equivalent of JavaScript code:</p>
+
+    <pre><code class="language-javascript">
+var div = document.querySelectorAll(".terminal div");
+var len = div.length;
+var i = 0;
+while (i < len) {
+   console.log(div[i].innerHTML);
+   ++i;
+}
+    </code></pre>
+
+    <h2>Math and boolean operators (functions and macros)</h2>
+
+    <pre>< > => <= ++ -- + - * / % and or</pre>
+
+    <h2>Extending LIPS</h2>
+
+    <p>to create new function from JavaScript you can use:</p>
+
+    <pre><code class="language-javascript">
+env.set('replace', function(re, sub, string) {
+   return string.replace(re, sub);
+});
+    </code></pre>
+
+    <p>then you can use it in LIPS:</p>
+
+    <pre><code class="langauge-scheme">
+(replace /(foo|bar)/g "hello" "foo bar baz")
+    </code></pre>
+
+    <p>
+      To define a macro in javascript you can use Macro constructor that accept
+      single function argument, that should return lisp code (instance of Pair).
+    </p>
+
+    <pre><code class="language-javascript">
+var {Macro, Pair, Symbol, nil} = lips;
+
+env.set('quote-car', new Macro(function(code) {
+    return Pair.fromArray([new Symbol('quote'), code.car.car]);
+}));
+    </code></pre>
+
+and you can execute this macro in LIPS:
+    <pre><code class="language-scheme">
+(quote-car (foo bar baz))
+    </code></pre>
+
+    <p>it will return first symbol and not execute it as function foo.</p>
+
+    <p>
+      if you want to create macro like quasiquote, the returned code need to be wrapped with
+      Quote instance.
+    </p>
+    <p>
+      When creating macros in JavaScript you can use helper <code>Pair.fromArray()</code>
+      and <code>code.toArray()</code>.
+    </p>
+  </section>
+  <footer>
+    <p>Copyright (c) 2018 <a href="https://jcubic.pl/me">Jakub Jankiewicz</a></p>
+  </footer>
+  <script src="https://unpkg.com/prismjs/prism.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-scheme.min.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-javascript.min.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-markup.min.js"></script>
+  <link href="https://unpkg.com/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+</body>
+</html>
