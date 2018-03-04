@@ -5,3 +5,5 @@ Makefile
 jest.config.js
 version
 templates
+demo.html
+www
