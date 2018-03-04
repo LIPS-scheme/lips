@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
-[![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&acf06f4b5cae4b8fb9ca088cda6a89e805b48569)](https://travis-ci.org/jcubic/jquery.terminal)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![npm](https://img.shields.io/badge/npm-0.1.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=gh-pages&26a8ac2b0092fa00da074f0019d4029a6b6cc98e)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=gh-pages&90f3a78d04af7d30b1ab1a6b7b5d9c13)](https://coveralls.io/github/jcubic/lips?branch=gh-pages)
 
 
 
@@ -27,7 +27,7 @@ https://unpkg.com/@jcubic/lips
 or from rawgit
 
 ```
-https://cdn.rawgit.com/jcubic/lips/master/index.js
+https://cdn.rawgit.com/jcubic/lips/master/dist/lips.min.js
 ```
 
 ## Usage
