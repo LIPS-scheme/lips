@@ -29,7 +29,7 @@ dist/lips.js: src/lips.js .$(VERSION)
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
 
-Makefile: templates/Makefile .$(VERSION)
+Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/" templates/Makefile > Makefile
 
 package.json: templates/package.json .$(VERSION)
