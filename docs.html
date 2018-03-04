@@ -37,7 +37,7 @@
     </nav>
   </header>
   <section>
-    <header><h2>variables and functions</h2></header>
+    <h3>variables and functions</h3>
 
     <pre><code class="language-scheme">
 (define x 10)
@@ -45,13 +45,13 @@
 (define (square x) (* x x))
     </code></pre>
 
-    <header><h2>Lisp Macros</h2></header>
+    <h3>Lisp Macros</h3>
 
     <pre><code class="language-scheme">
 (defmacro (foo x) `(1 2 ,@(car x) 3 4))
     </code></pre>
 
-    <header><h2>List operications</h2></header>
+    <h3>List operications</h3>
 
     <pre><code class="language-scheme">
 (cons 1 2)
@@ -66,7 +66,7 @@
 
     <p>all functions that match this regex `c[ad]{2,5}r` are defined.</p>
 
-    <header><h2>ALists</h2></header>
+    <h3>ALists</h3>
 
     <pre><code class="language-scheme">
 (let ((l '((foo . "lorem") (bar "ipsum"))))
@@ -75,7 +75,7 @@
    (print l))
     </code></pre>
 
-    <header><h2>Flow constructs</h2></header>
+    <h3>Flow constructs</h3>
 
     <pre><code class="language-scheme">
 (let ((x 5))
@@ -95,13 +95,13 @@
          (print "and x < 20"))))
     </code></pre>
 
-    <header><h2>eval</h2></header>
+    <h3>eval</h3>
 
     <pre><code class="language-scheme">
 (eval (read "(print \"hello\")"))
     </code></pre>
 
-    <header><h2>Async code</h2></header>
+    <h3>Async code</h3>
 
     <pre><code class="language-scheme">
 (eval (read))
@@ -113,7 +113,7 @@
     </p>
 
 
-    <header><h2>Access JavaScript functions and objects</h2></header>
+    <h3>Access JavaScript functions and objects</h3>
 
     <pre><code class="language-scheme">
 ((. window "alert") "hello")
@@ -143,7 +143,7 @@
     (array->list (match /([a-z]+)/g)))
     </code></pre>
 
-    <header><h2>Mapping, filtering and reducing</h2></header>
+    <h3>Mapping, filtering and reducing</h3>
 
     <pre><code class="language-scheme">
 (map car (list
@@ -162,7 +162,7 @@
 (reverse '(1 2 3 4))
     </code></pre>
 
-    <header><h2>Working with arrays</h2></header>
+    <h3>Working with arrays</h3>
 
     <p>
       You can modify array with <code>set</code> function and to get the value of the
@@ -194,11 +194,11 @@ while (i < len) {
 }
     </code></pre>
 
-    <header><h2>Math and boolean operators (functions and macros)</h2></header>
+    <h3>Math and boolean operators (functions and macros)</h3>
 
     <pre>< > => <= ++ -- + - * / % and or</pre>
 
-    <header><h2>Extending LIPS</h2></header>
+    <h3>Extending LIPS</h3>
 
     <p>to create new function from JavaScript you can use:</p>
 
