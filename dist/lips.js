@@ -1,10 +1,10 @@
 /**@license
- * LIPS is Pretty Simple - version DEV
+ * LIPS is Pretty Simple - version 0.2.0
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 04 Mar 2018 08:09:12 +0000
+ * build: Sun, 04 Mar 2018 08:14:59 +0000
  */
 /*
  * TODO: Pair.prototype.toObject = alist to Object
@@ -1168,7 +1168,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return new _Symbol(value.name);
     };
     return {
-        version: 'DEV',
+        version: '0.2.0',
         parse: parse,
         tokenize: tokenize,
         evaluate: evaluate,
