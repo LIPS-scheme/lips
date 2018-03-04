@@ -1,5 +1,5 @@
-## 0.2.1
-* Broken npm build
+## 0.2.1/0.2.2
+* fix build system
 
 ## 0.2.0
 ### Features
