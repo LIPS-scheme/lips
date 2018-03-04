@@ -1,3 +1,6 @@
+## 0.2.1
+* Broken npm build
+
 ## 0.2.0
 ### Features
 * Add reduce and set functions
