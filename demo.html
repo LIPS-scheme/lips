@@ -2,14 +2,33 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Lips Demo</title>
+    <title>LIPS Demo</title>
     <link href="https://rawgit.com/jcubic/jquery.terminal/master/css/jquery.terminal.css" rel="stylesheet"/>
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script src="https://rawgit.com/jcubic/jquery.terminal/master/js/jquery.terminal.js"></script>
     <script src="https://rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
-    <script src="index.js"></script>
   </head>
   <body></body>
+  <script>
+   var greetings = 'LIPS is Pretty Simple - Scheme like Lisp Interpreter\n' +
+                   'type [[b;#fff;](env)] to see environment with ' +
+                   'functions macros and variables\n';
+   window.onerror = function(message, source, lineno, colno,) {
+       message += ' ' + 'in file ' + source + ' line ' + lineno +
+                  '\nYour browser may not support ES6.';
+       var term = $('body');
+       if (term.hasClass('terminal')) {
+           $.terminal.active().error(message);
+       } else {
+           $('body').terminal(function() {
+               this.error('You need to use modern browser');
+           }, {
+               greetings: greetings
+           }).error(message);
+       }
+   };
+  </script>
+  <script src="src/lips.js"></script>
   <script>
    (function() {
        var {
@@ -44,17 +63,14 @@
            return string.replace(re, sub);
        });
        env.set('quote-car', new Macro(function(code) {
-           return new Pair(
-               new Symbol("quote"),
-               new Pair(code.car.car, nil)
-           );
+           return Pair.fromArray([new Symbol('quote'), code.car.car]);
        }));
        var term = $('body').terminal(function(code, term) {
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               parse(tokenize(code)).forEach(function(code) {
-                   try {
+               try {
+                   parse(tokenize(code)).forEach(function(code) {
                        var ret = evaluate(code, env);
                        if (ret instanceof Promise) {
                            ret.then((ret) => {
@@ -65,16 +81,14 @@
                        } else if (ret !== undefined) {
                            env.get('print').call(env, ret);
                        }
-                   } catch (e) {
-                       term.error(e.message);
-                   }
-               });
+                   });
+               } catch (e) {
+                   term.exception(e);
+               }
            }
        }, {
            name: 'lips',
-           greetings: 'Simple, Scheme like Lisp Interpreter\n' +
-                      'type [[b;#fff;](env)] to see environment with ' +
-                      'functions macros and variables\n'
+           greetings: greetings
        });
    })();
   </script>

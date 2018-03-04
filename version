@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Display current version or update version if used with version as argument
+
+VERSION=`grep VERSION= Makefile | sed -e 's/VERSION=\(.*\)/\1/'`
+if [ -z "$1" ]; then
+    echo $VERSION
+elif [ "$1" != "$VERSION" ]; then
+    sed -e "s/{{VERSION}}/"$1"/" templates/Makefile > Makefile
+fi
