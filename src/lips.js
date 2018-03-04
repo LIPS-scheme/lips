@@ -196,8 +196,6 @@
         //return '<#symbol \'' + this.name + '\'>';
         return this.name;
     };
-    
-
     // ----------------------------------------------------------------------
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
@@ -275,7 +273,7 @@
     Pair.prototype.toObject = function() {
         var node = this;
         var result = {};
-        while(true) {
+        while (true) {
             if (node instanceof Pair && node.car instanceof Pair) {
                 var pair = node.car;
                 var name = pair.car;

@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 03 Mar 2018 22:46:52 +0000
+ * build: Sun, 04 Mar 2018 08:09:12 +0000
  */
 /*
  * TODO: Pair.prototype.toObject = alist to Object
@@ -196,7 +196,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         //return '<#symbol \'' + this.name + '\'>';
         return this.name;
     };
-
     // ----------------------------------------------------------------------
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
