@@ -277,9 +277,12 @@ describe('evaluate', function() {
                             3
                         ],
                         [
-                            new Symbol('+'),
-                            3,
-                            4
+                            new Symbol('unquote'),
+                            [
+                                new Symbol('+'),
+                                3,
+                                4
+                            ]
                         ]
                     ]
                 ]));

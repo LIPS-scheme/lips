@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 09 Mar 2018 20:12:50 +0000
+ * build: Fri, 09 Mar 2018 21:05:39 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -798,7 +798,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     if (max_unquote === pair.count) {
                         return evaluate(pair.value, self);
                     } else {
-                        return unquote(pair.value);
+                        return new Pair(new _Symbol('unquote'), new Pair(unquote(pair.value), nil));
                     }
                 }
                 if (pair instanceof Pair) {

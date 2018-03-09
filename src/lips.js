@@ -810,7 +810,13 @@
                     if (max_unquote === pair.count) {
                         return evaluate(pair.value, self);
                     } else {
-                        return unquote(pair.value);
+                        return new Pair(
+                            new Symbol('unquote'),
+                            new Pair(
+                                unquote(pair.value),
+                                nil
+                            )
+                        );
                     }
                 }
                 if (pair instanceof Pair) {
