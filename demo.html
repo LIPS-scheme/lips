@@ -43,6 +43,8 @@
            Pair,
            evaluate
        } = lips;
+       var tokens = tokenize('((foo . 10) (bar . 20) (baz . 30))');
+       var array = parse(tokens);
        var env = new Environment({
            stdout: {
                write: function(...args) {

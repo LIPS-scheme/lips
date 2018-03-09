@@ -1,13 +1,10 @@
 /**@license
- * LIPS is Pretty Simple - version 0.2.2
+ * LIPS is Pretty Simple - version DEV
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 04 Mar 2018 08:22:50 +0000
- */
-/*
- * TODO: Pair.prototype.toObject = alist to Object
+ * build: Fri, 09 Mar 2018 17:00:58 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -102,24 +99,51 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         });
         var parents = 0;
         var first_value = false;
+        var specials_stack = [];
+        var single_list_specials = [];
+        function pop_join() {
+            var top = stack[stack.length - 1];
+            if (top instanceof Array && top[0] instanceof _Symbol && special_forms.includes(top[0].name) && stack.length > 1) {
+                stack.pop();
+                if (stack[stack.length - 1].length === 1 && stack[stack.length - 1][0] instanceof _Symbol) {
+                    stack[stack.length - 1].push(top);
+                } else if (stack[stack.length - 1].length === 0) {
+                    stack[stack.length - 1] = top;
+                } else if (stack[stack.length - 1] instanceof Pair) {
+                    if (stack[stack.length - 1].cdr instanceof Pair) {
+                        stack[stack.length - 1] = new Pair(stack[stack.length - 1], Pair.fromArray(top));
+                    } else {
+                        stack[stack.length - 1].cdr = Pair.fromArray(top);
+                    }
+                } else {
+                    stack[stack.length - 1].push(top);
+                }
+            }
+        }
         tokens.forEach(function (token) {
             var top = stack[stack.length - 1];
             if (special_tokens.indexOf(token) !== -1) {
                 special = token;
+                stack.push([specials[special]]);
+                if (!special) {
+                    single_list_specials = [];
+                }
+                single_list_specials.push(special);
             } else if (token === '(') {
                 first_value = true;
                 parents++;
                 if (special) {
-                    stack.push([specials[special]]);
-                    special = null;
+                    specials_stack.push(single_list_specials);
+                    single_list_specials = [];
                 }
                 stack.push([]);
+                special = null;
             } else if (token === '.' && !first_value) {
                 stack[stack.length - 1] = Pair.fromArray(top);
             } else if (token === ')') {
                 parents--;
                 if (!stack.length) {
-                    throw new Error('Unbalanced parenthesis');
+                    throw new Error('Unbalanced parenthesis 1');
                 }
                 if (stack.length === 1) {
                     result.push(stack.pop());
@@ -131,19 +155,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     } else if (top instanceof Pair) {
                         top.append(Pair.fromArray(list));
                     }
-                    if (top instanceof Array && top[0] instanceof _Symbol && special_forms.includes(top[0].name) && stack.length > 1) {
-                        stack.pop();
-                        if (stack[stack.length - 1].length === 0) {
-                            stack[stack.length - 1] = top;
-                        } else if (stack[stack.length - 1] instanceof Pair) {
-                            if (stack[stack.length - 1].cdr instanceof Pair) {
-                                stack[stack.length - 1] = new Pair(stack[stack.length - 1], Pair.fromArray(top));
-                            } else {
-                                stack[stack.length - 1].cdr = Pair.fromArray(top);
-                            }
-                        } else {
-                            stack[stack.length - 1].push(top);
+                    if (specials_stack.length) {
+                        single_list_specials = specials_stack.pop();
+                        while (single_list_specials.length) {
+                            pop_join();
+                            single_list_specials.pop();
                         }
+                    } else {
+                        pop_join();
                     }
                 }
                 if (parents === 0 && stack.length) {
@@ -153,14 +172,21 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 first_value = false;
                 var value = parse_argument(token);
                 if (special) {
-                    value = [specials[special], value];
+                    // special without list like ,foo
+                    stack[stack.length - 1][1] = value;
+                    value = stack.pop();
                     special = false;
                 }
+                top = stack[stack.length - 1];
                 if (top instanceof Pair) {
                     var node = top;
                     while (true) {
                         if (node.cdr === nil) {
-                            node.cdr = value;
+                            if (value instanceof Array) {
+                                node.cdr = Pair.fromArray(value);
+                            } else {
+                                node.cdr = value;
+                            }
                             break;
                         } else {
                             node = node.cdr;
@@ -174,7 +200,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         });
         if (stack.length) {
-            throw new Error('Unbalanced parenthesis');
+            console.log({ end: stack.slice() });
+            throw new Error('Unbalanced parenthesis 2');
         }
         return result.map(function (arg) {
             if (arg instanceof Array) {
@@ -1168,7 +1195,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return new _Symbol(value.name);
     };
     return {
-        version: '0.2.2',
+        version: 'DEV',
         parse: parse,
         tokenize: tokenize,
         evaluate: evaluate,
