@@ -6,7 +6,7 @@
 
 
 
-LIPS is very simple Lisp, similar to Scheme writen in JavaScript.
+LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 [Demo](https://codepen.io/jcubic/full/LQBaaV/)
 
@@ -33,7 +33,9 @@ https://cdn.rawgit.com/jcubic/lips/master/index.js
 ## Usage
 
 ```javascript
-var {exec} = require('@jcubic/lips');
+var {exec} = require('@jcubic/lips'); // node
+// or
+var {exec} = lips; // browser
 
 exec(string).forEach(function(result) {
      console.log(result);

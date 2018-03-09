@@ -1,12 +1,12 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&b112a38747fbb72e79056851c1568eabb926a7af)](https://travis-ci.org/jcubic/jquery.terminal)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&fb768384e583d5fa827e50342bd6b9c31bc303e7)](https://travis-ci.org/jcubic/jquery.terminal)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&653892f4acf8e13e87c4070c8e5eacd1)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 
-LIPS is very simple Lisp, similar to Scheme writen in JavaScript.
+LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 [Demo](https://codepen.io/jcubic/full/LQBaaV/)
 
@@ -33,7 +33,9 @@ https://cdn.rawgit.com/jcubic/lips/master/index.js
 ## Usage
 
 ```javascript
-var {exec} = require('@jcubic/lips');
+var {exec} = require('@jcubic/lips'); // node
+// or
+var {exec} = lips; // browser
 
 exec(string).forEach(function(result) {
      console.log(result);
