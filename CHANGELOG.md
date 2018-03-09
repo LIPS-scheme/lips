@@ -1,3 +1,7 @@
+## 0.3.0
+* fix processing of multiple backquote and unquote
+
+
 ## 0.2.1/0.2.2
 * fix build system
 

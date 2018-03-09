@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 09 Mar 2018 17:00:58 +0000
+ * build: Fri, 09 Mar 2018 20:12:50 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -460,6 +460,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         this.value = value;
     }
     // ----------------------------------------------------------------------
+    // :: Unquote is used for multiple backticks and unquote
+    // ----------------------------------------------------------------------
+    function Unquote(value, count) {
+        this.value = value;
+        this.count = count;
+    }
+    Unquote.prototype.toString = function () {
+        return '<#unquote[' + this.count + '] ' + this.value + '>';
+    };
+    // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
@@ -725,6 +735,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }),
         quasiquote: new Macro(function (arg) {
             var self = this;
+            var max_unquote = 0;
             function recur(pair) {
                 if (pair instanceof Pair) {
                     var eval_pair;
@@ -742,19 +753,33 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         }
                         return eval_pair;
                     }
-                    if (_Symbol.is(pair.car, 'unquote-splicing')) {
-                        eval_pair = evaluate(pair.cdr.car, self);
-                        if (!eval_pair instanceof Pair) {
-                            throw new Error('Value of unquote-splicing' + ' need to be pair');
-                        }
-                        return eval_pair;
-                    }
                     if (_Symbol.is(pair.car, 'unquote')) {
-                        if (pair.cdr.cdr !== nil) {
-                            return new Pair(evaluate(pair.cdr.car, self), pair.cdr.cdr);
-                        } else {
-                            return evaluate(pair.cdr.car, self);
+                        var head = pair.cdr;
+                        var node = head;
+                        var parent = node;
+                        var unquote_count = 1;
+                        while (_Symbol.is(node.car.car, 'unquote')) {
+                            parent = node;
+                            unquote_count++;
+                            node = node.car.cdr.car;
                         }
+                        if (unquote_count > max_unquote) {
+                            max_unquote = unquote_count;
+                        }
+                        // we use Unquote to proccess inner most unquote first
+                        // in unquote function afer processing whole s-expression
+                        if (parent === node) {
+                            if (pair.cdr.cdr !== nil) {
+                                return new Pair(new Unquote(pair.cdr.car, unquote_count), pair.cdr.cdr);
+                            } else {
+                                return new Unquote(pair.cdr.car, unquote_count);
+                            }
+                        } else if (parent.cdr.cdr !== nil) {
+                            parent.car.cdr = new Pair(new Unquote(node, unquote_count), parent.cdr === nil ? nil : parent.cdr.cdr);
+                        } else {
+                            parent.car.cdr = new Unquote(node, unquote_count);
+                        }
+                        return head.car;
                     }
                     var car = pair.car;
                     if (car instanceof Pair) {
@@ -768,7 +793,28 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 }
                 return pair;
             }
-            return new Quote(recur(arg.car));
+            function unquote(pair) {
+                if (pair instanceof Unquote) {
+                    if (max_unquote === pair.count) {
+                        return evaluate(pair.value, self);
+                    } else {
+                        return unquote(pair.value);
+                    }
+                }
+                if (pair instanceof Pair) {
+                    var car = pair.car;
+                    if (car instanceof Pair || car instanceof Unquote) {
+                        car = unquote(car);
+                    }
+                    var cdr = pair.cdr;
+                    if (cdr instanceof Pair || cdr instanceof Unquote) {
+                        cdr = unquote(cdr);
+                    }
+                    return new Pair(car, cdr);
+                }
+                return pair;
+            }
+            return new Quote(unquote(recur(arg.car)));
         }),
         clone: function clone(list) {
             return list.clone();
@@ -1150,6 +1196,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
     }
     // ----------------------------------------------------------------------
+    function exec(string, env) {
+        return parse(tokenize(string)).map(function (code) {
+            return evaluate(code, env);
+        });
+    }
+    // ----------------------------------------------------------------------
 
     function balanced(code) {
         var re = /[()]/;
@@ -1196,6 +1248,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     };
     return {
         version: 'DEV',
+        exec: exec,
         parse: parse,
         tokenize: tokenize,
         evaluate: evaluate,
