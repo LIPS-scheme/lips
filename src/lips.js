@@ -1114,6 +1114,7 @@
         }
         return result;
     }
+
     // ----------------------------------------------------------------------
     // cadr caddr cadadr etc.
     combinations(['d', 'a'], 2, 5).forEach((spec) => {
@@ -1189,6 +1190,7 @@
             return code;
         }
     }
+
     // ----------------------------------------------------------------------
     function exec(string, env) {
         return parse(tokenize(string)).map((code) => evaluate(code, env));
@@ -1202,6 +1204,7 @@
         var close = parenthesis.filter(p => p === '(');
         return open.length === close.length;
     }
+
     // --------------------------------------
     Pair.unDry = function(value) {
         return new Pair(value.car, value.cdr);

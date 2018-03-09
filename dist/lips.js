@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 09 Mar 2018 21:05:39 +0000
+ * build: Fri, 09 Mar 2018 21:07:00 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -1120,6 +1120,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return result;
     }
+
     // ----------------------------------------------------------------------
     // cadr caddr cadadr etc.
     combinations(['d', 'a'], 2, 5).forEach(function (spec) {
@@ -1195,6 +1196,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return code;
         }
     }
+
     // ----------------------------------------------------------------------
     function exec(string, env) {
         return parse(tokenize(string)).map(function (code) {
@@ -1216,6 +1218,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         });
         return open.length === close.length;
     }
+
     // --------------------------------------
     Pair.unDry = function (value) {
         return new Pair(value.car, value.cdr);
