@@ -33,6 +33,16 @@ https://cdn.rawgit.com/jcubic/lips/master/index.js
 ## Usage
 
 ```javascript
+var {exec} = require('@jcubic/lips');
+
+exec(string).forEach(function(result) {
+     console.log(result);
+});
+```
+
+there is also longer version if you want to split the process of evaluation:
+
+```
 var {parse, tokenize, evaluate} = require('@jcubic/lips');
 
 parse(tokenize(string)).forEach(function(code) {
@@ -40,7 +50,7 @@ parse(tokenize(string)).forEach(function(code) {
 });
 ```
 
-`evaluate` function also accept second argument, which is Environment.
+`evaluate` and `exec` functions also accept second argument, which is Environment.
 By default it's `lips.global_environment`. You can use it if you want to
 have separated instances of the interpreter.
 

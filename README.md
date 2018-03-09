@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&3ee6f60f223475a6e74d9a6b14423f010d1f7faa)](https://travis-ci.org/jcubic/jquery.terminal)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&90f3a78d04af7d30b1ab1a6b7b5d9c13)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&b112a38747fbb72e79056851c1568eabb926a7af)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&653892f4acf8e13e87c4070c8e5eacd1)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 
@@ -33,6 +33,16 @@ https://cdn.rawgit.com/jcubic/lips/master/index.js
 ## Usage
 
 ```javascript
+var {exec} = require('@jcubic/lips');
+
+exec(string).forEach(function(result) {
+     console.log(result);
+});
+```
+
+there is also longer version if you want to split the process of evaluation:
+
+```
 var {parse, tokenize, evaluate} = require('@jcubic/lips');
 
 parse(tokenize(string)).forEach(function(code) {
@@ -40,7 +50,7 @@ parse(tokenize(string)).forEach(function(code) {
 });
 ```
 
-`evaluate` function also accept second argument, which is Environment.
+`evaluate` and `exec` functions also accept second argument, which is Environment.
 By default it's `lips.global_environment`. You can use it if you want to
 have separated instances of the interpreter.
 
