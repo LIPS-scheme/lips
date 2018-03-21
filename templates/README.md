@@ -5,10 +5,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 
 
-
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
-[Demo](https://codepen.io/jcubic/full/LQBaaV/)
+[Demo](https://jcubic.github.io/lips/#demo)
 
 ## Installation
 
