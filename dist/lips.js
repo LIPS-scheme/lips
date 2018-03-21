@@ -1,13 +1,10 @@
 /**@license
- * LIPS is Pretty Simple - version 0.2.2
+ * LIPS is Pretty Simple - version DEV
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 04 Mar 2018 08:22:50 +0000
- */
-/*
- * TODO: Pair.prototype.toObject = alist to Object
+ * build: Fri, 09 Mar 2018 21:07:00 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -102,24 +99,51 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         });
         var parents = 0;
         var first_value = false;
+        var specials_stack = [];
+        var single_list_specials = [];
+        function pop_join() {
+            var top = stack[stack.length - 1];
+            if (top instanceof Array && top[0] instanceof _Symbol && special_forms.includes(top[0].name) && stack.length > 1) {
+                stack.pop();
+                if (stack[stack.length - 1].length === 1 && stack[stack.length - 1][0] instanceof _Symbol) {
+                    stack[stack.length - 1].push(top);
+                } else if (stack[stack.length - 1].length === 0) {
+                    stack[stack.length - 1] = top;
+                } else if (stack[stack.length - 1] instanceof Pair) {
+                    if (stack[stack.length - 1].cdr instanceof Pair) {
+                        stack[stack.length - 1] = new Pair(stack[stack.length - 1], Pair.fromArray(top));
+                    } else {
+                        stack[stack.length - 1].cdr = Pair.fromArray(top);
+                    }
+                } else {
+                    stack[stack.length - 1].push(top);
+                }
+            }
+        }
         tokens.forEach(function (token) {
             var top = stack[stack.length - 1];
             if (special_tokens.indexOf(token) !== -1) {
                 special = token;
+                stack.push([specials[special]]);
+                if (!special) {
+                    single_list_specials = [];
+                }
+                single_list_specials.push(special);
             } else if (token === '(') {
                 first_value = true;
                 parents++;
                 if (special) {
-                    stack.push([specials[special]]);
-                    special = null;
+                    specials_stack.push(single_list_specials);
+                    single_list_specials = [];
                 }
                 stack.push([]);
+                special = null;
             } else if (token === '.' && !first_value) {
                 stack[stack.length - 1] = Pair.fromArray(top);
             } else if (token === ')') {
                 parents--;
                 if (!stack.length) {
-                    throw new Error('Unbalanced parenthesis');
+                    throw new Error('Unbalanced parenthesis 1');
                 }
                 if (stack.length === 1) {
                     result.push(stack.pop());
@@ -131,19 +155,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     } else if (top instanceof Pair) {
                         top.append(Pair.fromArray(list));
                     }
-                    if (top instanceof Array && top[0] instanceof _Symbol && special_forms.includes(top[0].name) && stack.length > 1) {
-                        stack.pop();
-                        if (stack[stack.length - 1].length === 0) {
-                            stack[stack.length - 1] = top;
-                        } else if (stack[stack.length - 1] instanceof Pair) {
-                            if (stack[stack.length - 1].cdr instanceof Pair) {
-                                stack[stack.length - 1] = new Pair(stack[stack.length - 1], Pair.fromArray(top));
-                            } else {
-                                stack[stack.length - 1].cdr = Pair.fromArray(top);
-                            }
-                        } else {
-                            stack[stack.length - 1].push(top);
+                    if (specials_stack.length) {
+                        single_list_specials = specials_stack.pop();
+                        while (single_list_specials.length) {
+                            pop_join();
+                            single_list_specials.pop();
                         }
+                    } else {
+                        pop_join();
                     }
                 }
                 if (parents === 0 && stack.length) {
@@ -153,14 +172,21 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 first_value = false;
                 var value = parse_argument(token);
                 if (special) {
-                    value = [specials[special], value];
+                    // special without list like ,foo
+                    stack[stack.length - 1][1] = value;
+                    value = stack.pop();
                     special = false;
                 }
+                top = stack[stack.length - 1];
                 if (top instanceof Pair) {
                     var node = top;
                     while (true) {
                         if (node.cdr === nil) {
-                            node.cdr = value;
+                            if (value instanceof Array) {
+                                node.cdr = Pair.fromArray(value);
+                            } else {
+                                node.cdr = value;
+                            }
                             break;
                         } else {
                             node = node.cdr;
@@ -174,7 +200,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         });
         if (stack.length) {
-            throw new Error('Unbalanced parenthesis');
+            console.log({ end: stack.slice() });
+            throw new Error('Unbalanced parenthesis 2');
         }
         return result.map(function (arg) {
             if (arg instanceof Array) {
@@ -432,6 +459,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     function Quote(value) {
         this.value = value;
     }
+    // ----------------------------------------------------------------------
+    // :: Unquote is used for multiple backticks and unquote
+    // ----------------------------------------------------------------------
+    function Unquote(value, count) {
+        this.value = value;
+        this.count = count;
+    }
+    Unquote.prototype.toString = function () {
+        return '<#unquote[' + this.count + '] ' + this.value + '>';
+    };
     // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
@@ -698,6 +735,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }),
         quasiquote: new Macro(function (arg) {
             var self = this;
+            var max_unquote = 0;
             function recur(pair) {
                 if (pair instanceof Pair) {
                     var eval_pair;
@@ -715,19 +753,33 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         }
                         return eval_pair;
                     }
-                    if (_Symbol.is(pair.car, 'unquote-splicing')) {
-                        eval_pair = evaluate(pair.cdr.car, self);
-                        if (!eval_pair instanceof Pair) {
-                            throw new Error('Value of unquote-splicing' + ' need to be pair');
-                        }
-                        return eval_pair;
-                    }
                     if (_Symbol.is(pair.car, 'unquote')) {
-                        if (pair.cdr.cdr !== nil) {
-                            return new Pair(evaluate(pair.cdr.car, self), pair.cdr.cdr);
-                        } else {
-                            return evaluate(pair.cdr.car, self);
+                        var head = pair.cdr;
+                        var node = head;
+                        var parent = node;
+                        var unquote_count = 1;
+                        while (_Symbol.is(node.car.car, 'unquote')) {
+                            parent = node;
+                            unquote_count++;
+                            node = node.car.cdr.car;
                         }
+                        if (unquote_count > max_unquote) {
+                            max_unquote = unquote_count;
+                        }
+                        // we use Unquote to proccess inner most unquote first
+                        // in unquote function afer processing whole s-expression
+                        if (parent === node) {
+                            if (pair.cdr.cdr !== nil) {
+                                return new Pair(new Unquote(pair.cdr.car, unquote_count), pair.cdr.cdr);
+                            } else {
+                                return new Unquote(pair.cdr.car, unquote_count);
+                            }
+                        } else if (parent.cdr.cdr !== nil) {
+                            parent.car.cdr = new Pair(new Unquote(node, unquote_count), parent.cdr === nil ? nil : parent.cdr.cdr);
+                        } else {
+                            parent.car.cdr = new Unquote(node, unquote_count);
+                        }
+                        return head.car;
                     }
                     var car = pair.car;
                     if (car instanceof Pair) {
@@ -741,7 +793,28 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 }
                 return pair;
             }
-            return new Quote(recur(arg.car));
+            function unquote(pair) {
+                if (pair instanceof Unquote) {
+                    if (max_unquote === pair.count) {
+                        return evaluate(pair.value, self);
+                    } else {
+                        return new Pair(new _Symbol('unquote'), new Pair(unquote(pair.value), nil));
+                    }
+                }
+                if (pair instanceof Pair) {
+                    var car = pair.car;
+                    if (car instanceof Pair || car instanceof Unquote) {
+                        car = unquote(car);
+                    }
+                    var cdr = pair.cdr;
+                    if (cdr instanceof Pair || cdr instanceof Unquote) {
+                        cdr = unquote(cdr);
+                    }
+                    return new Pair(car, cdr);
+                }
+                return pair;
+            }
+            return new Quote(unquote(recur(arg.car)));
         }),
         clone: function clone(list) {
             return list.clone();
@@ -1047,6 +1120,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return result;
     }
+
     // ----------------------------------------------------------------------
     // cadr caddr cadadr etc.
     combinations(['d', 'a'], 2, 5).forEach(function (spec) {
@@ -1122,6 +1196,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return code;
         }
     }
+
+    // ----------------------------------------------------------------------
+    function exec(string, env) {
+        return parse(tokenize(string)).map(function (code) {
+            return evaluate(code, env);
+        });
+    }
     // ----------------------------------------------------------------------
 
     function balanced(code) {
@@ -1137,6 +1218,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         });
         return open.length === close.length;
     }
+
     // --------------------------------------
     Pair.unDry = function (value) {
         return new Pair(value.car, value.cdr);
@@ -1168,7 +1250,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return new _Symbol(value.name);
     };
     return {
-        version: '0.2.2',
+        version: 'DEV',
+        exec: exec,
         parse: parse,
         tokenize: tokenize,
         evaluate: evaluate,

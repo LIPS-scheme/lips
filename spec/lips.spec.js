@@ -266,6 +266,27 @@ describe('evaluate', function() {
                 Pair.fromArray([1, 2, 3, "foobar", 4])
             );
         });
+        it('should process multiple backquote/unquote', function() {
+            expect(exec('``(a ,,(+ 1 2) ,(+ 3 4))')).toEqual(
+                Pair.fromArray([
+                    new Symbol('quasiquote'),
+                    [
+                        new Symbol('a'),
+                        [
+                            new Symbol('unquote'),
+                            3
+                        ],
+                        [
+                            new Symbol('unquote'),
+                            [
+                                new Symbol('+'),
+                                3,
+                                4
+                            ]
+                        ]
+                    ]
+                ]));
+        });
     });
 });
 
