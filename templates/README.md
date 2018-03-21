@@ -27,7 +27,7 @@ https://unpkg.com/@jcubic/lips
 or from rawgit
 
 ```
-https://cdn.rawgit.com/jcubic/lips/master/index.js
+https://cdn.rawgit.com/jcubic/lips/{{BRANCH}}/dist/lips.min.js
 ```
 
 ## Usage
