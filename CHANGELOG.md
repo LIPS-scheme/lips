@@ -1,4 +1,4 @@
-## Next
+## 0.3.0
 ### Features
 * exec api method
 ### Bugfixes
