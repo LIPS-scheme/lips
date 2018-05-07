@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Mon, 07 May 2018 12:25:11 +0000
+ * build: Mon, 07 May 2018 15:58:34 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -520,6 +520,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         window: window,
         'true': true,
         'false': false,
+        // ------------------------------------------------------------------
         stdout: {
             write: function write() {
                 var _console;
@@ -527,6 +528,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 (_console = console).log.apply(_console, arguments);
             }
         },
+        // ------------------------------------------------------------------
         stdin: {
             read: function read() {
                 return new Promise(function (resolve) {
@@ -534,9 +536,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 });
             }
         },
+        // ------------------------------------------------------------------
         cons: function cons(car, cdr) {
             return new Pair(car, cdr);
         },
+        // ------------------------------------------------------------------
         car: function car(list) {
             if (list instanceof Pair) {
                 return list.car;
@@ -544,6 +548,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 throw new Error('argument to car need to be a list');
             }
         },
+        // ------------------------------------------------------------------
         cdr: function cdr(list) {
             if (list instanceof Pair) {
                 return list.cdr;
@@ -551,12 +556,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 throw new Error('argument to cdr need to be a list');
             }
         },
+        // ------------------------------------------------------------------
         'set-car': function setCar(slot, value) {
             slot.car = value;
         },
+        // ------------------------------------------------------------------
         'set-cdr': function setCdr(slot, value) {
             slot.cdr = value;
         },
+        // ------------------------------------------------------------------
         assoc: function assoc(list, key) {
             var node = list;
             var name = key instanceof _Symbol ? key.name : key;
@@ -569,7 +577,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 }
             }
         },
+        // ------------------------------------------------------------------
         gensym: gensym,
+        // ------------------------------------------------------------------
         load: function load(file) {
             var _this2 = this;
 
@@ -577,6 +587,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 _this2.get('eval')(_this2.get('read')(code));
             });
         },
+        // ------------------------------------------------------------------
         'while': new Macro(function (code) {
             var self = this;
             var begin = new Pair(new _Symbol('begin'), code.cdr);
@@ -608,6 +619,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         'if': new Macro(function (code) {
             var _this3 = this;
 
@@ -635,8 +647,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return resolve(cond);
             }
         }),
+        // ------------------------------------------------------------------
         'let*': let_macro(true),
+        // ------------------------------------------------------------------
         'let': let_macro(false),
+        // ------------------------------------------------------------------
         'begin': new Macro(function (code) {
             var _this4 = this;
 
@@ -645,6 +660,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return evaluate(code, _this4);
             }, 0);
         }),
+        // ------------------------------------------------------------------
         timer: new Macro(function (code) {
             var _this5 = this;
 
@@ -654,6 +670,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 }, code.car);
             });
         }),
+        // ------------------------------------------------------------------
         define: new Macro(function (code) {
             if (code.car instanceof Pair && code.car.car instanceof _Symbol) {
                 var new_code = new Pair(new _Symbol("define"), new Pair(code.car.car, new Pair(new Pair(new _Symbol("lambda"), new Pair(code.car.cdr, code.cdr)))));
@@ -667,9 +684,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 this.env[code.car.name] = value;
             }
         }),
+        // ------------------------------------------------------------------
         set: function set(obj, key, value) {
             obj[key] = value;
         },
+        // ------------------------------------------------------------------
         'eval': function _eval(code) {
             var _this6 = this;
 
@@ -684,6 +703,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return result;
             }
         },
+        // ------------------------------------------------------------------
         lambda: new Macro(function (code) {
             var _this7 = this;
 
@@ -721,6 +741,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return evaluate(code.cdr.car, env);
             };
         }),
+        // ------------------------------------------------------------------
         defmacro: new Macro(function (macro) {
             if (macro.car.car instanceof _Symbol) {
                 this.env[macro.car.car.name] = new Macro(function (code) {
@@ -741,9 +762,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 });
             }
         }),
+        // ------------------------------------------------------------------
         quote: new Macro(function (arg) {
             return new Quote(arg.car);
         }),
+        // ------------------------------------------------------------------
         quasiquote: new Macro(function (arg) {
             var self = this;
             var max_unquote = 0;
@@ -827,12 +850,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return new Quote(unquote(recur(arg.car)));
         }),
+        // ------------------------------------------------------------------
         clone: function clone(list) {
             return list.clone();
         },
+        // ------------------------------------------------------------------
         append: function append(list, item) {
             return this.get('append!')(list.clone(), item);
         },
+        // ------------------------------------------------------------------
         'append!': function append(list, item) {
             var node = list;
             while (true) {
@@ -844,12 +870,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return list;
         },
+        // ------------------------------------------------------------------
         list: function list() {
             return Pair.fromArray([].slice.call(arguments));
         },
+        // ------------------------------------------------------------------
         concat: function concat() {
             return [].join.call(arguments, '');
         },
+        // ------------------------------------------------------------------
         string: function string(obj) {
             if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
                 return '<#jQuery>';
@@ -884,6 +913,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return obj;
         },
+        // ------------------------------------------------------------------
         env: function env(_env) {
             _env = _env || this;
             var names = Object.keys(_env.env);
@@ -898,6 +928,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return result;
         },
+        // ------------------------------------------------------------------
         '.': function _(obj, arg) {
             var name = arg instanceof _Symbol ? arg.name : arg;
             var value = obj[name];
@@ -906,6 +937,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return value;
         },
+        // ------------------------------------------------------------------
         read: function read(arg) {
             var _this8 = this;
 
@@ -916,6 +948,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return _this8.get('read').call(_this8, text);
             });
         },
+        // ------------------------------------------------------------------
         print: function print() {
             var _get,
                 _this9 = this;
@@ -928,9 +961,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return _this9.get('string')(arg);
             })));
         },
+        // ------------------------------------------------------------------
         'array->list': function arrayList(array) {
             return Pair.fromArray(array);
         },
+        // ------------------------------------------------------------------
         'list->array': function listArray(list) {
             var result = [];
             var node = list;
@@ -944,19 +979,24 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return result;
         },
+        // ------------------------------------------------------------------
         filter: function filter(fn, list) {
             return Pair.fromArray(this.get('list->array')(list).filter(fn));
         },
+        // ------------------------------------------------------------------
         odd: function odd(num) {
             return num % 2 === 1;
         },
+        // ------------------------------------------------------------------
         even: function even(num) {
             return num % 2 === 0;
         },
+        // ------------------------------------------------------------------
         apply: function apply(fn, list) {
             var args = this.get('list->array')(list);
             return fn.apply(null, args);
         },
+        // ------------------------------------------------------------------
         map: function map(fn, list) {
             var result = this.get('list->array')(list).map(fn);
             if (result.length) {
@@ -965,68 +1005,119 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return nil;
             }
         },
+        // ------------------------------------------------------------------
         reduce: function reduce(fn, list) {
+            var init = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
             var arr = this.get('list->array')(list);
-            return arr.reduce(function (list, item) {
-                return fn(list, item);
-            }, nil);
+            if (init === null) {
+                return arr.slice(1).reduce(function (acc, item) {
+                    return fn(acc, item);
+                }, arr[0]);
+            } else {
+                return arr.reduce(function (acc, item) {
+                    return fn(acc, item);
+                }, init);
+            }
         },
+        // ------------------------------------------------------------------
+        curry: function curry(fn) {
+            for (var _len3 = arguments.length, init_args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+                init_args[_key3 - 1] = arguments[_key3];
+            }
+
+            var len = fn.length;
+            return function () {
+                var args = init_args.slice();
+                var self = this;
+                function call() {
+                    for (var _len4 = arguments.length, more_args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                        more_args[_key4] = arguments[_key4];
+                    }
+
+                    args = args.concat(more_args);
+                    if (args.length >= len) {
+                        return fn.apply(this, args);
+                    } else {
+                        return call;
+                    }
+                };
+                return call.apply(this, arguments);
+            };
+        },
+        // ------------------------------------------------------------------
+        range: function range(n) {
+            return Pair.fromArray(new Array(n).fill(0).map(function (_, i) {
+                return i;
+            }));
+        },
+        // ------------------------------------------------------------------
         // math functions
         '*': function _() {
-            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                args[_key3] = arguments[_key3];
+            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                args[_key5] = arguments[_key5];
             }
 
             return args.reduce(function (a, b) {
                 return a * b;
             });
         },
+        // ------------------------------------------------------------------
         '+': function _() {
-            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                args[_key4] = arguments[_key4];
+            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+                args[_key6] = arguments[_key6];
             }
 
             return args.reduce(function (a, b) {
                 return a + b;
             });
         },
+        // ------------------------------------------------------------------
         '-': function _() {
-            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                args[_key5] = arguments[_key5];
+            for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+                args[_key7] = arguments[_key7];
             }
 
             return args.reduce(function (a, b) {
                 return a - b;
             });
         },
+        // ------------------------------------------------------------------
         '/': function _() {
-            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-                args[_key6] = arguments[_key6];
+            for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+                args[_key8] = arguments[_key8];
             }
 
             return args.reduce(function (a, b) {
                 return a / b;
             });
         },
+        // ------------------------------------------------------------------
         '%': function _(a, b) {
             return a % b;
         },
+        // ------------------------------------------------------------------
         // Booleans
         "==": function _(a, b) {
             return a === b;
         },
+        // ------------------------------------------------------------------
         '>': function _(a, b) {
             return a > b;
         },
+        // ------------------------------------------------------------------
         '<': function _(a, b) {
             return a < b;
         },
+        // ------------------------------------------------------------------
         '<=': function _(a, b) {
             return a <= b;
         },
+        // ------------------------------------------------------------------
         '>=': function _(a, b) {
             return a >= b;
         },
+        // ------------------------------------------------------------------
         or: new Macro(function (code) {
             var args = this.get('list->array')(code);
             var self = this;
@@ -1058,6 +1149,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         and: new Macro(function (code) {
             var args = this.get('list->array')(code);
             var self = this;
@@ -1089,11 +1181,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         '++': new Macro(function (code) {
             var value = this.get(code.car) + 1;
             this.set(code.car, value);
             return value;
         }),
+        // ------------------------------------------------------------------
         '--': new Macro(function (code) {
             var value = this.get(code.car) - 1;
             this.set(code.car, value);

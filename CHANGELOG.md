@@ -1,3 +1,10 @@
+## 0.4.0
+### Features
+* lambda with reset parameter (like in scheme)
+* new functions: curry and range
+### Bugs
+* fix (reduce + list)
+
 ## 0.3.0
 ### Features
 * exec api method

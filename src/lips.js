@@ -519,11 +519,13 @@
         window: window,
         'true': true,
         'false': false,
+        // ------------------------------------------------------------------
         stdout: {
             write: function(...args) {
                 console.log(...args);
             }
         },
+        // ------------------------------------------------------------------
         stdin: {
             read: function() {
                 return new Promise((resolve) => {
@@ -531,9 +533,11 @@
                 });
             }
         },
+        // ------------------------------------------------------------------
         cons: function(car, cdr) {
             return new Pair(car, cdr);
         },
+        // ------------------------------------------------------------------
         car: function(list) {
             if (list instanceof Pair) {
                 return list.car;
@@ -541,6 +545,7 @@
                 throw new Error('argument to car need to be a list');
             }
         },
+        // ------------------------------------------------------------------
         cdr: function(list) {
             if (list instanceof Pair) {
                 return list.cdr;
@@ -548,12 +553,15 @@
                 throw new Error('argument to cdr need to be a list');
             }
         },
+        // ------------------------------------------------------------------
         'set-car': function(slot, value) {
             slot.car = value;
         },
+        // ------------------------------------------------------------------
         'set-cdr': function(slot, value) {
             slot.cdr = value;
         },
+        // ------------------------------------------------------------------
         assoc: function(list, key) {
             var node = list;
             var name = key instanceof Symbol ? key.name : key;
@@ -567,12 +575,15 @@
                 }
             }
         },
+        // ------------------------------------------------------------------
         gensym: gensym,
+        // ------------------------------------------------------------------
         load: function(file) {
             request(file).then((code) => {
                 this.get('eval')(this.get('read')(code));
             });
         },
+        // ------------------------------------------------------------------
         'while': new Macro(function(code) {
             var self = this;
             var begin = new Pair(
@@ -607,6 +618,7 @@
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         'if': new Macro(function(code) {
             var resolve = (cond) => {
                 if (cond) {
@@ -632,12 +644,16 @@
                 return resolve(cond);
             }
         }),
+        // ------------------------------------------------------------------
         'let*': let_macro(true),
+        // ------------------------------------------------------------------
         'let': let_macro(false),
+        // ------------------------------------------------------------------
         'begin': new Macro(function(code) {
             var arr = this.get('list->array')(code);
             return arr.reduce((_, code) => evaluate(code, this), 0);
         }),
+        // ------------------------------------------------------------------
         timer: new Macro(function(code) {
             return new Promise((resolve) => {
                 setTimeout(() => {
@@ -645,6 +661,7 @@
                 }, code.car);
             });
         }),
+        // ------------------------------------------------------------------
         define: new Macro(function(code) {
             if (code.car instanceof Pair &&
                 code.car.car instanceof Symbol) {
@@ -673,9 +690,11 @@
                 this.env[code.car.name] = value;
             }
         }),
+        // ------------------------------------------------------------------
         set: function(obj, key, value) {
             obj[key] = value;
         },
+        // ------------------------------------------------------------------
         'eval': function(code) {
             if (code instanceof Pair) {
                 return evaluate(code, this);
@@ -688,6 +707,7 @@
                 return result;
             }
         },
+        // ------------------------------------------------------------------
         lambda: new Macro(function(code) {
             return (...args) => {
                 var env = new Environment({}, this);
@@ -719,6 +739,7 @@
                 return evaluate(code.cdr.car, env);
             };
         }),
+        // ------------------------------------------------------------------
         defmacro: new Macro(function(macro) {
             if (macro.car.car instanceof Symbol) {
                 this.env[macro.car.car.name] = new Macro(function(code) {
@@ -739,9 +760,11 @@
                 });
             }
         }),
+        // ------------------------------------------------------------------
         quote: new Macro(function(arg) {
             return new Quote(arg.car);
         }),
+        // ------------------------------------------------------------------
         quasiquote: new Macro(function(arg) {
             var self = this;
             var max_unquote = 0;
@@ -841,12 +864,15 @@
             }
             return new Quote(unquote(recur(arg.car)));
         }),
+        // ------------------------------------------------------------------
         clone: function(list) {
             return list.clone();
         },
+        // ------------------------------------------------------------------
         append: function(list, item) {
             return this.get('append!')(list.clone(), item);
         },
+        // ------------------------------------------------------------------
         'append!': function(list, item) {
             var node = list;
             while (true) {
@@ -858,12 +884,15 @@
             }
             return list;
         },
+        // ------------------------------------------------------------------
         list: function() {
             return Pair.fromArray([].slice.call(arguments));
         },
+        // ------------------------------------------------------------------
         concat: function() {
             return [].join.call(arguments, '');
         },
+        // ------------------------------------------------------------------
         string: function(obj) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
@@ -899,6 +928,7 @@
             }
             return obj;
         },
+        // ------------------------------------------------------------------
         env: function(env) {
             env = env || this;
             var names = Object.keys(env.env);
@@ -913,6 +943,7 @@
             }
             return result;
         },
+        // ------------------------------------------------------------------
         '.': function(obj, arg) {
             var name = arg instanceof Symbol ? arg.name : arg;
             var value = obj[name];
@@ -921,6 +952,7 @@
             }
             return value;
         },
+        // ------------------------------------------------------------------
         read: function(arg) {
             if (typeof arg === 'string') {
                 return parse(tokenize(arg));
@@ -929,14 +961,17 @@
                 return this.get('read').call(this, text);
             });
         },
+        // ------------------------------------------------------------------
         print: function(...args) {
             this.get('stdout').write(...args.map((arg) => {
                 return this.get('string')(arg);
             }));
         },
+        // ------------------------------------------------------------------
         'array->list': function(array) {
             return Pair.fromArray(array);
         },
+        // ------------------------------------------------------------------
         'list->array': function(list) {
             var result = [];
             var node = list;
@@ -950,19 +985,24 @@
             }
             return result;
         },
+        // ------------------------------------------------------------------
         filter: function(fn, list) {
             return Pair.fromArray(this.get('list->array')(list).filter(fn));
         },
+        // ------------------------------------------------------------------
         odd: function(num) {
             return num % 2 === 1;
         },
+        // ------------------------------------------------------------------
         even: function(num) {
             return num % 2 === 0;
         },
+        // ------------------------------------------------------------------
         apply: function(fn, list) {
             var args = this.get('list->array')(list);
             return fn.apply(null, args);
         },
+        // ------------------------------------------------------------------
         map: function(fn, list) {
             var result = this.get('list->array')(list).map(fn);
             if (result.length) {
@@ -971,52 +1011,92 @@
                 return nil;
             }
         },
-        reduce: function(fn, list) {
+        // ------------------------------------------------------------------
+        reduce: function(fn, list, init = null) {
             var arr = this.get('list->array')(list);
-            return arr.reduce((list, item) => {
-                return fn(list, item);
-            }, nil);
+            if (init === null) {
+                return arr.slice(1).reduce((acc, item) => {
+                    return fn(acc, item);
+                }, arr[0]);
+            } else {
+                return arr.reduce((acc, item) => {
+                    return fn(acc, item);
+                }, init);
+            }
         },
+        // ------------------------------------------------------------------
+        curry: function(fn, ...init_args) {
+            var len = fn.length;
+            return function() {
+                var args = init_args.slice();
+                var self = this;
+                function call(...more_args) {
+                    args = args.concat(more_args);
+                    if (args.length >= len) {
+                        return fn.apply(this, args);
+                    } else {
+                        return call;
+                    }
+                };
+                return call.apply(this, arguments);
+            };
+
+        },
+        // ------------------------------------------------------------------
+        range: function(n) {
+            return Pair.fromArray(new Array(n).fill(0).map((_, i) => i));
+        },
+        // ------------------------------------------------------------------
         // math functions
         '*': function(...args) {
             return args.reduce(function(a, b) {
                 return a * b;
             });
         },
+        // ------------------------------------------------------------------
         '+': function(...args) {
             return args.reduce(function(a, b) {
                 return a + b;
             });
         },
+        // ------------------------------------------------------------------
         '-': function(...args) {
             return args.reduce(function(a, b) {
                 return a - b;
             });
         },
+        // ------------------------------------------------------------------
         '/': function(...args) {
             return args.reduce(function(a, b) {
                 return a / b;
             });
         },
+        // ------------------------------------------------------------------
         '%': function(a, b) {
             return a % b;
         },
+        // ------------------------------------------------------------------
         // Booleans
         "==": function(a, b) {
             return a === b;
         },
+        // ------------------------------------------------------------------
         '>': function(a, b) {
             return a > b;
         },
+        // ------------------------------------------------------------------
         '<': function(a, b) {
             return a < b;
         },
+        // ------------------------------------------------------------------
         '<=': function(a, b) {
             return a <= b;
         },
+        // ------------------------------------------------------------------
         '>=': function(a, b) {
             return a >= b;
         },
+        // ------------------------------------------------------------------
         or: new Macro(function(code) {
             var args = this.get('list->array')(code);
             var self = this;
@@ -1048,6 +1128,7 @@
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         and: new Macro(function(code) {
             var args = this.get('list->array')(code);
             var self = this;
@@ -1079,11 +1160,13 @@
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         '++': new Macro(function(code) {
             var value = this.get(code.car) + 1;
             this.set(code.car, value);
             return value;
         }),
+        // ------------------------------------------------------------------
         '--': new Macro(function(code) {
             var value = this.get(code.car) - 1;
             this.set(code.car, value);
