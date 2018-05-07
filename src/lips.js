@@ -1029,7 +1029,6 @@
             var len = fn.length;
             return function() {
                 var args = init_args.slice();
-                var self = this;
                 function call(...more_args) {
                     args = args.concat(more_args);
                     if (args.length >= len) {
@@ -1037,7 +1036,7 @@
                     } else {
                         return call;
                     }
-                };
+                }
                 return call.apply(this, arguments);
             };
 

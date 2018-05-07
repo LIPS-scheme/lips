@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Mon, 07 May 2018 15:58:34 +0000
+ * build: Mon, 07 May 2018 16:01:35 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -1029,7 +1029,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             var len = fn.length;
             return function () {
                 var args = init_args.slice();
-                var self = this;
                 function call() {
                     for (var _len4 = arguments.length, more_args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
                         more_args[_key4] = arguments[_key4];
@@ -1041,7 +1040,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     } else {
                         return call;
                     }
-                };
+                }
                 return call.apply(this, arguments);
             };
         },
