@@ -60,9 +60,9 @@ npm install @jcubic/lips
     </pre>
     <p>then you code use:</p>
     <pre><code class="language-javascript">
-var {evaluate, parse, tokenize} = require('@jcubic/lips');
+var {evaluate, parse, tokenize, exec} = require('@jcubic/lips');
 // or
-import {evaluate, parse, tokenize} from '@jcubic/lips';
+import {evaluate, parse, tokenize, exec} from '@jcubic/lips';
     </code></pre>
     <h3>Browser</h3>
     <p>When using in browser you need to include the file</p>
@@ -73,7 +73,13 @@ import {evaluate, parse, tokenize} from '@jcubic/lips';
     <pre><code class="language-javascript">
 var {evaluate, parse, tokenize} = lips;
     </code></pre>
-    <p>then use those functions like this:</p>
+    <p>You can use lips.exec to evaluate the code:</p>
+    <pre><code class="language-javascript">
+exec(string).forEach(function(result) {
+     console.log(result);
+});
+    </code></pre>
+    <p>Or you can split the process using this functions:</p>
     <pre><code class="language-javascript">
 parse(tokenize(string)).foEach(function(code) {
     evaluate(code);
