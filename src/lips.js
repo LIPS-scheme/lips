@@ -696,12 +696,19 @@
                 var value;
                 while (true) {
                     if (name.car !== nil) {
-                        if (typeof args[i] === 'undefined') {
-                            value = nil;
+                        if (name instanceof Symbol) {
+                            // rest argument,  can also be first argument
+                            value = Pair.fromArray(args.slice(i));
+                            env.env[name.name] = value;
+                            break;
                         } else {
-                            value = args[i];
+                            if (typeof args[i] === 'undefined') {
+                                value = nil;
+                            } else {
+                                value = args[i];
+                            }
+                            env.env[name.car.name] = value;
                         }
-                        env.env[name.car.name] = value;
                     }
                     if (name.cdr === nil) {
                         break;

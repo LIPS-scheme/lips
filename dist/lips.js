@@ -1,10 +1,10 @@
 /**@license
- * LIPS is Pretty Simple - version 0.3.0
+ * LIPS is Pretty Simple - version DEV
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Wed, 21 Mar 2018 21:11:48 +0000
+ * build: Mon, 07 May 2018 12:25:11 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -688,18 +688,29 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             var _this7 = this;
 
             return function () {
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
+                }
+
                 var env = new Environment({}, _this7);
                 var name = code.car;
                 var i = 0;
                 var value;
                 while (true) {
                     if (name.car !== nil) {
-                        if (typeof (arguments.length <= i ? undefined : arguments[i]) === 'undefined') {
-                            value = nil;
+                        if (name instanceof _Symbol) {
+                            // rest argument,  can also be first argument
+                            value = Pair.fromArray(args.slice(i));
+                            env.env[name.name] = value;
+                            break;
                         } else {
-                            value = arguments.length <= i ? undefined : arguments[i];
+                            if (typeof args[i] === 'undefined') {
+                                value = nil;
+                            } else {
+                                value = args[i];
+                            }
+                            env.env[name.car.name] = value;
                         }
-                        env.env[name.car.name] = value;
                     }
                     if (name.cdr === nil) {
                         break;
@@ -909,8 +920,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             var _get,
                 _this9 = this;
 
-            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                args[_key] = arguments[_key];
+            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
             }
 
             (_get = this.get('stdout')).write.apply(_get, _toConsumableArray(args.map(function (arg) {
@@ -962,8 +973,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // math functions
         '*': function _() {
-            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                args[_key2] = arguments[_key2];
+            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                args[_key3] = arguments[_key3];
             }
 
             return args.reduce(function (a, b) {
@@ -971,8 +982,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         },
         '+': function _() {
-            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                args[_key3] = arguments[_key3];
+            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                args[_key4] = arguments[_key4];
             }
 
             return args.reduce(function (a, b) {
@@ -980,8 +991,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         },
         '-': function _() {
-            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                args[_key4] = arguments[_key4];
+            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                args[_key5] = arguments[_key5];
             }
 
             return args.reduce(function (a, b) {
@@ -989,8 +1000,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         },
         '/': function _() {
-            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                args[_key5] = arguments[_key5];
+            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+                args[_key6] = arguments[_key6];
             }
 
             return args.reduce(function (a, b) {
@@ -1250,7 +1261,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return new _Symbol(value.name);
     };
     return {
-        version: '0.3.0',
+        version: 'DEV',
         exec: exec,
         parse: parse,
         tokenize: tokenize,
