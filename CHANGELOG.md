@@ -4,6 +4,7 @@
 * new functions: curry and range
 ### Bugs
 * fix (reduce + list)
+* fix handling of empty list
 
 ## 0.3.0
 ### Features

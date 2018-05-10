@@ -283,7 +283,7 @@
             array = [...array];
         }
         if (array.length === 0) {
-            return new Pair(nil, nil);
+            return new Pair(undefined, nil);
         } else {
             var car;
             if (array[0] instanceof Array) {
@@ -381,19 +381,21 @@
     };
     Pair.prototype.toString = function() {
         var arr = ['('];
-        if (typeof this.car === 'string') {
-            arr.push(JSON.stringify(this.car));
-        } else if (typeof this.car !== 'undefined') {
-            arr.push(this.car);
-        }
-        if (this.cdr instanceof Pair) {
-            arr.push(' ');
-            arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
-        } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-            if (typeof this.cdr === 'string') {
-                arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
-            } else {
-                arr = arr.concat([' . ', this.cdr]);
+        if (this.car !== undefined) {
+            if (typeof this.car === 'string') {
+                arr.push(JSON.stringify(this.car));
+            } else if (typeof this.car !== 'undefined') {
+                arr.push(this.car);
+            }
+            if (this.cdr instanceof Pair) {
+                arr.push(' ');
+                arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
+            } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
+                if (typeof this.cdr === 'string') {
+                    arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
+                } else {
+                    arr = arr.concat([' . ', this.cdr]);
+                }
             }
         }
         arr.push(')');
@@ -404,14 +406,23 @@
             return this.append(Pair.fromArray(pair));
         }
         var p = this;
-        while (true) {
-            if (p instanceof Pair && p.cdr !== nil) {
-                p = p.cdr;
+        if (p.car === undefined) {
+            if (pair instanceof Pair) {
+                this.car = pair.car;
+                this.cdr = pair.cdr;
             } else {
-                break;
+                return pair;
             }
+        } else {
+            while (true) {
+                if (p instanceof Pair && p.cdr !== nil) {
+                    p = p.cdr;
+                } else {
+                    break;
+                }
+            }
+            p.cdr = pair;
         }
-        p.cdr = pair;
         return this;
     };
 
@@ -874,15 +885,7 @@
         },
         // ------------------------------------------------------------------
         'append!': function(list, item) {
-            var node = list;
-            while (true) {
-                if (node.cdr === nil) {
-                    node.cdr = item;
-                    break;
-                }
-                node = node.cdr;
-            }
-            return list;
+            return list.append(item);
         },
         // ------------------------------------------------------------------
         list: function() {
