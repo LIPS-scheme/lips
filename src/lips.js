@@ -456,13 +456,20 @@
 
         if (this.parent instanceof Environment) {
             return this.parent.get(symbol);
-        } else if (symbol instanceof Symbol) {
-            if (typeof window[symbol.name] !== 'undefined') {
-                return window[symbol.name];
+        } else {
+            var name;
+            if (symbol instanceof Symbol) {
+                name = symbol.name;
+            } else if (typeof symbol === 'string') {
+                name = symbol;
             }
-        } else if (typeof symbol === 'string') {
-            if (typeof window[symbol] !== 'undefined') {
-                return window[symbol];
+            if (name) {
+                var type = typeof window[name];
+                if (type === 'function') {
+                    return window[name].bind(window);
+                } else if (type !== 'undefined') {
+                    return window[name];
+                }
             }
         }
     };
@@ -1295,8 +1302,8 @@
     function exec(string, env) {
         return parse(tokenize(string)).map((code) => evaluate(code, env));
     }
-    // ----------------------------------------------------------------------
 
+    // ----------------------------------------------------------------------
     function balanced(code) {
         var re = /[()]/;
         var parenthesis = tokenize(code).filter((token) => token.match(re));
@@ -1335,6 +1342,41 @@
     Symbol.unDry = function(value) {
         return new Symbol(value.name);
     };
+    function init() {
+        var lips_mime = 'text-x/lips';
+        if (window.document) {
+            Array.from(document.querySelectorAll('script')).forEach((script) => {
+                var type = script.getAttribute('type');
+                if (type === lips_mime) {
+                    exec(script.innerHTML);
+                } else if (type === 'text-x/lisp') {
+                    console.warn('Expecting ' + lips_mime + ' found ' + type);
+                }
+            });
+        }
+    }
+    function load(callback) {
+        if (typeof window !== 'undefined') {
+            if (window.addEventListener) {
+                window.addEventListener("load", callback, false);
+            } else if (window.attachEvent) {
+                window.attachEvent("onload", callback);
+            } else if (typeof window.onload === 'function') {
+                (function(old) {
+                    window.onload = function() {
+                        callback();
+                        old();
+                    };
+                })(window.onload);
+            } else {
+                window.onload = callback;
+            }
+        }
+    }
+    load(function() {
+        setTimeout(init, 0);
+    });
+    // --------------------------------------
     return {
         version: '{{VER}}',
         exec: exec,

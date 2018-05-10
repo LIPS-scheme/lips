@@ -20,10 +20,10 @@
        if (term.hasClass('terminal')) {
            $.terminal.active().error(message);
        } else {
-           $('body').terminal(function() {
+           window.term = $('body').terminal(function() {
                this.error('You need to use modern browser');
            }, {
-               greetings: greetings
+               greetings: false
            }).error(message);
        }
    };
@@ -69,7 +69,7 @@
        }));
        var position;
        var timer;
-       var term = $('body').terminal(function(code, term) {
+       window.term = $('body').terminal(function(code, term) {
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
@@ -92,7 +92,7 @@
            }
        }, {
            name: 'lips',
-           greetings: greetings,
+           greetings: false,
            keydown: function() {
                if (position) {
                    term.set_position(position);
@@ -136,5 +136,10 @@
            }
        });
    })();
+  </script>
+  <script type="text-x/lips">
+   ;; Example of LIPS in script tag, it invoke global terminal method
+   (let ((echo (. term "echo")))
+       (echo greetings))
   </script>
 </html>

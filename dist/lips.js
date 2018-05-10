@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Thu, 10 May 2018 07:19:53 +0000
+ * build: Thu, 10 May 2018 19:04:23 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -451,13 +451,20 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
         if (this.parent instanceof Environment) {
             return this.parent.get(symbol);
-        } else if (symbol instanceof _Symbol) {
-            if (typeof window[symbol.name] !== 'undefined') {
-                return window[symbol.name];
+        } else {
+            var name;
+            if (symbol instanceof _Symbol) {
+                name = symbol.name;
+            } else if (typeof symbol === 'string') {
+                name = symbol;
             }
-        } else if (typeof symbol === 'string') {
-            if (typeof window[symbol] !== 'undefined') {
-                return window[symbol];
+            if (name) {
+                var type = _typeof(window[name]);
+                if (type === 'function') {
+                    return window[name].bind(window);
+                } else if (type !== 'undefined') {
+                    return window[name];
+                }
             }
         }
     };
@@ -1318,8 +1325,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return evaluate(code, env);
         });
     }
-    // ----------------------------------------------------------------------
 
+    // ----------------------------------------------------------------------
     function balanced(code) {
         var re = /[()]/;
         var parenthesis = tokenize(code).filter(function (token) {
@@ -1364,6 +1371,41 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     _Symbol.unDry = function (value) {
         return new _Symbol(value.name);
     };
+    function init() {
+        var lips_mime = 'text-x/lips';
+        if (window.document) {
+            Array.from(document.querySelectorAll('script')).forEach(function (script) {
+                var type = script.getAttribute('type');
+                if (type === lips_mime) {
+                    exec(script.innerHTML);
+                } else if (type === 'text-x/lisp') {
+                    console.warn('Expecting ' + lips_mime + ' found ' + type);
+                }
+            });
+        }
+    }
+    function load(callback) {
+        if (typeof window !== 'undefined') {
+            if (window.addEventListener) {
+                window.addEventListener("load", callback, false);
+            } else if (window.attachEvent) {
+                window.attachEvent("onload", callback);
+            } else if (typeof window.onload === 'function') {
+                (function (old) {
+                    window.onload = function () {
+                        callback();
+                        old();
+                    };
+                })(window.onload);
+            } else {
+                window.onload = callback;
+            }
+        }
+    }
+    load(function () {
+        setTimeout(init, 0);
+    });
+    // --------------------------------------
     return {
         version: 'DEV',
         exec: exec,
