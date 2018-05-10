@@ -67,6 +67,8 @@
        env.set('quote-car', new Macro(function(code) {
            return Pair.fromArray([new Symbol('quote'), code.car.car]);
        }));
+       var position;
+       var timer;
        var term = $('body').terminal(function(code, term) {
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
@@ -90,7 +92,48 @@
            }
        }, {
            name: 'lips',
-           greetings: greetings
+           greetings: greetings,
+           keydown: function() {
+               if (position) {
+                   term.set_position(position);
+                   position = false;
+               }
+           },
+           keypress: function(e) {
+               var term = this;
+               if (e.key == ')') {
+                   setTimeout(function() {
+                       position = term.get_position();
+                       var command = term.get_command();
+                       var count = 1;
+                       var close_pos = position - 1;
+                       var c;
+                       while (count > 0) {
+                           c = command[--close_pos];
+                           if (!c) {
+                               return;
+                           }
+                           if (c === '(') {
+                               count--;
+                           } else if (c == ')') {
+                               count++;
+                           }
+                       }
+                       if (c == '(') {
+                           clearTimeout(timer);
+                           setTimeout(function() {
+                               term.set_position(close_pos);
+                               timer = setTimeout(function() {
+                                   term.set_position(position)
+                                   position = false;
+                               }, 200);
+                           }, 0);
+                       }
+                   }, 0);
+               } else {
+                   position = false;
+               }
+           }
        });
    })();
   </script>
