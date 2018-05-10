@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Thu, 10 May 2018 06:59:57 +0000
+ * build: Thu, 10 May 2018 07:12:23 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -1184,13 +1184,21 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         }),
         // ------------------------------------------------------------------
-        '++': new Macro(function (code) {
+        '++': function _(number) {
+            return number + 1;
+        },
+        // ------------------------------------------------------------------
+        '--': function _(number) {
+            return number - 1;
+        },
+        // ------------------------------------------------------------------
+        'inc': new Macro(function (code) {
             var value = this.get(code.car) + 1;
             this.set(code.car, value);
             return value;
         }),
         // ------------------------------------------------------------------
-        '--': new Macro(function (code) {
+        'dec': new Macro(function (code) {
             var value = this.get(code.car) - 1;
             this.set(code.car, value);
             return value;

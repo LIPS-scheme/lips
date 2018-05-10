@@ -1163,13 +1163,21 @@
             });
         }),
         // ------------------------------------------------------------------
-        '++': new Macro(function(code) {
+        '++': function(number) {
+            return number + 1;
+        },
+        // ------------------------------------------------------------------
+        '--': function(number) {
+            return number - 1;
+        },
+        // ------------------------------------------------------------------
+        'inc': new Macro(function(code) {
             var value = this.get(code.car) + 1;
             this.set(code.car, value);
             return value;
         }),
         // ------------------------------------------------------------------
-        '--': new Macro(function(code) {
+        'dec': new Macro(function(code) {
             var value = this.get(code.car) - 1;
             this.set(code.car, value);
             return value;

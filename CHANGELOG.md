@@ -2,6 +2,7 @@
 ### Features
 * lambda with reset parameter (like in scheme)
 * new functions: curry and range
+* change ++/-- to inc/dec and make ++/-- functions
 ### Bugs
 * fix (reduce + list)
 * fix handling of empty list
