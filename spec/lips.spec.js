@@ -247,11 +247,12 @@ describe('evaluate', function() {
         });
         it('should create alist with values', function() {
             expect(exec(`\`((1 . ,(car (list 1 2)))
-                            (2 . ,(cadr (list 1 "foo"))))`)).toEqual(
-                                new Pair(
-                                    new Pair(1, 1),
-                                    new Pair(new Pair(2, "foo"), nil))
-                            );
+                            (2 . ,(cadr (list 1 "foo"))))`))
+                .toEqual(
+                    new Pair(
+                        new Pair(1, 1),
+                        new Pair(new Pair(2, "foo"), nil))
+                );
             expect(exec(`\`((,(car (list "foo")) . ,(car (list 1 2)))
                             (2 . ,(cadr (list 1 "foo"))))`))
                 .toEqual(new Pair(
