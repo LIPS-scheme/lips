@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 11 May 2018 10:47:30 +0000
+ * build: Fri, 11 May 2018 16:13:58 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -497,26 +497,19 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return new Promise(function (resolve) {
                 var promises = [];
                 var i = 0;
-                function response() {
-                    var output = new Pair(new _Symbol('begin'), code.cdr);
-                    resolve(new Quote(evaluate(output, env)));
-                }
                 (function loop() {
-                    var set = function set(value) {
+                    var pair = args[i++];
+                    function set(value) {
                         if (value instanceof Promise) {
                             promises.push(value);
                             return value.then(set);
                         } else {
                             env.set(pair.car, value);
                         }
-                    };
-                    var pair = args[i++];
+                    }
                     if (!pair) {
-                        if (promises.length) {
-                            Promise.all(promises).then(response);
-                        } else {
-                            response();
-                        }
+                        var output = new Pair(new _Symbol('begin'), code.cdr);
+                        resolve(new Quote(evaluate(output, env)));
                     } else {
                         var value = evaluate(pair.cdr.car, asterisk ? env : this);
                         var promise = set(value);

@@ -502,26 +502,19 @@
             return new Promise((resolve) => {
                 var promises = [];
                 var i = 0;
-                function response() {
-                    var output = new Pair(new Symbol('begin'), code.cdr);
-                    resolve(new Quote(evaluate(output, env)));
-                }
                 (function loop() {
-                    var set = (value) => {
+                    var pair = args[i++];
+                    function set(value) {
                         if (value instanceof Promise) {
                             promises.push(value);
                             return value.then(set);
                         } else {
                             env.set(pair.car, value);
                         }
-                    };
-                    var pair = args[i++];
+                    }
                     if (!pair) {
-                        if (promises.length) {
-                            Promise.all(promises).then(response);
-                        } else {
-                            response();
-                        }
+                        var output = new Pair(new Symbol('begin'), code.cdr);
+                        resolve(new Quote(evaluate(output, env)));
                     } else {
                         var value = evaluate(pair.cdr.car, asterisk ? env : this);
                         var promise = set(value);
