@@ -65,6 +65,16 @@ First argument is an object with functions, macros and varibles (see Extending L
 Second argument is parent environment, you need to use global environment (or other that extend global)
 otherwise you will not have any functions.
 
+You can also use script tag to execute LIPS code:
+
+```html
+<script type="text-x/lips">
+(let ((what "world")
+      (greet "hello"))
+   (print (concat "hello" " " what)))
+</script>
+```
+
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license
