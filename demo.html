@@ -61,9 +61,6 @@
                }
            }
        }, global_environment);
-       env.set('replace', function(re, sub, string) {
-           return string.replace(re, sub);
-       });
        env.set('quote-car', new Macro(function(code) {
            return Pair.fromArray([new Symbol('quote'), code.car.car]);
        }));
@@ -105,24 +102,25 @@
                    setTimeout(function() {
                        position = term.get_position();
                        var command = term.get_command();
+                       var tokens = lips.tokens(command);
                        var count = 1;
-                       var close_pos = position - 1;
-                       var c;
+                       var token;
+                       var i = tokens.length - 1;
                        while (count > 0) {
-                           c = command[--close_pos];
-                           if (!c) {
+                           token = tokens[--i];
+                           if (!token) {
                                return;
                            }
-                           if (c === '(') {
+                           if (token.token === '(') {
                                count--;
-                           } else if (c == ')') {
+                           } else if (token.token == ')') {
                                count++;
                            }
                        }
-                       if (c == '(') {
+                       if (token.token == '(') {
                            clearTimeout(timer);
                            setTimeout(function() {
-                               term.set_position(close_pos);
+                               term.set_position(token.offset);
                                timer = setTimeout(function() {
                                    term.set_position(position)
                                    position = false;

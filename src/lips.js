@@ -62,13 +62,24 @@
     /* eslint-enable */
     // ----------------------------------------------------------------------
     function tokenize(str) {
-        return str.split('\n').map(function(line) {
-            return line.split(tokens_re).map(function(token) {
-                if (token.match(/^;/)) {
-                    return null;
-                }
-                return token.trim();
-            }).filter(Boolean);
+        return tokens(str).map(function(token) {
+            return token.token.trim();
+        }).filter(function(token) {
+            return token && !token.match(/^;/);
+        });
+    }
+    // ----------------------------------------------------------------------
+    function tokens(str) {
+        return str.split('\n').map(function(line, i) {
+            var count = 0;
+            return line.split(tokens_re).filter(Boolean).map(function(token, j) {
+                var result = {
+                    token,
+                    offset: count
+                };
+                count += token.length;
+                return result;
+            });
         }).reduce(function(arr, tokens) {
             return arr.concat(tokens);
         }, []);
@@ -1441,6 +1452,7 @@
         exec: exec,
         parse: parse,
         tokenize: tokenize,
+        tokens: tokens,
         evaluate: evaluate,
         Environment: Environment,
         global_environment: global_env,
