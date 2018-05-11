@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 11 May 2018 10:15:01 +0000
+ * build: Fri, 11 May 2018 10:47:30 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -1314,7 +1314,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         var rest = code.cdr;
         if (first instanceof Pair) {
             value = evaluate(first, env);
-            if (typeof value !== 'function') {
+            if (value instanceof Promise) {
+                return value.then(function (value) {
+                    return evaluate(new Pair(value, code.cdr));
+                });
+            } else if (typeof value !== 'function') {
                 throw new Error(env.get('string')(value) + ' is not a function');
             }
         }

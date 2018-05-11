@@ -1290,7 +1290,9 @@
         var rest = code.cdr;
         if (first instanceof Pair) {
             value = evaluate(first, env);
-            if (typeof value !== 'function') {
+            if (value instanceof Promise) {
+                return value.then((value) => evaluate(new Pair(value, code.cdr)));
+            } else if (typeof value !== 'function') {
                 throw new Error(
                     env.get('string')(value) + ' is not a function'
                 );

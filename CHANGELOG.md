@@ -9,6 +9,7 @@
 * fix handling of empty list
 * make let* handle promises
 * fix evaluate of macro that return a Promise
+* fix evaluating code with promises
 
 ## 0.3.0
 ### Features
