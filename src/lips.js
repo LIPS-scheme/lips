@@ -225,6 +225,35 @@
         });
     }
     // ----------------------------------------------------------------------
+    // :: flatten nested arrays
+    // :: source: https://stackoverflow.com/a/27282907/387194
+    // ----------------------------------------------------------------------
+    function flatten(array, mutable) {
+        var toString = Object.prototype.toString;
+        var arrayTypeStr = '[object Array]';
+
+        var result = [];
+        var nodes = (mutable && array) || array.slice();
+        var node;
+
+        if (!array.length) {
+            return result;
+        }
+
+        node = nodes.pop();
+
+        do {
+            if (toString.call(node) === arrayTypeStr) {
+                nodes.push.apply(nodes, node);
+            } else {
+                result.push(node);
+            }
+        } while (nodes.length && (node = nodes.pop()) !== undefined);
+
+        result.reverse(); // we reverse result to restore the original order
+        return result;
+    }
+    // ----------------------------------------------------------------------
     // :: Symbol constructor
     // ----------------------------------------------------------------------
     function Symbol(name) {
@@ -254,17 +283,24 @@
         this.car = car;
         this.cdr = cdr;
     }
+
     // ----------------------------------------------------------------------
     Pair.prototype[window.Symbol.iterator] = function*() {
         var node = this;
         while (true) {
-            if (node === nil) {
+            if (!node || node === nil) {
                 break;
             }
             yield node.car;
             node = node.cdr;
         }
     };
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.flatten = function() {
+        return Pair.fromArray(flatten(this.toArray()));
+    };
+
     // ----------------------------------------------------------------------
     Pair.prototype.length = function() {
         var len = 0;
@@ -278,15 +314,21 @@
         }
         return len;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.clone = function() {
-        var cdr;
-        if (this.cdr === nil) {
-            cdr = nil;
-        } else {
+        var cdr = this.cdr;
+        var car = this.car;
+        if (car instanceof Pair) {
+            car = car.clone();
+        }
+        if (cdr instanceof Pair) {
             cdr = this.cdr.clone();
         }
-        return new Pair(this.car, cdr);
+        return new Pair(car, cdr);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toArray = function() {
         if (this.cdr === nil && this.car === nil) {
             return [];
@@ -302,6 +344,8 @@
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromArray = function(array) {
         if (array instanceof Pair) {
             return array;
@@ -325,6 +369,8 @@
             }
         }
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toObject = function() {
         var node = this;
         var result = {};
@@ -343,6 +389,8 @@
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromPairs = function(array) {
         return array.reduce((list, pair) => {
             return new Pair(
@@ -354,10 +402,14 @@
             );
         }, nil);
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromObject = function(obj) {
         var array = Object.keys(obj).map((key) => [key, obj[key]]);
         return Pair.fromPairs(array);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.reduce = function(fn) {
         var node = this;
         var result = nil;
@@ -371,6 +423,8 @@
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.reverse = function() {
         var node = this;
         var prev = nil;
@@ -382,6 +436,8 @@
         }
         return prev;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.transform = function(fn) {
         var visited = [];
         function recur(pair) {
@@ -406,6 +462,8 @@
         }
         return recur(this);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toString = function() {
         var arr = ['('];
         if (this.car !== undefined) {
@@ -428,6 +486,8 @@
         arr.push(')');
         return arr.join('');
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.append = function(pair) {
         if (pair instanceof Array) {
             return this.append(Pair.fromArray(pair));
@@ -1053,6 +1113,10 @@
             this.get('stdout').write(...args.map((arg) => {
                 return this.get('string')(arg);
             }));
+        },
+        // ------------------------------------------------------------------
+        flatten: function(list) {
+            return list.flatten();
         },
         // ------------------------------------------------------------------
         'array->list': function(array) {

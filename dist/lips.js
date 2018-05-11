@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 11 May 2018 17:41:24 +0000
+ * build: Fri, 11 May 2018 18:46:57 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -226,6 +226,35 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         });
     }
     // ----------------------------------------------------------------------
+    // :: flatten nested arrays
+    // :: source: https://stackoverflow.com/a/27282907/387194
+    // ----------------------------------------------------------------------
+    function flatten(array, mutable) {
+        var toString = Object.prototype.toString;
+        var arrayTypeStr = '[object Array]';
+
+        var result = [];
+        var nodes = mutable && array || array.slice();
+        var node;
+
+        if (!array.length) {
+            return result;
+        }
+
+        node = nodes.pop();
+
+        do {
+            if (toString.call(node) === arrayTypeStr) {
+                nodes.push.apply(nodes, node);
+            } else {
+                result.push(node);
+            }
+        } while (nodes.length && (node = nodes.pop()) !== undefined);
+
+        result.reverse(); // we reverse result to restore the original order
+        return result;
+    }
+    // ----------------------------------------------------------------------
     // :: Symbol constructor
     // ----------------------------------------------------------------------
     function _Symbol(name) {
@@ -253,6 +282,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         this.car = car;
         this.cdr = cdr;
     }
+
     // ----------------------------------------------------------------------
     Pair.prototype[window.Symbol.iterator] = /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
         var node;
@@ -268,7 +298,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                             break;
                         }
 
-                        if (!(node === nil)) {
+                        if (!(!node || node === nil)) {
                             _context.next = 4;
                             break;
                         }
@@ -291,6 +321,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }, _callee, this);
     });
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.flatten = function () {
+        return Pair.fromArray(flatten(this.toArray()));
+    };
+
     // ----------------------------------------------------------------------
     Pair.prototype.length = function () {
         var len = 0;
@@ -304,15 +340,21 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return len;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.clone = function () {
-        var cdr;
-        if (this.cdr === nil) {
-            cdr = nil;
-        } else {
+        var cdr = this.cdr;
+        var car = this.car;
+        if (car instanceof Pair) {
+            car = car.clone();
+        }
+        if (cdr instanceof Pair) {
             cdr = this.cdr.clone();
         }
-        return new Pair(this.car, cdr);
+        return new Pair(car, cdr);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toArray = function () {
         if (this.cdr === nil && this.car === nil) {
             return [];
@@ -328,6 +370,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromArray = function (array) {
         if (array instanceof Pair) {
             return array;
@@ -351,6 +395,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toObject = function () {
         var node = this;
         var result = {};
@@ -369,17 +415,23 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromPairs = function (array) {
         return array.reduce(function (list, pair) {
             return new Pair(new Pair(new _Symbol(pair[0]), pair[1]), list);
         }, nil);
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromObject = function (obj) {
         var array = Object.keys(obj).map(function (key) {
             return [key, obj[key]];
         });
         return Pair.fromPairs(array);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.reduce = function (fn) {
         var node = this;
         var result = nil;
@@ -393,6 +445,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.reverse = function () {
         var node = this;
         var prev = nil;
@@ -404,6 +458,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return prev;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.transform = function (fn) {
         var visited = [];
         function recur(pair) {
@@ -428,6 +484,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return recur(this);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toString = function () {
         var arr = ['('];
         if (this.car !== undefined) {
@@ -450,6 +508,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         arr.push(')');
         return arr.join('');
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.append = function (pair) {
         if (pair instanceof Array) {
             return this.append(Pair.fromArray(pair));
@@ -1072,6 +1132,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             (_get = this.get('stdout')).write.apply(_get, _toConsumableArray(args.map(function (arg) {
                 return _this8.get('string')(arg);
             })));
+        },
+        // ------------------------------------------------------------------
+        flatten: function flatten(list) {
+            return list.flatten();
         },
         // ------------------------------------------------------------------
         'array->list': function arrayList(array) {

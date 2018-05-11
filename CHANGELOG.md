@@ -5,6 +5,7 @@
 * execute LIPS code from script tag with text-x/lips type attribute
 * add string functions: join, split, replace, match, search
 * new second parameter to `tokenize` that make it return array of extra objects `{token, offset}`
+* Pair.flatten and lips function flatten
 
 ### Bugs
 * fix (reduce + list)
