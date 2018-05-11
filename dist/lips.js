@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 11 May 2018 17:17:25 +0000
+ * build: Fri, 11 May 2018 17:41:24 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -79,9 +79,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
     // ----------------------------------------------------------------------
     function tokens(str) {
-        return str.split('\n').map(function (line, i) {
-            var count = 0;
-            return line.split(tokens_re).filter(Boolean).map(function (token, j) {
+        var count = 0;
+        return str.split('\n').map(function (line) {
+            return line.split(tokens_re).filter(Boolean).map(function (token) {
                 var result = {
                     token: token,
                     offset: count
@@ -253,6 +253,45 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         this.car = car;
         this.cdr = cdr;
     }
+    // ----------------------------------------------------------------------
+    Pair.prototype[window.Symbol.iterator] = /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        var node;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+                switch (_context.prev = _context.next) {
+                    case 0:
+                        node = this;
+
+                    case 1:
+                        if (!true) {
+                            _context.next = 9;
+                            break;
+                        }
+
+                        if (!(node === nil)) {
+                            _context.next = 4;
+                            break;
+                        }
+
+                        return _context.abrupt('break', 9);
+
+                    case 4:
+                        _context.next = 6;
+                        return node.car;
+
+                    case 6:
+                        node = node.cdr;
+                        _context.next = 1;
+                        break;
+
+                    case 9:
+                    case 'end':
+                        return _context.stop();
+                }
+            }
+        }, _callee, this);
+    });
+    // ----------------------------------------------------------------------
     Pair.prototype.length = function () {
         var len = 0;
         var node = this;
@@ -1422,7 +1461,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return open.length === close.length;
     }
 
-    // --------------------------------------
+    // ----------------------------------------------------------------------
     Pair.unDry = function (value) {
         return new Pair(value.car, value.cdr);
     };
@@ -1452,6 +1491,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     _Symbol.unDry = function (value) {
         return new _Symbol(value.name);
     };
+    // ----------------------------------------------------------------------
     function init() {
         var lips_mime = 'text-x/lips';
         if (window.document) {
@@ -1465,6 +1505,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         }
     }
+    // ----------------------------------------------------------------------
     function load(callback) {
         if (typeof window !== 'undefined') {
             if (window.addEventListener) {
@@ -1483,6 +1524,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }
     }
+    // ----------------------------------------------------------------------
     load(function () {
         setTimeout(init, 0);
     });

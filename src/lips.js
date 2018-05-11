@@ -74,9 +74,9 @@
     }
     // ----------------------------------------------------------------------
     function tokens(str) {
-        return str.split('\n').map(function(line, i) {
-            var count = 0;
-            return line.split(tokens_re).filter(Boolean).map(function(token, j) {
+        var count = 0;
+        return str.split('\n').map(function(line) {
+            return line.split(tokens_re).filter(Boolean).map(function(token) {
                 var result = {
                     token,
                     offset: count
@@ -254,6 +254,18 @@
         this.car = car;
         this.cdr = cdr;
     }
+    // ----------------------------------------------------------------------
+    Pair.prototype[window.Symbol.iterator] = function*() {
+        var node = this;
+        while (true) {
+            if (node === nil) {
+                break;
+            }
+            yield node.car;
+            node = node.cdr;
+        }
+    };
+    // ----------------------------------------------------------------------
     Pair.prototype.length = function() {
         var len = 0;
         var node = this;
@@ -1386,7 +1398,7 @@
         return open.length === close.length;
     }
 
-    // --------------------------------------
+    // ----------------------------------------------------------------------
     Pair.unDry = function(value) {
         return new Pair(value.car, value.cdr);
     };
@@ -1416,6 +1428,7 @@
     Symbol.unDry = function(value) {
         return new Symbol(value.name);
     };
+    // ----------------------------------------------------------------------
     function init() {
         var lips_mime = 'text-x/lips';
         if (window.document) {
@@ -1429,6 +1442,7 @@
             });
         }
     }
+    // ----------------------------------------------------------------------
     function load(callback) {
         if (typeof window !== 'undefined') {
             if (window.addEventListener) {
@@ -1447,6 +1461,7 @@
             }
         }
     }
+    // ----------------------------------------------------------------------
     load(function() {
         setTimeout(init, 0);
     });

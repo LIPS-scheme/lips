@@ -102,6 +102,7 @@
                    setTimeout(function() {
                        position = term.get_position();
                        var command = term.get_command();
+                       var len = command.split(/\n/)[0].length;
                        var tokens = tokenize(command, true);
                        var count = 1;
                        var token;
@@ -120,7 +121,8 @@
                        if (token.token == '(') {
                            clearTimeout(timer);
                            setTimeout(function() {
-                               term.set_position(token.offset);
+                               // first line was correct but next was off by one
+                               term.set_position(token.offset > len ? token.offset + 1 : token.offset);
                                timer = setTimeout(function() {
                                    term.set_position(position)
                                    position = false;
