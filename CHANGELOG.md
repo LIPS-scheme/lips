@@ -3,6 +3,7 @@
 * lambda with reset parameter (like in scheme)
 * new functions: 1+, 1-, curry and range
 * execute LIPS code from script tag with text-x/lips type attribute
+* add string functions: join, split, replace, match, search
 
 ### Bugs
 * fix (reduce + list)

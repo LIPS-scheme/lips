@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 11 May 2018 16:13:58 +0000
+ * build: Fri, 11 May 2018 16:39:30 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -909,6 +909,26 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         // ------------------------------------------------------------------
         concat: function concat() {
             return [].join.call(arguments, '');
+        },
+        // ------------------------------------------------------------------
+        join: function join(separator, list) {
+            return this.get('list->array')(list).join(separator);
+        },
+        // ------------------------------------------------------------------
+        split: function split(string, separator) {
+            return this.get('array->list')(string.split(separator));
+        },
+        // ------------------------------------------------------------------
+        replace: function replace(string, pattern, replacement) {
+            return string.replace(pattern, replacement);
+        },
+        // ------------------------------------------------------------------
+        match: function match(string, pattern) {
+            return this.get('array->list')(string.match(pattern));
+        },
+        // ------------------------------------------------------------------
+        search: function search(string, pattern) {
+            return string.search(pattern);
         },
         // ------------------------------------------------------------------
         string: function string(obj) {

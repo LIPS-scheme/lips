@@ -927,6 +927,26 @@
             return [].join.call(arguments, '');
         },
         // ------------------------------------------------------------------
+        join: function(separator, list) {
+            return this.get('list->array')(list).join(separator);
+        },
+        // ------------------------------------------------------------------
+        split: function(string, separator) {
+            return this.get('array->list')(string.split(separator));
+        },
+        // ------------------------------------------------------------------
+        replace: function(string, pattern, replacement) {
+            return string.replace(pattern, replacement);
+        },
+        // ------------------------------------------------------------------
+        match: function(string, pattern) {
+            return this.get('array->list')(string.match(pattern));
+        },
+        // ------------------------------------------------------------------
+        search: function(string, pattern) {
+            return string.search(pattern);
+        },
+        // ------------------------------------------------------------------
         string: function(obj) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
