@@ -1,13 +1,14 @@
 ## 0.4.0
 ### Features
 * lambda with reset parameter (like in scheme)
-* new functions: curry and range
-* add 1+ and 1- functions
+* new functions: 1+, 1-, curry and range
 * execute LIPS code from script tag with text-x/lips type attribute
 
 ### Bugs
 * fix (reduce + list)
 * fix handling of empty list
+* make let* handle promises
+* fix evaluate of macro that return a Promise
 
 ## 0.3.0
 ### Features

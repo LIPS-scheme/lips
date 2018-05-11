@@ -499,11 +499,42 @@
         return new Macro(function(code) {
             var args = this.get('list->array')(code.car);
             var env = new Environment({}, this);
-            args.forEach((pair) => {
-                env.set(pair.car, evaluate(pair.cdr.car, asterisk ? env : this));
+            return new Promise((resolve) => {
+                var promises = [];
+                var i = 0;
+                function response() {
+                    var output = new Pair(new Symbol('begin'), code.cdr);
+                    resolve(new Quote(evaluate(output, env)));
+                }
+                (function loop() {
+                    var set = (value) => {
+                        if (value instanceof Promise) {
+                            promises.push(value);
+                            return value.then(set);
+                        } else {
+                            env.set(pair.car, value);
+                        }
+                    };
+                    var pair = args[i++];
+                    if (!pair) {
+                        if (promises.length) {
+                            Promise.all(promises).then(response);
+                        } else {
+                            response();
+                        }
+                    } else {
+                        var value = evaluate(pair.cdr.car, asterisk ? env : this);
+                        var promise = set(value);
+                        if (promise instanceof Promise) {
+                            promise.then(() => {
+                                Promise.all(promises).then(loop);
+                            });
+                        } else {
+                            loop();
+                        }
+                    }
+                })();
             });
-            var output = new Pair(new Symbol('begin'), code.cdr);
-            return new Quote(evaluate(output, env));
         });
     }
     var gensym = (function() {
@@ -962,6 +993,12 @@
             }
             return value;
         },
+        type: function(obj) {
+            return typeof obj;
+        },
+        'instanceof': function(obj, type) {
+            return obj instanceof type;
+        },
         // ------------------------------------------------------------------
         read: function(arg) {
             if (typeof arg === 'string') {
@@ -1169,6 +1206,11 @@
                 })();
             });
         }),
+        '->': function(obj, name, ...args) {
+            console.log(name);
+            console.log(obj);
+            return obj[name](...args);
+        },
         // ------------------------------------------------------------------
         '1+': function(number) {
             return number + 1;
@@ -1263,6 +1305,8 @@
                 value = value.invoke(rest, env);
                 if (value instanceof Quote) {
                     return value.value;
+                } else if (value instanceof Promise) {
+                    return value.then((value) => value.value);
                 }
                 return evaluate(value, env);
             } else if (typeof value !== 'function') {

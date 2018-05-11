@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Thu, 10 May 2018 19:04:23 +0000
+ * build: Fri, 11 May 2018 10:15:01 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -492,15 +492,44 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
         return new Macro(function (code) {
-            var _this = this;
-
             var args = this.get('list->array')(code.car);
             var env = new Environment({}, this);
-            args.forEach(function (pair) {
-                env.set(pair.car, evaluate(pair.cdr.car, asterisk ? env : _this));
+            return new Promise(function (resolve) {
+                var promises = [];
+                var i = 0;
+                function response() {
+                    var output = new Pair(new _Symbol('begin'), code.cdr);
+                    resolve(new Quote(evaluate(output, env)));
+                }
+                (function loop() {
+                    var set = function set(value) {
+                        if (value instanceof Promise) {
+                            promises.push(value);
+                            return value.then(set);
+                        } else {
+                            env.set(pair.car, value);
+                        }
+                    };
+                    var pair = args[i++];
+                    if (!pair) {
+                        if (promises.length) {
+                            Promise.all(promises).then(response);
+                        } else {
+                            response();
+                        }
+                    } else {
+                        var value = evaluate(pair.cdr.car, asterisk ? env : this);
+                        var promise = set(value);
+                        if (promise instanceof Promise) {
+                            promise.then(function () {
+                                Promise.all(promises).then(loop);
+                            });
+                        } else {
+                            loop();
+                        }
+                    }
+                })();
             });
-            var output = new Pair(new _Symbol('begin'), code.cdr);
-            return new Quote(evaluate(output, env));
         });
     }
     var gensym = function () {
@@ -599,10 +628,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         gensym: gensym,
         // ------------------------------------------------------------------
         load: function load(file) {
-            var _this2 = this;
+            var _this = this;
 
             request(file).then(function (code) {
-                _this2.get('eval')(_this2.get('read')(code));
+                _this.get('eval')(_this.get('read')(code));
             });
         },
         // ------------------------------------------------------------------
@@ -639,17 +668,17 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }),
         // ------------------------------------------------------------------
         'if': new Macro(function (code) {
-            var _this3 = this;
+            var _this2 = this;
 
             var resolve = function resolve(cond) {
                 if (cond) {
-                    var true_value = evaluate(code.cdr.car, _this3);
+                    var true_value = evaluate(code.cdr.car, _this2);
                     if (typeof true_value === 'undefined') {
                         return;
                     }
                     return true_value;
                 } else if (code.cdr.cdr.car instanceof Pair) {
-                    var false_value = evaluate(code.cdr.cdr.car, _this3);
+                    var false_value = evaluate(code.cdr.cdr.car, _this2);
                     if (typeof false_value === 'undefined') {
                         return false;
                     }
@@ -671,20 +700,20 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         'let': let_macro(false),
         // ------------------------------------------------------------------
         'begin': new Macro(function (code) {
-            var _this4 = this;
+            var _this3 = this;
 
             var arr = this.get('list->array')(code);
             return arr.reduce(function (_, code) {
-                return evaluate(code, _this4);
+                return evaluate(code, _this3);
             }, 0);
         }),
         // ------------------------------------------------------------------
         timer: new Macro(function (code) {
-            var _this5 = this;
+            var _this4 = this;
 
             return new Promise(function (resolve) {
                 setTimeout(function () {
-                    resolve(new Quote(evaluate(code.cdr, _this5)));
+                    resolve(new Quote(evaluate(code.cdr, _this4)));
                 }, code.car);
             });
         }),
@@ -708,7 +737,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // ------------------------------------------------------------------
         'eval': function _eval(code) {
-            var _this6 = this;
+            var _this5 = this;
 
             if (code instanceof Pair) {
                 return evaluate(code, this);
@@ -716,21 +745,21 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             if (code instanceof Array) {
                 var result;
                 code.forEach(function (code) {
-                    result = evaluate(code, _this6);
+                    result = evaluate(code, _this5);
                 });
                 return result;
             }
         },
         // ------------------------------------------------------------------
         lambda: new Macro(function (code) {
-            var _this7 = this;
+            var _this6 = this;
 
             return function () {
                 for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
                     args[_key] = arguments[_key];
                 }
 
-                var env = new Environment({}, _this7);
+                var env = new Environment({}, _this6);
                 var name = code.car;
                 var i = 0;
                 var value;
@@ -947,28 +976,34 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return value;
         },
+        type: function type(obj) {
+            return typeof obj === 'undefined' ? 'undefined' : _typeof(obj);
+        },
+        'instanceof': function _instanceof(obj, type) {
+            return obj instanceof type;
+        },
         // ------------------------------------------------------------------
         read: function read(arg) {
-            var _this8 = this;
+            var _this7 = this;
 
             if (typeof arg === 'string') {
                 return parse(tokenize(arg));
             }
             return this.get('stdin').read().then(function (text) {
-                return _this8.get('read').call(_this8, text);
+                return _this7.get('read').call(_this7, text);
             });
         },
         // ------------------------------------------------------------------
         print: function print() {
             var _get,
-                _this9 = this;
+                _this8 = this;
 
             for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 args[_key2] = arguments[_key2];
             }
 
             (_get = this.get('stdout')).write.apply(_get, _toConsumableArray(args.map(function (arg) {
-                return _this9.get('string')(arg);
+                return _this8.get('string')(arg);
             })));
         },
         // ------------------------------------------------------------------
@@ -1190,6 +1225,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 })();
             });
         }),
+        '->': function _(obj, name) {
+            console.log(name);
+            console.log(obj);
+
+            for (var _len9 = arguments.length, args = Array(_len9 > 2 ? _len9 - 2 : 0), _key9 = 2; _key9 < _len9; _key9++) {
+                args[_key9 - 2] = arguments[_key9];
+            }
+
+            return obj[name].apply(obj, args);
+        },
         // ------------------------------------------------------------------
         '1+': function _(number) {
             return number + 1;
@@ -1282,6 +1327,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 value = value.invoke(rest, env);
                 if (value instanceof Quote) {
                     return value.value;
+                } else if (value instanceof Promise) {
+                    return value.then(function (value) {
+                        return value.value;
+                    });
                 }
                 return evaluate(value, env);
             } else if (typeof value !== 'function') {

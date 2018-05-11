@@ -138,8 +138,11 @@
    })();
   </script>
   <script type="text-x/lips">
-   ;; Example of LIPS in script tag, it invoke global terminal method
-   (let ((echo (. term "echo")))
-       (echo greetings))
+   ;; Example of LIPS in script tag
+   (load "greetings.lips")
+   (let* ((res (fetch "greetings.lips"))
+          (text ((. res "text")))
+          (log (. console "log")))
+       (log text))
   </script>
 </html>
