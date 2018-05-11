@@ -61,12 +61,16 @@
     var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function tokenize(str) {
-        return tokens(str).map(function(token) {
-            return token.token.trim();
-        }).filter(function(token) {
-            return token && !token.match(/^;/);
-        });
+    function tokenize(str, extra) {
+        if (extra) {
+            return tokens(str);
+        } else {
+            return tokens(str).map(function(token) {
+                return token.token.trim();
+            }).filter(function(token) {
+                return token && !token.match(/^;/);
+            });
+        }
     }
     // ----------------------------------------------------------------------
     function tokens(str) {
@@ -1452,7 +1456,6 @@
         exec: exec,
         parse: parse,
         tokenize: tokenize,
-        tokens: tokens,
         evaluate: evaluate,
         Environment: Environment,
         global_environment: global_env,

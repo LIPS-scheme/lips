@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 11 May 2018 17:11:23 +0000
+ * build: Fri, 11 May 2018 17:17:25 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -66,12 +66,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function tokenize(str) {
-        return tokens(str).map(function (token) {
-            return token.token.trim();
-        }).filter(function (token) {
-            return token && !token.match(/^;/);
-        });
+    function tokenize(str, extra) {
+        if (extra) {
+            return tokens(str);
+        } else {
+            return tokens(str).map(function (token) {
+                return token.token.trim();
+            }).filter(function (token) {
+                return token && !token.match(/^;/);
+            });
+        }
     }
     // ----------------------------------------------------------------------
     function tokens(str) {
@@ -1488,7 +1492,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         exec: exec,
         parse: parse,
         tokenize: tokenize,
-        tokens: tokens,
         evaluate: evaluate,
         Environment: Environment,
         global_environment: global_env,

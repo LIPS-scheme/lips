@@ -102,7 +102,7 @@
                    setTimeout(function() {
                        position = term.get_position();
                        var command = term.get_command();
-                       var tokens = lips.tokens(command);
+                       var tokens = tokenize(command, true);
                        var count = 1;
                        var token;
                        var i = tokens.length - 1;
