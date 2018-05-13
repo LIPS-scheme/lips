@@ -77,6 +77,7 @@
         var count = 0;
         return str.split('\n').map(function(line, i) {
             var col = 0;
+            // correction for newline characters
             count += i === 0 ? 0 : 1;
             return line.split(tokens_re).filter(Boolean).map(function(token) {
                 var result = {
