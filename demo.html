@@ -122,8 +122,7 @@
                        if (token.token == '(') {
                            clearTimeout(timer);
                            setTimeout(function() {
-                               // first line was correct but all after was off by one
-                               term.set_position(token.offset > len ? token.offset + 1 : token.offset);
+                               term.set_position(token.offset);
                                timer = setTimeout(function() {
                                    term.set_position(position)
                                    position = false;
