@@ -20,10 +20,10 @@
        if (term.hasClass('terminal')) {
            $.terminal.active().error(message);
        } else {
-           $('body').terminal(function() {
+           window.term = $('body').terminal(function() {
                this.error('You need to use modern browser');
            }, {
-               greetings: greetings
+               greetings: false
            }).error(message);
        }
    };
@@ -61,13 +61,12 @@
                }
            }
        }, global_environment);
-       env.set('replace', function(re, sub, string) {
-           return string.replace(re, sub);
-       });
        env.set('quote-car', new Macro(function(code) {
            return Pair.fromArray([new Symbol('quote'), code.car.car]);
        }));
-       var term = $('body').terminal(function(code, term) {
+       var position;
+       var timer;
+       window.term = $('body').terminal(function(code, term) {
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
@@ -90,8 +89,60 @@
            }
        }, {
            name: 'lips',
-           greetings: greetings
+           greetings: false,
+           // below is the code for parenthesis matching (jumping)
+           keydown: function() {
+               if (position) {
+                   term.set_position(position);
+                   position = false;
+               }
+           },
+           keypress: function(e) {
+               var term = this;
+               if (e.key == ')') {
+                   setTimeout(function() {
+                       position = term.get_position();
+                       var command = term.get_command();
+                       var len = command.split(/\n/)[0].length;
+                       var tokens = tokenize(command, true);
+                       var count = 1;
+                       var token;
+                       var i = tokens.length - 1;
+                       while (count > 0) {
+                           token = tokens[--i];
+                           if (!token) {
+                               return;
+                           }
+                           if (token.token === '(') {
+                               count--;
+                           } else if (token.token == ')') {
+                               count++;
+                           }
+                       }
+                       if (token.token == '(') {
+                           clearTimeout(timer);
+                           setTimeout(function() {
+                               term.set_position(token.offset);
+                               timer = setTimeout(function() {
+                                   term.set_position(position)
+                                   position = false;
+                               }, 200);
+                           }, 0);
+                       }
+                   }, 0);
+               } else {
+                   position = false;
+               }
+           }
        });
    })();
+  </script>
+  <script type="text-x/lips">
+   ;; Example of LIPS in script tag
+   (load "greetings.lips")
+   (let* ((res (fetch "greetings.lips"))
+          (text ((. res "text")))
+          (log (. console "log")))
+       (log text))
   </script>
 </html>

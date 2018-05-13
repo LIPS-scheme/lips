@@ -1,10 +1,10 @@
 /**@license
- * LIPS is Pretty Simple - version 0.3.0
+ * LIPS is Pretty Simple - version DEV
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Wed, 21 Mar 2018 21:11:48 +0000
+ * build: Sun, 13 May 2018 13:02:51 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -66,14 +66,35 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function tokenize(str) {
-        return str.split('\n').map(function (line) {
-            return line.split(tokens_re).map(function (token) {
-                if (token.match(/^;/)) {
-                    return null;
-                }
-                return token.trim();
-            }).filter(Boolean);
+    function tokenize(str, extra) {
+        if (extra) {
+            return tokens(str);
+        } else {
+            return tokens(str).map(function (token) {
+                return token.token.trim();
+            }).filter(function (token) {
+                return token && !token.match(/^;/);
+            });
+        }
+    }
+    // ----------------------------------------------------------------------
+    function tokens(str) {
+        var count = 0;
+        return str.split('\n').map(function (line, i) {
+            var col = 0;
+            // correction for newline characters
+            count += i === 0 ? 0 : 1;
+            return line.split(tokens_re).filter(Boolean).map(function (token) {
+                var result = {
+                    col: col,
+                    line: i,
+                    token: token,
+                    offset: count
+                };
+                col += token.length;
+                count += token.length;
+                return result;
+            });
         }).reduce(function (arr, tokens) {
             return arr.concat(tokens);
         }, []);
@@ -211,6 +232,35 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         });
     }
     // ----------------------------------------------------------------------
+    // :: flatten nested arrays
+    // :: source: https://stackoverflow.com/a/27282907/387194
+    // ----------------------------------------------------------------------
+    function flatten(array, mutable) {
+        var toString = Object.prototype.toString;
+        var arrayTypeStr = '[object Array]';
+
+        var result = [];
+        var nodes = mutable && array || array.slice();
+        var node;
+
+        if (!array.length) {
+            return result;
+        }
+
+        node = nodes.pop();
+
+        do {
+            if (toString.call(node) === arrayTypeStr) {
+                nodes.push.apply(nodes, node);
+            } else {
+                result.push(node);
+            }
+        } while (nodes.length && (node = nodes.pop()) !== undefined);
+
+        result.reverse(); // we reverse result to restore the original order
+        return result;
+    }
+    // ----------------------------------------------------------------------
     // :: Symbol constructor
     // ----------------------------------------------------------------------
     function _Symbol(name) {
@@ -238,6 +288,52 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         this.car = car;
         this.cdr = cdr;
     }
+
+    // ----------------------------------------------------------------------
+    Pair.prototype[window.Symbol.iterator] = /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        var node;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+                switch (_context.prev = _context.next) {
+                    case 0:
+                        node = this;
+
+                    case 1:
+                        if (!true) {
+                            _context.next = 9;
+                            break;
+                        }
+
+                        if (!(!node || node === nil)) {
+                            _context.next = 4;
+                            break;
+                        }
+
+                        return _context.abrupt('break', 9);
+
+                    case 4:
+                        _context.next = 6;
+                        return node.car;
+
+                    case 6:
+                        node = node.cdr;
+                        _context.next = 1;
+                        break;
+
+                    case 9:
+                    case 'end':
+                        return _context.stop();
+                }
+            }
+        }, _callee, this);
+    });
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.flatten = function () {
+        return Pair.fromArray(flatten(this.toArray()));
+    };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.length = function () {
         var len = 0;
         var node = this;
@@ -250,15 +346,21 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return len;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.clone = function () {
-        var cdr;
-        if (this.cdr === nil) {
-            cdr = nil;
-        } else {
+        var cdr = this.cdr;
+        var car = this.car;
+        if (car instanceof Pair) {
+            car = car.clone();
+        }
+        if (cdr instanceof Pair) {
             cdr = this.cdr.clone();
         }
-        return new Pair(this.car, cdr);
+        return new Pair(car, cdr);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toArray = function () {
         if (this.cdr === nil && this.car === nil) {
             return [];
@@ -274,6 +376,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromArray = function (array) {
         if (array instanceof Pair) {
             return array;
@@ -282,7 +386,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             array = [].concat(_toConsumableArray(array));
         }
         if (array.length === 0) {
-            return new Pair(nil, nil);
+            return new Pair(undefined, nil);
         } else {
             var car;
             if (array[0] instanceof Array) {
@@ -297,6 +401,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toObject = function () {
         var node = this;
         var result = {};
@@ -315,17 +421,23 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromPairs = function (array) {
         return array.reduce(function (list, pair) {
             return new Pair(new Pair(new _Symbol(pair[0]), pair[1]), list);
         }, nil);
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromObject = function (obj) {
         var array = Object.keys(obj).map(function (key) {
             return [key, obj[key]];
         });
         return Pair.fromPairs(array);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.reduce = function (fn) {
         var node = this;
         var result = nil;
@@ -339,6 +451,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.reverse = function () {
         var node = this;
         var prev = nil;
@@ -350,6 +464,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return prev;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.transform = function (fn) {
         var visited = [];
         function recur(pair) {
@@ -374,39 +490,54 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
         return recur(this);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toString = function () {
         var arr = ['('];
-        if (typeof this.car === 'string') {
-            arr.push(JSON.stringify(this.car));
-        } else if (typeof this.car !== 'undefined') {
-            arr.push(this.car);
-        }
-        if (this.cdr instanceof Pair) {
-            arr.push(' ');
-            arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
-        } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-            if (typeof this.cdr === 'string') {
-                arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
-            } else {
-                arr = arr.concat([' . ', this.cdr]);
+        if (this.car !== undefined) {
+            if (typeof this.car === 'string') {
+                arr.push(JSON.stringify(this.car));
+            } else if (typeof this.car !== 'undefined') {
+                arr.push(this.car);
+            }
+            if (this.cdr instanceof Pair) {
+                arr.push(' ');
+                arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
+            } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
+                if (typeof this.cdr === 'string') {
+                    arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
+                } else {
+                    arr = arr.concat([' . ', this.cdr]);
+                }
             }
         }
         arr.push(')');
         return arr.join('');
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.append = function (pair) {
         if (pair instanceof Array) {
             return this.append(Pair.fromArray(pair));
         }
         var p = this;
-        while (true) {
-            if (p instanceof Pair && p.cdr !== nil) {
-                p = p.cdr;
+        if (p.car === undefined) {
+            if (pair instanceof Pair) {
+                this.car = pair.car;
+                this.cdr = pair.cdr;
             } else {
-                break;
+                return pair;
             }
+        } else {
+            while (true) {
+                if (p instanceof Pair && p.cdr !== nil) {
+                    p = p.cdr;
+                } else {
+                    break;
+                }
+            }
+            p.cdr = pair;
         }
-        p.cdr = pair;
         return this;
     };
 
@@ -440,13 +571,20 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
         if (this.parent instanceof Environment) {
             return this.parent.get(symbol);
-        } else if (symbol instanceof _Symbol) {
-            if (typeof window[symbol.name] !== 'undefined') {
-                return window[symbol.name];
+        } else {
+            var name;
+            if (symbol instanceof _Symbol) {
+                name = symbol.name;
+            } else if (typeof symbol === 'string') {
+                name = symbol;
             }
-        } else if (typeof symbol === 'string') {
-            if (typeof window[symbol] !== 'undefined') {
-                return window[symbol];
+            if (name) {
+                var type = _typeof(window[name]);
+                if (type === 'function') {
+                    return window[name].bind(window);
+                } else if (type !== 'undefined') {
+                    return window[name];
+                }
             }
         }
     };
@@ -474,15 +612,37 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
         return new Macro(function (code) {
-            var _this = this;
-
             var args = this.get('list->array')(code.car);
             var env = new Environment({}, this);
-            args.forEach(function (pair) {
-                env.set(pair.car, evaluate(pair.cdr.car, asterisk ? env : _this));
+            return new Promise(function (resolve) {
+                var promises = [];
+                var i = 0;
+                (function loop() {
+                    var pair = args[i++];
+                    function set(value) {
+                        if (value instanceof Promise) {
+                            promises.push(value);
+                            return value.then(set);
+                        } else {
+                            env.set(pair.car, value);
+                        }
+                    }
+                    if (!pair) {
+                        var output = new Pair(new _Symbol('begin'), code.cdr);
+                        resolve(new Quote(evaluate(output, env)));
+                    } else {
+                        var value = evaluate(pair.cdr.car, asterisk ? env : this);
+                        var promise = set(value);
+                        if (promise instanceof Promise) {
+                            promise.then(function () {
+                                Promise.all(promises).then(loop);
+                            });
+                        } else {
+                            loop();
+                        }
+                    }
+                })();
             });
-            var output = new Pair(new _Symbol('begin'), code.cdr);
-            return new Quote(evaluate(output, env));
         });
     }
     var gensym = function () {
@@ -520,6 +680,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         window: window,
         'true': true,
         'false': false,
+        // ------------------------------------------------------------------
         stdout: {
             write: function write() {
                 var _console;
@@ -527,6 +688,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 (_console = console).log.apply(_console, arguments);
             }
         },
+        // ------------------------------------------------------------------
         stdin: {
             read: function read() {
                 return new Promise(function (resolve) {
@@ -534,9 +696,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 });
             }
         },
+        // ------------------------------------------------------------------
         cons: function cons(car, cdr) {
             return new Pair(car, cdr);
         },
+        // ------------------------------------------------------------------
         car: function car(list) {
             if (list instanceof Pair) {
                 return list.car;
@@ -544,6 +708,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 throw new Error('argument to car need to be a list');
             }
         },
+        // ------------------------------------------------------------------
         cdr: function cdr(list) {
             if (list instanceof Pair) {
                 return list.cdr;
@@ -551,12 +716,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 throw new Error('argument to cdr need to be a list');
             }
         },
+        // ------------------------------------------------------------------
         'set-car': function setCar(slot, value) {
             slot.car = value;
         },
+        // ------------------------------------------------------------------
         'set-cdr': function setCdr(slot, value) {
             slot.cdr = value;
         },
+        // ------------------------------------------------------------------
         assoc: function assoc(list, key) {
             var node = list;
             var name = key instanceof _Symbol ? key.name : key;
@@ -569,14 +737,17 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 }
             }
         },
+        // ------------------------------------------------------------------
         gensym: gensym,
+        // ------------------------------------------------------------------
         load: function load(file) {
-            var _this2 = this;
+            var _this = this;
 
             request(file).then(function (code) {
-                _this2.get('eval')(_this2.get('read')(code));
+                _this.get('eval')(_this.get('read')(code));
             });
         },
+        // ------------------------------------------------------------------
         'while': new Macro(function (code) {
             var self = this;
             var begin = new Pair(new _Symbol('begin'), code.cdr);
@@ -608,18 +779,19 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         'if': new Macro(function (code) {
-            var _this3 = this;
+            var _this2 = this;
 
             var resolve = function resolve(cond) {
                 if (cond) {
-                    var true_value = evaluate(code.cdr.car, _this3);
+                    var true_value = evaluate(code.cdr.car, _this2);
                     if (typeof true_value === 'undefined') {
                         return;
                     }
                     return true_value;
                 } else if (code.cdr.cdr.car instanceof Pair) {
-                    var false_value = evaluate(code.cdr.cdr.car, _this3);
+                    var false_value = evaluate(code.cdr.cdr.car, _this2);
                     if (typeof false_value === 'undefined') {
                         return false;
                     }
@@ -635,25 +807,30 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return resolve(cond);
             }
         }),
+        // ------------------------------------------------------------------
         'let*': let_macro(true),
+        // ------------------------------------------------------------------
         'let': let_macro(false),
+        // ------------------------------------------------------------------
         'begin': new Macro(function (code) {
-            var _this4 = this;
+            var _this3 = this;
 
             var arr = this.get('list->array')(code);
             return arr.reduce(function (_, code) {
-                return evaluate(code, _this4);
+                return evaluate(code, _this3);
             }, 0);
         }),
+        // ------------------------------------------------------------------
         timer: new Macro(function (code) {
-            var _this5 = this;
+            var _this4 = this;
 
             return new Promise(function (resolve) {
                 setTimeout(function () {
-                    resolve(new Quote(evaluate(code.cdr, _this5)));
+                    resolve(new Quote(evaluate(code.cdr, _this4)));
                 }, code.car);
             });
         }),
+        // ------------------------------------------------------------------
         define: new Macro(function (code) {
             if (code.car instanceof Pair && code.car.car instanceof _Symbol) {
                 var new_code = new Pair(new _Symbol("define"), new Pair(code.car.car, new Pair(new Pair(new _Symbol("lambda"), new Pair(code.car.cdr, code.cdr)))));
@@ -667,11 +844,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 this.env[code.car.name] = value;
             }
         }),
+        // ------------------------------------------------------------------
         set: function set(obj, key, value) {
             obj[key] = value;
         },
+        // ------------------------------------------------------------------
         'eval': function _eval(code) {
-            var _this6 = this;
+            var _this5 = this;
 
             if (code instanceof Pair) {
                 return evaluate(code, this);
@@ -679,27 +858,39 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             if (code instanceof Array) {
                 var result;
                 code.forEach(function (code) {
-                    result = evaluate(code, _this6);
+                    result = evaluate(code, _this5);
                 });
                 return result;
             }
         },
+        // ------------------------------------------------------------------
         lambda: new Macro(function (code) {
-            var _this7 = this;
+            var _this6 = this;
 
             return function () {
-                var env = new Environment({}, _this7);
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
+                }
+
+                var env = new Environment({}, _this6);
                 var name = code.car;
                 var i = 0;
                 var value;
                 while (true) {
                     if (name.car !== nil) {
-                        if (typeof (arguments.length <= i ? undefined : arguments[i]) === 'undefined') {
-                            value = nil;
+                        if (name instanceof _Symbol) {
+                            // rest argument,  can also be first argument
+                            value = Pair.fromArray(args.slice(i));
+                            env.env[name.name] = value;
+                            break;
                         } else {
-                            value = arguments.length <= i ? undefined : arguments[i];
+                            if (typeof args[i] === 'undefined') {
+                                value = nil;
+                            } else {
+                                value = args[i];
+                            }
+                            env.env[name.car.name] = value;
                         }
-                        env.env[name.car.name] = value;
                     }
                     if (name.cdr === nil) {
                         break;
@@ -710,6 +901,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return evaluate(code.cdr.car, env);
             };
         }),
+        // ------------------------------------------------------------------
         defmacro: new Macro(function (macro) {
             if (macro.car.car instanceof _Symbol) {
                 this.env[macro.car.car.name] = new Macro(function (code) {
@@ -730,9 +922,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 });
             }
         }),
+        // ------------------------------------------------------------------
         quote: new Macro(function (arg) {
             return new Quote(arg.car);
         }),
+        // ------------------------------------------------------------------
         quasiquote: new Macro(function (arg) {
             var self = this;
             var max_unquote = 0;
@@ -816,29 +1010,47 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return new Quote(unquote(recur(arg.car)));
         }),
+        // ------------------------------------------------------------------
         clone: function clone(list) {
             return list.clone();
         },
+        // ------------------------------------------------------------------
         append: function append(list, item) {
             return this.get('append!')(list.clone(), item);
         },
+        // ------------------------------------------------------------------
         'append!': function append(list, item) {
-            var node = list;
-            while (true) {
-                if (node.cdr === nil) {
-                    node.cdr = item;
-                    break;
-                }
-                node = node.cdr;
-            }
-            return list;
+            return list.append(item);
         },
+        // ------------------------------------------------------------------
         list: function list() {
             return Pair.fromArray([].slice.call(arguments));
         },
+        // ------------------------------------------------------------------
         concat: function concat() {
             return [].join.call(arguments, '');
         },
+        // ------------------------------------------------------------------
+        join: function join(separator, list) {
+            return this.get('list->array')(list).join(separator);
+        },
+        // ------------------------------------------------------------------
+        split: function split(string, separator) {
+            return this.get('array->list')(string.split(separator));
+        },
+        // ------------------------------------------------------------------
+        replace: function replace(string, pattern, replacement) {
+            return string.replace(pattern, replacement);
+        },
+        // ------------------------------------------------------------------
+        match: function match(string, pattern) {
+            return this.get('array->list')(string.match(pattern));
+        },
+        // ------------------------------------------------------------------
+        search: function search(string, pattern) {
+            return string.search(pattern);
+        },
+        // ------------------------------------------------------------------
         string: function string(obj) {
             if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
                 return '<#jQuery>';
@@ -873,6 +1085,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return obj;
         },
+        // ------------------------------------------------------------------
         env: function env(_env) {
             _env = _env || this;
             var names = Object.keys(_env.env);
@@ -887,6 +1100,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return result;
         },
+        // ------------------------------------------------------------------
         '.': function _(obj, arg) {
             var name = arg instanceof _Symbol ? arg.name : arg;
             var value = obj[name];
@@ -895,31 +1109,45 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return value;
         },
+        type: function type(obj) {
+            return typeof obj === 'undefined' ? 'undefined' : _typeof(obj);
+        },
+        'instanceof': function _instanceof(obj, type) {
+            return obj instanceof type;
+        },
+        // ------------------------------------------------------------------
         read: function read(arg) {
-            var _this8 = this;
+            var _this7 = this;
 
             if (typeof arg === 'string') {
                 return parse(tokenize(arg));
             }
             return this.get('stdin').read().then(function (text) {
-                return _this8.get('read').call(_this8, text);
+                return _this7.get('read').call(_this7, text);
             });
         },
+        // ------------------------------------------------------------------
         print: function print() {
             var _get,
-                _this9 = this;
+                _this8 = this;
 
-            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                args[_key] = arguments[_key];
+            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
             }
 
             (_get = this.get('stdout')).write.apply(_get, _toConsumableArray(args.map(function (arg) {
-                return _this9.get('string')(arg);
+                return _this8.get('string')(arg);
             })));
         },
+        // ------------------------------------------------------------------
+        flatten: function flatten(list) {
+            return list.flatten();
+        },
+        // ------------------------------------------------------------------
         'array->list': function arrayList(array) {
             return Pair.fromArray(array);
         },
+        // ------------------------------------------------------------------
         'list->array': function listArray(list) {
             var result = [];
             var node = list;
@@ -933,19 +1161,24 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             return result;
         },
+        // ------------------------------------------------------------------
         filter: function filter(fn, list) {
             return Pair.fromArray(this.get('list->array')(list).filter(fn));
         },
+        // ------------------------------------------------------------------
         odd: function odd(num) {
             return num % 2 === 1;
         },
+        // ------------------------------------------------------------------
         even: function even(num) {
             return num % 2 === 0;
         },
+        // ------------------------------------------------------------------
         apply: function apply(fn, list) {
             var args = this.get('list->array')(list);
             return fn.apply(null, args);
         },
+        // ------------------------------------------------------------------
         map: function map(fn, list) {
             var result = this.get('list->array')(list).map(fn);
             if (result.length) {
@@ -954,68 +1187,118 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return nil;
             }
         },
+        // ------------------------------------------------------------------
         reduce: function reduce(fn, list) {
+            var init = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
             var arr = this.get('list->array')(list);
-            return arr.reduce(function (list, item) {
-                return fn(list, item);
-            }, nil);
+            if (init === null) {
+                return arr.slice(1).reduce(function (acc, item) {
+                    return fn(acc, item);
+                }, arr[0]);
+            } else {
+                return arr.reduce(function (acc, item) {
+                    return fn(acc, item);
+                }, init);
+            }
         },
+        // ------------------------------------------------------------------
+        curry: function curry(fn) {
+            for (var _len3 = arguments.length, init_args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+                init_args[_key3 - 1] = arguments[_key3];
+            }
+
+            var len = fn.length;
+            return function () {
+                var args = init_args.slice();
+                function call() {
+                    for (var _len4 = arguments.length, more_args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                        more_args[_key4] = arguments[_key4];
+                    }
+
+                    args = args.concat(more_args);
+                    if (args.length >= len) {
+                        return fn.apply(this, args);
+                    } else {
+                        return call;
+                    }
+                }
+                return call.apply(this, arguments);
+            };
+        },
+        // ------------------------------------------------------------------
+        range: function range(n) {
+            return Pair.fromArray(new Array(n).fill(0).map(function (_, i) {
+                return i;
+            }));
+        },
+        // ------------------------------------------------------------------
         // math functions
         '*': function _() {
-            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                args[_key2] = arguments[_key2];
+            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                args[_key5] = arguments[_key5];
             }
 
             return args.reduce(function (a, b) {
                 return a * b;
             });
         },
+        // ------------------------------------------------------------------
         '+': function _() {
-            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                args[_key3] = arguments[_key3];
+            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+                args[_key6] = arguments[_key6];
             }
 
             return args.reduce(function (a, b) {
                 return a + b;
             });
         },
+        // ------------------------------------------------------------------
         '-': function _() {
-            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                args[_key4] = arguments[_key4];
+            for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+                args[_key7] = arguments[_key7];
             }
 
             return args.reduce(function (a, b) {
                 return a - b;
             });
         },
+        // ------------------------------------------------------------------
         '/': function _() {
-            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                args[_key5] = arguments[_key5];
+            for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+                args[_key8] = arguments[_key8];
             }
 
             return args.reduce(function (a, b) {
                 return a / b;
             });
         },
+        // ------------------------------------------------------------------
         '%': function _(a, b) {
             return a % b;
         },
+        // ------------------------------------------------------------------
         // Booleans
         "==": function _(a, b) {
             return a === b;
         },
+        // ------------------------------------------------------------------
         '>': function _(a, b) {
             return a > b;
         },
+        // ------------------------------------------------------------------
         '<': function _(a, b) {
             return a < b;
         },
+        // ------------------------------------------------------------------
         '<=': function _(a, b) {
             return a <= b;
         },
+        // ------------------------------------------------------------------
         '>=': function _(a, b) {
             return a >= b;
         },
+        // ------------------------------------------------------------------
         or: new Macro(function (code) {
             var args = this.get('list->array')(code);
             var self = this;
@@ -1047,6 +1330,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         and: new Macro(function (code) {
             var args = this.get('list->array')(code);
             var self = this;
@@ -1078,11 +1362,31 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 })();
             });
         }),
+        '->': function _(obj, name) {
+            console.log(name);
+            console.log(obj);
+
+            for (var _len9 = arguments.length, args = Array(_len9 > 2 ? _len9 - 2 : 0), _key9 = 2; _key9 < _len9; _key9++) {
+                args[_key9 - 2] = arguments[_key9];
+            }
+
+            return obj[name].apply(obj, args);
+        },
+        // ------------------------------------------------------------------
+        '1+': function _(number) {
+            return number + 1;
+        },
+        // ------------------------------------------------------------------
+        '1-': function _(number) {
+            return number - 1;
+        },
+        // ------------------------------------------------------------------
         '++': new Macro(function (code) {
             var value = this.get(code.car) + 1;
             this.set(code.car, value);
             return value;
         }),
+        // ------------------------------------------------------------------
         '--': new Macro(function (code) {
             var value = this.get(code.car) - 1;
             this.set(code.car, value);
@@ -1147,7 +1451,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         var rest = code.cdr;
         if (first instanceof Pair) {
             value = evaluate(first, env);
-            if (typeof value !== 'function') {
+            if (value instanceof Promise) {
+                return value.then(function (value) {
+                    return evaluate(new Pair(value, code.cdr));
+                });
+            } else if (typeof value !== 'function') {
                 throw new Error(env.get('string')(value) + ' is not a function');
             }
         }
@@ -1160,6 +1468,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 value = value.invoke(rest, env);
                 if (value instanceof Quote) {
                     return value.value;
+                } else if (value instanceof Promise) {
+                    return value.then(function (value) {
+                        return value.value;
+                    });
                 }
                 return evaluate(value, env);
             } else if (typeof value !== 'function') {
@@ -1203,8 +1515,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return evaluate(code, env);
         });
     }
-    // ----------------------------------------------------------------------
 
+    // ----------------------------------------------------------------------
     function balanced(code) {
         var re = /[()]/;
         var parenthesis = tokenize(code).filter(function (token) {
@@ -1219,7 +1531,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return open.length === close.length;
     }
 
-    // --------------------------------------
+    // ----------------------------------------------------------------------
     Pair.unDry = function (value) {
         return new Pair(value.car, value.cdr);
     };
@@ -1249,8 +1561,46 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     _Symbol.unDry = function (value) {
         return new _Symbol(value.name);
     };
+    // ----------------------------------------------------------------------
+    function init() {
+        var lips_mime = 'text-x/lips';
+        if (window.document) {
+            Array.from(document.querySelectorAll('script')).forEach(function (script) {
+                var type = script.getAttribute('type');
+                if (type === lips_mime) {
+                    exec(script.innerHTML);
+                } else if (type === 'text-x/lisp') {
+                    console.warn('Expecting ' + lips_mime + ' found ' + type);
+                }
+            });
+        }
+    }
+    // ----------------------------------------------------------------------
+    function load(callback) {
+        if (typeof window !== 'undefined') {
+            if (window.addEventListener) {
+                window.addEventListener("load", callback, false);
+            } else if (window.attachEvent) {
+                window.attachEvent("onload", callback);
+            } else if (typeof window.onload === 'function') {
+                (function (old) {
+                    window.onload = function () {
+                        callback();
+                        old();
+                    };
+                })(window.onload);
+            } else {
+                window.onload = callback;
+            }
+        }
+    }
+    // ----------------------------------------------------------------------
+    load(function () {
+        setTimeout(init, 0);
+    });
+    // --------------------------------------
     return {
-        version: '0.3.0',
+        version: 'DEV',
         exec: exec,
         parse: parse,
         tokenize: tokenize,

@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
-[![npm](https://img.shields.io/badge/npm-0.3.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&75a8e908f71d1893396db68780c9a21f88ff392c)](https://travis-ci.org/jcubic/jquery.terminal)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&a6562124b6b8df22c67398db686aa9f0)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&2dc94aa1484e56f5566d4c09b9f3ed51ace31d72)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&a6562124b6b8df22c67398db686aa9f0)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
@@ -26,7 +26,7 @@ https://unpkg.com/@jcubic/lips
 or from rawgit
 
 ```
-https://cdn.rawgit.com/jcubic/lips/master/dist/lips.min.js
+https://cdn.rawgit.com/jcubic/lips/devel/dist/lips.min.js
 ```
 
 ## Usage
@@ -64,6 +64,16 @@ var env = new Environment({}, lips.global_environment);
 First argument is an object with functions, macros and varibles (see Extending LIPS at the end).
 Second argument is parent environment, you need to use global environment (or other that extend global)
 otherwise you will not have any functions.
+
+You can also use script tag to execute LIPS code:
+
+```html
+<script type="text-x/lips">
+(let ((what "world")
+      (greet "hello"))
+   (print (concat "hello" " " what)))
+</script>
+```
 
 ## License
 

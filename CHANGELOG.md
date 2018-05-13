@@ -1,3 +1,19 @@
+## 0.4.0
+### Features
+* lambda with reset parameter (like in scheme)
+* new functions: 1+, 1-, curry and range
+* execute LIPS code from script tag with text-x/lips type attribute
+* add string functions: join, split, replace, match, search
+* new second parameter to `tokenize` that make it return array of extra objects `{token, col, line, offset}`
+* Pair.flatten and lips function flatten
+
+### Bugs
+* fix (reduce + list)
+* fix handling of empty list
+* make let* handle promises
+* fix evaluate of macro that return a Promise
+* fix evaluating code with promises
+
 ## 0.3.0
 ### Features
 * exec api method

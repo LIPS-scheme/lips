@@ -61,14 +61,35 @@
     var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function tokenize(str) {
-        return str.split('\n').map(function(line) {
-            return line.split(tokens_re).map(function(token) {
-                if (token.match(/^;/)) {
-                    return null;
-                }
-                return token.trim();
-            }).filter(Boolean);
+    function tokenize(str, extra) {
+        if (extra) {
+            return tokens(str);
+        } else {
+            return tokens(str).map(function(token) {
+                return token.token.trim();
+            }).filter(function(token) {
+                return token && !token.match(/^;/);
+            });
+        }
+    }
+    // ----------------------------------------------------------------------
+    function tokens(str) {
+        var count = 0;
+        return str.split('\n').map(function(line, i) {
+            var col = 0;
+            // correction for newline characters
+            count += i === 0 ? 0 : 1;
+            return line.split(tokens_re).filter(Boolean).map(function(token) {
+                var result = {
+                    col,
+                    line: i,
+                    token,
+                    offset: count
+                };
+                col += token.length;
+                count += token.length;
+                return result;
+            });
         }).reduce(function(arr, tokens) {
             return arr.concat(tokens);
         }, []);
@@ -210,6 +231,35 @@
         });
     }
     // ----------------------------------------------------------------------
+    // :: flatten nested arrays
+    // :: source: https://stackoverflow.com/a/27282907/387194
+    // ----------------------------------------------------------------------
+    function flatten(array, mutable) {
+        var toString = Object.prototype.toString;
+        var arrayTypeStr = '[object Array]';
+
+        var result = [];
+        var nodes = (mutable && array) || array.slice();
+        var node;
+
+        if (!array.length) {
+            return result;
+        }
+
+        node = nodes.pop();
+
+        do {
+            if (toString.call(node) === arrayTypeStr) {
+                nodes.push.apply(nodes, node);
+            } else {
+                result.push(node);
+            }
+        } while (nodes.length && (node = nodes.pop()) !== undefined);
+
+        result.reverse(); // we reverse result to restore the original order
+        return result;
+    }
+    // ----------------------------------------------------------------------
     // :: Symbol constructor
     // ----------------------------------------------------------------------
     function Symbol(name) {
@@ -239,6 +289,25 @@
         this.car = car;
         this.cdr = cdr;
     }
+
+    // ----------------------------------------------------------------------
+    Pair.prototype[window.Symbol.iterator] = function*() {
+        var node = this;
+        while (true) {
+            if (!node || node === nil) {
+                break;
+            }
+            yield node.car;
+            node = node.cdr;
+        }
+    };
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.flatten = function() {
+        return Pair.fromArray(flatten(this.toArray()));
+    };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.length = function() {
         var len = 0;
         var node = this;
@@ -251,15 +320,21 @@
         }
         return len;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.clone = function() {
-        var cdr;
-        if (this.cdr === nil) {
-            cdr = nil;
-        } else {
+        var cdr = this.cdr;
+        var car = this.car;
+        if (car instanceof Pair) {
+            car = car.clone();
+        }
+        if (cdr instanceof Pair) {
             cdr = this.cdr.clone();
         }
-        return new Pair(this.car, cdr);
+        return new Pair(car, cdr);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toArray = function() {
         if (this.cdr === nil && this.car === nil) {
             return [];
@@ -275,6 +350,8 @@
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromArray = function(array) {
         if (array instanceof Pair) {
             return array;
@@ -283,7 +360,7 @@
             array = [...array];
         }
         if (array.length === 0) {
-            return new Pair(nil, nil);
+            return new Pair(undefined, nil);
         } else {
             var car;
             if (array[0] instanceof Array) {
@@ -298,6 +375,8 @@
             }
         }
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toObject = function() {
         var node = this;
         var result = {};
@@ -316,6 +395,8 @@
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromPairs = function(array) {
         return array.reduce((list, pair) => {
             return new Pair(
@@ -327,10 +408,14 @@
             );
         }, nil);
     };
+
+    // ----------------------------------------------------------------------
     Pair.fromObject = function(obj) {
         var array = Object.keys(obj).map((key) => [key, obj[key]]);
         return Pair.fromPairs(array);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.reduce = function(fn) {
         var node = this;
         var result = nil;
@@ -344,6 +429,8 @@
         }
         return result;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.reverse = function() {
         var node = this;
         var prev = nil;
@@ -355,6 +442,8 @@
         }
         return prev;
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.transform = function(fn) {
         var visited = [];
         function recur(pair) {
@@ -379,39 +468,54 @@
         }
         return recur(this);
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toString = function() {
         var arr = ['('];
-        if (typeof this.car === 'string') {
-            arr.push(JSON.stringify(this.car));
-        } else if (typeof this.car !== 'undefined') {
-            arr.push(this.car);
-        }
-        if (this.cdr instanceof Pair) {
-            arr.push(' ');
-            arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
-        } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-            if (typeof this.cdr === 'string') {
-                arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
-            } else {
-                arr = arr.concat([' . ', this.cdr]);
+        if (this.car !== undefined) {
+            if (typeof this.car === 'string') {
+                arr.push(JSON.stringify(this.car));
+            } else if (typeof this.car !== 'undefined') {
+                arr.push(this.car);
+            }
+            if (this.cdr instanceof Pair) {
+                arr.push(' ');
+                arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
+            } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
+                if (typeof this.cdr === 'string') {
+                    arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
+                } else {
+                    arr = arr.concat([' . ', this.cdr]);
+                }
             }
         }
         arr.push(')');
         return arr.join('');
     };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.append = function(pair) {
         if (pair instanceof Array) {
             return this.append(Pair.fromArray(pair));
         }
         var p = this;
-        while (true) {
-            if (p instanceof Pair && p.cdr !== nil) {
-                p = p.cdr;
+        if (p.car === undefined) {
+            if (pair instanceof Pair) {
+                this.car = pair.car;
+                this.cdr = pair.cdr;
             } else {
-                break;
+                return pair;
             }
+        } else {
+            while (true) {
+                if (p instanceof Pair && p.cdr !== nil) {
+                    p = p.cdr;
+                } else {
+                    break;
+                }
+            }
+            p.cdr = pair;
         }
-        p.cdr = pair;
         return this;
     };
 
@@ -445,13 +549,20 @@
 
         if (this.parent instanceof Environment) {
             return this.parent.get(symbol);
-        } else if (symbol instanceof Symbol) {
-            if (typeof window[symbol.name] !== 'undefined') {
-                return window[symbol.name];
+        } else {
+            var name;
+            if (symbol instanceof Symbol) {
+                name = symbol.name;
+            } else if (typeof symbol === 'string') {
+                name = symbol;
             }
-        } else if (typeof symbol === 'string') {
-            if (typeof window[symbol] !== 'undefined') {
-                return window[symbol];
+            if (name) {
+                var type = typeof window[name];
+                if (type === 'function') {
+                    return window[name].bind(window);
+                } else if (type !== 'undefined') {
+                    return window[name];
+                }
             }
         }
     };
@@ -481,11 +592,35 @@
         return new Macro(function(code) {
             var args = this.get('list->array')(code.car);
             var env = new Environment({}, this);
-            args.forEach((pair) => {
-                env.set(pair.car, evaluate(pair.cdr.car, asterisk ? env : this));
+            return new Promise((resolve) => {
+                var promises = [];
+                var i = 0;
+                (function loop() {
+                    var pair = args[i++];
+                    function set(value) {
+                        if (value instanceof Promise) {
+                            promises.push(value);
+                            return value.then(set);
+                        } else {
+                            env.set(pair.car, value);
+                        }
+                    }
+                    if (!pair) {
+                        var output = new Pair(new Symbol('begin'), code.cdr);
+                        resolve(new Quote(evaluate(output, env)));
+                    } else {
+                        var value = evaluate(pair.cdr.car, asterisk ? env : this);
+                        var promise = set(value);
+                        if (promise instanceof Promise) {
+                            promise.then(() => {
+                                Promise.all(promises).then(loop);
+                            });
+                        } else {
+                            loop();
+                        }
+                    }
+                })();
             });
-            var output = new Pair(new Symbol('begin'), code.cdr);
-            return new Quote(evaluate(output, env));
         });
     }
     var gensym = (function() {
@@ -519,11 +654,13 @@
         window: window,
         'true': true,
         'false': false,
+        // ------------------------------------------------------------------
         stdout: {
             write: function(...args) {
                 console.log(...args);
             }
         },
+        // ------------------------------------------------------------------
         stdin: {
             read: function() {
                 return new Promise((resolve) => {
@@ -531,9 +668,11 @@
                 });
             }
         },
+        // ------------------------------------------------------------------
         cons: function(car, cdr) {
             return new Pair(car, cdr);
         },
+        // ------------------------------------------------------------------
         car: function(list) {
             if (list instanceof Pair) {
                 return list.car;
@@ -541,6 +680,7 @@
                 throw new Error('argument to car need to be a list');
             }
         },
+        // ------------------------------------------------------------------
         cdr: function(list) {
             if (list instanceof Pair) {
                 return list.cdr;
@@ -548,12 +688,15 @@
                 throw new Error('argument to cdr need to be a list');
             }
         },
+        // ------------------------------------------------------------------
         'set-car': function(slot, value) {
             slot.car = value;
         },
+        // ------------------------------------------------------------------
         'set-cdr': function(slot, value) {
             slot.cdr = value;
         },
+        // ------------------------------------------------------------------
         assoc: function(list, key) {
             var node = list;
             var name = key instanceof Symbol ? key.name : key;
@@ -567,12 +710,15 @@
                 }
             }
         },
+        // ------------------------------------------------------------------
         gensym: gensym,
+        // ------------------------------------------------------------------
         load: function(file) {
             request(file).then((code) => {
                 this.get('eval')(this.get('read')(code));
             });
         },
+        // ------------------------------------------------------------------
         'while': new Macro(function(code) {
             var self = this;
             var begin = new Pair(
@@ -607,6 +753,7 @@
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         'if': new Macro(function(code) {
             var resolve = (cond) => {
                 if (cond) {
@@ -632,12 +779,16 @@
                 return resolve(cond);
             }
         }),
+        // ------------------------------------------------------------------
         'let*': let_macro(true),
+        // ------------------------------------------------------------------
         'let': let_macro(false),
+        // ------------------------------------------------------------------
         'begin': new Macro(function(code) {
             var arr = this.get('list->array')(code);
             return arr.reduce((_, code) => evaluate(code, this), 0);
         }),
+        // ------------------------------------------------------------------
         timer: new Macro(function(code) {
             return new Promise((resolve) => {
                 setTimeout(() => {
@@ -645,6 +796,7 @@
                 }, code.car);
             });
         }),
+        // ------------------------------------------------------------------
         define: new Macro(function(code) {
             if (code.car instanceof Pair &&
                 code.car.car instanceof Symbol) {
@@ -673,9 +825,11 @@
                 this.env[code.car.name] = value;
             }
         }),
+        // ------------------------------------------------------------------
         set: function(obj, key, value) {
             obj[key] = value;
         },
+        // ------------------------------------------------------------------
         'eval': function(code) {
             if (code instanceof Pair) {
                 return evaluate(code, this);
@@ -688,6 +842,7 @@
                 return result;
             }
         },
+        // ------------------------------------------------------------------
         lambda: new Macro(function(code) {
             return (...args) => {
                 var env = new Environment({}, this);
@@ -696,12 +851,19 @@
                 var value;
                 while (true) {
                     if (name.car !== nil) {
-                        if (typeof args[i] === 'undefined') {
-                            value = nil;
+                        if (name instanceof Symbol) {
+                            // rest argument,  can also be first argument
+                            value = Pair.fromArray(args.slice(i));
+                            env.env[name.name] = value;
+                            break;
                         } else {
-                            value = args[i];
+                            if (typeof args[i] === 'undefined') {
+                                value = nil;
+                            } else {
+                                value = args[i];
+                            }
+                            env.env[name.car.name] = value;
                         }
-                        env.env[name.car.name] = value;
                     }
                     if (name.cdr === nil) {
                         break;
@@ -712,6 +874,7 @@
                 return evaluate(code.cdr.car, env);
             };
         }),
+        // ------------------------------------------------------------------
         defmacro: new Macro(function(macro) {
             if (macro.car.car instanceof Symbol) {
                 this.env[macro.car.car.name] = new Macro(function(code) {
@@ -732,9 +895,11 @@
                 });
             }
         }),
+        // ------------------------------------------------------------------
         quote: new Macro(function(arg) {
             return new Quote(arg.car);
         }),
+        // ------------------------------------------------------------------
         quasiquote: new Macro(function(arg) {
             var self = this;
             var max_unquote = 0;
@@ -834,29 +999,47 @@
             }
             return new Quote(unquote(recur(arg.car)));
         }),
+        // ------------------------------------------------------------------
         clone: function(list) {
             return list.clone();
         },
+        // ------------------------------------------------------------------
         append: function(list, item) {
             return this.get('append!')(list.clone(), item);
         },
+        // ------------------------------------------------------------------
         'append!': function(list, item) {
-            var node = list;
-            while (true) {
-                if (node.cdr === nil) {
-                    node.cdr = item;
-                    break;
-                }
-                node = node.cdr;
-            }
-            return list;
+            return list.append(item);
         },
+        // ------------------------------------------------------------------
         list: function() {
             return Pair.fromArray([].slice.call(arguments));
         },
+        // ------------------------------------------------------------------
         concat: function() {
             return [].join.call(arguments, '');
         },
+        // ------------------------------------------------------------------
+        join: function(separator, list) {
+            return this.get('list->array')(list).join(separator);
+        },
+        // ------------------------------------------------------------------
+        split: function(string, separator) {
+            return this.get('array->list')(string.split(separator));
+        },
+        // ------------------------------------------------------------------
+        replace: function(string, pattern, replacement) {
+            return string.replace(pattern, replacement);
+        },
+        // ------------------------------------------------------------------
+        match: function(string, pattern) {
+            return this.get('array->list')(string.match(pattern));
+        },
+        // ------------------------------------------------------------------
+        search: function(string, pattern) {
+            return string.search(pattern);
+        },
+        // ------------------------------------------------------------------
         string: function(obj) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
@@ -892,6 +1075,7 @@
             }
             return obj;
         },
+        // ------------------------------------------------------------------
         env: function(env) {
             env = env || this;
             var names = Object.keys(env.env);
@@ -906,6 +1090,7 @@
             }
             return result;
         },
+        // ------------------------------------------------------------------
         '.': function(obj, arg) {
             var name = arg instanceof Symbol ? arg.name : arg;
             var value = obj[name];
@@ -914,6 +1099,13 @@
             }
             return value;
         },
+        type: function(obj) {
+            return typeof obj;
+        },
+        'instanceof': function(obj, type) {
+            return obj instanceof type;
+        },
+        // ------------------------------------------------------------------
         read: function(arg) {
             if (typeof arg === 'string') {
                 return parse(tokenize(arg));
@@ -922,14 +1114,21 @@
                 return this.get('read').call(this, text);
             });
         },
+        // ------------------------------------------------------------------
         print: function(...args) {
             this.get('stdout').write(...args.map((arg) => {
                 return this.get('string')(arg);
             }));
         },
+        // ------------------------------------------------------------------
+        flatten: function(list) {
+            return list.flatten();
+        },
+        // ------------------------------------------------------------------
         'array->list': function(array) {
             return Pair.fromArray(array);
         },
+        // ------------------------------------------------------------------
         'list->array': function(list) {
             var result = [];
             var node = list;
@@ -943,19 +1142,24 @@
             }
             return result;
         },
+        // ------------------------------------------------------------------
         filter: function(fn, list) {
             return Pair.fromArray(this.get('list->array')(list).filter(fn));
         },
+        // ------------------------------------------------------------------
         odd: function(num) {
             return num % 2 === 1;
         },
+        // ------------------------------------------------------------------
         even: function(num) {
             return num % 2 === 0;
         },
+        // ------------------------------------------------------------------
         apply: function(fn, list) {
             var args = this.get('list->array')(list);
             return fn.apply(null, args);
         },
+        // ------------------------------------------------------------------
         map: function(fn, list) {
             var result = this.get('list->array')(list).map(fn);
             if (result.length) {
@@ -964,52 +1168,91 @@
                 return nil;
             }
         },
-        reduce: function(fn, list) {
+        // ------------------------------------------------------------------
+        reduce: function(fn, list, init = null) {
             var arr = this.get('list->array')(list);
-            return arr.reduce((list, item) => {
-                return fn(list, item);
-            }, nil);
+            if (init === null) {
+                return arr.slice(1).reduce((acc, item) => {
+                    return fn(acc, item);
+                }, arr[0]);
+            } else {
+                return arr.reduce((acc, item) => {
+                    return fn(acc, item);
+                }, init);
+            }
         },
+        // ------------------------------------------------------------------
+        curry: function(fn, ...init_args) {
+            var len = fn.length;
+            return function() {
+                var args = init_args.slice();
+                function call(...more_args) {
+                    args = args.concat(more_args);
+                    if (args.length >= len) {
+                        return fn.apply(this, args);
+                    } else {
+                        return call;
+                    }
+                }
+                return call.apply(this, arguments);
+            };
+
+        },
+        // ------------------------------------------------------------------
+        range: function(n) {
+            return Pair.fromArray(new Array(n).fill(0).map((_, i) => i));
+        },
+        // ------------------------------------------------------------------
         // math functions
         '*': function(...args) {
             return args.reduce(function(a, b) {
                 return a * b;
             });
         },
+        // ------------------------------------------------------------------
         '+': function(...args) {
             return args.reduce(function(a, b) {
                 return a + b;
             });
         },
+        // ------------------------------------------------------------------
         '-': function(...args) {
             return args.reduce(function(a, b) {
                 return a - b;
             });
         },
+        // ------------------------------------------------------------------
         '/': function(...args) {
             return args.reduce(function(a, b) {
                 return a / b;
             });
         },
+        // ------------------------------------------------------------------
         '%': function(a, b) {
             return a % b;
         },
+        // ------------------------------------------------------------------
         // Booleans
         "==": function(a, b) {
             return a === b;
         },
+        // ------------------------------------------------------------------
         '>': function(a, b) {
             return a > b;
         },
+        // ------------------------------------------------------------------
         '<': function(a, b) {
             return a < b;
         },
+        // ------------------------------------------------------------------
         '<=': function(a, b) {
             return a <= b;
         },
+        // ------------------------------------------------------------------
         '>=': function(a, b) {
             return a >= b;
         },
+        // ------------------------------------------------------------------
         or: new Macro(function(code) {
             var args = this.get('list->array')(code);
             var self = this;
@@ -1041,6 +1284,7 @@
                 })();
             });
         }),
+        // ------------------------------------------------------------------
         and: new Macro(function(code) {
             var args = this.get('list->array')(code);
             var self = this;
@@ -1072,11 +1316,26 @@
                 })();
             });
         }),
+        '->': function(obj, name, ...args) {
+            console.log(name);
+            console.log(obj);
+            return obj[name](...args);
+        },
+        // ------------------------------------------------------------------
+        '1+': function(number) {
+            return number + 1;
+        },
+        // ------------------------------------------------------------------
+        '1-': function(number) {
+            return number - 1;
+        },
+        // ------------------------------------------------------------------
         '++': new Macro(function(code) {
             var value = this.get(code.car) + 1;
             this.set(code.car, value);
             return value;
         }),
+        // ------------------------------------------------------------------
         '--': new Macro(function(code) {
             var value = this.get(code.car) - 1;
             this.set(code.car, value);
@@ -1141,7 +1400,9 @@
         var rest = code.cdr;
         if (first instanceof Pair) {
             value = evaluate(first, env);
-            if (typeof value !== 'function') {
+            if (value instanceof Promise) {
+                return value.then((value) => evaluate(new Pair(value, code.cdr)));
+            } else if (typeof value !== 'function') {
                 throw new Error(
                     env.get('string')(value) + ' is not a function'
                 );
@@ -1156,6 +1417,8 @@
                 value = value.invoke(rest, env);
                 if (value instanceof Quote) {
                     return value.value;
+                } else if (value instanceof Promise) {
+                    return value.then((value) => value.value);
                 }
                 return evaluate(value, env);
             } else if (typeof value !== 'function') {
@@ -1195,8 +1458,8 @@
     function exec(string, env) {
         return parse(tokenize(string)).map((code) => evaluate(code, env));
     }
-    // ----------------------------------------------------------------------
 
+    // ----------------------------------------------------------------------
     function balanced(code) {
         var re = /[()]/;
         var parenthesis = tokenize(code).filter((token) => token.match(re));
@@ -1205,7 +1468,7 @@
         return open.length === close.length;
     }
 
-    // --------------------------------------
+    // ----------------------------------------------------------------------
     Pair.unDry = function(value) {
         return new Pair(value.car, value.cdr);
     };
@@ -1235,6 +1498,44 @@
     Symbol.unDry = function(value) {
         return new Symbol(value.name);
     };
+    // ----------------------------------------------------------------------
+    function init() {
+        var lips_mime = 'text-x/lips';
+        if (window.document) {
+            Array.from(document.querySelectorAll('script')).forEach((script) => {
+                var type = script.getAttribute('type');
+                if (type === lips_mime) {
+                    exec(script.innerHTML);
+                } else if (type === 'text-x/lisp') {
+                    console.warn('Expecting ' + lips_mime + ' found ' + type);
+                }
+            });
+        }
+    }
+    // ----------------------------------------------------------------------
+    function load(callback) {
+        if (typeof window !== 'undefined') {
+            if (window.addEventListener) {
+                window.addEventListener("load", callback, false);
+            } else if (window.attachEvent) {
+                window.attachEvent("onload", callback);
+            } else if (typeof window.onload === 'function') {
+                (function(old) {
+                    window.onload = function() {
+                        callback();
+                        old();
+                    };
+                })(window.onload);
+            } else {
+                window.onload = callback;
+            }
+        }
+    }
+    // ----------------------------------------------------------------------
+    load(function() {
+        setTimeout(init, 0);
+    });
+    // --------------------------------------
     return {
         version: '{{VER}}',
         exec: exec,

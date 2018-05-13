@@ -1,0 +1,4 @@
+;; example lips file loaded using load
+;; it invoke global terminal method
+(let ((echo (. term "echo")))
+  (echo greetings))
