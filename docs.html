@@ -64,7 +64,7 @@
    (print (cadaddr lst)))
     </code></pre>
 
-    <p>all functions that match this regex `c[ad]{2,5}r` are defined.</p>
+    <p>all functions that match this regex `c[ad]{1,5}r` are defined.</p>
 
     <h3>ALists</h3>
 
@@ -82,11 +82,11 @@
     (while (> (-- x) 0) (print x)))
     </code></pre>
 
-    <p>same as in JS</p>
+    <p>Operator <code>==</code> work as === in javascript</p>
 
     <pre><code class="language-scheme">
 (if (== "10" 10)
-    (print "equal"))
+    (print "newer printed"))
 
 (let ((x 10))
   (if (and (> x 1) (< x 20))
@@ -99,6 +99,15 @@
 
     <pre><code class="language-scheme">
 (eval (read "(print \"hello\")"))
+    </code></pre>
+
+    <h3>Apply</h3>
+
+    <p>Apply function the same as the one from javascript invoke a function with arguments taken from list</p>
+
+    <pre><code class="language-scheme">
+(let ((strings '("foo" "bar" "baz")))
+   (print (apply concat strings)))
     </code></pre>
 
     <h3>Async code</h3>
@@ -143,6 +152,12 @@
     (array->list (match /([a-z]+)/g)))
     </code></pre>
 
+    <h3>String operations</h3>
+
+    <pre><code class="language-scheme">
+
+    </code></pre>
+
     <h3>Mapping, filtering and reducing</h3>
 
     <pre><code class="language-scheme">
@@ -157,10 +172,22 @@
     (list 1 2 3 4 5))
 
 (define (reverse list)
-    (reduce (lambda (list x) (cons x list)) list))
+    (reduce (lambda (list x) (cons x list)) list nil))
 
 (reverse '(1 2 3 4))
+
+(define (sum . list) (reduce (lambda (a b) (+ a b)) list))
+
+(print (sum 1 2 3 4 5))
     </code></pre>
+
+    <h3>Currying</h3>
+
+    <code><pre class="language-scheme">
+(define (add a b) (+ a b))
+(define add10 (curry add 10))
+(print (add10 20))
+    </pre></code>
 
     <h3>Working with arrays</h3>
 
@@ -196,22 +223,22 @@ while (i < len) {
 
     <h3>Math and boolean operators (functions and macros)</h3>
 
-    <pre>< > => <= ++ -- + - * / % and or</pre>
+    <pre>< > => <= 1+ 1- ++ -- + - * / % and or</pre>
 
     <h3>Extending LIPS</h3>
 
     <p>to create new function from JavaScript you can use:</p>
 
     <pre><code class="language-javascript">
-env.set('replace', function(re, sub, string) {
-   return string.replace(re, sub);
+env.set('greeter', function(user) {
+   return "hello " + user;
 });
     </code></pre>
 
     <p>then you can use it in LIPS:</p>
 
     <pre><code class="langauge-scheme">
-(replace /(foo|bar)/g "hello" "foo bar baz")
+(greeter "john")
     </code></pre>
 
     <p>

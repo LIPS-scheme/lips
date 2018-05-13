@@ -85,11 +85,20 @@ parse(tokenize(string)).foEach(function(code) {
     evaluate(code);
 });
     </code></pre>
+  </script>
     <p>
       <code>evaluate</code> function also accept second argument, which is Environment.
       By default it's <code>lips.global_environment</code>. You can use it if you want to
       have separated instances of the interpreter.
     </p>
+    <p>You can also execute LIPS code from script tag, just include code like this</p>
+    <pre><code class="language-html">
+  &lt;script type="text-x/lips"&gt;
+    (print "hello")
+    ;; this will load and evaluate external file
+    (load "example.lips")
+  &lt;script&gt;
+    </code></pre>
   </section>
   <footer>
     <p>Copyright (c) 2018 <a href="https://jcubic.pl/me">Jakub Jankiewicz</a></p>
@@ -159,7 +168,7 @@ parse(tokenize(string)).foEach(function(code) {
            name: 'lisp',
            prompt: 'lips> ',
            enabled: false,
-           greetings: 'LIPS Demo\n' +
+           greetings: 'LIPS Demo version ' + lips.version + '\n' +
                       'type [[b;#fff;](env)] to see environment with ' +
                       'functions macros and variables\n',
            keydown: function() {
@@ -173,25 +182,27 @@ parse(tokenize(string)).foEach(function(code) {
                if (e.key == ')') {
                    setTimeout(function() {
                        position = term.get_position();
-                       var command = term.get_command();
+                       var command = term.get_command().substring(0, position);
+                       var len = command.split(/\n/)[0].length;
+                       var tokens = tokenize(command, true);
                        var count = 1;
-                       var close_pos = position - 1;
-                       var c;
+                       var token;
+                       var i = tokens.length - 1;
                        while (count > 0) {
-                           c = command[--close_pos];
-                           if (!c) {
+                           token = tokens[--i];
+                           if (!token) {
                                return;
                            }
-                           if (c === '(') {
+                           if (token.token === '(') {
                                count--;
-                           } else if (c === ')') {
+                           } else if (token.token == ')') {
                                count++;
                            }
                        }
-                       if (c == '(') {
+                       if (token.token == '(' && count === 0) {
                            clearTimeout(timer);
                            setTimeout(function() {
-                               term.set_position(close_pos);
+                               term.set_position(token.offset);
                                timer = setTimeout(function() {
                                    term.set_position(position)
                                    position = false;
