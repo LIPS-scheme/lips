@@ -7,7 +7,7 @@
  * build: {{DATE}}
  */
 "use strict";
-/* global define, module, setTimeout, jQuery */
+/* global define, module, setTimeout, jQuery, global */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -20,7 +20,7 @@
     } else {
         root.lips = factory(root);
     }
-})(typeof self !== 'undefined' ? self : this, function(root, undefined) {
+})(typeof window !== 'undefined' ? window : global, function(root, undefined) {
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var float_re = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -545,11 +545,11 @@
                 name = symbol;
             }
             if (name) {
-                var type = typeof window[name];
+                var type = typeof root[name];
                 if (type === 'function') {
-                    return window[name].bind(window);
+                    return root[name].bind(root);
                 } else if (type !== 'undefined') {
-                    return window[name];
+                    return root[name];
                 }
             }
         }
@@ -639,7 +639,6 @@
     }
     var global_env = new Environment({
         nil: nil,
-        window: window,
         'true': true,
         'false': false,
         // ------------------------------------------------------------------
@@ -1376,6 +1375,13 @@
             }, arg);
         });
     });
+
+    // ----------------------------------------------------------------------
+    if (typeof global !== 'undefined') {
+        global_env.set('global', global);
+    } else if (typeof window !== 'undefined') {
+        global_env.set('window', window);
+    }
 
     // ----------------------------------------------------------------------
     function evaluate(code, env) {

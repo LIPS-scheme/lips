@@ -1,3 +1,7 @@
+## 0.4.1-2
+### Bug
+* fix for Node
+
 ## 0.4.0
 ### Features
 * lambda with reset parameter (like in scheme)

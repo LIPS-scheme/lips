@@ -4,10 +4,10 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 13 May 2018 14:53:39 +0000
+ * build: Sun, 13 May 2018 16:09:01 +0000
  */
 "use strict";
-/* global define, module, setTimeout, jQuery */
+/* global define, module, setTimeout, jQuery, global */
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
@@ -25,7 +25,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     } else {
         root.lips = factory(root);
     }
-})(typeof self !== 'undefined' ? self : undefined, function (root, undefined) {
+})(typeof window !== 'undefined' ? window : global, function (root, undefined) {
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var float_re = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -540,11 +540,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 name = symbol;
             }
             if (name) {
-                var type = _typeof(window[name]);
+                var type = _typeof(root[name]);
                 if (type === 'function') {
-                    return window[name].bind(window);
+                    return root[name].bind(root);
                 } else if (type !== 'undefined') {
-                    return window[name];
+                    return root[name];
                 }
             }
         }
@@ -638,7 +638,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
     var global_env = new Environment({
         nil: nil,
-        window: window,
         'true': true,
         'false': false,
         // ------------------------------------------------------------------
@@ -1400,6 +1399,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }, arg);
         });
     });
+
+    // ----------------------------------------------------------------------
+    if (typeof global !== 'undefined') {
+        global_env.set('global', global);
+    } else if (typeof window !== 'undefined') {
+        global_env.set('window', window);
+    }
 
     // ----------------------------------------------------------------------
     function evaluate(code, env) {
