@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 11 May 2018 18:46:57 +0000
+ * build: Sun, 13 May 2018 11:46:46 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -80,12 +80,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     // ----------------------------------------------------------------------
     function tokens(str) {
         var count = 0;
-        return str.split('\n').map(function (line) {
+        return str.split('\n').map(function (line, i) {
+            var col = 0;
             return line.split(tokens_re).filter(Boolean).map(function (token) {
                 var result = {
+                    col: col,
+                    line: i,
                     token: token,
                     offset: count
                 };
+                col += token.length;
                 count += token.length;
                 return result;
             });

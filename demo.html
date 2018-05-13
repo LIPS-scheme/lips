@@ -90,6 +90,7 @@
        }, {
            name: 'lips',
            greetings: false,
+           // below is the code for parenthesis matching (jumping)
            keydown: function() {
                if (position) {
                    term.set_position(position);
@@ -121,7 +122,7 @@
                        if (token.token == '(') {
                            clearTimeout(timer);
                            setTimeout(function() {
-                               // first line was correct but next was off by one
+                               // first line was correct but all after was off by one
                                term.set_position(token.offset > len ? token.offset + 1 : token.offset);
                                timer = setTimeout(function() {
                                    term.set_position(position)

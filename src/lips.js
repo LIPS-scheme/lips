@@ -75,12 +75,16 @@
     // ----------------------------------------------------------------------
     function tokens(str) {
         var count = 0;
-        return str.split('\n').map(function(line) {
+        return str.split('\n').map(function(line, i) {
+            var col = 0;
             return line.split(tokens_re).filter(Boolean).map(function(token) {
                 var result = {
+                    col,
+                    line: i,
                     token,
                     offset: count
                 };
+                col += token.length;
                 count += token.length;
                 return result;
             });
