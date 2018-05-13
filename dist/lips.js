@@ -1,10 +1,10 @@
 /**@license
- * LIPS is Pretty Simple - version 0.4.1
+ * LIPS is Pretty Simple - version 0.4.2
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 13 May 2018 16:09:01 +0000
+ * build: Sun, 13 May 2018 16:09:24 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global */
@@ -1567,7 +1567,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     });
     // --------------------------------------
     return {
-        version: '0.4.1',
+        version: '0.4.2',
         exec: exec,
         parse: parse,
         tokenize: tokenize,
