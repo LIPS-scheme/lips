@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 13 May 2018 13:05:02 +0000
+ * build: Sun, 13 May 2018 14:29:56 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery */
@@ -17,15 +17,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define([], function () {
-            return root.lips = factory();
+            return root.lips = factory(root);
         });
     } else if ((typeof module === 'undefined' ? 'undefined' : _typeof(module)) === 'object' && module.exports) {
         // Node/CommonJS
-        module.exports = factory();
+        module.exports = factory(root);
     } else {
-        root.lips = factory();
+        root.lips = factory(root);
     }
-})(typeof self !== 'undefined' ? self : undefined, function (undefined) {
+})(typeof self !== 'undefined' ? self : undefined, function (root, undefined) {
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var float_re = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -288,45 +288,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         this.car = car;
         this.cdr = cdr;
     }
-
-    // ----------------------------------------------------------------------
-    Pair.prototype[window.Symbol.iterator] = /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-        var node;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-            while (1) {
-                switch (_context.prev = _context.next) {
-                    case 0:
-                        node = this;
-
-                    case 1:
-                        if (!true) {
-                            _context.next = 9;
-                            break;
-                        }
-
-                        if (!(!node || node === nil)) {
-                            _context.next = 4;
-                            break;
-                        }
-
-                        return _context.abrupt('break', 9);
-
-                    case 4:
-                        _context.next = 6;
-                        return node.car;
-
-                    case 6:
-                        node = node.cdr;
-                        _context.next = 1;
-                        break;
-
-                    case 9:
-                    case 'end':
-                        return _context.stop();
-                }
-            }
-        }, _callee, this);
-    });
 
     // ----------------------------------------------------------------------
     Pair.prototype.flatten = function () {

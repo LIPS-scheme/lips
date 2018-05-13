@@ -12,15 +12,15 @@
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define([], function() {
-            return (root.lips = factory());
+            return (root.lips = factory(root));
         });
     } else if (typeof module === 'object' && module.exports) {
         // Node/CommonJS
-        module.exports = factory();
+        module.exports = factory(root);
     } else {
-        root.lips = factory();
+        root.lips = factory(root);
     }
-})(typeof self !== 'undefined' ? self : this, function(undefined) {
+})(typeof self !== 'undefined' ? self : this, function(root, undefined) {
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var float_re = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -289,18 +289,6 @@
         this.car = car;
         this.cdr = cdr;
     }
-
-    // ----------------------------------------------------------------------
-    Pair.prototype[window.Symbol.iterator] = function*() {
-        var node = this;
-        while (true) {
-            if (!node || node === nil) {
-                break;
-            }
-            yield node.car;
-            node = node.cdr;
-        }
-    };
 
     // ----------------------------------------------------------------------
     Pair.prototype.flatten = function() {
