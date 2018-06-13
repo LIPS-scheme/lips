@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Wed, 13 Jun 2018 18:27:25 +0000
+ * build: Wed, 13 Jun 2018 18:27:52 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global */
@@ -1322,6 +1322,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 })();
             });
         }),
+        not: function not(value) {
+            if (value === nil) {
+                return true;
+            }
+            return !value;
+        },
         '->': function _(obj, name) {
             for (var _len9 = arguments.length, args = Array(_len9 > 2 ? _len9 - 2 : 0), _key9 = 2; _key9 < _len9; _key9++) {
                 args[_key9 - 2] = arguments[_key9];

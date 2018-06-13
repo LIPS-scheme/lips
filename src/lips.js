@@ -1308,6 +1308,12 @@
                 })();
             });
         }),
+        not: function(value) {
+            if (value === nil) {
+                return true;
+            }
+            return !value;
+        },
         '->': function(obj, name, ...args) {
             return obj[name](...args);
         },
