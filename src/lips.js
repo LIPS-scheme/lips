@@ -1423,7 +1423,12 @@
                 if (value instanceof Quote) {
                     return value.value;
                 } else if (value instanceof Promise) {
-                    return value.then((value) => value.value);
+                    return value.then((value) => {
+                        if (value instanceof Quote) {
+                            return value.value;
+                        }
+                        return evaluate(value, env, dynamic_scope);
+                    });
                 }
                 return evaluate(value, env, dynamic_scope);
             } else if (typeof value !== 'function') {
