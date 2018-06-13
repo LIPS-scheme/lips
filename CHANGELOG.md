@@ -1,6 +1,8 @@
 ## 0.5.0
 ### Features
 * add support for new u and s regex flags
+* optional dynamic scope
+* not function
 
 
 ## 0.4.1-2

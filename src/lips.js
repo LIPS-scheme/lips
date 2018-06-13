@@ -513,8 +513,8 @@
     function Macro(fn) {
         this.fn = fn;
     }
-    Macro.prototype.invoke = function(code, env) {
-        return this.fn.call(env, code);
+    Macro.prototype.invoke = function(code, env, dynamic_scope) {
+        return this.fn.call(env, code, dynamic_scope);
     };
 
     // ----------------------------------------------------------------------
@@ -577,7 +577,7 @@
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
-        return new Macro(function(code) {
+        return new Macro(function(code, dynamic_scope) {
             var args = this.get('list->array')(code.car);
             var env = new Environment({}, this);
             return new Promise((resolve) => {
@@ -595,7 +595,11 @@
                     }
                     if (!pair) {
                         var output = new Pair(new Symbol('begin'), code.cdr);
-                        resolve(new Quote(evaluate(output, env)));
+                        resolve(new Quote(evaluate(
+                            output,
+                            env,
+                            dynamic_scope ? env : undefined
+                        )));
                     } else {
                         var value = evaluate(pair.cdr.car, asterisk ? env : this);
                         var promise = set(value);
@@ -784,7 +788,7 @@
             });
         }),
         // ------------------------------------------------------------------
-        define: new Macro(function(code) {
+        define: new Macro(function(code, dynamic_scope) {
             if (code.car instanceof Pair &&
                 code.car.car instanceof Symbol) {
                 var new_code = new Pair(
@@ -806,7 +810,7 @@
             }
             var value = code.cdr.car;
             if (value instanceof Pair) {
-                value = evaluate(value, this);
+                value = evaluate(value, this, dynamic_scope);
             }
             if (code.car instanceof Symbol) {
                 this.env[code.car.name] = value;
@@ -817,22 +821,23 @@
             obj[key] = value;
         },
         // ------------------------------------------------------------------
-        'eval': function(code) {
+        'eval': function(code, dynamic_scope) {
             if (code instanceof Pair) {
-                return evaluate(code, this);
+                return evaluate(code, this, dynamic_scope);
             }
             if (code instanceof Array) {
                 var result;
                 code.forEach((code) => {
-                    result = evaluate(code, this);
+                    result = evaluate(code, this, dynamic_scope);
                 });
                 return result;
             }
         },
         // ------------------------------------------------------------------
-        lambda: new Macro(function(code) {
-            return (...args) => {
-                var env = new Environment({}, this);
+        lambda: new Macro(function(code, dynamic_scope) {
+            var self = this;
+            return function(...args) {
+                var env = new Environment({}, dynamic_scope ? this : self);
                 var name = code.car;
                 var i = 0;
                 var value;
@@ -1304,8 +1309,6 @@
             });
         }),
         '->': function(obj, name, ...args) {
-            console.log(name);
-            console.log(obj);
             return obj[name](...args);
         },
         // ------------------------------------------------------------------
@@ -1384,7 +1387,7 @@
     }
 
     // ----------------------------------------------------------------------
-    function evaluate(code, env) {
+    function evaluate(code, env, dynamic_scope) {
         env = env || global_env;
         var value;
         if (typeof code === 'undefined') {
@@ -1393,9 +1396,11 @@
         var first = code.car;
         var rest = code.cdr;
         if (first instanceof Pair) {
-            value = evaluate(first, env);
+            value = evaluate(first, env, dynamic_scope);
             if (value instanceof Promise) {
-                return value.then((value) => evaluate(new Pair(value, code.cdr)));
+                return value.then((value) => {
+                    return evaluate(new Pair(value, code.cdr), env, dynamic_scope);
+                });
             } else if (typeof value !== 'function') {
                 throw new Error(
                     env.get('string')(value) + ' is not a function'
@@ -1408,13 +1413,13 @@
         if (first instanceof Symbol) {
             value = env.get(first);
             if (value instanceof Macro) {
-                value = value.invoke(rest, env);
+                value = value.invoke(rest, env, dynamic_scope);
                 if (value instanceof Quote) {
                     return value.value;
                 } else if (value instanceof Promise) {
                     return value.then((value) => value.value);
                 }
-                return evaluate(value, env);
+                return evaluate(value, env, dynamic_scope);
             } else if (typeof value !== 'function') {
                 throw new Error('Unknown function `' + first.name + '\'');
             }
@@ -1424,7 +1429,7 @@
             var node = rest;
             while (true) {
                 if (node instanceof Pair) {
-                    args.push(evaluate(node.car, env));
+                    args.push(evaluate(node.car, env, dynamic_scope));
                     node = node.cdr;
                 } else {
                     break;
@@ -1433,10 +1438,10 @@
             var promises = args.filter((arg) => arg instanceof Promise);
             if (promises.length) {
                 return Promise.all(args).then((args) => {
-                    return value.apply(env, args);
+                    return value.apply(dynamic_scope || env, args);
                 });
             }
-            return value.apply(env, args);
+            return value.apply(dynamic_scope || env, args);
         } else if (code instanceof Symbol) {
             value = env.get(code);
             if (value === 'undefined') {

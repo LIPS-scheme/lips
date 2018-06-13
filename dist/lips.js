@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Tue, 15 May 2018 07:50:44 +0000
+ * build: Wed, 13 Jun 2018 18:27:25 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global */
@@ -508,8 +508,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     function Macro(fn) {
         this.fn = fn;
     }
-    Macro.prototype.invoke = function (code, env) {
-        return this.fn.call(env, code);
+    Macro.prototype.invoke = function (code, env, dynamic_scope) {
+        return this.fn.call(env, code, dynamic_scope);
     };
 
     // ----------------------------------------------------------------------
@@ -572,7 +572,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
-        return new Macro(function (code) {
+        return new Macro(function (code, dynamic_scope) {
             var args = this.get('list->array')(code.car);
             var env = new Environment({}, this);
             return new Promise(function (resolve) {
@@ -590,7 +590,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     }
                     if (!pair) {
                         var output = new Pair(new _Symbol('begin'), code.cdr);
-                        resolve(new Quote(evaluate(output, env)));
+                        resolve(new Quote(evaluate(output, env, dynamic_scope ? env : undefined)));
                     } else {
                         var value = evaluate(pair.cdr.car, asterisk ? env : this);
                         var promise = set(value);
@@ -791,14 +791,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         }),
         // ------------------------------------------------------------------
-        define: new Macro(function (code) {
+        define: new Macro(function (code, dynamic_scope) {
             if (code.car instanceof Pair && code.car.car instanceof _Symbol) {
                 var new_code = new Pair(new _Symbol("define"), new Pair(code.car.car, new Pair(new Pair(new _Symbol("lambda"), new Pair(code.car.cdr, code.cdr)))));
                 return new_code;
             }
             var value = code.cdr.car;
             if (value instanceof Pair) {
-                value = evaluate(value, this);
+                value = evaluate(value, this, dynamic_scope);
             }
             if (code.car instanceof _Symbol) {
                 this.env[code.car.name] = value;
@@ -809,33 +809,33 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             obj[key] = value;
         },
         // ------------------------------------------------------------------
-        'eval': function _eval(code) {
+        'eval': function _eval(code, dynamic_scope) {
             var _this5 = this;
 
             if (code instanceof Pair) {
-                return evaluate(code, this);
+                return evaluate(code, this, dynamic_scope);
             }
             if (code instanceof Array) {
                 var result;
                 code.forEach(function (code) {
-                    result = evaluate(code, _this5);
+                    result = evaluate(code, _this5, dynamic_scope);
                 });
                 return result;
             }
         },
         // ------------------------------------------------------------------
-        lambda: new Macro(function (code) {
-            var _this6 = this;
-
+        lambda: new Macro(function (code, dynamic_scope) {
+            var self = this;
             return function () {
+                var env = new Environment({}, dynamic_scope ? this : self);
+                var name = code.car;
+                var i = 0;
+                var value;
+
                 for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
                     args[_key] = arguments[_key];
                 }
 
-                var env = new Environment({}, _this6);
-                var name = code.car;
-                var i = 0;
-                var value;
                 while (true) {
                     if (name.car !== nil) {
                         if (name instanceof _Symbol) {
@@ -1077,26 +1077,26 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // ------------------------------------------------------------------
         read: function read(arg) {
-            var _this7 = this;
+            var _this6 = this;
 
             if (typeof arg === 'string') {
                 return parse(tokenize(arg));
             }
             return this.get('stdin').read().then(function (text) {
-                return _this7.get('read').call(_this7, text);
+                return _this6.get('read').call(_this6, text);
             });
         },
         // ------------------------------------------------------------------
         print: function print() {
             var _get,
-                _this8 = this;
+                _this7 = this;
 
             for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 args[_key2] = arguments[_key2];
             }
 
             (_get = this.get('stdout')).write.apply(_get, _toConsumableArray(args.map(function (arg) {
-                return _this8.get('string')(arg);
+                return _this7.get('string')(arg);
             })));
         },
         // ------------------------------------------------------------------
@@ -1323,9 +1323,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         }),
         '->': function _(obj, name) {
-            console.log(name);
-            console.log(obj);
-
             for (var _len9 = arguments.length, args = Array(_len9 > 2 ? _len9 - 2 : 0), _key9 = 2; _key9 < _len9; _key9++) {
                 args[_key9 - 2] = arguments[_key9];
             }
@@ -1408,7 +1405,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
 
     // ----------------------------------------------------------------------
-    function evaluate(code, env) {
+    function evaluate(code, env, dynamic_scope) {
         env = env || global_env;
         var value;
         if (typeof code === 'undefined') {
@@ -1417,10 +1414,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         var first = code.car;
         var rest = code.cdr;
         if (first instanceof Pair) {
-            value = evaluate(first, env);
+            value = evaluate(first, env, dynamic_scope);
             if (value instanceof Promise) {
                 return value.then(function (value) {
-                    return evaluate(new Pair(value, code.cdr));
+                    return evaluate(new Pair(value, code.cdr), env, dynamic_scope);
                 });
             } else if (typeof value !== 'function') {
                 throw new Error(env.get('string')(value) + ' is not a function');
@@ -1432,7 +1429,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         if (first instanceof _Symbol) {
             value = env.get(first);
             if (value instanceof Macro) {
-                value = value.invoke(rest, env);
+                value = value.invoke(rest, env, dynamic_scope);
                 if (value instanceof Quote) {
                     return value.value;
                 } else if (value instanceof Promise) {
@@ -1440,7 +1437,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         return value.value;
                     });
                 }
-                return evaluate(value, env);
+                return evaluate(value, env, dynamic_scope);
             } else if (typeof value !== 'function') {
                 throw new Error('Unknown function `' + first.name + '\'');
             }
@@ -1450,7 +1447,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             var node = rest;
             while (true) {
                 if (node instanceof Pair) {
-                    args.push(evaluate(node.car, env));
+                    args.push(evaluate(node.car, env, dynamic_scope));
                     node = node.cdr;
                 } else {
                     break;
@@ -1461,10 +1458,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
             if (promises.length) {
                 return Promise.all(args).then(function (args) {
-                    return value.apply(env, args);
+                    return value.apply(dynamic_scope || env, args);
                 });
             }
-            return value.apply(env, args);
+            return value.apply(dynamic_scope || env, args);
         } else if (code instanceof _Symbol) {
             value = env.get(code);
             if (value === 'undefined') {

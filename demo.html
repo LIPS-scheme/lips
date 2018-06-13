@@ -37,18 +37,14 @@
            balanced_parenthesis,
            tokenize,
            parse,
-           Macro,
-           Symbol,
-           nil,
-           Pair,
            evaluate
        } = lips;
-       var tokens = tokenize('((foo . 10) (bar . 20) (baz . 30))');
-       var array = parse(tokens);
        var env = new Environment({
            stdout: {
                write: function(...args) {
-                   args.forEach(term.echo);
+                   args.forEach((arg) => {
+                       term.echo(arg, {keepWords: true});
+                   });
                }
            },
            stdin: {
@@ -61,17 +57,14 @@
                }
            }
        }, global_environment);
-       env.set('quote-car', new Macro(function(code) {
-           return Pair.fromArray([new Symbol('quote'), code.car.car]);
-       }));
        var position;
        var timer;
        window.term = $('body').terminal(function(code, term) {
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               try {
-                   parse(tokenize(code)).forEach(function(code) {
+               parse(tokenize(code)).forEach(function(code) {
+                   try {
                        var ret = evaluate(code, env);
                        if (ret instanceof Promise) {
                            ret.then((ret) => {
@@ -82,15 +75,16 @@
                        } else if (ret !== undefined) {
                            env.get('print').call(env, ret);
                        }
-                   });
-               } catch (e) {
-                   term.exception(e);
-               }
+                   } catch (e) {
+                       term.error(e.message);
+                   }
+               });
            }
        }, {
-           name: 'lips',
-           greetings: false,
-           // below is the code for parenthesis matching (jumping)
+           name: 'lisp',
+           prompt: 'lips> ',
+           enabled: false,
+           greetings: '',
            keydown: function() {
                if (position) {
                    term.set_position(position);
@@ -119,7 +113,7 @@
                                count++;
                            }
                        }
-                       if (token.token == '(') {
+                       if (token.token == '(' && count === 0) {
                            clearTimeout(timer);
                            setTimeout(function() {
                                term.set_position(token.offset);
