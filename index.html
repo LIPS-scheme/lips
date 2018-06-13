@@ -109,19 +109,12 @@ parse(tokenize(string)).foEach(function(code) {
   <link href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/>
   <script src="https://cdn.rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
   <script src="https://unpkg.com/prismjs/prism.js"></script>
-  <script src="https://unpkg.com/jquery.terminal/js/prism.js"></script>
   <script src="https://unpkg.com/prismjs/components/prism-scheme.min.js"></script>
   <script src="https://unpkg.com/prismjs/components/prism-javascript.min.js"></script>
   <script src="https://unpkg.com/prismjs/components/prism-markup.min.js"></script>
   <link href="https://unpkg.com/prismjs/themes/prism-coy.css" rel="stylesheet"/>
-  <style>
-   .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
-       background: inherit;
-   }
-  </style>
   <script>
    (function() {
-       $.terminal.defaults.formatters.push($.terminal.prism.bind(null, "scheme"));
        var {
            Environment,
            global_environment,
