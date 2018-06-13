@@ -7,6 +7,18 @@
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script src="https://rawgit.com/jcubic/jquery.terminal/master/js/jquery.terminal.js"></script>
     <script src="https://rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
+    <script src="https://unpkg.com/prismjs@1.8.1/prism.js"></script>
+    <link href="https://unpkg.com/prismjs@1.8.1/themes/prism.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jquery.terminal@1.16.1/js/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.14.0/components/prism-scheme.js"></script>
+    <style>
+     .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
+         background: inherit;
+     }
+     html, body {
+         height: 100%;
+     }
+    </style>
   </head>
   <body></body>
   <script>
@@ -31,6 +43,7 @@
   <script src="src/lips.js"></script>
   <script>
    (function() {
+       $.terminal.defaults.formatters.push($.terminal.prism.bind(null, "scheme"));
        var {
            Environment,
            global_environment,
