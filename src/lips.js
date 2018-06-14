@@ -606,7 +606,11 @@
                             dynamic_scope ? env : undefined
                         )));
                     } else {
-                        var value = evaluate(pair.cdr.car, asterisk ? env : this);
+                        var value = evaluate(
+                            pair.cdr.car,
+                            asterisk ? env : this,
+                            dynamic_scope
+                        );
                         var promise = set(value);
                         if (promise instanceof Promise) {
                             promise.then(() => {
@@ -818,7 +822,11 @@
                 value = evaluate(value, this, dynamic_scope);
             }
             if (code.car instanceof Symbol) {
-                this.env[code.car.name] = value;
+                if (value instanceof Promise) {
+                    value.then(value => this.env[code.car.name] = value);
+                } else {
+                    this.env[code.car.name] = value;
+                }
             }
         }),
         // ------------------------------------------------------------------

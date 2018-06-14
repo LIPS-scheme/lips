@@ -3,10 +3,12 @@
 * add support for new u and s regex flags
 * optional dynamic scope
 * not function
-
+### Bugs
+* fix lambda with no parameters
+* fix define with Promise like `(define x (let ...`
 
 ## 0.4.1-2
-### Bug
+### Bugs
 * fix for Node
 
 ## 0.4.0

@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Thu, 14 Jun 2018 13:01:09 +0000
+ * build: Thu, 14 Jun 2018 13:22:02 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global */
@@ -597,7 +597,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         var output = new Pair(new _Symbol('begin'), code.cdr);
                         resolve(new Quote(evaluate(output, env, dynamic_scope ? env : undefined)));
                     } else {
-                        var value = evaluate(pair.cdr.car, asterisk ? env : this);
+                        var value = evaluate(pair.cdr.car, asterisk ? env : this, dynamic_scope);
                         var promise = set(value);
                         if (promise instanceof Promise) {
                             promise.then(function () {
@@ -797,6 +797,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }),
         // ------------------------------------------------------------------
         define: new Macro(function (code, dynamic_scope) {
+            var _this5 = this;
+
             if (code.car instanceof Pair && code.car.car instanceof _Symbol) {
                 var new_code = new Pair(new _Symbol("define"), new Pair(code.car.car, new Pair(new Pair(new _Symbol("lambda"), new Pair(code.car.cdr, code.cdr)))));
                 return new_code;
@@ -806,7 +808,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 value = evaluate(value, this, dynamic_scope);
             }
             if (code.car instanceof _Symbol) {
-                this.env[code.car.name] = value;
+                if (value instanceof Promise) {
+                    value.then(function (value) {
+                        return _this5.env[code.car.name] = value;
+                    });
+                } else {
+                    this.env[code.car.name] = value;
+                }
             }
         }),
         // ------------------------------------------------------------------
@@ -815,7 +823,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // ------------------------------------------------------------------
         'eval': function _eval(code, dynamic_scope) {
-            var _this5 = this;
+            var _this6 = this;
 
             if (code instanceof Pair) {
                 return evaluate(code, this, dynamic_scope);
@@ -823,7 +831,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             if (code instanceof Array) {
                 var result;
                 code.forEach(function (code) {
-                    result = evaluate(code, _this5, dynamic_scope);
+                    result = evaluate(code, _this6, dynamic_scope);
                 });
                 return result;
             }
@@ -1083,26 +1091,26 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // ------------------------------------------------------------------
         read: function read(arg) {
-            var _this6 = this;
+            var _this7 = this;
 
             if (typeof arg === 'string') {
                 return parse(tokenize(arg));
             }
             return this.get('stdin').read().then(function (text) {
-                return _this6.get('read').call(_this6, text);
+                return _this7.get('read').call(_this7, text);
             });
         },
         // ------------------------------------------------------------------
         print: function print() {
             var _get,
-                _this7 = this;
+                _this8 = this;
 
             for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 args[_key2] = arguments[_key2];
             }
 
             (_get = this.get('stdout')).write.apply(_get, _toConsumableArray(args.map(function (arg) {
-                return _this7.get('string')(arg);
+                return _this8.get('string')(arg);
             })));
         },
         // ------------------------------------------------------------------
