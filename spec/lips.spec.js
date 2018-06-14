@@ -148,8 +148,8 @@ describe('Pair', function() {
     });
 });
 
-function exec(string, env) {
-    return evaluate(parse(tokenize(string))[0], env);
+function exec(string, env, dynamic_scope) {
+    return evaluate(parse(tokenize(string))[0], env, dynamic_scope);
 }
 
 describe('evaluate', function() {
@@ -158,7 +158,7 @@ describe('evaluate', function() {
         value: rand,
         fun: (a, b) => a + b,
         f2: (a, b) => new Pair(a, new Pair(b, nil))
-    }, global_environment);
+    }, global_environment, 'test');
     it('should return value', function() {
         expect(exec('value', env)).toEqual(rand);
     });
@@ -287,6 +287,50 @@ describe('evaluate', function() {
                         ]
                     ]
                 ]));
+        });
+    });
+});
+describe('scope', function() {
+    const ge = global_environment;
+    function exec(code, dynamic_scope) {
+        var env = ge.inherit();
+        return lips.exec(code, env, dynamic_scope ? env : undefined);
+    }
+    describe('lexical', function() {
+        it('should evaluate let', function() {
+            return exec(`(define x 10) (let ((x 10)) x)`).then((result) => {
+                expect(result).toEqual([undefined, 10]);
+            });
+            return exec(`(defined x 10) (let ((x 10)) (let ((x 20))) x)`).then(result => {
+                expect(result).toEqual([undefined, 20]);
+            });
+        });
+        it('should evalute lambda', function() {
+            return exec(`(define x 10) ((let ((x 20)) (lambda () x)))`).then((result) => {
+                expect(result).toEqual([undefined, 20]);
+            });
+        });
+        it('sould create closure', function() {
+            return exec(`(define fn (let ((x 10)) (let ((y 20)) (lambda () (+ x y))))) (fn)`).then(result => {
+                expect(result).toEqual([undefined, 30]);
+            });
+        });
+    });
+    describe('dynamic', function() {
+        it('should get value from let', function() {
+            return exec(`(define fn (lambda (x) (* x y))) (let ((y 10)) (fn 20))`, true).then(result => {
+                expect(result).toEqual([undefined, 200]);
+            });
+        });
+        it('should evalute simple lambda', function() {
+            return exec(`(define y 20) (define (foo x) (* x y)) ((lambda (y) (foo 10)) 2)`, true).then(result => {
+                expect(result).toEqual([undefined, undefined, 20]);
+            });
+        });
+        it('should evalute let over lambda', function() {
+            return exec(`(define y 10) ((let ((y 2)) (lambda () y)))`, true).then(result => {
+                expect(result).toEqual([undefined, 10]);
+            });
         });
     });
 });

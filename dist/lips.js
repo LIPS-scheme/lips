@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Thu, 14 Jun 2018 13:22:02 +0000
+ * build: Thu, 14 Jun 2018 19:03:02 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global */
@@ -461,7 +461,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     Pair.prototype.toString = function () {
         var arr = ['('];
         if (this.car !== undefined) {
-            if (typeof this.car === 'string') {
+            if (typeof this.car === 'function') {
+                arr.push('<#function ' + (this.car.name || 'anonymous') + '>');
+            } else if (typeof this.car === 'string') {
                 arr.push(JSON.stringify(this.car));
             } else if (typeof this.car !== 'undefined') {
                 arr.push(this.car);
@@ -518,12 +520,25 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     };
 
     // ----------------------------------------------------------------------
-    // :: Environment constructor (parent argument is optional)
+    // :: Environment constructor (parent and name arguments are optional)
     // ----------------------------------------------------------------------
-    function Environment(obj, parent) {
+    function Environment(obj, parent, name) {
         this.env = obj;
         this.parent = parent;
+        this.name = name;
     }
+    // ----------------------------------------------------------------------
+    Environment.prototype.inherit = function (obj, name) {
+        if (typeof obj === 'string') {
+            name = obj;
+            obj = {};
+        }
+        if (!name) {
+            name = 'child of ' + (this.name || 'unknown');
+        }
+        return new Environment(obj || {}, this, name);
+    };
+    // ----------------------------------------------------------------------
     Environment.prototype.get = function (symbol) {
         if (symbol instanceof _Symbol) {
             if (typeof this.env[symbol.name] !== 'undefined') {
@@ -554,6 +569,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }
     };
+    // ----------------------------------------------------------------------
     Environment.prototype.set = function (name, value) {
         this.env[name] = value;
     };
@@ -579,7 +595,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     function let_macro(asterisk) {
         return new Macro(function (code, dynamic_scope) {
             var args = this.get('list->array')(code.car);
-            var env = new Environment({}, this);
+            var env = this.inherit('let');
             return new Promise(function (resolve) {
                 var promises = [];
                 var i = 0;
@@ -595,7 +611,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     }
                     if (!pair) {
                         var output = new Pair(new _Symbol('begin'), code.cdr);
-                        resolve(new Quote(evaluate(output, env, dynamic_scope ? env : undefined)));
+                        resolve(new Quote(evaluate(output, env, dynamic_scope ? env : dynamic_scope)));
                     } else {
                         var value = evaluate(pair.cdr.car, asterisk ? env : this, dynamic_scope);
                         var promise = set(value);
@@ -777,12 +793,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         // ------------------------------------------------------------------
         'let': let_macro(false),
         // ------------------------------------------------------------------
-        'begin': new Macro(function (code) {
+        'begin': new Macro(function (code, dynamic_scope) {
             var _this3 = this;
 
             var arr = this.get('list->array')(code);
             return arr.reduce(function (_, code) {
-                return evaluate(code, _this3);
+                return evaluate(code, _this3, dynamic_scope);
             }, 0);
         }),
         // ------------------------------------------------------------------
@@ -809,8 +825,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
             if (code.car instanceof _Symbol) {
                 if (value instanceof Promise) {
-                    value.then(function (value) {
-                        return _this5.env[code.car.name] = value;
+                    return value.then(function (value) {
+                        _this5.env[code.car.name] = value;
                     });
                 } else {
                     this.env[code.car.name] = value;
@@ -840,7 +856,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         lambda: new Macro(function (code, dynamic_scope) {
             var self = this;
             return function () {
-                var env = new Environment({}, dynamic_scope ? this : self);
+                var env = (dynamic_scope ? this : self).inherit('lambda');
                 var name = code.car;
                 var i = 0;
                 var value;
@@ -872,14 +888,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         name = name.cdr;
                     }
                 }
-                return evaluate(code.cdr.car, env);
+                return evaluate(code.cdr.car, env, env);
             };
         }),
         // ------------------------------------------------------------------
         defmacro: new Macro(function (macro) {
             if (macro.car.car instanceof _Symbol) {
                 this.env[macro.car.car.name] = new Macro(function (code) {
-                    var env = new Environment({}, this);
+                    var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
                     var arg = code;
                     while (true) {
@@ -1369,7 +1385,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             this.set(code.car, value);
             return value;
         })
-    });
+    }, undefined, 'global');
 
     // ----------------------------------------------------------------------
     // source: https://stackoverflow.com/a/4331218/387194
@@ -1426,7 +1442,22 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     // ----------------------------------------------------------------------
     function evaluate(code, env, dynamic_scope) {
-        env = env || global_env;
+        /*
+        if (code instanceof Pair) {
+            if (code.car.name) {
+                console.log(code.car.name);
+            }
+            console.log({
+                env: env ? env.name : undefined,
+                dynamic: dynamic_scope ? dynamic_scope.name : undefined,
+                code: code && code.toString()
+            });
+        }*/
+        if (env === true) {
+            env = dynamic_scope = global_env;
+        } else {
+            env = env || global_env;
+        }
         var value;
         if (typeof code === 'undefined') {
             return;
@@ -1497,9 +1528,36 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
 
     // ----------------------------------------------------------------------
-    function exec(string, env) {
-        return parse(tokenize(string)).map(function (code) {
-            return evaluate(code, env);
+    function exec(string, env, dynamic_scope) {
+        if (env === true) {
+            env = dynamic_scope = global_env;
+        } else {
+            env = env || global_env;
+        }
+        var list = parse(tokenize(string));
+        return new Promise(function (resolve, reject) {
+            var results = [];
+            (function recur() {
+                function next(value) {
+                    results.push(value);
+                    recur();
+                }
+                var code = list.shift();
+                if (!code) {
+                    resolve(results);
+                } else {
+                    try {
+                        var result = evaluate(code, env, dynamic_scope);
+                    } catch (e) {
+                        return reject(e);
+                    }
+                    if (result instanceof Promise) {
+                        result.then(next).catch(reject);
+                    } else {
+                        next(result);
+                    }
+                }
+            })();
         });
     }
 

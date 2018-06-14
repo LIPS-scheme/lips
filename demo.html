@@ -67,9 +67,7 @@
            stdin: {
                read: function() {
                    return new Promise(function(resolve) {
-                       term.read('', function(command) {
-                           resolve(command);
-                       });
+                       term.read('', resolve);
                    });
                }
            }
@@ -80,22 +78,30 @@
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               parse(tokenize(code)).forEach(function(code) {
-                   try {
-                       var ret = evaluate(code, env, env);
-                       if (ret instanceof Promise) {
-                           ret.then((ret) => {
+               var list = parse(tokenize(code));
+               (function next() {
+                   var code = list.shift();
+                   if (code) {
+                       try {
+                           var ret = evaluate(code, env);
+                           if (ret instanceof Promise) {
+                               ret.then((ret) => {
+                                   if (ret !== undefined) {
+                                       env.get('print').call(env, ret)
+                                   }
+                                   next();
+                               });
+                           } else {
                                if (ret !== undefined) {
-                                   env.get('print').call(env, ret)
+                                   env.get('print').call(env, ret);
                                }
-                           });
-                       } else if (ret !== undefined) {
-                           env.get('print').call(env, ret);
+                               next();
+                           }
+                       } catch (e) {
+                           term.error(e.message);
                        }
-                   } catch (e) {
-                       term.error(e.message);
                    }
-               });
+               })();
            }
        }, {
            name: 'lisp',

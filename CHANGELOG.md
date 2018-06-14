@@ -1,4 +1,6 @@
 ## 0.5.0
+### Breaking
+* exec now return promise with array of results
 ### Features
 * add support for new u and s regex flags
 * optional dynamic scope
