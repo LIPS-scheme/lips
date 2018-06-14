@@ -292,20 +292,25 @@ describe('evaluate', function() {
 });
 describe('environment', function() {
     const env = global_environment;
+    var functions = {
+        scope_name: function() {
+            return this.name;
+        }
+    };
     it('should return name of the enviroment', function() {
-        var e = env.inherit({scope_name: function() { return this.name; }}, 'foo');
+        var e = env.inherit(functions, 'foo');
         return lips.exec('(scope_name)', e).then(result => {
             return expect(result).toEqual(['foo']);
         });
     });
     it('should create default scope name', function() {
-        var e = env.inherit({scope_name: function() { return this.name; }});
+        var e = env.inherit(functions);
         return lips.exec('(scope_name)', e).then(result => {
             return expect(result).toEqual(['child of global']);
         });
     });
     it('should create default scope name for child scope', function() {
-        var e = env.inherit({scope_name: function() { return this.name; }}, 'foo');
+        var e = env.inherit(functions, 'foo');
         var child = e.inherit();
         return lips.exec('(scope_name)', child).then(result => {
             return expect(result).toEqual(['child of foo']);
