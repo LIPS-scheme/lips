@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Thu, 14 Jun 2018 19:03:02 +0000
+ * build: Thu, 14 Jun 2018 19:44:57 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global */
@@ -1453,7 +1453,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 code: code && code.toString()
             });
         }*/
-        if (env === true) {
+        if (dynamic_scope === true) {
+            env = dynamic_scope = env || global_env;
+        } else if (env === true) {
             env = dynamic_scope = global_env;
         } else {
             env = env || global_env;
@@ -1529,7 +1531,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     // ----------------------------------------------------------------------
     function exec(string, env, dynamic_scope) {
-        if (env === true) {
+        if (dynamic_scope === true) {
+            env = dynamic_scope = env || global_env;
+        } else if (env === true) {
             env = dynamic_scope = global_env;
         } else {
             env = env || global_env;

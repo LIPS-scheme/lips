@@ -290,6 +290,28 @@ describe('evaluate', function() {
         });
     });
 });
+describe('environment', function() {
+    const env = global_environment;
+    it('should return name of the enviroment', function() {
+        var e = env.inherit({scope_name: function() { return this.name; }}, 'foo');
+        return lips.exec('(scope_name)', e).then(result => {
+            return expect(result).toEqual(['foo']);
+        });
+    });
+    it('should create default scope name', function() {
+        var e = env.inherit({scope_name: function() { return this.name; }});
+        return lips.exec('(scope_name)', e).then(result => {
+            return expect(result).toEqual(['child of global']);
+        });
+    });
+    it('should create default scope name for child scope', function() {
+        var e = env.inherit({scope_name: function() { return this.name; }}, 'foo');
+        var child = e.inherit();
+        return lips.exec('(scope_name)', child).then(result => {
+            return expect(result).toEqual(['child of foo']);
+        });
+    });
+});
 describe('scope', function() {
     const ge = global_environment;
     function exec(code, dynamic_scope) {

@@ -5,7 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&8cd27d9771922623e9d7bcc851ac4ce6)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
-LIPS is very simple Lisp, similar to Scheme written in JavaScript.
+LIPS is very simple Lisp, similar to Scheme written in JavaScript. With optional dynamic scope.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
@@ -36,8 +36,10 @@ var {exec} = require('@jcubic/lips'); // node
 // or
 var {exec} = lips; // browser
 
-exec(string).forEach(function(result) {
-     console.log(result);
+exec(string).then(function(results) {
+    results.forEach(function(result) {
+        console.log(result);
+    });
 });
 ```
 
@@ -55,15 +57,35 @@ parse(tokenize(string)).forEach(function(code) {
 By default it's `lips.global_environment`. You can use it if you want to
 have separated instances of the interpreter.
 
+It you want to use dynamic scope you can pass two arguments your global scopes and dynamic scope,
+scope and true or just true to have global scope.
+
+
+
+
 You can create new environment using:
 
 ```javascript
-var env = new Environment({}, lips.global_environment);
+var env = new Environment({}, lips.global_environment, 'name');
 ```
 
-First argument is an object with functions, macros and varibles (see Extending LIPS at the end).
+First argument is an object with functions, macros and variables (see Extending LIPS in
+[docs](https://jcubic.github.io/lips/docs.html)).
 Second argument is parent environment, you need to use global environment (or other that extend global)
 otherwise you will not have any functions.
+
+You can also use inherit method to create new child environment:
+
+```javascript
+var env = lips.global_environment.inherit({fn: function() { return 42; }}, 'name of the scope');
+var env = lips.global_environment.inherit('name of the scope');
+var env = lips.global_environment.inherit();
+```
+
+
+name of the scope is optional, it was used mainly for debugging while working on dynamic scope.
+But each function you define have Environment in this context so you can check the name of your scope
+in your functions written in JavaScript.
 
 You can also use script tag to execute LIPS code:
 

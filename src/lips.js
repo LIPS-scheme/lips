@@ -1438,7 +1438,9 @@
                 code: code && code.toString()
             });
         }*/
-        if (env === true) {
+        if (dynamic_scope === true) {
+            env = dynamic_scope = env || global_env;
+        } else if (env === true) {
             env = dynamic_scope = global_env;
         } else {
             env = env || global_env;
@@ -1514,7 +1516,9 @@
 
     // ----------------------------------------------------------------------
     function exec(string, env, dynamic_scope) {
-        if (env === true) {
+        if (dynamic_scope === true) {
+            env = dynamic_scope = env || global_env;
+        } else if (env === true) {
             env = dynamic_scope = global_env;
         } else {
             env = env || global_env;
