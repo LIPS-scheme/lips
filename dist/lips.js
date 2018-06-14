@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Wed, 13 Jun 2018 18:27:52 +0000
+ * build: Thu, 14 Jun 2018 13:01:09 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global */
@@ -336,6 +336,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             result = result.concat(this.cdr.toArray());
         }
         return result;
+    };
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.isEmptyList = function () {
+        return typeof this.car === 'undefined' && this.cdr === nil;
     };
 
     // ----------------------------------------------------------------------
@@ -831,32 +836,33 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 var name = code.car;
                 var i = 0;
                 var value;
+                if (!name.isEmptyList()) {
+                    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                        args[_key] = arguments[_key];
+                    }
 
-                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                    args[_key] = arguments[_key];
-                }
-
-                while (true) {
-                    if (name.car !== nil) {
-                        if (name instanceof _Symbol) {
-                            // rest argument,  can also be first argument
-                            value = Pair.fromArray(args.slice(i));
-                            env.env[name.name] = value;
-                            break;
-                        } else {
-                            if (typeof args[i] === 'undefined') {
-                                value = nil;
+                    while (true) {
+                        if (name.car !== nil) {
+                            if (name instanceof _Symbol) {
+                                // rest argument,  can also be first argument
+                                value = Pair.fromArray(args.slice(i));
+                                env.env[name.name] = value;
+                                break;
                             } else {
-                                value = args[i];
+                                if (typeof args[i] === 'undefined') {
+                                    value = nil;
+                                } else {
+                                    value = args[i];
+                                }
+                                env.env[name.car.name] = value;
                             }
-                            env.env[name.car.name] = value;
                         }
+                        if (name.cdr === nil) {
+                            break;
+                        }
+                        i++;
+                        name = name.cdr;
                     }
-                    if (name.cdr === nil) {
-                        break;
-                    }
-                    i++;
-                    name = name.cdr;
                 }
                 return evaluate(code.cdr.car, env);
             };
@@ -1440,7 +1446,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     return value.value;
                 } else if (value instanceof Promise) {
                     return value.then(function (value) {
-                        return value.value;
+                        if (value instanceof Quote) {
+                            return value.value;
+                        }
+                        return evaluate(value, env, dynamic_scope);
                     });
                 }
                 return evaluate(value, env, dynamic_scope);

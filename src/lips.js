@@ -340,6 +340,11 @@
     };
 
     // ----------------------------------------------------------------------
+    Pair.prototype.isEmptyList = function() {
+        return typeof this.car === 'undefined' && this.cdr === nil;
+    };
+
+    // ----------------------------------------------------------------------
     Pair.fromArray = function(array) {
         if (array instanceof Pair) {
             return array;
@@ -841,27 +846,29 @@
                 var name = code.car;
                 var i = 0;
                 var value;
-                while (true) {
-                    if (name.car !== nil) {
-                        if (name instanceof Symbol) {
-                            // rest argument,  can also be first argument
-                            value = Pair.fromArray(args.slice(i));
-                            env.env[name.name] = value;
-                            break;
-                        } else {
-                            if (typeof args[i] === 'undefined') {
-                                value = nil;
+                if (!name.isEmptyList()) {
+                    while (true) {
+                        if (name.car !== nil) {
+                            if (name instanceof Symbol) {
+                                // rest argument,  can also be first argument
+                                value = Pair.fromArray(args.slice(i));
+                                env.env[name.name] = value;
+                                break;
                             } else {
-                                value = args[i];
+                                if (typeof args[i] === 'undefined') {
+                                    value = nil;
+                                } else {
+                                    value = args[i];
+                                }
+                                env.env[name.car.name] = value;
                             }
-                            env.env[name.car.name] = value;
                         }
+                        if (name.cdr === nil) {
+                            break;
+                        }
+                        i++;
+                        name = name.cdr;
                     }
-                    if (name.cdr === nil) {
-                        break;
-                    }
-                    i++;
-                    name = name.cdr;
                 }
                 return evaluate(code.cdr.car, env);
             };

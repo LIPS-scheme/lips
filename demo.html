@@ -78,7 +78,7 @@
            } else {
                parse(tokenize(code)).forEach(function(code) {
                    try {
-                       var ret = evaluate(code, env);
+                       var ret = evaluate(code, env, env);
                        if (ret instanceof Promise) {
                            ret.then((ret) => {
                                if (ret !== undefined) {
