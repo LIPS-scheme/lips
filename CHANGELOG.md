@@ -1,5 +1,19 @@
+## 0.5.0
+### Breaking
+* exec now return promise with array of results
+* all numbers are wrapped with LNumber
+### Features
+* add support for new u and s regex flags
+* optional dynamic scope
+* add `not`, `abs`, `sqrt` and `**` functions
+* wrap numbers in LNumber that use BigInt or bn.js if possible
+### Bugs
+* fix lambda with no parameters
+* fix define with Promise like `(define x (let ...`
+* fix - with single argument
+
 ## 0.4.1-2
-### Bug
+### Bugs
 * fix for Node
 
 ## 0.4.0

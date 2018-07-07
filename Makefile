@@ -4,7 +4,7 @@ VERSION=0.4.2
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
-COMMIT=`git log -n 1 | grep commit | sed 's/commit //'`
+COMMIT=`git rev-parse HEAD`
 
 GIT=git
 SED=sed

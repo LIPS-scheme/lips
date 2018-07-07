@@ -7,20 +7,20 @@
  * build: {{DATE}}
  */
 "use strict";
-/* global define, module, setTimeout, jQuery, global */
+/* global define, module, setTimeout, jQuery, global, BigInt, require */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define([], function() {
-            return (root.lips = factory(root));
+        define(['bn.js'], function(BN) {
+            return (root.lips = factory(root, BN));
         });
     } else if (typeof module === 'object' && module.exports) {
         // Node/CommonJS
-        module.exports = factory(root);
+        module.exports = factory(root, require('bn.js'));
     } else {
-        root.lips = factory(root);
+        root.lips = factory(root, root.BN);
     }
-})(typeof window !== 'undefined' ? window : global, function(root, undefined) {
+})(typeof window !== 'undefined' ? window : global, function(root, BN, undefined) {
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var float_re = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -47,9 +47,9 @@
         } else if (arg.match(/['"]/)) {
             return parse_string(arg);
         } else if (arg.match(/^-?[0-9]+$/)) {
-            return parseInt(arg, 10);
+            return LNumber(parseInt(arg, 10));
         } else if (arg.match(float_re)) {
-            return parseFloat(arg);
+            return LNumber(parseFloat(arg));
         } else if (arg === 'nil') {
             return nil;
         } else {
@@ -340,6 +340,11 @@
     };
 
     // ----------------------------------------------------------------------
+    Pair.prototype.isEmptyList = function() {
+        return typeof this.car === 'undefined' && this.cdr === nil;
+    };
+
+    // ----------------------------------------------------------------------
     Pair.fromArray = function(array) {
         if (array instanceof Pair) {
             return array;
@@ -461,7 +466,9 @@
     Pair.prototype.toString = function() {
         var arr = ['('];
         if (this.car !== undefined) {
-            if (typeof this.car === 'string') {
+            if (typeof this.car === 'function') {
+                arr.push('<#function ' + (this.car.name || 'anonymous') + '>');
+            } else if (typeof this.car === 'string') {
                 arr.push(JSON.stringify(this.car));
             } else if (typeof this.car !== 'undefined') {
                 arr.push(this.car);
@@ -513,26 +520,253 @@
     function Macro(fn) {
         this.fn = fn;
     }
-    Macro.prototype.invoke = function(code, env) {
-        return this.fn.call(env, code);
+    Macro.prototype.invoke = function(name, code, env, dynamic_scope) {
+        return this.fn.call(env, code, dynamic_scope, name);
     };
-
     // ----------------------------------------------------------------------
-    // :: Environment constructor (parent argument is optional)
+    // :: Number wrapper that handle BigNumbers
     // ----------------------------------------------------------------------
-    function Environment(obj, parent) {
+    function LNumber(n) {
+        if (n instanceof LNumber) {
+            return n;
+        }
+        if (typeof this !== 'undefined' && this.constructor !== LNumber ||
+            typeof this === 'undefined') {
+            return new LNumber(n);
+        }
+        if (!LNumber.isNumber(n)) {
+            throw new Error("You can't create LNumber from " + typeof n);
+        }
+        // prevent infite loop https://github.com/indutny/bn.js/issues/186
+        if (n === null) {
+            n = 0;
+        }
+        if (LNumber.isFloat(n)) {
+            this.value = n;
+        } else if (typeof BigInt !== 'undefined') {
+            if (typeof n !== 'bigint') {
+                this.value = BigInt(n);
+            } else {
+                this.value = n;
+            }
+        } else if (typeof BN !== 'undefined' && !(n instanceof BN)) {
+            this.value = new BN(n);
+        } else {
+            this.value = n;
+        }
+    }
+    // ----------------------------------------------------------------------
+    LNumber.isFloat = function isFloat(n) {
+        return Number(n) === n && n % 1 !== 0;
+    };
+    // ----------------------------------------------------------------------
+    LNumber.isNumber = function(n) {
+        return n instanceof LNumber || LNumber.isNative(n) || LNumber.isBN(n);
+    };
+    // ----------------------------------------------------------------------
+    LNumber.isNative = function(n) {
+        return typeof n === 'bigint' || typeof n === 'number';
+    };
+    // ----------------------------------------------------------------------
+    LNumber.isBN = function(n) {
+        return typeof BN !== 'undefined' && n instanceof BN;
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.toString = function() {
+        console.log(this.value);
+        return this.value.toString();
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.valueOf = function() {
+        if (LNumber.isNative(this.value)) {
+            return Number(this.value);
+        } else if (LNumber.isBN(this.value)) {
+            return this.value.toNumber();
+        }
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.coerce = function(n) {
+        if (n === null) {
+            n = 0;
+        }
+        var value;
+        if (n instanceof LNumber) {
+            value = n.value;
+        } else {
+            value = n;
+        }
+        if (LNumber.isFloat(value)) {
+            // skip
+        } else if (typeof this.value === 'bigint' && typeof value !== 'bigint') {
+            value = BigInt(value);
+        } else if (typeof BN !== 'undefined' && this.value instanceof BN &&
+            !value instanceof BN) {
+            value = new BN(value);
+        }
+        return LNumber(value);
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.add = function(n) {
+        n = this.coerce(n);
+        if (LNumber.isNative(n.value)) {
+            n.value = this.value + n.value;
+        } else if (LNumber.isBN(this.value)) {
+            n.value.iadd(this.value);
+        }
+        return n;
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.sub = function(n) {
+        n = this.coerce(n);
+        if (LNumber.isNative(n.value)) {
+            n.value = this.value - n.value;
+        } else if (LNumber.isBN(this.value)) {
+            n.value.isub(this.value);
+        }
+        return n;
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.mul = function(n) {
+        n = this.coerce(n);
+        if (LNumber.isNative(n.value)) {
+            n.value = this.value * n.value;
+        } else if (LNumber.isBN(this.value)) {
+            n.value.imul(this.value);
+        }
+        return n;
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.div = function(n) {
+        n = this.coerce(n);
+        if (LNumber.isNative(n.value)) {
+            n.value = this.value / n.value;
+        } else if (LNumber.isBN(this.value)) {
+            n.value.idiv(this.value);
+        }
+        return n;
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.mod = function(n) {
+        n = this.coerce(n);
+        if (LNumber.isNative(n.value)) {
+            n.value = this.value % n.value;
+        } else if (LNumber.isBN(this.value)) {
+            n.value.imod(this.value);
+        }
+        return n;
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.sqrt = function() {
+        var value;
+        if (LNumber.isNative(this.value)) {
+            value = Math.sqrt(this.value);
+        } else if (LNumber.isBN(this.value)) {
+            value = this.value.sqrt();
+        }
+        return new LNumber(value);
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.pow = function(n) {
+        n = this.coerce(n);
+        if (LNumber.isNative(this.value)) {
+            try {
+                var pow = new Function('a,b', 'return a**b;');
+                n.value = pow(this.value, n.value);
+            } catch (e) {
+                throw new Error("Power operator not supported");
+            }
+        } else if (LNumber.isBN(this.value)) {
+            n.value = this.value.pow(n.value);
+        } else {
+            n.value = Math.pow(this.value, n.value);
+        }
+        return n;
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.neg = function() {
+        var value = this.value;
+        if (LNumber.isNative(value)) {
+            value = -value;
+        } else if (LNumber.isBN(value)) {
+            value = value.neg();
+        }
+        return new LNumber(value);
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.abs = function() {
+        var value = this.value;
+        if (LNumber.isNative(this.value)) {
+            if (value < 0) {
+                value = -value;
+            }
+        } else if (LNumber.isBN(value)) {
+            value.iabs();
+        }
+        return new LNumber(value);
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.isOdd = function() {
+        if (LNumber.isNative(this.value)) {
+            return this.value % 2 === 1;
+        } else if (LNumber.isBN(this.value)) {
+            return this.value.isOdd();
+        }
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.isEven = function() {
+        return !this.isOdd();
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.cmp = function(n) {
+        n = this.coerce(n);
+        if (LNumber.isNative(this.value)) {
+            if (this.value < n.value) {
+                return -1;
+            } else if (this.value === n.value) {
+                return 0;
+            } else {
+                return 1;
+            }
+        } else if (LNumber.isBN(this.value)) {
+            return this.value.cmp(n.value);
+        }
+    };
+    // ----------------------------------------------------------------------
+    // :: Environment constructor (parent and name arguments are optional)
+    // ----------------------------------------------------------------------
+    function Environment(obj, parent, name) {
         this.env = obj;
         this.parent = parent;
+        this.name = name;
     }
+    // ----------------------------------------------------------------------
+    Environment.prototype.inherit = function(obj, name) {
+        if (typeof obj === 'string') {
+            name = obj;
+            obj = {};
+        }
+        if (!name) {
+            name = 'child of ' + (this.name || 'unknown');
+        }
+        return new Environment(obj || {}, this, name);
+    };
+    // ----------------------------------------------------------------------
     Environment.prototype.get = function(symbol) {
+        var value;
         if (symbol instanceof Symbol) {
             if (typeof this.env[symbol.name] !== 'undefined') {
-                return this.env[symbol.name];
+                value = this.env[symbol.name];
             }
         } else if (typeof symbol === 'string') {
             if (typeof this.env[symbol] !== 'undefined') {
-                return this.env[symbol];
+                value = this.env[symbol];
             }
+        }
+        if (typeof value !== 'undefined') {
+            if (LNumber.isNumber(value)) {
+                return LNumber(value);
+            }
+            return value;
         }
 
         if (this.parent instanceof Environment) {
@@ -554,7 +788,14 @@
             }
         }
     };
+    // ----------------------------------------------------------------------
     Environment.prototype.set = function(name, value) {
+        if (LNumber.isNumber(value)) {
+            value = LNumber(value);
+        }
+        if (name instanceof Symbol) {
+            name = name.name;
+        }
         this.env[name] = value;
     };
     // ----------------------------------------------------------------------
@@ -577,9 +818,9 @@
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
-        return new Macro(function(code) {
+        return new Macro(function(code, dynamic_scope) {
             var args = this.get('list->array')(code.car);
-            var env = new Environment({}, this);
+            var env = this.inherit('let');
             return new Promise((resolve) => {
                 var promises = [];
                 var i = 0;
@@ -595,9 +836,17 @@
                     }
                     if (!pair) {
                         var output = new Pair(new Symbol('begin'), code.cdr);
-                        resolve(new Quote(evaluate(output, env)));
+                        resolve(new Quote(evaluate(
+                            output,
+                            env,
+                            dynamic_scope ? env : dynamic_scope
+                        )));
                     } else {
-                        var value = evaluate(pair.cdr.car, asterisk ? env : this);
+                        var value = evaluate(
+                            pair.cdr.car,
+                            asterisk ? env : this,
+                            dynamic_scope
+                        );
                         var promise = set(value);
                         if (promise instanceof Promise) {
                             promise.then(() => {
@@ -771,9 +1020,9 @@
         // ------------------------------------------------------------------
         'let': let_macro(false),
         // ------------------------------------------------------------------
-        'begin': new Macro(function(code) {
+        'begin': new Macro(function(code, dynamic_scope) {
             var arr = this.get('list->array')(code);
-            return arr.reduce((_, code) => evaluate(code, this), 0);
+            return arr.reduce((_, code) => evaluate(code, this, dynamic_scope), 0);
         }),
         // ------------------------------------------------------------------
         timer: new Macro(function(code) {
@@ -784,7 +1033,7 @@
             });
         }),
         // ------------------------------------------------------------------
-        define: new Macro(function(code) {
+        define: new Macro(function(code, dynamic_scope) {
             if (code.car instanceof Pair &&
                 code.car.car instanceof Symbol) {
                 var new_code = new Pair(
@@ -806,10 +1055,16 @@
             }
             var value = code.cdr.car;
             if (value instanceof Pair) {
-                value = evaluate(value, this);
+                value = evaluate(value, this, dynamic_scope);
             }
             if (code.car instanceof Symbol) {
-                this.env[code.car.name] = value;
+                if (value instanceof Promise) {
+                    return value.then(value => {
+                        this.set(code.car, value);
+                    });
+                } else {
+                    this.set(code.car, value);
+                }
             }
         }),
         // ------------------------------------------------------------------
@@ -817,55 +1072,58 @@
             obj[key] = value;
         },
         // ------------------------------------------------------------------
-        'eval': function(code) {
+        'eval': function(code, dynamic_scope) {
             if (code instanceof Pair) {
-                return evaluate(code, this);
+                return evaluate(code, this, dynamic_scope);
             }
             if (code instanceof Array) {
                 var result;
                 code.forEach((code) => {
-                    result = evaluate(code, this);
+                    result = evaluate(code, this, dynamic_scope);
                 });
                 return result;
             }
         },
         // ------------------------------------------------------------------
-        lambda: new Macro(function(code) {
-            return (...args) => {
-                var env = new Environment({}, this);
+        lambda: new Macro(function(code, dynamic_scope) {
+            var self = this;
+            return function(...args) {
+                var env = (dynamic_scope ? this : self).inherit('lambda');
                 var name = code.car;
                 var i = 0;
                 var value;
-                while (true) {
-                    if (name.car !== nil) {
-                        if (name instanceof Symbol) {
-                            // rest argument,  can also be first argument
-                            value = Pair.fromArray(args.slice(i));
-                            env.env[name.name] = value;
-                            break;
-                        } else {
-                            if (typeof args[i] === 'undefined') {
-                                value = nil;
+                if (!name.isEmptyList()) {
+                    while (true) {
+                        if (name.car !== nil) {
+                            if (name instanceof Symbol) {
+                                // rest argument,  can also be first argument
+                                value = Pair.fromArray(args.slice(i));
+                                env.env[name.name] = value;
+                                break;
                             } else {
-                                value = args[i];
+                                if (typeof args[i] === 'undefined') {
+                                    value = nil;
+                                } else {
+                                    value = args[i];
+                                }
+                                env.env[name.car.name] = value;
                             }
-                            env.env[name.car.name] = value;
                         }
+                        if (name.cdr === nil) {
+                            break;
+                        }
+                        i++;
+                        name = name.cdr;
                     }
-                    if (name.cdr === nil) {
-                        break;
-                    }
-                    i++;
-                    name = name.cdr;
                 }
-                return evaluate(code.cdr.car, env);
+                return evaluate(code.cdr.car, env, dynamic_scope ? env : undefined);
             };
         }),
         // ------------------------------------------------------------------
         defmacro: new Macro(function(macro) {
             if (macro.car.car instanceof Symbol) {
                 this.env[macro.car.car.name] = new Macro(function(code) {
-                    var env = new Environment({}, this);
+                    var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
                     var arg = code;
                     while (true) {
@@ -1035,6 +1293,9 @@
             if (obj instanceof Macro) {
                 //return '<#Macro>';
             }
+            if (obj instanceof LNumber) {
+                return obj.value.toString();
+            }
             if (typeof obj === 'undefined') {
                 return '<#undefined>';
             }
@@ -1134,14 +1395,6 @@
             return Pair.fromArray(this.get('list->array')(list).filter(fn));
         },
         // ------------------------------------------------------------------
-        odd: function(num) {
-            return num % 2 === 1;
-        },
-        // ------------------------------------------------------------------
-        even: function(num) {
-            return num % 2 === 0;
-        },
-        // ------------------------------------------------------------------
         apply: function(fn, list) {
             var args = this.get('list->array')(list);
             return fn.apply(null, args);
@@ -1186,58 +1439,122 @@
 
         },
         // ------------------------------------------------------------------
+        odd: function(num) {
+            return LNumber(num).isOdd();
+        },
+        // ------------------------------------------------------------------
+        even: function(num) {
+            return LNumber(num).isEvent();
+        },
+        // ------------------------------------------------------------------
         range: function(n) {
-            return Pair.fromArray(new Array(n).fill(0).map((_, i) => i));
+            if (n instanceof LNumber) {
+                n = n.valueOf();
+            }
+            return Pair.fromArray(new Array(n).fill(0).map((_, i) => LNumber(i)));
         },
         // ------------------------------------------------------------------
         // math functions
         '*': function(...args) {
-            return args.reduce(function(a, b) {
-                return a * b;
-            });
+            if (args.length) {
+                return args.reduce(function(a, b) {
+                    return LNumber(a).mul(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
         '+': function(...args) {
-            return args.reduce(function(a, b) {
-                return a + b;
-            });
+            if (args.length) {
+                return args.reduce(function(a, b) {
+                    if (LNumber.isNumber(a) && LNumber.isNumber(b)) {
+                        return LNumber(a).add(b);
+                    } else if (typeof a === 'string') {
+                        throw new Error("To concatenate strings use `concat`");
+                    }
+                    return a + b;
+                });
+            }
         },
         // ------------------------------------------------------------------
         '-': function(...args) {
-            return args.reduce(function(a, b) {
-                return a - b;
-            });
+            if (args.length === 1) {
+                return LNumber(args[0]).neg();
+            }
+            if (args.length) {
+                return args.reduce(function(a, b) {
+                    return LNumber(a).sub(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
         '/': function(...args) {
-            return args.reduce(function(a, b) {
-                return a / b;
-            });
+            if (args.length) {
+                return args.reduce(function(a, b) {
+                    return LNumber(a).div(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
+        'abs': function(n) {
+            return LNumber(n).abs();
+        },
+        // ------------------------------------------------------------------
+        'sqrt': function(n) {
+            if (n instanceof LNumber) {
+                return Math.sqrt(n.valueOf());
+            }
+            return Math.sqrt(n);
+        },
+        // ------------------------------------------------------------------
+        '**': function(a, b) {
+            return LNumber(a).pow(b);
+        },
+        // ------------------------------------------------------------------
+        '1+': function(number) {
+            return LNumber(number).add(1);
+        },
+        // ------------------------------------------------------------------
+        '1-': function(number) {
+            return LNumber(number).sub(1);
+        },
+        // ------------------------------------------------------------------
+        '++': new Macro(function(code) {
+            var car = this.get(code.car);
+            var value = LNumber(car).add(1);
+            this.set(code.car, value);
+            return value;
+        }),
+        // ------------------------------------------------------------------
+        '--': new Macro(function(code) {
+            var car = this.get(code.car);
+            var value = LNumber(car).sub(1);
+            this.set(code.car, value);
+            return value;
+        }),
+        // ------------------------------------------------------------------
         '%': function(a, b) {
-            return a % b;
+            return LNumber(a).mod(b);
         },
         // ------------------------------------------------------------------
         // Booleans
         "==": function(a, b) {
-            return a === b;
+            return LNumber(a).cmp(b) === 0;
         },
         // ------------------------------------------------------------------
         '>': function(a, b) {
-            return a > b;
+            return LNumber(a).cmp(b) === 1;
         },
         // ------------------------------------------------------------------
         '<': function(a, b) {
-            return a < b;
+            return LNumber(a).cmp(b) === -1;
         },
         // ------------------------------------------------------------------
         '<=': function(a, b) {
-            return a <= b;
+            return [0, -1].includes(LNumber(a).cmp(b));
         },
         // ------------------------------------------------------------------
         '>=': function(a, b) {
-            return a >= b;
+            [0, 1].includes(LNumber(a).cmp(b));
         },
         // ------------------------------------------------------------------
         or: new Macro(function(code) {
@@ -1303,32 +1620,16 @@
                 })();
             });
         }),
+        not: function(value) {
+            if (value === nil) {
+                return true;
+            }
+            return !value;
+        },
         '->': function(obj, name, ...args) {
-            console.log(name);
-            console.log(obj);
             return obj[name](...args);
-        },
-        // ------------------------------------------------------------------
-        '1+': function(number) {
-            return number + 1;
-        },
-        // ------------------------------------------------------------------
-        '1-': function(number) {
-            return number - 1;
-        },
-        // ------------------------------------------------------------------
-        '++': new Macro(function(code) {
-            var value = this.get(code.car) + 1;
-            this.set(code.car, value);
-            return value;
-        }),
-        // ------------------------------------------------------------------
-        '--': new Macro(function(code) {
-            var value = this.get(code.car) - 1;
-            this.set(code.car, value);
-            return value;
-        })
-    });
+        }
+    }, undefined, 'global');
 
     // ----------------------------------------------------------------------
     // source: https://stackoverflow.com/a/4331218/387194
@@ -1384,8 +1685,25 @@
     }
 
     // ----------------------------------------------------------------------
-    function evaluate(code, env) {
-        env = env || global_env;
+    function evaluate(code, env, dynamic_scope) {
+        /*
+        if (code instanceof Pair) {
+            if (code.car.name) {
+                console.log(code.car.name);
+            }
+            console.log({
+                env: env ? env.name : undefined,
+                dynamic: dynamic_scope ? dynamic_scope.name : undefined,
+                code: code && code.toString()
+            });
+        }*/
+        if (dynamic_scope === true) {
+            env = dynamic_scope = env || global_env;
+        } else if (env === true) {
+            env = dynamic_scope = global_env;
+        } else {
+            env = env || global_env;
+        }
         var value;
         if (typeof code === 'undefined') {
             return;
@@ -1393,9 +1711,11 @@
         var first = code.car;
         var rest = code.cdr;
         if (first instanceof Pair) {
-            value = evaluate(first, env);
+            value = evaluate(first, env, dynamic_scope);
             if (value instanceof Promise) {
-                return value.then((value) => evaluate(new Pair(value, code.cdr)));
+                return value.then((value) => {
+                    return evaluate(new Pair(value, code.cdr), env, dynamic_scope);
+                });
             } else if (typeof value !== 'function') {
                 throw new Error(
                     env.get('string')(value) + ' is not a function'
@@ -1408,13 +1728,18 @@
         if (first instanceof Symbol) {
             value = env.get(first);
             if (value instanceof Macro) {
-                value = value.invoke(rest, env);
+                value = value.invoke(first, rest, env, dynamic_scope);
                 if (value instanceof Quote) {
                     return value.value;
                 } else if (value instanceof Promise) {
-                    return value.then((value) => value.value);
+                    return value.then((value) => {
+                        if (value instanceof Quote) {
+                            return value.value;
+                        }
+                        return evaluate(value, env, dynamic_scope);
+                    });
                 }
-                return evaluate(value, env);
+                return evaluate(value, env, dynamic_scope);
             } else if (typeof value !== 'function') {
                 throw new Error('Unknown function `' + first.name + '\'');
             }
@@ -1424,7 +1749,7 @@
             var node = rest;
             while (true) {
                 if (node instanceof Pair) {
-                    args.push(evaluate(node.car, env));
+                    args.push(evaluate(node.car, env, dynamic_scope));
                     node = node.cdr;
                 } else {
                     break;
@@ -1433,10 +1758,10 @@
             var promises = args.filter((arg) => arg instanceof Promise);
             if (promises.length) {
                 return Promise.all(args).then((args) => {
-                    return value.apply(env, args);
+                    return value.apply(dynamic_scope || env, args);
                 });
             }
-            return value.apply(env, args);
+            return value.apply(dynamic_scope || env, args);
         } else if (code instanceof Symbol) {
             value = env.get(code);
             if (value === 'undefined') {
@@ -1449,8 +1774,39 @@
     }
 
     // ----------------------------------------------------------------------
-    function exec(string, env) {
-        return parse(tokenize(string)).map((code) => evaluate(code, env));
+    function exec(string, env, dynamic_scope) {
+        if (dynamic_scope === true) {
+            env = dynamic_scope = env || global_env;
+        } else if (env === true) {
+            env = dynamic_scope = global_env;
+        } else {
+            env = env || global_env;
+        }
+        var list = parse(tokenize(string));
+        return new Promise((resolve, reject) => {
+            var results = [];
+            (function recur() {
+                function next(value) {
+                    results.push(value);
+                    recur();
+                }
+                var code = list.shift();
+                if (!code) {
+                    resolve(results);
+                } else {
+                    try {
+                        var result = evaluate(code, env, dynamic_scope);
+                    } catch (e) {
+                        return reject(e);
+                    }
+                    if (result instanceof Promise) {
+                        result.then(next).catch(reject);
+                    } else {
+                        next(result);
+                    }
+                }
+            })();
+        });
     }
 
     // ----------------------------------------------------------------------
@@ -1543,6 +1899,7 @@
         Quote: Quote,
         Pair: Pair,
         nil: nil,
-        Symbol: Symbol
+        Symbol: Symbol,
+        LNumber: LNumber
     };
 });

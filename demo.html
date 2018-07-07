@@ -7,6 +7,22 @@
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script src="https://rawgit.com/jcubic/jquery.terminal/master/js/jquery.terminal.js"></script>
     <script src="https://rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
+    <script src="https://unpkg.com/prismjs@1.8.1/prism.js"></script>
+    <link href="https://unpkg.com/prismjs@1.8.1/themes/prism.css" rel="stylesheet">
+    <script src="https://rawgit.com/jcubic/jquery.terminal/2abab463b9be5a2ec8a3951b7e586bc9fab855fe/js/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.14.0/components/prism-scheme.js"></script>
+    <style>
+     .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
+         background: inherit;
+     }
+     .terminal .token.boolean, .terminal .token.function {
+         color: inherit;
+         font-weight: normal !important;
+     }
+     html, body {
+         height: 100%;
+     }
+    </style>
   </head>
   <body></body>
   <script>
@@ -29,68 +45,70 @@
    };
   </script>
   <script src="src/lips.js"></script>
+  <script src="https://unpkg.com/bn.js@4.11.8/lib/bn.js"></script>
   <script>
    (function() {
+       $.terminal.defaults.formatters.push($.terminal.prism.bind(null, "scheme"));
        var {
            Environment,
            global_environment,
            balanced_parenthesis,
            tokenize,
            parse,
-           Macro,
-           Symbol,
-           nil,
-           Pair,
            evaluate
        } = lips;
-       var tokens = tokenize('((foo . 10) (bar . 20) (baz . 30))');
-       var array = parse(tokens);
        var env = new Environment({
            stdout: {
                write: function(...args) {
-                   args.forEach(term.echo);
+                   args.forEach((arg) => {
+                       term.echo(arg, {keepWords: true});
+                   });
                }
            },
            stdin: {
                read: function() {
                    return new Promise(function(resolve) {
-                       term.read('', function(command) {
-                           resolve(command);
-                       });
+                       term.read('', resolve);
                    });
                }
            }
        }, global_environment);
-       env.set('quote-car', new Macro(function(code) {
-           return Pair.fromArray([new Symbol('quote'), code.car.car]);
-       }));
        var position;
        var timer;
        window.term = $('body').terminal(function(code, term) {
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               try {
-                   parse(tokenize(code)).forEach(function(code) {
-                       var ret = evaluate(code, env);
-                       if (ret instanceof Promise) {
-                           ret.then((ret) => {
+               var list = parse(tokenize(code));
+               (function next() {
+                   var code = list.shift();
+                   if (code) {
+                       try {
+                           var ret = evaluate(code, env, env);
+                           if (ret instanceof Promise) {
+                               ret.then((ret) => {
+                                   if (ret !== undefined) {
+                                       env.get('print').call(env, ret)
+                                   }
+                                   next();
+                               });
+                           } else {
                                if (ret !== undefined) {
-                                   env.get('print').call(env, ret)
+                                   env.get('print').call(env, ret);
                                }
-                           });
-                       } else if (ret !== undefined) {
-                           env.get('print').call(env, ret);
+                               next();
+                           }
+                       } catch (e) {
+                           term.exception(e);
                        }
-                   });
-               } catch (e) {
-                   term.exception(e);
-               }
+                   }
+               })();
            }
        }, {
-           name: 'lips',
-           greetings: false,
-           // below is the code for parenthesis matching (jumping)
+           name: 'lisp',
+           prompt: 'lips> ',
+           enabled: false,
+           greetings: '',
            keydown: function() {
                if (position) {
                    term.set_position(position);
@@ -119,7 +137,7 @@
                                count++;
                            }
                        }
-                       if (token.token == '(') {
+                       if (token.token == '(' && count === 0) {
                            clearTimeout(timer);
                            setTimeout(function() {
                                term.set_position(token.offset);

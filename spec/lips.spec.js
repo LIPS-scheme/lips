@@ -11,7 +11,8 @@ var {
     Symbol,
     nil,
     Environment,
-    global_environment
+    global_environment,
+    LNumber
 } = lips;
 
 describe('tokenizer', function() {
@@ -69,11 +70,11 @@ describe('parser', function() {
                     new Pair(
                         'bar baz',
                         new Pair(
-                            10,
+                            LNumber(10),
                             new Pair(
-                                1.1,
+                                LNumber(1.1),
                                 new Pair(
-                                    10e2,
+                                    LNumber(10e2),
                                     nil
                                 )
                             )
@@ -90,17 +91,17 @@ describe('parser', function() {
             new Pair(
                 new Pair(
                     new Symbol('foo'),
-                    10
+                    LNumber(10)
                 ),
                 new Pair(
                     new Pair(
                         new Symbol('bar'),
-                        20
+                        LNumber(20)
                     ),
                     new Pair(
                         new Pair(
                             new Symbol('baz'),
-                            30
+                            LNumber(30)
                         ),
                         nil
                     )
@@ -148,22 +149,28 @@ describe('Pair', function() {
     });
 });
 
-function exec(string, env) {
-    return evaluate(parse(tokenize(string))[0], env);
+function exec(string, env, dynamic_scope) {
+    return evaluate(parse(tokenize(string))[0], env, dynamic_scope);
 }
 
 describe('evaluate', function() {
     const rand = Math.random();
     const env = new Environment({
         value: rand,
-        fun: (a, b) => a + b,
+        fun: function(a, b) {
+            if (LNumber.isNumber(a)) {
+                return LNumber(a).add(b);
+            } else if (typeof a === 'string') {
+                return a + b;
+            }
+        },
         f2: (a, b) => new Pair(a, new Pair(b, nil))
-    }, global_environment);
+    }, global_environment, 'test');
     it('should return value', function() {
-        expect(exec('value', env)).toEqual(rand);
+        expect(exec('value', env)).toEqual(LNumber(rand));
     });
     it('should call function', function() {
-        expect(exec('(fun 1 2)', env)).toEqual(3);
+        expect(exec('(fun 1 2)', env)).toEqual(LNumber(3));
         expect(exec('(fun "foo" "bar")', env)).toEqual("foobar");
     });
     it('should set environment', function() {
@@ -173,12 +180,17 @@ describe('evaluate', function() {
     });
     it('should create list', function() {
         expect(exec('(cons 1 (cons 2 (cons 3 nil)))'))
-            .toEqual(Pair.fromArray([1, 2, 3]));
+            .toEqual(Pair.fromArray([LNumber(1), LNumber(2), LNumber(3)]));
     });
     describe('quote', function() {
         it('should return literal list', function() {
             expect(exec(`'(1 2 3 (4 5))`)).toEqual(
-                Pair.fromArray([1, 2, 3, [4, 5]])
+                Pair.fromArray([
+                    LNumber(1),
+                    LNumber(2),
+                    LNumber(3),
+                    [LNumber(4), LNumber(5)]
+                ])
             );
         });
         it('should return alist', function() {
@@ -189,12 +201,12 @@ describe('evaluate', function() {
                 new Pair(
                     new Pair(
                         new Symbol('foo'),
-                        1
+                        LNumber(1)
                     ),
                     new Pair(
                         new Pair(
                             new Symbol('bar'),
-                            2.1
+                            LNumber(2.1)
                         ),
                         new Pair(
                             new Pair(
@@ -217,17 +229,17 @@ describe('evaluate', function() {
     describe('quasiquote', function() {
         it('should create list with function call', function() {
             expect(exec('`(1 2 3 ,(fun 2 2) 5)', env)).toEqual(
-                Pair.fromArray([1, 2, 3, 4, 5])
+                Pair.fromArray([1, 2, 3, 4, 5].map(LNumber))
             );
         });
         it('should create list with value', function() {
             expect(exec('`(1 2 3 ,value 4)', env)).toEqual(
-                Pair.fromArray([1, 2, 3, rand, 4])
+                Pair.fromArray([1, 2, 3, rand, 4].map(LNumber))
             );
         });
         it('should create single list using uquote-splice', function() {
             expect(exec('`(1 2 3 ,@(f2 4 5) 6)', env)).toEqual(
-                Pair.fromArray([1, 2, 3, 4, 5, 6])
+                Pair.fromArray([1, 2, 3, 4, 5, 6].map(LNumber))
             );
         });
         it('should create single pair', function() {
@@ -237,12 +249,12 @@ describe('evaluate', function() {
                 '`(1 . ,(cadr (list 1 2 3)))',
                 '`(,(car (list 1 2 3)) . ,(cadr (list 1 2 3)))'
             ].forEach((code) => {
-                expect(exec(code)).toEqual(new Pair(1, 2));
+                expect(exec(code)).toEqual(new Pair(LNumber(1), LNumber(2)));
             });
         });
         it('should create list from pair syntax', function() {
             expect(exec('`(,(car (list 1 2 3)) . (1 2 3))')).toEqual(
-                Pair.fromArray([1, 1, 2, 3])
+                Pair.fromArray([LNumber(1), LNumber(1), LNumber(2), LNumber(3)])
             );
         });
         it('should create alist with values', function() {
@@ -250,21 +262,23 @@ describe('evaluate', function() {
                             (2 . ,(cadr (list 1 "foo"))))`))
                 .toEqual(
                     new Pair(
-                        new Pair(1, 1),
-                        new Pair(new Pair(2, "foo"), nil))
+                        new Pair(LNumber(1), LNumber(1)),
+                        new Pair(new Pair(LNumber(2), "foo"), nil))
                 );
             expect(exec(`\`((,(car (list "foo")) . ,(car (list 1 2)))
                             (2 . ,(cadr (list 1 "foo"))))`))
                 .toEqual(new Pair(
-                    new Pair("foo", 1),
+                    new Pair("foo", LNumber(1)),
                     new Pair(
-                        new Pair(2, "foo"),
+                        new Pair(LNumber(2), "foo"),
                         nil
                     )));
         });
         it('should process nested backquote', function() {
-            expect(exec('`(1 2 3 ,(cadr `(1 ,(+ "foo" "bar") 3)) 4)')).toEqual(
-                Pair.fromArray([1, 2, 3, "foobar", 4])
+            expect(exec('`(1 2 3 ,(cadr `(1 ,(concat "foo" "bar") 3)) 4)')).toEqual(
+                Pair.fromArray([
+                    LNumber(1), LNumber(2), LNumber(3), "foobar", LNumber(4)
+                ])
             );
         });
         it('should process multiple backquote/unquote', function() {
@@ -275,18 +289,105 @@ describe('evaluate', function() {
                         new Symbol('a'),
                         [
                             new Symbol('unquote'),
-                            3
+                            LNumber(3)
                         ],
                         [
                             new Symbol('unquote'),
                             [
                                 new Symbol('+'),
-                                3,
-                                4
+                                LNumber(3),
+                                LNumber(4)
                             ]
                         ]
                     ]
                 ]));
+        });
+    });
+});
+describe('environment', function() {
+    const env = global_environment;
+    var functions = {
+        scope_name: function() {
+            return this.name;
+        }
+    };
+    it('should return name of the enviroment', function() {
+        var e = env.inherit(functions, 'foo');
+        return lips.exec('(scope_name)', e).then(result => {
+            return expect(result).toEqual(['foo']);
+        });
+    });
+    it('should create default scope name', function() {
+        var e = env.inherit(functions);
+        return lips.exec('(scope_name)', e).then(result => {
+            return expect(result).toEqual(['child of global']);
+        });
+    });
+    it('should create default scope name for child scope', function() {
+        var e = env.inherit(functions, 'foo');
+        var child = e.inherit();
+        return lips.exec('(scope_name)', child).then(result => {
+            return expect(result).toEqual(['child of foo']);
+        });
+    });
+});
+describe('scope', function() {
+    const ge = global_environment;
+    function exec(code, dynamic_scope) {
+        var env = ge.inherit();
+        return lips.exec(code, env, dynamic_scope ? env : undefined);
+    }
+    describe('lexical', function() {
+        it('should evaluate let', function() {
+            return exec(`(define x 10) (let ((x 10)) x)`).then((result) => {
+                expect(result).toEqual([undefined, LNumber(10)]);
+            });
+        });
+        it('should evaluate let over let', function() {
+            var code = `(define x 10)
+                        (let ((x 20)) (let ((x 30)) x))`;
+            return exec(code).then(result => {
+                expect(result).toEqual([undefined, LNumber(30)]);
+            });
+        });
+        it('should evalute lambda', function() {
+            var code = `(define x 10)
+                        ((let ((x 20)) (lambda () x)))`;
+            return exec(code).then((result) => {
+                expect(result).toEqual([undefined, LNumber(20)]);
+            });
+        });
+        it('sould create closure', function() {
+            var code = `(define fn (let ((x 10))
+                                      (let ((y 20)) (lambda () (+ x y)))))
+                        (fn)`;
+            return exec(code).then(result => {
+                expect(result).toEqual([undefined, LNumber(30)]);
+            });
+        });
+    });
+    describe('dynamic', function() {
+        it('should get value from let', function() {
+            var code = `(define fn (lambda (x) (* x y)))
+                        (let ((y 10)) (fn 20))`;
+            return exec(code, true).then(result => {
+                expect(result).toEqual([undefined, LNumber(200)]);
+            });
+        });
+        it('should evalute simple lambda', function() {
+            var code = `(define y 20)
+                        (define (foo x) (* x y))
+                        ((lambda (y) (foo 10)) 2)`;
+            return exec(code, true).then(result => {
+                expect(result).toEqual([undefined, undefined, LNumber(20)]);
+            });
+        });
+        it('should evalute let over lambda', function() {
+            var code = `(define y 10)
+                        ((let ((y 2)) (lambda () y)))`;
+            return exec(code, true).then(result => {
+                expect(result).toEqual([undefined, LNumber(10)]);
+            });
         });
     });
 });
