@@ -1456,35 +1456,43 @@
         // ------------------------------------------------------------------
         // math functions
         '*': function(...args) {
-            return args.reduce(function(a, b) {
-                return LNumber(a).mul(b);
-            });
+            if (args.length) {
+                return args.reduce(function(a, b) {
+                    return LNumber(a).mul(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
         '+': function(...args) {
-            return args.reduce(function(a, b) {
-                if (LNumber.isNumber(a) && LNumber.isNumber(b)) {
-                    return LNumber(a).add(b);
-                } else if (typeof a === 'string') {
-                    throw new Error("To concatenate strings using concat function");
-                }
-                return a + b;
-            });
+            if (args.length) {
+                return args.reduce(function(a, b) {
+                    if (LNumber.isNumber(a) && LNumber.isNumber(b)) {
+                        return LNumber(a).add(b);
+                    } else if (typeof a === 'string') {
+                        throw new Error("To concatenate strings use `concat`");
+                    }
+                    return a + b;
+                });
+            }
         },
         // ------------------------------------------------------------------
         '-': function(...args) {
             if (args.length === 1) {
                 return LNumber(args[0]).neg();
             }
-            return args.reduce(function(a, b) {
-                return LNumber(a).sub(b);
-            });
+            if (args.length) {
+                return args.reduce(function(a, b) {
+                    return LNumber(a).sub(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
         '/': function(...args) {
-            return args.reduce(function(a, b) {
-                return LNumber(a).div(b);
-            });
+            if (args.length) {
+                return args.reduce(function(a, b) {
+                    return LNumber(a).div(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
         'abs': function(n) {

@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 07 Jul 2018 13:59:01 +0000
+ * build: Sat, 07 Jul 2018 14:12:24 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require */
@@ -1453,9 +1453,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 args[_key5] = arguments[_key5];
             }
 
-            return args.reduce(function (a, b) {
-                return LNumber(a).mul(b);
-            });
+            if (args.length) {
+                return args.reduce(function (a, b) {
+                    return LNumber(a).mul(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
         '+': function _() {
@@ -1463,14 +1465,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 args[_key6] = arguments[_key6];
             }
 
-            return args.reduce(function (a, b) {
-                if (LNumber.isNumber(a) && LNumber.isNumber(b)) {
-                    return LNumber(a).add(b);
-                } else if (typeof a === 'string') {
-                    throw new Error("To concatenate strings using concat function");
-                }
-                return a + b;
-            });
+            if (args.length) {
+                return args.reduce(function (a, b) {
+                    if (LNumber.isNumber(a) && LNumber.isNumber(b)) {
+                        return LNumber(a).add(b);
+                    } else if (typeof a === 'string') {
+                        throw new Error("To concatenate strings use `concat`");
+                    }
+                    return a + b;
+                });
+            }
         },
         // ------------------------------------------------------------------
         '-': function _() {
@@ -1481,9 +1485,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             if (args.length === 1) {
                 return LNumber(args[0]).neg();
             }
-            return args.reduce(function (a, b) {
-                return LNumber(a).sub(b);
-            });
+            if (args.length) {
+                return args.reduce(function (a, b) {
+                    return LNumber(a).sub(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
         '/': function _() {
@@ -1491,9 +1497,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 args[_key8] = arguments[_key8];
             }
 
-            return args.reduce(function (a, b) {
-                return LNumber(a).div(b);
-            });
+            if (args.length) {
+                return args.reduce(function (a, b) {
+                    return LNumber(a).div(b);
+                });
+            }
         },
         // ------------------------------------------------------------------
         'abs': function abs(n) {
