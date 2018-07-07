@@ -10,6 +10,9 @@ header.main {
   padding: 10px;
   padding-bottom: 0;
 }
+header.main a {
+    display: inline-block;
+}
 header img {
   float: left;
 }
@@ -33,7 +36,13 @@ nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: space-between;
+  justify-content: left;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 nav li:hover {
   border-bottom: 10px solid white;
@@ -42,6 +51,7 @@ nav li:hover {
 nav li {
   display: inline-block;
   padding-bottom: 10px;
+  margin-right: 20px;
 }
 nav li a {
   padding: 5px 15px;
@@ -50,8 +60,8 @@ nav li a {
   text-decoration: none;
   display: block;
 }
-nav li + li {
-  margin-left: 20px;
+nav li:last-child {
+  margin-right: 0;
 }
 nav {
   font-size: 1.3em;
@@ -120,4 +130,19 @@ footer p, footer a {
 footer p {
   margin: 0;
   text-align: center;
+}
+code[class*="language-"], pre[class*="language-"] {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+@media (max-width: 720px) {
+    header.main h1 {
+        margin: 0;
+    }
+    section {
+        margin-left: 10px;
+    }
+    section#demo {
+        margin-right: 10px;
+    }
 }
