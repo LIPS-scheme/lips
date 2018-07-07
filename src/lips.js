@@ -7,7 +7,7 @@
  * build: {{DATE}}
  */
 "use strict";
-/* global define, module, setTimeout, jQuery, global */
+/* global define, module, setTimeout, jQuery, global, BigInt */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -520,8 +520,8 @@
     function Macro(fn) {
         this.fn = fn;
     }
-    Macro.prototype.invoke = function(code, env, dynamic_scope) {
-        return this.fn.call(env, code, dynamic_scope);
+    Macro.prototype.invoke = function(name, code, env, dynamic_scope) {
+        return this.fn.call(env, code, dynamic_scope, name);
     };
 
     // ----------------------------------------------------------------------
@@ -896,7 +896,7 @@
                         name = name.cdr;
                     }
                 }
-                return evaluate(code.cdr.car, env, env);
+                return evaluate(code.cdr.car, env, dynamic_scope ? env : undefined);
             };
         }),
         // ------------------------------------------------------------------
@@ -1225,7 +1225,11 @@
         },
         // ------------------------------------------------------------------
         range: function(n) {
-            return Pair.fromArray(new Array(n).fill(0).map((_, i) => i));
+            if (typeof BigInt === 'function') {
+                return Pair.fromArray(new Array(n).fill(0).map((_, i) => BigInt(i)));
+            } else {
+                return Pair.fromArray(new Array(n).fill(0).map((_, i) => i));
+            }
         },
         // ------------------------------------------------------------------
         // math functions
@@ -1352,21 +1356,39 @@
         },
         // ------------------------------------------------------------------
         '1+': function(number) {
+            if (typeof number === 'bigint') {
+                return number + BigInt(1);
+            }
             return number + 1;
         },
         // ------------------------------------------------------------------
         '1-': function(number) {
+            if (typeof number === 'bigint') {
+                return number - BigInt(1);
+            }
             return number - 1;
         },
         // ------------------------------------------------------------------
         '++': new Macro(function(code) {
-            var value = this.get(code.car) + 1;
+            var car = this.get(code.car);
+            var value;
+            if (typeof car === 'bigint') {
+                value = car + BigInt(1);
+            } else {
+                value = car + 1;
+            }
             this.set(code.car, value);
             return value;
         }),
         // ------------------------------------------------------------------
         '--': new Macro(function(code) {
-            var value = this.get(code.car) - 1;
+            var car = this.get(code.car);
+            var value;
+            if (typeof car === 'bigint') {
+                value = car - BigInt(1);
+            } else {
+                value = car - 1;
+            }
             this.set(code.car, value);
             return value;
         })
@@ -1469,7 +1491,7 @@
         if (first instanceof Symbol) {
             value = env.get(first);
             if (value instanceof Macro) {
-                value = value.invoke(rest, env, dynamic_scope);
+                value = value.invoke(first, rest, env, dynamic_scope);
                 if (value instanceof Quote) {
                     return value.value;
                 } else if (value instanceof Promise) {

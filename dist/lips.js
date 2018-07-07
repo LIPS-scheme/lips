@@ -4,10 +4,10 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Thu, 14 Jun 2018 19:44:57 +0000
+ * build: Sat, 07 Jul 2018 09:04:21 +0000
  */
 "use strict";
-/* global define, module, setTimeout, jQuery, global */
+/* global define, module, setTimeout, jQuery, global, BigInt */
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
@@ -515,8 +515,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     function Macro(fn) {
         this.fn = fn;
     }
-    Macro.prototype.invoke = function (code, env, dynamic_scope) {
-        return this.fn.call(env, code, dynamic_scope);
+    Macro.prototype.invoke = function (name, code, env, dynamic_scope) {
+        return this.fn.call(env, code, dynamic_scope, name);
     };
 
     // ----------------------------------------------------------------------
@@ -888,7 +888,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         name = name.cdr;
                     }
                 }
-                return evaluate(code.cdr.car, env, env);
+                return evaluate(code.cdr.car, env, dynamic_scope ? env : undefined);
             };
         }),
         // ------------------------------------------------------------------
@@ -1218,9 +1218,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // ------------------------------------------------------------------
         range: function range(n) {
-            return Pair.fromArray(new Array(n).fill(0).map(function (_, i) {
-                return i;
-            }));
+            if (typeof BigInt === 'function') {
+                return Pair.fromArray(new Array(n).fill(0).map(function (_, i) {
+                    return BigInt(i);
+                }));
+            } else {
+                return Pair.fromArray(new Array(n).fill(0).map(function (_, i) {
+                    return i;
+                }));
+            }
         },
         // ------------------------------------------------------------------
         // math functions
@@ -1367,21 +1373,39 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // ------------------------------------------------------------------
         '1+': function _(number) {
+            if (typeof number === 'bigint') {
+                return number + BigInt(1);
+            }
             return number + 1;
         },
         // ------------------------------------------------------------------
         '1-': function _(number) {
+            if (typeof number === 'bigint') {
+                return number - BigInt(1);
+            }
             return number - 1;
         },
         // ------------------------------------------------------------------
         '++': new Macro(function (code) {
-            var value = this.get(code.car) + 1;
+            var car = this.get(code.car);
+            var value;
+            if (typeof car === 'bigint') {
+                value = car + BigInt(1);
+            } else {
+                value = car + 1;
+            }
             this.set(code.car, value);
             return value;
         }),
         // ------------------------------------------------------------------
         '--': new Macro(function (code) {
-            var value = this.get(code.car) - 1;
+            var car = this.get(code.car);
+            var value;
+            if (typeof car === 'bigint') {
+                value = car - BigInt(1);
+            } else {
+                value = car - 1;
+            }
             this.set(code.car, value);
             return value;
         })
@@ -1482,7 +1506,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         if (first instanceof _Symbol) {
             value = env.get(first);
             if (value instanceof Macro) {
-                value = value.invoke(rest, env, dynamic_scope);
+                value = value.invoke(first, rest, env, dynamic_scope);
                 if (value instanceof Quote) {
                     return value.value;
                 } else if (value instanceof Promise) {

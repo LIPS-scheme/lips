@@ -5,6 +5,7 @@
 * add support for new u and s regex flags
 * optional dynamic scope
 * not function
+* use BigInt when supported in ++ -- 1+ and 1- and range
 ### Bugs
 * fix lambda with no parameters
 * fix define with Promise like `(define x (let ...`
