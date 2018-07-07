@@ -1,6 +1,7 @@
 ## 0.5.0
 ### Breaking
 * exec now return promise with array of results
+* all numbers are wrapped with LNumber
 ### Features
 * add support for new u and s regex flags
 * optional dynamic scope
