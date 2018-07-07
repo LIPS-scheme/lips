@@ -1499,6 +1499,13 @@
             return LNumber(n).abs();
         },
         // ------------------------------------------------------------------
+        'sqrt': function(n) {
+            if (n instanceof LNumber) {
+                return Math.sqrt(n.valueOf());
+            }
+            return Math.sqrt(n);
+        },
+        // ------------------------------------------------------------------
         '**': function(a, b) {
             return LNumber(a).pow(b);
         },

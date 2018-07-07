@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 07 Jul 2018 14:12:24 +0000
+ * build: Sat, 07 Jul 2018 14:21:45 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require */
@@ -1506,6 +1506,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         // ------------------------------------------------------------------
         'abs': function abs(n) {
             return LNumber(n).abs();
+        },
+        // ------------------------------------------------------------------
+        'sqrt': function sqrt(n) {
+            if (n instanceof LNumber) {
+                return Math.sqrt(n.valueOf());
+            }
+            return Math.sqrt(n);
         },
         // ------------------------------------------------------------------
         '**': function _(a, b) {
