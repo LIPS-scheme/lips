@@ -371,7 +371,6 @@ describe('scope', function() {
             var code = `(define fn (lambda (x) (* x y)))
                         (let ((y 10)) (fn 20))`;
             return exec(code, true).then(result => {
-                console.log(typeof result[1].value);
                 expect(result).toEqual([undefined, LNumber(200)]);
             });
         });
@@ -380,7 +379,6 @@ describe('scope', function() {
                         (define (foo x) (* x y))
                         ((lambda (y) (foo 10)) 2)`;
             return exec(code, true).then(result => {
-                console.log(result[2].toString());
                 expect(result).toEqual([undefined, undefined, LNumber(20)]);
             });
         });
