@@ -4,7 +4,7 @@
 ### Features
 * add support for new u and s regex flags
 * optional dynamic scope
-* not function
+* add not and ** functions
 * wrap numbers in LNumber that use BigInt or bn.js if possible
 ### Bugs
 * fix lambda with no parameters
