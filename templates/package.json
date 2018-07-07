@@ -38,7 +38,7 @@
       "eqeqeq": "error",
       "curly": "error",
       "no-unreachable": "error",
-      "valid-typeof": "error",
+      "valid-typeof": 0,
       "no-unexpected-multiline": "error",
       "no-regex-spaces": "error",
       "no-irregular-whitespace": "error",
