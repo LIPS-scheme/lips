@@ -16,7 +16,7 @@
     <!--[if IE]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link href="/lips/style.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
     <link href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Play" rel="stylesheet"/>
 </head>
@@ -181,13 +181,21 @@
 (print (sum 1 2 3 4 5))
     </code></pre>
 
+    <h3>Auto resolving promises</h3>
+
+    <pre><code class="language-scheme">
+(let* ((res (fetch "https://terminal.jcubic.pl"))
+       (text ((. res "text"))))
+   (. ((. text "match") "&lt;title&gt;([^<]+)") 1))
+    </code></pre>
+
     <h3>Currying</h3>
 
-    <code><pre class="language-scheme">
+    <pre><code class="language-scheme">
 (define (add a b) (+ a b))
 (define add10 (curry add 10))
 (print (add10 20))
-    </pre></code>
+    </code></pre>
 
     <h3>Working with arrays</h3>
 
