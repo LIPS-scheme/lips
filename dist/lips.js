@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 07 Jul 2018 13:20:10 +0000
+ * build: Sat, 07 Jul 2018 13:38:41 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require */
@@ -639,7 +639,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     };
     LNumber.prototype.sqrt = function () {
         var value;
-        if (this.isNative()) {
+        if (LNumber.isNative(this.value)) {
             value = Math.sqrt(this.value);
         } else if (LNumber.isBN(this.value)) {
             value = this.value.sqrt();
@@ -648,15 +648,22 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     };
     LNumber.prototype.pow = function (n) {
         n = this.coerce(n);
-        if (this.isNative()) {
-            n.value = Math.pow(this.value, n.value);
+        if (LNumber.isNative(this.value)) {
+            try {
+                var pow = new Function('a,b', 'return a**b;');
+                n.value = pow(this.value, n.value);
+            } catch (e) {
+                throw new Error("Power operator not supported");
+            }
         } else if (LNumber.isBN(this.value)) {
             n.value = this.value.pow(n.value);
+        } else {
+            n.value = Math.pow(this.value, n.value);
         }
         return n;
     };
     LNumber.prototype.isOdd = function () {
-        if (this.isNative()) {
+        if (LNumber.isNative(this.value)) {
             return this.value % 2 === 1;
         } else if (LNumber.isBN(this.value)) {
             return this.value.isOdd();
@@ -667,7 +674,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     };
     LNumber.prototype.cmp = function (n) {
         n = this.coerce(n);
-        if (this.isNative()) {
+        if (LNumber.isNative(this.value)) {
             if (this.value < n.value) {
                 return -1;
             } else if (this.value === n.value) {
@@ -1422,8 +1429,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 if (LNumber.isNumber(a) && LNumber.isNumber(b)) {
                     return LNumber(a).add(b);
                 } else if (typeof a === 'string') {
-                    return a + b;
+                    throw new Error("To concatenate strings using concat function");
                 }
+                return a + b;
             });
         },
         // ------------------------------------------------------------------
@@ -1445,6 +1453,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return args.reduce(function (a, b) {
                 return LNumber(a).div(b);
             });
+        },
+        // ------------------------------------------------------------------
+        '**': function _(a, b) {
+            return LNumber(a).pow(b);
         },
         // ------------------------------------------------------------------
         '1+': function _(number) {

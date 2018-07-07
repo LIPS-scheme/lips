@@ -185,7 +185,12 @@ describe('evaluate', function() {
     describe('quote', function() {
         it('should return literal list', function() {
             expect(exec(`'(1 2 3 (4 5))`)).toEqual(
-                Pair.fromArray([LNumber(1), LNumber(2), LNumber(3), [LNumber(4), LNumber(5)]])
+                Pair.fromArray([
+                    LNumber(1),
+                    LNumber(2),
+                    LNumber(3),
+                    [LNumber(4), LNumber(5)]
+                ])
             );
         });
         it('should return alist', function() {
@@ -224,17 +229,17 @@ describe('evaluate', function() {
     describe('quasiquote', function() {
         it('should create list with function call', function() {
             expect(exec('`(1 2 3 ,(fun 2 2) 5)', env)).toEqual(
-                Pair.fromArray([LNumber(1), LNumber(2), LNumber(3), LNumber(4), LNumber(5)])
+                Pair.fromArray([1, 2, 3, 4, 5].map(LNumber))
             );
         });
         it('should create list with value', function() {
             expect(exec('`(1 2 3 ,value 4)', env)).toEqual(
-                Pair.fromArray([LNumber(1), LNumber(2), LNumber(3), LNumber(rand), LNumber(4)])
+                Pair.fromArray([1, 2, 3, rand, 4].map(LNumber))
             );
         });
         it('should create single list using uquote-splice', function() {
             expect(exec('`(1 2 3 ,@(f2 4 5) 6)', env)).toEqual(
-                Pair.fromArray([LNumber(1), LNumber(2), LNumber(3), LNumber(4), LNumber(5), LNumber(6)])
+                Pair.fromArray([1, 2, 3, 4, 5, 6].map(LNumber))
             );
         });
         it('should create single pair', function() {
@@ -270,8 +275,10 @@ describe('evaluate', function() {
                     )));
         });
         it('should process nested backquote', function() {
-            expect(exec('`(1 2 3 ,(cadr `(1 ,(+ "foo" "bar") 3)) 4)')).toEqual(
-                Pair.fromArray([LNumber(1), LNumber(2), LNumber(3), "foobar", LNumber(4)])
+            expect(exec('`(1 2 3 ,(cadr `(1 ,(concat "foo" "bar") 3)) 4)')).toEqual(
+                Pair.fromArray([
+                    LNumber(1), LNumber(2), LNumber(3), "foobar", LNumber(4)
+                ])
             );
         });
         it('should process multiple backquote/unquote', function() {

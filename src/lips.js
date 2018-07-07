@@ -556,7 +556,7 @@
         }
     }
     // ----------------------------------------------------------------------
-    LNumber.isFloat = function isFloat(n){
+    LNumber.isFloat = function isFloat(n) {
         return Number(n) === n && n % 1 !== 0;
     };
     LNumber.isNumber = function(n) {
@@ -646,7 +646,7 @@
     };
     LNumber.prototype.sqrt = function() {
         var value;
-        if (this.isNative()) {
+        if (LNumber.isNative(this.value)) {
             value = Math.sqrt(this.value);
         } else if (LNumber.isBN(this.value)) {
             value = this.value.sqrt();
@@ -655,15 +655,22 @@
     };
     LNumber.prototype.pow = function(n) {
         n = this.coerce(n);
-        if (this.isNative()) {
-            n.value = Math.pow(this.value, n.value);
+        if (LNumber.isNative(this.value)) {
+            try {
+                var pow = new Function('a,b', 'return a**b;');
+                n.value = pow(this.value, n.value);
+            } catch (e) {
+                throw new Error("Power operator not supported");
+            }
         } else if (LNumber.isBN(this.value)) {
             n.value = this.value.pow(n.value);
+        } else {
+            n.value = Math.pow(this.value, n.value);
         }
         return n;
     };
     LNumber.prototype.isOdd = function() {
-        if (this.isNative()) {
+        if (LNumber.isNative(this.value)) {
             return this.value % 2 === 1;
         } else if (LNumber.isBN(this.value)) {
             return this.value.isOdd();
@@ -674,7 +681,7 @@
     };
     LNumber.prototype.cmp = function(n) {
         n = this.coerce(n);
-        if (this.isNative()) {
+        if (LNumber.isNative(this.value)) {
             if (this.value < n.value) {
                 return -1;
             } else if (this.value === n.value) {
@@ -1421,8 +1428,9 @@
                 if (LNumber.isNumber(a) && LNumber.isNumber(b)) {
                     return LNumber(a).add(b);
                 } else if (typeof a === 'string') {
-                    return a + b;
+                    throw new Error("To concatenate strings using concat function");
                 }
+                return a + b;
             });
         },
         // ------------------------------------------------------------------
@@ -1436,6 +1444,10 @@
             return args.reduce(function(a, b) {
                 return LNumber(a).div(b);
             });
+        },
+        // ------------------------------------------------------------------
+        '**': function(a, b) {
+            return LNumber(a).pow(b);
         },
         // ------------------------------------------------------------------
         '1+': function(number) {
