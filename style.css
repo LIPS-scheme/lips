@@ -145,4 +145,11 @@ code[class*="language-"], pre[class*="language-"] {
     section#demo {
         margin-right: 10px;
     }
+    code[class*="language-"] {
+        min-width: 630px;
+    }
+    pre[class*="language-"] {
+        width: 100%;
+        overflow: auto;
+    }
 }
