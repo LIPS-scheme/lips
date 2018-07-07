@@ -4,11 +4,12 @@
 ### Features
 * add support for new u and s regex flags
 * optional dynamic scope
-* add not and ** functions
+* add `not`, `abs` and `**` functions
 * wrap numbers in LNumber that use BigInt or bn.js if possible
 ### Bugs
 * fix lambda with no parameters
 * fix define with Promise like `(define x (let ...`
+* fix - with single argument
 
 ## 0.4.1-2
 ### Bugs

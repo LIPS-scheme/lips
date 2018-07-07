@@ -524,7 +524,7 @@
         return this.fn.call(env, code, dynamic_scope, name);
     };
     // ----------------------------------------------------------------------
-    // :: Number wrapper
+    // :: Number wrapper that handle BigNumbers
     // ----------------------------------------------------------------------
     function LNumber(n) {
         if (n instanceof LNumber) {
@@ -559,19 +559,24 @@
     LNumber.isFloat = function isFloat(n) {
         return Number(n) === n && n % 1 !== 0;
     };
+    // ----------------------------------------------------------------------
     LNumber.isNumber = function(n) {
         return n instanceof LNumber || LNumber.isNative(n) || LNumber.isBN(n);
     };
+    // ----------------------------------------------------------------------
     LNumber.isNative = function(n) {
         return typeof n === 'bigint' || typeof n === 'number';
     };
+    // ----------------------------------------------------------------------
     LNumber.isBN = function(n) {
         return typeof BN !== 'undefined' && n instanceof BN;
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.toString = function() {
         console.log(this.value);
         return this.value.toString();
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.valueOf = function() {
         if (LNumber.isNative(this.value)) {
             return Number(this.value);
@@ -579,6 +584,7 @@
             return this.value.toNumber();
         }
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.coerce = function(n) {
         if (n === null) {
             n = 0;
@@ -599,6 +605,7 @@
         }
         return LNumber(value);
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.add = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
@@ -608,6 +615,7 @@
         }
         return n;
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.sub = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
@@ -617,6 +625,7 @@
         }
         return n;
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.mul = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
@@ -626,6 +635,7 @@
         }
         return n;
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.div = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
@@ -635,6 +645,7 @@
         }
         return n;
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.mod = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
@@ -644,6 +655,7 @@
         }
         return n;
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.sqrt = function() {
         var value;
         if (LNumber.isNative(this.value)) {
@@ -653,6 +665,7 @@
         }
         return new LNumber(value);
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.pow = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(this.value)) {
@@ -669,6 +682,29 @@
         }
         return n;
     };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.neg = function() {
+        var value = this.value;
+        if (LNumber.isNative(value)) {
+            value = -value;
+        } else if (LNumber.isBN(value)) {
+            value = value.neg();
+        }
+        return new LNumber(value);
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.abs = function() {
+        var value = this.value;
+        if (LNumber.isNative(this.value)) {
+            if (value < 0) {
+                value = -value;
+            }
+        } else if (LNumber.isBN(value)) {
+            value.iabs();
+        }
+        return new LNumber(value);
+    };
+    // ----------------------------------------------------------------------
     LNumber.prototype.isOdd = function() {
         if (LNumber.isNative(this.value)) {
             return this.value % 2 === 1;
@@ -676,9 +712,11 @@
             return this.value.isOdd();
         }
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.isEven = function() {
         return !this.isOdd();
     };
+    // ----------------------------------------------------------------------
     LNumber.prototype.cmp = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(this.value)) {
@@ -1435,6 +1473,9 @@
         },
         // ------------------------------------------------------------------
         '-': function(...args) {
+            if (args.length === 1) {
+                return LNumber(args[0]).neg();
+            }
             return args.reduce(function(a, b) {
                 return LNumber(a).sub(b);
             });
@@ -1444,6 +1485,10 @@
             return args.reduce(function(a, b) {
                 return LNumber(a).div(b);
             });
+        },
+        // ------------------------------------------------------------------
+        'abs': function(n) {
+            return LNumber(n).abs();
         },
         // ------------------------------------------------------------------
         '**': function(a, b) {
