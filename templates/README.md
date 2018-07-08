@@ -46,8 +46,10 @@ var {exec} = require('@jcubic/lips'); // node
 // or
 var {exec} = lips; // browser
 
-exec(string).forEach(function(result) {
-     console.log(result);
+exec(string).then(function(results) {
+     results.forEach(function(result) {
+        console.log(result.toString());
+     });
 });
 ```
 
@@ -74,6 +76,18 @@ var env = new Environment({}, lips.global_environment);
 First argument is an object with functions, macros and varibles (see Extending LIPS at the end).
 Second argument is parent environment, you need to use global environment (or other that extend global)
 otherwise you will not have any functions.
+
+Optionally you can provide 3rd options as environment for dynamic scope or value `true`, you can also use 2 arguments where first is code or AST with `evaluate` and second is value `true`:
+
+```
+// dynamic scope
+exec('(+ 10 10)', env, env)
+exec('(+ 10 10)', true)
+
+// lexical scope
+exec('(+ 10 10)')
+exec('(+ 10 10)', env)
+```
 
 You can also use script tag to execute LIPS code:
 
