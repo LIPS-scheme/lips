@@ -15,7 +15,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 * Functions in lips are normal javascript functions,
 * Easy extension using JavaScript using Macros or functions,
 * Regexes are first class objects,
-* BigInt support,
+* BigInt support if your browser don't support it you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Optional dynamic scope,
 * Promises are treated as values they resolve to.
 
@@ -88,6 +88,16 @@ exec('(+ 10 10)', true)
 exec('(+ 10 10)')
 exec('(+ 10 10)', env)
 ```
+
+Exec function always return a `Promise` for array of values, value can be Pair that you can convert to Array
+using `Pair::toArray()`, `LNumber` that wrap BigInt or native numbers if your browser don't support BigInt and
+you don't include bn.js. You can get native value out if BigInt using `LNumber::valueOf()` but you may lost precision
+or get completely different value if your value is big. You can also use `LNumber::toString()` to get
+number representation as string.
+
+evaluate return normal values so you will need to check if the value is a `Promise`, some expressions return
+explicit `Promise` like `let` and `let*`, so you can use fetch to get text value in one `let`. `exec` make this
+easier to always return `Promise`
 
 You can also use script tag to execute LIPS code:
 
