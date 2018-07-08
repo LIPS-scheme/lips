@@ -51,6 +51,16 @@
 (defmacro (foo x) `(1 2 ,@(car x) 3 4))
     </code></pre>
 
+    <h3>BigInt</h3>
+
+    <p>lips have no problems in evaluating factorial of thousand, and it's fast.</p>
+
+    <pre><code class="language-scheme">
+    (define (! n) (reduce * (map 1+ (range n))))
+
+    (print (! 1000))
+    </code></pre>
+
     <h3>List operations</h3>
 
     <pre><code class="language-scheme">
