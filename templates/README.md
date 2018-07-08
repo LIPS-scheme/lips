@@ -9,6 +9,16 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
+## Key features
+
+* Lisp Macros and backquote,
+* Functions in lips are normal javascript functions,
+* Easy extension using JavaScript using Macros or functions,
+* Regexes are first class objects,
+* BigInt support,
+* Optional dynamic scope,
+* Promises are treated as values they resolve to.
+
 ## Installation
 
 use npm

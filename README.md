@@ -1,13 +1,23 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-0.5.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&ce5fdee75492b52d49bfbbc34dbcfd9ffb20fe36)](https://travis-ci.org/jcubic/jquery.terminal)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&cd5080098dc18fd52f62de7e69b545640961ac87)](https://travis-ci.org/jcubic/jquery.terminal)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&d80d86213c8f8d97d1352ed4276a11f7)](https://coveralls.io/github/jcubic/lips?branch=master)
 
 
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 [Demo](https://jcubic.github.io/lips/#demo)
+
+## Key features
+
+* Lisp Macros and backquote,
+* Functions in lips are normal javascript functions,
+* Easy extension using JavaScript using Macros or functions,
+* Regexes are first class objects,
+* BigInt support,
+* Optional dynamic scope,
+* Promises are treated as values they resolve to.
 
 ## Installation
 
