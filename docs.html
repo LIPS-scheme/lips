@@ -238,6 +238,34 @@ while (i < len) {
    ++i;
 }
     </code></pre>
+    
+    <h3>Stdin and stdout</h3>
+    
+    <p>If you're using <strong><code>print</code></strong> function to display values or using
+      <strong><code>read</code></strong> to get values from users, you can provide your own
+      handlers in environment, jQuery Terminal based implementation look like this:</p>
+    <p>By default stdout prints to console and stdin use browser <strong><code>prompt</code></strong> function.</p>
+    
+    <pre><code class="language-javascript">
+var env = new Environment({
+    stdout: {
+        write: function(...args) {
+            args.forEach((arg) => {
+                term.echo(arg, {keepWords: true});
+            });
+        }
+    },
+    stdin: {
+        read: function() {
+            return new Promise(function(resolve) {
+                term.read('', function(command) {
+                    resolve(command);
+                });
+            });
+        }
+    }
+}, global_environment);
+    </code></pre>
 
     <h3>Math and boolean operators (functions and macros)</h3>
 
