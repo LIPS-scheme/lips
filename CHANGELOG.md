@@ -1,6 +1,7 @@
 ## 0.5.1
 ### Bugs
 * fix lambda with symbol as parameters
+* fix for TCO factorial using Y combinator & trampoline
 
 ## 0.5.0
 ### Breaking

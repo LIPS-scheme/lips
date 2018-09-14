@@ -4,12 +4,14 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Fri, 14 Sep 2018 08:00:28 +0000
+ * build: Fri, 14 Sep 2018 20:53:39 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require */
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -512,11 +514,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
-    function Macro(fn) {
+    function Macro(name, fn) {
+        this.name = name;
         this.fn = fn;
     }
     Macro.prototype.invoke = function (name, code, env, dynamic_scope) {
         return this.fn.call(env, code, dynamic_scope, name);
+    };
+    Macro.prototype.toString = function () {
+        return '#<Macro ' + this.name + '>';
     };
     // ----------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
@@ -567,7 +573,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     };
     // ----------------------------------------------------------------------
     LNumber.prototype.toString = function () {
-        console.log(this.value);
         return this.value.toString();
     };
     // ----------------------------------------------------------------------
@@ -811,7 +816,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
-        return new Macro(function (code, dynamic_scope) {
+        var name = 'let' + (asterisk ? '*' : '');
+        return new Macro(name, function (code, dynamic_scope) {
+            var self = this;
             var args = this.get('list->array')(code.car);
             var env = this.inherit('let');
             return new Promise(function (resolve) {
@@ -829,9 +836,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     }
                     if (!pair) {
                         var output = new Pair(new _Symbol('begin'), code.cdr);
-                        resolve(new Quote(evaluate(output, env, dynamic_scope ? env : dynamic_scope)));
+                        evaluate(output, env, dynamic_scope ? env : dynamic_scope).then(function (result) {
+                            resolve(new Quote(result));
+                        });
                     } else {
-                        var value = evaluate(pair.cdr.car, asterisk ? env : this, dynamic_scope);
+                        var value = evaluate(pair.cdr.car, asterisk ? env : self, dynamic_scope);
                         var promise = set(value);
                         if (promise instanceof Promise) {
                             promise.then(function () {
@@ -895,6 +904,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 });
             }
         },
+        test: function test() {
+            return Promise.resolve(undefined);
+        },
         // ------------------------------------------------------------------
         cons: function cons(car, cdr) {
             return new Pair(car, cdr);
@@ -915,6 +927,19 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 throw new Error('argument to cdr need to be a list');
             }
         },
+        // ------------------------------------------------------------------
+        'set': new Macro('set', function (code, dynamic_scope) {
+            var value;
+            if (code.cdr.car instanceof Pair) {
+                if (dynamic_scope) {
+                    dynamic_scope = this;
+                }
+                value = evaluate(code.cdr.car, this, dynamic_scope);
+            } else {
+                value = code.cdr.car;
+            }
+            this.set(code.car, value);
+        }),
         // ------------------------------------------------------------------
         'set-car': function setCar(slot, value) {
             slot.car = value;
@@ -947,39 +972,66 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         },
         // ------------------------------------------------------------------
-        'while': new Macro(function (code) {
-            var self = this;
-            var begin = new Pair(new _Symbol('begin'), code.cdr);
-            return new Promise(function (resolve) {
-                var result;
-                (function loop() {
-                    function next(cond) {
-                        if (cond) {
-                            var value = evaluate(begin, self);
-                            if (value instanceof Promise) {
-                                value.then(function (value) {
-                                    result = value;
-                                    loop();
-                                });
-                            } else {
-                                result = value;
-                                loop();
-                            }
-                        } else {
-                            resolve(result);
+        'while': new Macro('while', function () {
+            var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(code, dynamic_scope) {
+                var self, begin, result, cond;
+                return regeneratorRuntime.wrap(function _callee$(_context) {
+                    while (1) {
+                        switch (_context.prev = _context.next) {
+                            case 0:
+                                self = this;
+                                begin = new Pair(new _Symbol('begin'), code.cdr);
+
+                                if (dynamic_scope) {
+                                    dynamic_scope = self;
+                                }
+
+                            case 3:
+                                if (!true) {
+                                    _context.next = 16;
+                                    break;
+                                }
+
+                                _context.next = 6;
+                                return evaluate(code.car, self, dynamic_scope);
+
+                            case 6:
+                                cond = _context.sent;
+
+                                if (!cond) {
+                                    _context.next = 13;
+                                    break;
+                                }
+
+                                _context.next = 10;
+                                return evaluate(begin, self, dynamic_scope);
+
+                            case 10:
+                                result = _context.sent;
+                                _context.next = 14;
+                                break;
+
+                            case 13:
+                                return _context.abrupt('return', result);
+
+                            case 14:
+                                _context.next = 3;
+                                break;
+
+                            case 16:
+                            case 'end':
+                                return _context.stop();
                         }
                     }
-                    var cond = evaluate(code.car, self);
-                    if (cond instanceof Promise) {
-                        cond.then(next);
-                    } else {
-                        next(cond);
-                    }
-                })();
-            });
-        }),
+                }, _callee, this);
+            }));
+
+            return function (_x4, _x5) {
+                return _ref.apply(this, arguments);
+            };
+        }()),
         // ------------------------------------------------------------------
-        'if': new Macro(function (code) {
+        'if': new Macro('if', function (code) {
             var _this2 = this;
 
             var resolve = function resolve(cond) {
@@ -1011,27 +1063,71 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         // ------------------------------------------------------------------
         'let': let_macro(false),
         // ------------------------------------------------------------------
-        'begin': new Macro(function (code, dynamic_scope) {
-            var _this3 = this;
+        'begin': new Macro('begin', function () {
+            var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(code, dynamic_scope) {
+                var arr, result;
+                return regeneratorRuntime.wrap(function _callee2$(_context2) {
+                    while (1) {
+                        switch (_context2.prev = _context2.next) {
+                            case 0:
+                                arr = this.get('list->array')(code);
 
-            var arr = this.get('list->array')(code);
-            return arr.reduce(function (_, code) {
-                return evaluate(code, _this3, dynamic_scope);
-            }, 0);
-        }),
+                                if (dynamic_scope) {
+                                    dynamic_scope = this;
+                                }
+
+                            case 2:
+                                if (!true) {
+                                    _context2.next = 13;
+                                    break;
+                                }
+
+                                if (!arr.length) {
+                                    _context2.next = 10;
+                                    break;
+                                }
+
+                                code = arr.shift();
+                                _context2.next = 7;
+                                return evaluate(code, this, dynamic_scope);
+
+                            case 7:
+                                result = _context2.sent;
+                                _context2.next = 11;
+                                break;
+
+                            case 10:
+                                return _context2.abrupt('return', result);
+
+                            case 11:
+                                _context2.next = 2;
+                                break;
+
+                            case 13:
+                            case 'end':
+                                return _context2.stop();
+                        }
+                    }
+                }, _callee2, this);
+            }));
+
+            return function (_x6, _x7) {
+                return _ref2.apply(this, arguments);
+            };
+        }()),
         // ------------------------------------------------------------------
-        timer: new Macro(function (code) {
-            var _this4 = this;
+        timer: new Macro('timer', function (code) {
+            var _this3 = this;
 
             return new Promise(function (resolve) {
                 setTimeout(function () {
-                    resolve(new Quote(evaluate(code.cdr, _this4)));
+                    resolve(new Quote(evaluate(code.cdr, _this3)));
                 }, code.car);
             });
         }),
         // ------------------------------------------------------------------
-        define: new Macro(function (code, dynamic_scope) {
-            var _this5 = this;
+        define: new Macro('define', function (code, dynamic_scope) {
+            var _this4 = this;
 
             if (code.car instanceof Pair && code.car.car instanceof _Symbol) {
                 var new_code = new Pair(new _Symbol("define"), new Pair(code.car.car, new Pair(new Pair(new _Symbol("lambda"), new Pair(code.car.cdr, code.cdr)))));
@@ -1044,7 +1140,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             if (code.car instanceof _Symbol) {
                 if (value instanceof Promise) {
                     return value.then(function (value) {
-                        _this5.set(code.car, value);
+                        _this4.set(code.car, value);
                     });
                 } else {
                     this.set(code.car, value);
@@ -1052,12 +1148,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }),
         // ------------------------------------------------------------------
-        set: function set(obj, key, value) {
+        'set-obj': function setObj(obj, key, value) {
             obj[key] = value;
         },
         // ------------------------------------------------------------------
         'eval': function _eval(code, dynamic_scope) {
-            var _this6 = this;
+            var _this5 = this;
 
             if (code instanceof Pair) {
                 return evaluate(code, this, dynamic_scope);
@@ -1065,13 +1161,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             if (code instanceof Array) {
                 var result;
                 code.forEach(function (code) {
-                    result = evaluate(code, _this6, dynamic_scope);
+                    result = evaluate(code, _this5, dynamic_scope);
                 });
                 return result;
             }
         },
         // ------------------------------------------------------------------
-        lambda: new Macro(function (code, dynamic_scope) {
+        lambda: new Macro('lambda', function (code, dynamic_scope) {
             var self = this;
             return function () {
                 var env = (dynamic_scope ? this : self).inherit('lambda');
@@ -1110,7 +1206,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             };
         }),
         // ------------------------------------------------------------------
-        defmacro: new Macro(function (macro) {
+        defmacro: new Macro('defmacro', function (macro) {
             if (macro.car.car instanceof _Symbol) {
                 this.env[macro.car.car.name] = new Macro(function (code) {
                     var env = new Environment({}, this, 'defmacro');
@@ -1131,11 +1227,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }),
         // ------------------------------------------------------------------
-        quote: new Macro(function (arg) {
+        quote: new Macro('quote', function (arg) {
             return new Quote(arg.car);
         }),
         // ------------------------------------------------------------------
-        quasiquote: new Macro(function (arg) {
+        quasiquote: new Macro('quasiquote', function (arg) {
             var self = this;
             var max_unquote = 0;
             function recur(pair) {
@@ -1328,26 +1424,26 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // ------------------------------------------------------------------
         read: function read(arg) {
-            var _this7 = this;
+            var _this6 = this;
 
             if (typeof arg === 'string') {
                 return parse(tokenize(arg));
             }
             return this.get('stdin').read().then(function (text) {
-                return _this7.get('read').call(_this7, text);
+                return _this6.get('read').call(_this6, text);
             });
         },
         // ------------------------------------------------------------------
         print: function print() {
             var _get,
-                _this8 = this;
+                _this7 = this;
 
             for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 args[_key2] = arguments[_key2];
             }
 
             (_get = this.get('stdout')).write.apply(_get, _toConsumableArray(args.map(function (arg) {
-                return _this8.get('string')(arg);
+                return _this7.get('string')(arg);
             })));
         },
         // ------------------------------------------------------------------
@@ -1360,6 +1456,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         // ------------------------------------------------------------------
         'list->array': function listArray(list) {
+            if (list instanceof Pair && list.isEmptyList()) {
+                return [];
+            }
             var result = [];
             var node = list;
             while (true) {
@@ -1527,14 +1626,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             return LNumber(number).sub(1);
         },
         // ------------------------------------------------------------------
-        '++': new Macro(function (code) {
+        '++': new Macro('++', function (code) {
             var car = this.get(code.car);
             var value = LNumber(car).add(1);
             this.set(code.car, value);
             return value;
         }),
         // ------------------------------------------------------------------
-        '--': new Macro(function (code) {
+        '--': new Macro('--', function (code) {
             var car = this.get(code.car);
             var value = LNumber(car).sub(1);
             this.set(code.car, value);
@@ -1566,7 +1665,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             [0, 1].includes(LNumber(a).cmp(b));
         },
         // ------------------------------------------------------------------
-        or: new Macro(function (code) {
+        'eq?': function eq(a, b) {
+            return a === b;
+        },
+        // ------------------------------------------------------------------
+        or: new Macro('or', function (code) {
             var args = this.get('list->array')(code);
             var self = this;
             return new Promise(function (resolve) {
@@ -1598,7 +1701,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
         }),
         // ------------------------------------------------------------------
-        and: new Macro(function (code) {
+        and: new Macro('and', function (code) {
             var args = this.get('list->array')(code);
             var self = this;
             return new Promise(function (resolve) {
@@ -1733,9 +1836,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 throw new Error(env.get('string')(value) + ' is not a function');
             }
         }
-        if (typeof first === 'function') {
-            value = first;
-        }
         if (first instanceof _Symbol) {
             value = env.get(first);
             if (value instanceof Macro) {
@@ -1754,6 +1854,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             } else if (typeof value !== 'function') {
                 throw new Error('Unknown function `' + first.name + '\'');
             }
+        } else if (typeof first === 'function') {
+            value = first;
         }
         if (typeof value === 'function') {
             var args = [];

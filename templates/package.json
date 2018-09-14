@@ -22,7 +22,7 @@
   "homepage": "https://github.com/jcubic/lips#readme",
   "eslintConfig": {
     "parserOptions": {
-      "ecmaVersion": 6,
+      "ecmaVersion": 2017,
       "sourceType": "script",
       "ecmaFeatures": {}
     },
