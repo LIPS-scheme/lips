@@ -1092,7 +1092,7 @@
                 var name = code.car;
                 var i = 0;
                 var value;
-                if (!name.isEmptyList()) {
+                if (name instanceof Symbol || !name.isEmptyList()) {
                     while (true) {
                         if (name.car !== nil) {
                             if (name instanceof Symbol) {

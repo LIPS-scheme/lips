@@ -9,7 +9,7 @@
     <script src="https://rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
     <script src="https://unpkg.com/prismjs@1.8.1/prism.js"></script>
     <link href="https://unpkg.com/prismjs@1.8.1/themes/prism.css" rel="stylesheet">
-    <script src="https://rawgit.com/jcubic/jquery.terminal/2abab463b9be5a2ec8a3951b7e586bc9fab855fe/js/prism.js"></script>
+    <script src="https://unpkg.com/jquery.terminal/js/prism.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.14.0/components/prism-scheme.js"></script>
     <style>
      .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
@@ -48,7 +48,7 @@
   <script src="https://unpkg.com/bn.js@4.11.8/lib/bn.js"></script>
   <script>
    (function() {
-       $.terminal.defaults.formatters.push($.terminal.prism.bind(null, "scheme"));
+       $.terminal.syntax("scheme");
        var {
            Environment,
            global_environment,

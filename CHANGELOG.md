@@ -1,3 +1,7 @@
+## 0.5.1
+### Bugs
+* fix lambda with symbol as parameters
+
 ## 0.5.0
 ### Breaking
 * exec now return promise with array of results
