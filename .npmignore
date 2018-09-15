@@ -1,6 +1,6 @@
 spec
 *~
-covarage
+coverage
 Makefile
 jest.config.js
 version

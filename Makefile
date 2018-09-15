@@ -29,7 +29,7 @@ dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	src/banner.js > dist/banner.js
 	$(CAT) dist/banner.js dist/lips.js > dist/tmp.js
 	$(CP) dist/tmp.js dist/lips.js
-	$(RM) dist/tmp.js
+	$(RM) dist/tmp.js dist/banner.js
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
