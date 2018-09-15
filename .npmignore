@@ -6,4 +6,7 @@ jest.config.js
 version
 templates
 demo.html
+rollup.config.js
 www
+\#*#
+.*
