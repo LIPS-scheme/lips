@@ -218,10 +218,12 @@ parse(tokenize(string)).foEach(function(code) {
                    try {
                        var ret = evaluate(code, env, dynamic ? env : undefined);
                        if (ret instanceof Promise) {
-                           ret.then((ret) => {
+                           ret.then(ret => {
                                if (ret !== undefined) {
                                    env.get('print').call(env, ret)
                                }
+                           }).catch(e => {
+                               term.error(e.message);
                            });
                        } else if (ret !== undefined) {
                            env.get('print').call(env, ret);
