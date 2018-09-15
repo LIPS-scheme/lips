@@ -1,10 +1,10 @@
 /**@license
- * LIPS is Pretty Simple - version {{VER}}
+ * LIPS is Pretty Simple - version DEV
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: {{DATE}}
+ * build: Sat, 15 Sep 2018 09:39:49 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require */
@@ -517,11 +517,15 @@
     // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
-    function Macro(fn) {
+    function Macro(name, fn) {
+        this.name = name;
         this.fn = fn;
     }
     Macro.prototype.invoke = function(name, code, env, dynamic_scope) {
         return this.fn.call(env, code, dynamic_scope, name);
+    };
+    Macro.prototype.toString = function() {
+        return '#<Macro ' + this.name + '>';
     };
     // ----------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
@@ -573,7 +577,6 @@
     };
     // ----------------------------------------------------------------------
     LNumber.prototype.toString = function() {
-        console.log(this.value);
         return this.value.toString();
     };
     // ----------------------------------------------------------------------
@@ -818,7 +821,9 @@
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
-        return new Macro(function(code, dynamic_scope) {
+        var name = 'let' + (asterisk ? '*' : '');
+        return new Macro(name, function(code, dynamic_scope) {
+            var self = this;
             var args = this.get('list->array')(code.car);
             var env = this.inherit('let');
             return new Promise((resolve) => {
@@ -836,15 +841,17 @@
                     }
                     if (!pair) {
                         var output = new Pair(new Symbol('begin'), code.cdr);
-                        resolve(new Quote(evaluate(
+                        evaluate(
                             output,
                             env,
                             dynamic_scope ? env : dynamic_scope
-                        )));
+                        ).then(function(result) {
+                            resolve(new Quote(result));
+                        });
                     } else {
                         var value = evaluate(
                             pair.cdr.car,
-                            asterisk ? env : this,
+                            asterisk ? env : self,
                             dynamic_scope
                         );
                         var promise = set(value);
@@ -904,6 +911,9 @@
                 });
             }
         },
+        test: function() {
+            return Promise.resolve(undefined);
+        },
         // ------------------------------------------------------------------
         cons: function(car, cdr) {
             return new Pair(car, cdr);
@@ -924,6 +934,19 @@
                 throw new Error('argument to cdr need to be a list');
             }
         },
+        // ------------------------------------------------------------------
+        'set': new Macro('set', function(code, dynamic_scope) {
+            var value;
+            if (code.cdr.car instanceof Pair) {
+                if (dynamic_scope) {
+                    dynamic_scope = this;
+                }
+                value = evaluate(code.cdr.car, this, dynamic_scope);
+            } else {
+                value = code.cdr.car;
+            }
+            this.set(code.car, value);
+        }),
         // ------------------------------------------------------------------
         'set-car': function(slot, value) {
             slot.car = value;
@@ -955,42 +978,27 @@
             });
         },
         // ------------------------------------------------------------------
-        'while': new Macro(function(code) {
+        'while': new Macro('while', async function(code, dynamic_scope) {
             var self = this;
             var begin = new Pair(
                 new Symbol('begin'),
                 code.cdr
             );
-            return new Promise((resolve) => {
-                var result;
-                (function loop() {
-                    function next(cond) {
-                        if (cond) {
-                            var value = evaluate(begin, self);
-                            if (value instanceof Promise) {
-                                value.then((value) => {
-                                    result = value;
-                                    loop();
-                                });
-                            } else {
-                                result = value;
-                                loop();
-                            }
-                        } else {
-                            resolve(result);
-                        }
-                    }
-                    var cond = evaluate(code.car, self);
-                    if (cond instanceof Promise) {
-                        cond.then(next);
-                    } else {
-                        next(cond);
-                    }
-                })();
-            });
+            var result;
+            if (dynamic_scope) {
+                dynamic_scope = self;
+            }
+            while (true) {
+                var cond = await evaluate(code.car, self, dynamic_scope);
+                if (cond) {
+                    result = await evaluate(begin, self, dynamic_scope);
+                } else {
+                    return result;
+                }
+            }
         }),
         // ------------------------------------------------------------------
-        'if': new Macro(function(code) {
+        'if': new Macro('if', function(code) {
             var resolve = (cond) => {
                 if (cond) {
                     var true_value = evaluate(code.cdr.car, this);
@@ -1020,12 +1028,23 @@
         // ------------------------------------------------------------------
         'let': let_macro(false),
         // ------------------------------------------------------------------
-        'begin': new Macro(function(code, dynamic_scope) {
+        'begin': new Macro('begin', async function(code, dynamic_scope) {
             var arr = this.get('list->array')(code);
-            return arr.reduce((_, code) => evaluate(code, this, dynamic_scope), 0);
+            var result;
+            if (dynamic_scope) {
+                dynamic_scope = this;
+            }
+            while (true) {
+                if (arr.length) {
+                    code = arr.shift();
+                    result = await evaluate(code, this, dynamic_scope);
+                } else {
+                    return result;
+                }
+            }
         }),
         // ------------------------------------------------------------------
-        timer: new Macro(function(code) {
+        timer: new Macro('timer', function(code) {
             return new Promise((resolve) => {
                 setTimeout(() => {
                     resolve(new Quote(evaluate(code.cdr, this)));
@@ -1033,7 +1052,7 @@
             });
         }),
         // ------------------------------------------------------------------
-        define: new Macro(function(code, dynamic_scope) {
+        define: new Macro('define', function(code, dynamic_scope) {
             if (code.car instanceof Pair &&
                 code.car.car instanceof Symbol) {
                 var new_code = new Pair(
@@ -1068,7 +1087,7 @@
             }
         }),
         // ------------------------------------------------------------------
-        set: function(obj, key, value) {
+        'set-obj': function(obj, key, value) {
             obj[key] = value;
         },
         // ------------------------------------------------------------------
@@ -1085,14 +1104,14 @@
             }
         },
         // ------------------------------------------------------------------
-        lambda: new Macro(function(code, dynamic_scope) {
+        lambda: new Macro('lambda', function(code, dynamic_scope) {
             var self = this;
             return function(...args) {
                 var env = (dynamic_scope ? this : self).inherit('lambda');
                 var name = code.car;
                 var i = 0;
                 var value;
-                if (!name.isEmptyList()) {
+                if (name instanceof Symbol || !name.isEmptyList()) {
                     while (true) {
                         if (name.car !== nil) {
                             if (name instanceof Symbol) {
@@ -1120,7 +1139,7 @@
             };
         }),
         // ------------------------------------------------------------------
-        defmacro: new Macro(function(macro) {
+        defmacro: new Macro('defmacro', function(macro) {
             if (macro.car.car instanceof Symbol) {
                 this.env[macro.car.car.name] = new Macro(function(code) {
                     var env = new Environment({}, this, 'defmacro');
@@ -1141,11 +1160,11 @@
             }
         }),
         // ------------------------------------------------------------------
-        quote: new Macro(function(arg) {
+        quote: new Macro('quote', function(arg) {
             return new Quote(arg.car);
         }),
         // ------------------------------------------------------------------
-        quasiquote: new Macro(function(arg) {
+        quasiquote: new Macro('quasiquote', function(arg) {
             var self = this;
             var max_unquote = 0;
             function recur(pair) {
@@ -1378,6 +1397,9 @@
         },
         // ------------------------------------------------------------------
         'list->array': function(list) {
+            if (list instanceof Pair && list.isEmptyList()) {
+                return [];
+            }
             var result = [];
             var node = list;
             while (true) {
@@ -1395,10 +1417,29 @@
             return Pair.fromArray(this.get('list->array')(list).filter(fn));
         },
         // ------------------------------------------------------------------
-        apply: function(fn, list) {
-            var args = this.get('list->array')(list);
-            return fn.apply(null, args);
-        },
+        apply: new Macro('apply', function(code, dynamic_scope) {
+            if (dynamic_scope) {
+                dynamic_scope = this;
+            }
+            var fn = evaluate(code.car, this, dynamic_scope);
+            if (typeof fn !== 'function') {
+                var message;
+                if (code.car instanceof Symbol) {
+                    message = "Variable `" + code.car.name + "' is not a function";
+                } else {
+                    message = "Expression `" + code.car.toString() +
+                        "' is not a function";
+                }
+                throw new Error(message);
+            }
+            var args = evaluate(code.cdr.car, this, dynamic_scope);
+            args = this.get('list->array')(args);
+            if (args.filter(a => a instanceof Promise).length) {
+                return Promise.all(args).then(args => fn.apply(this, args));
+            } else {
+                return fn.apply(this, args);
+            }
+        }),
         // ------------------------------------------------------------------
         map: function(fn, list) {
             var result = this.get('list->array')(list).map(fn);
@@ -1518,14 +1559,14 @@
             return LNumber(number).sub(1);
         },
         // ------------------------------------------------------------------
-        '++': new Macro(function(code) {
+        '++': new Macro('++', function(code) {
             var car = this.get(code.car);
             var value = LNumber(car).add(1);
             this.set(code.car, value);
             return value;
         }),
         // ------------------------------------------------------------------
-        '--': new Macro(function(code) {
+        '--': new Macro('--', function(code) {
             var car = this.get(code.car);
             var value = LNumber(car).sub(1);
             this.set(code.car, value);
@@ -1557,7 +1598,11 @@
             [0, 1].includes(LNumber(a).cmp(b));
         },
         // ------------------------------------------------------------------
-        or: new Macro(function(code) {
+        'eq?': function(a, b) {
+            return a === b;
+        },
+        // ------------------------------------------------------------------
+        or: new Macro('or', function(code) {
             var args = this.get('list->array')(code);
             var self = this;
             return new Promise(function(resolve) {
@@ -1589,7 +1634,7 @@
             });
         }),
         // ------------------------------------------------------------------
-        and: new Macro(function(code) {
+        and: new Macro('and', function(code) {
             var args = this.get('list->array')(code);
             var self = this;
             return new Promise(function(resolve) {
@@ -1722,9 +1767,6 @@
                 );
             }
         }
-        if (typeof first === 'function') {
-            value = first;
-        }
         if (first instanceof Symbol) {
             value = env.get(first);
             if (value instanceof Macro) {
@@ -1743,6 +1785,8 @@
             } else if (typeof value !== 'function') {
                 throw new Error('Unknown function `' + first.name + '\'');
             }
+        } else if (typeof first === 'function') {
+            value = first;
         }
         if (typeof value === 'function') {
             var args = [];
@@ -1887,7 +1931,7 @@
     });
     // --------------------------------------
     return {
-        version: '{{VER}}',
+        version: 'DEV',
         exec: exec,
         parse: parse,
         tokenize: tokenize,

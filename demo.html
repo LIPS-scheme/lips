@@ -9,7 +9,7 @@
     <script src="https://rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
     <script src="https://unpkg.com/prismjs@1.8.1/prism.js"></script>
     <link href="https://unpkg.com/prismjs@1.8.1/themes/prism.css" rel="stylesheet">
-    <script src="https://rawgit.com/jcubic/jquery.terminal/2abab463b9be5a2ec8a3951b7e586bc9fab855fe/js/prism.js"></script>
+    <script src="https://unpkg.com/jquery.terminal/js/prism.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.14.0/components/prism-scheme.js"></script>
     <style>
      .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
@@ -44,11 +44,12 @@
        }
    };
   </script>
-  <script src="src/lips.js"></script>
+  <!-- <script src="src/lips.js"></script> -->
+  <script src="dist/lips.js"></script>
   <script src="https://unpkg.com/bn.js@4.11.8/lib/bn.js"></script>
   <script>
    (function() {
-       $.terminal.defaults.formatters.push($.terminal.prism.bind(null, "scheme"));
+       $.terminal.syntax("scheme");
        var {
            Environment,
            global_environment,
@@ -57,6 +58,31 @@
            parse,
            evaluate
        } = lips;
+       var result = lips.exec(`(define Y
+                          (lambda (h)
+                             ((lambda (x) (x x))
+                              (lambda (g)
+                                (h (lambda args (apply (g g) args)))))))
+
+                       (define (trampoline f)
+                          (lambda args
+                             (let ((result (apply f args)))
+                                 (while (eq? (type result) "function")
+                                    (set result (result)))
+                                 result)))
+
+                       (define (! n)
+                           ((trampoline (Y (lambda (f)
+                                            (lambda (n acc)
+                                              (if (== n 0)
+                                                  acc
+                                                (lambda ()
+                                                   (f (- n 1) (* n acc)))))))) n 1))
+
+
+
+                       (print (! 1000))`, env, env);
+       result.then((result) => console.log(result));
        var env = new Environment({
            stdout: {
                write: function(...args) {
@@ -84,7 +110,7 @@
                    var code = list.shift();
                    if (code) {
                        try {
-                           var ret = evaluate(code, env, env);
+                           var ret = evaluate(code, env);
                            if (ret instanceof Promise) {
                                ret.then((ret) => {
                                    if (ret !== undefined) {

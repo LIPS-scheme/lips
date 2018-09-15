@@ -8,6 +8,7 @@ COMMIT=`git rev-parse HEAD`
 
 GIT=git
 SED=sed
+CP=cp
 RM=rm
 TEST=test
 CAT=cat
@@ -16,15 +17,19 @@ ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
 UGLIFY=./node_modules/.bin/uglifyjs
-BABEL=./node_modules/.bin/babel
+ROLLUP=./node_modules/.bin/rollup
 
 
 ALL: Makefile .$(VERSION) dist/lips.js dist/lips.min.js README.md package.json
 
-dist/lips.js: src/lips.js .$(VERSION)
-	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" src/lips.js > dist/lips.tmp.js || $(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" src/lips.js > dist/lips.tmp.js
-	$(BABEL) dist/lips.tmp.js > dist/lips.js
-	$(RM) dist/lips.tmp.js
+dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
+	$(ROLLUP) -c
+	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
+	src/banner.js > dist/banner.js || $(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" \
+	src/banner.js > dist/banner.js
+	$(CAT) dist/banner.js dist/lips.js > dist/tmp.js
+	$(CP) dist/tmp.js dist/lips.js
+	$(RM) dist/tmp.js
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
