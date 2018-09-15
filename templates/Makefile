@@ -5,8 +5,10 @@ BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
+URL=`git config --get remote.origin.url`
 
 GIT=git
+CD=cd
 SED=sed
 CP=cp
 RM=rm
@@ -51,7 +53,9 @@ README.md: templates/README.md .$(VERSION)
 	touch .$(VERSION)
 
 publish:
-	$(NPM) publish --access=public
+	$(GIT) clone $(URL) --depth 1 npm
+	$(CD) npm && $(NPM) publish --access=public
+	$(RM) -rf npm
 
 test:
 	$(JEST)

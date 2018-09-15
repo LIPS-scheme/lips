@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 15 Sep 2018 11:34:27 +0000
+ * build: Sat, 15 Sep 2018 11:42:05 +0000
  */
 (function () {
 'use strict';
