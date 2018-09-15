@@ -24,12 +24,12 @@ ALL: Makefile .$(VERSION) dist/lips.js dist/lips.min.js README.md package.json
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
-	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
-	src/banner.js > dist/banner.js || $(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" \
-	src/banner.js > dist/banner.js
-	$(CAT) dist/banner.js dist/lips.js > dist/tmp.js
+	$(CAT) src/banner.js dist/lips.js > dist/tmp.js
 	$(CP) dist/tmp.js dist/lips.js
-	$(RM) dist/tmp.js dist/banner.js
+	$(RM) dist/tmp.js
+	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
+	dist/lips.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" \
+	dist/lips.js
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js

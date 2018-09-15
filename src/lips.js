@@ -1930,19 +1930,19 @@
     });
     // --------------------------------------
     return {
-        version: 'DEV',
-        exec: exec,
-        parse: parse,
-        tokenize: tokenize,
-        evaluate: evaluate,
-        Environment: Environment,
+        version: '{{VER}}',
+        exec,
+        parse,
+        tokenize,
+        evaluate,
+        Environment,
         global_environment: global_env,
         balanced_parenthesis: balanced,
-        Macro: Macro,
-        Quote: Quote,
-        Pair: Pair,
-        nil: nil,
-        Symbol: Symbol,
-        LNumber: LNumber
+        Macro,
+        Quote,
+        Pair,
+        nil,
+        Symbol,
+        LNumber
     };
 });

@@ -1,3 +1,7 @@
+## 0.5.3
+### Bugs
+* fix version number in exported field
+
 ## 0.5.2
 ### Bugs
 * use dist/lips.min.js as main for unpkg
