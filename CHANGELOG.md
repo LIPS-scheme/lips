@@ -1,3 +1,7 @@
+## 0.5.4
+### Bugs
+* use src file for node and dist build file for unpkg
+
 ## 0.5.3
 ### Bugs
 * fix version number in exported field
