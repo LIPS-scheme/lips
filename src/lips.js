@@ -1417,10 +1417,29 @@
             return Pair.fromArray(this.get('list->array')(list).filter(fn));
         },
         // ------------------------------------------------------------------
-        apply: function(fn, list) {
-            var args = this.get('list->array')(list);
-            return fn.apply(null, args);
-        },
+        apply: new Macro('apply', function(code, dynamic_scope) {
+            if (dynamic_scope) {
+                dynamic_scope = this;
+            }
+            var fn = evaluate(code.car, this, dynamic_scope);
+            if (typeof fn !== 'function') {
+                var message;
+                if (code.car instanceof Symbol) {
+                    message = "Variable `" + code.car.name + "' is not a function";
+                } else {
+                    message = "Expression `" + code.car.toString() +
+                        "' is not a function";
+                }
+                throw new Error(message);
+            }
+            var args = evaluate(code.cdr.car, this, dynamic_scope);
+            args = this.get('list->array')(args);
+            if (args.filter(a => a instanceof Promise).length) {
+                return Promise.all(args).then(args => fn.apply(this, args));
+            } else {
+                return fn.apply(this, args);
+            }
+        }),
         // ------------------------------------------------------------------
         map: function(fn, list) {
             var result = this.get('list->array')(list).map(fn);

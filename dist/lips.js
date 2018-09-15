@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 15 Sep 2018 09:56:03 +0000
+ * build: Sat, 15 Sep 2018 10:52:49 +0000
  */
 (function () {
 'use strict';
@@ -2524,10 +2524,40 @@ var toConsumableArray = _toConsumableArray;
       return Pair.fromArray(this.get('list->array')(list).filter(fn));
     },
     // ------------------------------------------------------------------
-    apply: function apply(fn, list) {
-      var args = this.get('list->array')(list);
-      return fn.apply(null, args);
-    },
+    apply: new Macro('apply', function (code, dynamic_scope) {
+      var _this8 = this;
+
+      if (dynamic_scope) {
+        dynamic_scope = this;
+      }
+
+      var fn = evaluate(code.car, this, dynamic_scope);
+
+      if (typeof fn !== 'function') {
+        var message;
+
+        if (code.car instanceof _Symbol) {
+          message = "Variable `" + code.car.name + "' is not a function";
+        } else {
+          message = "Expression `" + code.car.toString() + "' is not a function";
+        }
+
+        throw new Error(message);
+      }
+
+      var args = evaluate(code.cdr.car, this, dynamic_scope);
+      args = this.get('list->array')(args);
+
+      if (args.filter(function (a) {
+        return a instanceof Promise;
+      }).length) {
+        return Promise.all(args).then(function (args) {
+          return fn.apply(_this8, args);
+        });
+      } else {
+        return fn.apply(this, args);
+      }
+    }),
     // ------------------------------------------------------------------
     map: function map(fn, list) {
       var result = this.get('list->array')(list).map(fn);
