@@ -1,10 +1,10 @@
 /**@license
- * LIPS is Pretty Simple - version 0.5.1
+ * LIPS is Pretty Simple - version 0.5.2
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 15 Sep 2018 11:21:59 +0000
+ * build: Sat, 15 Sep 2018 11:28:33 +0000
  */
 (function () {
 'use strict';
@@ -842,12 +842,11 @@ function _toConsumableArray(arr) {
 var toConsumableArray = _toConsumableArray;
 
 /**@license
- * LIPS is Pretty Simple - version DEV
+ * LIPS is Pretty Simple
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 15 Sep 2018 09:39:49 +0000
  */
 
 (function (root, factory) {

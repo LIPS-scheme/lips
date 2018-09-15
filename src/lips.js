@@ -1,10 +1,9 @@
 /**@license
- * LIPS is Pretty Simple - version DEV
+ * LIPS is Pretty Simple
  *
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sat, 15 Sep 2018 09:39:49 +0000
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require */

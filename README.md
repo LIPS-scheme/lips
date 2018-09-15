@@ -1,7 +1,7 @@
 ## LIPS is Pretty Simple
 
-[![npm](https://img.shields.io/badge/npm-0.5.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&8726e81c4d57c970c2d7cac9b483e8e3726312b2)](https://travis-ci.org/jcubic/jquery.terminal)
+[![npm](https://img.shields.io/badge/npm-0.5.2-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&a2bf45452ac4a52d1de26b765b21df062631d833)](https://travis-ci.org/jcubic/jquery.terminal)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&60344fd3539909db22af3efb7138097d)](https://coveralls.io/github/jcubic/lips?branch=master)
 
 

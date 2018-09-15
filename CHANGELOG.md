@@ -1,3 +1,8 @@
+## 0.5.2
+### Bugs
+* use dist/lips.min.js as main for unpkg
+* npm housekeeping
+
 ## 0.5.1
 ### Bugs
 * fix lambda with symbol as parameters
