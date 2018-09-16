@@ -1,3 +1,9 @@
+## 0.5.5
+### Breaking
+* change api for evaluate to have object `{env, dynamic_scope, error}`
+### Bugs
+* show error when invoking trampoline in dynamic scope
+
 ## 0.5.4
 ### Bugs
 * use src file for node and dist build file for unpkg
