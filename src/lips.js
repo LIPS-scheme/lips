@@ -992,29 +992,45 @@
                 dynamic_scope = self;
             }
             while (true) {
-                var cond = await evaluate(code.car, {env: self, dynamic_scope, error});
+                var cond = await evaluate(code.car, {
+                    env: self,
+                    dynamic_scope,
+                    error
+                });
                 if (cond) {
-                    result = await evaluate(begin, {env: self, dynamic_scope, error});
+                    result = await evaluate(begin, {
+                        env: self,
+                        dynamic_scope,
+                        error
+                    });
                 } else {
                     return result;
                 }
             }
         }),
         // ------------------------------------------------------------------
-        'if': new Macro('if', function(code, {dynamic_scope, error} = {}) {
+        'if': new Macro('if', function(code, {dynamic_scope, error}) {
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
             var env = this;
             var resolve = (cond) => {
                 if (cond) {
-                    var true_value = evaluate(code.cdr.car, {env, dynamic_scope, error});
+                    var true_value = evaluate(code.cdr.car, {
+                        env,
+                        dynamic_scope,
+                        error
+                    });
                     if (typeof true_value === 'undefined') {
                         return;
                     }
                     return true_value;
                 } else if (code.cdr.cdr.car instanceof Pair) {
-                    var false_value = evaluate(code.cdr.cdr.car, {env, dynamic_scope, error});
+                    var false_value = evaluate(code.cdr.cdr.car, {
+                        env,
+                        dynamic_scope,
+                        error
+                    });
                     if (typeof false_value === 'undefined') {
                         return false;
                     }
@@ -1058,7 +1074,11 @@
             }
             return new Promise((resolve) => {
                 setTimeout(() => {
-                    resolve(new Quote(evaluate(code.cdr, {env, dynamic_scope, error})));
+                    resolve(new Quote(evaluate(code.cdr, {
+                        env,
+                        dynamic_scope,
+                        error
+                    })));
                 }, code.car);
             });
         }),
@@ -1161,7 +1181,7 @@
             };
         }),
         // ------------------------------------------------------------------
-        defmacro: new Macro('defmacro', function(macro, {dynamic_scope, error} = {}) {
+        defmacro: new Macro('defmacro', function(macro, {dynamic_scope, error}) {
             if (macro.car.car instanceof Symbol) {
                 this.env[macro.car.car.name] = new Macro(function(code) {
                     var env = new Environment({}, this, 'defmacro');
@@ -1189,7 +1209,7 @@
             return new Quote(arg.car);
         }),
         // ------------------------------------------------------------------
-        quasiquote: new Macro('quasiquote', function(arg, {dynamic_scope, error} = {}) {
+        quasiquote: new Macro('quasiquote', function(arg, {dynamic_scope, error}) {
             var self = this;
             var max_unquote = 0;
             if (dynamic_scope) {
@@ -1634,7 +1654,7 @@
             return a === b;
         },
         // ------------------------------------------------------------------
-        or: new Macro('or', function(code, {dynamic_scope, error}= {}) {
+        or: new Macro('or', function(code, {dynamic_scope, error}) {
             var args = this.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
@@ -1846,7 +1866,7 @@
             } else {
                 return code;
             }
-        } catch(e) {
+        } catch (e) {
             error && error(e);
         }
     }
