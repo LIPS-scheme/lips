@@ -150,7 +150,7 @@ describe('Pair', function() {
 });
 
 function exec(string, env, dynamic_scope) {
-    return evaluate(parse(tokenize(string))[0], env, dynamic_scope);
+    return evaluate(parse(tokenize(string))[0], {env, dynamic_scope});
 }
 
 describe('evaluate', function() {
@@ -382,7 +382,7 @@ describe('evaluate', function() {
         });
         it('should throw exception', function() {
             return lips.exec(code, env, env).catch(e => {
-                expect(e).toEqual(new Error("Variable `f' is not a function"));
+                expect(e).toEqual(new Error("Unbound variable `f'"));
             });
         });
     });
