@@ -127,10 +127,9 @@ parse(tokenize(string)).foEach(function(code) {
     evaluate(code);
 });
     </code></pre>
-  </script>
     <p>
       with <strong><code>evaluate</code></strong> you need to check the type if it's Promise you need to wait for it.
-    <p>
+    </p>
     <p><strong><code>evaluate</code></strong> function also accept two more arguments:
       <ul>
         <li>first Environment.
@@ -165,6 +164,13 @@ parse(tokenize(string)).foEach(function(code) {
   <footer>
     <p>Copyright (c) 2018 <a href="https://jcubic.pl/me">Jakub Jankiewicz</a></p>
   </footer>
+  <script>
+   if (!Array.from) {
+       Array.from = function(arr) {
+           return [].slice.call(arr);
+       };
+   }
+  </script>
   <script src="https://code.jquery.com/jquery-latest.min.js"></script>
   <script src="https://unpkg.com/@jcubic/lips"></script>
   <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.min.js"></script>
@@ -181,56 +187,36 @@ parse(tokenize(string)).foEach(function(code) {
   </style>
   <script>
    function interpreter(selector, dynamic) {
-       $.terminal.defaults.formatters.push($.terminal.prism.bind(null, "scheme"));
-       var {
-           Environment,
-           global_environment,
-           balanced_parenthesis,
-           tokenize,
-           parse,
-           evaluate
-       } = lips;
-       var env = new Environment({
+       $.terminal.syntax("scheme");
+       var env = new lips.Environment({
            stdout: {
-               write: function(...args) {
-                   args.forEach((arg) => {
+               write: function() {
+                   var args = Array.from(arguments);
+                   args.forEach(function(arg) {
                        term.echo(arg, {keepWords: true});
                    });
                }
            },
            stdin: {
                read: function() {
-                   return new Promise(function(resolve) {
-                       term.read('', function(command) {
-                           resolve(command);
-                       });
-                   });
+                   return term.read('');
                }
            }
-       }, global_environment);
+       }, lips.global_environment);
        var position;
        var timer;
        var term = $(selector).terminal(function(code, term) {
-           if (!balanced_parenthesis(code)) {
+           if (!lips.balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               parse(tokenize(code)).forEach(function(code) {
-                   try {
-                       var ret = evaluate(code, env, dynamic ? env : undefined);
-                       if (ret instanceof Promise) {
-                           ret.then(ret => {
-                               if (ret !== undefined) {
-                                   env.get('print').call(env, ret)
-                               }
-                           }).catch(e => {
-                               term.error(e.message);
-                           });
-                       } else if (ret !== undefined) {
+               lips.exec(code, env, env).then(function(ret) {
+                   ret.forEach(function(ret) {
+                       if (ret !== undefined) {
                            env.get('print').call(env, ret);
                        }
-                   } catch (e) {
-                       term.error(e.message);
-                   }
+                   });
+               }).catch(function(e) {
+                   term.error(e.message);
                });
            }
        }, {
