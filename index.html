@@ -165,13 +165,7 @@ parse(tokenize(string)).foEach(function(code) {
   <footer>
     <p>Copyright (c) 2018 <a href="https://jcubic.pl/me">Jakub Jankiewicz</a></p>
   </footer>
-  <script>
-   if (!Array.from) {
-       Array.from = function(arr) {
-           return [].slice.call(arr);
-       };
-   }
-  </script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
   <script src="https://code.jquery.com/jquery-latest.min.js"></script>
   <script src="https://unpkg.com/@jcubic/lips"></script>
   <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.min.js"></script>
