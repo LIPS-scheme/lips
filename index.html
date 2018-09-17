@@ -180,6 +180,10 @@ parse(tokenize(string)).foEach(function(code) {
    .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
        background: inherit;
    }
+   .terminal span.token.boolean {
+       font-weight: normal !important;
+       color: inherit !important;
+   }
   </style>
   <script>
    function interpreter(selector, dynamic) {
