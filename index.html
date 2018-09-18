@@ -208,7 +208,7 @@ parse(tokenize(string)).foEach(function(code) {
            if (!lips.balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               lips.exec(code, env, env).then(function(ret) {
+               lips.exec(code, env, dynamic).then(function(ret) {
                    ret.forEach(function(ret) {
                        if (ret !== undefined) {
                            env.get('print').call(env, ret);
