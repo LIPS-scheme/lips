@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Tue, 25 Sep 2018 06:45:37 +0000
+ * build: Tue, 25 Sep 2018 07:56:48 +0000
  */
 (function () {
 'use strict';
@@ -1441,6 +1441,11 @@ function _typeof(obj) {
       return x === y;
     }
   } // ----------------------------------------------------------------------
+
+
+  function isEmptyList(x) {
+    return x instanceof Pair && x.isEmptyList() || x === nil;
+  } // ----------------------------------------------------------------------
   // :: Macro constructor
   // ----------------------------------------------------------------------
 
@@ -1797,6 +1802,28 @@ function _typeof(obj) {
 
     this.env[name] = value;
   }; // ----------------------------------------------------------------------
+
+
+  Environment.prototype.has = function (name) {
+    return typeof this.env[name] !== 'undefined';
+  }; // ----------------------------------------------------------------------
+
+
+  Environment.prototype.ref = function (name) {
+    var env = this;
+
+    while (true) {
+      if (!env) {
+        break;
+      }
+
+      if (env.has(name)) {
+        return env;
+      }
+
+      env = env.parent;
+    }
+  }; // ----------------------------------------------------------------------
   // :: Quote constructor used to pause evaluation from Macro
   // ----------------------------------------------------------------------
 
@@ -1954,7 +1981,7 @@ function _typeof(obj) {
       }
     },
     // ------------------------------------------------------------------
-    'set': new Macro('set', function (code) {
+    'set!': new Macro('set', function (code) {
       var _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           dynamic_scope = _ref3.dynamic_scope,
           error = _ref3.error;
@@ -1975,30 +2002,45 @@ function _typeof(obj) {
         value = code.cdr.car;
       }
 
-      this.set(code.car, value);
+      if (!(code.car instanceof _Symbol)) {
+        throw new Error('set! first argument need to be a symbol');
+      }
+
+      var ref = this.ref(code.car.name);
+
+      if (!ref) {
+        ref = this;
+      }
+
+      ref.set(code.car, value);
     }),
     // ------------------------------------------------------------------
-    'set-car': function setCar(slot, value) {
+    'set-car!': function setCar(slot, value) {
       slot.car = value;
     },
     // ------------------------------------------------------------------
-    'set-cdr': function setCdr(slot, value) {
+    'set-cdr!': function setCdr(slot, value) {
       slot.cdr = value;
     },
+    'empty?': function empty(x) {
+      return typeof x === 'undefined' || isEmptyList(x);
+    },
     // ------------------------------------------------------------------
-    assoc: function assoc(list, key) {
+    assoc: function assoc(key, list) {
       var node = list;
-      var name = key instanceof _Symbol ? key.name : key;
 
       while (true) {
+        if (this.get('empty?')(node)) break;
         var car = node.car.car;
 
-        if (car instanceof _Symbol && car.name === name || car.name === name) {
+        if (equal(car, key)) {
           return node.car;
         } else {
           node = node.cdr;
         }
       }
+
+      return nil;
     },
     // ------------------------------------------------------------------
     gensym: gensym,
@@ -2090,7 +2132,7 @@ function _typeof(obj) {
       var env = this;
 
       var resolve = function resolve(cond) {
-        if (cond) {
+        if (cond && !isEmptyList(cond)) {
           var true_value = evaluate(code.cdr.car, {
             env: env,
             dynamic_scope: dynamic_scope,
@@ -2293,7 +2335,7 @@ function _typeof(obj) {
         var i = 0;
         var value;
 
-        if (name instanceof _Symbol || !name.isEmptyList()) {
+        if (name instanceof _Symbol || !isEmptyList(name)) {
           for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
             args[_key] = arguments[_key];
           }
@@ -2329,7 +2371,8 @@ function _typeof(obj) {
           dynamic_scope = env;
         }
 
-        return evaluate(code.cdr.car, {
+        var output = new Pair(new _Symbol('begin'), code.cdr);
+        return evaluate(output, {
           env: env,
           dynamic_scope: dynamic_scope,
           error: error

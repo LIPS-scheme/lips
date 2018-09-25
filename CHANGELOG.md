@@ -1,9 +1,11 @@
 ## 0.5.5
 ### Breaking
 * change api for evaluate to have object `{env, dynamic_scope, error}`
+* rename set to set!, set-cdr to set-cdr! and set-car to set-car!
 ### Bugs
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions
+* fix set! (change existing reference or create new if not existing in scope chain)
 
 ## 0.5.4
 ### Bugs

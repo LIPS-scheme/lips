@@ -526,6 +526,10 @@
         }
     }
     // ----------------------------------------------------------------------
+    function isEmptyList(x) {
+        return x instanceof Pair && x.isEmptyList() || x === nil;
+    }
+    // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
     function Macro(name, fn) {
@@ -814,6 +818,23 @@
         this.env[name] = value;
     };
     // ----------------------------------------------------------------------
+    Environment.prototype.has = function(name) {
+        return typeof this.env[name] !== 'undefined';
+    };
+    // ----------------------------------------------------------------------
+    Environment.prototype.ref = function(name) {
+        var env = this;
+        while (true) {
+            if (!env) {
+                break;
+            }
+            if (env.has(name)) {
+                return env;
+            }
+            env = env.parent;
+        }
+    };
+    // ----------------------------------------------------------------------
     // :: Quote constructor used to pause evaluation from Macro
     // ----------------------------------------------------------------------
     function Quote(value) {
@@ -950,7 +971,7 @@
             }
         },
         // ------------------------------------------------------------------
-        'set': new Macro('set', function(code, {dynamic_scope, error} = {}) {
+        'set!': new Macro('set', function(code, {dynamic_scope, error} = {}) {
             var value;
             if (code.cdr.car instanceof Pair) {
                 if (dynamic_scope) {
@@ -960,29 +981,39 @@
             } else {
                 value = code.cdr.car;
             }
-            this.set(code.car, value);
+            if (!(code.car instanceof Symbol)) {
+                throw new Error('set! first argument need to be a symbol');
+            }
+            var ref = this.ref(code.car.name);
+            if (!ref) {
+                ref = this;
+            }
+            ref.set(code.car, value);
         }),
         // ------------------------------------------------------------------
-        'set-car': function(slot, value) {
+        'set-car!': function(slot, value) {
             slot.car = value;
         },
         // ------------------------------------------------------------------
-        'set-cdr': function(slot, value) {
+        'set-cdr!': function(slot, value) {
             slot.cdr = value;
         },
+        'empty?': function(x) {
+            return typeof x === 'undefined' || isEmptyList(x);
+        },
         // ------------------------------------------------------------------
-        assoc: function(list, key) {
+        assoc: function(key, list) {
             var node = list;
-            var name = key instanceof Symbol ? key.name : key;
             while (true) {
+                if (this.get('empty?')(node)) break;
                 var car = node.car.car;
-                if (car instanceof Symbol &&
-                    car.name === name || car.name === name) {
+                if (equal(car, key)) {
                     return node.car;
                 } else {
                     node = node.cdr;
                 }
             }
+            return nil;
         },
         // ------------------------------------------------------------------
         gensym: gensym,
@@ -1027,7 +1058,7 @@
             }
             var env = this;
             var resolve = (cond) => {
-                if (cond) {
+                if (cond && !isEmptyList(cond)) {
                     var true_value = evaluate(code.cdr.car, {
                         env,
                         dynamic_scope,
@@ -1162,7 +1193,7 @@
                 var name = code.car;
                 var i = 0;
                 var value;
-                if (name instanceof Symbol || !name.isEmptyList()) {
+                if (name instanceof Symbol || !isEmptyList(name)) {
                     while (true) {
                         if (name.car !== nil) {
                             if (name instanceof Symbol) {
@@ -1189,7 +1220,8 @@
                 if (dynamic_scope) {
                     dynamic_scope = env;
                 }
-                return evaluate(code.cdr.car, {env, dynamic_scope, error});
+                var output = new Pair(new Symbol('begin'), code.cdr);
+                return evaluate(output, {env, dynamic_scope, error});
             };
         }),
         // ------------------------------------------------------------------
