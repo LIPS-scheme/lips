@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Tue, 25 Sep 2018 07:56:48 +0000
+ * build: Tue, 25 Sep 2018 08:18:46 +0000
  */
 (function () {
 'use strict';
@@ -2030,7 +2030,10 @@ function _typeof(obj) {
       var node = list;
 
       while (true) {
-        if (this.get('empty?')(node)) break;
+        if (this.get('empty?')(node)) {
+          break;
+        }
+
         var car = node.car.car;
 
         if (equal(car, key)) {

@@ -1005,7 +1005,9 @@
         assoc: function(key, list) {
             var node = list;
             while (true) {
-                if (this.get('empty?')(node)) break;
+                if (this.get('empty?')(node)) {
+                    break;
+                }
                 var car = node.car.car;
                 if (equal(car, key)) {
                     return node.car;
