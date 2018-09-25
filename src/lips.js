@@ -1527,7 +1527,8 @@
                 if (typeof fn !== 'function') {
                     var message;
                     if (code.car instanceof Symbol) {
-                        message = "Variable `" + code.car.name + "' is not a function";
+                        message = "Variable `" + code.car.name +
+                            "' is not a function";
                     } else {
                         message = "Expression `" + code.car.toString() +
                             "' is not a function";
