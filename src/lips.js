@@ -514,6 +514,18 @@
     };
 
     // ----------------------------------------------------------------------
+    function equal(x, y) {
+        if (x instanceof LNumber && y instanceof LNumber) {
+            return x.cmp(y) === 0;
+        } else if (typeof x === 'number' || typeof y === 'number') {
+            return LNumber(x).cmp(LNumber(y));
+        } else if (x instanceof Symbol && y instanceof Symbol) {
+            return x.name === y.name;
+        } else {
+            return x === y;
+        }
+    }
+    // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
     function Macro(name, fn) {
@@ -1647,12 +1659,10 @@
         },
         // ------------------------------------------------------------------
         '>=': function(a, b) {
-            [0, 1].includes(LNumber(a).cmp(b));
+            return [0, 1].includes(LNumber(a).cmp(b));
         },
         // ------------------------------------------------------------------
-        'eq?': function(a, b) {
-            return a === b;
-        },
+        'eq?': equal,
         // ------------------------------------------------------------------
         or: new Macro('or', function(code, {dynamic_scope, error}) {
             var args = this.get('list->array')(code);

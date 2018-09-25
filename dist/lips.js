@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 16 Sep 2018 09:49:36 +0000
+ * build: Tue, 25 Sep 2018 06:45:37 +0000
  */
 (function () {
 'use strict';
@@ -1428,6 +1428,19 @@ function _typeof(obj) {
 
     return this;
   }; // ----------------------------------------------------------------------
+
+
+  function equal(x, y) {
+    if (x instanceof LNumber && y instanceof LNumber) {
+      return x.cmp(y) === 0;
+    } else if (typeof x === 'number' || typeof y === 'number') {
+      return LNumber(x).cmp(LNumber(y));
+    } else if (x instanceof _Symbol && y instanceof _Symbol) {
+      return x.name === y.name;
+    } else {
+      return x === y;
+    }
+  } // ----------------------------------------------------------------------
   // :: Macro constructor
   // ----------------------------------------------------------------------
 
@@ -2898,12 +2911,10 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '>=': function _(a, b) {
-      [0, 1].includes(LNumber(a).cmp(b));
+      return [0, 1].includes(LNumber(a).cmp(b));
     },
     // ------------------------------------------------------------------
-    'eq?': function eq(a, b) {
-      return a === b;
-    },
+    'eq?': equal,
     // ------------------------------------------------------------------
     or: new Macro('or', function (code, _ref15) {
       var dynamic_scope = _ref15.dynamic_scope,

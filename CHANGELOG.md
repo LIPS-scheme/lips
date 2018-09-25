@@ -3,6 +3,7 @@
 * change api for evaluate to have object `{env, dynamic_scope, error}`
 ### Bugs
 * show error when invoking trampoline in dynamic scope
+* fix eq? and >= functions
 
 ## 0.5.4
 ### Bugs
