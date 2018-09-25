@@ -314,7 +314,7 @@ describe('evaluate', function() {
                          (lambda args
                             (let ((result (apply f args)))
                                 (while (eq? (type result) "function")
-                                   (set result (result)))
+                                   (set! result (result)))
                                 result)))
 
                      (define (! n)

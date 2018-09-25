@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Tue, 25 Sep 2018 08:18:46 +0000
+ * build: Tue, 25 Sep 2018 09:24:04 +0000
  */
 (function () {
 'use strict';
@@ -2012,7 +2012,13 @@ function _typeof(obj) {
         ref = this;
       }
 
-      ref.set(code.car, value);
+      if (value instanceof Promise) {
+        value.then(function (value) {
+          return ref.set(code.car, value);
+        });
+      } else {
+        ref.set(code.car, value);
+      }
     }),
     // ------------------------------------------------------------------
     'set-car!': function setCar(slot, value) {
@@ -2732,39 +2738,50 @@ function _typeof(obj) {
         dynamic_scope = this;
       }
 
+      function type_check(fn) {
+        if (typeof fn !== 'function') {
+          var message;
+
+          if (code.car instanceof _Symbol) {
+            message = "Variable `" + code.car.name + "' is not a function";
+          } else {
+            message = "Expression `" + code.car.toString() + "' is not a function";
+          }
+
+          throw new Error(message);
+        }
+      }
+
+      var invoke = function invoke(fn) {
+        type_check(fn);
+        var args = evaluate(code.cdr.car, {
+          env: _this6,
+          dynamic_scope: dynamic_scope,
+          error: error
+        });
+        args = _this6.get('list->array')(args);
+
+        if (args.filter(function (a) {
+          return a instanceof Promise;
+        }).length) {
+          return Promise.all(args).then(function (args) {
+            return fn.apply(_this6, args);
+          });
+        } else {
+          return fn.apply(_this6, args);
+        }
+      };
+
       var fn = evaluate(code.car, {
         env: this,
         dynamic_scope: dynamic_scope,
         error: error
       });
 
-      if (typeof fn !== 'function') {
-        var message;
-
-        if (code.car instanceof _Symbol) {
-          message = "Variable `" + code.car.name + "' is not a function";
-        } else {
-          message = "Expression `" + code.car.toString() + "' is not a function";
-        }
-
-        throw new Error(message);
-      }
-
-      var args = evaluate(code.cdr.car, {
-        env: this,
-        dynamic_scope: dynamic_scope,
-        error: error
-      });
-      args = this.get('list->array')(args);
-
-      if (args.filter(function (a) {
-        return a instanceof Promise;
-      }).length) {
-        return Promise.all(args).then(function (args) {
-          return fn.apply(_this6, args);
-        });
+      if (fn instanceof Promise) {
+        return fn.then(invoke);
       } else {
-        return fn.apply(this, args);
+        return invoke(fn);
       }
     }),
     // ------------------------------------------------------------------

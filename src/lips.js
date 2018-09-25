@@ -988,7 +988,11 @@
             if (!ref) {
                 ref = this;
             }
-            ref.set(code.car, value);
+            if (value instanceof Promise) {
+                value.then(value => ref.set(code.car, value));
+            } else {
+                ref.set(code.car, value);
+            }
         }),
         // ------------------------------------------------------------------
         'set-car!': function(slot, value) {
@@ -1519,23 +1523,33 @@
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
-            var fn = evaluate(code.car, {env: this, dynamic_scope, error});
-            if (typeof fn !== 'function') {
-                var message;
-                if (code.car instanceof Symbol) {
-                    message = "Variable `" + code.car.name + "' is not a function";
-                } else {
-                    message = "Expression `" + code.car.toString() +
-                        "' is not a function";
+            function type_check(fn) {
+                if (typeof fn !== 'function') {
+                    var message;
+                    if (code.car instanceof Symbol) {
+                        message = "Variable `" + code.car.name + "' is not a function";
+                    } else {
+                        message = "Expression `" + code.car.toString() +
+                            "' is not a function";
+                    }
+                    throw new Error(message);
                 }
-                throw new Error(message);
             }
-            var args = evaluate(code.cdr.car, {env: this, dynamic_scope, error});
-            args = this.get('list->array')(args);
-            if (args.filter(a => a instanceof Promise).length) {
-                return Promise.all(args).then(args => fn.apply(this, args));
+            var invoke = fn => {
+                type_check(fn);
+                var args = evaluate(code.cdr.car, {env: this, dynamic_scope, error});
+                args = this.get('list->array')(args);
+                if (args.filter(a => a instanceof Promise).length) {
+                    return Promise.all(args).then(args => fn.apply(this, args));
+                } else {
+                    return fn.apply(this, args);
+                }
+            };
+            var fn = evaluate(code.car, {env: this, dynamic_scope, error});
+            if (fn instanceof Promise) {
+                return fn.then(invoke);
             } else {
-                return fn.apply(this, args);
+                return invoke(fn);
             }
         }),
         // ------------------------------------------------------------------
