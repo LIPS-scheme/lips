@@ -9,6 +9,7 @@
 * fix return value of if macro
 * fix defmacro
 * fix parsing expressions that have multiple special characters in a row
+* handle float calculations
 
 ## 0.5.4
 ### Bugs

@@ -195,7 +195,6 @@
                 var value = parse_argument(token);
                 if (special) {
                     // special without list like ,foo
-                    console.log(special_count);
                     while (special_count--) {
                         stack[stack.length - 1][1] = value;
                         value = stack.pop();
@@ -630,7 +629,36 @@
         return LNumber(value);
     };
     // ----------------------------------------------------------------------
+    LNumber.prototype.floatOp = function(op, n) {
+        var ops = {
+            '*': function(a, b) {
+                return a * b;
+            },
+            '+': function(a, b) {
+                return a + b;
+            },
+            '-': function(a, b) {
+                return a - b;
+            },
+            '/': function(a, b) {
+                return a / b;
+            },
+            '%': function(a, b) {
+                return a % b;
+            }
+        };
+        if (LNumber.isFloat(n) || (n instanceof LNumber && LNumber.isFloat(n.value)) ||
+            LNumber.isFloat(this.value))  {
+            var value = n instanceof LNumber ? n.valueOf() : n;
+            return ops[op](this.valueOf(), value);
+        }
+    };
+    // ----------------------------------------------------------------------
     LNumber.prototype.add = function(n) {
+        var ret = this.floatOp('+', n);
+        if (typeof ret !== 'undefined') {
+            return ret;
+        }
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
             n.value = this.value + n.value;
@@ -641,6 +669,10 @@
     };
     // ----------------------------------------------------------------------
     LNumber.prototype.sub = function(n) {
+        var ret = this.floatOp('-', n);
+        if (typeof ret !== 'undefined') {
+            return ret;
+        }
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
             n.value = this.value - n.value;
@@ -651,6 +683,10 @@
     };
     // ----------------------------------------------------------------------
     LNumber.prototype.mul = function(n) {
+        var ret = this.floatOp('*', n);
+        if (typeof ret !== 'undefined') {
+            return ret;
+        }
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
             n.value = this.value * n.value;
@@ -661,6 +697,10 @@
     };
     // ----------------------------------------------------------------------
     LNumber.prototype.div = function(n) {
+        var ret = this.floatOp('/', n);
+        if (typeof ret !== 'undefined') {
+            return ret;
+        }
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
             n.value = this.value / n.value;
@@ -671,6 +711,10 @@
     };
     // ----------------------------------------------------------------------
     LNumber.prototype.mod = function(n) {
+        var ret = this.floatOp('%', n);
+        if (typeof ret !== 'undefined') {
+            return ret;
+        }
         n = this.coerce(n);
         if (LNumber.isNative(n.value)) {
             n.value = this.value % n.value;
@@ -1237,7 +1281,6 @@
         // ------------------------------------------------------------------
         defmacro: new Macro('defmacro', function(macro, {dynamic_scope, error}) {
             if (macro.car.car instanceof Symbol) {
-                console.log(macro.cdr.car.toString());
                 var name = macro.car.car.name;
                 this.env[name] = new Macro(name, function(code) {
                     var env = new Environment({}, this, 'defmacro');

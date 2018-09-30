@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 30 Sep 2018 13:32:30 +0000
+ * build: Sun, 30 Sep 2018 13:58:50 +0000
  */
 (function () {
 'use strict';
@@ -1067,8 +1067,6 @@ function _typeof(obj) {
 
         if (special) {
           // special without list like ,foo
-          console.log(special_count);
-
           while (special_count--) {
             stack[stack.length - 1][1] = value;
             value = stack.pop();
@@ -1572,7 +1570,39 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
+  LNumber.prototype.floatOp = function (op, n) {
+    var ops = {
+      '*': function _(a, b) {
+        return a * b;
+      },
+      '+': function _(a, b) {
+        return a + b;
+      },
+      '-': function _(a, b) {
+        return a - b;
+      },
+      '/': function _(a, b) {
+        return a / b;
+      },
+      '%': function _(a, b) {
+        return a % b;
+      }
+    };
+
+    if (LNumber.isFloat(n) || n instanceof LNumber && LNumber.isFloat(n.value) || LNumber.isFloat(this.value)) {
+      var value = n instanceof LNumber ? n.valueOf() : n;
+      return ops[op](this.valueOf(), value);
+    }
+  }; // ----------------------------------------------------------------------
+
+
   LNumber.prototype.add = function (n) {
+    var ret = this.floatOp('+', n);
+
+    if (typeof ret !== 'undefined') {
+      return ret;
+    }
+
     n = this.coerce(n);
 
     if (LNumber.isNative(n.value)) {
@@ -1586,6 +1616,12 @@ function _typeof(obj) {
 
 
   LNumber.prototype.sub = function (n) {
+    var ret = this.floatOp('-', n);
+
+    if (typeof ret !== 'undefined') {
+      return ret;
+    }
+
     n = this.coerce(n);
 
     if (LNumber.isNative(n.value)) {
@@ -1599,6 +1635,12 @@ function _typeof(obj) {
 
 
   LNumber.prototype.mul = function (n) {
+    var ret = this.floatOp('*', n);
+
+    if (typeof ret !== 'undefined') {
+      return ret;
+    }
+
     n = this.coerce(n);
 
     if (LNumber.isNative(n.value)) {
@@ -1612,6 +1654,12 @@ function _typeof(obj) {
 
 
   LNumber.prototype.div = function (n) {
+    var ret = this.floatOp('/', n);
+
+    if (typeof ret !== 'undefined') {
+      return ret;
+    }
+
     n = this.coerce(n);
 
     if (LNumber.isNative(n.value)) {
@@ -1625,6 +1673,12 @@ function _typeof(obj) {
 
 
   LNumber.prototype.mod = function (n) {
+    var ret = this.floatOp('%', n);
+
+    if (typeof ret !== 'undefined') {
+      return ret;
+    }
+
     n = this.coerce(n);
 
     if (LNumber.isNative(n.value)) {
@@ -2400,7 +2454,6 @@ function _typeof(obj) {
           error = _ref12.error;
 
       if (macro.car.car instanceof _Symbol) {
-        console.log(macro.cdr.car.toString());
         var name = macro.car.car.name;
         this.env[name] = new Macro(name, function (code) {
           var env = new Environment({}, this, 'defmacro');
