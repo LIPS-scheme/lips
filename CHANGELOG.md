@@ -2,6 +2,8 @@
 ### Breaking
 * change api for evaluate to have object `{env, dynamic_scope, error}`
 * rename set to set!, set-cdr to set-cdr! and set-car to set-car!
+## Features
+* add bit operation functions
 ### Bugs
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions
