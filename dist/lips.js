@@ -6,10 +6,48 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 30 Sep 2018 16:25:59 +0000
+ * build: Sun, 30 Sep 2018 17:49:57 +0000
  */
 (function () {
 'use strict';
+
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+
+function _iterableToArrayLimit(arr, i) {
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+  var _e = undefined;
+
+  try {
+    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance");
+}
+
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+}
 
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -2656,12 +2694,24 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     append: function append(list, item) {
-      return this.get('append!')(list.clone(), item);
+      return list.clone().append([item]);
     },
     // ------------------------------------------------------------------
-    'append!': function append(list, item) {
-      return list.append(item);
-    },
+    'append!': new Macro('append!', function (code, _ref14) {
+      var dynamic_scope = _ref14.dynamic_scope,
+          error = _ref14.error;
+
+      if (dynamic_scope) {
+        dynamic_scope = this;
+      }
+
+      var value = evaluate(code.cdr.car, {
+        env: this,
+        dynamic_scope: dynamic_scope,
+        error: error
+      });
+      return this.get(code.car).append([value]);
+    }),
     // ------------------------------------------------------------------
     list: function list() {
       return Pair.fromArray([].slice.call(arguments));
@@ -2832,9 +2882,9 @@ function _typeof(obj) {
     apply: new Macro('apply', function (code) {
       var _this6 = this;
 
-      var _ref14 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref14.dynamic_scope,
-          error = _ref14.error;
+      var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref15.dynamic_scope,
+          error = _ref15.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3081,9 +3131,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': equal,
     // ------------------------------------------------------------------
-    or: new Macro('or', function (code, _ref15) {
-      var dynamic_scope = _ref15.dynamic_scope,
-          error = _ref15.error;
+    or: new Macro('or', function (code, _ref16) {
+      var dynamic_scope = _ref16.dynamic_scope,
+          error = _ref16.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -3131,9 +3181,9 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     and: new Macro('and', function (code) {
-      var _ref16 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref16.dynamic_scope,
-          error = _ref16.error;
+      var _ref17 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref17.dynamic_scope,
+          error = _ref17.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -3285,11 +3335,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref17 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref17.env,
-        dynamic_scope = _ref17.dynamic_scope,
-        _ref17$error = _ref17.error,
-        error = _ref17$error === void 0 ? function () {} : _ref17$error;
+    var _ref18 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref18.env,
+        dynamic_scope = _ref18.dynamic_scope,
+        _ref18$error = _ref18.error,
+        error = _ref18$error === void 0 ? function () {} : _ref18$error;
 
     try {
       if (dynamic_scope === true) {
@@ -3384,11 +3434,40 @@ function _typeof(obj) {
           }
         }
 
-        var promises = args.filter(function (arg) {
-          return arg instanceof Promise;
+        var promises = [];
+        args.forEach(function (arg) {
+          traverse(arg);
+
+          function traverse(node) {
+            if (node instanceof Promise) {
+              promises.push(node);
+            } else if (node instanceof Pair) {
+              traverse(node.car);
+              traverse(node.cdr);
+            }
+          }
         });
 
         if (promises.length) {
+          args = args.map(function (arg) {
+            function resolve(node) {
+              if (node instanceof Pair) {
+                var car = resolve(node.car);
+                var cdr = resolve(node.cdr);
+                return Promise.all([car, cdr]).then(function (_ref19) {
+                  var _ref20 = _slicedToArray(_ref19, 2),
+                      car = _ref20[0],
+                      cdr = _ref20[1];
+
+                  return new Pair(car, cdr);
+                });
+              } else {
+                return node;
+              }
+            }
+
+            return resolve(arg);
+          });
           return Promise.all(args).then(function (args) {
             return value.apply(dynamic_scope || env, args);
           });

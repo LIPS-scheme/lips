@@ -1468,12 +1468,16 @@
         },
         // ------------------------------------------------------------------
         append: function(list, item) {
-            return this.get('append!')(list.clone(), item);
+            return list.clone().append([item]);
         },
         // ------------------------------------------------------------------
-        'append!': function(list, item) {
-            return list.append(item);
-        },
+        'append!': new Macro('append!', function(code, {dynamic_scope, error}) {
+            if (dynamic_scope) {
+                dynamic_scope = this;
+            }
+            var value = evaluate(code.cdr.car, {env: this, dynamic_scope, error});
+            return this.get(code.car).append([value]);
+        }),
         // ------------------------------------------------------------------
         list: function() {
             return Pair.fromArray([].slice.call(arguments));
@@ -2035,8 +2039,33 @@
                         break;
                     }
                 }
-                var promises = args.filter((arg) => arg instanceof Promise);
+                var promises = [];
+                args.forEach(function(arg) {
+                    traverse(arg);
+                    function traverse(node) {
+                        if (node instanceof Promise) {
+                            promises.push(node);
+                        } else if (node instanceof Pair) {
+                            traverse(node.car);
+                            traverse(node.cdr);
+                        }
+                    }
+                });
                 if (promises.length) {
+                    args = args.map(function(arg) {
+                        function resolve(node) {
+                            if (node instanceof Pair) {
+                                var car = resolve(node.car);
+                                var cdr = resolve(node.cdr);
+                                return Promise.all([car, cdr]).then(([car, cdr]) => {
+                                    return new Pair(car, cdr);
+                                });
+                            } else {
+                                return node;
+                            }
+                        }
+                        return resolve(arg);
+                    });
                     return Promise.all(args).then((args) => {
                         return value.apply(dynamic_scope || env, args);
                     });

@@ -13,6 +13,7 @@
 * fix parsing expressions that have multiple special characters in a row
 * handle float calculations
 * throw exception when try to execute native non function value
+* fix resolving Promises when evaluating code
 
 ## 0.5.4
 ### Bugs
