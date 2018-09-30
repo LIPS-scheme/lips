@@ -6,6 +6,9 @@
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions
 * fix set! (change existing reference or create new if not existing in scope chain)
+* fix return value of if macro
+* fix defmacro
+* fix parsing expressions that have multiple special characters in a row
 
 ## 0.5.4
 ### Bugs

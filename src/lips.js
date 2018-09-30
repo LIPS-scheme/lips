@@ -114,6 +114,7 @@
         var first_value = false;
         var specials_stack = [];
         var single_list_specials = [];
+        var special_count = 0;
         function pop_join() {
             var top = stack[stack.length - 1];
             if (top instanceof Array && top[0] instanceof Symbol &&
@@ -142,6 +143,7 @@
         tokens.forEach(function(token) {
             var top = stack[stack.length - 1];
             if (special_tokens.indexOf(token) !== -1) {
+                special_count++;
                 special = token;
                 stack.push([specials[special]]);
                 if (!special) {
@@ -157,6 +159,7 @@
                 }
                 stack.push([]);
                 special = null;
+                special_count = 0;
             } else if (token === '.' && !first_value) {
                 stack[stack.length - 1] = Pair.fromArray(top);
             } else if (token === ')') {
@@ -192,8 +195,11 @@
                 var value = parse_argument(token);
                 if (special) {
                     // special without list like ,foo
-                    stack[stack.length - 1][1] = value;
-                    value = stack.pop();
+                    console.log(special_count);
+                    while (special_count--) {
+                        stack[stack.length - 1][1] = value;
+                        value = stack.pop();
+                    }
                     special = false;
                 }
                 top = stack[stack.length - 1];
@@ -1074,7 +1080,7 @@
                         return;
                     }
                     return true_value;
-                } else if (code.cdr.cdr.car instanceof Pair) {
+                } else {
                     var false_value = evaluate(code.cdr.cdr.car, {
                         env,
                         dynamic_scope,
@@ -1084,8 +1090,6 @@
                         return false;
                     }
                     return false_value;
-                } else {
-                    return false;
                 }
             };
             var cond = evaluate(code.car, {env, dynamic_scope, error});
@@ -1233,12 +1237,17 @@
         // ------------------------------------------------------------------
         defmacro: new Macro('defmacro', function(macro, {dynamic_scope, error}) {
             if (macro.car.car instanceof Symbol) {
-                this.env[macro.car.car.name] = new Macro(function(code) {
+                console.log(macro.cdr.car.toString());
+                var name = macro.car.car.name;
+                this.env[name] = new Macro(name, function(code) {
                     var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
                     var arg = code;
                     while (true) {
-                        if (name.car !== nil && arg.car !== nil) {
+                        if (name instanceof Symbol) {
+                            env.env[name.name] = arg;
+                            break;
+                        } else if (name.car !== nil && arg.car !== nil) {
                             env.env[name.car.name] = arg.car;
                         }
                         if (name.cdr === nil) {
@@ -1782,6 +1791,16 @@
                 })();
             });
         }),
+        // bit operations
+        '|': function(a, b) {
+            return a | b;
+        },
+        '&': function(a, b) {
+            return a & b;
+        },
+        '~': function(a) {
+            return ~a;
+        },
         not: function(value) {
             if (value === nil) {
                 return true;
@@ -2011,7 +2030,7 @@
     };
     // ----------------------------------------------------------------------
     function init() {
-        var lips_mime = 'text-x/lips';
+        var lips_mime = 'text/x-lips';
         if (window.document) {
             Array.from(document.querySelectorAll('script')).forEach((script) => {
                 var type = script.getAttribute('type');

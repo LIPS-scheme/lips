@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Tue, 25 Sep 2018 09:36:09 +0000
+ * build: Sun, 30 Sep 2018 13:32:30 +0000
  */
 (function () {
 'use strict';
@@ -976,6 +976,7 @@ function _typeof(obj) {
     var first_value = false;
     var specials_stack = [];
     var single_list_specials = [];
+    var special_count = 0;
 
     function pop_join() {
       var top = stack[stack.length - 1];
@@ -1003,6 +1004,7 @@ function _typeof(obj) {
       var top = stack[stack.length - 1];
 
       if (special_tokens.indexOf(token) !== -1) {
+        special_count++;
         special = token;
         stack.push([specials[special]]);
 
@@ -1022,6 +1024,7 @@ function _typeof(obj) {
 
         stack.push([]);
         special = null;
+        special_count = 0;
       } else if (token === '.' && !first_value) {
         stack[stack.length - 1] = Pair.fromArray(top);
       } else if (token === ')') {
@@ -1064,8 +1067,13 @@ function _typeof(obj) {
 
         if (special) {
           // special without list like ,foo
-          stack[stack.length - 1][1] = value;
-          value = stack.pop();
+          console.log(special_count);
+
+          while (special_count--) {
+            stack[stack.length - 1][1] = value;
+            value = stack.pop();
+          }
+
           special = false;
         }
 
@@ -2153,7 +2161,7 @@ function _typeof(obj) {
           }
 
           return true_value;
-        } else if (code.cdr.cdr.car instanceof Pair) {
+        } else {
           var false_value = evaluate(code.cdr.cdr.car, {
             env: env,
             dynamic_scope: dynamic_scope,
@@ -2165,8 +2173,6 @@ function _typeof(obj) {
           }
 
           return false_value;
-        } else {
-          return false;
         }
       };
 
@@ -2394,13 +2400,18 @@ function _typeof(obj) {
           error = _ref12.error;
 
       if (macro.car.car instanceof _Symbol) {
-        this.env[macro.car.car.name] = new Macro(function (code) {
+        console.log(macro.cdr.car.toString());
+        var name = macro.car.car.name;
+        this.env[name] = new Macro(name, function (code) {
           var env = new Environment({}, this, 'defmacro');
           var name = macro.car.cdr;
           var arg = code;
 
           while (true) {
-            if (name.car !== nil && arg.car !== nil) {
+            if (name instanceof _Symbol) {
+              env.env[name.name] = arg;
+              break;
+            } else if (name.car !== nil && arg.car !== nil) {
               env.env[name.car.name] = arg.car;
             }
 
@@ -3078,6 +3089,16 @@ function _typeof(obj) {
         })();
       });
     }),
+    // bit operations
+    '|': function _(a, b) {
+      return a | b;
+    },
+    '&': function _(a, b) {
+      return a & b;
+    },
+    '~': function _(a) {
+      return ~a;
+    },
     not: function not(value) {
       if (value === nil) {
         return true;
@@ -3379,7 +3400,7 @@ function _typeof(obj) {
 
 
   function init() {
-    var lips_mime = 'text-x/lips';
+    var lips_mime = 'text/x-lips';
 
     if (window.document) {
       Array.from(document.querySelectorAll('script')).forEach(function (script) {

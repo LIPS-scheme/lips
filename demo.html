@@ -19,9 +19,6 @@
          color: inherit;
          font-weight: normal !important;
      }
-     html, body {
-         height: 100%;
-     }
     </style>
   </head>
   <body></body>
@@ -79,15 +76,19 @@
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               exec(code, env, env).then(ret => {
-                   ret.forEach(ret => {
-                       if (ret !== undefined) {
-                           env.get('print').call(env, ret);
-                       }
+               try {
+                   exec(code, env, env).then(ret => {
+                       ret.forEach(ret => {
+                           if (ret !== undefined) {
+                               env.get('print').call(env, ret);
+                           }
+                       });
+                   }).catch(e => {
+                       term.exception(e);
                    });
-               }).catch(e => {
-                   term.error(e.message);
-               });
+               } catch (e) {
+                   term.exception(e);
+               }
            }
        }, {
            name: 'lisp',
