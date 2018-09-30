@@ -1,7 +1,7 @@
 /**@license
  * LIPS is Pretty Simple
  *
- * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
+ * Copyright (c) 2018 Jakub Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  */
@@ -20,6 +20,63 @@
         root.lips = factory(root, root.BN);
     }
 })(typeof window !== 'undefined' ? window : global, function(root, BN, undefined) {
+    /* eslint-disable */
+    if (!root.fetch) {
+        root.fetch = function(url, options) {
+            options = options || {};
+            return new Promise( (resolve, reject) => {
+                let request = new XMLHttpRequest();
+
+                request.open(options.method || 'get', url, true);
+
+                for (let i in options.headers) {
+                    request.setRequestHeader(i, options.headers[i]);
+                }
+
+                request.withCredentials = options.credentials=='include';
+
+                request.onload = () => {
+                    resolve(response());
+                };
+
+                request.onerror = reject;
+
+                request.send(options.body || null);
+
+                function response() {
+                    let keys = [],
+                        all = [],
+                        headers = {},
+                        header;
+
+                    request.getAllResponseHeaders().replace(/^(.*?):[^\S\n]*([\s\S]*?)$/gm, (m, key, value) => {
+                        keys.push(key = key.toLowerCase());
+                        all.push([key, value]);
+                        header = headers[key];
+                        headers[key] = header ? `${header},${value}` : value;
+                    });
+
+                    return {
+                        ok: (request.status/100|0) == 2,    // 200-299
+                        status: request.status,
+                        statusText: request.statusText,
+                        url: request.responseURL,
+                        clone: response,
+                        text: () => Promise.resolve(request.responseText),
+                        json: () => Promise.resolve(request.responseText).then(JSON.parse),
+                        blob: () => Promise.resolve(new Blob([request.response])),
+                        headers: {
+                            keys: () => keys,
+                            entries: () => all,
+                            get: n => headers[n.toLowerCase()],
+                            has: n => n.toLowerCase() in headers
+                        }
+                    };
+                }
+            });
+        };
+    }
+    /* eslint-enable */
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var int_re = /^[-+]?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -2088,7 +2145,12 @@
             Array.from(document.querySelectorAll('script')).forEach((script) => {
                 var type = script.getAttribute('type');
                 if (type === lips_mime) {
-                    exec(script.innerHTML);
+                    var src = script.getAttribute('src');
+                    if (src) {
+                        root.fetch(src).then(res => res.text()).then(exec);
+                    } else {
+                        exec(script.innerHTML);
+                    }
                 } else if (type === 'text-x/lisp') {
                     console.warn('Expecting ' + lips_mime + ' found ' + type);
                 }
