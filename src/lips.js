@@ -632,31 +632,6 @@
         return LNumber(value);
     };
     // ----------------------------------------------------------------------
-    LNumber.prototype.floatOp = function(op, n) {
-        var ops = {
-            '*': function(a, b) {
-                return a * b;
-            },
-            '+': function(a, b) {
-                return a + b;
-            },
-            '-': function(a, b) {
-                return a - b;
-            },
-            '/': function(a, b) {
-                return a / b;
-            },
-            '%': function(a, b) {
-                return a % b;
-            }
-        };
-        if (LNumber.isFloat(n) || (n instanceof LNumber && LNumber.isFloat(n.value)) ||
-            LNumber.isFloat(this.value))  {
-            var value = n instanceof LNumber ? n.valueOf() : n;
-            return LNumber(ops[op](this.valueOf(), value));
-        }
-    };
-    // ----------------------------------------------------------------------
     LNumber.prototype.op = function(op, n) {
         var ops = {
             '*': function(a, b) {
@@ -692,7 +667,7 @@
         };
         if (LNumber.isFloat(n) || (n instanceof LNumber &&
                                    (LNumber.isFloat(n.value) || n.float)) ||
-            (LNumber.isFloat(this.value) || this.float))  {
+            (LNumber.isFloat(this.value) || this.float)) {
             var value = n instanceof LNumber ? n.valueOf() : n;
             return LNumber(ops[op](this.valueOf(), value));
         }

@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 30 Sep 2018 15:05:11 +0000
+ * build: Sun, 30 Sep 2018 15:06:54 +0000
  */
 (function () {
 'use strict';
@@ -1570,32 +1570,6 @@ function _typeof(obj) {
     }
 
     return LNumber(value);
-  }; // ----------------------------------------------------------------------
-
-
-  LNumber.prototype.floatOp = function (op, n) {
-    var ops = {
-      '*': function _(a, b) {
-        return a * b;
-      },
-      '+': function _(a, b) {
-        return a + b;
-      },
-      '-': function _(a, b) {
-        return a - b;
-      },
-      '/': function _(a, b) {
-        return a / b;
-      },
-      '%': function _(a, b) {
-        return a % b;
-      }
-    };
-
-    if (LNumber.isFloat(n) || n instanceof LNumber && LNumber.isFloat(n.value) || LNumber.isFloat(this.value)) {
-      var value = n instanceof LNumber ? n.valueOf() : n;
-      return LNumber(ops[op](this.valueOf(), value));
-    }
   }; // ----------------------------------------------------------------------
 
 
