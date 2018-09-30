@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
  * Released under the MIT license
  *
- * build: Sun, 30 Sep 2018 15:06:54 +0000
+ * build: Sun, 30 Sep 2018 15:34:40 +0000
  */
 (function () {
 'use strict';
@@ -873,7 +873,8 @@ function _typeof(obj) {
 })(typeof window !== 'undefined' ? window : global, function (root, BN, undefined) {
   // parse_argument based on function from jQuery Terminal
   var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-  var float_re = /^[-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?$/; // ----------------------------------------------------------------------
+  var int_re = /^[-+]?[0-9]+([eE][-+]?[0-9]+)?$/;
+  var float_re = /^([-+]?((\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/; // ----------------------------------------------------------------------
 
   function parse_argument(arg) {
     function parse_string(string) {
@@ -900,8 +901,8 @@ function _typeof(obj) {
       return new RegExp(regex[1], regex[2]);
     } else if (arg.match(/['"]/)) {
       return parse_string(arg);
-    } else if (arg.match(/^-?[0-9]+$/)) {
-      return LNumber(parseInt(arg, 10));
+    } else if (arg.match(int_re)) {
+      return LNumber(parseFloat(arg));
     } else if (arg.match(float_re)) {
       return LNumber(parseFloat(arg), true);
     } else if (arg === 'nil') {
@@ -1484,7 +1485,7 @@ function _typeof(obj) {
     }
 
     if (typeof this !== 'undefined' && this.constructor !== LNumber || typeof this === 'undefined') {
-      return new LNumber(n, float);
+      return new LNumber(n, float === true ? true : undefined);
     }
 
     if (!LNumber.isNumber(n)) {
@@ -3193,6 +3194,20 @@ function _typeof(obj) {
     global_env.set('global', global);
   } else if (typeof window !== 'undefined') {
     global_env.set('window', window);
+  }
+
+  function type(value) {
+    if (typeof value === "string") {
+      return "string";
+    } else if (value instanceof LNumber) {
+      return "number";
+    } else if (value instanceof RegExp) {
+      return "regex";
+    } else if (typeof value === 'boolean') {
+      return 'boolean';
+    } else {
+      return 'unknown type';
+    }
   } // ----------------------------------------------------------------------
 
 
@@ -3315,6 +3330,9 @@ function _typeof(obj) {
         }
 
         return value;
+      } else if (code instanceof Pair) {
+        value = first.toString();
+        throw new Error("".concat(type(first), " ").concat(value, " is not a function"));
       } else {
         return code;
       }
