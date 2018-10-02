@@ -78,7 +78,7 @@
     }
     /* eslint-enable */
     // parse_argument based on function from jQuery Terminal
-    var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
+    var re_re = /^\/((?:\\\/|[^\/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var int_re = /^[-+]?[0-9]+([eE][-+]?[0-9]+)?$/;
     var float_re = /^([-+]?((\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
     // ----------------------------------------------------------------------
@@ -115,7 +115,7 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
+    var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
     /* eslint-enable */
     // ----------------------------------------------------------------------
     function tokenize(str, extra) {
@@ -660,6 +660,17 @@
     LNumber.prototype.toString = function() {
         return this.value.toString();
     };
+    // ----------------------------------------------------------------------
+    LNumber.convert = function(fn) {
+        return function() {
+            if (this.float || LNumber.isFloat(this.value)) {
+                return LNumber(Math[fn](this.value));
+            }
+        };
+    };
+    ['floor', 'ceil', 'round'].forEach(fn => {
+        LNumber.prototype[fn] = LNumber.convert(fn);
+    });
     // ----------------------------------------------------------------------
     LNumber.prototype.valueOf = function() {
         if (LNumber.isNative(this.value)) {
@@ -1909,7 +1920,14 @@
             return obj[name](...args);
         }
     }, undefined, 'global');
-
+    ['floor', 'round', 'ceil'].forEach(fn => {
+        global_env.set(fn, function(value) {
+            if (value instanceof LNumber) {
+                return value[fn]();
+            }
+            throw new Error(`${typeof value} ${value.toString()} is not a number`);
+        });
+    });
     // ----------------------------------------------------------------------
     // source: https://stackoverflow.com/a/4331218/387194
     function allPossibleCases(arr) {

@@ -4,6 +4,7 @@
 * rename set to set!, set-cdr to set-cdr! and set-car to set-car!
 ## Features
 * add bit operation functions
+* add float, round and ceil functions
 ### Bugs
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions
@@ -14,6 +15,7 @@
 * handle float calculations
 * throw exception when try to execute native non function value
 * fix resolving Promises when evaluating code
+* don't allow regex that start with space (so it work when you have two divisions in one S-Expression)
 
 ## 0.5.4
 ### Bugs

@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 30 Sep 2018 17:49:57 +0000
+ * build: Tue, 02 Oct 2018 07:26:32 +0000
  */
 (function () {
 'use strict';
@@ -983,7 +983,7 @@ function _typeof(obj) {
   // parse_argument based on function from jQuery Terminal
 
 
-  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
+  var re_re = /^\/((?:\\\/|[^\/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
   var int_re = /^[-+]?[0-9]+([eE][-+]?[0-9]+)?$/;
   var float_re = /^([-+]?((\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/; // ----------------------------------------------------------------------
 
@@ -1026,7 +1026,7 @@ function _typeof(obj) {
   /* eslint-disable */
 
 
-  var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
+  var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|\.|,@|,|`|[^(\s)]+)/gi;
   /* eslint-enable */
   // ----------------------------------------------------------------------
 
@@ -1651,6 +1651,18 @@ function _typeof(obj) {
     return this.value.toString();
   }; // ----------------------------------------------------------------------
 
+
+  LNumber.convert = function (fn) {
+    return function () {
+      if (this.float || LNumber.isFloat(this.value)) {
+        return LNumber(Math[fn](this.value));
+      }
+    };
+  };
+
+  ['floor', 'ceil', 'round'].forEach(function (fn) {
+    LNumber.prototype[fn] = LNumber.convert(fn);
+  }); // ----------------------------------------------------------------------
 
   LNumber.prototype.valueOf = function () {
     if (LNumber.isNative(this.value)) {
@@ -3260,7 +3272,16 @@ function _typeof(obj) {
 
       return obj[name].apply(obj, args);
     }
-  }, undefined, 'global'); // ----------------------------------------------------------------------
+  }, undefined, 'global');
+  ['floor', 'round', 'ceil'].forEach(function (fn) {
+    global_env.set(fn, function (value) {
+      if (value instanceof LNumber) {
+        return value[fn]();
+      }
+
+      throw new Error("".concat(_typeof(value), " ").concat(value.toString(), " is not a number"));
+    });
+  }); // ----------------------------------------------------------------------
   // source: https://stackoverflow.com/a/4331218/387194
 
   function allPossibleCases(arr) {
