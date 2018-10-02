@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Tue, 02 Oct 2018 07:26:32 +0000
+ * build: Tue, 02 Oct 2018 07:39:53 +0000
  */
 (function () {
 'use strict';
@@ -983,7 +983,7 @@ function _typeof(obj) {
   // parse_argument based on function from jQuery Terminal
 
 
-  var re_re = /^\/((?:\\\/|[^\/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
+  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
   var int_re = /^[-+]?[0-9]+([eE][-+]?[0-9]+)?$/;
   var float_re = /^([-+]?((\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/; // ----------------------------------------------------------------------
 
