@@ -1,4 +1,4 @@
-## 0.5.5
+## 0.6.0
 ### Breaking
 * change api for evaluate to have object `{env, dynamic_scope, error}`
 * rename set to set!, set-cdr to set-cdr! and set-car to set-car!
@@ -16,6 +16,7 @@
 * throw exception when try to execute native non function value
 * fix resolving Promises when evaluating code
 * don't allow regex that start with space (so it work when you have two divisions in one S-Expression)
+* fix parsing float numbers that start with dot
 
 ## 0.5.4
 ### Bugs
