@@ -661,15 +661,14 @@
         return this.value.toString();
     };
     // ----------------------------------------------------------------------
-    LNumber.convert = function(fn) {
-        return function() {
+    ['floor', 'ceil', 'round'].forEach(fn => {
+        LNumber.prototype[fn] = function() {
             if (this.float || LNumber.isFloat(this.value)) {
                 return LNumber(Math[fn](this.value));
+            } else {
+                return LNumber(this.value);
             }
         };
-    };
-    ['floor', 'ceil', 'round'].forEach(fn => {
-        LNumber.prototype[fn] = LNumber.convert(fn);
     });
     // ----------------------------------------------------------------------
     LNumber.prototype.valueOf = function() {

@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Tue, 02 Oct 2018 07:39:53 +0000
+ * build: Wed, 03 Oct 2018 16:58:55 +0000
  */
 (function () {
 'use strict';
@@ -1652,16 +1652,14 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
-  LNumber.convert = function (fn) {
-    return function () {
+  ['floor', 'ceil', 'round'].forEach(function (fn) {
+    LNumber.prototype[fn] = function () {
       if (this.float || LNumber.isFloat(this.value)) {
         return LNumber(Math[fn](this.value));
+      } else {
+        return LNumber(this.value);
       }
     };
-  };
-
-  ['floor', 'ceil', 'round'].forEach(function (fn) {
-    LNumber.prototype[fn] = LNumber.convert(fn);
   }); // ----------------------------------------------------------------------
 
   LNumber.prototype.valueOf = function () {
