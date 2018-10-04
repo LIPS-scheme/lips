@@ -257,6 +257,7 @@
                         stack[stack.length - 1][1] = value;
                         value = stack.pop();
                     }
+                    special_count = 0;
                     special = false;
                 }
                 top = stack[stack.length - 1];
@@ -1151,7 +1152,7 @@
                     dynamic_scope,
                     error
                 });
-                if (cond) {
+                if (cond && !isEmptyList(cond)) {
                     result = await evaluate(begin, {
                         env: self,
                         dynamic_scope,

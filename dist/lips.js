@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Wed, 03 Oct 2018 19:45:27 +0000
+ * build: Thu, 04 Oct 2018 21:00:00 +0000
  */
 (function () {
 'use strict';
@@ -1184,6 +1184,7 @@ function _typeof(obj) {
             value = stack.pop();
           }
 
+          special_count = 0;
           special = false;
         }
 
@@ -1215,7 +1216,7 @@ function _typeof(obj) {
 
     if (stack.length) {
       console.log({
-        end: stack.slice()
+        end: Dry.stringify(stack)
       });
       throw new Error('Unbalanced parenthesis 2');
     }
@@ -2241,7 +2242,7 @@ function _typeof(obj) {
               case 7:
                 cond = _context.sent;
 
-                if (!cond) {
+                if (!(cond && !isEmptyList(cond))) {
                   _context.next = 14;
                   break;
                 }
