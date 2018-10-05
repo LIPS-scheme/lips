@@ -115,46 +115,27 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var string_re = /("(?:\\[\S\s]|[^"])*")/g;
-    var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.|,@|,|`|[^(\s)]+)/gi;
+    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
+    var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.|,@|,|`|[^(\s)]+)/gim;
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function tokenize(str, extra) {
-        if (extra) {
-            return tokens(str);
-        } else {
-            return tokens(str).map(function(token) {
-                return token.token.trim();
-            }).filter(function(token) {
-                return token && !token.match(/^;/);
-            });
-        }
-    }
-    // ----------------------------------------------------------------------
-    function tokens(str) {
-        var count = 0;
-        return str.split(string_re).filter(Boolean).reduce(function(lines, item) {
-            if (item.match(string_re)) {
-                return lines.concat([item]);
+    function tokenize(str) {
+        var parts = str.split(pre_parse_re).filter(Boolean);
+        return parts.reduce(function(list, item) {
+            if (item.match(pre_parse_re)) {
+                if (!item.match(/^;/)) {
+                    return list.concat([item.trim()]);
+                }
+                return list;
             }
-            return lines.concat(item.split('\n'));
-        }, []).map(function(line, i) {
-            var col = 0;
-            // correction for newline characters
-            count += i === 0 ? 0 : 1;
-            return line.split(tokens_re).filter(Boolean).map(function(token) {
-                var result = {
-                    col,
-                    line: i,
-                    token,
-                    offset: count
-                };
-                col += token.length;
-                count += token.length;
-                return result;
+            var items = [];
+            item.trim().split('\n').forEach(function(line) {
+                var tokens = line.trim().split(tokens_re).map(function(item) {
+                    return item.trim();
+                }).filter(Boolean);
+                items = items.concat(tokens);
             });
-        }).reduce(function(arr, tokens) {
-            return arr.concat(tokens);
+            return list.concat(items);
         }, []);
     }
     // ----------------------------------------------------------------------
