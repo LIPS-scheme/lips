@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 05 Oct 2018 08:11:16 +0000
+ * build: Fri, 05 Oct 2018 09:14:59 +0000
  */
 (function () {
 'use strict';
@@ -3354,12 +3354,68 @@ function _typeof(obj) {
     } else {
       return 'unknown type';
     }
-  }
+  } // ----------------------------------------------------------------------
+  // :; wrap tree of Promises with single Promise or return argument as is
+  // :: if tree have no Promises
+  // ----------------------------------------------------------------------
 
-  function get_function_args(rest, _ref18) {
-    var env = _ref18.env,
-        dynamic_scope = _ref18.dynamic_scope,
-        error = _ref18.error;
+
+  function maybe_promise(arg) {
+    var promises = [];
+
+    if (arg instanceof Array) {
+      arg.forEach(traverse);
+
+      if (promises.length) {
+        return Promise.all(arg.map(resolve));
+      }
+    } else {
+      traverse(arg);
+
+      if (promises.length) {
+        return resolve(arg);
+      }
+    }
+
+    return arg;
+
+    function traverse(node) {
+      if (node instanceof Promise) {
+        promises.push(node);
+      } else if (node instanceof Pair) {
+        traverse(node.car);
+        traverse(node.cdr);
+      }
+    }
+
+    function resolve(node) {
+      if (node instanceof Pair) {
+        var car = resolve(node.car);
+        var cdr = resolve(node.cdr);
+        return Promise.all([car, cdr]).then(function (_ref18) {
+          var _ref19 = _slicedToArray(_ref18, 2),
+              car = _ref19[0],
+              cdr = _ref19[1];
+
+          var pair = new Pair(car, cdr);
+
+          if (node.data) {
+            quote(pair);
+          }
+
+          return pair;
+        });
+      } else {
+        return node;
+      }
+    }
+  } // ----------------------------------------------------------------------
+
+
+  function get_function_args(rest, _ref20) {
+    var env = _ref20.env,
+        dynamic_scope = _ref20.dynamic_scope,
+        error = _ref20.error;
     var args = [];
     var node = rest;
 
@@ -3376,44 +3432,7 @@ function _typeof(obj) {
       }
     }
 
-    var promises = [];
-    args.forEach(function (arg) {
-      traverse(arg);
-
-      function traverse(node) {
-        if (node instanceof Promise) {
-          promises.push(node);
-        } else if (node instanceof Pair) {
-          traverse(node.car);
-          traverse(node.cdr);
-        }
-      }
-    });
-
-    if (promises.length) {
-      args = args.map(function (arg) {
-        function resolve(node) {
-          if (node instanceof Pair) {
-            var car = resolve(node.car);
-            var cdr = resolve(node.cdr);
-            return Promise.all([car, cdr]).then(function (_ref19) {
-              var _ref20 = _slicedToArray(_ref19, 2),
-                  car = _ref20[0],
-                  cdr = _ref20[1];
-
-              return new Pair(car, cdr);
-            });
-          } else {
-            return node;
-          }
-        }
-
-        return resolve(arg);
-      });
-      return Promise.all(args);
-    }
-
-    return args;
+    return maybe_promise(args);
   } // ----------------------------------------------------------------------
 
 
@@ -3433,6 +3452,11 @@ function _typeof(obj) {
         env = env || global_env;
       }
 
+      var eval_args = {
+        env: env,
+        dynamic_scope: dynamic_scope,
+        error: error
+      };
       var value;
 
       if (typeof code === 'undefined') {
@@ -3443,19 +3467,11 @@ function _typeof(obj) {
       var rest = code.cdr;
 
       if (first instanceof Pair) {
-        value = evaluate(first, {
-          env: env,
-          dynamic_scope: dynamic_scope,
-          error: error
-        });
+        value = maybe_promise(evaluate(first, eval_args));
 
         if (value instanceof Promise) {
           return value.then(function (value) {
-            return evaluate(new Pair(value, code.cdr), {
-              env: env,
-              dynamic_scope: dynamic_scope,
-              error: error
-            });
+            return evaluate(new Pair(value, code.cdr), eval_args);
           });
         } else if (typeof value !== 'function') {
           throw new Error(env.get('string')(value) + ' is not a function');
@@ -3466,11 +3482,11 @@ function _typeof(obj) {
         value = env.get(first);
 
         if (value instanceof Macro) {
-          value = value.invoke(first, rest, {
+          value = maybe_promise(value.invoke(first, rest, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
-          });
+          }));
 
           if (value && value.data) {
             return value;
@@ -3480,19 +3496,11 @@ function _typeof(obj) {
                 return value;
               }
 
-              return evaluate(value, {
-                env: env,
-                dynamic_scope: dynamic_scope,
-                error: error
-              });
+              return evaluate(value, eval_args);
             });
           }
 
-          return evaluate(value, {
-            env: env,
-            dynamic_scope: dynamic_scope,
-            error: error
-          });
+          return evaluate(value, eval_args);
         } else if (typeof value !== 'function') {
           throw new Error('Unknown function `' + first.name + '\'');
         }
@@ -3501,11 +3509,7 @@ function _typeof(obj) {
       }
 
       if (typeof value === 'function') {
-        var args = get_function_args(rest, {
-          env: env,
-          dynamic_scope: dynamic_scope,
-          error: error
-        });
+        var args = get_function_args(rest, eval_args);
 
         if (args instanceof Promise) {
           return args.then(function (args) {

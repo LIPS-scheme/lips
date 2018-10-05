@@ -1995,6 +1995,49 @@
             return 'unknown type';
         }
     }
+    // ----------------------------------------------------------------------
+    // :; wrap tree of Promises with single Promise or return argument as is
+    // :: if tree have no Promises
+    // ----------------------------------------------------------------------
+    function maybe_promise(arg) {
+        var promises = [];
+        if (arg instanceof Array) {
+            arg.forEach(traverse);
+            if (promises.length) {
+                return Promise.all(arg.map(resolve));
+            }
+        } else {
+            traverse(arg);
+            if (promises.length) {
+                return resolve(arg);
+            }
+        }
+        return arg;
+        function traverse(node) {
+            if (node instanceof Promise) {
+                promises.push(node);
+            } else if (node instanceof Pair) {
+                traverse(node.car);
+                traverse(node.cdr);
+            }
+        }
+        function resolve(node) {
+            if (node instanceof Pair) {
+                var car = resolve(node.car);
+                var cdr = resolve(node.cdr);
+                return Promise.all([car, cdr]).then(([car, cdr]) => {
+                    var pair = new Pair(car, cdr);
+                    if (node.data) {
+                        quote(pair);
+                    }
+                    return pair;
+                });
+            } else {
+                return node;
+            }
+        }
+    }
+    // ----------------------------------------------------------------------
     function get_function_args(rest, {env, dynamic_scope, error}) {
         var args = [];
         var node = rest;
@@ -2006,36 +2049,7 @@
                 break;
             }
         }
-        var promises = [];
-        args.forEach(function(arg) {
-            traverse(arg);
-            function traverse(node) {
-                if (node instanceof Promise) {
-                    promises.push(node);
-                } else if (node instanceof Pair) {
-                    traverse(node.car);
-                    traverse(node.cdr);
-                }
-            }
-        });
-        if (promises.length) {
-            args = args.map(function(arg) {
-                function resolve(node) {
-                    if (node instanceof Pair) {
-                        var car = resolve(node.car);
-                        var cdr = resolve(node.cdr);
-                        return Promise.all([car, cdr]).then(([car, cdr]) => {
-                            return new Pair(car, cdr);
-                        });
-                    } else {
-                        return node;
-                    }
-                }
-                return resolve(arg);
-            });
-            return Promise.all(args);
-        }
-        return args;
+        return maybe_promise(args);
     }
     // ----------------------------------------------------------------------
     function evaluate(code, {env, dynamic_scope, error = () => {}} = {}) {
@@ -2047,6 +2061,7 @@
             } else {
                 env = env || global_env;
             }
+            var eval_args = {env, dynamic_scope, error};
             var value;
             if (typeof code === 'undefined') {
                 return;
@@ -2054,14 +2069,10 @@
             var first = code.car;
             var rest = code.cdr;
             if (first instanceof Pair) {
-                value = evaluate(first, {env, dynamic_scope, error});
+                value = maybe_promise(evaluate(first, eval_args));
                 if (value instanceof Promise) {
                     return value.then((value) => {
-                        return evaluate(new Pair(value, code.cdr), {
-                            env,
-                            dynamic_scope,
-                            error
-                        });
+                        return evaluate(new Pair(value, code.cdr), eval_args);
                     });
                 } else if (typeof value !== 'function') {
                     throw new Error(
@@ -2072,7 +2083,11 @@
             if (first instanceof Symbol) {
                 value = env.get(first);
                 if (value instanceof Macro) {
-                    value = value.invoke(first, rest, {env, dynamic_scope, error});
+                    value = maybe_promise(value.invoke(first, rest, {
+                        env,
+                        dynamic_scope,
+                        error
+                    }));
                     if (value && value.data) {
                         return value;
                     } else if (value instanceof Promise) {
@@ -2080,10 +2095,10 @@
                             if (value && value.data) {
                                 return value;
                             }
-                            return evaluate(value, {env, dynamic_scope, error});
+                            return evaluate(value, eval_args);
                         });
                     }
-                    return evaluate(value, {env, dynamic_scope, error});
+                    return evaluate(value, eval_args);
                 } else if (typeof value !== 'function') {
                     throw new Error('Unknown function `' + first.name + '\'');
                 }
@@ -2091,7 +2106,7 @@
                 value = first;
             }
             if (typeof value === 'function') {
-                var args = get_function_args(rest, {env, dynamic_scope, error});
+                var args = get_function_args(rest, eval_args);
                 if (args instanceof Promise) {
                     return args.then((args) => {
                         return value.apply(dynamic_scope || env, args);
