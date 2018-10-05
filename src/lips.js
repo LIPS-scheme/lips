@@ -944,14 +944,21 @@
     // :: Quote funtion used to pause evaluation from Macro
     // ----------------------------------------------------------------------
     function quote(value) {
-        value.data = true;
+        if (value instanceof Pair) {
+            value.data = true;
+        }
         return value;
     }
-    function unquote(value, count) {
-        value.unquote = true;
-        value.count = count;
-        return value;
+    // ----------------------------------------------------------------------
+    // :: Unquote is used for multiple backticks and unquote
+    // ----------------------------------------------------------------------
+    function Unquote(value, count) {
+        this.value = value;
+        this.count = count;
     }
+    Unquote.prototype.toString = function() {
+        return '<#unquote[' + this.count + '] ' + this.value + '>';
+    };
     // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
@@ -1412,19 +1419,19 @@
                         if (parent === node) {
                             if (pair.cdr.cdr !== nil) {
                                 return new Pair(
-                                    unquote(pair.cdr.car, unquote_count),
+                                    new Unquote(pair.cdr.car, unquote_count),
                                     pair.cdr.cdr
                                 );
                             } else {
-                                return unquote(pair.cdr.car, unquote_count);
+                                return new Unquote(pair.cdr.car, unquote_count);
                             }
                         } else if (parent.cdr.cdr !== nil) {
                             parent.car.cdr = new Pair(
-                                unquote(node, unquote_count),
+                                new Unquote(node, unquote_count),
                                 parent.cdr === nil ? nil : parent.cdr.cdr
                             );
                         } else {
-                            parent.car.cdr = unquote(node, unquote_count);
+                            parent.car.cdr = new Unquote(node, unquote_count);
                         }
                         return head.car;
                     }
@@ -1441,17 +1448,14 @@
                 return pair;
             }
             function unquoting(pair) {
-                if (pair && typeof pair === 'object' && pair.unquote) {
-                    var count = pair.count;
-                    delete pair.count;
-                    delete pair.data;
-                    if (max_unquote === count) {
-                        return evaluate(pair, {env: self});
+                if (pair instanceof Unquote) {
+                    if (max_unquote === pair.count) {
+                        return evaluate(pair.value, {env: self});
                     } else {
                         return new Pair(
                             new Symbol('unquote'),
                             new Pair(
-                                unquoting(pair),
+                                unquoting(pair.value),
                                 nil
                             )
                         );
@@ -1459,11 +1463,11 @@
                 }
                 if (pair instanceof Pair) {
                     var car = pair.car;
-                    if (car && car.unquote || car) {
+                    if (car instanceof Pair || car instanceof Unquote) {
                         car = unquoting(car);
                     }
                     var cdr = pair.cdr;
-                    if (cdr && cdr.unquote || cdr) {
+                    if (cdr instanceof Pair || cdr instanceof Unquote) {
                         cdr = unquoting(cdr);
                     }
                     return new Pair(car, cdr);
@@ -1473,7 +1477,7 @@
             return quote(unquoting(recur(arg.car)));
         }),
         // ------------------------------------------------------------------
-        clone: function(lilst) {
+        clone: function(list) {
             return list.clone();
         },
         // ------------------------------------------------------------------
@@ -1991,6 +1995,48 @@
             return 'unknown type';
         }
     }
+    function get_function_args(rest, {env, dynamic_scope, error}) {
+        var args = [];
+        var node = rest;
+        while (true) {
+            if (node instanceof Pair) {
+                args.push(evaluate(node.car, {env, dynamic_scope, error}));
+                node = node.cdr;
+            } else {
+                break;
+            }
+        }
+        var promises = [];
+        args.forEach(function(arg) {
+            traverse(arg);
+            function traverse(node) {
+                if (node instanceof Promise) {
+                    promises.push(node);
+                } else if (node instanceof Pair) {
+                    traverse(node.car);
+                    traverse(node.cdr);
+                }
+            }
+        });
+        if (promises.length) {
+            args = args.map(function(arg) {
+                function resolve(node) {
+                    if (node instanceof Pair) {
+                        var car = resolve(node.car);
+                        var cdr = resolve(node.cdr);
+                        return Promise.all([car, cdr]).then(([car, cdr]) => {
+                            return new Pair(car, cdr);
+                        });
+                    } else {
+                        return node;
+                    }
+                }
+                return resolve(arg);
+            });
+            return Promise.all(args);
+        }
+        return args;
+    }
     // ----------------------------------------------------------------------
     function evaluate(code, {env, dynamic_scope, error = () => {}} = {}) {
         try {
@@ -2045,44 +2091,9 @@
                 value = first;
             }
             if (typeof value === 'function') {
-                var args = [];
-                var node = rest;
-                while (true) {
-                    if (node instanceof Pair) {
-                        args.push(evaluate(node.car, {env, dynamic_scope, error}));
-                        node = node.cdr;
-                    } else {
-                        break;
-                    }
-                }
-                var promises = [];
-                args.forEach(function(arg) {
-                    traverse(arg);
-                    function traverse(node) {
-                        if (node instanceof Promise) {
-                            promises.push(node);
-                        } else if (node instanceof Pair) {
-                            traverse(node.car);
-                            traverse(node.cdr);
-                        }
-                    }
-                });
-                if (promises.length) {
-                    args = args.map(function(arg) {
-                        function resolve(node) {
-                            if (node instanceof Pair) {
-                                var car = resolve(node.car);
-                                var cdr = resolve(node.cdr);
-                                return Promise.all([car, cdr]).then(([car, cdr]) => {
-                                    return new Pair(car, cdr);
-                                });
-                            } else {
-                                return node;
-                            }
-                        }
-                        return resolve(arg);
-                    });
-                    return Promise.all(args).then((args) => {
+                var args = get_function_args(rest, {env, dynamic_scope, error});
+                if (args instanceof Promise) {
+                    return args.then((args) => {
                         return value.apply(dynamic_scope || env, args);
                     });
                 }

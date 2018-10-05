@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 05 Oct 2018 07:25:42 +0000
+ * build: Fri, 05 Oct 2018 08:07:59 +0000
  */
 (function () {
 'use strict';
@@ -1978,15 +1978,24 @@ function _typeof(obj) {
 
 
   function quote(value) {
-    value.data = true;
-    return value;
-  }
+    if (value instanceof Pair) {
+      value.data = true;
+    }
 
-  function unquote(value, count) {
-    value.unquote = true;
-    value.count = count;
     return value;
   } // ----------------------------------------------------------------------
+  // :: Unquote is used for multiple backticks and unquote
+  // ----------------------------------------------------------------------
+
+
+  function Unquote(value, count) {
+    this.value = value;
+    this.count = count;
+  }
+
+  Unquote.prototype.toString = function () {
+    return '<#unquote[' + this.count + '] ' + this.value + '>';
+  }; // ----------------------------------------------------------------------
   // :: function that return macro for let and let*
   // ----------------------------------------------------------------------
 
@@ -2631,14 +2640,14 @@ function _typeof(obj) {
 
             if (parent === node) {
               if (pair.cdr.cdr !== nil) {
-                return new Pair(unquote(pair.cdr.car, unquote_count), pair.cdr.cdr);
+                return new Pair(new Unquote(pair.cdr.car, unquote_count), pair.cdr.cdr);
               } else {
-                return unquote(pair.cdr.car, unquote_count);
+                return new Unquote(pair.cdr.car, unquote_count);
               }
             } else if (parent.cdr.cdr !== nil) {
-              parent.car.cdr = new Pair(unquote(node, unquote_count), parent.cdr === nil ? nil : parent.cdr.cdr);
+              parent.car.cdr = new Pair(new Unquote(node, unquote_count), parent.cdr === nil ? nil : parent.cdr.cdr);
             } else {
-              parent.car.cdr = unquote(node, unquote_count);
+              parent.car.cdr = new Unquote(node, unquote_count);
             }
 
             return head.car;
@@ -2663,30 +2672,26 @@ function _typeof(obj) {
       }
 
       function unquoting(pair) {
-        if (pair && _typeof(pair) === 'object' && pair.unquote) {
-          var count = pair.count;
-          delete pair.count;
-          delete pair.data;
-
-          if (max_unquote === count) {
-            return evaluate(pair, {
+        if (pair instanceof Unquote) {
+          if (max_unquote === pair.count) {
+            return evaluate(pair.value, {
               env: self
             });
           } else {
-            return new Pair(new _Symbol('unquote'), new Pair(unquoting(pair), nil));
+            return new Pair(new _Symbol('unquote'), new Pair(unquoting(pair.value), nil));
           }
         }
 
         if (pair instanceof Pair) {
           var car = pair.car;
 
-          if (car && car.unquote || car) {
+          if (car instanceof Pair || car instanceof Unquote) {
             car = unquoting(car);
           }
 
           var cdr = pair.cdr;
 
-          if (cdr && cdr.unquote || cdr) {
+          if (cdr instanceof Pair || cdr instanceof Unquote) {
             cdr = unquoting(cdr);
           }
 
@@ -2699,7 +2704,7 @@ function _typeof(obj) {
       return quote(unquoting(recur(arg.car)));
     }),
     // ------------------------------------------------------------------
-    clone: function clone(lilst) {
+    clone: function clone(list) {
       return list.clone();
     },
     // ------------------------------------------------------------------
@@ -3349,15 +3354,75 @@ function _typeof(obj) {
     } else {
       return 'unknown type';
     }
+  }
+
+  function get_function_args(rest, _ref18) {
+    var env = _ref18.env,
+        dynamic_scope = _ref18.dynamic_scope,
+        error = _ref18.error;
+    var args = [];
+    var node = rest;
+
+    while (true) {
+      if (node instanceof Pair) {
+        args.push(evaluate(node.car, {
+          env: env,
+          dynamic_scope: dynamic_scope,
+          error: error
+        }));
+        node = node.cdr;
+      } else {
+        break;
+      }
+    }
+
+    var promises = [];
+    args.forEach(function (arg) {
+      traverse(arg);
+
+      function traverse(node) {
+        if (node instanceof Promise) {
+          promises.push(node);
+        } else if (node instanceof Pair) {
+          traverse(node.car);
+          traverse(node.cdr);
+        }
+      }
+    });
+
+    if (promises.length) {
+      args = args.map(function (arg) {
+        function resolve(node) {
+          if (node instanceof Pair) {
+            var car = resolve(node.car);
+            var cdr = resolve(node.cdr);
+            return Promise.all([car, cdr]).then(function (_ref19) {
+              var _ref20 = _slicedToArray(_ref19, 2),
+                  car = _ref20[0],
+                  cdr = _ref20[1];
+
+              return new Pair(car, cdr);
+            });
+          } else {
+            return node;
+          }
+        }
+
+        return resolve(arg);
+      });
+      return Promise.all(args);
+    }
+
+    return args;
   } // ----------------------------------------------------------------------
 
 
   function evaluate(code) {
-    var _ref18 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref18.env,
-        dynamic_scope = _ref18.dynamic_scope,
-        _ref18$error = _ref18.error,
-        error = _ref18$error === void 0 ? function () {} : _ref18$error;
+    var _ref21 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref21.env,
+        dynamic_scope = _ref21.dynamic_scope,
+        _ref21$error = _ref21.error,
+        error = _ref21$error === void 0 ? function () {} : _ref21$error;
 
     try {
       if (dynamic_scope === true) {
@@ -3436,57 +3501,14 @@ function _typeof(obj) {
       }
 
       if (typeof value === 'function') {
-        var args = [];
-        var node = rest;
-
-        while (true) {
-          if (node instanceof Pair) {
-            args.push(evaluate(node.car, {
-              env: env,
-              dynamic_scope: dynamic_scope,
-              error: error
-            }));
-            node = node.cdr;
-          } else {
-            break;
-          }
-        }
-
-        var promises = [];
-        args.forEach(function (arg) {
-          traverse(arg);
-
-          function traverse(node) {
-            if (node instanceof Promise) {
-              promises.push(node);
-            } else if (node instanceof Pair) {
-              traverse(node.car);
-              traverse(node.cdr);
-            }
-          }
+        var args = get_function_args(rest, {
+          env: env,
+          dynamic_scope: dynamic_scope,
+          error: error
         });
 
-        if (promises.length) {
-          args = args.map(function (arg) {
-            function resolve(node) {
-              if (node instanceof Pair) {
-                var car = resolve(node.car);
-                var cdr = resolve(node.cdr);
-                return Promise.all([car, cdr]).then(function (_ref19) {
-                  var _ref20 = _slicedToArray(_ref19, 2),
-                      car = _ref20[0],
-                      cdr = _ref20[1];
-
-                  return new Pair(car, cdr);
-                });
-              } else {
-                return node;
-              }
-            }
-
-            return resolve(arg);
-          });
-          return Promise.all(args).then(function (args) {
+        if (args instanceof Promise) {
+          return args.then(function (args) {
             return value.apply(dynamic_scope || env, args);
           });
         }
