@@ -944,7 +944,7 @@
     // :: Quote funtion used to pause evaluation from Macro
     // ----------------------------------------------------------------------
     function quote(value) {
-        if (value instanceof Pair) {
+        if (value instanceof Pair || value instanceof Symbol) {
             value.data = true;
         }
         return value;

@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 05 Oct 2018 08:07:59 +0000
+ * build: Fri, 05 Oct 2018 08:11:16 +0000
  */
 (function () {
 'use strict';
@@ -1978,7 +1978,7 @@ function _typeof(obj) {
 
 
   function quote(value) {
-    if (value instanceof Pair) {
+    if (value instanceof Pair || value instanceof _Symbol) {
       value.data = true;
     }
 
