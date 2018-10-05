@@ -600,8 +600,8 @@
         this.name = name;
         this.fn = fn;
     }
-    Macro.prototype.invoke = function(name, code, {env, dynamic_scope, error}) {
-        return this.fn.call(env, code, {dynamic_scope, error}, name);
+    Macro.prototype.invoke = function(code, {env, dynamic_scope, error}) {
+        return this.fn.call(env, code, {dynamic_scope, error}, this.name);
     };
     Macro.prototype.toString = function() {
         return '#<Macro ' + this.name + '>';
@@ -1080,7 +1080,7 @@
             }
         },
         // ------------------------------------------------------------------
-        'set!': new Macro('set', function(code, {dynamic_scope, error} = {}) {
+        'set!': new Macro('set!', function(code, {dynamic_scope, error} = {}) {
             var value;
             if (code.cdr.car instanceof Pair) {
                 if (dynamic_scope) {
@@ -1361,7 +1361,20 @@
                     if (dynamic_scope) {
                         dynamic_scope = env;
                     }
-                    return evaluate(macro.cdr.car, {env, dynamic_scope, error});
+                    // evaluate macro
+                    var pair = evaluate(macro.cdr.car, {env, dynamic_scope, error});
+                    // evaluate any possible backquotes
+                    pair = evaluate(pair, {env, dynamic_scope, error});
+                    function clear(node) {
+                        if (node instanceof Pair) {
+                            delete node.data;
+                        }
+                        return node;
+                    }
+                    if (pair instanceof Promise) {
+                        return pair.then(clear);
+                    }
+                    return clear(pair);
                 });
             }
         }),
@@ -2083,11 +2096,8 @@
             if (first instanceof Symbol) {
                 value = env.get(first);
                 if (value instanceof Macro) {
-                    value = maybe_promise(value.invoke(first, rest, {
-                        env,
-                        dynamic_scope,
-                        error
-                    }));
+                    value = value.invoke(rest, eval_args);
+                    value = maybe_promise(value);
                     if (value && value.data) {
                         return value;
                     } else if (value instanceof Promise) {

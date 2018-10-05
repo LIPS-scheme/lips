@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 05 Oct 2018 09:14:59 +0000
+ * build: Fri, 05 Oct 2018 14:13:13 +0000
  */
 (function () {
 'use strict';
@@ -1574,14 +1574,14 @@ function _typeof(obj) {
     this.fn = fn;
   }
 
-  Macro.prototype.invoke = function (name, code, _ref) {
+  Macro.prototype.invoke = function (code, _ref) {
     var env = _ref.env,
         dynamic_scope = _ref.dynamic_scope,
         error = _ref.error;
     return this.fn.call(env, code, {
       dynamic_scope: dynamic_scope,
       error: error
-    }, name);
+    }, this.name);
   };
 
   Macro.prototype.toString = function () {
@@ -2134,7 +2134,7 @@ function _typeof(obj) {
       }
     },
     // ------------------------------------------------------------------
-    'set!': new Macro('set', function (code) {
+    'set!': new Macro('set!', function (code) {
       var _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           dynamic_scope = _ref3.dynamic_scope,
           error = _ref3.error;
@@ -2569,13 +2569,34 @@ function _typeof(obj) {
 
           if (dynamic_scope) {
             dynamic_scope = env;
-          }
+          } // evaluate macro
 
-          return evaluate(macro.cdr.car, {
+
+          var pair = evaluate(macro.cdr.car, {
+            env: env,
+            dynamic_scope: dynamic_scope,
+            error: error
+          }); // evaluate any possible backquotes
+
+          pair = evaluate(pair, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
           });
+
+          function clear(node) {
+            if (node instanceof Pair) {
+              delete node.data;
+            }
+
+            return node;
+          }
+
+          if (pair instanceof Promise) {
+            return pair.then(clear);
+          }
+
+          return clear(pair);
         });
       }
     }),
@@ -3482,11 +3503,8 @@ function _typeof(obj) {
         value = env.get(first);
 
         if (value instanceof Macro) {
-          value = maybe_promise(value.invoke(first, rest, {
-            env: env,
-            dynamic_scope: dynamic_scope,
-            error: error
-          }));
+          value = value.invoke(rest, eval_args);
+          value = maybe_promise(value);
 
           if (value && value.data) {
             return value;
