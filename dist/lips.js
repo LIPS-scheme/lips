@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 05 Oct 2018 14:13:13 +0000
+ * build: Fri, 05 Oct 2018 14:41:21 +0000
  */
 (function () {
 'use strict';
@@ -1003,7 +1003,7 @@ function _typeof(obj) {
       } // use build in function to parse rest of escaped characters
 
 
-      return JSON.parse('"' + string + '"');
+      return JSON.parse('"' + string.replace(/\n/g, '\\n') + '"');
     }
 
     var regex = arg.match(re_re);
@@ -1026,7 +1026,8 @@ function _typeof(obj) {
   /* eslint-disable */
 
 
-  var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.|,@|,|`|[^(\s)]+)/gi;
+  var string_re = /("[^"\\]*(?:\\[\S\s]|[^"\\])*")/;
+  var tokens_re = /("[^"\\]*(?:\\[\S\s]|[^"\\])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.|,@|,|`|[^(\s)]+)/gi;
   /* eslint-enable */
   // ----------------------------------------------------------------------
 
@@ -1045,7 +1046,13 @@ function _typeof(obj) {
 
   function tokens(str) {
     var count = 0;
-    return str.split('\n').map(function (line, i) {
+    return str.split(string_re).filter(Boolean).reduce(function (lines, item) {
+      if (item.match(string_re)) {
+        return lines.concat([item]);
+      }
+
+      return lines.concat(item.split('\n'));
+    }, []).map(function (line, i) {
       var col = 0; // correction for newline characters
 
       count += i === 0 ? 0 : 1;
@@ -2544,6 +2551,14 @@ function _typeof(obj) {
       var dynamic_scope = _ref12.dynamic_scope,
           error = _ref12.error;
 
+      function clear(node) {
+        if (node instanceof Pair) {
+          delete node.data;
+        }
+
+        return node;
+      }
+
       if (macro.car.car instanceof _Symbol) {
         var name = macro.car.car.name;
         this.env[name] = new Macro(name, function (code) {
@@ -2572,31 +2587,27 @@ function _typeof(obj) {
           } // evaluate macro
 
 
-          var pair = evaluate(macro.cdr.car, {
-            env: env,
-            dynamic_scope: dynamic_scope,
-            error: error
-          }); // evaluate any possible backquotes
+          if (macro.cdr instanceof Pair) {
+            var pair = macro.cdr.reduce(function (result, node) {
+              return evaluate(node, {
+                env: env,
+                dynamic_scope: dynamic_scope,
+                error: error
+              });
+            }); // evaluate any possible backquotes
 
-          pair = evaluate(pair, {
-            env: env,
-            dynamic_scope: dynamic_scope,
-            error: error
-          });
+            pair = evaluate(pair, {
+              env: env,
+              dynamic_scope: dynamic_scope,
+              error: error
+            });
 
-          function clear(node) {
-            if (node instanceof Pair) {
-              delete node.data;
+            if (pair instanceof Promise) {
+              return pair.then(clear);
             }
 
-            return node;
+            return clear(pair);
           }
-
-          if (pair instanceof Promise) {
-            return pair.then(clear);
-          }
-
-          return clear(pair);
         });
       }
     }),

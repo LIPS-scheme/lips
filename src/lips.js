@@ -96,7 +96,7 @@
                 string = string.replace(re, "$1");
             }
             // use build in function to parse rest of escaped characters
-            return JSON.parse('"' + string + '"');
+            return JSON.parse('"' + string.replace(/\n/g, '\\n') + '"');
         }
         var regex = arg.match(re_re);
         if (regex) {
@@ -115,7 +115,8 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var tokens_re = /("[^"\\]*(?:\\[\S\s][^"\\]*)*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.|,@|,|`|[^(\s)]+)/gi;
+    var string_re = /("[^"\\]*(?:\\[\S\s]|[^"\\])*")/;
+    var tokens_re = /("[^"\\]*(?:\\[\S\s]|[^"\\])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*|\(|\)|'|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.|,@|,|`|[^(\s)]+)/gi;
     /* eslint-enable */
     // ----------------------------------------------------------------------
     function tokenize(str, extra) {
@@ -132,7 +133,12 @@
     // ----------------------------------------------------------------------
     function tokens(str) {
         var count = 0;
-        return str.split('\n').map(function(line, i) {
+        return str.split(string_re).filter(Boolean).reduce(function(lines, item) {
+            if (item.match(string_re)) {
+                return lines.concat([item]);
+            }
+            return lines.concat(item.split('\n'));
+        }, []).map(function(line, i) {
             var col = 0;
             // correction for newline characters
             count += i === 0 ? 0 : 1;
@@ -1339,6 +1345,12 @@
         }),
         // ------------------------------------------------------------------
         defmacro: new Macro('defmacro', function(macro, {dynamic_scope, error}) {
+            function clear(node) {
+                if (node instanceof Pair) {
+                    delete node.data;
+                }
+                return node;
+            }
             if (macro.car.car instanceof Symbol) {
                 var name = macro.car.car.name;
                 this.env[name] = new Macro(name, function(code) {
@@ -1362,19 +1374,17 @@
                         dynamic_scope = env;
                     }
                     // evaluate macro
-                    var pair = evaluate(macro.cdr.car, {env, dynamic_scope, error});
-                    // evaluate any possible backquotes
-                    pair = evaluate(pair, {env, dynamic_scope, error});
-                    function clear(node) {
-                        if (node instanceof Pair) {
-                            delete node.data;
+                    if (macro.cdr instanceof Pair) {
+                        var pair = macro.cdr.reduce(function(result, node) {
+                            return evaluate(node, {env, dynamic_scope, error});
+                        });
+                        // evaluate any possible backquotes
+                        pair = evaluate(pair, {env, dynamic_scope, error});
+                        if (pair instanceof Promise) {
+                            return pair.then(clear);
                         }
-                        return node;
+                        return clear(pair);
                     }
-                    if (pair instanceof Promise) {
-                        return pair.then(clear);
-                    }
-                    return clear(pair);
                 });
             }
         }),
