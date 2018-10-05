@@ -941,21 +941,17 @@
         }
     };
     // ----------------------------------------------------------------------
-    // :: Quote constructor used to pause evaluation from Macro
+    // :: Quote funtion used to pause evaluation from Macro
     // ----------------------------------------------------------------------
-    function Quote(value) {
-        this.value = value;
+    function quote(value) {
+        value.data = true;
+        return value;
     }
-    // ----------------------------------------------------------------------
-    // :: Unquote is used for multiple backticks and unquote
-    // ----------------------------------------------------------------------
-    function Unquote(value, count) {
-        this.value = value;
-        this.count = count;
+    function unquote(value, count) {
+        value.unquote = true;
+        value.count = count;
+        return value;
     }
-    Unquote.prototype.toString = function() {
-        return '<#unquote[' + this.count + '] ' + this.value + '>';
-    };
     // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
@@ -988,7 +984,7 @@
                             dynamic_scope,
                             error
                         }).then(function(result) {
-                            resolve(new Quote(result));
+                            resolve(quote(result));
                         });
                     } else {
                         var value = evaluate(pair.cdr.car, {
@@ -1227,7 +1223,7 @@
             }
             return new Promise((resolve) => {
                 setTimeout(() => {
-                    resolve(new Quote(evaluate(code.cdr, {
+                    resolve(quote(evaluate(code.cdr, {
                         env,
                         dynamic_scope,
                         error
@@ -1364,7 +1360,7 @@
         }),
         // ------------------------------------------------------------------
         quote: new Macro('quote', function(arg) {
-            return new Quote(arg.car);
+            return quote(arg.car);
         }),
         // ------------------------------------------------------------------
         quasiquote: new Macro('quasiquote', function(arg, {dynamic_scope, error}) {
@@ -1416,19 +1412,19 @@
                         if (parent === node) {
                             if (pair.cdr.cdr !== nil) {
                                 return new Pair(
-                                    new Unquote(pair.cdr.car, unquote_count),
+                                    unquote(pair.cdr.car, unquote_count),
                                     pair.cdr.cdr
                                 );
                             } else {
-                                return new Unquote(pair.cdr.car, unquote_count);
+                                return unquote(pair.cdr.car, unquote_count);
                             }
                         } else if (parent.cdr.cdr !== nil) {
                             parent.car.cdr = new Pair(
-                                new Unquote(node, unquote_count),
+                                unquote(node, unquote_count),
                                 parent.cdr === nil ? nil : parent.cdr.cdr
                             );
                         } else {
-                            parent.car.cdr = new Unquote(node, unquote_count);
+                            parent.car.cdr = unquote(node, unquote_count);
                         }
                         return head.car;
                     }
@@ -1444,15 +1440,18 @@
                 }
                 return pair;
             }
-            function unquote(pair) {
-                if (pair instanceof Unquote) {
-                    if (max_unquote === pair.count) {
-                        return evaluate(pair.value, {env: self});
+            function unquoting(pair) {
+                if (pair && typeof pair === 'object' && pair.unquote) {
+                    var count = pair.count;
+                    delete pair.count;
+                    delete pair.data;
+                    if (max_unquote === count) {
+                        return evaluate(pair, {env: self});
                     } else {
                         return new Pair(
                             new Symbol('unquote'),
                             new Pair(
-                                unquote(pair.value),
+                                unquoting(pair),
                                 nil
                             )
                         );
@@ -1460,21 +1459,21 @@
                 }
                 if (pair instanceof Pair) {
                     var car = pair.car;
-                    if (car instanceof Pair || car instanceof Unquote) {
-                        car = unquote(car);
+                    if (car && car.unquote || car) {
+                        car = unquoting(car);
                     }
                     var cdr = pair.cdr;
-                    if (cdr instanceof Pair || cdr instanceof Unquote) {
-                        cdr = unquote(cdr);
+                    if (cdr && cdr.unquote || cdr) {
+                        cdr = unquoting(cdr);
                     }
                     return new Pair(car, cdr);
                 }
                 return pair;
             }
-            return new Quote(unquote(recur(arg.car)));
+            return quote(unquoting(recur(arg.car)));
         }),
         // ------------------------------------------------------------------
-        clone: function(list) {
+        clone: function(lilst) {
             return list.clone();
         },
         // ------------------------------------------------------------------
@@ -1491,9 +1490,8 @@
         }),
         // ------------------------------------------------------------------
         list: function() {
-            return Pair.fromArray([].slice.call(arguments));
+            return quote(Pair.fromArray([].slice.call(arguments)));
         },
-        // ------------------------------------------------------------------
         concat: function() {
             return [].join.call(arguments, '');
         },
@@ -2029,12 +2027,12 @@
                 value = env.get(first);
                 if (value instanceof Macro) {
                     value = value.invoke(first, rest, {env, dynamic_scope, error});
-                    if (value instanceof Quote) {
-                        return value.value;
+                    if (value && value.data) {
+                        return value;
                     } else if (value instanceof Promise) {
                         return value.then((value) => {
-                            if (value instanceof Quote) {
-                                return value.value;
+                            if (value && value.data) {
+                                return value;
                             }
                             return evaluate(value, {env, dynamic_scope, error});
                         });
@@ -2096,7 +2094,7 @@
                 }
                 return value;
             } else if (code instanceof Pair) {
-                value = first.toString();
+                value = first && first.toString();
                 throw new Error(`${type(first)} ${value} is not a function`);
             } else {
                 return code;
@@ -2238,7 +2236,7 @@
         global_environment: global_env,
         balanced_parenthesis: balanced,
         Macro,
-        Quote,
+        quote,
         Pair,
         nil,
         Symbol,

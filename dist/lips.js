@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Thu, 04 Oct 2018 21:00:00 +0000
+ * build: Fri, 05 Oct 2018 07:25:42 +0000
  */
 (function () {
 'use strict';
@@ -1216,7 +1216,7 @@ function _typeof(obj) {
 
     if (stack.length) {
       console.log({
-        end: Dry.stringify(stack)
+        end: stack.slice()
       });
       throw new Error('Unbalanced parenthesis 2');
     }
@@ -1973,25 +1973,20 @@ function _typeof(obj) {
       env = env.parent;
     }
   }; // ----------------------------------------------------------------------
-  // :: Quote constructor used to pause evaluation from Macro
+  // :: Quote funtion used to pause evaluation from Macro
   // ----------------------------------------------------------------------
 
 
-  function Quote(value) {
-    this.value = value;
-  } // ----------------------------------------------------------------------
-  // :: Unquote is used for multiple backticks and unquote
-  // ----------------------------------------------------------------------
-
-
-  function Unquote(value, count) {
-    this.value = value;
-    this.count = count;
+  function quote(value) {
+    value.data = true;
+    return value;
   }
 
-  Unquote.prototype.toString = function () {
-    return '<#unquote[' + this.count + '] ' + this.value + '>';
-  }; // ----------------------------------------------------------------------
+  function unquote(value, count) {
+    value.unquote = true;
+    value.count = count;
+    return value;
+  } // ----------------------------------------------------------------------
   // :: function that return macro for let and let*
   // ----------------------------------------------------------------------
 
@@ -2031,7 +2026,7 @@ function _typeof(obj) {
               dynamic_scope: dynamic_scope,
               error: error
             }).then(function (result) {
-              resolve(new Quote(result));
+              resolve(quote(result));
             });
           } else {
             var value = evaluate(pair.cdr.car, {
@@ -2405,7 +2400,7 @@ function _typeof(obj) {
 
       return new Promise(function (resolve) {
         setTimeout(function () {
-          resolve(new Quote(evaluate(code.cdr, {
+          resolve(quote(evaluate(code.cdr, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
@@ -2577,7 +2572,7 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     quote: new Macro('quote', function (arg) {
-      return new Quote(arg.car);
+      return quote(arg.car);
     }),
     // ------------------------------------------------------------------
     quasiquote: new Macro('quasiquote', function (arg, _ref13) {
@@ -2636,14 +2631,14 @@ function _typeof(obj) {
 
             if (parent === node) {
               if (pair.cdr.cdr !== nil) {
-                return new Pair(new Unquote(pair.cdr.car, unquote_count), pair.cdr.cdr);
+                return new Pair(unquote(pair.cdr.car, unquote_count), pair.cdr.cdr);
               } else {
-                return new Unquote(pair.cdr.car, unquote_count);
+                return unquote(pair.cdr.car, unquote_count);
               }
             } else if (parent.cdr.cdr !== nil) {
-              parent.car.cdr = new Pair(new Unquote(node, unquote_count), parent.cdr === nil ? nil : parent.cdr.cdr);
+              parent.car.cdr = new Pair(unquote(node, unquote_count), parent.cdr === nil ? nil : parent.cdr.cdr);
             } else {
-              parent.car.cdr = new Unquote(node, unquote_count);
+              parent.car.cdr = unquote(node, unquote_count);
             }
 
             return head.car;
@@ -2667,28 +2662,32 @@ function _typeof(obj) {
         return pair;
       }
 
-      function unquote(pair) {
-        if (pair instanceof Unquote) {
-          if (max_unquote === pair.count) {
-            return evaluate(pair.value, {
+      function unquoting(pair) {
+        if (pair && _typeof(pair) === 'object' && pair.unquote) {
+          var count = pair.count;
+          delete pair.count;
+          delete pair.data;
+
+          if (max_unquote === count) {
+            return evaluate(pair, {
               env: self
             });
           } else {
-            return new Pair(new _Symbol('unquote'), new Pair(unquote(pair.value), nil));
+            return new Pair(new _Symbol('unquote'), new Pair(unquoting(pair), nil));
           }
         }
 
         if (pair instanceof Pair) {
           var car = pair.car;
 
-          if (car instanceof Pair || car instanceof Unquote) {
-            car = unquote(car);
+          if (car && car.unquote || car) {
+            car = unquoting(car);
           }
 
           var cdr = pair.cdr;
 
-          if (cdr instanceof Pair || cdr instanceof Unquote) {
-            cdr = unquote(cdr);
+          if (cdr && cdr.unquote || cdr) {
+            cdr = unquoting(cdr);
           }
 
           return new Pair(car, cdr);
@@ -2697,10 +2696,10 @@ function _typeof(obj) {
         return pair;
       }
 
-      return new Quote(unquote(recur(arg.car)));
+      return quote(unquoting(recur(arg.car)));
     }),
     // ------------------------------------------------------------------
-    clone: function clone(list) {
+    clone: function clone(lilst) {
       return list.clone();
     },
     // ------------------------------------------------------------------
@@ -2725,9 +2724,8 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     list: function list() {
-      return Pair.fromArray([].slice.call(arguments));
+      return quote(Pair.fromArray([].slice.call(arguments)));
     },
-    // ------------------------------------------------------------------
     concat: function concat() {
       return [].join.call(arguments, '');
     },
@@ -3409,12 +3407,12 @@ function _typeof(obj) {
             error: error
           });
 
-          if (value instanceof Quote) {
-            return value.value;
+          if (value && value.data) {
+            return value;
           } else if (value instanceof Promise) {
             return value.then(function (value) {
-              if (value instanceof Quote) {
-                return value.value;
+              if (value && value.data) {
+                return value;
               }
 
               return evaluate(value, {
@@ -3503,7 +3501,7 @@ function _typeof(obj) {
 
         return value;
       } else if (code instanceof Pair) {
-        value = first.toString();
+        value = first && first.toString();
         throw new Error("".concat(type(first), " ").concat(value, " is not a function"));
       } else {
         return code;
@@ -3671,7 +3669,7 @@ function _typeof(obj) {
     global_environment: global_env,
     balanced_parenthesis: balanced,
     Macro: Macro,
-    Quote: Quote,
+    quote: quote,
     Pair: Pair,
     nil: nil,
     Symbol: _Symbol,

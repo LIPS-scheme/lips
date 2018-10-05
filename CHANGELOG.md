@@ -17,6 +17,7 @@
 * fix resolving Promises when evaluating code
 * don't allow regex that start with space (so it work when you have two divisions in one S-Expression)
 * fix parsing float numbers that start with dot
+* prevent evaluation of quoted expressions in macros
 
 ## 0.5.4
 ### Bugs
