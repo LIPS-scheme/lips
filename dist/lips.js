@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 06 Oct 2018 16:06:38 +0000
+ * build: Sat, 06 Oct 2018 16:48:57 +0000
  */
 (function () {
 'use strict';
@@ -2893,7 +2893,6 @@ function _typeof(obj) {
         args[_key2 - 1] = arguments[_key2];
       }
 
-      console.log(args);
       return _construct(obj, args);
     },
     // ------------------------------------------------------------------
@@ -3777,7 +3776,12 @@ function _typeof(obj) {
         if (value instanceof Macro) {
           return evaluate_macro(value, rest, eval_args);
         } else if (typeof value !== 'function') {
-          throw new Error('Unknown function `' + first.name + '\'');
+          if (value) {
+            var msg = "".concat(type(value), " `").concat(value, "' is not a function");
+            throw new Error(msg);
+          }
+
+          throw new Error("Unknown function `".concat(first.name, "'"));
         }
       } else if (typeof first === 'function') {
         value = first;

@@ -1592,7 +1592,6 @@
             return result;
         },
         'new': function(obj, ...args) {
-            console.log(args);
             return new obj(...args);
         },
         // ------------------------------------------------------------------
@@ -2162,7 +2161,11 @@
                 if (value instanceof Macro) {
                     return evaluate_macro(value, rest, eval_args);
                 } else if (typeof value !== 'function') {
-                    throw new Error('Unknown function `' + first.name + '\'');
+                    if (value) {
+                        var msg = `${type(value)} \`${value}' is not a function`;
+                        throw new Error(msg);
+                    }
+                    throw new Error(`Unknown function \`${first.name}'`);
                 }
             } else if (typeof first === 'function') {
                 value = first;
