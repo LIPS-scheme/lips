@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 06 Oct 2018 20:09:44 +0000
+ * build: Sat, 06 Oct 2018 20:32:23 +0000
  */
 (function () {
 'use strict';
@@ -2188,11 +2188,38 @@ function _typeof(obj) {
         value = code.cdr.car;
       }
 
+      var ref;
+
+      if (code.car instanceof Pair && _Symbol.is(code.car.car, '.')) {
+        var second = code.car.cdr.car;
+        var thrid = code.car.cdr.cdr.car;
+        var object = evaluate(second, {
+          env: this,
+          dynamic_scope: dynamic_scope,
+          error: error
+        });
+        var key = evaluate(thrid, {
+          env: this,
+          dynamic_scope: dynamic_scope,
+          error: error
+        });
+        value = maybe_promise(value);
+
+        if (value instanceof Promise) {
+          return value.then(function (value) {
+            object[key] = value;
+          });
+        } else {
+          object[key] = value;
+          return value;
+        }
+      }
+
       if (!(code.car instanceof _Symbol)) {
         throw new Error('set! first argument need to be a symbol');
       }
 
-      var ref = this.ref(code.car.name);
+      ref = this.ref(code.car.name);
 
       if (!ref) {
         ref = this;

@@ -8,6 +8,7 @@
 * add float, round and ceil functions
 * add env variable to lips namespace
 * add length and find higher order function
+* allow to set value using set! and dot expression that is used to get the value
 ### Bugs
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions

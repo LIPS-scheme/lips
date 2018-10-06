@@ -1088,10 +1088,26 @@
             } else {
                 value = code.cdr.car;
             }
+            var ref;
+            if (code.car instanceof Pair && Symbol.is(code.car.car, '.')) {
+                var second = code.car.cdr.car;
+                var thrid = code.car.cdr.cdr.car;
+                var object = evaluate(second, {env: this, dynamic_scope, error});
+                var key = evaluate(thrid, {env: this, dynamic_scope, error});
+                value = maybe_promise(value);
+                if (value instanceof Promise) {
+                    return value.then(value => {
+                        object[key] = value;
+                    });
+                } else {
+                    object[key] = value;
+                    return value;
+                }
+            }
             if (!(code.car instanceof Symbol)) {
                 throw new Error('set! first argument need to be a symbol');
             }
-            var ref = this.ref(code.car.name);
+            ref = this.ref(code.car.name);
             if (!ref) {
                 ref = this;
             }
