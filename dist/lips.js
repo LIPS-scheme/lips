@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 06 Oct 2018 09:10:33 +0000
+ * build: Sat, 06 Oct 2018 11:40:25 +0000
  */
 (function () {
 'use strict';
@@ -1018,6 +1018,10 @@ function _typeof(obj) {
       return LNumber(parseFloat(arg), true);
     } else if (arg === 'nil') {
       return nil;
+    } else if (arg === 'true') {
+      return true;
+    } else if (arg === 'false') {
+      return false;
     } else {
       return new _Symbol(arg);
     }
@@ -1389,7 +1393,13 @@ function _typeof(obj) {
           name = name.name;
         }
 
-        result[name] = pair.cdr;
+        var cdr = pair.cdr;
+
+        if (cdr instanceof Pair) {
+          cdr = cdr.toObject();
+        }
+
+        result[name] = cdr;
         node = node.cdr;
       } else {
         break;
@@ -1990,13 +2000,12 @@ function _typeof(obj) {
 
   function let_macro(asterisk) {
     var name = 'let' + (asterisk ? '*' : '');
-    var count = 0;
     return new Macro(name, function (code, _ref2) {
       var dynamic_scope = _ref2.dynamic_scope,
           error = _ref2.error;
       var self = this;
       var args = this.get('list->array')(code.car);
-      var env = self.inherit('let_' + count++);
+      var env = self.inherit('let');
       return new Promise(function (resolve) {
         var promises = [];
         var i = 0;
@@ -2008,6 +2017,8 @@ function _typeof(obj) {
             if (value instanceof Promise) {
               promises.push(value);
               return value.then(set);
+            } else if (typeof value === 'undefined') {
+              env.set(pair.car, nil);
             } else {
               env.set(pair.car, value);
             }
@@ -3288,7 +3299,8 @@ function _typeof(obj) {
 
       return obj[name].apply(obj, args);
     }
-  }, undefined, 'global');
+  }, undefined, 'global'); // ----------------------------------------------------------------------
+
   ['floor', 'round', 'ceil'].forEach(function (fn) {
     global_env.set(fn, function (value) {
       if (value instanceof LNumber) {
@@ -3376,19 +3388,10 @@ function _typeof(obj) {
 
   function maybe_promise(arg) {
     var promises = [];
+    traverse(arg);
 
-    if (arg instanceof Array) {
-      arg.forEach(traverse);
-
-      if (promises.length) {
-        return Promise.all(arg.map(resolve));
-      }
-    } else {
-      traverse(arg);
-
-      if (promises.length) {
-        return resolve(arg);
-      }
+    if (promises.length) {
+      return resolve(arg);
     }
 
     return arg;
@@ -3399,10 +3402,16 @@ function _typeof(obj) {
       } else if (node instanceof Pair) {
         traverse(node.car);
         traverse(node.cdr);
+      } else if (node instanceof Array) {
+        node.forEach(traverse);
       }
     }
 
     function resolve(node) {
+      if (node instanceof Array) {
+        return Promise.all(node.map(resolve));
+      }
+
       if (node instanceof Pair) {
         var car = resolve(node.car);
         var cdr = resolve(node.cdr);
@@ -3450,6 +3459,30 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
+  function evaluate_macro(macro, code, eval_args) {
+    if (code instanceof Pair) {
+      code = code.clone();
+    }
+
+    var value = macro.invoke(code, eval_args);
+    value = maybe_promise(value, true);
+
+    if (value && value.data) {
+      return value;
+    } else if (value instanceof Promise) {
+      return value.then(function (value) {
+        if (value && value.data) {
+          return value;
+        }
+
+        return evaluate(value, eval_args);
+      });
+    }
+
+    return evaluate(value, eval_args);
+  } // ----------------------------------------------------------------------
+
+
   function evaluate(code) {
     var _ref21 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
         env = _ref21.env,
@@ -3477,6 +3510,10 @@ function _typeof(obj) {
         return;
       }
 
+      if (code === null) {
+        return nil;
+      }
+
       var first = code.car;
       var rest = code.cdr;
 
@@ -3496,26 +3533,7 @@ function _typeof(obj) {
         value = env.get(first);
 
         if (value instanceof Macro) {
-          if (rest instanceof Pair) {
-            rest = rest.clone();
-          }
-
-          value = value.invoke(rest, eval_args);
-          value = maybe_promise(value);
-
-          if (value && value.data) {
-            return value;
-          } else if (value instanceof Promise) {
-            return value.then(function (value) {
-              if (value && value.data) {
-                return value;
-              }
-
-              return evaluate(value, eval_args);
-            });
-          }
-
-          return evaluate(value, eval_args);
+          return evaluate_macro(value, rest, eval_args);
         } else if (typeof value !== 'function') {
           throw new Error('Unknown function `' + first.name + '\'');
         }
@@ -3528,11 +3546,12 @@ function _typeof(obj) {
 
         if (args instanceof Promise) {
           return args.then(function (args) {
-            return value.apply(dynamic_scope || env, args);
+            var scope = dynamic_scope || env;
+            return maybe_promise(value.apply(scope, args));
           });
         }
 
-        return value.apply(dynamic_scope || env, args);
+        return maybe_promise(value.apply(dynamic_scope || env, args));
       } else if (code instanceof _Symbol) {
         value = env.get(code);
 
@@ -3708,11 +3727,13 @@ function _typeof(obj) {
     evaluate: evaluate,
     Environment: Environment,
     global_environment: global_env,
+    env: global_env,
     balanced_parenthesis: balanced,
     Macro: Macro,
     quote: quote,
     Pair: Pair,
     nil: nil,
+    maybe_promise: maybe_promise,
     Symbol: _Symbol,
     LNumber: LNumber
   };

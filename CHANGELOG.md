@@ -5,6 +5,7 @@
 ## Features
 * add bit operation functions
 * add float, round and ceil functions
+* add env variable to lips namespace
 ### Bugs
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions
@@ -20,6 +21,7 @@
 * prevent evaluation of quoted expressions in macros
 * fix macro sharing body between invocations
 * fix read function
+* fix parsing boolean values
 
 ## 0.5.4
 ### Bugs

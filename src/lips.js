@@ -109,6 +109,10 @@
             return LNumber(parseFloat(arg), true);
         } else if (arg === 'nil') {
             return nil;
+        } else if (arg === 'true') {
+            return true;
+        } else if (arg === 'false') {
+            return false;
         } else {
             return new Symbol(arg);
         }
@@ -430,7 +434,11 @@
                 if (name instanceof Symbol) {
                     name = name.name;
                 }
-                result[name] = pair.cdr;
+                var cdr = pair.cdr;
+                if (cdr instanceof Pair) {
+                    cdr = cdr.toObject();
+                }
+                result[name] = cdr;
                 node = node.cdr;
             } else {
                 break;
@@ -951,11 +959,10 @@
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
         var name = 'let' + (asterisk ? '*' : '');
-        var count = 0;
         return new Macro(name, function(code, {dynamic_scope, error}) {
             var self = this;
             var args = this.get('list->array')(code.car);
-            var env = self.inherit('let_' + (count++));
+            var env = self.inherit('let');
             return new Promise((resolve) => {
                 var promises = [];
                 var i = 0;
@@ -965,6 +972,8 @@
                         if (value instanceof Promise) {
                             promises.push(value);
                             return value.then(set);
+                        } else if (typeof value === 'undefined') {
+                            env.set(pair.car, nil);
                         } else {
                             env.set(pair.car, value);
                         }
@@ -1927,6 +1936,7 @@
             return obj[name](...args);
         }
     }, undefined, 'global');
+    // ----------------------------------------------------------------------
     ['floor', 'round', 'ceil'].forEach(fn => {
         global_env.set(fn, function(value) {
             if (value instanceof LNumber) {
@@ -2006,16 +2016,9 @@
     // ----------------------------------------------------------------------
     function maybe_promise(arg) {
         var promises = [];
-        if (arg instanceof Array) {
-            arg.forEach(traverse);
-            if (promises.length) {
-                return Promise.all(arg.map(resolve));
-            }
-        } else {
-            traverse(arg);
-            if (promises.length) {
-                return resolve(arg);
-            }
+        traverse(arg);
+        if (promises.length) {
+            return resolve(arg);
         }
         return arg;
         function traverse(node) {
@@ -2024,9 +2027,14 @@
             } else if (node instanceof Pair) {
                 traverse(node.car);
                 traverse(node.cdr);
+            } else if (node instanceof Array) {
+                node.forEach(traverse);
             }
         }
         function resolve(node) {
+            if (node instanceof Array) {
+                return Promise.all(node.map(resolve));
+            }
             if (node instanceof Pair) {
                 var car = resolve(node.car);
                 var cdr = resolve(node.cdr);
@@ -2057,6 +2065,25 @@
         return maybe_promise(args);
     }
     // ----------------------------------------------------------------------
+    function evaluate_macro(macro, code, eval_args) {
+        if (code instanceof Pair) {
+            code = code.clone();
+        }
+        var value = macro.invoke(code, eval_args);
+        value = maybe_promise(value, true);
+        if (value && value.data) {
+            return value;
+        } else if (value instanceof Promise) {
+            return value.then((value) => {
+                if (value && value.data) {
+                    return value;
+                }
+                return evaluate(value, eval_args);
+            });
+        }
+        return evaluate(value, eval_args);
+    }
+    // ----------------------------------------------------------------------
     function evaluate(code, {env, dynamic_scope, error = () => {}} = {}) {
         try {
             if (dynamic_scope === true) {
@@ -2070,6 +2097,9 @@
             var value;
             if (typeof code === 'undefined') {
                 return;
+            }
+            if (code === null) {
+                return nil;
             }
             var first = code.car;
             var rest = code.cdr;
@@ -2088,22 +2118,7 @@
             if (first instanceof Symbol) {
                 value = env.get(first);
                 if (value instanceof Macro) {
-                    if (rest instanceof Pair) {
-                        rest = rest.clone();
-                    }
-                    value = value.invoke(rest, eval_args);
-                    value = maybe_promise(value);
-                    if (value && value.data) {
-                        return value;
-                    } else if (value instanceof Promise) {
-                        return value.then((value) => {
-                            if (value && value.data) {
-                                return value;
-                            }
-                            return evaluate(value, eval_args);
-                        });
-                    }
-                    return evaluate(value, eval_args);
+                    return evaluate_macro(value, rest, eval_args);
                 } else if (typeof value !== 'function') {
                     throw new Error('Unknown function `' + first.name + '\'');
                 }
@@ -2114,10 +2129,11 @@
                 var args = get_function_args(rest, eval_args);
                 if (args instanceof Promise) {
                     return args.then((args) => {
-                        return value.apply(dynamic_scope || env, args);
+                        var scope = dynamic_scope || env;
+                        return maybe_promise(value.apply(scope, args));
                     });
                 }
-                return value.apply(dynamic_scope || env, args);
+                return maybe_promise(value.apply(dynamic_scope || env, args));
             } else if (code instanceof Symbol) {
                 value = env.get(code);
                 if (value === 'undefined') {
@@ -2265,11 +2281,13 @@
         evaluate,
         Environment,
         global_environment: global_env,
+        env: global_env,
         balanced_parenthesis: balanced,
         Macro,
         quote,
         Pair,
         nil,
+        maybe_promise,
         Symbol,
         LNumber
     };
