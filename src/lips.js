@@ -21,6 +21,10 @@
     }
 })(typeof window !== 'undefined' ? window : global, function(root, BN, undefined) {
     /* eslint-disable */
+    function log(x) {
+        console.log(x);
+        return x;
+    }
     if (!root.fetch) {
         root.fetch = function(url, options) {
             options = options || {};
@@ -345,6 +349,11 @@
     }
 
     // ----------------------------------------------------------------------
+    function emptyList() {
+        return new Pair(undefined, nil);
+    }
+
+    // ----------------------------------------------------------------------
     Pair.prototype.flatten = function() {
         return Pair.fromArray(flatten(this.toArray()));
     };
@@ -407,7 +416,7 @@
             array = [...array];
         }
         if (array.length === 0) {
-            return new Pair(undefined, nil);
+            return emptyList();
         } else {
             var car;
             if (array[0] instanceof Array) {
@@ -592,6 +601,10 @@
     // :: Macro constructor
     // ----------------------------------------------------------------------
     function Macro(name, fn) {
+        if (typeof this !== 'undefined' && this.constructor !== Macro ||
+            typeof this === 'undefined') {
+            return new Macro(name, fn);
+        }
         this.name = name;
         this.fn = fn;
     }
@@ -601,6 +614,7 @@
     Macro.prototype.toString = function() {
         return '#<Macro ' + this.name + '>';
     };
+    var macro = 'define-macro';
     // ----------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
     // ----------------------------------------------------------------------
@@ -939,6 +953,9 @@
     // :: Quote funtion used to pause evaluation from Macro
     // ----------------------------------------------------------------------
     function quote(value) {
+        if (value instanceof Promise) {
+            return value.then(quote);
+        }
         if (value instanceof Pair || value instanceof Symbol) {
             value.data = true;
         }
@@ -988,7 +1005,7 @@
                             dynamic_scope,
                             error
                         }).then(function(result) {
-                            resolve(quote(result));
+                            resolve(result);
                         });
                     } else {
                         var value = evaluate(pair.cdr.car, {
@@ -1231,11 +1248,11 @@
             }
             return new Promise((resolve) => {
                 setTimeout(() => {
-                    resolve(quote(evaluate(code.cdr, {
+                    resolve(evaluate(code.cdr, {
                         env,
                         dynamic_scope,
                         error
-                    })));
+                    }));
                 }, code.car);
             });
         }),
@@ -1339,14 +1356,14 @@
             };
         }),
         // ------------------------------------------------------------------
-        defmacro: new Macro('defmacro', function(macro, {dynamic_scope, error}) {
+        'define-macro': new Macro(macro, function(macro, {dynamic_scope, error}) {
             function clear(node) {
                 if (node instanceof Pair) {
                     delete node.data;
                 }
                 return node;
             }
-            if (macro.car.car instanceof Symbol) {
+            if (macro.car instanceof Pair && macro.car.car instanceof Symbol) {
                 var name = macro.car.car.name;
                 this.env[name] = new Macro(name, function(code) {
                     var env = new Environment({}, this, 'defmacro');
@@ -1512,7 +1529,7 @@
         }),
         // ------------------------------------------------------------------
         list: function() {
-            return quote(Pair.fromArray([].slice.call(arguments)));
+            return Pair.fromArray([].slice.call(arguments));
         },
         concat: function() {
             return [].join.call(arguments, '');
@@ -1542,9 +1559,6 @@
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
                 return '<#jQuery>';
-            }
-            if (obj instanceof Macro) {
-                //return '<#Macro>';
             }
             if (obj instanceof LNumber) {
                 return obj.value.toString();
@@ -1612,7 +1626,11 @@
         // ------------------------------------------------------------------
         read: function read(arg) {
             if (typeof arg === 'string') {
-                return quote(parse(tokenize(arg))[0]);
+                arg = parse(tokenize(arg));
+                if (arg.length) {
+                    return arg[arg.length - 1];
+                }
+                return emptyList();
             }
             return this.get('stdin').read().then((text) => {
                 return read.call(this, text);
@@ -1686,11 +1704,14 @@
         }),
         // ------------------------------------------------------------------
         'length': function(obj) {
+            if (!obj) {
+                return LNumber(0);
+            }
             if (obj instanceof Pair) {
-                return obj.length();
+                return LNumber(obj.length());
             }
             if ("length" in obj) {
-                return obj.length;
+                return LNumber(obj.length);
             }
         },
         // ------------------------------------------------------------------
@@ -1728,6 +1749,9 @@
                 var item = array[i];
                 result = await fn(result, item);
             }
+            if (typeof result === 'number') {
+                return LNumber(result);
+            }
             return result;
         },
         // ------------------------------------------------------------------
@@ -1742,7 +1766,7 @@
                     result.push(item);
                 }
             }
-            return Pair.fromArray(result);
+            return Pair.fromArray(result, true);
         },
         // ------------------------------------------------------------------
         curry: function(fn, ...init_args) {
@@ -1968,7 +1992,7 @@
             return LNumber(a).shl(b);
         },
         not: function(value) {
-            if (value === nil) {
+            if (isEmptyList(value)) {
                 return true;
             }
             return !value;
@@ -2136,11 +2160,11 @@
             }
             var eval_args = {env, dynamic_scope, error};
             var value;
-            if (typeof code === 'undefined') {
-                return;
+            if (typeof code === 'undefined' || code === nil || code === null) {
+                return code;
             }
-            if (code === null) {
-                return nil;
+            if (isEmptyList(code)) {
+                return emptyList();
             }
             var first = code.car;
             var rest = code.cdr;
@@ -2175,10 +2199,10 @@
                 if (args instanceof Promise) {
                     return args.then((args) => {
                         var scope = dynamic_scope || env;
-                        return maybe_promise(value.apply(scope, args));
+                        return quote(maybe_promise(value.apply(scope, args)));
                     });
                 }
-                return maybe_promise(value.apply(dynamic_scope || env, args));
+                return quote(maybe_promise(value.apply(dynamic_scope || env, args)));
             } else if (code instanceof Symbol) {
                 value = env.get(code);
                 if (value === 'undefined') {

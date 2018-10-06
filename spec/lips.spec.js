@@ -154,6 +154,15 @@ function exec(string, env, dynamic_scope) {
     return evaluate(parse(tokenize(string))[0], {env, dynamic_scope});
 }
 
+function deepQuote(pair) {
+    if (pair instanceof Pair) {
+        quote(pair);
+        deepQuote(pair.cdr);
+        deepQuote(pair.car);
+    }
+    return pair;
+}
+
 describe('evaluate', function() {
     const rand = Math.random();
     const env = new Environment({
@@ -181,7 +190,7 @@ describe('evaluate', function() {
     });
     it('should create list', function() {
         expect(exec('(cons 1 (cons 2 (cons 3 nil)))'))
-            .toEqual(Pair.fromArray([LNumber(1), LNumber(2), LNumber(3)]));
+            .toEqual(deepQuote(Pair.fromArray([LNumber(1), LNumber(2), LNumber(3)])));
     });
     describe('quote', function() {
         it('should return literal list', function() {

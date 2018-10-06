@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 06 Oct 2018 16:48:57 +0000
+ * build: Sat, 06 Oct 2018 18:46:07 +0000
  */
 (function () {
 'use strict';
@@ -950,7 +950,7 @@ function _typeof(obj) {
     root.lips = factory(root, root.BN);
   }
 })(typeof window !== 'undefined' ? window : global, function (root, BN, undefined) {
-  /* eslint-disable */
+
   if (!root.fetch) {
     root.fetch = function (url, options) {
       options = options || {};
@@ -1326,6 +1326,11 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
+  function emptyList() {
+    return new Pair(undefined, nil);
+  } // ----------------------------------------------------------------------
+
+
   Pair.prototype.flatten = function () {
     return Pair.fromArray(flatten(this.toArray()));
   }; // ----------------------------------------------------------------------
@@ -1400,7 +1405,7 @@ function _typeof(obj) {
     }
 
     if (array.length === 0) {
-      return new Pair(undefined, nil);
+      return emptyList();
     } else {
       var car;
 
@@ -1607,6 +1612,10 @@ function _typeof(obj) {
 
 
   function Macro(name, fn) {
+    if (typeof this !== 'undefined' && this.constructor !== Macro || typeof this === 'undefined') {
+      return new Macro(name, fn);
+    }
+
     this.name = name;
     this.fn = fn;
   }
@@ -1623,10 +1632,11 @@ function _typeof(obj) {
 
   Macro.prototype.toString = function () {
     return '#<Macro ' + this.name + '>';
-  }; // ----------------------------------------------------------------------
+  };
+
+  var macro = 'define-macro'; // ----------------------------------------------------------------------
   // :: Number wrapper that handle BigNumbers
   // ----------------------------------------------------------------------
-
 
   function LNumber(n, float) {
     if (n instanceof LNumber) {
@@ -2015,6 +2025,10 @@ function _typeof(obj) {
 
 
   function quote(value) {
+    if (value instanceof Promise) {
+      return value.then(quote);
+    }
+
     if (value instanceof Pair || value instanceof _Symbol) {
       value.data = true;
     }
@@ -2074,7 +2088,7 @@ function _typeof(obj) {
               dynamic_scope: dynamic_scope,
               error: error
             }).then(function (result) {
-              resolve(quote(result));
+              resolve(result);
             });
           } else {
             var value = evaluate(pair.cdr.car, {
@@ -2454,11 +2468,11 @@ function _typeof(obj) {
 
       return new Promise(function (resolve) {
         setTimeout(function () {
-          resolve(quote(evaluate(code.cdr, {
+          resolve(evaluate(code.cdr, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
-          })));
+          }));
         }, code.car);
       });
     }),
@@ -2585,7 +2599,7 @@ function _typeof(obj) {
       };
     }),
     // ------------------------------------------------------------------
-    defmacro: new Macro('defmacro', function (macro, _ref12) {
+    'define-macro': new Macro(macro, function (macro, _ref12) {
       var dynamic_scope = _ref12.dynamic_scope,
           error = _ref12.error;
 
@@ -2597,7 +2611,7 @@ function _typeof(obj) {
         return node;
       }
 
-      if (macro.car.car instanceof _Symbol) {
+      if (macro.car instanceof Pair && macro.car.car instanceof _Symbol) {
         var name = macro.car.car.name;
         this.env[name] = new Macro(name, function (code) {
           var env = new Environment({}, this, 'defmacro');
@@ -2799,7 +2813,7 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     list: function list() {
-      return quote(Pair.fromArray([].slice.call(arguments)));
+      return Pair.fromArray([].slice.call(arguments));
     },
     concat: function concat() {
       return [].join.call(arguments, '');
@@ -2917,7 +2931,13 @@ function _typeof(obj) {
       var _this4 = this;
 
       if (typeof arg === 'string') {
-        return quote(parse(tokenize(arg))[0]);
+        arg = parse(tokenize(arg));
+
+        if (arg.length) {
+          return arg[arg.length - 1];
+        }
+
+        return emptyList();
       }
 
       return this.get('stdin').read().then(function (text) {
@@ -3025,12 +3045,16 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     'length': function length(obj) {
+      if (!obj) {
+        return LNumber(0);
+      }
+
       if (obj instanceof Pair) {
-        return obj.length();
+        return LNumber(obj.length());
       }
 
       if ("length" in obj) {
-        return obj.length;
+        return LNumber(obj.length);
       }
     },
     // ------------------------------------------------------------------
@@ -3178,9 +3202,17 @@ function _typeof(obj) {
                 break;
 
               case 14:
+                if (!(typeof result === 'number')) {
+                  _context5.next = 16;
+                  break;
+                }
+
+                return _context5.abrupt("return", LNumber(result));
+
+              case 16:
                 return _context5.abrupt("return", result);
 
-              case 15:
+              case 17:
               case "end":
                 return _context5.stop();
             }
@@ -3227,7 +3259,7 @@ function _typeof(obj) {
                 break;
 
               case 11:
-                return _context6.abrupt("return", Pair.fromArray(result));
+                return _context6.abrupt("return", Pair.fromArray(result, true));
 
               case 12:
               case "end":
@@ -3527,7 +3559,7 @@ function _typeof(obj) {
       return LNumber(a).shl(b);
     },
     not: function not(value) {
-      if (value === nil) {
+      if (isEmptyList(value)) {
         return true;
       }
 
@@ -3747,12 +3779,12 @@ function _typeof(obj) {
       };
       var value;
 
-      if (typeof code === 'undefined') {
-        return;
+      if (typeof code === 'undefined' || code === nil || code === null) {
+        return code;
       }
 
-      if (code === null) {
-        return nil;
+      if (isEmptyList(code)) {
+        return emptyList();
       }
 
       var first = code.car;
@@ -3793,11 +3825,11 @@ function _typeof(obj) {
         if (args instanceof Promise) {
           return args.then(function (args) {
             var scope = dynamic_scope || env;
-            return maybe_promise(value.apply(scope, args));
+            return quote(maybe_promise(value.apply(scope, args)));
           });
         }
 
-        return maybe_promise(value.apply(dynamic_scope || env, args));
+        return quote(maybe_promise(value.apply(dynamic_scope || env, args)));
       } else if (code instanceof _Symbol) {
         value = env.get(code);
 

@@ -129,7 +129,7 @@
       ],
       "max-len": [
         "error",
-        85
+        90
       ],
       "max-statements-per-line": "error",
       "new-parens": "error",
