@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 06 Oct 2018 18:46:07 +0000
+ * build: Sat, 06 Oct 2018 19:39:29 +0000
  */
 (function () {
 'use strict';
@@ -2119,30 +2119,6 @@ function _typeof(obj) {
     };
   }();
 
-  function request(url) {
-    var method = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'GET';
-    var headers = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    var data = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-    var xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    Object.keys(headers).forEach(function (name) {
-      xhr.setRequestHeader(name, headers[name]);
-    });
-    return new Promise(function (resolve) {
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          resolve(xhr.responseText);
-        }
-      };
-
-      if (data !== null) {
-        xhr.send(data);
-      } else {
-        xhr.send();
-      }
-    });
-  }
-
   var global_env = new Environment({
     nil: nil,
     'true': true,
@@ -2269,7 +2245,7 @@ function _typeof(obj) {
     load: function load(file) {
       var _this = this;
 
-      request(file).then(function (code) {
+      root.fetch(file).then(function (code) {
         _this.get('eval')(_this.get('read')(code));
       });
     },
@@ -2759,7 +2735,9 @@ function _typeof(obj) {
         if (pair instanceof Unquote) {
           if (max_unquote === pair.count) {
             return evaluate(pair.value, {
-              env: self
+              env: self,
+              dynamic_scope: dynamic_scope,
+              error: error
             });
           } else {
             return new Pair(new _Symbol('unquote'), new Pair(unquoting(pair.value), nil));
@@ -3862,35 +3840,64 @@ function _typeof(obj) {
     var list = parse(tokenize(string));
     return new Promise(function (resolve, reject) {
       var results = [];
+      (function () {
+        var _recur = _asyncToGenerator(
+        /*#__PURE__*/
+        regenerator.mark(function _callee7() {
+          var code, result;
+          return regenerator.wrap(function _callee7$(_context7) {
+            while (1) {
+              switch (_context7.prev = _context7.next) {
+                case 0:
+                  code = list.shift();
 
-      (function recur() {
-        function next(value) {
-          results.push(value);
-          recur();
-        }
+                  if (code) {
+                    _context7.next = 5;
+                    break;
+                  }
 
-        var code = list.shift();
+                  resolve(results);
+                  _context7.next = 16;
+                  break;
 
-        if (!code) {
-          resolve(results);
-        } else {
-          try {
-            var result = evaluate(code, {
-              env: env,
-              dynamic_scope: dynamic_scope,
-              error: reject
-            });
-          } catch (e) {
-            return reject(e);
-          }
+                case 5:
+                  _context7.prev = 5;
+                  _context7.next = 8;
+                  return evaluate(code, {
+                    env: env,
+                    dynamic_scope: dynamic_scope,
+                    error: function error(e) {
+                      reject(e);
+                      throw e;
+                    }
+                  });
 
-          if (result instanceof Promise) {
-            result.then(next);
-          } else {
-            next(result);
-          }
-        }
-      })();
+                case 8:
+                  result = _context7.sent;
+                  _context7.next = 14;
+                  break;
+
+                case 11:
+                  _context7.prev = 11;
+                  _context7.t0 = _context7["catch"](5);
+                  return _context7.abrupt("return", reject(_context7.t0));
+
+                case 14:
+                  results.push(result);
+                  recur();
+
+                case 16:
+                case "end":
+                  return _context7.stop();
+              }
+            }
+          }, _callee7, this, [[5, 11]]);
+        }));
+
+        return function recur() {
+          return _recur.apply(this, arguments);
+        };
+      })()();
     });
   } // ----------------------------------------------------------------------
 

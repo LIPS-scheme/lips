@@ -1033,25 +1033,6 @@
             return new Symbol('#' + count);
         };
     })();
-    function request(url, method = 'GET', headers = {}, data = null) {
-        var xhr = new XMLHttpRequest();
-        xhr.open(method, url, true);
-        Object.keys(headers).forEach(name => {
-            xhr.setRequestHeader(name, headers[name]);
-        });
-        return new Promise((resolve) => {
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    resolve(xhr.responseText);
-                }
-            };
-            if (data !== null) {
-                xhr.send(data);
-            } else {
-                xhr.send();
-            }
-        });
-    }
     var global_env = new Environment({
         nil: nil,
         'true': true,
@@ -1152,7 +1133,7 @@
         gensym: gensym,
         // ------------------------------------------------------------------
         load: function(file) {
-            request(file).then((code) => {
+            root.fetch(file).then((code) => {
                 this.get('eval')(this.get('read')(code));
             });
         },
@@ -1485,7 +1466,7 @@
             function unquoting(pair) {
                 if (pair instanceof Unquote) {
                     if (max_unquote === pair.count) {
-                        return evaluate(pair.value, {env: self});
+                        return evaluate(pair.value, {env: self, dynamic_scope, error});
                     } else {
                         return new Pair(
                             new Symbol('unquote'),
@@ -2232,29 +2213,25 @@
         var list = parse(tokenize(string));
         return new Promise((resolve, reject) => {
             var results = [];
-            (function recur() {
-                function next(value) {
-                    results.push(value);
-                    recur();
-                }
+            (async function recur() {
                 var code = list.shift();
                 if (!code) {
                     resolve(results);
                 } else {
                     try {
-                        var result = evaluate(code, {
+                        var result = await evaluate(code, {
                             env,
                             dynamic_scope,
-                            error: reject
+                            error: (e) => {
+                                reject(e);
+                                throw e;
+                            }
                         });
                     } catch (e) {
                         return reject(e);
                     }
-                    if (result instanceof Promise) {
-                        result.then(next);
-                    } else {
-                        next(result);
-                    }
+                    results.push(result);
+                    recur();
                 }
             })();
         });
