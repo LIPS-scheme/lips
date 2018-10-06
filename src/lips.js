@@ -1594,12 +1594,12 @@
             return obj instanceof type;
         },
         // ------------------------------------------------------------------
-        read: function(arg) {
+        read: function read(arg) {
             if (typeof arg === 'string') {
-                return parse(tokenize(arg));
+                return quote(parse(tokenize(arg))[0]);
             }
             return this.get('stdin').read().then((text) => {
-                return this.get('read').call(this, text);
+                return read.call(this, text);
             });
         },
         // ------------------------------------------------------------------

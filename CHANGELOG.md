@@ -19,6 +19,7 @@
 * fix parsing float numbers that start with dot
 * prevent evaluation of quoted expressions in macros
 * fix macro sharing body between invocations
+* fix read function
 
 ## 0.5.4
 ### Bugs

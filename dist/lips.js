@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 06 Oct 2018 08:08:55 +0000
+ * build: Sat, 06 Oct 2018 09:10:33 +0000
  */
 (function () {
 'use strict';
@@ -2854,11 +2854,11 @@ function _typeof(obj) {
       var _this4 = this;
 
       if (typeof arg === 'string') {
-        return parse(tokenize(arg));
+        return quote(parse(tokenize(arg))[0]);
       }
 
       return this.get('stdin').read().then(function (text) {
-        return _this4.get('read').call(_this4, text);
+        return read.call(_this4, text);
       });
     },
     // ------------------------------------------------------------------
