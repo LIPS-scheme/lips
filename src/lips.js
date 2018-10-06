@@ -378,7 +378,7 @@
 
     // ----------------------------------------------------------------------
     Pair.prototype.toArray = function() {
-        if (this.cdr === nil && this.car === nil) {
+        if (this.isEmptyList()) {
             return [];
         }
         var result = [];
@@ -403,7 +403,7 @@
         if (array instanceof Pair) {
             return array;
         }
-        if (array.length && !array instanceof Array) {
+        if (array.length && !(array instanceof Array)) {
             array = [...array];
         }
         if (array.length === 0) {
@@ -1094,8 +1094,9 @@
             if (!ref) {
                 ref = this;
             }
+            value = maybe_promise(value);
             if (value instanceof Promise) {
-                value.then(value => ref.set(code.car, value));
+                return value.then(value => ref.set(code.car, value));
             } else {
                 ref.set(code.car, value);
             }
@@ -1113,9 +1114,12 @@
         },
         // ------------------------------------------------------------------
         assoc: function(key, list) {
+            if (key instanceof Pair && !(list instanceof Pair)) {
+                throw new Error('First argument to assoc new to a key');
+            }
             var node = list;
             while (true) {
-                if (this.get('empty?')(node)) {
+                if (!(node instanceof Pair) || this.get('empty?')(node)) {
                     break;
                 }
                 var car = node.car.car;
@@ -1587,6 +1591,10 @@
             }
             return result;
         },
+        'new': function(obj, ...args) {
+            console.log(args);
+            return new obj(...args);
+        },
         // ------------------------------------------------------------------
         '.': function(obj, arg) {
             var name = arg instanceof Symbol ? arg.name : arg;
@@ -1643,10 +1651,6 @@
             return result;
         },
         // ------------------------------------------------------------------
-        filter: function(fn, list) {
-            return Pair.fromArray(this.get('list->array')(list).filter(fn));
-        },
-        // ------------------------------------------------------------------
         apply: new Macro('apply', function(code, {dynamic_scope, error} = {}) {
             if (dynamic_scope) {
                 dynamic_scope = this;
@@ -1682,26 +1686,64 @@
             }
         }),
         // ------------------------------------------------------------------
-        map: function(fn, list) {
-            var result = this.get('list->array')(list).map(fn);
-            if (result.length) {
-                return Pair.fromArray(result);
-            } else {
-                return nil;
+        'length': function(obj) {
+            if (obj instanceof Pair) {
+                return obj.length();
+            }
+            if ("length" in obj) {
+                return obj.length;
             }
         },
         // ------------------------------------------------------------------
-        reduce: function(fn, list, init = null) {
-            var arr = this.get('list->array')(list);
-            if (init === null) {
-                return arr.slice(1).reduce((acc, item) => {
-                    return fn(acc, item);
-                }, arr[0]);
-            } else {
-                return arr.reduce((acc, item) => {
-                    return fn(acc, item);
-                }, init);
+        find: async function(fn, list) {
+            var array = this.get('list->array')(list);
+            for (var i = 0; i < array.length; ++i) {
+                if (await fn(array[i], i)) {
+                    return array[i];
+                }
             }
+        },
+        // ------------------------------------------------------------------
+        map: async function(fn, list) {
+            var array = this.get('list->array')(list);
+            var result = [];
+            var i = 0;
+            while (i < array.length) {
+                var item = array[i++];
+                result.push(await fn(item, i));
+            }
+            return Pair.fromArray(result);
+        },
+        // ------------------------------------------------------------------
+        reduce: async function(fn, list, init = null) {
+            var array = this.get('list->array')(list);
+            if (list.length === 0) {
+                return nil;
+            }
+            var result = init;
+            if (init === null) {
+                result = array.unshift();
+            }
+            var i = 0;
+            while (i < array.length) {
+                var item = array[i];
+                result = await fn(result, item);
+            }
+            return result;
+        },
+        // ------------------------------------------------------------------
+        filter: async function(fn, list) {
+            var array = this.get('list->array')(list);
+            var result = [];
+            var i = 0;
+            while (i < array.length) {
+                var item = array[i++];
+                var cond = await fn(item, i);
+                if (cond) {
+                    result.push(item);
+                }
+            }
+            return Pair.fromArray(result);
         },
         // ------------------------------------------------------------------
         curry: function(fn, ...init_args) {
@@ -2176,13 +2218,13 @@
                         var result = evaluate(code, {
                             env,
                             dynamic_scope,
-                            error: (e) => reject(e)
+                            error: reject
                         });
                     } catch (e) {
                         return reject(e);
                     }
                     if (result instanceof Promise) {
-                        result.then(next).catch(reject);
+                        result.then(next);
                     } else {
                         next(result);
                     }

@@ -6,6 +6,7 @@
 * add bit operation functions
 * add float, round and ceil functions
 * add env variable to lips namespace
+* add length and find higher order function
 ### Bugs
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions
@@ -22,6 +23,7 @@
 * fix macro sharing body between invocations
 * fix read function
 * fix parsing boolean values
+* fix map, reduce and filter to handle async functions
 
 ## 0.5.4
 ### Bugs

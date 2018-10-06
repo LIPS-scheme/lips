@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 06 Oct 2018 11:40:25 +0000
+ * build: Sat, 06 Oct 2018 16:06:38 +0000
  */
 (function () {
 'use strict';
@@ -47,6 +47,45 @@ function _nonIterableRest() {
 
 function _slicedToArray(arr, i) {
   return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+}
+
+function _setPrototypeOf(o, p) {
+  _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+    o.__proto__ = p;
+    return o;
+  };
+
+  return _setPrototypeOf(o, p);
+}
+
+function isNativeReflectConstruct() {
+  if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+  if (Reflect.construct.sham) return false;
+  if (typeof Proxy === "function") return true;
+
+  try {
+    Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function _construct(Parent, args, Class) {
+  if (isNativeReflectConstruct()) {
+    _construct = Reflect.construct;
+  } else {
+    _construct = function _construct(Parent, args, Class) {
+      var a = [null];
+      a.push.apply(a, args);
+      var Constructor = Function.bind.apply(Parent, a);
+      var instance = new Constructor();
+      if (Class) setPrototypeOf(instance, Class.prototype);
+      return instance;
+    };
+  }
+
+  return _construct.apply(null, arguments);
 }
 
 function createCommonjsModule(fn, module) {
@@ -1326,7 +1365,7 @@ function _typeof(obj) {
 
 
   Pair.prototype.toArray = function () {
-    if (this.cdr === nil && this.car === nil) {
+    if (this.isEmptyList()) {
       return [];
     }
 
@@ -1356,7 +1395,7 @@ function _typeof(obj) {
       return array;
     }
 
-    if (array.length && !array instanceof Array) {
+    if (array.length && !(array instanceof Array)) {
       array = _toConsumableArray(array);
     }
 
@@ -2165,8 +2204,10 @@ function _typeof(obj) {
         ref = this;
       }
 
+      value = maybe_promise(value);
+
       if (value instanceof Promise) {
-        value.then(function (value) {
+        return value.then(function (value) {
           return ref.set(code.car, value);
         });
       } else {
@@ -2186,10 +2227,14 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     assoc: function assoc(key, list) {
+      if (key instanceof Pair && !(list instanceof Pair)) {
+        throw new Error('First argument to assoc new to a key');
+      }
+
       var node = list;
 
       while (true) {
-        if (this.get('empty?')(node)) {
+        if (!(node instanceof Pair) || this.get('empty?')(node)) {
           break;
         }
 
@@ -2843,6 +2888,14 @@ function _typeof(obj) {
 
       return result;
     },
+    'new': function _new(obj) {
+      for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+        args[_key2 - 1] = arguments[_key2];
+      }
+
+      console.log(args);
+      return _construct(obj, args);
+    },
     // ------------------------------------------------------------------
     '.': function _(obj, arg) {
       var name = arg instanceof _Symbol ? arg.name : arg;
@@ -2877,8 +2930,8 @@ function _typeof(obj) {
       var _this$get,
           _this5 = this;
 
-      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
+      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
@@ -2912,10 +2965,6 @@ function _typeof(obj) {
       }
 
       return result;
-    },
-    // ------------------------------------------------------------------
-    filter: function filter(fn, list) {
-      return Pair.fromArray(this.get('list->array')(list).filter(fn));
     },
     // ------------------------------------------------------------------
     apply: new Macro('apply', function (code) {
@@ -2976,34 +3025,227 @@ function _typeof(obj) {
       }
     }),
     // ------------------------------------------------------------------
-    map: function map(fn, list) {
-      var result = this.get('list->array')(list).map(fn);
+    'length': function length(obj) {
+      if (obj instanceof Pair) {
+        return obj.length();
+      }
 
-      if (result.length) {
-        return Pair.fromArray(result);
-      } else {
-        return nil;
+      if ("length" in obj) {
+        return obj.length;
       }
     },
     // ------------------------------------------------------------------
-    reduce: function reduce(fn, list) {
-      var init = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-      var arr = this.get('list->array')(list);
+    find: function () {
+      var _find = _asyncToGenerator(
+      /*#__PURE__*/
+      regenerator.mark(function _callee3(fn, list) {
+        var array, i;
+        return regenerator.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                array = this.get('list->array')(list);
+                i = 0;
 
-      if (init === null) {
-        return arr.slice(1).reduce(function (acc, item) {
-          return fn(acc, item);
-        }, arr[0]);
-      } else {
-        return arr.reduce(function (acc, item) {
-          return fn(acc, item);
-        }, init);
-      }
-    },
+              case 2:
+                if (!(i < array.length)) {
+                  _context3.next = 10;
+                  break;
+                }
+
+                _context3.next = 5;
+                return fn(array[i], i);
+
+              case 5:
+                if (!_context3.sent) {
+                  _context3.next = 7;
+                  break;
+                }
+
+                return _context3.abrupt("return", array[i]);
+
+              case 7:
+                ++i;
+                _context3.next = 2;
+                break;
+
+              case 10:
+              case "end":
+                return _context3.stop();
+            }
+          }
+        }, _callee3, this);
+      }));
+
+      return function find(_x5, _x6) {
+        return _find.apply(this, arguments);
+      };
+    }(),
+    // ------------------------------------------------------------------
+    map: function () {
+      var _map = _asyncToGenerator(
+      /*#__PURE__*/
+      regenerator.mark(function _callee4(fn, list) {
+        var array, result, i, item;
+        return regenerator.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                array = this.get('list->array')(list);
+                result = [];
+                i = 0;
+
+              case 3:
+                if (!(i < array.length)) {
+                  _context4.next = 12;
+                  break;
+                }
+
+                item = array[i++];
+                _context4.t0 = result;
+                _context4.next = 8;
+                return fn(item, i);
+
+              case 8:
+                _context4.t1 = _context4.sent;
+
+                _context4.t0.push.call(_context4.t0, _context4.t1);
+
+                _context4.next = 3;
+                break;
+
+              case 12:
+                return _context4.abrupt("return", Pair.fromArray(result));
+
+              case 13:
+              case "end":
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+
+      return function map(_x7, _x8) {
+        return _map.apply(this, arguments);
+      };
+    }(),
+    // ------------------------------------------------------------------
+    reduce: function () {
+      var _reduce = _asyncToGenerator(
+      /*#__PURE__*/
+      regenerator.mark(function _callee5(fn, list) {
+        var init,
+            array,
+            result,
+            i,
+            item,
+            _args5 = arguments;
+        return regenerator.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                init = _args5.length > 2 && _args5[2] !== undefined ? _args5[2] : null;
+                array = this.get('list->array')(list);
+
+                if (!(list.length === 0)) {
+                  _context5.next = 4;
+                  break;
+                }
+
+                return _context5.abrupt("return", nil);
+
+              case 4:
+                result = init;
+
+                if (init === null) {
+                  result = array.unshift();
+                }
+
+                i = 0;
+
+              case 7:
+                if (!(i < array.length)) {
+                  _context5.next = 14;
+                  break;
+                }
+
+                item = array[i];
+                _context5.next = 11;
+                return fn(result, item);
+
+              case 11:
+                result = _context5.sent;
+                _context5.next = 7;
+                break;
+
+              case 14:
+                return _context5.abrupt("return", result);
+
+              case 15:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this);
+      }));
+
+      return function reduce(_x9, _x10) {
+        return _reduce.apply(this, arguments);
+      };
+    }(),
+    // ------------------------------------------------------------------
+    filter: function () {
+      var _filter = _asyncToGenerator(
+      /*#__PURE__*/
+      regenerator.mark(function _callee6(fn, list) {
+        var array, result, i, item, cond;
+        return regenerator.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                array = this.get('list->array')(list);
+                result = [];
+                i = 0;
+
+              case 3:
+                if (!(i < array.length)) {
+                  _context6.next = 11;
+                  break;
+                }
+
+                item = array[i++];
+                _context6.next = 7;
+                return fn(item, i);
+
+              case 7:
+                cond = _context6.sent;
+
+                if (cond) {
+                  result.push(item);
+                }
+
+                _context6.next = 3;
+                break;
+
+              case 11:
+                return _context6.abrupt("return", Pair.fromArray(result));
+
+              case 12:
+              case "end":
+                return _context6.stop();
+            }
+          }
+        }, _callee6, this);
+      }));
+
+      return function filter(_x11, _x12) {
+        return _filter.apply(this, arguments);
+      };
+    }(),
     // ------------------------------------------------------------------
     curry: function curry(fn) {
-      for (var _len3 = arguments.length, init_args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-        init_args[_key3 - 1] = arguments[_key3];
+      for (var _len4 = arguments.length, init_args = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+        init_args[_key4 - 1] = arguments[_key4];
       }
 
       var len = fn.length;
@@ -3011,8 +3253,8 @@ function _typeof(obj) {
         var args = init_args.slice();
 
         function call() {
-          for (var _len4 = arguments.length, more_args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-            more_args[_key4] = arguments[_key4];
+          for (var _len5 = arguments.length, more_args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+            more_args[_key5] = arguments[_key5];
           }
 
           args = args.concat(more_args);
@@ -3048,8 +3290,8 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     // math functions
     '*': function _() {
-      for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        args[_key5] = arguments[_key5];
+      for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+        args[_key6] = arguments[_key6];
       }
 
       if (args.length) {
@@ -3060,8 +3302,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '+': function _() {
-      for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
+      for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+        args[_key7] = arguments[_key7];
       }
 
       if (args.length) {
@@ -3078,8 +3320,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '-': function _() {
-      for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-        args[_key7] = arguments[_key7];
+      for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        args[_key8] = arguments[_key8];
       }
 
       if (args.length === 1) {
@@ -3094,8 +3336,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '/': function _() {
-      for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
+      for (var _len9 = arguments.length, args = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        args[_key9] = arguments[_key9];
       }
 
       if (args.length) {
@@ -3293,8 +3535,8 @@ function _typeof(obj) {
       return !value;
     },
     '->': function _(obj, name) {
-      for (var _len9 = arguments.length, args = new Array(_len9 > 2 ? _len9 - 2 : 0), _key9 = 2; _key9 < _len9; _key9++) {
-        args[_key9 - 2] = arguments[_key9];
+      for (var _len10 = arguments.length, args = new Array(_len10 > 2 ? _len10 - 2 : 0), _key10 = 2; _key10 < _len10; _key10++) {
+        args[_key10 - 2] = arguments[_key10];
       }
 
       return obj[name].apply(obj, args);
@@ -3600,16 +3842,14 @@ function _typeof(obj) {
             var result = evaluate(code, {
               env: env,
               dynamic_scope: dynamic_scope,
-              error: function error(e) {
-                return reject(e);
-              }
+              error: reject
             });
           } catch (e) {
             return reject(e);
           }
 
           if (result instanceof Promise) {
-            result.then(next).catch(reject);
+            result.then(next);
           } else {
             next(result);
           }
