@@ -360,6 +360,9 @@
 
     // ----------------------------------------------------------------------
     Pair.prototype.length = function() {
+        if (isEmptyList(this)) {
+            return 0;
+        }
         var len = 0;
         var node = this;
         while (true) {

@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 06 Oct 2018 19:39:29 +0000
+ * build: Sat, 06 Oct 2018 20:09:44 +0000
  */
 (function () {
 'use strict';
@@ -1337,6 +1337,10 @@ function _typeof(obj) {
 
 
   Pair.prototype.length = function () {
+    if (isEmptyList(this)) {
+      return 0;
+    }
+
     var len = 0;
     var node = this;
 
