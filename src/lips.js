@@ -951,10 +951,11 @@
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
         var name = 'let' + (asterisk ? '*' : '');
+        var count = 0;
         return new Macro(name, function(code, {dynamic_scope, error}) {
             var self = this;
             var args = this.get('list->array')(code.car);
-            var env = this.inherit('let');
+            var env = self.inherit('let_' + (count++));
             return new Promise((resolve) => {
                 var promises = [];
                 var i = 0;
@@ -2087,6 +2088,9 @@
             if (first instanceof Symbol) {
                 value = env.get(first);
                 if (value instanceof Macro) {
+                    if (rest instanceof Pair) {
+                        rest = rest.clone();
+                    }
                     value = value.invoke(rest, eval_args);
                     value = maybe_promise(value);
                     if (value && value.data) {

@@ -18,6 +18,7 @@
 * don't allow regex that start with space (so it work when you have two divisions in one S-Expression)
 * fix parsing float numbers that start with dot
 * prevent evaluation of quoted expressions in macros
+* fix macro sharing body between invocations
 
 ## 0.5.4
 ### Bugs

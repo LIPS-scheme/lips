@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 05 Oct 2018 16:53:17 +0000
+ * build: Sat, 06 Oct 2018 08:08:55 +0000
  */
 (function () {
 'use strict';
@@ -1990,12 +1990,13 @@ function _typeof(obj) {
 
   function let_macro(asterisk) {
     var name = 'let' + (asterisk ? '*' : '');
+    var count = 0;
     return new Macro(name, function (code, _ref2) {
       var dynamic_scope = _ref2.dynamic_scope,
           error = _ref2.error;
       var self = this;
       var args = this.get('list->array')(code.car);
-      var env = this.inherit('let');
+      var env = self.inherit('let_' + count++);
       return new Promise(function (resolve) {
         var promises = [];
         var i = 0;
@@ -3495,6 +3496,10 @@ function _typeof(obj) {
         value = env.get(first);
 
         if (value instanceof Macro) {
+          if (rest instanceof Pair) {
+            rest = rest.clone();
+          }
+
           value = value.invoke(rest, eval_args);
           value = maybe_promise(value);
 
