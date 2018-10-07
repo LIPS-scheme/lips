@@ -1,6 +1,6 @@
 .PHONY: publish test coveralls lint
 
-VERSION=0.6.0
+VERSION=0.6.1
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
