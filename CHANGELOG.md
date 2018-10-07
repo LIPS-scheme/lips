@@ -12,6 +12,7 @@
 * add new function which create instance of objects
 * allow to set value using set! and dot expression that is used to get the value
 * better invalid mime on script tag detection
+* use ES6 symbols as names for lips symbols in gensym function
 ### Bugs
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions

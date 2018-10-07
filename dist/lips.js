@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 14:05:27 +0000
+ * build: Sun, 07 Oct 2018 14:47:08 +0000
  */
 (function () {
 'use strict';
@@ -1334,6 +1334,10 @@ function _typeof(obj) {
 
   _Symbol.prototype.toJSON = _Symbol.prototype.toString = function () {
     //return '<#symbol \'' + this.name + '\'>';
+    if (_typeof(this.name) === 'symbol') {
+      return this.name.toString();
+    }
+
     return this.name;
   }; // ----------------------------------------------------------------------
   // :: Nil constructor with only once instance
@@ -1574,6 +1578,8 @@ function _typeof(obj) {
         arr.push('<#function ' + (this.car.name || 'anonymous') + '>');
       } else if (typeof this.car === 'string') {
         arr.push(JSON.stringify(this.car));
+      } else if (this.car instanceof _Symbol) {
+        arr.push(this.car.toString());
       } else if (typeof this.car !== 'undefined') {
         arr.push(this.car);
       }
@@ -2314,8 +2320,15 @@ function _typeof(obj) {
   var gensym = function () {
     var count = 0;
     return function () {
+      var name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+      // use ES6 symbol as name for lips symbol to they are uniq
+      if (name !== null) {
+        return new _Symbol(root.Symbol('#' + name));
+      }
+
       count++;
-      return new _Symbol('#' + count);
+      return new _Symbol(root.Symbol('#' + count));
     };
   }();
 

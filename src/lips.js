@@ -363,6 +363,9 @@
     };
     Symbol.prototype.toJSON = Symbol.prototype.toString = function() {
         //return '<#symbol \'' + this.name + '\'>';
+        if (typeof this.name === 'symbol') {
+            return this.name.toString();
+        }
         return this.name;
     };
     // ----------------------------------------------------------------------
@@ -573,6 +576,8 @@
                 arr.push('<#function ' + (this.car.name || 'anonymous') + '>');
             } else if (typeof this.car === 'string') {
                 arr.push(JSON.stringify(this.car));
+            } else if (this.car instanceof Symbol) {
+                arr.push(this.car.toString());
             } else if (typeof this.car !== 'undefined') {
                 arr.push(this.car);
             }
@@ -1115,9 +1120,13 @@
     }
     var gensym = (function() {
         var count = 0;
-        return function() {
+        return function(name = null) {
+            // use ES6 symbol as name for lips symbol to they are uniq
+            if (name !== null) {
+                return new Symbol(root.Symbol('#' + name));
+            }
             count++;
-            return new Symbol('#' + count);
+            return new Symbol(root.Symbol('#' + count));
         };
     })();
     var global_env = new Environment({
