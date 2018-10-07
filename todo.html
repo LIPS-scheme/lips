@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TODO lips</title>
+    <script src="dist/lips.js"></script>
+    <script src="https://unpkg.com/handlebars/dist/handlebars.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://unpkg.com/director@1.2.8/build/director.min.js"></script>
+    <link href="https://rawgit.com/tastejs/todomvc/gh-pages/examples/jquery/node_modules/todomvc-app-css/index.css"
+          rel="stylesheet"/>
+    <link href="https://rawgit.com/tastejs/todomvc/gh-pages/examples/jquery/node_modules/todomvc-common/base.css"
+          rel="stylesheet"/>
+    <script id="todo-template" type="text/x-handlebars-template">
+      {{#this}}
+      <li {{#if completed}}class="completed"{{/if}} data-id="{{id}}">
+        <div class="view">
+          <input class="toggle" type="checkbox" {{#if completed}}checked{{/if}}>
+          <label>{{title}}</label>
+          <button class="destroy"></button>
+        </div>
+        <input class="edit" value="{{title}}">
+      </li>
+    {{/this}}
+    </script>
+    <script id="footer-template" type="text/x-handlebars-template">
+      <span class="todo-count"><strong>{{activeTodoCount}}</strong> {{activeTodoWord}} left</span>
+      <ul class="filters">
+        <li>
+          <a {{#eq filter 'all'}}class="selected"{{/eq}} href="#/all">All</a>
+        </li>
+        <li>
+          <a {{#eq filter 'active'}}class="selected"{{/eq}}href="#/active">Active</a>
+        </li>
+        <li>
+          <a {{#eq filter 'completed'}}class="selected"{{/eq}}href="#/completed">Completed</a>
+        </li>
+      </ul>
+      {{#if completedTodos}}<button class="clear-completed">Clear completed</button>{{/if}}
+    </script>
+    <script>
+     // we create helper in JS because lips don't expose this context
+     Handlebars.registerHelper('eq', function (a, b, options) {
+         return a === b ? options.fn(this) : options.inverse(this);
+     });
+    </script>
+  </head>
+  <body>
+    <section class="todoapp">
+      <header class="header">
+        <h1>todos</h1>
+        <input class="new-todo" placeholder="What needs to be done?" autofocus>
+      </header>
+      <section class="main">
+        <input id="toggle-all" class="toggle-all" type="checkbox">
+        <label for="toggle-all">Mark all as complete</label>
+        <ul class="todo-list"></ul>
+      </section>
+      <footer class="footer"></footer>
+    </section>
+    <footer class="info">
+      <p>Double-click to edit a todo</p>
+      <p>Author <a href="https://jcubic.pl/jakub-jankiewicz">Jakub Jankiewicz</a> based on jQuery <a href="http://todomvc.com">TodoMVC</a> by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
+    </footer>
+    <script type="text/x-lips" src="todo.lips"></script>
+  </body>
+</html>

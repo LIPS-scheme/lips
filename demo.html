@@ -19,9 +19,6 @@
          color: inherit;
          font-weight: normal !important;
      }
-     html, body {
-         height: 100%;
-     }
     </style>
   </head>
   <body></body>
@@ -55,7 +52,7 @@
            balanced_parenthesis,
            tokenize,
            parse,
-           evaluate
+           exec
        } = lips;
        var env = new Environment({
            stdout: {
@@ -79,32 +76,19 @@
            if (!balanced_parenthesis(code)) {
                term.error('Unbalanced parenthesis');
            } else {
-               var list = parse(tokenize(code));
-               (function next() {
-                   var code = list.shift();
-                   if (code) {
-                       try {
-                           var ret = evaluate(code, env, env);
-                           if (ret instanceof Promise) {
-                               ret.then((ret) => {
-                                   if (ret !== undefined) {
-                                       env.get('print').call(env, ret)
-                                   }
-                                   next();
-                               }).catch(e => {
-                                   term.error(e.message);
-                               });
-                           } else {
-                               if (ret !== undefined) {
-                                   env.get('print').call(env, ret);
-                               }
-                               next();
+               try {
+                   exec(code, env, env).then(ret => {
+                       ret.forEach(ret => {
+                           if (ret !== undefined) {
+                               env.get('print').call(env, ret);
                            }
-                       } catch (e) {
-                           term.exception(e);
-                       }
-                   }
-               })();
+                       });
+                   }).catch(e => {
+                       term.exception(e);
+                   });
+               } catch (e) {
+                   term.exception(e);
+               }
            }
        }, {
            name: 'lisp',
@@ -157,7 +141,7 @@
        });
    })();
   </script>
-  <script type="text-x/lips">
+  <script type="text/x-lips">
    ;; Example of LIPS in script tag
    (load "greetings.lips")
    (let* ((res (fetch "greetings.lips"))

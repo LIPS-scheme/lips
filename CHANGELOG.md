@@ -1,3 +1,38 @@
+## 0.6.0
+### Breaking
+* change api for evaluate to have object `{env, dynamic_scope, error}`
+* rename set to set!, set-cdr to set-cdr! and set-car to set-car!
+* rename defmacro to define-macro like in scheme
+* change order of arguments in env.inherit
+## Features
+* add bit operation functions
+* add float, round and ceil functions
+* add env variable to lips namespace which is alias to global_environment
+* add find and for-each higher order functions
+* add length function
+* add new function which create instance of objects
+* allow to set value using set! and dot expression that is used to get the value
+* better invalid mime on script tag detection
+* use ES6 symbols as names for lips symbols in gensym function
+### Bugs
+* show error when invoking trampoline in dynamic scope
+* fix eq? and >= functions
+* fix set! (change existing reference or create new if not existing in scope chain)
+* fix return value of if macro
+* fix defmacro
+* fix parsing expressions that have multiple special characters in a row
+* handle float calculations
+* throw exception when try to execute native non function value
+* fix resolving Promises when evaluating code
+* don't allow regex that start with space (so it work when you have two divisions in one S-Expression)
+* fix parsing float numbers that start with dot
+* prevent evaluation of quoted expressions in macros
+* fix macro sharing body between invocations
+* fix read function
+* fix parsing boolean values
+* fix map, reduce and filter to handle async functions
+* fix access variables that have value of undefined
+
 ## 0.5.4
 ### Bugs
 * use src file for node and dist build file for unpkg
