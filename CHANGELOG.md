@@ -9,6 +9,7 @@
 * add float, round and ceil functions
 * add env variable to lips namespace which is alias to global_environment
 * add length and find higher order function
+* add new function which create instance of objects
 * allow to set value using set! and dot expression that is used to get the value
 ### Bugs
 * show error when invoking trampoline in dynamic scope
