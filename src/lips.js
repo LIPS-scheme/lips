@@ -2347,12 +2347,13 @@
             env = env || global_env;
         }
         var list = parse(tokenize(string));
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             var results = [];
-            (async function recur() {
+            while (true) {
                 var code = list.shift();
                 if (!code) {
                     resolve(results);
+                    break;
                 } else {
                     try {
                         var result = await evaluate(code, {
@@ -2367,9 +2368,8 @@
                         return reject(e);
                     }
                     results.push(result);
-                    recur();
                 }
-            })();
+            }
         });
     }
 

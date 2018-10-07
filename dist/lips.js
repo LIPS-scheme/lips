@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 17:45:20 +0000
+ * build: Sun, 07 Oct 2018 17:51:25 +0000
  */
 (function () {
 'use strict';
@@ -4133,67 +4133,72 @@ function _typeof(obj) {
     }
 
     var list = parse(tokenize(string));
-    return new Promise(function (resolve, reject) {
-      var results = [];
-      (function () {
-        var _recur = _asyncToGenerator(
-        /*#__PURE__*/
-        regenerator.mark(function _callee10() {
-          var code, result;
-          return regenerator.wrap(function _callee10$(_context10) {
-            while (1) {
-              switch (_context10.prev = _context10.next) {
-                case 0:
-                  code = list.shift();
+    return new Promise(
+    /*#__PURE__*/
+    function () {
+      var _ref27 = _asyncToGenerator(
+      /*#__PURE__*/
+      regenerator.mark(function _callee10(resolve, reject) {
+        var results, code, result;
+        return regenerator.wrap(function _callee10$(_context10) {
+          while (1) {
+            switch (_context10.prev = _context10.next) {
+              case 0:
+                results = [];
 
-                  if (code) {
-                    _context10.next = 5;
-                    break;
-                  }
+              case 1:
 
-                  resolve(results);
-                  _context10.next = 16;
-                  break;
+                code = list.shift();
 
-                case 5:
-                  _context10.prev = 5;
+                if (code) {
                   _context10.next = 8;
-                  return evaluate(code, {
-                    env: env,
-                    dynamic_scope: dynamic_scope,
-                    error: function error(e) {
-                      reject(e);
-                      throw e;
-                    }
-                  });
-
-                case 8:
-                  result = _context10.sent;
-                  _context10.next = 14;
                   break;
+                }
 
-                case 11:
-                  _context10.prev = 11;
-                  _context10.t0 = _context10["catch"](5);
-                  return _context10.abrupt("return", reject(_context10.t0));
+                resolve(results);
+                return _context10.abrupt("break", 20);
 
-                case 14:
-                  results.push(result);
-                  recur();
+              case 8:
+                _context10.prev = 8;
+                _context10.next = 11;
+                return evaluate(code, {
+                  env: env,
+                  dynamic_scope: dynamic_scope,
+                  error: function error(e) {
+                    reject(e);
+                    throw e;
+                  }
+                });
 
-                case 16:
-                case "end":
-                  return _context10.stop();
-              }
+              case 11:
+                result = _context10.sent;
+                _context10.next = 17;
+                break;
+
+              case 14:
+                _context10.prev = 14;
+                _context10.t0 = _context10["catch"](8);
+                return _context10.abrupt("return", reject(_context10.t0));
+
+              case 17:
+                results.push(result);
+
+              case 18:
+                _context10.next = 1;
+                break;
+
+              case 20:
+              case "end":
+                return _context10.stop();
             }
-          }, _callee10, this, [[5, 11]]);
-        }));
+          }
+        }, _callee10, this, [[8, 14]]);
+      }));
 
-        return function recur() {
-          return _recur.apply(this, arguments);
-        };
-      })()();
-    });
+      return function (_x18, _x19) {
+        return _ref27.apply(this, arguments);
+      };
+    }());
   } // ----------------------------------------------------------------------
 
 
