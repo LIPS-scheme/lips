@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 08:48:57 +0000
+ * build: Sun, 07 Oct 2018 14:05:27 +0000
  */
 (function () {
 'use strict';
@@ -1070,30 +1070,60 @@ function _typeof(obj) {
 
 
   var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
-  var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.|,@|,|`|[^(\s)]+)/gim;
+  var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.|,@|,|`|[^(\s)]+)/gim;
   /* eslint-enable */
   // ----------------------------------------------------------------------
 
-  function tokenize(str) {
-    var parts = str.split(pre_parse_re).filter(Boolean);
-    return parts.reduce(function (list, item) {
-      if (item.match(pre_parse_re)) {
-        if (!item.match(/^;/)) {
-          return list.concat([item.trim()]);
+  function tokens(str) {
+    var count = 0;
+    var offset = 0;
+    var tokens = [];
+    str.split(pre_parse_re).filter(Boolean).forEach(function (string) {
+      if (string.match(pre_parse_re)) {
+        if (!string.match(/^;/)) {
+          var col = (string.split(/\n/), [""]).pop().length;
+          tokens.push({
+            token: string,
+            col: col,
+            offset: count,
+            line: offset
+          });
+          count += string.length;
         }
 
-        return list;
+        offset += (string.match("\n") || []).length;
+        return;
       }
 
-      var items = [];
-      item.trim().split('\n').forEach(function (line) {
-        var tokens = line.trim().split(tokens_re).map(function (item) {
-          return item.trim();
-        }).filter(Boolean);
-        items = items.concat(tokens);
+      string.split('\n').filter(Boolean).forEach(function (line, i) {
+        var col = 0;
+        line.split(tokens_re).filter(Boolean).forEach(function (token) {
+          var result = {
+            col: col,
+            line: i + offset,
+            token: token,
+            offset: count
+          };
+          col += token.length;
+          count += token.length;
+          tokens.push(result);
+        });
       });
-      return list.concat(items);
-    }, []);
+    });
+    return tokens;
+  } // ----------------------------------------------------------------------
+
+
+  function tokenize(str, extra) {
+    if (extra) {
+      return tokens(str);
+    } else {
+      return tokens(str).map(function (token) {
+        return token.token.trim();
+      }).filter(function (token) {
+        return token && !token.match(/^;/);
+      });
+    }
   } // ----------------------------------------------------------------------
 
 

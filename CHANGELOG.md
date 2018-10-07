@@ -2,7 +2,7 @@
 ### Breaking
 * change api for evaluate to have object `{env, dynamic_scope, error}`
 * rename set to set!, set-cdr to set-cdr! and set-car to set-car!
-* rename defmacro to define-macro
+* rename defmacro to define-macro like in scheme
 * change order of arguments in env.inherit
 ## Features
 * add bit operation functions
