@@ -1,5 +1,12 @@
 ;; -*- scheme -*-
-
+;;
+;; TODO app using LIPS (LIPS is Pretty Simple)
+;; Copyright (C) Jaub Jankiewicz <https://jcubic.pl/me>
+;; Released under the MIT license
+;;
+;; code based on jQuery TODO MVC
+;; https://github.com/tastejs/todomvc/blob/gh-pages/examples/jquery/js/app.js
+;;
 ;; ----------------------------------------------------------------------------------
 ;; Helper macros
 ;; ----------------------------------------------------------------------------------
