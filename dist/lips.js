@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 08:41:52 +0000
+ * build: Sun, 07 Oct 2018 08:48:57 +0000
  */
 (function () {
 'use strict';
@@ -2442,7 +2442,9 @@ function _typeof(obj) {
     load: function load(file) {
       var _this = this;
 
-      root.fetch(file).then(function (code) {
+      root.fetch(file).then(function (res) {
+        return res.text();
+      }).then(function (code) {
         _this.get('eval')(_this.get('read')(code));
       });
     },
@@ -3457,6 +3459,16 @@ function _typeof(obj) {
       };
     }(),
     // ------------------------------------------------------------------
+    range: function range(n) {
+      if (n instanceof LNumber) {
+        n = n.valueOf();
+      }
+
+      return Pair.fromArray(new Array(n).fill(0).map(function (_, i) {
+        return LNumber(i);
+      }));
+    },
+    // ------------------------------------------------------------------
     curry: function curry(fn) {
       for (var _len4 = arguments.length, init_args = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
         init_args[_key4 - 1] = arguments[_key4];
@@ -3490,16 +3502,6 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     even: function even(num) {
       return LNumber(num).isEvent();
-    },
-    // ------------------------------------------------------------------
-    range: function range(n) {
-      if (n instanceof LNumber) {
-        n = n.valueOf();
-      }
-
-      return Pair.fromArray(new Array(n).fill(0).map(function (_, i) {
-        return LNumber(i);
-      }));
     },
     // ------------------------------------------------------------------
     // math functions
@@ -4175,7 +4177,7 @@ function _typeof(obj) {
           } else {
             exec(script.innerHTML);
           }
-        } else if (type.match(/lips|lisp/)) {
+        } else if (type && type.match(/lips|lisp/)) {
           console.warn('Expecting ' + lips_mime + ' found ' + type);
         }
       });

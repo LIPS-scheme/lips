@@ -1207,7 +1207,7 @@
         gensym: gensym,
         // ------------------------------------------------------------------
         load: function(file) {
-            root.fetch(file).then((code) => {
+            root.fetch(file).then(res => res.text()).then(code => {
                 this.get('eval')(this.get('read')(code));
             });
         },
@@ -1830,6 +1830,13 @@
             return Pair.fromArray(result, true);
         },
         // ------------------------------------------------------------------
+        range: function(n) {
+            if (n instanceof LNumber) {
+                n = n.valueOf();
+            }
+            return Pair.fromArray(new Array(n).fill(0).map((_, i) => LNumber(i)));
+        },
+        // ------------------------------------------------------------------
         curry: function(fn, ...init_args) {
             var len = fn.length;
             return function() {
@@ -1853,13 +1860,6 @@
         // ------------------------------------------------------------------
         even: function(num) {
             return LNumber(num).isEvent();
-        },
-        // ------------------------------------------------------------------
-        range: function(n) {
-            if (n instanceof LNumber) {
-                n = n.valueOf();
-            }
-            return Pair.fromArray(new Array(n).fill(0).map((_, i) => LNumber(i)));
         },
         // ------------------------------------------------------------------
         // math functions
@@ -2369,7 +2369,7 @@
                     } else {
                         exec(script.innerHTML);
                     }
-                } else if (type.match(/lips|lisp/)) {
+                } else if (type && type.match(/lips|lisp/)) {
                     console.warn('Expecting ' + lips_mime + ' found ' + type);
                 }
             });
