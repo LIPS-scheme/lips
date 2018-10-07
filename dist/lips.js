@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 16:47:36 +0000
+ * build: Sun, 07 Oct 2018 17:45:20 +0000
  */
 (function () {
 'use strict';
@@ -2392,22 +2392,16 @@ function _typeof(obj) {
           dynamic_scope = _ref7.dynamic_scope,
           error = _ref7.error;
 
-      var value;
-
-      if (code.cdr.car instanceof Pair) {
-        if (dynamic_scope) {
-          dynamic_scope = this;
-        }
-
-        value = evaluate(code.cdr.car, {
-          env: this,
-          dynamic_scope: dynamic_scope,
-          error: error
-        });
-      } else {
-        value = code.cdr.car;
+      if (dynamic_scope) {
+        dynamic_scope = this;
       }
 
+      var value = evaluate(code.cdr.car, {
+        env: this,
+        dynamic_scope: dynamic_scope,
+        error: error
+      });
+      value = maybe_promise(value);
       var ref;
 
       if (code.car instanceof Pair && _Symbol.is(code.car.car, '.')) {
@@ -2423,7 +2417,6 @@ function _typeof(obj) {
           dynamic_scope: dynamic_scope,
           error: error
         });
-        value = maybe_promise(value);
 
         if (value instanceof Promise) {
           return value.then(function (value) {
@@ -2444,8 +2437,6 @@ function _typeof(obj) {
       if (!ref) {
         ref = this;
       }
-
-      value = maybe_promise(value);
 
       if (value instanceof Promise) {
         return value.then(function (value) {
@@ -3092,6 +3083,10 @@ function _typeof(obj) {
       }
 
       if (typeof obj === 'function') {
+        if (obj.toString().match(/\{\s*\[native code\]\s*\}/)) {
+          return '<#function(native)>';
+        }
+
         return '<#function>';
       }
 

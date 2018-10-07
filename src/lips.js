@@ -1184,22 +1184,17 @@
         },
         // ------------------------------------------------------------------
         'set!': new Macro('set!', function(code, {dynamic_scope, error} = {}) {
-            var value;
-            if (code.cdr.car instanceof Pair) {
-                if (dynamic_scope) {
-                    dynamic_scope = this;
-                }
-                value = evaluate(code.cdr.car, {env: this, dynamic_scope, error});
-            } else {
-                value = code.cdr.car;
+            if (dynamic_scope) {
+                dynamic_scope = this;
             }
+            var value = evaluate(code.cdr.car, {env: this, dynamic_scope, error});
+            value = maybe_promise(value);
             var ref;
             if (code.car instanceof Pair && Symbol.is(code.car.car, '.')) {
                 var second = code.car.cdr.car;
                 var thrid = code.car.cdr.cdr.car;
                 var object = evaluate(second, {env: this, dynamic_scope, error});
                 var key = evaluate(thrid, {env: this, dynamic_scope, error});
-                value = maybe_promise(value);
                 if (value instanceof Promise) {
                     return value.then(value => {
                         object[key] = value;
@@ -1216,7 +1211,6 @@
             if (!ref) {
                 ref = this;
             }
-            value = maybe_promise(value);
             if (value instanceof Promise) {
                 return value.then(value => ref.set(code.car, value));
             } else {
@@ -1678,6 +1672,9 @@
                 return '<#undefined>';
             }
             if (typeof obj === 'function') {
+                if (obj.toString().match(/\{\s*\[native code\]\s*\}/)) {
+                    return '<#function(native)>';
+                }
                 return '<#function>';
             }
             if (obj === nil) {
