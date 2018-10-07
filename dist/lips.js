@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 15:08:32 +0000
+ * build: Sun, 07 Oct 2018 16:47:36 +0000
  */
 (function () {
 'use strict';
@@ -2155,18 +2155,21 @@ function _typeof(obj) {
 
   Environment.prototype.get = function (symbol) {
     var value;
+    var defined = false;
 
     if (symbol instanceof _Symbol) {
-      if (typeof this.env[symbol.name] !== 'undefined') {
+      if (symbol.name in this.env) {
         value = this.env[symbol.name];
+        defined = true;
       }
     } else if (typeof symbol === 'string') {
       if (typeof this.env[symbol] !== 'undefined') {
         value = this.env[symbol];
+        defined = true;
       }
     }
 
-    if (typeof value !== 'undefined') {
+    if (defined) {
       if (LNumber.isNumber(value)) {
         return LNumber(value);
       }
@@ -2196,7 +2199,8 @@ function _typeof(obj) {
       }
     }
 
-    throw new Error("Unbound variable `" + (name.name || name) + "'");
+    name = (name.name || name).toString();
+    throw new Error("Unbound variable `" + name + "'");
   }; // ----------------------------------------------------------------------
 
 
@@ -3076,7 +3080,7 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     string: function string(obj) {
       if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
-        return '<#jQuery>';
+        return '<#jQuery(' + obj.length + ')>';
       }
 
       if (obj instanceof LNumber) {
@@ -3340,42 +3344,33 @@ function _typeof(obj) {
       };
     }(),
     // ------------------------------------------------------------------
-    map: function () {
-      var _map = _asyncToGenerator(
+    'for-each': function () {
+      var _forEach = _asyncToGenerator(
       /*#__PURE__*/
       regenerator.mark(function _callee6(fn, list) {
-        var array, result, i, item;
+        var array, i, item;
         return regenerator.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
               case 0:
                 array = this.get('list->array')(list);
-                result = [];
                 i = 0;
 
-              case 3:
+              case 2:
                 if (!(i < array.length)) {
-                  _context6.next = 12;
+                  _context6.next = 8;
                   break;
                 }
 
                 item = array[i++];
-                _context6.t0 = result;
-                _context6.next = 8;
+                _context6.next = 6;
                 return fn(item, i);
 
-              case 8:
-                _context6.t1 = _context6.sent;
-
-                _context6.t0.push.call(_context6.t0, _context6.t1);
-
-                _context6.next = 3;
+              case 6:
+                _context6.next = 2;
                 break;
 
-              case 12:
-                return _context6.abrupt("return", Pair.fromArray(result));
-
-              case 13:
+              case 8:
               case "end":
                 return _context6.stop();
             }
@@ -3383,7 +3378,55 @@ function _typeof(obj) {
         }, _callee6, this);
       }));
 
-      return function map(_x10, _x11) {
+      return function forEach(_x10, _x11) {
+        return _forEach.apply(this, arguments);
+      };
+    }(),
+    // ------------------------------------------------------------------
+    map: function () {
+      var _map = _asyncToGenerator(
+      /*#__PURE__*/
+      regenerator.mark(function _callee7(fn, list) {
+        var array, result, i, item;
+        return regenerator.wrap(function _callee7$(_context7) {
+          while (1) {
+            switch (_context7.prev = _context7.next) {
+              case 0:
+                array = this.get('list->array')(list);
+                result = [];
+                i = 0;
+
+              case 3:
+                if (!(i < array.length)) {
+                  _context7.next = 12;
+                  break;
+                }
+
+                item = array[i++];
+                _context7.t0 = result;
+                _context7.next = 8;
+                return fn(item, i);
+
+              case 8:
+                _context7.t1 = _context7.sent;
+
+                _context7.t0.push.call(_context7.t0, _context7.t1);
+
+                _context7.next = 3;
+                break;
+
+              case 12:
+                return _context7.abrupt("return", Pair.fromArray(result));
+
+              case 13:
+              case "end":
+                return _context7.stop();
+            }
+          }
+        }, _callee7, this);
+      }));
+
+      return function map(_x12, _x13) {
         return _map.apply(this, arguments);
       };
     }(),
@@ -3391,26 +3434,26 @@ function _typeof(obj) {
     reduce: function () {
       var _reduce = _asyncToGenerator(
       /*#__PURE__*/
-      regenerator.mark(function _callee7(fn, list) {
+      regenerator.mark(function _callee8(fn, list) {
         var init,
             array,
             result,
             i,
             item,
-            _args7 = arguments;
-        return regenerator.wrap(function _callee7$(_context7) {
+            _args8 = arguments;
+        return regenerator.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                init = _args7.length > 2 && _args7[2] !== undefined ? _args7[2] : null;
+                init = _args8.length > 2 && _args8[2] !== undefined ? _args8[2] : null;
                 array = this.get('list->array')(list);
 
                 if (!(list.length === 0)) {
-                  _context7.next = 4;
+                  _context8.next = 4;
                   break;
                 }
 
-                return _context7.abrupt("return", nil);
+                return _context8.abrupt("return", nil);
 
               case 4:
                 result = init;
@@ -3423,80 +3466,31 @@ function _typeof(obj) {
 
               case 7:
                 if (!(i < array.length)) {
-                  _context7.next = 14;
+                  _context8.next = 14;
                   break;
                 }
 
                 item = array[i];
-                _context7.next = 11;
+                _context8.next = 11;
                 return fn(result, item);
 
               case 11:
-                result = _context7.sent;
-                _context7.next = 7;
+                result = _context8.sent;
+                _context8.next = 7;
                 break;
 
               case 14:
                 if (!(typeof result === 'number')) {
-                  _context7.next = 16;
+                  _context8.next = 16;
                   break;
                 }
 
-                return _context7.abrupt("return", LNumber(result));
+                return _context8.abrupt("return", LNumber(result));
 
               case 16:
-                return _context7.abrupt("return", result);
+                return _context8.abrupt("return", result);
 
               case 17:
-              case "end":
-                return _context7.stop();
-            }
-          }
-        }, _callee7, this);
-      }));
-
-      return function reduce(_x12, _x13) {
-        return _reduce.apply(this, arguments);
-      };
-    }(),
-    // ------------------------------------------------------------------
-    filter: function () {
-      var _filter = _asyncToGenerator(
-      /*#__PURE__*/
-      regenerator.mark(function _callee8(fn, list) {
-        var array, result, i, item, cond;
-        return regenerator.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                array = this.get('list->array')(list);
-                result = [];
-                i = 0;
-
-              case 3:
-                if (!(i < array.length)) {
-                  _context8.next = 11;
-                  break;
-                }
-
-                item = array[i++];
-                _context8.next = 7;
-                return fn(item, i);
-
-              case 7:
-                cond = _context8.sent;
-
-                if (cond) {
-                  result.push(item);
-                }
-
-                _context8.next = 3;
-                break;
-
-              case 11:
-                return _context8.abrupt("return", Pair.fromArray(result, true));
-
-              case 12:
               case "end":
                 return _context8.stop();
             }
@@ -3504,7 +3498,56 @@ function _typeof(obj) {
         }, _callee8, this);
       }));
 
-      return function filter(_x14, _x15) {
+      return function reduce(_x14, _x15) {
+        return _reduce.apply(this, arguments);
+      };
+    }(),
+    // ------------------------------------------------------------------
+    filter: function () {
+      var _filter = _asyncToGenerator(
+      /*#__PURE__*/
+      regenerator.mark(function _callee9(fn, list) {
+        var array, result, i, item, cond;
+        return regenerator.wrap(function _callee9$(_context9) {
+          while (1) {
+            switch (_context9.prev = _context9.next) {
+              case 0:
+                array = this.get('list->array')(list);
+                result = [];
+                i = 0;
+
+              case 3:
+                if (!(i < array.length)) {
+                  _context9.next = 11;
+                  break;
+                }
+
+                item = array[i++];
+                _context9.next = 7;
+                return fn(item, i);
+
+              case 7:
+                cond = _context9.sent;
+
+                if (cond) {
+                  result.push(item);
+                }
+
+                _context9.next = 3;
+                break;
+
+              case 11:
+                return _context9.abrupt("return", Pair.fromArray(result, true));
+
+              case 12:
+              case "end":
+                return _context9.stop();
+            }
+          }
+        }, _callee9, this);
+      }));
+
+      return function filter(_x16, _x17) {
         return _filter.apply(this, arguments);
       };
     }(),
@@ -4100,26 +4143,26 @@ function _typeof(obj) {
       (function () {
         var _recur = _asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee9() {
+        regenerator.mark(function _callee10() {
           var code, result;
-          return regenerator.wrap(function _callee9$(_context9) {
+          return regenerator.wrap(function _callee10$(_context10) {
             while (1) {
-              switch (_context9.prev = _context9.next) {
+              switch (_context10.prev = _context10.next) {
                 case 0:
                   code = list.shift();
 
                   if (code) {
-                    _context9.next = 5;
+                    _context10.next = 5;
                     break;
                   }
 
                   resolve(results);
-                  _context9.next = 16;
+                  _context10.next = 16;
                   break;
 
                 case 5:
-                  _context9.prev = 5;
-                  _context9.next = 8;
+                  _context10.prev = 5;
+                  _context10.next = 8;
                   return evaluate(code, {
                     env: env,
                     dynamic_scope: dynamic_scope,
@@ -4130,14 +4173,14 @@ function _typeof(obj) {
                   });
 
                 case 8:
-                  result = _context9.sent;
-                  _context9.next = 14;
+                  result = _context10.sent;
+                  _context10.next = 14;
                   break;
 
                 case 11:
-                  _context9.prev = 11;
-                  _context9.t0 = _context9["catch"](5);
-                  return _context9.abrupt("return", reject(_context9.t0));
+                  _context10.prev = 11;
+                  _context10.t0 = _context10["catch"](5);
+                  return _context10.abrupt("return", reject(_context10.t0));
 
                 case 14:
                   results.push(result);
@@ -4145,10 +4188,10 @@ function _typeof(obj) {
 
                 case 16:
                 case "end":
-                  return _context9.stop();
+                  return _context10.stop();
               }
             }
-          }, _callee9, this, [[5, 11]]);
+          }, _callee10, this, [[5, 11]]);
         }));
 
         return function recur() {

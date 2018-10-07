@@ -8,7 +8,8 @@
 * add bit operation functions
 * add float, round and ceil functions
 * add env variable to lips namespace which is alias to global_environment
-* add length and find higher order function
+* add find and for-each higher order functions
+* add length function
 * add new function which create instance of objects
 * allow to set value using set! and dot expression that is used to get the value
 * better invalid mime on script tag detection
@@ -30,6 +31,7 @@
 * fix read function
 * fix parsing boolean values
 * fix map, reduce and filter to handle async functions
+* fix access variables that have value of undefined
 
 ## 0.5.4
 ### Bugs

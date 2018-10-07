@@ -986,16 +986,19 @@
     // ----------------------------------------------------------------------
     Environment.prototype.get = function(symbol) {
         var value;
+        var defined = false;
         if (symbol instanceof Symbol) {
-            if (typeof this.env[symbol.name] !== 'undefined') {
+            if (symbol.name in this.env) {
                 value = this.env[symbol.name];
+                defined = true;
             }
         } else if (typeof symbol === 'string') {
             if (typeof this.env[symbol] !== 'undefined') {
                 value = this.env[symbol];
+                defined = true;
             }
         }
-        if (typeof value !== 'undefined') {
+        if (defined) {
             if (LNumber.isNumber(value)) {
                 return LNumber(value);
             }
@@ -1020,7 +1023,8 @@
                 }
             }
         }
-        throw new Error("Unbound variable `" + (name.name || name) + "'");
+        name = (name.name || name).toString();
+        throw new Error("Unbound variable `" + name + "'");
     };
     // ----------------------------------------------------------------------
     Environment.prototype.set = function(name, value) {
@@ -1665,7 +1669,7 @@
         string: function(obj) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
-                return '<#jQuery>';
+                return '<#jQuery(' + obj.length + ')>';
             }
             if (obj instanceof LNumber) {
                 return obj.value.toString();
@@ -1828,6 +1832,15 @@
                 if (await fn(array[i], i)) {
                     return array[i];
                 }
+            }
+        },
+        // ------------------------------------------------------------------
+        'for-each': async function(fn, list) {
+            var array = this.get('list->array')(list);
+            var i = 0;
+            while (i < array.length) {
+                var item = array[i++];
+                await fn(item, i);
             }
         },
         // ------------------------------------------------------------------
