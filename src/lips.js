@@ -22,7 +22,11 @@
 })(typeof window !== 'undefined' ? window : global, function(root, BN, undefined) {
     /* eslint-disable */
     function log(x) {
-        console.log(x);
+        if (x instanceof Promise) {
+            x.then(x => console.log({Promise: x}));
+        } else {
+            console.log(x);
+        }
         return x;
     }
     if (!root.fetch) {
@@ -611,13 +615,65 @@
         this.name = name;
         this.fn = fn;
     }
-    Macro.prototype.invoke = function(code, {env, dynamic_scope, error}) {
-        return this.fn.call(env, code, {dynamic_scope, error}, this.name);
+    Macro.prototype.invoke = function(code, {env, dynamic_scope, error}, macro_expand) {
+        return this.fn.call(env, code, {dynamic_scope, error, macro_expand}, this.name);
     };
     Macro.prototype.toString = function() {
         return '#<Macro ' + this.name + '>';
     };
     var macro = 'define-macro';
+    function macro_expand(single) {
+        return async function(code, args) {
+            var env = args['env'] = this;
+            async function traverse(node) {
+                if (node instanceof Pair && node.car instanceof Symbol) {
+                    var value = env.get(node.car);
+                    if (value instanceof Macro && value.defmacro) {
+                        return value.invoke(node.cdr, args, true);
+                    }
+                    return value;
+                }
+                var car = node.car;
+                if (car instanceof Pair) {
+                    car = await traverse(car);
+                }
+                var cdr = node.cdr;
+                if (cdr instanceof Pair) {
+                    cdr = await traverse(cdr);
+                }
+                return new Pair(car, cdr);
+            }
+            function have_macros(node) {
+                if (node instanceof Pair && node.car instanceof Symbol) {
+                    var value = env.get(node.car);
+                    if (value instanceof Macro) {
+                        console.log({name: value.name, defmacro: value.defmacro});
+                    }
+                    return value instanceof Macro && value.defmacro;
+                }
+                if (node.car instanceof Pair && traverse(node.car)) {
+                    return true;
+                }
+                if (node.cdr instanceof Pair && traverse(node.cdr)) {
+                    return true;
+                }
+                return false;
+            }
+            var new_code = code;
+            if (single) {
+                return quote(await traverse(code)).car;
+            } else {
+                while (true) {
+                    new_code = await traverse(code);
+                    if (!have_macros(new_code)) {
+                        break;
+                    }
+                    code = new_code;
+                }
+                return quote(code).car;
+            }
+        };
+    }
     // ----------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
     // ----------------------------------------------------------------------
@@ -1355,6 +1411,8 @@
                 return evaluate(output, {env, dynamic_scope, error});
             };
         }),
+        'macroexpand': new Macro('macro-expand', macro_expand()),
+        'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
         // ------------------------------------------------------------------
         'define-macro': new Macro(macro, function(macro, {dynamic_scope, error}) {
             function clear(node) {
@@ -1365,7 +1423,7 @@
             }
             if (macro.car instanceof Pair && macro.car.car instanceof Symbol) {
                 var name = macro.car.car.name;
-                this.env[name] = new Macro(name, function(code) {
+                this.env[name] = new Macro(name, function(code, {macro_expand}) {
                     var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
                     var arg = code;
@@ -1391,6 +1449,9 @@
                             return evaluate(node, {env, dynamic_scope, error});
                         });
                         // evaluate any possible backquotes
+                        if (macro_expand) {
+                            return quote(pair);
+                        }
                         pair = evaluate(pair, {env, dynamic_scope, error});
                         if (pair instanceof Promise) {
                             return pair.then(clear);
@@ -1398,6 +1459,7 @@
                         return clear(pair);
                     }
                 });
+                this.env[name].defmacro = true;
             }
         }),
         // ------------------------------------------------------------------
