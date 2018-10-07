@@ -3,10 +3,11 @@
 * change api for evaluate to have object `{env, dynamic_scope, error}`
 * rename set to set!, set-cdr to set-cdr! and set-car to set-car!
 * rename defmacro to define-macro
+* change order of arguments in env.inherit
 ## Features
 * add bit operation functions
 * add float, round and ceil functions
-* add env variable to lips namespace
+* add env variable to lips namespace which is alias to global_environment
 * add length and find higher order function
 * allow to set value using set! and dot expression that is used to get the value
 ### Bugs

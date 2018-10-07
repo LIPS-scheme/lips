@@ -932,12 +932,11 @@
         this.name = name;
     }
     // ----------------------------------------------------------------------
-    Environment.prototype.inherit = function(obj, name) {
-        if (typeof obj === 'string') {
-            name = obj;
-            obj = {};
+    Environment.prototype.inherit = function(name, obj = {}) {
+        if (typeof name === "object") {
+            obj = name;
         }
-        if (!name) {
+        if (!name || typeof name === "object") {
             name = 'child of ' + (this.name || 'unknown');
         }
         return new Environment(obj || {}, this, name);

@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 08:14:12 +0000
+ * build: Sun, 07 Oct 2018 08:35:36 +0000
  */
 (function () {
 'use strict';
@@ -2095,13 +2095,14 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  Environment.prototype.inherit = function (obj, name) {
-    if (typeof obj === 'string') {
-      name = obj;
-      obj = {};
+  Environment.prototype.inherit = function (name) {
+    var obj = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    if (_typeof(name) === "object") {
+      obj = name;
     }
 
-    if (!name) {
+    if (!name || _typeof(name) === "object") {
       name = 'child of ' + (this.name || 'unknown');
     }
 

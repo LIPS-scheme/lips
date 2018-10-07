@@ -410,7 +410,7 @@ describe('environment', function() {
         }
     };
     it('should return name of the enviroment', function() {
-        var e = env.inherit(functions, 'foo');
+        var e = env.inherit('foo', functions);
         return lips.exec('(scope_name)', e).then(result => {
             return expect(result).toEqual(['foo']);
         });
@@ -422,7 +422,7 @@ describe('environment', function() {
         });
     });
     it('should create default scope name for child scope', function() {
-        var e = env.inherit(functions, 'foo');
+        var e = env.inherit('foo', functions);
         var child = e.inherit();
         return lips.exec('(scope_name)', child).then(result => {
             return expect(result).toEqual(['child of foo']);
