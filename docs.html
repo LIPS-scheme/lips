@@ -48,7 +48,7 @@
     <h3>Lisp Macros</h3>
 
     <pre><code class="language-scheme">
-(defmacro (foo x) `(1 2 ,@(car x) 3 4))
+(define-macro (foo x) `(1 2 ,@(car x) 3 4))
     </code></pre>
 
     <h3>BigInt</h3>
@@ -80,8 +80,8 @@
 
     <pre><code class="language-scheme">
 (let ((l '((foo . "lorem") (bar "ipsum"))))
-   (set-cdr (assoc l 'foo) "hello")
-   (set-cdr (assoc l 'bar) "world")
+   (set-cdr! (assoc l 'foo) "hello")
+   (set-cdr! (assoc l 'bar) "world")
    (print l))
     </code></pre>
 
@@ -92,11 +92,17 @@
     (while (> (-- x) 0) (print x)))
     </code></pre>
 
-    <p>Operator <code>==</code> work as === in javascript</p>
+    <p>Operator <code>==</code> work as == in javascript but it should only be used on number or
+      values that can be converted to numbers like string "10".</p>
+    <p>To compare strings or any values use <code>eq?</code></p>
 
     <pre><code class="language-scheme">
 (if (== "10" 10)
     (print "newer printed"))
+
+(if (eq? "foo" "bar")
+    (print "equal")
+    (print "not equal"))
 
 (let ((x 10))
   (if (and (> x 1) (< x 20))
@@ -210,13 +216,13 @@
     <h3>Working with arrays</h3>
 
     <p>
-      You can modify array with <code>set</code> function and to get the value of the
+      You can modify array with <code>set!</code> function and to get the value of the
       array you can use <code>.</code> dot function.
     </p>
 
     <pre><code class="language-scheme">
 (let ((arr (list->array '(1 2 3 4))))
-   (set arr 0 2)
+   (set! (. x 1) 10)
    (print (array->list arr)))
 
 (let* ((div ((. document "querySelectorAll") ".terminal-output > div"))
@@ -238,16 +244,16 @@ while (i < len) {
    ++i;
 }
     </code></pre>
-    
+
     <h3>Stdin and stdout</h3>
-    
+
     <p>If you're using <strong><code>print</code></strong> function to display values or using
       <strong><code>read</code></strong> to get values from users, you can provide your own
       handlers in environment, jQuery Terminal based implementation look like this:</p>
     <p>By default stdout prints to console and stdin use browser <strong><code>prompt</code></strong> function.</p>
-    
+
     <pre><code class="language-javascript">
-var env = new Environment({
+var env = lips.env.inherit(({
     stdout: {
         write: function(...args) {
             args.forEach((arg) => {
@@ -264,12 +270,16 @@ var env = new Environment({
             });
         }
     }
-}, global_environment);
+});
     </code></pre>
 
     <h3>Math and boolean operators (functions and macros)</h3>
 
     <pre>< > => <= 1+ 1- ++ -- + - * / % and or not</pre>
+    <h3>Bit operation</h3>
+
+    <pre>| &amp; ~ &lt;&lt; &gt;&gt;</pre>
+
 
     <h3>Extending LIPS</h3>
 
@@ -300,16 +310,31 @@ env.set('quote-car', new Macro(function(code) {
 }));
     </code></pre>
 
-and you can execute this macro in LIPS:
+    <p>and you can execute this macro in LIPS:</p>
     <pre><code class="language-scheme">
 (quote-car (foo bar baz))
     </code></pre>
-
     <p>it will return first symbol and not execute it as function foo.</p>
 
+    <p>you can also use eval here to execute code</p>
+    <pre><code class="language-javascript">
+env.set('async', new Macro(function(code, {dynamic_scope, error}) {
+    var args = {error: env: this};
+    if (dynamic_scope) {
+        args.dynamic_scope = this;
+    }
+    return new Promise(function(resolve) {
+        setTimeout(function() {
+           resolve(evaluate(code.car, args));
+        }, 0);
+    });
+}));
+    </code></pre>
+
+    <p>This function will invoke code in next iteration of event loop</p>
     <p>
       if you want to create macro like quasiquote, the returned code need to be wrapped with
-      Quote instance.
+      function quote
     </p>
     <p>
       When creating macros in JavaScript you can use helper <code>Pair.fromArray()</code>
