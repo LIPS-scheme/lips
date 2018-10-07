@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 14:47:08 +0000
+ * build: Sun, 07 Oct 2018 15:08:32 +0000
  */
 (function () {
 'use strict';
@@ -1320,6 +1320,13 @@ function _typeof(obj) {
 
     return result;
   } // ----------------------------------------------------------------------
+  // detect if object is ES6 Symbol that work with polyfills
+  // ----------------------------------------------------------------------
+
+
+  function isSymbol(x) {
+    return _typeof(x) === 'symbol' || _typeof(x) === 'object' && Object.prototype.toString.call(x) === '[object Symbol]';
+  } // ----------------------------------------------------------------------
   // :: Symbol constructor
   // ----------------------------------------------------------------------
 
@@ -1334,7 +1341,7 @@ function _typeof(obj) {
 
   _Symbol.prototype.toJSON = _Symbol.prototype.toString = function () {
     //return '<#symbol \'' + this.name + '\'>';
-    if (_typeof(this.name) === 'symbol') {
+    if (isSymbol(this.name)) {
       return this.name.toString();
     }
 

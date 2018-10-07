@@ -351,6 +351,14 @@
         return result;
     }
     // ----------------------------------------------------------------------
+    // detect if object is ES6 Symbol that work with polyfills
+    // ----------------------------------------------------------------------
+    function isSymbol(x) {
+        return typeof x === 'symbol' ||
+            typeof x === 'object' &&
+            Object.prototype.toString.call(x) === '[object Symbol]';
+    }
+    // ----------------------------------------------------------------------
     // :: Symbol constructor
     // ----------------------------------------------------------------------
     function Symbol(name) {
@@ -363,7 +371,7 @@
     };
     Symbol.prototype.toJSON = Symbol.prototype.toString = function() {
         //return '<#symbol \'' + this.name + '\'>';
-        if (typeof this.name === 'symbol') {
+        if (isSymbol(this.name)) {
             return this.name.toString();
         }
         return this.name;
