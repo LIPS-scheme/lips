@@ -2369,7 +2369,7 @@
                     } else {
                         exec(script.innerHTML);
                     }
-                } else if (type === 'text-x/lisp') {
+                } else if (type.match(/lips|lisp/)) {
                     console.warn('Expecting ' + lips_mime + ' found ' + type);
                 }
             });

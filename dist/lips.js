@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 08:35:36 +0000
+ * build: Sun, 07 Oct 2018 08:41:52 +0000
  */
 (function () {
 'use strict';
@@ -4175,7 +4175,7 @@ function _typeof(obj) {
           } else {
             exec(script.innerHTML);
           }
-        } else if (type === 'text-x/lisp') {
+        } else if (type.match(/lips|lisp/)) {
           console.warn('Expecting ' + lips_mime + ' found ' + type);
         }
       });

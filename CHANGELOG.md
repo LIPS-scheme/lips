@@ -11,6 +11,7 @@
 * add length and find higher order function
 * add new function which create instance of objects
 * allow to set value using set! and dot expression that is used to get the value
+* better invalid mime on script tag detection
 ### Bugs
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions
