@@ -1,3 +1,8 @@
+## 0.6.1
+### Bugfix
+* fix reduce infinite loop
+* fix invoking lambdas in dynamic scope
+
 ## 0.6.0
 ### Breaking
 * change api for evaluate to have object `{env, dynamic_scope, error}`

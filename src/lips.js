@@ -1863,7 +1863,7 @@
             }
             var i = 0;
             while (i < array.length) {
-                var item = array[i];
+                var item = array[i++];
                 result = await fn(result, item);
             }
             if (typeof result === 'number') {
@@ -2238,7 +2238,20 @@
         var node = rest;
         while (true) {
             if (node instanceof Pair) {
-                args.push(evaluate(node.car, {env, dynamic_scope, error}));
+                var arg = evaluate(node.car, {env, dynamic_scope, error});
+                if (dynamic_scope) {
+                    if (arg instanceof Promise) {
+                        arg = arg.then(arg => {
+                            if (typeof arg === 'function') {
+                                return arg.bind(dynamic_scope);
+                            }
+                            return arg;
+                        });
+                    } else if (typeof arg === 'function') {
+                        arg = arg.bind(dynamic_scope);
+                    }
+                }
+                args.push(arg);
                 node = node.cdr;
             } else {
                 break;

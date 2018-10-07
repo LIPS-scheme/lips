@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 18:38:33 +0000
+ * build: Sun, 07 Oct 2018 19:43:49 +0000
  */
 (function () {
 'use strict';
@@ -3465,7 +3465,7 @@ function _typeof(obj) {
                   break;
                 }
 
-                item = array[i];
+                item = array[i++];
                 _context8.next = 11;
                 return fn(result, item);
 
@@ -3990,11 +3990,27 @@ function _typeof(obj) {
 
     while (true) {
       if (node instanceof Pair) {
-        args.push(evaluate(node.car, {
+        var arg = evaluate(node.car, {
           env: env,
           dynamic_scope: dynamic_scope,
           error: error
-        }));
+        });
+
+        if (dynamic_scope) {
+          if (arg instanceof Promise) {
+            arg = arg.then(function (arg) {
+              if (typeof arg === 'function') {
+                return arg.bind(dynamic_scope);
+              }
+
+              return arg;
+            });
+          } else if (typeof arg === 'function') {
+            arg = arg.bind(dynamic_scope);
+          }
+        }
+
+        args.push(arg);
         node = node.cdr;
       } else {
         break;
