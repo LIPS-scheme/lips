@@ -2347,7 +2347,7 @@
             env = env || global_env;
         }
         var list = parse(tokenize(string));
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async function(resolve, reject) {
             var results = [];
             while (true) {
                 var code = list.shift();
