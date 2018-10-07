@@ -154,11 +154,15 @@ parse(tokenize(string)).foEach(function(code) {
     <p>You can also create dynamic scope if you call <strong><code>evaluate('code', true)</code></strong>.</p>
     <p>You can also execute LIPS code from script tag, just include code like this</p>
     <pre><code class="language-html">
-  &lt;script type="text-x/lips"&gt;
+  &lt;script type="text/x-lips"&gt;
     (print "hello")
     ;; this will load and evaluate external file
     (load "example.lips")
   &lt;script&gt;
+    </code></pre>
+    <p>You can also use src attribute to link to source file</p>
+    <pre><code class="language-html">
+  &lt;script type="text/x-lips" src="example.lips"&gt;&lt;script&gt;
     </code></pre>
   </section>
   <footer>
