@@ -1660,7 +1660,7 @@
             return string.search(pattern);
         },
         // ------------------------------------------------------------------
-        string: function(obj) {
+        string: function string(obj, quote) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
                 return '<#jQuery(' + obj.length + ')>';
@@ -1680,7 +1680,10 @@
             if (obj === nil) {
                 return 'nil';
             }
-            if (obj instanceof Array || obj === null) {
+            if (obj instanceof Array) {
+                return '[' + obj.map(x => string(x, true)).join(', ') + ']';
+            }
+            if (obj === null || (typeof obj === 'string' && quote)) {
                 return JSON.stringify(obj);
             }
             if (obj instanceof Pair) {

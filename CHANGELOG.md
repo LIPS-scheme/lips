@@ -2,6 +2,7 @@
 ### Bugfix
 * fix reduce infinite loop
 * fix invoking lambdas in dynamic scope
+* fix print of Array with multi line strings and BigInts
 
 ## 0.6.0
 ### Breaking
