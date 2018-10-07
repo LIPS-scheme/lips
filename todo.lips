@@ -1,6 +1,6 @@
 ;; -*- scheme -*-
 ;;
-;; TODO app using LIPS (LIPS is Pretty Simple)
+;; TODO app using LIPS - simple lips in JavaScript
 ;; Copyright (C) Jaub Jankiewicz <https://jcubic.pl/me>
 ;; Released under the MIT license
 ;;
@@ -206,6 +206,7 @@
 
 
 (define (update event)
+  "update title of todo but not when user press ESC"
   (let* ((element (. event "target"))
          ($el ($ element))
          (val (--> $el (val) (trim))))
@@ -227,6 +228,7 @@
 ;; ----------------------------------------------------------------------------------
 
 (define (render-footer)
+  "get data about toods and render the app footer"
   (let* ((todo-count (length todos))
          (active-count (length (filter-todos false)))
          (data `((activeTodoCount . ,active-count)
@@ -239,6 +241,7 @@
 
 
 (define (render)
+  "render the app"
   (let* ((todos (get-todos))
          (data (-> (map (lambda (e) (-> e toObject)) todos) toArray)))
     (--> ($ ".todo-list")
@@ -251,6 +254,7 @@
     (store "todos-jquery" todos)))
 
 (define (bind)
+  "bind event handlers"
   (--> ($ ".new-todo") (on "keyup" add-todo))
   (--> ($ ".toggle-all") (on "change" toggle-all))
   (--> ($ ".todoapp")
