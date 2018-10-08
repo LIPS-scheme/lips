@@ -1,7 +1,7 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-0.6.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&28847baf0b0a50f79290ed33b36df54eaecfb68c)](https://travis-ci.org/jcubic/jquery.terminal)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&8960341d7bf0dddd681fc2fc4a95c74068b93f3d)](https://travis-ci.org/jcubic/jquery.terminal)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2565a767972a64e2959f434e12e8fcf1)](https://coveralls.io/github/jcubic/lips?branch=master)
 
 
@@ -13,8 +13,9 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 * Lisp Macros and backquote,
 * Functions in lips are normal javascript functions,
+* You can invoke native JavaScript functions and methods from Lips,
 * Easy extension using JavaScript using Macros or functions,
-* Regexes are first class objects,
+* RegExp-es are first class objects,
 * BigInt support if your browser don't support it you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Optional dynamic scope,
 * Promises are treated as values they resolve to.
@@ -73,6 +74,13 @@ You can create new environment using:
 var env = new Environment({}, lips.global_environment);
 ```
 
+or
+
+```javascript
+var env = lips.env.inherit({});
+```
+
+
 First argument is an object with functions, macros and varibles (see Extending LIPS at the end).
 Second argument is parent environment, you need to use global environment (or other that extend global)
 otherwise you will not have any functions.
@@ -102,12 +110,19 @@ easier to always return `Promise`
 You can also use script tag to execute LIPS code:
 
 ```html
-<script type="text-x/lips">
+<script type="text/x-lips">
 (let ((what "world")
       (greet "hello"))
    (print (concat "hello" " " what)))
 </script>
 ```
+
+or use `src` attribute:
+
+```html
+<script type="text/x-lips" src="example.lips"></script>
+```
+
 
 ## License
 
