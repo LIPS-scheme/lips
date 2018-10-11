@@ -414,7 +414,6 @@ describe('environment', function() {
         return lips.exec('(scope_name)', e).then(result => {
             return expect(result).toEqual(['foo']);
         });
-        
     });
     it('should create default scope name', function() {
         var e = env.inherit(functions);

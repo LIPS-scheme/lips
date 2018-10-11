@@ -736,6 +736,11 @@
         };
     }
     // ----------------------------------------------------------------------
+    // :: check for nullish values
+    function is_null(value) {
+        return typeof value === 'undefined' || value === nil || value === null;
+    }
+    // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
@@ -2351,7 +2356,7 @@
             } else {
                 env = env || global_env;
             }
-            if (this instanceof Api) {
+            if (this instanceof ApiContext) {
                 if (dynamic_scope instanceof Environment) {
                     dynamic_scope.set_root();
                 }
@@ -2359,7 +2364,7 @@
             }
             var eval_args = {env, dynamic_scope, error};
             var value;
-            if (typeof code === 'undefined' || code === nil || code === null) {
+            if (is_null(code)) {
                 return code;
             }
             if (isEmptyList(code)) {
@@ -2533,7 +2538,7 @@
         setTimeout(init, 0);
     });
     // marker that indicate that function was called from API
-    function Api() {}
+    function ApiContext() {}
     // --------------------------------------
     return {
         version: '{{VER}}',
@@ -2541,7 +2546,9 @@
         parse,
         tokenize,
         evaluate: function(...args) {
-            return evaluate.call(new Api(), ...args);
+            // this is hack to have environment from user be root
+            // evaluate check if this is instanceof ApiContext
+            return evaluate.call(new ApiContext(), ...args);
         },
         Environment,
         global_environment: global_env,

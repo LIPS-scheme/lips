@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Thu, 11 Oct 2018 13:42:25 +0000
+ * build: Thu, 11 Oct 2018 17:45:59 +0000
  */
 (function () {
 'use strict';
@@ -1863,6 +1863,12 @@ function _typeof(obj) {
         };
       }()
     );
+  } // ----------------------------------------------------------------------
+  // :: check for nullish values
+
+
+  function is_null(value) {
+    return typeof value === 'undefined' || value === nil || value === null;
   } // ----------------------------------------------------------------------
   // :: function that return macro for let and let*
   // ----------------------------------------------------------------------
@@ -4132,7 +4138,7 @@ function _typeof(obj) {
         env = env || global_env;
       }
 
-      if (this instanceof Api) {
+      if (this instanceof ApiContext) {
         if (dynamic_scope instanceof Environment) {
           dynamic_scope.set_root();
         }
@@ -4147,7 +4153,7 @@ function _typeof(obj) {
       };
       var value;
 
-      if (typeof code === 'undefined' || code === nil || code === null) {
+      if (is_null(code)) {
         return code;
       }
 
@@ -4387,7 +4393,7 @@ function _typeof(obj) {
     setTimeout(init, 0);
   }); // marker that indicate that function was called from API
 
-  function Api() {} // --------------------------------------
+  function ApiContext() {} // --------------------------------------
 
 
   return {
@@ -4400,7 +4406,9 @@ function _typeof(obj) {
         args[_key11] = arguments[_key11];
       }
 
-      return _evaluate.call.apply(_evaluate, [new Api()].concat(args));
+      // this is hack to have environment from user be root
+      // evaluate check if this is instanceof ApiContext
+      return _evaluate.call.apply(_evaluate, [new ApiContext()].concat(args));
     },
     Environment: Environment,
     global_environment: global_env,
