@@ -1085,18 +1085,6 @@
         return new Environment(obj || {}, this, name);
     };
     // ----------------------------------------------------------------------
-    Environment.prototype.root = function() {
-        var env = this;
-        while (env.parent && !env._root) {
-            env = env.parent;
-        }
-        return env;
-    };
-    // ----------------------------------------------------------------------
-    Environment.prototype.set_root = function() {
-        this._root = true;
-    };
-    // ----------------------------------------------------------------------
     Environment.prototype.get = function(symbol) {
         var value;
         var defined = false;
@@ -1416,7 +1404,7 @@
         }),
         // ------------------------------------------------------------------
         define: Macro.defmacro('define', function(code, eval_args) {
-            var root = this.root();
+            var env = this;
             if (code.car instanceof Pair &&
                 code.car.car instanceof Symbol) {
                 var new_code = new Pair(
@@ -1442,7 +1430,7 @@
             if (eval_args.dynamic_scope) {
                 eval_args.dynamic_scope = this;
             }
-            eval_args.env = this;
+            eval_args.env = env;
             var value = code.cdr.car;
             if (value instanceof Pair) {
                 value = evaluate(value, eval_args);
@@ -1450,10 +1438,10 @@
             if (code.car instanceof Symbol) {
                 if (value instanceof Promise) {
                     return value.then(value => {
-                        root.set(code.car, value);
+                        env.set(code.car, value);
                     });
                 } else {
-                    root.set(code.car, value);
+                    env.set(code.car, value);
                 }
             }
         }),
@@ -2356,12 +2344,6 @@
             } else {
                 env = env || global_env;
             }
-            if (this instanceof ApiContext) {
-                if (dynamic_scope instanceof Environment) {
-                    dynamic_scope.set_root();
-                }
-                env.set_root();
-            }
             var eval_args = {env, dynamic_scope, error};
             var value;
             if (is_null(code)) {
@@ -2433,10 +2415,6 @@
         } else {
             env = env || global_env;
         }
-        if (dynamic_scope) {
-            dynamic_scope.set_root();
-        }
-        env.set_root();
         var list = parse(tokenize(string));
         var results = [];
         while (true) {
@@ -2537,19 +2515,13 @@
     load(function() {
         setTimeout(init, 0);
     });
-    // marker that indicate that function was called from API
-    function ApiContext() {}
     // --------------------------------------
     return {
         version: '{{VER}}',
         exec,
         parse,
         tokenize,
-        evaluate: function(...args) {
-            // this is hack to have environment from user be root
-            // evaluate check if this is instanceof ApiContext
-            return evaluate.call(new ApiContext(), ...args);
-        },
+        evaluate,
         Environment,
         global_environment: global_env,
         env: global_env,

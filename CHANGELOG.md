@@ -4,7 +4,6 @@
 * expandable `(let iter` and `(define (foo)` by macroexpand
 ### Bugfix
 * fix macroexpand evaluation of code
-* allow `(let ((x 10)) (define (foo y) (+ x y)))` - define is always global
 
 ## 0.6.1
 ### Bugfix

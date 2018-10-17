@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Thu, 11 Oct 2018 17:45:59 +0000
+ * build: Wed, 17 Oct 2018 18:41:30 +0000
  */
 (function () {
 'use strict';
@@ -1929,8 +1929,7 @@ function _typeof(obj) {
 
           if (!pair) {
             var output = new Pair(new _Symbol('begin'), code.cdr);
-
-            _evaluate(output, {
+            evaluate(output, {
               env: env,
               dynamic_scope: dynamic_scope,
               error: error
@@ -1938,12 +1937,11 @@ function _typeof(obj) {
               resolve(result);
             });
           } else {
-            var value = _evaluate(pair.cdr.car, {
+            var value = evaluate(pair.cdr.car, {
               env: asterisk ? env : self,
               dynamic_scope: dynamic_scope,
               error: error
             });
-
             var promise = set(value);
 
             if (promise instanceof Promise) {
@@ -2265,22 +2263,6 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
-  Environment.prototype.root = function () {
-    var env = this;
-
-    while (env.parent && !env._root) {
-      env = env.parent;
-    }
-
-    return env;
-  }; // ----------------------------------------------------------------------
-
-
-  Environment.prototype.set_root = function () {
-    this._root = true;
-  }; // ----------------------------------------------------------------------
-
-
   Environment.prototype.get = function (symbol) {
     var value;
     var defined = false;
@@ -2462,26 +2444,23 @@ function _typeof(obj) {
         dynamic_scope = this;
       }
 
-      var value = _evaluate(code.cdr.car, {
+      var value = evaluate(code.cdr.car, {
         env: this,
         dynamic_scope: dynamic_scope,
         error: error
       });
-
       value = maybe_promise(value);
       var ref;
 
       if (code.car instanceof Pair && _Symbol.is(code.car.car, '.')) {
         var second = code.car.cdr.car;
         var thrid = code.car.cdr.cdr.car;
-
-        var object = _evaluate(second, {
+        var object = evaluate(second, {
           env: this,
           dynamic_scope: dynamic_scope,
           error: error
         });
-
-        var key = _evaluate(thrid, {
+        var key = evaluate(thrid, {
           env: this,
           dynamic_scope: dynamic_scope,
           error: error
@@ -2585,7 +2564,7 @@ function _typeof(obj) {
               case 4:
 
                 _context3.next = 7;
-                return _evaluate(code.car, {
+                return evaluate(code.car, {
                   env: self,
                   dynamic_scope: dynamic_scope,
                   error: error
@@ -2600,7 +2579,7 @@ function _typeof(obj) {
                 }
 
                 _context3.next = 11;
-                return _evaluate(begin, {
+                return evaluate(begin, {
                   env: self,
                   dynamic_scope: dynamic_scope,
                   error: error
@@ -2643,7 +2622,7 @@ function _typeof(obj) {
 
       var resolve = function resolve(cond) {
         if (cond && !isEmptyList(cond)) {
-          var true_value = _evaluate(code.cdr.car, {
+          var true_value = evaluate(code.cdr.car, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
@@ -2655,7 +2634,7 @@ function _typeof(obj) {
 
           return true_value;
         } else {
-          var false_value = _evaluate(code.cdr.cdr.car, {
+          var false_value = evaluate(code.cdr.cdr.car, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
@@ -2669,7 +2648,7 @@ function _typeof(obj) {
         }
       };
 
-      var cond = _evaluate(code.car, {
+      var cond = evaluate(code.car, {
         env: env,
         dynamic_scope: dynamic_scope,
         error: error
@@ -2713,7 +2692,7 @@ function _typeof(obj) {
 
                 code = arr.shift();
                 _context4.next = 8;
-                return _evaluate(code, {
+                return evaluate(code, {
                   env: this,
                   dynamic_scope: dynamic_scope,
                   error: error
@@ -2757,7 +2736,7 @@ function _typeof(obj) {
 
       return new Promise(function (resolve) {
         setTimeout(function () {
-          resolve(_evaluate(code.cdr, {
+          resolve(evaluate(code.cdr, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
@@ -2767,7 +2746,7 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     define: Macro.defmacro('define', function (code, eval_args) {
-      var root = this.root();
+      var env = this;
 
       if (code.car instanceof Pair && code.car.car instanceof _Symbol) {
         var new_code = new Pair(new _Symbol("define"), new Pair(code.car.car, new Pair(new Pair(new _Symbol("lambda"), new Pair(code.car.cdr, code.cdr)))));
@@ -2781,20 +2760,20 @@ function _typeof(obj) {
         eval_args.dynamic_scope = this;
       }
 
-      eval_args.env = this;
+      eval_args.env = env;
       var value = code.cdr.car;
 
       if (value instanceof Pair) {
-        value = _evaluate(value, eval_args);
+        value = evaluate(value, eval_args);
       }
 
       if (code.car instanceof _Symbol) {
         if (value instanceof Promise) {
           return value.then(function (value) {
-            root.set(code.car, value);
+            env.set(code.car, value);
           });
         } else {
-          root.set(code.car, value);
+          env.set(code.car, value);
         }
       }
     }),
@@ -2807,7 +2786,7 @@ function _typeof(obj) {
       var _this2 = this;
 
       if (code instanceof Pair) {
-        return _evaluate(code, {
+        return evaluate(code, {
           env: this,
           dynamic_scope: this,
           error: function error(e) {
@@ -2819,7 +2798,7 @@ function _typeof(obj) {
       if (code instanceof Array) {
         var result;
         code.forEach(function (code) {
-          result = _evaluate(code, {
+          result = evaluate(code, {
             env: _this2,
             dynamic_scope: _this2,
             error: function error(e) {
@@ -2880,7 +2859,7 @@ function _typeof(obj) {
         }
 
         var output = new Pair(new _Symbol('begin'), code.cdr);
-        return _evaluate(output, {
+        return evaluate(output, {
           env: env,
           dynamic_scope: dynamic_scope,
           error: error
@@ -2933,7 +2912,7 @@ function _typeof(obj) {
 
           if (macro.cdr instanceof Pair) {
             var pair = macro.cdr.reduce(function (result, node) {
-              return _evaluate(node, {
+              return evaluate(node, {
                 env: env,
                 dynamic_scope: dynamic_scope,
                 error: error
@@ -2944,7 +2923,7 @@ function _typeof(obj) {
               return pair;
             }
 
-            pair = _evaluate(pair, {
+            pair = evaluate(pair, {
               env: env,
               dynamic_scope: dynamic_scope,
               error: error
@@ -2979,7 +2958,7 @@ function _typeof(obj) {
           var eval_pair;
 
           if (_Symbol.is(pair.car.car, 'unquote-splicing')) {
-            eval_pair = _evaluate(pair.car.cdr.car, {
+            eval_pair = evaluate(pair.car.cdr.car, {
               env: self,
               dynamic_scope: dynamic_scope,
               error: error
@@ -3054,7 +3033,7 @@ function _typeof(obj) {
       function unquoting(pair) {
         if (pair instanceof Unquote) {
           if (max_unquote === pair.count) {
-            return _evaluate(pair.value, {
+            return evaluate(pair.value, {
               env: self,
               dynamic_scope: dynamic_scope,
               error: error
@@ -3102,12 +3081,11 @@ function _typeof(obj) {
         dynamic_scope = this;
       }
 
-      var value = _evaluate(code.cdr.car, {
+      var value = evaluate(code.cdr.car, {
         env: this,
         dynamic_scope: dynamic_scope,
         error: error
       });
-
       return this.get(code.car).append([value]);
     }),
     // ------------------------------------------------------------------
@@ -3322,13 +3300,11 @@ function _typeof(obj) {
 
       var invoke = function invoke(fn) {
         type_check(fn);
-
-        var args = _evaluate(code.cdr.car, {
+        var args = evaluate(code.cdr.car, {
           env: _this5,
           dynamic_scope: dynamic_scope,
           error: error
         });
-
         args = _this5.get('list->array')(args);
 
         if (args.filter(function (a) {
@@ -3342,7 +3318,7 @@ function _typeof(obj) {
         }
       };
 
-      var fn = _evaluate(code.car, {
+      var fn = evaluate(code.car, {
         env: this,
         dynamic_scope: dynamic_scope,
         error: error
@@ -3826,7 +3802,7 @@ function _typeof(obj) {
               resolve(false);
             }
           } else {
-            var value = _evaluate(arg, {
+            var value = evaluate(arg, {
               env: self,
               dynamic_scope: dynamic_scope,
               error: error
@@ -3877,7 +3853,7 @@ function _typeof(obj) {
               resolve(false);
             }
           } else {
-            var value = _evaluate(arg, {
+            var value = evaluate(arg, {
               env: self,
               dynamic_scope: dynamic_scope,
               error: error
@@ -4067,7 +4043,7 @@ function _typeof(obj) {
 
     while (true) {
       if (node instanceof Pair) {
-        var arg = _evaluate(node.car, {
+        var arg = evaluate(node.car, {
           env: env,
           dynamic_scope: dynamic_scope,
           error: error
@@ -4114,15 +4090,15 @@ function _typeof(obj) {
           return value;
         }
 
-        return _evaluate(value, eval_args);
+        return evaluate(value, eval_args);
       });
     }
 
-    return _evaluate(value, eval_args);
+    return evaluate(value, eval_args);
   } // ----------------------------------------------------------------------
 
 
-  function _evaluate(code) {
+  function evaluate(code) {
     var _ref24 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
         env = _ref24.env,
         dynamic_scope = _ref24.dynamic_scope,
@@ -4136,14 +4112,6 @@ function _typeof(obj) {
         env = dynamic_scope = global_env;
       } else {
         env = env || global_env;
-      }
-
-      if (this instanceof ApiContext) {
-        if (dynamic_scope instanceof Environment) {
-          dynamic_scope.set_root();
-        }
-
-        env.set_root();
       }
 
       var eval_args = {
@@ -4165,11 +4133,11 @@ function _typeof(obj) {
       var rest = code.cdr;
 
       if (first instanceof Pair) {
-        value = maybe_promise(_evaluate(first, eval_args));
+        value = maybe_promise(evaluate(first, eval_args));
 
         if (value instanceof Promise) {
           return value.then(function (value) {
-            return _evaluate(new Pair(value, code.cdr), eval_args);
+            return evaluate(new Pair(value, code.cdr), eval_args);
           });
         } else if (typeof value !== 'function') {
           throw new Error(env.get('string')(value) + ' is not a function');
@@ -4246,28 +4214,23 @@ function _typeof(obj) {
                 env = env || global_env;
               }
 
-              if (dynamic_scope) {
-                dynamic_scope.set_root();
-              }
-
-              env.set_root();
               list = parse(tokenize(string));
               results = [];
 
-            case 5:
+            case 3:
 
               code = list.shift();
 
               if (code) {
-                _context10.next = 11;
+                _context10.next = 9;
                 break;
               }
 
               return _context10.abrupt("return", results);
 
-            case 11:
-              _context10.next = 13;
-              return _evaluate(code, {
+            case 9:
+              _context10.next = 11;
+              return evaluate(code, {
                 env: env,
                 dynamic_scope: dynamic_scope,
                 error: function error(e) {
@@ -4275,15 +4238,15 @@ function _typeof(obj) {
                 }
               });
 
-            case 13:
+            case 11:
               result = _context10.sent;
               results.push(result);
 
-            case 15:
-              _context10.next = 5;
+            case 13:
+              _context10.next = 3;
               break;
 
-            case 17:
+            case 15:
             case "end":
               return _context10.stop();
           }
@@ -4391,25 +4354,14 @@ function _typeof(obj) {
 
   load(function () {
     setTimeout(init, 0);
-  }); // marker that indicate that function was called from API
-
-  function ApiContext() {} // --------------------------------------
-
+  }); // --------------------------------------
 
   return {
     version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
-    evaluate: function evaluate() {
-      for (var _len11 = arguments.length, args = new Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        args[_key11] = arguments[_key11];
-      }
-
-      // this is hack to have environment from user be root
-      // evaluate check if this is instanceof ApiContext
-      return _evaluate.call.apply(_evaluate, [new ApiContext()].concat(args));
-    },
+    evaluate: evaluate,
     Environment: Environment,
     global_environment: global_env,
     env: global_env,
