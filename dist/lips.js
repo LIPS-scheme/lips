@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Wed, 17 Oct 2018 18:41:30 +0000
+ * build: Fri, 26 Oct 2018 10:13:12 +0000
  */
 (function () {
 'use strict';
@@ -2416,6 +2416,10 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     cons: function cons(car, cdr) {
+      if (isEmptyList(cdr)) {
+        cdr = nil;
+      }
+
       return new Pair(car, cdr);
     },
     // ------------------------------------------------------------------

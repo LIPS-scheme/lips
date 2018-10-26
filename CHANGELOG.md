@@ -4,6 +4,7 @@
 * expandable `(let iter` and `(define (foo)` by macroexpand
 ### Bugfix
 * fix macroexpand evaluation of code
+* use nil in cons when cdr is empty list
 
 ## 0.6.1
 ### Bugfix
