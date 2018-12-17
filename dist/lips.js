@@ -1,12 +1,12 @@
 /**@license
- * LIPS is Pretty Simple - version 0.6.1
+ * LIPS is Pretty Simple - version 0.6.2
  *
  * Copyright (c) 2018 Jakub Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 07 Oct 2018 19:56:55 +0000
+ * build: Mon, 17 Dec 2018 13:24:09 +0000
  */
 (function () {
 'use strict';
@@ -4325,7 +4325,7 @@ function _typeof(obj) {
   }); // --------------------------------------
 
   return {
-    version: '0.6.1',
+    version: '0.6.2',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
