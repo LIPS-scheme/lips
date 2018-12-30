@@ -1,7 +1,7 @@
 /**@license
  * LIPS is Pretty Simple
  *
- * Copyright (c) 2018 Jakub Jankiewicz <https://jcubic.pl/me>
+ * Copyright (c) 2018 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  */
