@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 06 Jan 2019 20:00:34 +0000
+ * build: Sun, 06 Jan 2019 20:42:06 +0000
  */
 (function () {
 'use strict';
@@ -2882,8 +2882,8 @@ function _typeof(obj) {
         return 'a' + i;
       }).join(','); // hack that create function with specific length
 
-      var wrapper = new Function("f,".concat(args), "return f(".concat(args, ");"));
-      return wrapper.bind(this, lambda);
+      var wrapper = new Function("f", "return function(".concat(args, ") {\n                return f.call(this, ").concat(args, ");\n            };"));
+      return wrapper(lambda);
     }),
     'macroexpand': new Macro('macro-expand', macro_expand()),
     'macroexpand-1': new Macro('macro-expand', macro_expand(true)),

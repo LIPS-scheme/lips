@@ -1518,8 +1518,10 @@
             // list of arguments (name don't matter
             var args = new Array(length).fill(0).map((_, i) => 'a' + i).join(',');
             // hack that create function with specific length
-            var wrapper = new Function(`f,${args}`, `return f(${args});`);
-            return wrapper.bind(this, lambda);
+            var wrapper = new Function(`f`, `return function(${args}) {
+                return f.call(this, ${args});
+            };`);
+            return wrapper(lambda);
         }),
         'macroexpand': new Macro('macro-expand', macro_expand()),
         'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
