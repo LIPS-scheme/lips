@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 30 Dec 2018 18:07:47 +0000
+ * build: Sun, 06 Jan 2019 20:00:34 +0000
  */
 (function () {
 'use strict';
@@ -2820,7 +2820,8 @@ function _typeof(obj) {
           error = _ref13.error;
 
       var self = this;
-      return function () {
+
+      function lambda() {
         var env = (dynamic_scope ? this : self).inherit('lambda');
         var name = code.car;
         var i = 0;
@@ -2868,7 +2869,21 @@ function _typeof(obj) {
           dynamic_scope: dynamic_scope,
           error: error
         });
-      };
+      }
+
+      var length = code.car instanceof Pair ? code.car.length() : null;
+
+      if (!(code.car instanceof Pair)) {
+        return lambda; // variable arguments
+      } // list of arguments (name don't matter
+
+
+      var args = new Array(length).fill(0).map(function (_, i) {
+        return 'a' + i;
+      }).join(','); // hack that create function with specific length
+
+      var wrapper = new Function("f,".concat(args), "return f(".concat(args, ");"));
+      return wrapper.bind(this, lambda);
     }),
     'macroexpand': new Macro('macro-expand', macro_expand()),
     'macroexpand-1': new Macro('macro-expand', macro_expand(true)),

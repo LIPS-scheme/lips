@@ -5,6 +5,7 @@
 ### Bugfix
 * fix macroexpand evaluation of code
 * use nil in cons when cdr is empty list
+* fix curry function
 
 ## 0.6.1
 ### Bugfix

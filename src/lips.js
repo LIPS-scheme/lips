@@ -1476,7 +1476,7 @@
         // ------------------------------------------------------------------
         lambda: new Macro('lambda', function(code, {dynamic_scope, error} = {}) {
             var self = this;
-            return function(...args) {
+            function lambda(...args) {
                 var env = (dynamic_scope ? this : self).inherit('lambda');
                 var name = code.car;
                 var i = 0;
@@ -1510,7 +1510,16 @@
                 }
                 var output = new Pair(new Symbol('begin'), code.cdr);
                 return evaluate(output, {env, dynamic_scope, error});
-            };
+            }
+            var length = code.car instanceof Pair ? code.car.length() : null;
+            if (!(code.car instanceof Pair)) {
+                return lambda; // variable arguments
+            }
+            // list of arguments (name don't matter
+            var args = new Array(length).fill(0).map((_, i) => 'a' + i).join(',');
+            // hack that create function with specific length
+            var wrapper = new Function(`f,${args}`, `return f(${args});`);
+            return wrapper.bind(this, lambda);
         }),
         'macroexpand': new Macro('macro-expand', macro_expand()),
         'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
@@ -1966,7 +1975,6 @@
                 }
                 return call.apply(this, arguments);
             };
-
         },
         // ------------------------------------------------------------------
         odd: function(num) {
