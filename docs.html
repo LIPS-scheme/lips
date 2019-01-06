@@ -173,7 +173,7 @@
     <h3>String operations</h3>
 
     <pre><code class="language-scheme">
-
+;; todo
     </code></pre>
 
     <h3>Mapping, filtering and reducing</h3>
@@ -195,6 +195,8 @@
 (reverse '(1 2 3 4))
 
 (define (sum . list) (reduce (lambda (a b) (+ a b)) list))
+;; or
+(define (sum . list) (reduce + list))
 
 (print (sum 1 2 3 4 5))
     </code></pre>
