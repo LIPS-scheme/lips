@@ -1,7 +1,7 @@
 /**@license
- * LIPS is Pretty Simple
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript
  *
- * Copyright (c) 2018 Jakub T. Jankiewicz <https://jcubic.pl/me>
+ * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  */

@@ -1,3 +1,6 @@
+## 0.7.1
+* fix curry function
+
 ## 0.7.0
 ### Features
 * `(let iter` macro that's transformation of `(let* ((iter (lambda () ...`
@@ -5,7 +8,6 @@
 ### Bugfix
 * fix macroexpand evaluation of code
 * use nil in cons when cdr is empty list
-* fix curry function
 
 ## 0.6.1
 ### Bugfix
