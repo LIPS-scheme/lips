@@ -1,7 +1,7 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-0.7.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&7961eb3a113d9a55347335a2277e32a10dccac61)](https://travis-ci.org/jcubic/jquery.terminal)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&0f9f0ba8ec43662710a3a0ba64ea4cdc4b4a26e8)](https://travis-ci.org/jcubic/jquery.terminal)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2565a767972a64e2959f434e12e8fcf1)](https://coveralls.io/github/jcubic/lips?branch=master)
 
 
@@ -128,4 +128,4 @@ or use `src` attribute:
 
 Released under [MIT](http://opensource.org/licenses/MIT) license
 
-Copyright (c) 2018 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2019 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
