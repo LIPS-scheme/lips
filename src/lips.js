@@ -2508,7 +2508,7 @@
                     env,
                     dynamic_scope,
                     error: (e, code) => {
-                        e.message += '\nin code: ' + code.toString();
+                        e.code = code.toString();
                         throw e;
                     }
                 });

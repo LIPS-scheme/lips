@@ -1,3 +1,7 @@
+## 0.8.1
+### Bugfix
+* use exception.code for code that triggered exception
+
 ## 0.8.0
 ### Features
 * new nth and reverse functions
