@@ -309,7 +309,7 @@ env.set('greeter', function(user) {
     <pre><code class="language-javascript">
 var {Macro, Pair, Symbol, nil} = lips;
 
-env.set('quote-car', new Macro(function(code) {
+env.set('quote-car', new Macro('quote-car', function(code) {
     return Pair.fromArray([new Symbol('quote'), code.car.car]);
 }));
     </code></pre>
@@ -322,14 +322,14 @@ env.set('quote-car', new Macro(function(code) {
 
     <p>you can also use eval here to execute code</p>
     <pre><code class="language-javascript">
-env.set('async', new Macro(function(code, {dynamic_scope, error}) {
-    var args = {error: env: this};
+env.set('async', new Macro('async', function(code, {dynamic_scope, error}) {
+    var args = {error, env: this};
     if (dynamic_scope) {
         args.dynamic_scope = this;
     }
     return new Promise(function(resolve) {
         setTimeout(function() {
-           resolve(evaluate(code.car, args));
+            resolve(evaluate(code.car, args));
         }, 0);
     });
 }));
