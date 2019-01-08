@@ -1,4 +1,9 @@
+## 0.8.0
+### Features
+* new nth and reverse functions
+
 ## 0.7.1
+### Bugfix
 * fix curry function
 
 ## 0.7.0

@@ -1692,6 +1692,37 @@
             return list.clone().append([item]);
         },
         // ------------------------------------------------------------------
+        reverse: function(arg) {
+            if (arg instanceof Pair) {
+                var arr = this.get('list->array')(arg).reverse();
+                return this.get('array->list')(arr);
+            } else if (!(arg instanceof Array)) {
+                throw new Error('Invlid value for reverse');
+            } else {
+                return arg.reverse();
+            }
+        },
+        // ------------------------------------------------------------------
+        nth: function(index, obj) {
+            if (obj instanceof Pair) {
+                var node = obj;
+                var count = 0;
+                while (count < index) {
+                    if (!node.cdr || node.cdr === nil) {
+                        return nil;
+                        break;
+                    }
+                    node = node.cdr;
+                    count++;
+                }
+                return node.car;
+            } else if (obj instanceof Array) {
+                return obj[index];
+            } else {
+                throw new Error('Invalid object for nth');
+            }
+        },
+        // ------------------------------------------------------------------
         'append!': new Macro('append!', function(code, {dynamic_scope, error}) {
             if (dynamic_scope) {
                 dynamic_scope = this;

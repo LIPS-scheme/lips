@@ -2,6 +2,7 @@
 
 var {exec} = require('../src/lips');
 var fs = require('fs');
+/*
 global.$ = function() {
     return {
         css: function(...args) {
@@ -16,6 +17,7 @@ global.$ = function() {
         }
     };
 };
+*/
 
 if (process.argv.length > 2) {
     process.argv.slice(2).forEach(function(filename) {

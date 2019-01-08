@@ -1,12 +1,12 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.7.1
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 06 Jan 2019 20:46:54 +0000
+ * build: Tue, 08 Jan 2019 17:42:26 +0000
  */
 (function () {
 'use strict';
@@ -3092,6 +3092,40 @@ function _typeof(obj) {
       return list.clone().append([item]);
     },
     // ------------------------------------------------------------------
+    reverse: function reverse(arg) {
+      if (arg instanceof Pair) {
+        var arr = this.get('list->array')(arg).reverse();
+        return this.get('array->list')(arr);
+      } else if (!(arg instanceof Array)) {
+        throw new Error('Invlid value for reverse');
+      } else {
+        return arg.reverse();
+      }
+    },
+    // ------------------------------------------------------------------
+    nth: function nth(index, obj) {
+      if (obj instanceof Pair) {
+        var node = obj;
+        var count = 0;
+
+        while (count < index) {
+          if (!node.cdr || node.cdr === nil) {
+            return nil;
+            break;
+          }
+
+          node = node.cdr;
+          count++;
+        }
+
+        return node.car;
+      } else if (obj instanceof Array) {
+        return obj[index];
+      } else {
+        throw new Error('Invalid object for nth');
+      }
+    },
+    // ------------------------------------------------------------------
     'append!': new Macro('append!', function (code, _ref17) {
       var dynamic_scope = _ref17.dynamic_scope,
           error = _ref17.error;
@@ -4376,7 +4410,7 @@ function _typeof(obj) {
   }); // --------------------------------------
 
   return {
-    version: '0.7.1',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

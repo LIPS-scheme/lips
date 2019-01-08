@@ -9,6 +9,9 @@
     "type": "git",
     "url": "git+https://github.com/jcubic/lips.git"
   },
+  "bin": {
+    "lips": "bin/lips.js"
+  },
   "keywords": [
     "lisp",
     "scheme",
