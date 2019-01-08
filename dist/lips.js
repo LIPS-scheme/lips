@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Tue, 08 Jan 2019 20:42:58 +0000
+ * build: Tue, 08 Jan 2019 21:00:23 +0000
  */
 (function () {
 'use strict';
@@ -2625,7 +2625,7 @@ function _typeof(obj) {
       var env = this;
 
       var resolve = function resolve(cond) {
-        if (cond && !isEmptyList(cond)) {
+        if (cond && !is_null(cond) && !isEmptyList(cond)) {
           var true_value = evaluate(code.cdr.car, {
             env: env,
             dynamic_scope: dynamic_scope,
@@ -2882,7 +2882,7 @@ function _typeof(obj) {
         return 'a' + i;
       }).join(','); // hack that create function with specific length
 
-      var wrapper = new Function("f", "return function(".concat(args, ") {\n                return f.call(this, ").concat(args, ");\n            };"));
+      var wrapper = new Function("f", "return function(".concat(args, ") {\n                return f.apply(this, arguments);\n            };"));
       return wrapper(lambda);
     }),
     'macroexpand': new Macro('macro-expand', macro_expand()),

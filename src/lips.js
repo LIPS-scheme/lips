@@ -1340,7 +1340,7 @@
             }
             var env = this;
             var resolve = (cond) => {
-                if (cond && !isEmptyList(cond)) {
+                if (cond && !is_null(cond) && !isEmptyList(cond)) {
                     var true_value = evaluate(code.cdr.car, {
                         env,
                         dynamic_scope,
@@ -1519,7 +1519,7 @@
             var args = new Array(length).fill(0).map((_, i) => 'a' + i).join(',');
             // hack that create function with specific length
             var wrapper = new Function(`f`, `return function(${args}) {
-                return f.call(this, ${args});
+                return f.apply(this, arguments);
             };`);
             return wrapper(lambda);
         }),
