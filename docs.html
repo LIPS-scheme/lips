@@ -257,7 +257,7 @@ while (i < len) {
     <p>By default stdout prints to console and stdin use browser <strong><code>prompt</code></strong> function.</p>
 
     <pre><code class="language-javascript">
-var env = lips.env.inherit(({
+var env = lips.env.inherit('name', {
     stdout: {
         write: function(...args) {
             args.forEach((arg) => {

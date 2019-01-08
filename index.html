@@ -134,7 +134,7 @@ parse(tokenize(string)).foEach(function(code) {
     <p><strong><code>evaluate</code></strong> function also accept two more arguments:
       <ul>
         <li>first Environment.
-            By default it's <strong><code>lips.global_environment</code></strong>. You can use it if you want to
+            By default it's <strong><code>lips.env</code></strong>. You can use it if you want to
             have separated instances of the interpreter.</li>
         <li>
           Second can be value <strong><code>true</code></strong> or Environment, this argument mean that
@@ -191,7 +191,7 @@ parse(tokenize(string)).foEach(function(code) {
   <script>
    function interpreter(selector, dynamic) {
        $.terminal.syntax("scheme");
-       var env = new lips.Environment({
+       var env = lips.env.inherit('demo', {
            stdout: {
                write: function() {
                    var args = Array.from(arguments);
@@ -205,7 +205,7 @@ parse(tokenize(string)).foEach(function(code) {
                    return term.read('');
                }
            }
-       }, lips.global_environment);
+       });
        var position;
        var timer;
        var term = $(selector).terminal(function(code, term) {
