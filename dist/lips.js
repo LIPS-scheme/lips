@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Tue, 08 Jan 2019 19:38:49 +0000
+ * build: Tue, 08 Jan 2019 20:42:58 +0000
  */
 (function () {
 'use strict';
@@ -1394,7 +1394,7 @@ function _typeof(obj) {
     var node = this;
 
     while (true) {
-      if (node === nil) {
+      if (!node || node === nil || !(node instanceof Pair)) {
         break;
       }
 
@@ -3259,11 +3259,43 @@ function _typeof(obj) {
 
       return value;
     },
+    // ------------------------------------------------------------------
     type: function type(obj) {
       return _typeof(obj);
     },
+    // ------------------------------------------------------------------
     'instanceof': function _instanceof(obj, type) {
       return obj instanceof type;
+    },
+    // ------------------------------------------------------------------
+    'number?': LNumber.isNumber,
+    // ------------------------------------------------------------------
+    'string?': function string(obj) {
+      return typeof obj === 'string';
+    },
+    // ------------------------------------------------------------------
+    'pair?': function pair(obj) {
+      return obj instanceof Pair;
+    },
+    // ------------------------------------------------------------------
+    'regex?': function regex(obj) {
+      return obj instanceof RegExp;
+    },
+    // ------------------------------------------------------------------
+    'null?': function _null(obj) {
+      return is_null(obj) || obj instanceof Pair && obj.isEmptyList();
+    },
+    // ------------------------------------------------------------------
+    'symbol?': function symbol(obj) {
+      return obj instanceof _Symbol;
+    },
+    // ------------------------------------------------------------------
+    'array?': function array(obj) {
+      return obj instanceof Array;
+    },
+    // ------------------------------------------------------------------
+    'object?': function object(obj) {
+      return obj !== null && _typeof(obj) === 'object' && !(obj instanceof Array);
     },
     // ------------------------------------------------------------------
     read: function read(arg) {

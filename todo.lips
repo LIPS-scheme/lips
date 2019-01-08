@@ -94,7 +94,7 @@
 (define (store namespace . data)
   "set or get value from localStorage"
   (if data
-    (-> localStorage setItem namespace (-> (car data) toString))
+    (--> localStorage (setItem namespace (-> (car data) toString)))
     (let ((store (-> localStorage getItem namespace)))
       (if store
         (read store)

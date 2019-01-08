@@ -418,7 +418,7 @@
         var len = 0;
         var node = this;
         while (true) {
-            if (node === nil) {
+            if (!node || node === nil || !(node instanceof Pair)) {
                 break;
             }
             len++;
@@ -1825,11 +1825,43 @@
             }
             return value;
         },
+        // ------------------------------------------------------------------
         type: function(obj) {
             return typeof obj;
         },
+        // ------------------------------------------------------------------
         'instanceof': function(obj, type) {
             return obj instanceof type;
+        },
+        // ------------------------------------------------------------------
+        'number?': LNumber.isNumber,
+        // ------------------------------------------------------------------
+        'string?': function(obj) {
+            return typeof obj === 'string';
+        },
+        // ------------------------------------------------------------------
+        'pair?': function(obj) {
+            return obj instanceof Pair;
+        },
+        // ------------------------------------------------------------------
+        'regex?': function(obj) {
+            return obj instanceof RegExp;
+        },
+        // ------------------------------------------------------------------
+        'null?': function(obj) {
+            return is_null(obj) || (obj instanceof Pair && obj.isEmptyList());
+        },
+        // ------------------------------------------------------------------
+        'symbol?': function(obj) {
+            return obj instanceof Symbol;
+        },
+        // ------------------------------------------------------------------
+        'array?': function(obj) {
+            return obj instanceof Array;
+        },
+        // ------------------------------------------------------------------
+        'object?': function(obj) {
+            return obj !== null && typeof obj === 'object' && !(obj instanceof Array);
         },
         // ------------------------------------------------------------------
         read: function read(arg) {

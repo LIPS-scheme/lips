@@ -1,6 +1,9 @@
 ## 0.8.0
 ### Features
 * new nth and reverse functions
+* new type checking functions null? regex? pair? string? number? symbol? array? object?
+### Bugfix
+* fix lambda with rest parameter
 
 ## 0.7.1
 ### Bugfix
