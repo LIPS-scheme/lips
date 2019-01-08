@@ -1,9 +1,12 @@
 ## 0.8.0
 ### Features
 * new nth and reverse functions
-* new type checking functions null? regex? pair? string? number? symbol? array? object?
+* new type checking functions null? regex? pair? string? number? symbol? array? object? boolean?
+* add lips source code that throwed exception in JavaScript error message
 ### Bugfix
 * fix lambda with rest parameter
+### Breaking
+* `if` now check if argument is boolean
 
 ## 0.7.1
 ### Bugfix

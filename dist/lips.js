@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Tue, 08 Jan 2019 21:00:23 +0000
+ * build: Tue, 08 Jan 2019 21:41:41 +0000
  */
 (function () {
 'use strict';
@@ -2625,7 +2625,11 @@ function _typeof(obj) {
       var env = this;
 
       var resolve = function resolve(cond) {
-        if (cond && !is_null(cond) && !isEmptyList(cond)) {
+        if (typeof cond !== 'boolean') {
+          throw new Error('if: value need to be boolean');
+        }
+
+        if (cond) {
           var true_value = evaluate(code.cdr.car, {
             env: env,
             dynamic_scope: dynamic_scope,
@@ -3284,6 +3288,10 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'null?': function _null(obj) {
       return is_null(obj) || obj instanceof Pair && obj.isEmptyList();
+    },
+    // ------------------------------------------------------------------
+    'boolean?': function boolean(obj) {
+      return typeof obj === 'boolean';
     },
     // ------------------------------------------------------------------
     'symbol?': function symbol(obj) {
@@ -4271,7 +4279,7 @@ function _typeof(obj) {
         return code;
       }
     } catch (e) {
-      error && error(e);
+      error && error(e, code);
     }
   } // ----------------------------------------------------------------------
 
@@ -4317,7 +4325,8 @@ function _typeof(obj) {
               return evaluate(code, {
                 env: env,
                 dynamic_scope: dynamic_scope,
-                error: function error(e) {
+                error: function error(e, code) {
+                  e.message += '\nin code: ' + code.toString();
                   throw e;
                 }
               });

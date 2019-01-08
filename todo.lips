@@ -57,8 +57,8 @@
 (define (on-todo fn element)
   "Invoke function for each todo"
   (let* ((todo (find-todo element)))
-    (if todo
-      (fn todo))))
+    (if (not (null? todo))
+        (fn todo))))
 
 
 (define (get-todos)
@@ -93,21 +93,20 @@
 
 (define (store namespace . data)
   "set or get value from localStorage"
-  (if data
-    (--> localStorage (setItem namespace (-> (car data) toString)))
-    (let ((store (-> localStorage getItem namespace)))
-      (if store
-        (read store)
-        '()))))
+  (if (not (null? data))
+      (--> localStorage (setItem namespace (-> (car data) toString)))
+      (let ((store (--> localStorage (getItem namespace))))
+        (if (null? store)
+            '()
+            (read store)))))
 
 ;; ref: https://www.programming-idioms.org/idiom/12/check-if-list-contains-a-value/154/scheme
 (define (contains x list)
   (if (not list)
-    false
-    (if (eq? (car list) x)
-      true
-      (contains x (cdr list)))))
-
+      false
+      (if (eq? (car list) x)
+          true
+          (contains x (cdr list)))))
 
 
 (define log (. console "log"))

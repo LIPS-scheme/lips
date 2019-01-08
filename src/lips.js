@@ -1340,7 +1340,10 @@
             }
             var env = this;
             var resolve = (cond) => {
-                if (cond && !is_null(cond) && !isEmptyList(cond)) {
+                if (typeof cond !== 'boolean') {
+                    throw new Error('if: value need to be boolean');
+                }
+                if (cond) {
                     var true_value = evaluate(code.cdr.car, {
                         env,
                         dynamic_scope,
@@ -1850,6 +1853,10 @@
         // ------------------------------------------------------------------
         'null?': function(obj) {
             return is_null(obj) || (obj instanceof Pair && obj.isEmptyList());
+        },
+        // ------------------------------------------------------------------
+        'boolean?': function(obj) {
+            return typeof obj === 'boolean';
         },
         // ------------------------------------------------------------------
         'symbol?': function(obj) {
@@ -2477,7 +2484,7 @@
                 return code;
             }
         } catch (e) {
-            error && error(e);
+            error && error(e, code);
         }
     }
 
@@ -2500,7 +2507,8 @@
                 var result = await evaluate(code, {
                     env,
                     dynamic_scope,
-                    error: (e) => {
+                    error: (e, code) => {
+                        e.message += '\nin code: ' + code.toString();
                         throw e;
                     }
                 });
