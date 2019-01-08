@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Tue, 08 Jan 2019 17:42:26 +0000
+ * build: Tue, 08 Jan 2019 19:38:49 +0000
  */
 (function () {
 'use strict';
@@ -3111,7 +3111,6 @@ function _typeof(obj) {
         while (count < index) {
           if (!node.cdr || node.cdr === nil) {
             return nil;
-            break;
           }
 
           node = node.cdr;

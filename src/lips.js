@@ -1710,7 +1710,6 @@
                 while (count < index) {
                     if (!node.cdr || node.cdr === nil) {
                         return nil;
-                        break;
                     }
                     node = node.cdr;
                     count++;
