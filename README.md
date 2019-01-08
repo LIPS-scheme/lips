@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
-[![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&a61badd525f5a645c1043e8669ccf3597578d45a)](https://travis-ci.org/jcubic/jquery.terminal)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2565a767972a64e2959f434e12e8fcf1)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![npm](https://img.shields.io/badge/npm-0.8.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&24989f84cb1e8d5b431a8368e79a8f47ef021a4e)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2565a767972a64e2959f434e12e8fcf1)](https://coveralls.io/github/jcubic/lips?branch=master)
 
 
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
@@ -37,7 +37,7 @@ https://unpkg.com/@jcubic/lips
 or from rawgit
 
 ```
-https://cdn.rawgit.com/jcubic/lips/devel/dist/lips.min.js
+https://cdn.rawgit.com/jcubic/lips/master/dist/lips.min.js
 ```
 
 ## Usage
