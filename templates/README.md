@@ -64,28 +64,32 @@ parse(tokenize(string)).forEach(function(code) {
 });
 ```
 
-`evaluate` and `exec` functions also accept second argument, which is Environment.
-By default it's `lips.global_environment`. You can use it if you want to
-have separated instances of the interpreter.
+`evaluate` and `exec` functions also accept second argument, which is Environment.  By
+default it's `lips.env`. You can use it if you want to have separated instances of the
+interpreter.
 
 You can create new environment using:
 
 ```javascript
-var env = new Environment({}, lips.global_environment);
+var env = new Environment({}, lips.env);
 ```
 
-or
+First argument is an object with functions, macros and variables (see Extending LIPS at
+the end of [docs](https://jcubic.github.io/lips/docs.html)).  Second argument is parent
+environment, you need to use global environment (or other that extend global) otherwise
+you will not have any functions.
+
+You can also use helper function:
+
 
 ```javascript
-var env = lips.env.inherit({});
+var env = lips.env.inherit('name', {});
 ```
 
 
-First argument is an object with functions, macros and varibles (see Extending LIPS at the end).
-Second argument is parent environment, you need to use global environment (or other that extend global)
-otherwise you will not have any functions.
-
-Optionally you can provide 3rd options as environment for dynamic scope or value `true`, you can also use 2 arguments where first is code or AST with `evaluate` and second is value `true`:
+While calling exec, optionally you can provide 3rd options as environment for dynamic
+scope or value `true`, you can also use 2 arguments where first is code (string) or AST
+(tree of Pairs) with `evaluate` and second is value `true`:
 
 ```
 // dynamic scope
@@ -97,15 +101,17 @@ exec('(+ 10 10)')
 exec('(+ 10 10)', env)
 ```
 
-Exec function always return a `Promise` for array of values, value can be Pair that you can convert to Array
-using `Pair::toArray()`, `LNumber` that wrap BigInt or native numbers if your browser don't support BigInt and
-you don't include bn.js. You can get native value out if BigInt using `LNumber::valueOf()` but you may lost precision
-or get completely different value if your value is big. You can also use `LNumber::toString()` to get
-number representation as string.
+Exec function always return a `Promise` for array of values, value can be Pair that you
+can convert to Array using `Pair::toArray()`, `LNumber` that wrap BigInt or native numbers
+(if your browser don't support BigInt and you don't include bn.js). You can get native
+value out if BigInt using `LNumber::valueOf()` but you may lost precision or get
+completely different value if your value is big. You can also use `LNumber::toString()` to
+get number representation as string (works for all values).
 
-evaluate return normal values so you will need to check if the value is a `Promise`, some expressions return
-explicit `Promise` like `let` and `let*`, so you can use fetch to get text value in one `let`. `exec` make this
-easier to always return `Promise`
+`evaluate` function return normal values or a Promise, so you will need to check the type
+of the value, some expressions return explicit `Promise` like `let` and `let*`, so you can
+use fetch to get text value in one `let`. `exec` make this easier to always return
+`Promise`.
 
 You can also use script tag to execute LIPS code:
 
