@@ -1,3 +1,7 @@
+## 0.9.0
+### Features
+* better binary (options -f -c + read stdin + REPL)
+
 ## 0.8.1
 ### Bugfix
 * use exception.code for code that triggered exception
