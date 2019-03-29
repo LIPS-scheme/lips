@@ -208,25 +208,68 @@ parse(tokenize(string)).foEach(function(code) {
        });
        var position;
        var timer;
-       var term = $(selector).terminal(function(code, term) {
-           if (!lips.balanced_parenthesis(code)) {
-               term.error('Unbalanced parenthesis');
-           } else {
-               lips.exec(code, env, dynamic).then(function(ret) {
-                   ret.forEach(function(ret) {
-                       if (ret !== undefined) {
-                           env.get('print').call(env, ret);
-                       }
-                   });
-               }).catch(function(e) {
-                   term.error(e.message);
-               });
+       function sexp(tokens) {
+           var count = 1;
+           var i = tokens.length;
+           while (count > 0) {
+               token = tokens[--i];
+               if (!token) {
+                   return;
+               }
+               if (token.token === '(') {
+                   count--;
+               } else if (token.token == ')') {
+                   count++;
+               }
            }
+           return tokens.slice(i);
+       }
+       // basic indent
+       function indent(term, level, offset) {
+           var code = term.before_cursor();
+           var tokens = lips.tokenize(code, true);
+           var s = sexp(tokens);
+           var lines = code.split('\n');
+           var prev_line = lines[lines.length - 1];
+           var parse = prev_line.match(/^(\s*)(.*)/);
+           var spaces = parse[1].length || offset;
+           var re_if = /(.*\(if\s+)\(/;
+           var m = prev_line.match(re_if);
+           if (s && s[1].token == 'if' && s[3].token == '(') {
+               spaces = s[3].col;
+           } else if (parse[2].match(/\(/)) {
+               spaces += level;
+           }
+           return spaces;
+       }
+       var version = lips.version.split('.');
+       var offset_bug = version[0] == 0 && version[1] < 9;
+
+       var term = $(selector).terminal(function(code, term) {
+           lips.exec(code, env, dynamic).then(function(ret) {
+               ret.forEach(function(ret) {
+                   if (ret !== undefined) {
+                       env.get('print').call(env, ret);
+                   }
+               });
+           }).catch(function(e) {
+               term.error(e.message);
+           });
        }, {
            name: 'lisp',
            prompt: 'lips> ',
            enabled: false,
            greetings: false,
+           keymap: {
+               ENTER: function(e, original) {
+                   if (lips.balanced_parenthesis(this.get_command())) {
+                       original();
+                   } else {
+                       var i = indent(this, 2, this.get_prompt().length);
+                       this.insert('\n' + (new Array(i + 1).join(' ')));
+                   }
+               }
+           },
            keydown: function() {
                if (position) {
                    term.set_position(position);
@@ -258,7 +301,12 @@ parse(tokenize(string)).foEach(function(code) {
                        if (token.token == '(' && count === 0) {
                            clearTimeout(timer);
                            setTimeout(function() {
-                               term.set_position(token.offset);
+                               var offset = token.offset;
+                               // offset bug (fixed in 0.9.0)
+                               if (offset_bug) {
+                                   offset += token.line;
+                               }
+                               term.set_position(offset);
                                timer = setTimeout(function() {
                                    term.set_position(position)
                                    position = false;
