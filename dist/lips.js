@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 12 Jan 2019 21:52:33 +0000
+ * build: Fri, 29 Mar 2019 10:50:00 +0000
  */
 (function () {
 'use strict';
@@ -1085,7 +1085,7 @@ function _typeof(obj) {
           tokens.push({
             token: string,
             col: col,
-            offset: count,
+            offset: count + offset,
             line: offset
           });
           count += string.length;
@@ -1098,11 +1098,12 @@ function _typeof(obj) {
       string.split('\n').filter(Boolean).forEach(function (line, i) {
         var col = 0;
         line.split(tokens_re).filter(Boolean).forEach(function (token) {
+          var line = i + offset;
           var result = {
             col: col,
-            line: i + offset,
+            line: line,
             token: token,
-            offset: count
+            offset: count + line
           };
           col += token.length;
           count += token.length;
@@ -1802,7 +1803,7 @@ function _typeof(obj) {
                               return _context.stop();
                           }
                         }
-                      }, _callee, this, [[1, 11]]);
+                      }, _callee, null, [[1, 11]]);
                     }));
                     return _traverse.apply(this, arguments);
                   };
@@ -4344,7 +4345,7 @@ function _typeof(obj) {
               return _context10.stop();
           }
         }
-      }, _callee10, this);
+      }, _callee10);
     }));
     return _exec.apply(this, arguments);
   }

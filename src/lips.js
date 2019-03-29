@@ -142,7 +142,7 @@
                     tokens.push({
                         token: string,
                         col,
-                        offset: count,
+                        offset: count + offset,
                         line: offset
                     });
                     count += string.length;
@@ -153,11 +153,12 @@
             string.split('\n').filter(Boolean).forEach(function(line, i) {
                 var col = 0;
                 line.split(tokens_re).filter(Boolean).forEach(function(token) {
+                    var line = i + offset;
                     var result = {
                         col,
-                        line: i + offset,
+                        line,
                         token,
-                        offset: count
+                        offset: count + line
                     };
                     col += token.length;
                     count += token.length;

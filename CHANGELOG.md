@@ -1,6 +1,8 @@
 ## 0.9.0
 ### Features
 * better binary (options -f -c + read stdin + REPL)
+### Bugs
+* fix offset in tokenier
 
 ## 0.8.1
 ### Bugfix
