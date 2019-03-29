@@ -228,19 +228,28 @@ parse(tokenize(string)).foEach(function(code) {
        function indent(term, level, offset) {
            var code = term.before_cursor();
            var tokens = lips.tokenize(code, true);
-           var s = sexp(tokens);
+           var last_sexpr = sexp(tokens);
            var lines = code.split('\n');
            var prev_line = lines[lines.length - 1];
-           var parse = prev_line.match(/^(\s*)(.*)/);
+           var parse = prev_line.match(/^(\s*)/);
            var spaces = parse[1].length || offset;
-           var re_if = /(.*\(if\s+)\(/;
-           var m = prev_line.match(re_if);
-           if (s && s[1].token == 'if' && s[3].token == '(') {
-               spaces = s[3].col;
-           } else if (parse[2].match(/\(/)) {
-               spaces += level;
+           if (last_sexpr) {
+               if (last_sexpr[0].line > 0) {
+                   offset = 0;
+               }
+               if (['define', 'begin'].indexOf(last_sexpr[1].token) !== -1) {
+                   return offset + last_sexpr[0].col + level;
+               } else {
+                   var next_tokens = last_sexpr.slice(2);
+                   for (var i in next_tokens) {
+                       var token = next_tokens[i];
+                       if (token.token.trim()) {
+                           return token.col;
+                       }
+                   }
+               }
            }
-           return spaces;
+           return spaces + level;
        }
        var version = lips.version.split('.');
        var offset_bug = version[0] == 0 && version[1] < 9;
