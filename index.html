@@ -196,7 +196,7 @@ parse(tokenize(string)).foEach(function(code) {
                write: function() {
                    var args = Array.from(arguments);
                    args.forEach(function(arg) {
-                       term.echo(arg, {keepWords: true});
+                       term.echo(arg, {keepWords: true, formatters: false});
                    });
                }
            },
@@ -237,8 +237,16 @@ parse(tokenize(string)).foEach(function(code) {
                if (last_sexpr[0].line > 0) {
                    offset = 0;
                }
-               if (['define', 'begin'].indexOf(last_sexpr[1].token) !== -1) {
+               if (last_sexpr.length === 1) {
+                   return offset + last_sexpr[0].col + 1;
+               } else if (['define', 'begin', 'let'].indexOf(last_sexpr[1].token) !== -1) {
                    return offset + last_sexpr[0].col + level;
+               } else if (last_sexpr[0].line < last_sexpr[1].line) {
+                   return offset + last_sexpr[0].col + 1;
+               } else if (last_sexpr.length > 3 && last_sexpr[1].line === last_sexpr[3].line) {
+                   return offset + last_sexpr[3].col;
+               } else if (last_sexpr[0].line === last_sexpr[1].line) {
+                   return offset + last_sexpr[1].col;
                } else {
                    var next_tokens = last_sexpr.slice(2);
                    for (var i in next_tokens) {
