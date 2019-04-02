@@ -115,7 +115,15 @@ if (options.c) {
                     rl.prompt();
                 }
                 rl.resume();
-            }).catch(function() { rl.prompt(); }); // passing function directly don't work
+            }).catch(function() {
+                if (process.stdin.isTTY) {
+                    if (multiline) {
+                        rl.setPrompt(prompt);
+                    }
+                    rl.prompt();
+                }
+                code = '';
+            });
         } else {
             multiline = true;
             var i = indent(code, 2, prompt.length - continuePrompt.length);
