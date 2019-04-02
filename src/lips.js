@@ -364,6 +364,7 @@
             } else if (sexp[0].line < sexp[1].line) {
                 return offset + sexp[0].col + 1;
             } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
+                /*
                 var next = sexp.slice(1);
                 if (balanced(next)) {
                     for (i = 0; i < next.length; ++i) {
@@ -372,6 +373,7 @@
                         }
                     }
                 }
+                */
                 return offset + sexp[3].col;
             } else if (sexp[0].line === sexp[1].line) {
                 return offset + sexp[1].col;
