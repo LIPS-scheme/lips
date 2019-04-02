@@ -6,7 +6,7 @@
  *
  */
 "use strict";
-/* global define, module, setTimeout, jQuery, global, BigInt, require */
+/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -252,7 +252,7 @@
             } else if (token === ')') {
                 parents--;
                 if (!stack.length) {
-                    throw new Error('Unbalanced parenthesis 1');
+                    throw new Error('Unbalanced parenthesis');
                 }
                 if (stack.length === 1) {
                     result.push(stack.pop());
@@ -312,8 +312,7 @@
             }
         });
         if (stack.length) {
-            console.log({end: stack.slice()});
-            throw new Error('Unbalanced parenthesis 2');
+            throw new Error('Unbalanced parenthesis');
         }
         return result.map((arg) => {
             if (arg instanceof Array) {
@@ -321,6 +320,72 @@
             }
             return arg;
         });
+    }
+    // ----------------------------------------------------------------------
+    // return last S-Expression
+    // ----------------------------------------------------------------------
+    function previousSexp(tokens) {
+        var count = 1;
+        var i = tokens.length;
+        while (count > 0) {
+            var token = tokens[--i];
+            if (!token) {
+                return;
+            }
+            if (token.token === '(') {
+                count--;
+            } else if (token.token === ')') {
+                count++;
+            }
+        }
+        return tokens.slice(i);
+    }
+    // ----------------------------------------------------------------------
+    // :: calculating basic indent for next line
+    // :: based on http://community.schemewiki.org/?scheme-style
+    // :: and GNU Emacs scheme mode
+    // ----------------------------------------------------------------------
+    function indent(code, level, offset) {
+        var tokens = tokenize(code, true);
+        var sexp = previousSexp(tokens);
+        var lines = code.split('\n');
+        var prev_line = lines[lines.length - 1];
+        var parse = prev_line.match(/^(\s*)/);
+        var spaces = parse[1].length || offset;
+        var i;
+        if (sexp) {
+            if (sexp[0].line > 0) {
+                offset = 0;
+            }
+            if (sexp.length === 1) {
+                return offset + sexp[0].col + 1;
+            } else if (['define', 'lambda', 'let'].indexOf(sexp[1].token) !== -1) {
+                return offset + sexp[0].col + level;
+            } else if (sexp[0].line < sexp[1].line) {
+                return offset + sexp[0].col + 1;
+            } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
+                var next = sexp.slice(1);
+                if (balanced(next)) {
+                    for (i = 0; i < next.length; ++i) {
+                        if (next[i].token === '(') {
+                            return offset + next[i].col;
+                        }
+                    }
+                }
+                return offset + sexp[3].col;
+            } else if (sexp[0].line === sexp[1].line) {
+                return offset + sexp[1].col;
+            } else {
+                var next_tokens = sexp.slice(2);
+                for (i = 0; i < next_tokens.length; ++i) {
+                    var token = next_tokens[i];
+                    if (token.token.trim()) {
+                        return token.col;
+                    }
+                }
+            }
+        }
+        return spaces + level;
     }
     // ----------------------------------------------------------------------
     // :: flatten nested arrays
@@ -1448,6 +1513,9 @@
                         env.set(code.car, value);
                     });
                 } else {
+                    if (value instanceof Symbol) {
+                        value = env.get(value);
+                    }
                     env.set(code.car, value);
                 }
             }
@@ -2519,11 +2587,23 @@
     }
 
     // ----------------------------------------------------------------------
+    // create token matcher that work with string and object token
+    // ----------------------------------------------------------------------
+    function matchToken(re) {
+        return function(token) {
+            if (!token) {
+                return false;
+            }
+            return (token.token || token).match(re);
+        };
+    }
+    var isParen = matchToken(/[()]/);
+    // ----------------------------------------------------------------------
     function balanced(code) {
-        var re = /[()]/;
-        var parenthesis = tokenize(code).filter((token) => token.match(re));
-        var open = parenthesis.filter(p => p === ')');
-        var close = parenthesis.filter(p => p === '(');
+        var tokens = typeof code === 'string' ? tokenize(code) : code;
+        var parenthesis = tokens.filter(isParen);
+        var open = parenthesis.filter(p => (p.token || p) === ')');
+        var close = parenthesis.filter(p => (p.token || p) === '(');
         return open.length === close.length;
     }
 
@@ -2613,6 +2693,7 @@
         Macro,
         quote,
         Pair,
+        indent,
         nil,
         maybe_promise,
         Symbol,

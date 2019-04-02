@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {exec} = require('../src/lips');
+const {exec, indent, balanced_parenthesis, tokenize} = require('../src/lips');
 const fs = require('fs');
 const readline = require('readline');
 
@@ -61,10 +61,6 @@ function run(code) {
     }
     return exec(code).catch(function(e) {
         console.error(e.message);
-        if (e.code) {
-            console.error('error in line ' + e.code);
-        }
-        console.error(e.stack);
     });
 }
 
@@ -92,23 +88,40 @@ if (options.c) {
         }
     });
 } else {
+    var prompt = 'lips> ';
+    var continuePrompt = '... ';
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
-        prompt: 'lips> ',
+        prompt: prompt,
         terminal: !!process.stdin.isTTY
     });
     if (process.stdin.isTTY) {
         rl.prompt();
     }
+    var code = '';
+    var multiline = false;
     rl.on('line', function(line) {
-        rl.pause();
-        run(line).then(function(result) {
-            if (process.stdin.isTTY) {
-                print(result);
-                rl.prompt();
-            }
-            rl.resume();
-        });
+        code += line;
+        if (balanced_parenthesis(code)) {
+            rl.pause();
+            run(code).then(function(result) {
+                if (process.stdin.isTTY) {
+                    print(result);
+                    if (multiline) {
+                        rl.setPrompt(prompt);
+                    }
+                    code = '';
+                    rl.prompt();
+                }
+                rl.resume();
+            }).catch(function() { rl.prompt(); }); // passing function directly don't work
+        } else {
+            multiline = true;
+            var i = indent(code, 2, prompt.length - continuePrompt.length);
+            rl.setPrompt(continuePrompt);
+            rl.prompt();
+            rl.write(new Array(i + 1).join(' '));
+        }
     });
 }
