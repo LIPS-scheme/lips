@@ -1,14 +1,24 @@
 ## LIPS is Pretty Simple
 
-[![npm](https://img.shields.io/badge/npm-0.1.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=gh-pages&26a8ac2b0092fa00da074f0019d4029a6b6cc98e)](https://travis-ci.org/jcubic/jquery.terminal)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=gh-pages&90f3a78d04af7d30b1ab1a6b7b5d9c13)](https://coveralls.io/github/jcubic/lips?branch=gh-pages)
+[![npm](https://img.shields.io/badge/npm-0.8.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=gh-pages&6f361b440b7ea92ac3e7b8041ee4358353e5392b)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=gh-pages&1a39cbb47c1a8f3874924c910736ba58)](https://coveralls.io/github/jcubic/lips?branch=gh-pages)
 
 
+LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
-LIPS is very simple Lisp, similar to Scheme writen in JavaScript.
+[Demo](https://jcubic.github.io/lips/#demo)
 
-[Demo](https://codepen.io/jcubic/full/LQBaaV/)
+## Key features
+
+* Lisp Macros and backquote,
+* Functions in lips are normal javascript functions,
+* You can invoke native JavaScript functions and methods from Lips,
+* Easy extension using JavaScript using Macros or functions,
+* RegExp-es are first class objects,
+* BigInt support if your browser don't support it you will need to use [bn.js](https://github.com/indutny/bn.js/),
+* Optional dynamic scope,
+* Promises are treated as values they resolve to.
 
 ## Installation
 
@@ -27,12 +37,30 @@ https://unpkg.com/@jcubic/lips
 or from rawgit
 
 ```
+<<<<<<< HEAD
 https://cdn.rawgit.com/jcubic/lips/master/dist/lips.min.js
+=======
+https://cdn.rawgit.com/jcubic/lips/gh-pages/dist/lips.min.js
+>>>>>>> master
 ```
 
 ## Usage
 
 ```javascript
+var {exec} = require('@jcubic/lips'); // node
+// or
+var {exec} = lips; // browser
+
+exec(string).then(function(results) {
+     results.forEach(function(result) {
+        console.log(result.toString());
+     });
+});
+```
+
+there is also longer version if you want to split the process of evaluation:
+
+```
 var {parse, tokenize, evaluate} = require('@jcubic/lips');
 
 parse(tokenize(string)).forEach(function(code) {
@@ -40,220 +68,74 @@ parse(tokenize(string)).forEach(function(code) {
 });
 ```
 
-`evaluate` function also accept second argument, which is Environment.
-By default it's `lips.global_environment`. You can use it if you want to
-have separated instances of the interpreter.
+`evaluate` and `exec` functions also accept second argument, which is Environment.  By
+default it's `lips.env`. You can use it if you want to have separated instances of the
+interpreter.
 
 You can create new environment using:
 
 ```javascript
-var env = new Environment({}, lips.global_environment);
+var env = new Environment({}, lips.env);
 ```
 
-First argument is an object with functions, macros and varibles (see Extending LIPS at the end).
-Second argument is parent environment, you need to use global environment (or other that extend global)
-otherwise you will not have any functions.
+First argument is an object with functions, macros and variables (see Extending LIPS at
+the end of [docs](https://jcubic.github.io/lips/docs.html)).  Second argument is parent
+environment, you need to use global environment (or other that extend global) otherwise
+you will not have any functions.
 
-## What's in
+You can also use helper function:
 
-### variables and functions
-
-```scheme
-(define x 10)
-(define square (lambda (x) (* x x)))
-(define (square x) (* x x))
-```
-
-### List operications
-
-```scheme
-(cons 1 2)
-(cons 1 (cons 2 nil))
-(list 1 2 3 4)
-'(1 2 3 4)
-
-(let ((lst '(1 2 (3 4 5 6))))
-   (print (car lst))
-   (print (cadaddr lst)))
-```
-
-all functions that match this regex `c[ad]{2,5}r` are defined.
-
-### ALists
-
-```scheme
-(let ((l '((foo . "lorem") (bar "ipsum"))))
-   (set-cdr (assoc l 'foo) "hello")
-   (set-cdr (assoc l 'bar) "world")
-   (print l))
-```
-
-### Flow constructs
-
-```scheme
-(let ((x 5))
-    (while (> (-- x) 0) (print x)))
-```
-
-same as in JS
-
-```scheme
-(if (== "10" 10)
-    (print "equal"))
-
-(let ((x 10))
-  (if (and (> x 1) (< x 20))
-      (begin
-         (print "this is x > 1")
-         (print "and x < 20"))))
-```
-
-### eval
-
-```scheme
-(eval (read "(print \"hello\")"))
-```
-
-### Lisp Macros
-
-```scheme
-(defmacro (foo x) `(1 2 ,@(car x) 3 4))
-```
-
-### Async code
-
-```scheme
-(eval (read))
-```
-
-then type S-Expression like `(print 10)`. If function return Promise
-the execution is paused and restored when Promise is resolved
-
-
-### Access JavaScript functions and objects
-
-```scheme
-((. window "alert") "hello")
-((. console "log") "hello")
-```
-
-If object is not found in environment, then window object is tested for
-presense of the element.
-
-You can execute jQuery functions
-
-```scheme
-(let* ((term ($ ".terminal")))
-  ((.  term "css") "background" "red"))
-```
-
-function `$` is available because it's in window object.
-
-or operate on strings
-
-```
-((. "foo bar baz" "replace") /^[a-z]+/g "baz")
-
-(let ((match (. "foo bar baz" "match")))
-    (array->list (match /([a-z]+)/g)))
-```
-
-### Mapping, filtering and reducing
-
-```scheme
-(map car (list
-            (cons "a" 2)
-            (cons "b" 3)))
-
-(filter odd (list 1 2 3 4 5))
-
-(filter (lambda (x)
-          (== (% x 2) 0))
-    (list 1 2 3 4 5))
-
-(define (reverse list)
-    (reduce (lambda (list x) (cons x list)) list))
-
-(reverse '(1 2 3 4))
-```
-
-### Working with arrays
-
-You can modify array with `set` function and to get the value of the array you can use `.` dot function.
-
-```scheme
-(let ((arr (list->array '(1 2 3 4))))
-   (set arr 0 2)
-   (print (array->list arr)))
-
-(let* ((div ((. document "querySelectorAll") ".terminal-output > div"))
-       (len (. div "length"))
-       (i 0))
-    (while (< i len)
-       (print (. (. div i) "innerHTML"))
-       (++ i)))
-```
-
-this equivalent of JavaScript code:
 
 ```javascript
-var div = document.querySelectorAll(".terminal div");
-var len = div.length;
-var i = 0;
-while (i < len) {
-   console.log(div[i].innerHTML);
-   ++i;
-}
+var env = lips.env.inherit('name', {});
 ```
 
-### Math and boolean operators
 
-`< > => <= ++ -- + - * / % and or`
-
-## Extending LIPS
-
-to create new function from JavaScript you can use:
-
-```javascript
-env.set('replace', function(re, sub, string) {
-   return string.replace(re, sub);
-});
-```
-
-then you can use it in LIPS:
+While calling exec, optionally you can provide 3rd options as environment for dynamic
+scope or value `true`, you can also use 2 arguments where first is code (string) or AST
+(tree of Pairs) with `evaluate` and second is value `true`:
 
 ```
-(replace /(foo|bar)/g "hello" "foo bar baz")
+// dynamic scope
+exec('(+ 10 10)', env, env)
+exec('(+ 10 10)', true)
+
+// lexical scope
+exec('(+ 10 10)')
+exec('(+ 10 10)', env)
 ```
 
-To define a macro in javascript you can use Macro constructor that accept
-single function argument, that should return lisp code (instance of Pair)
+Exec function always return a `Promise` for array of values, value can be Pair that you
+can convert to Array using `Pair::toArray()`, `LNumber` that wrap BigInt or native numbers
+(if your browser don't support BigInt and you don't include bn.js). You can get native
+value out if BigInt using `LNumber::valueOf()` but you may lost precision or get
+completely different value if your value is big. You can also use `LNumber::toString()` to
+get number representation as string (works for all values).
 
-```javascript
+`evaluate` function return normal values or a Promise, so you will need to check the type
+of the value, some expressions return explicit `Promise` like `let` and `let*`, so you can
+use fetch to get text value in one `let`. `exec` make this easier to always return
+`Promise`.
 
-var {Macro, Pair, Symbol, nil} = lips;
+You can also use script tag to execute LIPS code:
 
-env.set('quote-car', new Macro(function(code) {
-    return Pair.fromArray([new Symbol('quote'), code.car.car]);
-}));
+```html
+<script type="text/x-lips">
+(let ((what "world")
+      (greet "hello"))
+   (print (concat "hello" " " what)))
+</script>
 ```
 
-and you can execute this macro in LIPS:
+or use `src` attribute:
 
-```scheme
-(quote-car (foo bar baz))
+```html
+<script type="text/x-lips" src="example.lips"></script>
 ```
 
-it will return first symbol and not execute it as function foo.
-
-if you want to create macro like quasiquote, the returned code need to be wrapped with
-Quote instance.
-
-When creating macros in JavaScript you can use helper `Pair.fromArray()`
-and `code.toArray()`.
 
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license
 
-Copyright (c) 2018 [Jakub Jankiewicz](http://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2019 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)

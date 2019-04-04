@@ -2,11 +2,15 @@
   "name": "@jcubic/lips",
   "version": "{{VER}}",
   "description": "Simple Scheme Like Lisp in JavaScript",
-  "main": "dist/lips.js",
+  "main": "src/lips.js",
+  "unpkg": "dist/lips.min.js",
   "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jcubic/lips.git"
+  },
+  "bin": {
+    "lips": "bin/lips.js"
   },
   "keywords": [
     "lisp",
@@ -14,7 +18,7 @@
     "language",
     "interpreter"
   ],
-  "author": "Jakub Jankiewicz <jcubic@onet.pl> (http://jcubic.pl/jakub-jankiewicz/)",
+  "author": "Jakub T. Jankiewicz <jcubic@onet.pl> (https://jcubic.pl/jakub-jankiewicz/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/jcubic/lips/issues"
@@ -22,7 +26,7 @@
   "homepage": "https://github.com/jcubic/lips#readme",
   "eslintConfig": {
     "parserOptions": {
-      "ecmaVersion": 6,
+      "ecmaVersion": 2017,
       "sourceType": "script",
       "ecmaFeatures": {}
     },
@@ -38,7 +42,7 @@
       "eqeqeq": "error",
       "curly": "error",
       "no-unreachable": "error",
-      "valid-typeof": "error",
+      "valid-typeof": 0,
       "no-unexpected-multiline": "error",
       "no-regex-spaces": "error",
       "no-irregular-whitespace": "error",
@@ -128,7 +132,7 @@
       ],
       "max-len": [
         "error",
-        85
+        90
       ],
       "max-statements-per-line": "error",
       "new-parens": "error",
@@ -185,11 +189,24 @@
     }
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
+    "@babel/core": "^7.0.1",
+    "@babel/plugin-transform-async-to-generator": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/runtime": "^7.0.0",
     "babel-preset-env": "^1.6.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "rollup": "^0.56.3",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-commonjs": "^9.1.6",
+    "rollup-plugin-node-resolve": "^3.4.0",
     "coveralls": "^3.0.0",
-    "eslint": "^4.18.1",
-    "jest": "^22.4.2",
+    "eslint": "^5.0.1",
+    "jest": "^23.3.0",
     "uglify-js": "^3.3.12"
+  },
+  "dependencies": {
+    "bn.js": "^4.11.8"
   }
 }

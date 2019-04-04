@@ -4,10 +4,13 @@ VERSION={{VERSION}}
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
-COMMIT=`git log -n 1 | grep commit | sed 's/commit //'`
+COMMIT=`git rev-parse HEAD`
+URL=`git config --get remote.origin.url`
 
 GIT=git
+CD=cd
 SED=sed
+CP=cp
 RM=rm
 TEST=test
 CAT=cat
@@ -16,15 +19,19 @@ ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
 UGLIFY=./node_modules/.bin/uglifyjs
-BABEL=./node_modules/.bin/babel
+ROLLUP=./node_modules/.bin/rollup
 
 
 ALL: Makefile .$(VERSION) dist/lips.js dist/lips.min.js README.md package.json
 
-dist/lips.js: src/lips.js .$(VERSION)
-	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" src/lips.js > dist/lips.tmp.js || $(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" src/lips.js > dist/lips.tmp.js
-	$(BABEL) dist/lips.tmp.js > dist/lips.js
-	$(RM) dist/lips.tmp.js
+dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
+	$(ROLLUP) -c
+	$(CAT) src/banner.js dist/lips.js > dist/tmp.js
+	$(CP) dist/tmp.js dist/lips.js
+	$(RM) dist/tmp.js
+	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
+	dist/lips.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" \
+	dist/lips.js
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
@@ -35,7 +42,7 @@ Makefile: templates/Makefile
 package.json: templates/package.json .$(VERSION)
 	$(SED) -e "s/{{VER}}/"$(VERSION)"/" templates/package.json > package.json || true
 
-README.md: templates/README.md
+README.md: templates/README.md .$(VERSION)
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \
 	"s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" \
 	-e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md || \
@@ -46,7 +53,9 @@ README.md: templates/README.md
 	touch .$(VERSION)
 
 publish:
-	$(NPM) publish --access=public
+	$(GIT) clone $(URL) --depth 1 npm
+	$(CD) npm && $(NPM) publish --access=public
+	$(RM) -rf npm
 
 test:
 	$(JEST)

@@ -1,3 +1,4 @@
 module.exports = {
-    collectCoverage: true
+    collectCoverage: true,
+    modulePathIgnorePatterns: ['<rootDir>/templates/', '<rootDir>/dist/']
 };
