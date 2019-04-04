@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 29 Mar 2019 10:50:00 +0000
+ * build: Thu, 04 Apr 2019 09:59:49 +0000
  */
 (function () {
 'use strict';
@@ -92,7 +92,7 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
-var runtime = createCommonjsModule(function (module) {
+var runtime_1 = createCommonjsModule(function (module) {
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
  *
@@ -100,7 +100,7 @@ var runtime = createCommonjsModule(function (module) {
  * LICENSE file in the root directory of this source tree.
  */
 
-!(function(global) {
+var runtime = (function (exports) {
 
   var Op = Object.prototype;
   var hasOwn = Op.hasOwnProperty;
@@ -109,23 +109,6 @@ var runtime = createCommonjsModule(function (module) {
   var iteratorSymbol = $Symbol.iterator || "@@iterator";
   var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
   var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
-
-  var inModule = 'object' === "object";
-  var runtime = global.regeneratorRuntime;
-  if (runtime) {
-    if (inModule) {
-      // If regeneratorRuntime is defined globally and we're in a module,
-      // make the exports object identical to regeneratorRuntime.
-      module.exports = runtime;
-    }
-    // Don't bother evaluating the rest of this file if the runtime was
-    // already defined globally.
-    return;
-  }
-
-  // Define the runtime globally (as expected by generated code) as either
-  // module.exports (if we're in a module) or a new, empty object.
-  runtime = global.regeneratorRuntime = inModule ? module.exports : {};
 
   function wrap(innerFn, outerFn, self, tryLocsList) {
     // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
@@ -139,7 +122,7 @@ var runtime = createCommonjsModule(function (module) {
 
     return generator;
   }
-  runtime.wrap = wrap;
+  exports.wrap = wrap;
 
   // Try/catch helper to minimize deoptimizations. Returns a completion
   // record like context.tryEntries[i].completion. This interface could
@@ -210,7 +193,7 @@ var runtime = createCommonjsModule(function (module) {
     });
   }
 
-  runtime.isGeneratorFunction = function(genFun) {
+  exports.isGeneratorFunction = function(genFun) {
     var ctor = typeof genFun === "function" && genFun.constructor;
     return ctor
       ? ctor === GeneratorFunction ||
@@ -220,7 +203,7 @@ var runtime = createCommonjsModule(function (module) {
       : false;
   };
 
-  runtime.mark = function(genFun) {
+  exports.mark = function(genFun) {
     if (Object.setPrototypeOf) {
       Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
     } else {
@@ -237,7 +220,7 @@ var runtime = createCommonjsModule(function (module) {
   // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
   // `hasOwn.call(value, "__await")` to determine if the yielded value is
   // meant to be awaited.
-  runtime.awrap = function(arg) {
+  exports.awrap = function(arg) {
     return { __await: arg };
   };
 
@@ -312,17 +295,17 @@ var runtime = createCommonjsModule(function (module) {
   AsyncIterator.prototype[asyncIteratorSymbol] = function () {
     return this;
   };
-  runtime.AsyncIterator = AsyncIterator;
+  exports.AsyncIterator = AsyncIterator;
 
   // Note that simple async functions are implemented on top of
   // AsyncIterator objects; they just return a Promise for the value of
   // the final result produced by the iterator.
-  runtime.async = function(innerFn, outerFn, self, tryLocsList) {
+  exports.async = function(innerFn, outerFn, self, tryLocsList) {
     var iter = new AsyncIterator(
       wrap(innerFn, outerFn, self, tryLocsList)
     );
 
-    return runtime.isGeneratorFunction(outerFn)
+    return exports.isGeneratorFunction(outerFn)
       ? iter // If outerFn is a generator, return the full iterator.
       : iter.next().then(function(result) {
           return result.done ? result.value : iter.next();
@@ -419,7 +402,8 @@ var runtime = createCommonjsModule(function (module) {
       context.delegate = null;
 
       if (context.method === "throw") {
-        if (delegate.iterator.return) {
+        // Note: ["return"] must be used for ES3 parsing compatibility.
+        if (delegate.iterator["return"]) {
           // If the delegate iterator has a return method, give it a
           // chance to clean up.
           context.method = "return";
@@ -539,7 +523,7 @@ var runtime = createCommonjsModule(function (module) {
     this.reset(true);
   }
 
-  runtime.keys = function(object) {
+  exports.keys = function(object) {
     var keys = [];
     for (var key in object) {
       keys.push(key);
@@ -600,7 +584,7 @@ var runtime = createCommonjsModule(function (module) {
     // Return an iterator with no values.
     return { next: doneResult };
   }
-  runtime.values = values;
+  exports.values = values;
 
   function doneResult() {
     return { value: undefined, done: true };
@@ -805,55 +789,38 @@ var runtime = createCommonjsModule(function (module) {
       return ContinueSentinel;
     }
   };
-})(
-  // In sloppy mode, unbound `this` refers to the global object, fallback to
-  // Function constructor if we're in global strict mode. That is sadly a form
-  // of indirect eval which violates Content Security Policy.
-  (function() {
-    return this || (typeof self === "object" && self);
-  })() || Function("return this")()
-);
+
+  // Regardless of whether this script is executing as a CommonJS module
+  // or not, return the runtime object so that we can declare the variable
+  // regeneratorRuntime in the outer scope, which allows this module to be
+  // injected easily by `bin/regenerator --include-runtime script.js`.
+  return exports;
+
+}(
+  // If this script is executing as a CommonJS module, use module.exports
+  // as the regeneratorRuntime namespace. Otherwise create a new empty
+  // object. Either way, the resulting object will be used to initialize
+  // the regeneratorRuntime variable at the top of this file.
+  module.exports
+));
+
+try {
+  regeneratorRuntime = runtime;
+} catch (accidentalStrictMode) {
+  // This module should not be running in strict mode, so the above
+  // assignment should always work unless something is misconfigured. Just
+  // in case runtime.js accidentally runs in strict mode, we can escape
+  // strict mode using a global Function call. This could conceivably fail
+  // if a Content Security Policy forbids using Function, but in that case
+  // the proper solution is to fix the accidental strict mode problem. If
+  // you've misconfigured your bundler to force strict mode and applied a
+  // CSP to forbid Function, and you're not willing to fix either of those
+  // problems, please detail your unique predicament in a GitHub issue.
+  Function("r", "regeneratorRuntime = r")(runtime);
+}
 });
 
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-// This method of obtaining a reference to the global object needs to be
-// kept identical to the way it is obtained in runtime.js
-var g = (function() {
-  return this || (typeof self === "object" && self);
-})() || Function("return this")();
-
-// Use `getOwnPropertyNames` because not all browsers support calling
-// `hasOwnProperty` on the global `self` object in a worker. See #183.
-var hadRuntime = g.regeneratorRuntime &&
-  Object.getOwnPropertyNames(g).indexOf("regeneratorRuntime") >= 0;
-
-// Save the old regeneratorRuntime in case it needs to be restored later.
-var oldRuntime = hadRuntime && g.regeneratorRuntime;
-
-// Force reevalutation of runtime.js.
-g.regeneratorRuntime = undefined;
-
-var runtimeModule = runtime;
-
-if (hadRuntime) {
-  // Restore the original runtime.
-  g.regeneratorRuntime = oldRuntime;
-} else {
-  // Remove the global property added by runtime.js.
-  try {
-    delete g.regeneratorRuntime;
-  } catch(e) {
-    g.regeneratorRuntime = undefined;
-  }
-}
-
-var regenerator = runtimeModule;
+var regenerator = runtime_1;
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -1205,7 +1172,7 @@ function _typeof(obj) {
         parents--;
 
         if (!stack.length) {
-          throw new Error('Unbalanced parenthesis 1');
+          throw new Error('Unbalanced parenthesis');
         }
 
         if (stack.length === 1) {
@@ -1277,10 +1244,7 @@ function _typeof(obj) {
     });
 
     if (stack.length) {
-      console.log({
-        end: stack.slice()
-      });
-      throw new Error('Unbalanced parenthesis 2');
+      throw new Error('Unbalanced parenthesis');
     }
 
     return result.map(function (arg) {
@@ -1290,6 +1254,79 @@ function _typeof(obj) {
 
       return arg;
     });
+  } // ----------------------------------------------------------------------
+  // return last S-Expression
+  // ----------------------------------------------------------------------
+
+
+  function previousSexp(tokens) {
+    var count = 1;
+    var i = tokens.length;
+
+    while (count > 0) {
+      var token = tokens[--i];
+
+      if (!token) {
+        return;
+      }
+
+      if (token.token === '(') {
+        count--;
+      } else if (token.token === ')') {
+        count++;
+      }
+    }
+
+    return tokens.slice(i);
+  } // ----------------------------------------------------------------------
+  // :: calculating basic indent for next line
+  // :: based on http://community.schemewiki.org/?scheme-style
+  // :: and GNU Emacs scheme mode
+  // ----------------------------------------------------------------------
+
+
+  function indent(code, level, offset) {
+    var tokens = tokenize(code, true);
+    var sexp = previousSexp(tokens);
+    var lines = code.split('\n');
+    var prev_line = lines[lines.length - 1];
+    var parse = prev_line.match(/^(\s*)/);
+    var spaces = parse[1].length || offset;
+    var i;
+
+    if (sexp) {
+      if (sexp[0].line > 0) {
+        offset = 0;
+      }
+
+      if (sexp.length === 1) {
+        return offset + sexp[0].col + 1;
+      } else if (['define', 'lambda', 'let'].indexOf(sexp[1].token) !== -1) {
+        return offset + sexp[0].col + level;
+      } else if (sexp[0].line < sexp[1].line) {
+        return offset + sexp[0].col + 1;
+      } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
+        if (sexp[1].token === '(') {
+          return offset + sexp[1].col;
+        }
+
+        return offset + sexp[3].col;
+      } else if (sexp[0].line === sexp[1].line) {
+        return offset + sexp[1].col;
+      } else {
+        var next_tokens = sexp.slice(2);
+
+        for (i = 0; i < next_tokens.length; ++i) {
+          var token = next_tokens[i];
+
+          if (token.token.trim()) {
+            return token.col;
+          }
+        }
+      }
+    }
+
+    return spaces + level;
   } // ----------------------------------------------------------------------
   // :: flatten nested arrays
   // :: source: https://stackoverflow.com/a/27282907/387194
@@ -2782,6 +2819,10 @@ function _typeof(obj) {
             env.set(code.car, value);
           });
         } else {
+          if (value instanceof _Symbol) {
+            value = env.get(value);
+          }
+
           env.set(code.car, value);
         }
       }
@@ -3480,9 +3521,11 @@ function _typeof(obj) {
         }, _callee5, this);
       }));
 
-      return function find(_x8, _x9) {
+      function find(_x8, _x9) {
         return _find.apply(this, arguments);
-      };
+      }
+
+      return find;
     }(),
     // ------------------------------------------------------------------
     'for-each': function () {
@@ -3519,9 +3562,11 @@ function _typeof(obj) {
         }, _callee6, this);
       }));
 
-      return function forEach(_x10, _x11) {
+      function forEach(_x10, _x11) {
         return _forEach.apply(this, arguments);
-      };
+      }
+
+      return forEach;
     }(),
     // ------------------------------------------------------------------
     map: function () {
@@ -3567,9 +3612,11 @@ function _typeof(obj) {
         }, _callee7, this);
       }));
 
-      return function map(_x12, _x13) {
+      function map(_x12, _x13) {
         return _map.apply(this, arguments);
-      };
+      }
+
+      return map;
     }(),
     // ------------------------------------------------------------------
     reduce: function () {
@@ -3639,9 +3686,11 @@ function _typeof(obj) {
         }, _callee8, this);
       }));
 
-      return function reduce(_x14, _x15) {
+      function reduce(_x14, _x15) {
         return _reduce.apply(this, arguments);
-      };
+      }
+
+      return reduce;
     }(),
     // ------------------------------------------------------------------
     filter: function () {
@@ -3688,9 +3737,11 @@ function _typeof(obj) {
         }, _callee9, this);
       }));
 
-      return function filter(_x16, _x17) {
+      function filter(_x16, _x17) {
         return _filter.apply(this, arguments);
-      };
+      }
+
+      return filter;
     }(),
     // ------------------------------------------------------------------
     range: function range(n) {
@@ -4288,6 +4339,8 @@ function _typeof(obj) {
   function exec(_x18, _x19, _x20) {
     return _exec.apply(this, arguments);
   } // ----------------------------------------------------------------------
+  // create token matcher that work with string and object token
+  // ----------------------------------------------------------------------
 
 
   function _exec() {
@@ -4350,16 +4403,26 @@ function _typeof(obj) {
     return _exec.apply(this, arguments);
   }
 
+  function matchToken(re) {
+    return function (token) {
+      if (!token) {
+        return false;
+      }
+
+      return (token.token || token).match(re);
+    };
+  }
+
+  var isParen = matchToken(/[()]/); // ----------------------------------------------------------------------
+
   function balanced(code) {
-    var re = /[()]/;
-    var parenthesis = tokenize(code).filter(function (token) {
-      return token.match(re);
-    });
+    var tokens = typeof code === 'string' ? tokenize(code) : code;
+    var parenthesis = tokens.filter(isParen);
     var open = parenthesis.filter(function (p) {
-      return p === ')';
+      return (p.token || p) === ')';
     });
     var close = parenthesis.filter(function (p) {
-      return p === '(';
+      return (p.token || p) === '(';
     });
     return open.length === close.length;
   } // ----------------------------------------------------------------------
@@ -4463,6 +4526,7 @@ function _typeof(obj) {
     Macro: Macro,
     quote: quote,
     Pair: Pair,
+    indent: indent,
     nil: nil,
     maybe_promise: maybe_promise,
     Symbol: _Symbol,
