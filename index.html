@@ -173,6 +173,7 @@ parse(tokenize(string)).foEach(function(code) {
   <script src="https://code.jquery.com/jquery-latest.min.js"></script>
   <script src="https://unpkg.com/@jcubic/lips"></script>
   <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.min.js"></script>
+  <!--<script src="../terminal/repo/js/jquery.terminal-src.js"></script>-->
   <script src="https://cdn.rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
   <script src="https://unpkg.com/prismjs/prism.js"></script>
   <script src="https://unpkg.com/jquery.terminal/js/prism.js"></script>
@@ -225,8 +226,7 @@ parse(tokenize(string)).foEach(function(code) {
            return tokens.slice(i);
        }
        // basic indent
-       function indent(term, level, offset) {
-           var code = term.before_cursor();
+       function indent(code, level, offset) {
            var tokens = lips.tokenize(code, true);
            var last_sexpr = sexp(tokens);
            var lines = code.split('\n');
@@ -285,9 +285,27 @@ parse(tokenize(string)).foEach(function(code) {
                    if (lips.balanced_parenthesis(this.get_command())) {
                        original();
                    } else {
-                       var i = indent(this, 2, this.get_prompt().length);
+                       var i = indent(term.before_cursor(), 2, this.get_prompt().length);
                        this.insert('\n' + (new Array(i + 1).join(' ')));
                    }
+               }
+           },
+           onPaste: function(e) {
+               if (e.text) {
+                   var code = e.text;
+                   var lines = code.split('\n').map(function(line) {
+                       return line.trim();
+                   });
+                   var output = '';
+                   var prompt = this.get_prompt();
+                   for (var i = 1; i < lines.length; ++i) {
+                       var c = lines.slice(0, i).join('\n');
+                       var ind = indent(c, 2, prompt.length);
+                       var spaces = new Array(ind + 1).join(' ');
+                       lines[i] = spaces + lines[i];
+                   }
+                   // in version <2.3.0 returning string is not supported
+                   return Promise.resolve(lines.join('\n'));
                }
            },
            keydown: function() {
