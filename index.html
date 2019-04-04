@@ -244,6 +244,9 @@ parse(tokenize(string)).foEach(function(code) {
                } else if (last_sexpr[0].line < last_sexpr[1].line) {
                    return offset + last_sexpr[0].col + 1;
                } else if (last_sexpr.length > 3 && last_sexpr[1].line === last_sexpr[3].line) {
+                   if (last_sexpr[1].token === '(') {
+                       return offset + last_sexpr[1].col;
+                   }
                    return offset + last_sexpr[3].col;
                } else if (last_sexpr[0].line === last_sexpr[1].line) {
                    return offset + last_sexpr[1].col;
