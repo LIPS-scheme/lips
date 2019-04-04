@@ -364,16 +364,9 @@
             } else if (sexp[0].line < sexp[1].line) {
                 return offset + sexp[0].col + 1;
             } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
-                /*
-                var next = sexp.slice(1);
-                if (balanced(next)) {
-                    for (i = 0; i < next.length; ++i) {
-                        if (next[i].token === '(') {
-                            return offset + next[i].col;
-                        }
-                    }
-                }
-                */
+                 if (sexp[1].token === '(') {
+                     return offset + sexp[1].col;
+                 }
                 return offset + sexp[3].col;
             } else if (sexp[0].line === sexp[1].line) {
                 return offset + sexp[1].col;
