@@ -3,8 +3,9 @@
 * better binary (options -f -c + read stdin + REPL + indent + catch exception)
 * indent API function
 ### Bugs
-* fix offset in tokenier
+* fix offset in tokenizer
 * fix assign variables from variables (eg. function or variable aliases)
+* fix return value of Math operation that should return float [#1](https://github.com/jcubic/lips/issues/1)
 
 ## 0.8.1
 ### Bugfix
