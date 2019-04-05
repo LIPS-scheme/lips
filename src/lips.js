@@ -1010,7 +1010,7 @@
                                    (LNumber.isFloat(n.value) || n.float)) ||
             (LNumber.isFloat(this.value) || this.float)) {
             var value = n instanceof LNumber ? n.valueOf() : n;
-            return LNumber(ops[op](this.valueOf(), value));
+            return LNumber(ops[op](this.valueOf(), value), true);
         }
         n = this.coerce(n);
         if (LNumber.isNative(n.value) && LNumber.isNative(this.value)) {

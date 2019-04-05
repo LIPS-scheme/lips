@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Thu, 04 Apr 2019 09:59:49 +0000
+ * build: Fri, 05 Apr 2019 09:50:32 +0000
  */
 (function () {
 'use strict';
@@ -2139,7 +2139,7 @@ function _typeof(obj) {
 
     if (LNumber.isFloat(n) || n instanceof LNumber && (LNumber.isFloat(n.value) || n.float) || LNumber.isFloat(this.value) || this.float) {
       var value = n instanceof LNumber ? n.valueOf() : n;
-      return LNumber(ops[op](this.valueOf(), value));
+      return LNumber(ops[op](this.valueOf(), value), true);
     }
 
     n = this.coerce(n);
