@@ -2,6 +2,15 @@
 
 var lips = require('../src/lips');
 
+/* TODO
+ *     test quasiquote
+ *  (define (test)
+ *       (let ((struct 'foo)
+ *             (name 'bar))
+ *         (print `(define (,(make-predicate name)  ,struct)))))
+ */
+
+
 
 var {
     parse,

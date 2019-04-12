@@ -272,7 +272,8 @@
             } else if (token === ')') {
                 parents--;
                 if (!stack.length) {
-                    throw new Error('Unbalanced parenthesis');
+                    dump(result);
+                    throw new Error('Unbalanced parenthesis 1');
                 }
                 if (stack.length === 1) {
                     result.push(stack.pop());
@@ -332,14 +333,26 @@
             }
         });
         if (stack.length) {
-            throw new Error('Unbalanced parenthesis');
+            throw new Error('Unbalanced parenthesis 2');
         }
+        dump(result);
         return result.map((arg) => {
             if (arg instanceof Array) {
                 return Pair.fromArray(arg);
             }
             return arg;
         });
+    }
+    // ----------------------------------------------------------------------
+    function dump(arr) {
+        if (false) {
+            console.log(arr.map((arg) => {
+                if (arg instanceof Array) {
+                    return Pair.fromArray(arg);
+                }
+                return arg;
+            }).toString());
+        }
     }
     // ----------------------------------------------------------------------
     // return last S-Expression
@@ -1031,6 +1044,11 @@
     // ----------------------------------------------------------------------
     LNumber.prototype.toString = LNumber.prototype.toJSON = function() {
         return this.value.toString();
+    };
+    // ----------------------------------------------------------------------
+    LNumber.prototype.isBigNumber = function() {
+        return typeof this.value === 'bigint' ||
+            typeof BN !== 'undefined' && !(this.value instanceof BN);
     };
     // ----------------------------------------------------------------------
     ['floor', 'ceil', 'round'].forEach(fn => {
@@ -1792,7 +1810,7 @@
                             if (pair.cdr.cdr !== nil) {
                                 return new Pair(
                                     new Unquote(pair.cdr.car, unquote_count),
-                                    pair.cdr.cdr
+                                    recur(pair.cdr.cdr)
                                 );
                             } else {
                                 return new Unquote(pair.cdr.car, unquote_count);
@@ -1800,7 +1818,7 @@
                         } else if (parent.cdr.cdr !== nil) {
                             parent.car.cdr = new Pair(
                                 new Unquote(node, unquote_count),
-                                parent.cdr === nil ? nil : parent.cdr.cdr
+                                parent.cdr === nil ? nil : recur(parent.cdr.cdr)
                             );
                         } else {
                             parent.car.cdr = new Unquote(node, unquote_count);
@@ -1808,10 +1826,10 @@
                         return head.car;
                     }
                     var car = pair.car;
+                    var cdr = pair.cdr;
                     if (car instanceof Pair) {
                         car = recur(car);
                     }
-                    var cdr = pair.cdr;
                     if (cdr instanceof Pair) {
                         cdr = recur(cdr);
                     }
@@ -1992,6 +2010,21 @@
         },
         // ------------------------------------------------------------------
         type: function(obj) {
+            var mapping = {
+                'pair': Pair,
+                'symbol': Symbol
+            };
+            for (let [key, value] of Object.entries(mapping)) {
+                if (obj instanceof value) {
+                    return key;
+                }
+            }
+            if (obj instanceof LNumber) {
+                if (obj.isBigNumber()) {
+                    return 'bigint';
+                }
+                return 'number';
+            }
             return typeof obj;
         },
         // ------------------------------------------------------------------

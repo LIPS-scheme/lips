@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 12 Apr 2019 18:54:33 +0000
+ * build: Fri, 12 Apr 2019 20:52:18 +0000
  */
 (function () {
 'use strict';
@@ -1197,7 +1197,7 @@ function _typeof(obj) {
         parents--;
 
         if (!stack.length) {
-          throw new Error('Unbalanced parenthesis');
+          throw new Error('Unbalanced parenthesis 1');
         }
 
         if (stack.length === 1) {
@@ -1269,9 +1269,8 @@ function _typeof(obj) {
     });
 
     if (stack.length) {
-      throw new Error('Unbalanced parenthesis');
+      throw new Error('Unbalanced parenthesis 2');
     }
-
     return result.map(function (arg) {
       if (arg instanceof Array) {
         return Pair.fromArray(arg);
@@ -2183,6 +2182,11 @@ function _typeof(obj) {
 
   LNumber.prototype.toString = LNumber.prototype.toJSON = function () {
     return this.value.toString();
+  }; // ----------------------------------------------------------------------
+
+
+  LNumber.prototype.isBigNumber = function () {
+    return typeof this.value === 'bigint' || typeof BN !== 'undefined' && !(this.value instanceof BN);
   }; // ----------------------------------------------------------------------
 
 
@@ -3188,12 +3192,12 @@ function _typeof(obj) {
 
             if (parent === node) {
               if (pair.cdr.cdr !== nil) {
-                return new Pair(new Unquote(pair.cdr.car, unquote_count), pair.cdr.cdr);
+                return new Pair(new Unquote(pair.cdr.car, unquote_count), recur(pair.cdr.cdr));
               } else {
                 return new Unquote(pair.cdr.car, unquote_count);
               }
             } else if (parent.cdr.cdr !== nil) {
-              parent.car.cdr = new Pair(new Unquote(node, unquote_count), parent.cdr === nil ? nil : parent.cdr.cdr);
+              parent.car.cdr = new Pair(new Unquote(node, unquote_count), parent.cdr === nil ? nil : recur(parent.cdr.cdr));
             } else {
               parent.car.cdr = new Unquote(node, unquote_count);
             }
@@ -3202,12 +3206,11 @@ function _typeof(obj) {
           }
 
           var car = pair.car;
+          var cdr = pair.cdr;
 
           if (car instanceof Pair) {
             car = recur(car);
           }
-
-          var cdr = pair.cdr;
 
           if (cdr instanceof Pair) {
             cdr = recur(cdr);
@@ -3431,6 +3434,31 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     type: function type(obj) {
+      var mapping = {
+        'pair': Pair,
+        'symbol': _Symbol
+      };
+
+      var _arr = Object.entries(mapping);
+
+      for (var _i = 0; _i < _arr.length; _i++) {
+        var _arr$_i = _slicedToArray(_arr[_i], 2),
+            key = _arr$_i[0],
+            value = _arr$_i[1];
+
+        if (obj instanceof value) {
+          return key;
+        }
+      }
+
+      if (obj instanceof LNumber) {
+        if (obj.isBigNumber()) {
+          return 'bigint';
+        }
+
+        return 'number';
+      }
+
       return _typeof(obj);
     },
     // ------------------------------------------------------------------

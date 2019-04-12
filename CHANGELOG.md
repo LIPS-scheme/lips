@@ -8,6 +8,7 @@
 * fix return value of Math operation that should return float [#1](https://github.com/jcubic/lips/issues/1)
 * fix tokenizer meta data with strings outside of S-Expressions or in lonely lines
 * fix print of lips Symbols (update string function)
+* fix missing recursive calls to unquote in quasiquote macro
 
 ## 0.8.1
 ### Bugfix
