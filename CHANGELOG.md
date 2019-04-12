@@ -2,6 +2,7 @@
 ### Features
 * better binary (options -f -c + read stdin + REPL + indent + catch exception)
 * indent API function
+* allow to use dots and variable names
 ### Bugs
 * fix offset in tokenizer
 * fix assign variables from variables (eg. function or variable aliases)
