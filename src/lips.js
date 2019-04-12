@@ -1532,6 +1532,8 @@
             var value = code.cdr.car;
             if (value instanceof Pair) {
                 value = evaluate(value, eval_args);
+            } else if (value instanceof Symbol) {
+                value = env.get(value);
             }
             if (code.car instanceof Symbol) {
                 if (value instanceof Promise) {
@@ -1539,9 +1541,6 @@
                         env.set(code.car, value);
                     });
                 } else {
-                    if (value instanceof Symbol) {
-                        value = env.get(value);
-                    }
                     env.set(code.car, value);
                 }
             }
@@ -1881,7 +1880,7 @@
             if (obj === null || (typeof obj === 'string' && quote)) {
                 return JSON.stringify(obj);
             }
-            if (obj instanceof Pair) {
+            if (obj instanceof Pair || obj instanceof Symbol) {
                 return obj.toString();
             }
             if (typeof obj === 'object') {

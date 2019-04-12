@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 12 Apr 2019 15:30:35 +0000
+ * build: Fri, 12 Apr 2019 16:50:33 +0000
  */
 (function () {
 'use strict';
@@ -2846,6 +2846,8 @@ function _typeof(obj) {
 
       if (value instanceof Pair) {
         value = evaluate(value, eval_args);
+      } else if (value instanceof _Symbol) {
+        value = env.get(value);
       }
 
       if (code.car instanceof _Symbol) {
@@ -2854,10 +2856,6 @@ function _typeof(obj) {
             env.set(code.car, value);
           });
         } else {
-          if (value instanceof _Symbol) {
-            value = env.get(value);
-          }
-
           env.set(code.car, value);
         }
       }
@@ -3284,7 +3282,7 @@ function _typeof(obj) {
         return JSON.stringify(obj);
       }
 
-      if (obj instanceof Pair) {
+      if (obj instanceof Pair || obj instanceof _Symbol) {
         return obj.toString();
       }
 
