@@ -6,6 +6,7 @@
 * fix offset in tokenizer
 * fix assign variables from variables (eg. function or variable aliases)
 * fix return value of Math operation that should return float [#1](https://github.com/jcubic/lips/issues/1)
+* fix tokenizer meta data with strings outside of S-Expressions or in lonely lines
 
 ## 0.8.1
 ### Bugfix
