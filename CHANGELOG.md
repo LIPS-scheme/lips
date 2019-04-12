@@ -9,6 +9,7 @@
 * fix tokenizer meta data with strings outside of S-Expressions or in lonely lines
 * fix print of lips Symbols (update string function)
 * fix missing recursive calls to unquote in quasiquote macro
+* fix parser when using multiple specials (unquote, quote etc.) in a row
 
 ## 0.8.1
 ### Bugfix

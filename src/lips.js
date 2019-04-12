@@ -257,85 +257,86 @@
                     single_list_specials = [];
                 }
                 single_list_specials.push(special);
-            } else if (token === '(') {
-                first_value = true;
-                parents++;
+            } else {
                 if (special) {
                     specials_stack.push(single_list_specials);
                     single_list_specials = [];
                 }
-                stack.push([]);
-                special = null;
-                special_count = 0;
-            } else if (token === '.' && !first_value) {
-                stack[stack.length - 1] = Pair.fromArray(top);
-            } else if (token === ')') {
-                parents--;
-                if (!stack.length) {
-                    dump(result);
-                    throw new Error('Unbalanced parenthesis 1');
-                }
-                if (stack.length === 1) {
-                    result.push(stack.pop());
-                } else if (stack.length > 1) {
-                    var list = stack.pop();
-                    top = stack[stack.length - 1];
-                    if (top instanceof Array) {
-                        top.push(list);
-                    } else if (top instanceof Pair) {
-                        top.append(Pair.fromArray(list));
-                    }
-                    if (specials_stack.length) {
-                        single_list_specials = specials_stack.pop();
-                        while (single_list_specials.length) {
-                            pop_join();
-                            single_list_specials.pop();
-                        }
-                    } else {
-                        pop_join();
-                    }
-                }
-                if (parents === 0 && stack.length) {
-                    result.push(stack.pop());
-                }
-            } else {
-                first_value = false;
-                var value = parse_argument(token);
-                if (special) {
-                    // special without list like ,foo
-                    while (special_count--) {
-                        stack[stack.length - 1][1] = value;
-                        value = stack.pop();
-                    }
+                if (token === '(') {
+                    first_value = true;
+                    parents++;
+                    stack.push([]);
+                    special = null;
                     special_count = 0;
-                    special = false;
-                }
-                top = stack[stack.length - 1];
-                if (top instanceof Pair) {
-                    var node = top;
-                    while (true) {
-                        if (node.cdr === nil) {
-                            if (value instanceof Array) {
-                                node.cdr = Pair.fromArray(value);
-                            } else {
-                                node.cdr = value;
+                } else if (token === '.' && !first_value) {
+                    stack[stack.length - 1] = Pair.fromArray(top);
+                } else if (token === ')') {
+                    parents--;
+                    if (!stack.length) {
+                        throw new Error('Unbalanced parenthesis');
+                    }
+                    if (stack.length === 1) {
+                        result.push(stack.pop());
+                    } else if (stack.length > 1) {
+                        var list = stack.pop();
+                        top = stack[stack.length - 1];
+                        if (top instanceof Array) {
+                            top.push(list);
+                        } else if (top instanceof Pair) {
+                            top.append(Pair.fromArray(list));
+                        }
+                        if (specials_stack.length) {
+                            single_list_specials = specials_stack.pop();
+                            while (single_list_specials.length) {
+                                pop_join();
+                                single_list_specials.pop();
                             }
-                            break;
                         } else {
-                            node = node.cdr;
+                            pop_join();
                         }
                     }
-                } else if (!stack.length) {
-                    result.push(value);
+                    if (parents === 0 && stack.length) {
+                        result.push(stack.pop());
+                    }
                 } else {
-                    top.push(value);
+                    first_value = false;
+                    var value = parse_argument(token);
+                    if (special) {
+                        // special without list like ,foo
+                        while (special_count--) {
+                            stack[stack.length - 1][1] = value;
+                            value = stack.pop();
+                        }
+                        special_count = 0;
+                        special = false;
+                    }
+                    top = stack[stack.length - 1];
+                    if (top instanceof Pair) {
+                        var node = top;
+                        while (true) {
+                            if (node.cdr === nil) {
+                                if (value instanceof Array) {
+                                    node.cdr = Pair.fromArray(value);
+                                } else {
+                                    node.cdr = value;
+                                }
+                                break;
+                            } else {
+                                node = node.cdr;
+                            }
+                        }
+                    } else if (!stack.length) {
+                        result.push(value);
+                    } else {
+                        top.push(value);
+                    }
                 }
             }
         });
         if (stack.length) {
+            dump(result);
             throw new Error('Unbalanced parenthesis 2');
         }
-        dump(result);
         return result.map((arg) => {
             if (arg instanceof Array) {
                 return Pair.fromArray(arg);
