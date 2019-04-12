@@ -51,7 +51,7 @@ describe('tokenizer', function() {
         (field-arg (gensym)))
 `;
         var output = [
-            { col: 0, line: 0, token: '(', offset: 0} ,
+            { col: 0, line: 0, token: '(', offset: 0 },
             { col: 1, line: 0, token: 'define-macro', offset: 1 },
             { col: 13, line: 0, token: ' ', offset: 13 },
             { col: 14, line: 0, token: '(', offset: 14 },
@@ -72,7 +72,7 @@ describe('tokenizer', function() {
             { col: 23, line: 1, token: '10', offset: 63 },
             { col: 25, line: 1, token: '\n', offset: 65 },
             { col: 0, line: 2, token: '  ', offset: 66 },
-            { col: 2, line: 2, token: '"Second Line."', offset:  68 },
+            { col: 2, line: 2, token: '"Second Line."', offset: 68 },
             { col: 16, line: 2, token: '    ', offset: 82 },
             { col: 20, line: 2, token: '"word"', offset: 86 },
             { col: 26, line: 2, token: ' ', offset: 92 },
@@ -289,7 +289,7 @@ describe('Pair', function() {
 });
 
 function exec(string, env, dynamic_scope) {
-    return evaluate(parse(tokenize(string))[0], {env, dynamic_scope});
+    return evaluate(parse(tokenize(string))[0], { env, dynamic_scope });
 }
 
 function deepQuote(pair) {

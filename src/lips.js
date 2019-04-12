@@ -140,7 +140,6 @@
         var count = 0;
         var line = 0;
         var tokens = [];
-        var prev_string;
         var current_line = [];
         var col = 0;
         str.split(pre_parse_re).filter(Boolean).forEach(function(string) {
@@ -362,28 +361,62 @@
         return tokens.slice(i);
     }
     // ----------------------------------------------------------------------
-    // :: calculating basic indent for next line
+    // :: find number of spaces in line
+    // ----------------------------------------------------------------------
+    function lineIndent(tokens) {
+        if (!tokens || !tokens.length) {
+            return 0;
+        }
+        var i = tokens.length;
+        if (tokens[i - 1].token === '\n') {
+            return 0;
+        }
+        while (--i) {
+            if (tokens[i].token === '\n') {
+                var token = (tokens[i + 1] || {}).token;
+                if (token) {
+                    return token.length;
+                }
+            }
+        }
+        return 0;
+    }
+    // ----------------------------------------------------------------------
+    // :: Code formatter class
     // :: based on http://community.schemewiki.org/?scheme-style
     // :: and GNU Emacs scheme mode
     // :: it rely on meta data from tokenizer function
     // ----------------------------------------------------------------------
-    function indent(code, options) {
-        var defaults = {
-            offset: 0,
-            indent: 2,
-            specials: ['define', 'lambda', 'let', 'define-macro']
-        };
+    function Formatter(code) {
+        // so we have space token after newline
+        this._code = code.replace(/\r/g, '').replace(/\n\s*/g, '\n ');
+        this._tokens = tokenize(this._code, true);
+    }
+    // ----------------------------------------------------------------------
+    Formatter.defaults = {
+        offset: 0,
+        indent: 2,
+        specials: ['define', 'lambda', 'let', 'define-macro']
+    };
+    // ----------------------------------------------------------------------
+    // :: return indent for next line
+    // ----------------------------------------------------------------------
+    Formatter.prototype._options = function _options(options) {
+        var defaults = Formatter.defaults;
+        if (typeof options === 'undefined') {
+            return Object.assign({}, defaults);
+        }
         var specials = options && options.specials || [];
-        var settings = Object.assign({}, defaults, options, {
-            specials: defaults.concat(specials)
+        return Object.assign({}, defaults, options, {
+            specials: defaults.specials.concat(specials)
         });
-        var tokens = tokenize(code, true);
+    };
+    // ----------------------------------------------------------------------
+    Formatter.prototype.indent = function indent(tokens, options) {
+        var settings = this._options(options);
+        var spaces = lineIndent(tokens);
+        var specials = settings.specials;
         var sexp = previousSexp(tokens);
-        var lines = code.split('\n');
-        var prev_line = lines[lines.length - 1];
-        var parse = prev_line.match(/^(\s*)/);
-        var spaces = parse[1].length || settings.offset;
-        var i;
         if (sexp) {
             if (sexp[0].line > 0) {
                 settings.offset = 0;
@@ -391,7 +424,7 @@
             if (sexp.length === 1) {
                 return settings.offset + sexp[0].col + 1;
             } else if (specials.indexOf(sexp[1].token) !== -1) {
-                return settings.offset + sexp[0].col + settings.level;
+                return settings.offset + sexp[0].col + settings.indent;
             } else if (sexp[0].line < sexp[1].line) {
                 return settings.offset + sexp[0].col + 1;
             } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
@@ -403,7 +436,7 @@
                 return settings.offset + sexp[1].col;
             } else {
                 var next_tokens = sexp.slice(2);
-                for (i = 0; i < next_tokens.length; ++i) {
+                for (var i = 0; i < next_tokens.length; ++i) {
                     var token = next_tokens[i];
                     if (token.token.trim()) {
                         return token.col;
@@ -411,8 +444,42 @@
                 }
             }
         }
-        return spaces + settings.level;
-    }
+        return spaces + settings.indent;
+    };
+    // ----------------------------------------------------------------------
+    Formatter.prototype._spaces = function(i) {
+        return new Array(i + 1).join(' ');
+    };
+    // ----------------------------------------------------------------------
+    // :: auto formatting of code, it require to have newlines
+    // ----------------------------------------------------------------------
+    Formatter.prototype.format = function format(options) {
+        var settings = this._options(options);
+        var indent = 0;
+        var offset = 0;
+        for (var i = 0; i < this._tokens.length; ++i) {
+            var token = this._tokens[i];
+            if (token.token === '\n') {
+                let tokens = this._tokens.slice(0, i);
+                indent = this.indent(tokens, settings);
+                offset += indent;
+                if (this._tokens[i + 1]) {
+                    this._tokens[i + 1].token = this._spaces(indent);
+                    indent--; // because we have single space as initial indent
+                    for (var j = i + 2; j < this._tokens.length; ++j) {
+                        this._tokens[j].offset += offset;
+                        this._tokens[j].col += indent;
+                        if (this._tokens[j].token === '\n') {
+                            // ++i is called after the loop
+                            i = j - 1;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return this._tokens.map(token => token.token).join('');
+    };
     // ----------------------------------------------------------------------
     // :: flatten nested arrays
     // :: source: https://stackoverflow.com/a/27282907/387194
@@ -771,7 +838,7 @@
         macro.defmacro = true;
         return macro;
     };
-    Macro.prototype.invoke = function(code, {env, dynamic_scope, error}, macro_expand) {
+    Macro.prototype.invoke = function(code, { env, dynamic_scope, error }, macro_expand) {
         var args = {
             dynamic_scope,
             error,
@@ -837,7 +904,8 @@
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
         var name = 'let' + (asterisk ? '*' : '');
-        return Macro.defmacro(name, function(code, {dynamic_scope, error, macro_expand}) {
+        return Macro.defmacro(name, function(code, options) {
+            var { dynamic_scope, error, macro_expand } = options;
             var args;
             // named let:
             // (let iter ((x 10)) (iter (- x 1))) -> (let* ((iter (lambda (x) ...
@@ -1325,18 +1393,18 @@
             }
         },
         // ------------------------------------------------------------------
-        'set!': new Macro('set!', function(code, {dynamic_scope, error} = {}) {
+        'set!': new Macro('set!', function(code, { dynamic_scope, error } = {}) {
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
-            var value = evaluate(code.cdr.car, {env: this, dynamic_scope, error});
+            var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
             value = maybe_promise(value);
             var ref;
             if (code.car instanceof Pair && Symbol.is(code.car.car, '.')) {
                 var second = code.car.cdr.car;
                 var thrid = code.car.cdr.cdr.car;
-                var object = evaluate(second, {env: this, dynamic_scope, error});
-                var key = evaluate(thrid, {env: this, dynamic_scope, error});
+                var object = evaluate(second, { env: this, dynamic_scope, error });
+                var key = evaluate(thrid, { env: this, dynamic_scope, error });
                 if (value instanceof Promise) {
                     return value.then(value => {
                         object[key] = value;
@@ -1398,7 +1466,7 @@
             });
         },
         // ------------------------------------------------------------------
-        'while': new Macro('while', async function(code, {dynamic_scope, error}) {
+        'while': new Macro('while', async function(code, { dynamic_scope, error }) {
             var self = this;
             var begin = new Pair(
                 new Symbol('begin'),
@@ -1426,7 +1494,7 @@
             }
         }),
         // ------------------------------------------------------------------
-        'if': new Macro('if', function(code, {dynamic_scope, error}) {
+        'if': new Macro('if', function(code, { dynamic_scope, error }) {
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
@@ -1457,7 +1525,7 @@
                     return false_value;
                 }
             };
-            var cond = evaluate(code.car, {env, dynamic_scope, error});
+            var cond = evaluate(code.car, { env, dynamic_scope, error });
             if (cond instanceof Promise) {
                 return cond.then(resolve);
             } else {
@@ -1469,7 +1537,7 @@
         // ------------------------------------------------------------------
         'let': let_macro(false),
         // ------------------------------------------------------------------
-        'begin': new Macro('begin', async function(code, {dynamic_scope, error}) {
+        'begin': new Macro('begin', async function(code, { dynamic_scope, error }) {
             var arr = this.get('list->array')(code);
             var result;
             if (dynamic_scope) {
@@ -1478,14 +1546,14 @@
             while (true) {
                 if (arr.length) {
                     code = arr.shift();
-                    result = await evaluate(code, {env: this, dynamic_scope, error});
+                    result = await evaluate(code, { env: this, dynamic_scope, error });
                 } else {
                     return result;
                 }
             }
         }),
         // ------------------------------------------------------------------
-        timer: new Macro('timer', function(code, {dynamic_scope, error} = {}) {
+        timer: new Macro('timer', function(code, { dynamic_scope, error } = {}) {
             var env = this;
             if (dynamic_scope) {
                 dynamic_scope = this;
@@ -1571,7 +1639,7 @@
             }
         },
         // ------------------------------------------------------------------
-        lambda: new Macro('lambda', function(code, {dynamic_scope, error} = {}) {
+        lambda: new Macro('lambda', function(code, { dynamic_scope, error } = {}) {
             var self = this;
             function lambda(...args) {
                 var env = (dynamic_scope ? this : self).inherit('lambda');
@@ -1606,7 +1674,7 @@
                     dynamic_scope = env;
                 }
                 var output = new Pair(new Symbol('begin'), code.cdr);
-                return evaluate(output, {env, dynamic_scope, error});
+                return evaluate(output, { env, dynamic_scope, error });
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
             if (!(code.car instanceof Pair)) {
@@ -1623,7 +1691,7 @@
         'macroexpand': new Macro('macro-expand', macro_expand()),
         'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
         // ------------------------------------------------------------------
-        'define-macro': new Macro(macro, function(macro, {dynamic_scope, error}) {
+        'define-macro': new Macro(macro, function(macro, { dynamic_scope, error }) {
             function clear(node) {
                 if (node instanceof Pair) {
                     delete node.data;
@@ -1632,7 +1700,7 @@
             }
             if (macro.car instanceof Pair && macro.car.car instanceof Symbol) {
                 var name = macro.car.car.name;
-                this.env[name] = Macro.defmacro(name, function(code, {macro_expand}) {
+                this.env[name] = Macro.defmacro(name, function(code, { macro_expand }) {
                     var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
                     var arg = code;
@@ -1655,12 +1723,12 @@
                     // evaluate macro
                     if (macro.cdr instanceof Pair) {
                         var pair = macro.cdr.reduce(function(result, node) {
-                            return evaluate(node, {env, dynamic_scope, error});
+                            return evaluate(node, { env, dynamic_scope, error });
                         });
                         if (macro_expand) {
                             return pair;
                         }
-                        pair = evaluate(pair, {env, dynamic_scope, error});
+                        pair = evaluate(pair, { env, dynamic_scope, error });
                         if (pair instanceof Promise) {
                             return pair.then(clear);
                         }
@@ -1674,7 +1742,7 @@
             return quote(arg.car);
         }),
         // ------------------------------------------------------------------
-        quasiquote: new Macro('quasiquote', function(arg, {dynamic_scope, error}) {
+        quasiquote: new Macro('quasiquote', function(arg, { dynamic_scope, error }) {
             var self = this;
             var max_unquote = 0;
             if (dynamic_scope) {
@@ -1754,7 +1822,7 @@
             function unquoting(pair) {
                 if (pair instanceof Unquote) {
                     if (max_unquote === pair.count) {
-                        return evaluate(pair.value, {env: self, dynamic_scope, error});
+                        return evaluate(pair.value, { env: self, dynamic_scope, error });
                     } else {
                         return new Pair(
                             new Symbol('unquote'),
@@ -1819,11 +1887,11 @@
             }
         },
         // ------------------------------------------------------------------
-        'append!': new Macro('append!', function(code, {dynamic_scope, error}) {
+        'append!': new Macro('append!', function(code, { dynamic_scope, error }) {
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
-            var value = evaluate(code.cdr.car, {env: this, dynamic_scope, error});
+            var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
             return this.get(code.car).append([value]);
         }),
         // ------------------------------------------------------------------
@@ -2009,7 +2077,7 @@
             return result;
         },
         // ------------------------------------------------------------------
-        apply: new Macro('apply', function(code, {dynamic_scope, error} = {}) {
+        apply: new Macro('apply', function(code, { dynamic_scope, error } = {}) {
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
@@ -2028,7 +2096,7 @@
             }
             var invoke = fn => {
                 type_check(fn);
-                var args = evaluate(code.cdr.car, {env: this, dynamic_scope, error});
+                var args = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
                 args = this.get('list->array')(args);
                 if (args.filter(a => a instanceof Promise).length) {
                     return Promise.all(args).then(args => fn.apply(this, args));
@@ -2036,7 +2104,7 @@
                     return fn.apply(this, args);
                 }
             };
-            var fn = evaluate(code.car, {env: this, dynamic_scope, error});
+            var fn = evaluate(code.car, { env: this, dynamic_scope, error });
             if (fn instanceof Promise) {
                 return fn.then(invoke);
             } else {
@@ -2255,7 +2323,7 @@
         // ------------------------------------------------------------------
         'eq?': equal,
         // ------------------------------------------------------------------
-        or: new Macro('or', function(code, {dynamic_scope, error}) {
+        or: new Macro('or', function(code, { dynamic_scope, error }) {
             var args = this.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
@@ -2279,7 +2347,7 @@
                             resolve(false);
                         }
                     } else {
-                        var value = evaluate(arg, {env: self, dynamic_scope, error});
+                        var value = evaluate(arg, { env: self, dynamic_scope, error });
                         if (value instanceof Promise) {
                             value.then(next);
                         } else {
@@ -2290,7 +2358,7 @@
             });
         }),
         // ------------------------------------------------------------------
-        and: new Macro('and', function(code, {dynamic_scope, error} = {}) {
+        and: new Macro('and', function(code, { dynamic_scope, error } = {}) {
             var args = this.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
@@ -2314,7 +2382,7 @@
                             resolve(false);
                         }
                     } else {
-                        var value = evaluate(arg, {env: self, dynamic_scope, error});
+                        var value = evaluate(arg, { env: self, dynamic_scope, error });
                         if (value instanceof Promise) {
                             value.then(next);
                         } else {
@@ -2465,12 +2533,12 @@
         }
     }
     // ----------------------------------------------------------------------
-    function get_function_args(rest, {env, dynamic_scope, error}) {
+    function get_function_args(rest, { env, dynamic_scope, error }) {
         var args = [];
         var node = rest;
         while (true) {
             if (node instanceof Pair) {
-                var arg = evaluate(node.car, {env, dynamic_scope, error});
+                var arg = evaluate(node.car, { env, dynamic_scope, error });
                 if (dynamic_scope) {
                     if (arg instanceof Promise) {
                         arg = arg.then(arg => {
@@ -2511,7 +2579,7 @@
         return evaluate(value, eval_args);
     }
     // ----------------------------------------------------------------------
-    function evaluate(code, {env, dynamic_scope, error = () => {}} = {}) {
+    function evaluate(code, { env, dynamic_scope, error = () => {} } = {}) {
         try {
             if (dynamic_scope === true) {
                 env = dynamic_scope = env || global_env;
@@ -2520,7 +2588,7 @@
             } else {
                 env = env || global_env;
             }
-            var eval_args = {env, dynamic_scope, error};
+            var eval_args = { env, dynamic_scope, error };
             var value;
             if (is_null(code)) {
                 return code;
@@ -2718,7 +2786,7 @@
         Macro,
         quote,
         Pair,
-        indent,
+        Formatter,
         nil,
         maybe_promise,
         Symbol,

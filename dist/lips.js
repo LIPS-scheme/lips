@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 12 Apr 2019 16:50:33 +0000
+ * build: Fri, 12 Apr 2019 18:54:33 +0000
  */
 (function () {
 'use strict';
@@ -1304,30 +1304,75 @@ function _typeof(obj) {
 
     return tokens.slice(i);
   } // ----------------------------------------------------------------------
-  // :: calculating basic indent for next line
+  // :: find number of spaces in line
+  // ----------------------------------------------------------------------
+
+
+  function lineIndent(tokens) {
+    if (!tokens || !tokens.length) {
+      return 0;
+    }
+
+    var i = tokens.length;
+
+    if (tokens[i - 1].token === '\n') {
+      return 0;
+    }
+
+    while (--i) {
+      if (tokens[i].token === '\n') {
+        var token = (tokens[i + 1] || {}).token;
+
+        if (token) {
+          return token.length;
+        }
+      }
+    }
+
+    return 0;
+  } // ----------------------------------------------------------------------
+  // :: Code formatter class
   // :: based on http://community.schemewiki.org/?scheme-style
   // :: and GNU Emacs scheme mode
   // :: it rely on meta data from tokenizer function
   // ----------------------------------------------------------------------
 
 
-  function indent(code, options) {
-    var defaults = {
-      offset: 0,
-      indent: 2,
-      specials: ['define', 'lambda', 'let', 'define-macro']
-    };
+  function Formatter(code) {
+    // so we have space token after newline
+    this._code = code.replace(/\r/g, '').replace(/\n\s*/g, '\n ');
+    this._tokens = tokenize(this._code, true);
+  } // ----------------------------------------------------------------------
+
+
+  Formatter.defaults = {
+    offset: 0,
+    indent: 2,
+    specials: ['define', 'lambda', 'let', 'define-macro']
+  }; // ----------------------------------------------------------------------
+  // :: return indent for next line
+  // ----------------------------------------------------------------------
+
+  Formatter.prototype._options = function _options(options) {
+    var defaults = Formatter.defaults;
+
+    if (typeof options === 'undefined') {
+      return Object.assign({}, defaults);
+    }
+
     var specials = options && options.specials || [];
-    var settings = Object.assign({}, defaults, options, {
-      specials: defaults.concat(specials)
+    return Object.assign({}, defaults, options, {
+      specials: defaults.specials.concat(specials)
     });
-    var tokens = tokenize(code, true);
+  }; // ----------------------------------------------------------------------
+
+
+  Formatter.prototype.indent = function indent(tokens, options) {
+    var settings = this._options(options);
+
+    var spaces = lineIndent(tokens);
+    var specials = settings.specials;
     var sexp = previousSexp(tokens);
-    var lines = code.split('\n');
-    var prev_line = lines[lines.length - 1];
-    var parse = prev_line.match(/^(\s*)/);
-    var spaces = parse[1].length || settings.offset;
-    var i;
 
     if (sexp) {
       if (sexp[0].line > 0) {
@@ -1337,7 +1382,7 @@ function _typeof(obj) {
       if (sexp.length === 1) {
         return settings.offset + sexp[0].col + 1;
       } else if (specials.indexOf(sexp[1].token) !== -1) {
-        return settings.offset + sexp[0].col + settings.level;
+        return settings.offset + sexp[0].col + settings.indent;
       } else if (sexp[0].line < sexp[1].line) {
         return settings.offset + sexp[0].col + 1;
       } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
@@ -1351,7 +1396,7 @@ function _typeof(obj) {
       } else {
         var next_tokens = sexp.slice(2);
 
-        for (i = 0; i < next_tokens.length; ++i) {
+        for (var i = 0; i < next_tokens.length; ++i) {
           var token = next_tokens[i];
 
           if (token.token.trim()) {
@@ -1361,8 +1406,54 @@ function _typeof(obj) {
       }
     }
 
-    return spaces + settings.level;
-  } // ----------------------------------------------------------------------
+    return spaces + settings.indent;
+  }; // ----------------------------------------------------------------------
+
+
+  Formatter.prototype._spaces = function (i) {
+    return new Array(i + 1).join(' ');
+  }; // ----------------------------------------------------------------------
+  // :: auto formatting of code, it require to have newlines
+  // ----------------------------------------------------------------------
+
+
+  Formatter.prototype.format = function format(options) {
+    var settings = this._options(options);
+
+    var indent = 0;
+    var offset = 0;
+
+    for (var i = 0; i < this._tokens.length; ++i) {
+      var token = this._tokens[i];
+
+      if (token.token === '\n') {
+        var _tokens = this._tokens.slice(0, i);
+
+        indent = this.indent(_tokens, settings);
+        offset += indent;
+
+        if (this._tokens[i + 1]) {
+          this._tokens[i + 1].token = this._spaces(indent);
+          indent--; // because we have single space as initial indent
+
+          for (var j = i + 2; j < this._tokens.length; ++j) {
+            this._tokens[j].offset += offset;
+            this._tokens[j].col += indent;
+
+            if (this._tokens[j].token === '\n') {
+              // ++i is called after the loop
+              i = j - 1;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    return this._tokens.map(function (token) {
+      return token.token;
+    }).join('');
+  }; // ----------------------------------------------------------------------
   // :: flatten nested arrays
   // :: source: https://stackoverflow.com/a/27282907/387194
   // ----------------------------------------------------------------------
@@ -1949,10 +2040,10 @@ function _typeof(obj) {
 
   function let_macro(asterisk) {
     var name = 'let' + (asterisk ? '*' : '');
-    return Macro.defmacro(name, function (code, _ref5) {
-      var dynamic_scope = _ref5.dynamic_scope,
-          error = _ref5.error,
-          macro_expand = _ref5.macro_expand;
+    return Macro.defmacro(name, function (code, options) {
+      var dynamic_scope = options.dynamic_scope,
+          error = options.error,
+          macro_expand = options.macro_expand;
       var args; // named let:
       // (let iter ((x 10)) (iter (- x 1))) -> (let* ((iter (lambda (x) ...
 
@@ -2513,9 +2604,9 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     'set!': new Macro('set!', function (code) {
-      var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref6.dynamic_scope,
-          error = _ref6.error;
+      var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref5.dynamic_scope,
+          error = _ref5.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -2622,15 +2713,15 @@ function _typeof(obj) {
     'while': new Macro('while',
     /*#__PURE__*/
     function () {
-      var _ref7 = _asyncToGenerator(
+      var _ref6 = _asyncToGenerator(
       /*#__PURE__*/
-      regenerator.mark(function _callee3(code, _ref8) {
+      regenerator.mark(function _callee3(code, _ref7) {
         var dynamic_scope, error, self, begin, result, cond;
         return regenerator.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                dynamic_scope = _ref8.dynamic_scope, error = _ref8.error;
+                dynamic_scope = _ref7.dynamic_scope, error = _ref7.error;
                 self = this;
                 begin = new Pair(new _Symbol('begin'), code.cdr);
 
@@ -2683,13 +2774,13 @@ function _typeof(obj) {
       }));
 
       return function (_x4, _x5) {
-        return _ref7.apply(this, arguments);
+        return _ref6.apply(this, arguments);
       };
     }()),
     // ------------------------------------------------------------------
-    'if': new Macro('if', function (code, _ref9) {
-      var dynamic_scope = _ref9.dynamic_scope,
-          error = _ref9.error;
+    'if': new Macro('if', function (code, _ref8) {
+      var dynamic_scope = _ref8.dynamic_scope,
+          error = _ref8.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -2749,15 +2840,15 @@ function _typeof(obj) {
     'begin': new Macro('begin',
     /*#__PURE__*/
     function () {
-      var _ref10 = _asyncToGenerator(
+      var _ref9 = _asyncToGenerator(
       /*#__PURE__*/
-      regenerator.mark(function _callee4(code, _ref11) {
+      regenerator.mark(function _callee4(code, _ref10) {
         var dynamic_scope, error, arr, result;
         return regenerator.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                dynamic_scope = _ref11.dynamic_scope, error = _ref11.error;
+                dynamic_scope = _ref10.dynamic_scope, error = _ref10.error;
                 arr = this.get('list->array')(code);
 
                 if (dynamic_scope) {
@@ -2800,14 +2891,14 @@ function _typeof(obj) {
       }));
 
       return function (_x6, _x7) {
-        return _ref10.apply(this, arguments);
+        return _ref9.apply(this, arguments);
       };
     }()),
     // ------------------------------------------------------------------
     timer: new Macro('timer', function (code) {
-      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref12.dynamic_scope,
-          error = _ref12.error;
+      var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref11.dynamic_scope,
+          error = _ref11.error;
 
       var env = this;
 
@@ -2894,9 +2985,9 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
-      var _ref13 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref13.dynamic_scope,
-          error = _ref13.error;
+      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref12.dynamic_scope,
+          error = _ref12.error;
 
       var self = this;
 
@@ -2967,9 +3058,9 @@ function _typeof(obj) {
     'macroexpand': new Macro('macro-expand', macro_expand()),
     'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
     // ------------------------------------------------------------------
-    'define-macro': new Macro(macro, function (macro, _ref14) {
-      var dynamic_scope = _ref14.dynamic_scope,
-          error = _ref14.error;
+    'define-macro': new Macro(macro, function (macro, _ref13) {
+      var dynamic_scope = _ref13.dynamic_scope,
+          error = _ref13.error;
 
       function clear(node) {
         if (node instanceof Pair) {
@@ -2981,8 +3072,8 @@ function _typeof(obj) {
 
       if (macro.car instanceof Pair && macro.car.car instanceof _Symbol) {
         var name = macro.car.car.name;
-        this.env[name] = Macro.defmacro(name, function (code, _ref15) {
-          var macro_expand = _ref15.macro_expand;
+        this.env[name] = Macro.defmacro(name, function (code, _ref14) {
+          var macro_expand = _ref14.macro_expand;
           var env = new Environment({}, this, 'defmacro');
           var name = macro.car.cdr;
           var arg = code;
@@ -3041,9 +3132,9 @@ function _typeof(obj) {
       return quote(arg.car);
     }),
     // ------------------------------------------------------------------
-    quasiquote: new Macro('quasiquote', function (arg, _ref16) {
-      var dynamic_scope = _ref16.dynamic_scope,
-          error = _ref16.error;
+    quasiquote: new Macro('quasiquote', function (arg, _ref15) {
+      var dynamic_scope = _ref15.dynamic_scope,
+          error = _ref15.error;
       var self = this;
       var max_unquote = 0;
 
@@ -3204,9 +3295,9 @@ function _typeof(obj) {
       }
     },
     // ------------------------------------------------------------------
-    'append!': new Macro('append!', function (code, _ref17) {
-      var dynamic_scope = _ref17.dynamic_scope,
-          error = _ref17.error;
+    'append!': new Macro('append!', function (code, _ref16) {
+      var dynamic_scope = _ref16.dynamic_scope,
+          error = _ref16.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3443,9 +3534,9 @@ function _typeof(obj) {
     apply: new Macro('apply', function (code) {
       var _this5 = this;
 
-      var _ref18 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref18.dynamic_scope,
-          error = _ref18.error;
+      var _ref17 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref17.dynamic_scope,
+          error = _ref17.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3946,9 +4037,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': equal,
     // ------------------------------------------------------------------
-    or: new Macro('or', function (code, _ref19) {
-      var dynamic_scope = _ref19.dynamic_scope,
-          error = _ref19.error;
+    or: new Macro('or', function (code, _ref18) {
+      var dynamic_scope = _ref18.dynamic_scope,
+          error = _ref18.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -3996,9 +4087,9 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     and: new Macro('and', function (code) {
-      var _ref20 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref20.dynamic_scope,
-          error = _ref20.error;
+      var _ref19 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref19.dynamic_scope,
+          error = _ref19.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -4191,10 +4282,10 @@ function _typeof(obj) {
       if (node instanceof Pair) {
         var car = resolve(node.car);
         var cdr = resolve(node.cdr);
-        return Promise.all([car, cdr]).then(function (_ref21) {
-          var _ref22 = _slicedToArray(_ref21, 2),
-              car = _ref22[0],
-              cdr = _ref22[1];
+        return Promise.all([car, cdr]).then(function (_ref20) {
+          var _ref21 = _slicedToArray(_ref20, 2),
+              car = _ref21[0],
+              cdr = _ref21[1];
 
           var pair = new Pair(car, cdr);
 
@@ -4211,10 +4302,10 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function get_function_args(rest, _ref23) {
-    var env = _ref23.env,
-        dynamic_scope = _ref23.dynamic_scope,
-        error = _ref23.error;
+  function get_function_args(rest, _ref22) {
+    var env = _ref22.env,
+        dynamic_scope = _ref22.dynamic_scope,
+        error = _ref22.error;
     var args = [];
     var node = rest;
 
@@ -4276,11 +4367,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref24 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref24.env,
-        dynamic_scope = _ref24.dynamic_scope,
-        _ref24$error = _ref24.error,
-        error = _ref24$error === void 0 ? function () {} : _ref24$error;
+    var _ref23 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref23.env,
+        dynamic_scope = _ref23.dynamic_scope,
+        _ref23$error = _ref23.error,
+        error = _ref23$error === void 0 ? function () {} : _ref23$error;
 
     try {
       if (dynamic_scope === true) {
@@ -4559,7 +4650,7 @@ function _typeof(obj) {
     Macro: Macro,
     quote: quote,
     Pair: Pair,
-    indent: indent,
+    Formatter: Formatter,
     nil: nil,
     maybe_promise: maybe_promise,
     Symbol: _Symbol,
