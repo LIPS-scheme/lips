@@ -273,8 +273,15 @@ parse(tokenize(string)).foEach(function(code) {
            greedy: true
        }
    });
-   // add define-macro as keyword
-   Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:\*|rec)?(?:-values)?|else|if|cond|begin|delay(?:-force)?|parameterize|define-macro|guard|set!|(?:quasi-)?quote|syntax-rules)(?=[()\s])/
+   // symbols
+   Prism.languages.insertBefore('scheme', 'string', {
+       symbol: {
+           pattern: /'[^\s()]+/g,
+           greedy: true
+       }
+   });
+   // and define-macro as keyword (update original regex)
+   Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:\*|rec)?(?:-values)?|else|if|cond|begin|delay(?:-force)?|parameterize|define-macro|guard|set!|(?:quasi-)?quote|syntax-rules)(?=[()\s])/;
 
    function interpreter(selector, dynamic) {
        $.terminal.syntax("scheme");
@@ -354,6 +361,9 @@ parse(tokenize(string)).foEach(function(code) {
            lips.exec(code, env, dynamic).then(function(ret) {
                ret.forEach(function(ret) {
                    if (ret !== undefined) {
+                       if (ret instanceof lips.Symbol) {
+                           ret = ret.name;
+                       }
                        env.get('print').call(env, ret);
                    }
                });
