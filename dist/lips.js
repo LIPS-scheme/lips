@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 12 Apr 2019 20:52:18 +0000
+ * build: Fri, 12 Apr 2019 21:05:29 +0000
  */
 (function () {
 'use strict';
@@ -1391,7 +1391,7 @@ function _typeof(obj) {
 
         return settings.offset + sexp[3].col;
       } else if (sexp[0].line === sexp[1].line) {
-        return settings.offset + sexp[1].col;
+        return settings.offset + settings.indent + sexp[0].col;
       } else {
         var next_tokens = sexp.slice(2);
 

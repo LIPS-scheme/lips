@@ -446,7 +446,7 @@
                 }
                 return settings.offset + sexp[3].col;
             } else if (sexp[0].line === sexp[1].line) {
-                return settings.offset + sexp[1].col;
+                return settings.offset + settings.indent + sexp[0].col;
             } else {
                 var next_tokens = sexp.slice(2);
                 for (var i = 0; i < next_tokens.length; ++i) {

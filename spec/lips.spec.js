@@ -10,8 +10,6 @@ var lips = require('../src/lips');
  *         (print `(define (,(make-predicate name)  ,struct)))))
  */
 
-
-
 var {
     parse,
     tokenize,
