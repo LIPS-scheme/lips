@@ -410,7 +410,7 @@
     Formatter.defaults = {
         offset: 0,
         indent: 2,
-        specials: ['define', 'lambda', 'let', 'define-macro']
+        specials: ['define', 'lambda', 'let', 'let*', 'define-macro']
     };
     // ----------------------------------------------------------------------
     // :: return indent for next line
@@ -675,6 +675,9 @@
                 if (cdr instanceof Pair) {
                     cdr = cdr.toObject();
                 }
+                if (cdr instanceof LNumber) {
+                    cdr = cdr.valueOf();
+                }
                 result[name] = cdr;
                 node = node.cdr;
             } else {
@@ -923,19 +926,24 @@
     // :: and applied with different context after bind
     // ----------------------------------------------------------------------
     function weakBind(fn, context, ...args) {
-        let bindable = function(...moreArgs) {
-            return fn.apply(context, [...args, ...moreArgs]);
+        let binded = function(...moreArgs) {
+            const args = [...binded.__bind.args, ...moreArgs];
+            return binded.__bind.fn.apply(context, args);
         };
-        bindable.apply = function(context, args) {
-            return fn.apply(context, args);
+        binded.__bind = {
+            args: fn.__bind ? fn.__bind.args.concat(args) : args,
+            fn: fn.__bind ? fn.__bind.fn : fn
         };
-        bindable.call = function(context, ...args) {
-            return fn.apply(context, args);
+        binded.apply = function(context, args) {
+            return binded.__bind.fn.apply(context, args);
         };
-        bindable.bind = function(context, ...args) {
-            return weakBind(fn, context, ...args);
+        binded.call = function(context, ...args) {
+            return binded.__bind.fn.call(context, ...args);
         };
-        return bindable;
+        binded.bind = function(context, ...moreArgs) {
+            return weakBind(binded, context, ...moreArgs);
+        };
+        return binded;
     }
     // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
@@ -1056,7 +1064,8 @@
     };
     // ----------------------------------------------------------------------
     LNumber.isNumber = function(n) {
-        return n instanceof LNumber || LNumber.isNative(n) || LNumber.isBN(n);
+        return n instanceof LNumber ||
+            (!Number.isNaN(n) && LNumber.isNative(n) || LNumber.isBN(n));
     };
     // ----------------------------------------------------------------------
     LNumber.isNative = function(n) {
@@ -1311,7 +1320,6 @@
             }
             return value;
         }
-
         if (this.parent instanceof Environment) {
             return this.parent.get(symbol);
         } else {
@@ -1403,7 +1411,11 @@
         nil: nil,
         'undefined': undefined,
         'true': true,
+        'NaN': NaN,
         'false': false,
+        'this': function() {
+            return this;
+        },
         // ------------------------------------------------------------------
         stdout: {
             write: function(...args) {

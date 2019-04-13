@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 13 Apr 2019 11:36:48 +0000
+ * build: Sat, 13 Apr 2019 13:06:32 +0000
  */
 (function () {
 'use strict';
@@ -1349,7 +1349,7 @@ function _typeof(obj) {
   Formatter.defaults = {
     offset: 0,
     indent: 2,
-    specials: ['define', 'lambda', 'let', 'define-macro']
+    specials: ['define', 'lambda', 'let', 'let*', 'define-macro']
   }; // ----------------------------------------------------------------------
   // :: return indent for next line
   // ----------------------------------------------------------------------
@@ -1659,6 +1659,10 @@ function _typeof(obj) {
 
         if (cdr instanceof Pair) {
           cdr = cdr.toObject();
+        }
+
+        if (cdr instanceof LNumber) {
+          cdr = cdr.valueOf();
         }
 
         result[name] = cdr;
@@ -2046,39 +2050,47 @@ function _typeof(obj) {
 
 
   function weakBind(fn, context) {
-    for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-      args[_key - 2] = arguments[_key];
-    }
-
-    var bindable = function bindable() {
+    var binded = function binded() {
       for (var _len2 = arguments.length, moreArgs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
         moreArgs[_key2] = arguments[_key2];
       }
 
-      return fn.apply(context, [].concat(args, moreArgs));
+      var args = [].concat(_toConsumableArray(binded.__bind.args), moreArgs);
+      return binded.__bind.fn.apply(context, args);
     };
 
-    bindable.apply = function (context, args) {
-      return fn.apply(context, args);
+    for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      args[_key - 2] = arguments[_key];
+    }
+
+    binded.__bind = {
+      args: fn.__bind ? fn.__bind.args.concat(args) : args,
+      fn: fn.__bind ? fn.__bind.fn : fn
     };
 
-    bindable.call = function (context) {
+    binded.apply = function (context, args) {
+      return binded.__bind.fn.apply(context, args);
+    };
+
+    binded.call = function (context) {
+      var _binded$__bind$fn;
+
       for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
         args[_key3 - 1] = arguments[_key3];
       }
 
-      return fn.apply(context, args);
+      return (_binded$__bind$fn = binded.__bind.fn).call.apply(_binded$__bind$fn, [context].concat(args));
     };
 
-    bindable.bind = function (context) {
-      for (var _len4 = arguments.length, args = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-        args[_key4 - 1] = arguments[_key4];
+    binded.bind = function (context) {
+      for (var _len4 = arguments.length, moreArgs = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+        moreArgs[_key4 - 1] = arguments[_key4];
       }
 
-      return weakBind.apply(void 0, [fn, context].concat(args));
+      return weakBind.apply(void 0, [binded, context].concat(moreArgs));
     };
 
-    return bindable;
+    return binded;
   } // ----------------------------------------------------------------------
   // :: function that return macro for let and let*
   // ----------------------------------------------------------------------
@@ -2213,7 +2225,7 @@ function _typeof(obj) {
 
 
   LNumber.isNumber = function (n) {
-    return n instanceof LNumber || LNumber.isNative(n) || LNumber.isBN(n);
+    return n instanceof LNumber || !Number.isNaN(n) && LNumber.isNative(n) || LNumber.isBN(n);
   }; // ----------------------------------------------------------------------
 
 
@@ -2619,7 +2631,11 @@ function _typeof(obj) {
     nil: nil,
     'undefined': undefined,
     'true': true,
+    'NaN': NaN,
     'false': false,
+    'this': function _this() {
+      return this;
+    },
     // ------------------------------------------------------------------
     stdout: {
       write: function write() {
@@ -2762,12 +2778,12 @@ function _typeof(obj) {
     gensym: gensym,
     // ------------------------------------------------------------------
     load: function load(file) {
-      var _this = this;
+      var _this2 = this;
 
       root.fetch(file).then(function (res) {
         return res.text();
       }).then(function (code) {
-        _this.get('eval')(_this.get('read')(code));
+        _this2.get('eval')(_this2.get('read')(code));
       });
     },
     // ------------------------------------------------------------------
@@ -3018,14 +3034,14 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     'eval': function _eval(code) {
-      var _this2 = this;
+      var _this3 = this;
 
       if (code instanceof Pair) {
         return evaluate(code, {
           env: this,
           dynamic_scope: this,
           error: function error(e) {
-            return _this2.get('print')(e.message);
+            return _this3.get('print')(e.message);
           }
         });
       }
@@ -3034,10 +3050,10 @@ function _typeof(obj) {
         var result;
         code.forEach(function (code) {
           result = evaluate(code, {
-            env: _this2,
-            dynamic_scope: _this2,
+            env: _this3,
+            dynamic_scope: _this3,
             error: function error(e) {
-              return _this2.get('print')(e.message);
+              return _this3.get('print')(e.message);
             }
           });
         });
@@ -3569,7 +3585,7 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     read: function read(arg) {
-      var _this3 = this;
+      var _this4 = this;
 
       if (typeof arg === 'string') {
         arg = parse(tokenize(arg));
@@ -3582,20 +3598,20 @@ function _typeof(obj) {
       }
 
       return this.get('stdin').read().then(function (text) {
-        return read.call(_this3, text);
+        return read.call(_this4, text);
       });
     },
     // ------------------------------------------------------------------
     print: function print() {
       var _this$get,
-          _this4 = this;
+          _this5 = this;
 
       for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
         args[_key8] = arguments[_key8];
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
-        return _this4.get('string')(arg);
+        return _this5.get('string')(arg);
       })));
     },
     // ------------------------------------------------------------------
@@ -3628,7 +3644,7 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     apply: new Macro('apply', function (code) {
-      var _this5 = this;
+      var _this6 = this;
 
       var _ref17 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           dynamic_scope = _ref17.dynamic_scope,
@@ -3655,20 +3671,20 @@ function _typeof(obj) {
       var invoke = function invoke(fn) {
         type_check(fn);
         var args = evaluate(code.cdr.car, {
-          env: _this5,
+          env: _this6,
           dynamic_scope: dynamic_scope,
           error: error
         });
-        args = _this5.get('list->array')(args);
+        args = _this6.get('list->array')(args);
 
         if (args.filter(function (a) {
           return a instanceof Promise;
         }).length) {
           return Promise.all(args).then(function (args) {
-            return fn.apply(_this5, args);
+            return fn.apply(_this6, args);
           });
         } else {
-          return fn.apply(_this5, args);
+          return fn.apply(_this6, args);
         }
       };
 
