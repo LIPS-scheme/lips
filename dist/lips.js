@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 13 Apr 2019 13:21:42 +0000
+ * build: Sat, 13 Apr 2019 14:46:25 +0000
  */
 (function () {
 'use strict';
@@ -1340,9 +1340,7 @@ function _typeof(obj) {
 
 
   function Formatter(code) {
-    // so we have space token after newline
-    this._code = code.replace(/\r/g, '').replace(/\n\s*/g, '\n ');
-    this._tokens = tokenize(this._code, true);
+    this._code = code.replace(/\r/g, '');
   } // ----------------------------------------------------------------------
 
 
@@ -1368,7 +1366,13 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
-  Formatter.prototype.indent = function indent(tokens, options) {
+  Formatter.prototype.indent = function indent(options) {
+    var tokens = tokenize(this._code, true);
+    return this._indent(tokens, options);
+  }; // ----------------------------------------------------------------------
+
+
+  Formatter.prototype._indent = function _indent(tokens, options) {
     var settings = this._options(options);
 
     var spaces = lineIndent(tokens);
@@ -1419,29 +1423,35 @@ function _typeof(obj) {
 
 
   Formatter.prototype.format = function format(options) {
+    // prepare code with single space after newline
+    // so we have space token to align
+    var code = this._code.replace(/\n\s*/g, '\n ');
+
+    var tokens = tokenize(code, true);
+
     var settings = this._options(options);
 
     var indent = 0;
     var offset = 0;
 
-    for (var i = 0; i < this._tokens.length; ++i) {
-      var token = this._tokens[i];
+    for (var i = 0; i < tokens.length; ++i) {
+      var token = tokens[i];
 
       if (token.token === '\n') {
-        var _tokens = this._tokens.slice(0, i);
+        var _tokens = _tokens.slice(0, i);
 
-        indent = this.indent(_tokens, settings);
+        indent = this._indent(_tokens, settings);
         offset += indent;
 
-        if (this._tokens[i + 1]) {
-          this._tokens[i + 1].token = this._spaces(indent);
+        if (_tokens[i + 1]) {
+          _tokens[i + 1].token = this._spaces(indent);
           indent--; // because we have single space as initial indent
 
-          for (var j = i + 2; j < this._tokens.length; ++j) {
-            this._tokens[j].offset += offset;
-            this._tokens[j].col += indent;
+          for (var j = i + 2; j < _tokens.length; ++j) {
+            _tokens[j].offset += offset;
+            _tokens[j].col += indent;
 
-            if (this._tokens[j].token === '\n') {
+            if (_tokens[j].token === '\n') {
               // ++i is called after the loop
               i = j - 1;
               break;
@@ -1451,7 +1461,7 @@ function _typeof(obj) {
       }
     }
 
-    return this._tokens.map(function (token) {
+    return tokens.map(function (token) {
       return token.token;
     }).join('');
   }; // ----------------------------------------------------------------------
@@ -2971,7 +2981,7 @@ function _typeof(obj) {
         return _ref9.apply(this, arguments);
       };
     }()),
-    nop: $.noop,
+    nop: function nop() {},
     // ------------------------------------------------------------------
     timer: new Macro('timer', function (code) {
       var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
@@ -3178,6 +3188,7 @@ function _typeof(obj) {
 
 
           if (macro.cdr instanceof Pair) {
+            // this eval will return lips code
             var pair = macro.cdr.reduce(function (result, node) {
               return evaluate(node, {
                 env: env,
@@ -3188,10 +3199,13 @@ function _typeof(obj) {
 
             if (macro_expand) {
               return pair;
-            }
+            } // second evalute of code that is returned from macro
+            // need different env because we need to call it in scope
+            // were it was called
+
 
             pair = evaluate(pair, {
-              env: env,
+              env: this,
               dynamic_scope: dynamic_scope,
               error: error
             });

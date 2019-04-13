@@ -402,9 +402,7 @@
     // :: it rely on meta data from tokenizer function
     // ----------------------------------------------------------------------
     function Formatter(code) {
-        // so we have space token after newline
-        this._code = code.replace(/\r/g, '').replace(/\n\s*/g, '\n ');
-        this._tokens = tokenize(this._code, true);
+        this._code = code.replace(/\r/g, '');
     }
     // ----------------------------------------------------------------------
     Formatter.defaults = {
@@ -426,7 +424,12 @@
         });
     };
     // ----------------------------------------------------------------------
-    Formatter.prototype.indent = function indent(tokens, options) {
+    Formatter.prototype.indent = function indent(options) {
+        var tokens = tokenize(this._code, true);
+        return this._indent(tokens, options);
+    };
+    // ----------------------------------------------------------------------
+    Formatter.prototype._indent = function _indent(tokens, options) {
         var settings = this._options(options);
         var spaces = lineIndent(tokens);
         var specials = settings.specials;
@@ -468,22 +471,26 @@
     // :: auto formatting of code, it require to have newlines
     // ----------------------------------------------------------------------
     Formatter.prototype.format = function format(options) {
+        // prepare code with single space after newline
+        // so we have space token to align
+        var code = this._code.replace(/\n\s*/g, '\n ');
+        var tokens = tokenize(code, true);
         var settings = this._options(options);
         var indent = 0;
         var offset = 0;
-        for (var i = 0; i < this._tokens.length; ++i) {
-            var token = this._tokens[i];
+        for (var i = 0; i < tokens.length; ++i) {
+            var token = tokens[i];
             if (token.token === '\n') {
-                let tokens = this._tokens.slice(0, i);
-                indent = this.indent(tokens, settings);
+                let tokens = tokens.slice(0, i);
+                indent = this._indent(tokens, settings);
                 offset += indent;
-                if (this._tokens[i + 1]) {
-                    this._tokens[i + 1].token = this._spaces(indent);
+                if (tokens[i + 1]) {
+                    tokens[i + 1].token = this._spaces(indent);
                     indent--; // because we have single space as initial indent
-                    for (var j = i + 2; j < this._tokens.length; ++j) {
-                        this._tokens[j].offset += offset;
-                        this._tokens[j].col += indent;
-                        if (this._tokens[j].token === '\n') {
+                    for (var j = i + 2; j < tokens.length; ++j) {
+                        tokens[j].offset += offset;
+                        tokens[j].col += indent;
+                        if (tokens[j].token === '\n') {
                             // ++i is called after the loop
                             i = j - 1;
                             break;
@@ -492,7 +499,7 @@
                 }
             }
         }
-        return this._tokens.map(token => token.token).join('');
+        return tokens.map(token => token.token).join('');
     };
     // ----------------------------------------------------------------------
     // :: flatten nested arrays
@@ -1787,13 +1794,17 @@
                     }
                     // evaluate macro
                     if (macro.cdr instanceof Pair) {
+                        // this eval will return lips code
                         var pair = macro.cdr.reduce(function(result, node) {
                             return evaluate(node, { env, dynamic_scope, error });
                         });
                         if (macro_expand) {
                             return pair;
                         }
-                        pair = evaluate(pair, { env, dynamic_scope, error });
+                        // second evalute of code that is returned from macro
+                        // need different env because we need to call it in scope
+                        // were it was called
+                        pair = evaluate(pair, { env: this, dynamic_scope, error });
                         if (pair instanceof Promise) {
                             return pair.then(clear);
                         }

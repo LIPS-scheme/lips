@@ -15,6 +15,7 @@
 * fix print of lips Symbols (update string function)
 * fix missing recursive calls to unquote in quasiquote macro
 * fix parser when using multiple specials (unquote, quote etc.) in a row
+* fix scope when evaluating macros
 
 ## 0.8.1
 ### Bugfix
