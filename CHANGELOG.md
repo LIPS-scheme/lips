@@ -4,11 +4,12 @@
 * indent API function
 * allow to use dots and variable names
 * `.` function now work with multiple arguments and gets nested object value
-* add undefined to default Environment so you can use it in Lips code
+* add `undefined` to default Environment so you can use it in Lips code
 * add function `nop`
+* tokenizer with meta data now include newlines and comments (nothing is removed)
 ### Bugs
 * fix offset in tokenizer
-* fix assign variables from variables (eg. function or variable aliases)
+* fix assign variables from variables (e.g. function or variable aliases)
 * fix return value of Math operation that should return float [#1](https://github.com/jcubic/lips/issues/1)
 * fix tokenizer meta data with strings outside of S-Expressions or in lonely lines
 * fix print of lips Symbols (update string function)
