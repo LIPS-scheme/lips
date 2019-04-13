@@ -4,6 +4,7 @@
 * indent API function
 * allow to use dots and variable names
 * `.` function now work with multiple arguments and gets nested object value
+* add undefined to default Environment so you can use it in Lips code
 ### Bugs
 * fix offset in tokenizer
 * fix assign variables from variables (eg. function or variable aliases)

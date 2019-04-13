@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 13 Apr 2019 09:13:14 +0000
+ * build: Sat, 13 Apr 2019 09:20:17 +0000
  */
 (function () {
 'use strict';
@@ -2573,6 +2573,7 @@ function _typeof(obj) {
 
   var global_env = new Environment({
     nil: nil,
+    'undefined': undefined,
     'true': true,
     'false': false,
     // ------------------------------------------------------------------

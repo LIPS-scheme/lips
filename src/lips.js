@@ -1379,6 +1379,7 @@
     })();
     var global_env = new Environment({
         nil: nil,
+        'undefined': undefined,
         'true': true,
         'false': false,
         // ------------------------------------------------------------------
