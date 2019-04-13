@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 13 Apr 2019 13:06:32 +0000
+ * build: Sat, 13 Apr 2019 13:21:42 +0000
  */
 (function () {
 'use strict';
@@ -2971,6 +2971,7 @@ function _typeof(obj) {
         return _ref9.apply(this, arguments);
       };
     }()),
+    nop: $.noop,
     // ------------------------------------------------------------------
     timer: new Macro('timer', function (code) {
       var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},

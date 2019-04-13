@@ -1616,6 +1616,7 @@
                 }
             }
         }),
+        nop: function() {},
         // ------------------------------------------------------------------
         timer: new Macro('timer', function(code, { dynamic_scope, error } = {}) {
             var env = this;
