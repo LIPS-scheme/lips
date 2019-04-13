@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Fri, 12 Apr 2019 22:40:35 +0000
+ * build: Sat, 13 Apr 2019 09:13:14 +0000
  */
 (function () {
 'use strict';
@@ -2035,6 +2035,11 @@ function _typeof(obj) {
   function is_null(value) {
     return typeof value === 'undefined' || value === nil || value === null;
   } // ----------------------------------------------------------------------
+
+
+  function isNativeFunction(fn) {
+    return typeof fn === 'function' && fn.toString().match(/\{\s*\[native code\]\s*\}/);
+  } // ----------------------------------------------------------------------
   // :: function that return macro for let and let*
   // ----------------------------------------------------------------------
 
@@ -2472,7 +2477,12 @@ function _typeof(obj) {
         var type = _typeof(root[name]);
 
         if (type === 'function') {
-          return root[name].bind(root);
+          // this is maily done for console.log
+          if (isNativeFunction(root[name])) {
+            return root[name].bind(root);
+          } else {
+            return root[name];
+          }
         } else if (type !== 'undefined') {
           return root[name];
         }
@@ -3357,7 +3367,7 @@ function _typeof(obj) {
       }
 
       if (typeof obj === 'function') {
-        if (obj.toString().match(/\{\s*\[native code\]\s*\}/)) {
+        if (isNativeFunction(obj)) {
           return '<#function(native)>';
         }
 
@@ -3424,12 +3434,23 @@ function _typeof(obj) {
       return _construct(obj, args);
     },
     // ------------------------------------------------------------------
-    '.': function _(obj, arg) {
-      var name = arg instanceof _Symbol ? arg.name : arg;
-      var value = obj[name];
+    '.': function _(obj) {
+      for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+        args[_key3 - 1] = arguments[_key3];
+      }
 
-      if (typeof value === 'function') {
-        return value.bind(obj);
+      var _arr = args;
+
+      for (var _i = 0; _i < _arr.length; _i++) {
+        var arg = _arr[_i];
+        var name = arg instanceof _Symbol ? arg.name : arg;
+        var value = obj[name];
+
+        if (typeof value === 'function') {
+          value = value.bind(obj);
+        }
+
+        obj = value;
       }
 
       return value;
@@ -3441,12 +3462,12 @@ function _typeof(obj) {
         'symbol': _Symbol
       };
 
-      var _arr = Object.entries(mapping);
+      var _arr2 = Object.entries(mapping);
 
-      for (var _i = 0; _i < _arr.length; _i++) {
-        var _arr$_i = _slicedToArray(_arr[_i], 2),
-            key = _arr$_i[0],
-            value = _arr$_i[1];
+      for (var _i2 = 0; _i2 < _arr2.length; _i2++) {
+        var _arr2$_i = _slicedToArray(_arr2[_i2], 2),
+            key = _arr2$_i[0],
+            value = _arr2$_i[1];
 
         if (obj instanceof value) {
           return key;
@@ -3524,8 +3545,8 @@ function _typeof(obj) {
       var _this$get,
           _this4 = this;
 
-      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
+      for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
@@ -3909,8 +3930,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     curry: function curry(fn) {
-      for (var _len4 = arguments.length, init_args = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-        init_args[_key4 - 1] = arguments[_key4];
+      for (var _len5 = arguments.length, init_args = new Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+        init_args[_key5 - 1] = arguments[_key5];
       }
 
       var len = fn.length;
@@ -3918,8 +3939,8 @@ function _typeof(obj) {
         var args = init_args.slice();
 
         function call() {
-          for (var _len5 = arguments.length, more_args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-            more_args[_key5] = arguments[_key5];
+          for (var _len6 = arguments.length, more_args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+            more_args[_key6] = arguments[_key6];
           }
 
           args = args.concat(more_args);
@@ -3945,8 +3966,8 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     // math functions
     '*': function _() {
-      for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
+      for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+        args[_key7] = arguments[_key7];
       }
 
       if (args.length) {
@@ -3957,8 +3978,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '+': function _() {
-      for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-        args[_key7] = arguments[_key7];
+      for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        args[_key8] = arguments[_key8];
       }
 
       if (args.length) {
@@ -3975,8 +3996,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '-': function _() {
-      for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
+      for (var _len9 = arguments.length, args = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        args[_key9] = arguments[_key9];
       }
 
       if (args.length === 1) {
@@ -3991,8 +4012,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '/': function _() {
-      for (var _len9 = arguments.length, args = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        args[_key9] = arguments[_key9];
+      for (var _len10 = arguments.length, args = new Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        args[_key10] = arguments[_key10];
       }
 
       if (args.length) {
@@ -4190,8 +4211,8 @@ function _typeof(obj) {
       return !value;
     },
     '->': function _(obj, name) {
-      for (var _len10 = arguments.length, args = new Array(_len10 > 2 ? _len10 - 2 : 0), _key10 = 2; _key10 < _len10; _key10++) {
-        args[_key10 - 2] = arguments[_key10];
+      for (var _len11 = arguments.length, args = new Array(_len11 > 2 ? _len11 - 2 : 0), _key11 = 2; _key11 < _len11; _key11++) {
+        args[_key11 - 2] = arguments[_key11];
       }
 
       return obj[name].apply(obj, args);

@@ -914,6 +914,11 @@
         return typeof value === 'undefined' || value === nil || value === null;
     }
     // ----------------------------------------------------------------------
+    function isNativeFunction(fn) {
+        return typeof fn === 'function' &&
+            fn.toString().match(/\{\s*\[native code\]\s*\}/);
+    }
+    // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
@@ -1297,7 +1302,12 @@
             if (name) {
                 var type = typeof root[name];
                 if (type === 'function') {
-                    return root[name].bind(root);
+                    // this is maily done for console.log
+                    if (isNativeFunction(root[name])) {
+                        return root[name].bind(root);
+                    } else {
+                        return root[name];
+                    }
                 } else if (type !== 'undefined') {
                     return root[name];
                 }
@@ -1953,7 +1963,7 @@
                 return '<#undefined>';
             }
             if (typeof obj === 'function') {
-                if (obj.toString().match(/\{\s*\[native code\]\s*\}/)) {
+                if (isNativeFunction(obj)) {
                     return '<#function(native)>';
                 }
                 return '<#function>';
@@ -2001,11 +2011,14 @@
             return new obj(...args);
         },
         // ------------------------------------------------------------------
-        '.': function(obj, arg) {
-            var name = arg instanceof Symbol ? arg.name : arg;
-            var value = obj[name];
-            if (typeof value === 'function') {
-                return value.bind(obj);
+        '.': function(obj, ...args) {
+            for (let arg of args) {
+                var name = arg instanceof Symbol ? arg.name : arg;
+                var value = obj[name];
+                if (typeof value === 'function') {
+                    value = value.bind(obj);
+                }
+                obj = value;
             }
             return value;
         },
