@@ -1,4 +1,6 @@
 ## 0.9.0
+### Breaking
+* `for-each` and `map` works as in Scheme spec (use multiple arguments and don't use index)
 ### Features
 * better binary (options -f -c + read stdin + REPL + indent + catch exception)
 * indent API function
@@ -14,6 +16,7 @@
 * fix tokenizer meta data with strings outside of S-Expressions or in lonely lines
 * fix print of lips Symbols (update string function)
 * fix missing recursive calls to unquote in quasiquote macro
+* fix major issues with quasiquote that make macros don't work quite right
 * fix parser when using multiple specials (unquote, quote etc.) in a row
 * fix scope when evaluating macros
 

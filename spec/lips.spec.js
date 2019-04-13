@@ -382,33 +382,34 @@ describe('evaluate', function() {
         });
     });
     describe('quasiquote', function() {
-        it('should create list with function call', function() {
-            expect(exec('`(1 2 3 ,(fun 2 2) 5)', env)).toEqual(
+        it('should create list with function call', async function() {
+            expect(await exec('`(1 2 3 ,(fun 2 2) 5)', env)).toEqual(
                 quote(Pair.fromArray([1, 2, 3, 4, 5].map(LNumber)))
             );
         });
-        it('should create list with value', function() {
-            expect(exec('`(1 2 3 ,value 4)', env)).toEqual(
+        it('should create list with value', async function() {
+            expect(await exec('`(1 2 3 ,value 4)', env)).toEqual(
                 quote(Pair.fromArray([1, 2, 3, rand, 4].map(LNumber)))
             );
         });
-        it('should create single list using uquote-splice', function() {
-            expect(exec('`(1 2 3 ,@(f2 4 5) 6)', env)).toEqual(
+        it('should create single list using uquote-splice', async function() {
+            expect(await exec('`(1 2 3 ,@(f2 4 5) 6)', env)).toEqual(
                 quote(Pair.fromArray([1, 2, 3, 4, 5, 6].map(LNumber)))
             );
         });
-        it('should create single pair', function() {
-            [
+        it('should create single pair', async function() {
+            var specs = [
                 '`(1 . 2)',
                 '`(,(car (list 1 2 3)) . 2)',
                 '`(1 . ,(cadr (list 1 2 3)))',
                 '`(,(car (list 1 2 3)) . ,(cadr (list 1 2 3)))'
-            ].forEach((code) => {
-                expect(exec(code)).toEqual(quote(new Pair(LNumber(1), LNumber(2))));
-            });
+            ];
+            for (let code of specs) {
+                expect(await exec(code)).toEqual(quote(new Pair(LNumber(1), LNumber(2))));
+            }
         });
-        it('should create list from pair syntax', function() {
-            expect(exec('`(,(car (list 1 2 3)) . (1 2 3))')).toEqual(
+        it('should create list from pair syntax', async function() {
+            expect(await exec('`(,(car (list 1 2 3)) . (1 2 3))')).toEqual(
                 quote(Pair.fromArray([
                     LNumber(1),
                     LNumber(1),
@@ -417,15 +418,15 @@ describe('evaluate', function() {
                 ]))
             );
         });
-        it('should create alist with values', function() {
-            expect(exec(`\`((1 . ,(car (list 1 2)))
+        it('should create alist with values', async function() {
+            expect(await exec(`\`((1 . ,(car (list 1 2)))
                             (2 . ,(cadr (list 1 "foo"))))`))
                 .toEqual(
                     quote(new Pair(
                         new Pair(LNumber(1), LNumber(1)),
                         new Pair(new Pair(LNumber(2), "foo"), nil)))
                 );
-            expect(exec(`\`((,(car (list "foo")) . ,(car (list 1 2)))
+            expect(await exec(`\`((,(car (list "foo")) . ,(car (list 1 2)))
                             (2 . ,(cadr (list 1 "foo"))))`))
                 .toEqual(quote(new Pair(
                     new Pair("foo", LNumber(1)),
@@ -434,15 +435,15 @@ describe('evaluate', function() {
                         nil
                     ))));
         });
-        it('should process nested backquote', function() {
-            expect(exec('`(1 2 3 ,(cadr `(1 ,(concat "foo" "bar") 3)) 4)')).toEqual(
+        it('should process nested backquote', async function() {
+            expect(await exec('`(1 2 3 ,(cadr `(1 ,(concat "foo" "bar") 3)) 4)')).toEqual(
                 quote(Pair.fromArray([
                     LNumber(1), LNumber(2), LNumber(3), "foobar", LNumber(4)
                 ]))
             );
         });
-        it('should process multiple backquote/unquote', function() {
-            expect(exec('``(a ,,(+ 1 2) ,(+ 3 4))')).toEqual(
+        it('should process multiple backquote/unquote', async function() {
+            expect(await exec('``(a ,,(+ 1 2) ,(+ 3 4))')).toEqual(
                 quote(Pair.fromArray([
                     new Symbol('quasiquote'),
                     [

@@ -21,11 +21,17 @@
     }
 })(typeof window !== 'undefined' ? window : global, function(root, BN, undefined) {
     /* eslint-disable */
-    function log(x) {
-        if (x instanceof Promise) {
-            x.then(x => console.log({Promise: x}));
+    function log(x, regex = null) {
+        function msg(x) {
+            var value = global_env.get('string')(x);
+            if (regex === null || regex.test(value)) {
+                console.log(value);
+            }
+        }
+        if (isPromise(x)) {
+            x.then(msg);
         } else {
-            console.log(x);
+            msg(x);
         }
         return x;
     }
@@ -481,12 +487,13 @@
         for (var i = 0; i < tokens.length; ++i) {
             var token = tokens[i];
             if (token.token === '\n') {
-                let tokens = tokens.slice(0, i);
-                indent = this._indent(tokens, settings);
+                indent = this._indent(tokens.slice(0, i), settings);
                 offset += indent;
                 if (tokens[i + 1]) {
                     tokens[i + 1].token = this._spaces(indent);
-                    indent--; // because we have single space as initial indent
+                    // because we have single space as initial indent
+                    indent--;
+                    offset--;
                     for (var j = i + 2; j < tokens.length; ++j) {
                         tokens[j].offset += offset;
                         tokens[j].col += indent;
@@ -548,11 +555,13 @@
         }
         this.name = name;
     }
+    // ----------------------------------------------------------------------
     Symbol.is = function(symbol, name) {
         return symbol instanceof Symbol &&
-            typeof name === 'string' &&
-            symbol.name === name;
+            ((typeof name === 'string' && symbol.name === name) ||
+             (name instanceof RegExp && name.test(symbol.name)));
     };
+    // ----------------------------------------------------------------------
     Symbol.prototype.toJSON = Symbol.prototype.toString = function() {
         //return '<#symbol \'' + this.name + '\'>';
         if (isSymbol(this.name)) {
@@ -929,6 +938,11 @@
             fn.toString().match(/\{\s*\[native code\]\s*\}/);
     }
     // ----------------------------------------------------------------------
+    function isPromise(o) {
+        return o instanceof Promise ||
+            (typeof o !== 'undefined' && typeof o.then === 'function');
+    }
+    // ----------------------------------------------------------------------
     // :: weak version fn.bind as function - it can be rebinded and
     // :: and applied with different context after bind
     // ----------------------------------------------------------------------
@@ -990,7 +1004,7 @@
                 (function loop() {
                     var pair = args[i++];
                     function set(value) {
-                        if (value instanceof Promise) {
+                        if (isPromise(value)) {
                             promises.push(value);
                             return value.then(set);
                         } else if (typeof value === 'undefined') {
@@ -1018,7 +1032,7 @@
                             error
                         });
                         var promise = set(value);
-                        if (promise instanceof Promise) {
+                        if (isPromise(promise)) {
                             promise.then(() => {
                                 Promise.all(promises).then(loop);
                             });
@@ -1384,7 +1398,7 @@
     // :: Quote funtion used to pause evaluation from Macro
     // ----------------------------------------------------------------------
     function quote(value) {
-        if (value instanceof Promise) {
+        if (isPromise(value)) {
             return value.then(quote);
         }
         if (value instanceof Pair || value instanceof Symbol) {
@@ -1406,14 +1420,15 @@
     var gensym = (function() {
         var count = 0;
         return function(name = null) {
-            // use ES6 symbol as name for lips symbol to they are uniq
+            // use ES6 symbol as name for lips symbol (they are unique)
             if (name !== null) {
                 return new Symbol(root.Symbol('#' + name));
             }
             count++;
-            return new Symbol(root.Symbol('#' + count));
+            return new Symbol(root.Symbol('#gensym_' + count));
         };
     })();
+    // ----------------------------------------------------------------------
     var global_env = new Environment({
         nil: nil,
         'undefined': undefined,
@@ -1476,7 +1491,7 @@
                 var thrid = code.car.cdr.cdr.car;
                 var object = evaluate(second, { env: this, dynamic_scope, error });
                 var key = evaluate(thrid, { env: this, dynamic_scope, error });
-                if (value instanceof Promise) {
+                if (isPromise(value)) {
                     return value.then(value => {
                         object[key] = value;
                     });
@@ -1492,7 +1507,7 @@
             if (!ref) {
                 ref = this;
             }
-            if (value instanceof Promise) {
+            if (isPromise(value)) {
                 return value.then(value => ref.set(code.car, value));
             } else {
                 ref.set(code.car, value);
@@ -1597,7 +1612,7 @@
                 }
             };
             var cond = evaluate(code.car, { env, dynamic_scope, error });
-            if (cond instanceof Promise) {
+            if (isPromise(cond)) {
                 return cond.then(resolve);
             } else {
                 return resolve(cond);
@@ -1676,7 +1691,7 @@
                 value = env.get(value);
             }
             if (code.car instanceof Symbol) {
-                if (value instanceof Promise) {
+                if (isPromise(value)) {
                     return value.then(value => {
                         env.set(code.car, value);
                     });
@@ -1805,7 +1820,7 @@
                         // need different env because we need to call it in scope
                         // were it was called
                         pair = evaluate(pair, { env: this, dynamic_scope, error });
-                        if (pair instanceof Promise) {
+                        if (isPromise(pair)) {
                             return pair.then(clear);
                         }
                         return clear(pair);
@@ -1824,11 +1839,11 @@
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
-            function recur(pair) {
+            async function recur(pair) {
                 if (pair instanceof Pair) {
                     var eval_pair;
                     if (Symbol.is(pair.car.car, 'unquote-splicing')) {
-                        eval_pair = evaluate(pair.car.cdr.car, {
+                        eval_pair = await evaluate(pair.car.cdr.car, {
                             env: self,
                             dynamic_scope,
                             error
@@ -1839,11 +1854,11 @@
                         }
                         if (pair.cdr instanceof Pair) {
                             if (eval_pair instanceof Pair) {
-                                eval_pair.cdr.append(recur(pair.cdr));
+                                eval_pair.cdr.append(await recur(pair.cdr));
                             } else {
                                 eval_pair = new Pair(
                                     eval_pair,
-                                    recur(pair.cdr)
+                                    await recur(pair.cdr)
                                 );
                             }
                         }
@@ -1868,7 +1883,7 @@
                             if (pair.cdr.cdr !== nil) {
                                 return new Pair(
                                     new Unquote(pair.cdr.car, unquote_count),
-                                    recur(pair.cdr.cdr)
+                                    await recur(pair.cdr.cdr)
                                 );
                             } else {
                                 return new Unquote(pair.cdr.car, unquote_count);
@@ -1876,7 +1891,7 @@
                         } else if (parent.cdr.cdr !== nil) {
                             parent.car.cdr = new Pair(
                                 new Unquote(node, unquote_count),
-                                parent.cdr === nil ? nil : recur(parent.cdr.cdr)
+                                parent.cdr === nil ? nil : await recur(parent.cdr.cdr)
                             );
                         } else {
                             parent.car.cdr = new Unquote(node, unquote_count);
@@ -1886,16 +1901,16 @@
                     var car = pair.car;
                     var cdr = pair.cdr;
                     if (car instanceof Pair) {
-                        car = recur(car);
+                        car = await recur(car);
                     }
                     if (cdr instanceof Pair) {
-                        cdr = recur(cdr);
+                        cdr = await recur(cdr);
                     }
                     return new Pair(car, cdr);
                 }
                 return pair;
             }
-            function unquoting(pair) {
+            async function unquoting(pair) {
                 if (pair instanceof Unquote) {
                     if (max_unquote === pair.count) {
                         return evaluate(pair.value, { env: self, dynamic_scope, error });
@@ -1903,7 +1918,7 @@
                         return new Pair(
                             new Symbol('unquote'),
                             new Pair(
-                                unquoting(pair.value),
+                                await unquoting(pair.value),
                                 nil
                             )
                         );
@@ -1912,17 +1927,17 @@
                 if (pair instanceof Pair) {
                     var car = pair.car;
                     if (car instanceof Pair || car instanceof Unquote) {
-                        car = unquoting(car);
+                        car = await unquoting(car);
                     }
                     var cdr = pair.cdr;
                     if (cdr instanceof Pair || cdr instanceof Unquote) {
-                        cdr = unquoting(cdr);
+                        cdr = await unquoting(cdr);
                     }
                     return new Pair(car, cdr);
                 }
                 return pair;
             }
-            return quote(unquoting(recur(arg.car)));
+            return recur(arg.car).then(unquoting).then(quote);
         }),
         // ------------------------------------------------------------------
         clone: function(list) {
@@ -2192,14 +2207,14 @@
                 type_check(fn);
                 var args = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
                 args = this.get('list->array')(args);
-                if (args.filter(a => a instanceof Promise).length) {
+                if (args.filter(isPromise).length) {
                     return Promise.all(args).then(args => fn.apply(this, args));
                 } else {
                     return fn.apply(this, args);
                 }
             };
             var fn = evaluate(code.car, { env: this, dynamic_scope, error });
-            if (fn instanceof Promise) {
+            if (isPromise(fn)) {
                 return fn.then(invoke);
             } else {
                 return invoke(fn);
@@ -2227,22 +2242,19 @@
             }
         },
         // ------------------------------------------------------------------
-        'for-each': async function(fn, list) {
-            var array = this.get('list->array')(list);
-            var i = 0;
-            while (i < array.length) {
-                var item = array[i++];
-                await fn(item, i);
-            }
+        'for-each': async function(fn, ...args) {
+            await this.get('map')(fn, ...args);
         },
         // ------------------------------------------------------------------
-        map: async function(fn, list) {
-            var array = this.get('list->array')(list);
+        map: async function(fn, ...args) {
+            var array = args.map(list => this.get('list->array')(list));
             var result = [];
             var i = 0;
-            while (i < array.length) {
-                var item = array[i++];
-                result.push(await fn(item, i));
+            while (i < array[0].length) {
+                var item = array.map((_, j) => array[j][i]);
+                var value = await fn(...item);
+                result.push(value);
+                i++;
             }
             return Pair.fromArray(result);
         },
@@ -2442,7 +2454,7 @@
                         }
                     } else {
                         var value = evaluate(arg, { env: self, dynamic_scope, error });
-                        if (value instanceof Promise) {
+                        if (isPromise(value)) {
                             value.then(next);
                         } else {
                             next(value);
@@ -2477,7 +2489,7 @@
                         }
                     } else {
                         var value = evaluate(arg, { env: self, dynamic_scope, error });
-                        if (value instanceof Promise) {
+                        if (isPromise(value)) {
                             value.then(next);
                         } else {
                             next(value);
@@ -2598,7 +2610,7 @@
         }
         return arg;
         function traverse(node) {
-            if (node instanceof Promise) {
+            if (isPromise(node)) {
                 promises.push(node);
             } else if (node instanceof Pair) {
                 traverse(node.car);
@@ -2634,7 +2646,7 @@
             if (node instanceof Pair) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
                 if (dynamic_scope) {
-                    if (arg instanceof Promise) {
+                    if (isPromise(arg)) {
                         arg = arg.then(arg => {
                             if (typeof arg === 'function') {
                                 return arg.bind(dynamic_scope);
@@ -2662,7 +2674,7 @@
         value = maybe_promise(value, true);
         if (value && value.data) {
             return value;
-        } else if (value instanceof Promise) {
+        } else if (isPromise(value)) {
             return value.then((value) => {
                 if (value && value.data) {
                     return value;
@@ -2694,13 +2706,14 @@
             var rest = code.cdr;
             if (first instanceof Pair) {
                 value = maybe_promise(evaluate(first, eval_args));
-                if (value instanceof Promise) {
+                if (isPromise(value)) {
                     return value.then((value) => {
                         return evaluate(new Pair(value, code.cdr), eval_args);
                     });
                 } else if (typeof value !== 'function') {
                     throw new Error(
-                        env.get('string')(value) + ' is not a function'
+                        env.get('string')(value) + ' is not a function' +
+                            ' while evaluating ' + first.toString()
                     );
                 }
             }
@@ -2720,7 +2733,7 @@
             }
             if (typeof value === 'function') {
                 var args = get_function_args(rest, eval_args);
-                if (args instanceof Promise) {
+                if (isPromise(args)) {
                     return args.then((args) => {
                         var scope = dynamic_scope || env;
                         return quote(maybe_promise(value.apply(scope, args)));
