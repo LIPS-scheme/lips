@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 13 Apr 2019 09:20:17 +0000
+ * build: Sat, 13 Apr 2019 11:36:48 +0000
  */
 (function () {
 'use strict';
@@ -2040,6 +2040,46 @@ function _typeof(obj) {
   function isNativeFunction(fn) {
     return typeof fn === 'function' && fn.toString().match(/\{\s*\[native code\]\s*\}/);
   } // ----------------------------------------------------------------------
+  // :: weak version fn.bind as function - it can be rebinded and
+  // :: and applied with different context after bind
+  // ----------------------------------------------------------------------
+
+
+  function weakBind(fn, context) {
+    for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      args[_key - 2] = arguments[_key];
+    }
+
+    var bindable = function bindable() {
+      for (var _len2 = arguments.length, moreArgs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        moreArgs[_key2] = arguments[_key2];
+      }
+
+      return fn.apply(context, [].concat(args, moreArgs));
+    };
+
+    bindable.apply = function (context, args) {
+      return fn.apply(context, args);
+    };
+
+    bindable.call = function (context) {
+      for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+        args[_key3 - 1] = arguments[_key3];
+      }
+
+      return fn.apply(context, args);
+    };
+
+    bindable.bind = function (context) {
+      for (var _len4 = arguments.length, args = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+        args[_key4 - 1] = arguments[_key4];
+      }
+
+      return weakBind.apply(void 0, [fn, context].concat(args));
+    };
+
+    return bindable;
+  } // ----------------------------------------------------------------------
   // :: function that return macro for let and let*
   // ----------------------------------------------------------------------
 
@@ -2457,6 +2497,10 @@ function _typeof(obj) {
     if (defined) {
       if (LNumber.isNumber(value)) {
         return LNumber(value);
+      }
+
+      if (typeof value === 'function') {
+        return weakBind(value, this);
       }
 
       return value;
@@ -3015,8 +3059,8 @@ function _typeof(obj) {
         var value;
 
         if (name instanceof _Symbol || !isEmptyList(name)) {
-          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
+          for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+            args[_key5] = arguments[_key5];
           }
 
           while (true) {
@@ -3428,16 +3472,16 @@ function _typeof(obj) {
       return result;
     },
     'new': function _new(obj) {
-      for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-        args[_key2 - 1] = arguments[_key2];
+      for (var _len6 = arguments.length, args = new Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
+        args[_key6 - 1] = arguments[_key6];
       }
 
       return _construct(obj, args);
     },
     // ------------------------------------------------------------------
     '.': function _(obj) {
-      for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-        args[_key3 - 1] = arguments[_key3];
+      for (var _len7 = arguments.length, args = new Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
+        args[_key7 - 1] = arguments[_key7];
       }
 
       var _arr = args;
@@ -3546,8 +3590,8 @@ function _typeof(obj) {
       var _this$get,
           _this4 = this;
 
-      for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
+      for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        args[_key8] = arguments[_key8];
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
@@ -3931,8 +3975,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     curry: function curry(fn) {
-      for (var _len5 = arguments.length, init_args = new Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
-        init_args[_key5 - 1] = arguments[_key5];
+      for (var _len9 = arguments.length, init_args = new Array(_len9 > 1 ? _len9 - 1 : 0), _key9 = 1; _key9 < _len9; _key9++) {
+        init_args[_key9 - 1] = arguments[_key9];
       }
 
       var len = fn.length;
@@ -3940,8 +3984,8 @@ function _typeof(obj) {
         var args = init_args.slice();
 
         function call() {
-          for (var _len6 = arguments.length, more_args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-            more_args[_key6] = arguments[_key6];
+          for (var _len10 = arguments.length, more_args = new Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+            more_args[_key10] = arguments[_key10];
           }
 
           args = args.concat(more_args);
@@ -3967,8 +4011,8 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     // math functions
     '*': function _() {
-      for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-        args[_key7] = arguments[_key7];
+      for (var _len11 = arguments.length, args = new Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+        args[_key11] = arguments[_key11];
       }
 
       if (args.length) {
@@ -3979,8 +4023,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '+': function _() {
-      for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
+      for (var _len12 = arguments.length, args = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
       }
 
       if (args.length) {
@@ -3997,8 +4041,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '-': function _() {
-      for (var _len9 = arguments.length, args = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        args[_key9] = arguments[_key9];
+      for (var _len13 = arguments.length, args = new Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+        args[_key13] = arguments[_key13];
       }
 
       if (args.length === 1) {
@@ -4013,8 +4057,8 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     '/': function _() {
-      for (var _len10 = arguments.length, args = new Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-        args[_key10] = arguments[_key10];
+      for (var _len14 = arguments.length, args = new Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+        args[_key14] = arguments[_key14];
       }
 
       if (args.length) {
@@ -4067,7 +4111,7 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     // Booleans
-    "==": function _(a, b) {
+    '==': function _(a, b) {
       return LNumber(a).cmp(b) === 0;
     },
     // ------------------------------------------------------------------
@@ -4212,8 +4256,8 @@ function _typeof(obj) {
       return !value;
     },
     '->': function _(obj, name) {
-      for (var _len11 = arguments.length, args = new Array(_len11 > 2 ? _len11 - 2 : 0), _key11 = 2; _key11 < _len11; _key11++) {
-        args[_key11 - 2] = arguments[_key11];
+      for (var _len15 = arguments.length, args = new Array(_len15 > 2 ? _len15 - 2 : 0), _key15 = 2; _key15 < _len15; _key15++) {
+        args[_key15 - 2] = arguments[_key15];
       }
 
       return obj[name].apply(obj, args);

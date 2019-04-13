@@ -919,6 +919,25 @@
             fn.toString().match(/\{\s*\[native code\]\s*\}/);
     }
     // ----------------------------------------------------------------------
+    // :: weak version fn.bind as function - it can be rebinded and
+    // :: and applied with different context after bind
+    // ----------------------------------------------------------------------
+    function weakBind(fn, context, ...args) {
+        let bindable = function(...moreArgs) {
+            return fn.apply(context, [...args, ...moreArgs]);
+        };
+        bindable.apply = function(context, args) {
+            return fn.apply(context, args);
+        };
+        bindable.call = function(context, ...args) {
+            return fn.apply(context, args);
+        };
+        bindable.bind = function(context, ...args) {
+            return weakBind(fn, context, ...args);
+        };
+        return bindable;
+    }
+    // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
     function let_macro(asterisk) {
@@ -1286,6 +1305,9 @@
         if (defined) {
             if (LNumber.isNumber(value)) {
                 return LNumber(value);
+            }
+            if (typeof value === 'function') {
+                return weakBind(value, this);
             }
             return value;
         }
@@ -2349,7 +2371,7 @@
         },
         // ------------------------------------------------------------------
         // Booleans
-        "==": function(a, b) {
+        '==': function(a, b) {
             return LNumber(a).cmp(b) === 0;
         },
         // ------------------------------------------------------------------
