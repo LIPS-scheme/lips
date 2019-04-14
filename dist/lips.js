@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 14 Apr 2019 10:42:36 +0000
+ * build: Sun, 14 Apr 2019 11:26:14 +0000
  */
 (function () {
 'use strict';
@@ -2642,9 +2642,6 @@ function _typeof(obj) {
     'true': true,
     'NaN': NaN,
     'false': false,
-    'this': function _this() {
-      return this;
-    },
     // ------------------------------------------------------------------
     stdout: {
       write: function write() {
@@ -2661,9 +2658,14 @@ function _typeof(obj) {
         });
       }
     },
-    test: function test() {
-      return Promise.resolve(undefined);
+    'this': function _this() {
+      return this;
     },
+
+    /*
+    test: function() {
+        return Promise.resolve(undefined);
+    },*/
     // ------------------------------------------------------------------
     cons: function cons(car, cdr) {
       if (isEmptyList(cdr)) {
@@ -4356,9 +4358,9 @@ function _typeof(obj) {
 
             if (result) {
               resolve(value);
+            } else {
+              loop();
             }
-
-            loop();
           }
 
           var arg = args.shift();
@@ -4407,9 +4409,9 @@ function _typeof(obj) {
 
             if (!result) {
               resolve(false);
+            } else {
+              loop();
             }
-
-            loop();
           }
 
           var arg = args.shift();

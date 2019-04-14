@@ -20,6 +20,7 @@
 * fix parser when using multiple specials (unquote, quote etc.) in a row
 * fix scope when evaluating macros
 * fix async issues with list values inside let, lambda and begin macros
+* don't evaluate next expressions in `and` and `or` macros
 
 ## 0.8.1
 ### Bugfix

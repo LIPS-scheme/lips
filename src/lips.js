@@ -1427,9 +1427,6 @@
         'true': true,
         'NaN': NaN,
         'false': false,
-        'this': function() {
-            return this;
-        },
         // ------------------------------------------------------------------
         stdout: {
             write: function(...args) {
@@ -1444,9 +1441,13 @@
                 });
             }
         },
+        'this': function() {
+            return this;
+        },
+        /*
         test: function() {
             return Promise.resolve(undefined);
-        },
+        },*/
         // ------------------------------------------------------------------
         cons: function(car, cdr) {
             if (isEmptyList(cdr)) {
@@ -2446,8 +2447,9 @@
                         result = value;
                         if (result) {
                             resolve(value);
+                        } else {
+                            loop();
                         }
-                        loop();
                     }
                     var arg = args.shift();
                     if (typeof arg === 'undefined') {
@@ -2481,8 +2483,9 @@
                         result = value;
                         if (!result) {
                             resolve(false);
+                        } else {
+                            loop();
                         }
-                        loop();
                     }
                     var arg = args.shift();
                     if (typeof arg === 'undefined') {
