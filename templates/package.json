@@ -146,7 +146,7 @@
       "no-whitespace-before-property": "error",
       "object-curly-spacing": [
         "error",
-        "never"
+        "always"
       ],
       "space-before-blocks": "error",
       "keyword-spacing": [
