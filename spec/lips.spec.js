@@ -543,7 +543,7 @@ describe('evaluate', function() {
         });
         it('should throw exception', function() {
             return lips.exec(code, env, env).catch(e => {
-                expect(e.code).toEqual('(apply f args)');
+                expect(e.code).toEqual('(string (! 1000))');
                 expect(e).toEqual(new Error("Unbound variable `f'"));
             });
         });

@@ -19,6 +19,7 @@
 * fix major issues with quasiquote that make macros don't work quite right
 * fix parser when using multiple specials (unquote, quote etc.) in a row
 * fix scope when evaluating macros
+* fix async issues with list values inside let, lambda and begin macros
 
 ## 0.8.1
 ### Bugfix
