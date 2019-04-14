@@ -12,7 +12,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 ## Key features
 
 * Full lisp macros and backquote,
-* Functions in lips are normal javascript functions,
+* Functions in lips are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,

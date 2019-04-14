@@ -1,7 +1,7 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-0.9.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&6549cbcb61f082ec5f7134797328ce6807f9cc7c)](https://travis-ci.org/jcubic/jquery.terminal)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&4912f43f5a0a8836940ba8e35fe069c538cae4b4)](https://travis-ci.org/jcubic/jquery.terminal)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&4605127ab4ae61bb9393947f167c7edb)](https://coveralls.io/github/jcubic/lips?branch=master)
 
 
@@ -12,7 +12,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 ## Key features
 
 * Full lisp macros and backquote,
-* Functions in lips are normal javascript functions,
+* Functions in lips are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
