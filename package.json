@@ -1,6 +1,6 @@
 {
   "name": "@jcubic/lips",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "Simple Scheme Like Lisp in JavaScript",
   "main": "src/lips.js",
   "unpkg": "dist/lips.min.js",
@@ -146,7 +146,7 @@
       "no-whitespace-before-property": "error",
       "object-curly-spacing": [
         "error",
-        "never"
+        "always"
       ],
       "space-before-blocks": "error",
       "keyword-spacing": [

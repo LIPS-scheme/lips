@@ -1,7 +1,7 @@
 ;; -*- scheme -*-
 ;;
 ;; TODO app using LIPS - simple scheme like lisp in JavaScript
-;; Copyright (C) 2018-2019 Jaub Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under the MIT license
 ;;
 ;; code based on jQuery TODO MVC

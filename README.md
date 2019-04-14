@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
-[![npm](https://img.shields.io/badge/npm-0.8.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=gh-pages&6f361b440b7ea92ac3e7b8041ee4358353e5392b)](https://travis-ci.org/jcubic/jquery.terminal)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=gh-pages&1a39cbb47c1a8f3874924c910736ba58)](https://coveralls.io/github/jcubic/lips?branch=gh-pages)
+[![npm](https://img.shields.io/badge/npm-0.9.0-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&4912f43f5a0a8836940ba8e35fe069c538cae4b4)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&4605127ab4ae61bb9393947f167c7edb)](https://coveralls.io/github/jcubic/lips?branch=master)
 
 
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
@@ -11,14 +11,14 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 ## Key features
 
-* Lisp Macros and backquote,
-* Functions in lips are normal javascript functions,
+* Full lisp macros and backquote,
+* Functions in lips are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
-* BigInt support if your browser don't support it you will need to use [bn.js](https://github.com/indutny/bn.js/),
-* Optional dynamic scope,
-* Promises are treated as values they resolve to.
+* Promises are treated as values they resolve to (so async code look like sync),
+* BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
+* Optional dynamic scope.
 
 ## Installation
 
@@ -37,14 +37,31 @@ https://unpkg.com/@jcubic/lips
 or from rawgit
 
 ```
-<<<<<<< HEAD
-https://cdn.rawgit.com/jcubic/lips/master/dist/lips.min.js
-=======
-https://cdn.rawgit.com/jcubic/lips/gh-pages/dist/lips.min.js
->>>>>>> master
+https://cdn.rawgit.com/jcubic/lips/devel/dist/lips.min.js
 ```
 
 ## Usage
+
+
+Simplest way is to include the lips code in script tag:
+
+```html
+<script type="text/x-lips">
+(let ((what "world")
+      (greet "hello"))
+   (print (concat "hello" " " what)))
+</script>
+```
+
+or use `src` attribute:
+
+```html
+<script type="text/x-lips" src="example.lips"></script>
+```
+
+
+You can also run the interpreter programmatically:
+
 
 ```javascript
 var {exec} = require('@jcubic/lips'); // node
@@ -116,23 +133,6 @@ get number representation as string (works for all values).
 of the value, some expressions return explicit `Promise` like `let` and `let*`, so you can
 use fetch to get text value in one `let`. `exec` make this easier to always return
 `Promise`.
-
-You can also use script tag to execute LIPS code:
-
-```html
-<script type="text/x-lips">
-(let ((what "world")
-      (greet "hello"))
-   (print (concat "hello" " " what)))
-</script>
-```
-
-or use `src` attribute:
-
-```html
-<script type="text/x-lips" src="example.lips"></script>
-```
-
 
 ## License
 

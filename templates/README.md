@@ -11,14 +11,14 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 ## Key features
 
-* Lisp Macros and backquote,
-* Functions in lips are normal javascript functions,
+* Full lisp macros and backquote,
+* Functions in lips are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
-* BigInt support if your browser don't support it you will need to use [bn.js](https://github.com/indutny/bn.js/),
-* Optional dynamic scope,
-* Promises are treated as values they resolve to.
+* Promises are treated as values they resolve to (so async code look like sync),
+* BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
+* Optional dynamic scope.
 
 ## Installation
 
@@ -37,14 +37,31 @@ https://unpkg.com/@jcubic/lips
 or from rawgit
 
 ```
-<<<<<<< HEAD
-https://cdn.rawgit.com/jcubic/lips/master/dist/lips.min.js
-=======
-https://cdn.rawgit.com/jcubic/lips/{{BRANCH}}/dist/lips.min.js
->>>>>>> master
+https://cdn.rawgit.com/jcubic/lips/devel/dist/lips.min.js
 ```
 
 ## Usage
+
+
+Simplest way is to include the lips code in script tag:
+
+```html
+<script type="text/x-lips">
+(let ((what "world")
+      (greet "hello"))
+   (print (concat "hello" " " what)))
+</script>
+```
+
+or use `src` attribute:
+
+```html
+<script type="text/x-lips" src="example.lips"></script>
+```
+
+
+You can also run the interpreter programmatically:
+
 
 ```javascript
 var {exec} = require('@jcubic/lips'); // node
@@ -116,23 +133,6 @@ get number representation as string (works for all values).
 of the value, some expressions return explicit `Promise` like `let` and `let*`, so you can
 use fetch to get text value in one `let`. `exec` make this easier to always return
 `Promise`.
-
-You can also use script tag to execute LIPS code:
-
-```html
-<script type="text/x-lips">
-(let ((what "world")
-      (greet "hello"))
-   (print (concat "hello" " " what)))
-</script>
-```
-
-or use `src` attribute:
-
-```html
-<script type="text/x-lips" src="example.lips"></script>
-```
-
 
 ## License
 
