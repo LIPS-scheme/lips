@@ -320,6 +320,7 @@ parse(tokenize(string)).foEach(function(code) {
            }
        });
        term.env = function() { return env; };
+
        term.echo('LIPS Demo version ' + lips.version + ' with [[b;#fff;]' +
                  (dynamic ? 'dynamic' : 'lexical') + ' scope]\n' +
                  'type [[b;#fff;](env)] to see environment with ' +
@@ -343,10 +344,6 @@ parse(tokenize(string)).foEach(function(code) {
        // and define-macro as keyword (update original regex)
        Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:\*|rec)?(?:-values)?|else|if|cond|begin|delay(?:-force)?|parameterize|define-macro|guard|set!|(?:quasi-)?quote|syntax-rules)(?=[()\s])/;
 
-       $.terminal.syntax("scheme");
-       interpreter('.term.dynamic', true);
-       interpreter('.term.lexical', false);
-
        function select(li) {
            li = $(li);
            var index = li.index();
@@ -359,6 +356,10 @@ parse(tokenize(string)).foEach(function(code) {
        }
        var tabs = $('.tabs');
        select(tabs.find('ul li:eq(0)'));
+
+       $.terminal.syntax("scheme");
+       interpreter('.term.dynamic', true);
+       interpreter('.term.lexical', false);
 
        tabs.on('click', 'ul li', function() {
            select(this).terminal().focus();
