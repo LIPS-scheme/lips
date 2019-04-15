@@ -1,12 +1,12 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.9.0
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 14 Apr 2019 11:34:32 +0000
+ * build: Mon, 15 Apr 2019 10:19:18 +0000
  */
 (function () {
 'use strict';
@@ -2883,29 +2883,17 @@ function _typeof(obj) {
         }
 
         if (cond) {
-          var true_value = evaluate(code.cdr.car, {
+          return evaluate(code.cdr.car, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
           });
-
-          if (typeof true_value === 'undefined') {
-            return;
-          }
-
-          return true_value;
         } else {
-          var false_value = evaluate(code.cdr.cdr.car, {
+          return evaluate(code.cdr.cdr.car, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
           });
-
-          if (typeof false_value === 'undefined') {
-            return false;
-          }
-
-          return false_value;
         }
       };
 
@@ -3118,7 +3106,7 @@ function _typeof(obj) {
         return 'a' + i;
       }).join(','); // hack that create function with specific length
 
-      var wrapper = new Function("f", "return function(".concat(args, ") {\n                window.calls = window.calls || [];\n                window.calls.push([...arguments]);\n                return f.apply(this, arguments);\n            };"));
+      var wrapper = new Function("f", "return function(".concat(args, ") {\n                return f.apply(this, arguments);\n            };"));
       return wrapper(lambda);
     }),
     'macroexpand': new Macro('macro-expand', macro_expand()),
@@ -4680,19 +4668,19 @@ function _typeof(obj) {
     var value = macro.invoke(code, eval_args);
     value = maybe_promise(value, true);
 
-    if (value && value.data) {
-      return value;
-    } else if (isPromise(value)) {
-      return value.then(function (value) {
-        if (value && value.data) {
-          return value;
-        }
-
+    function ret(value) {
+      if (value && value.data || !(value instanceof Pair)) {
+        return value;
+      } else {
         return evaluate(value, eval_args);
-      });
+      }
     }
 
-    return evaluate(value, eval_args);
+    if (isPromise(value)) {
+      return value.then(ret);
+    }
+
+    return ret(value);
   } // ----------------------------------------------------------------------
 
 
@@ -4985,7 +4973,7 @@ function _typeof(obj) {
   }); // --------------------------------------
 
   return {
-    version: '0.9.0',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

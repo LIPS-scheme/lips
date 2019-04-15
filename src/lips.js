@@ -1584,25 +1584,17 @@
                     throw new Error('if: value need to be boolean');
                 }
                 if (cond) {
-                    var true_value = evaluate(code.cdr.car, {
+                    return evaluate(code.cdr.car, {
                         env,
                         dynamic_scope,
                         error
                     });
-                    if (typeof true_value === 'undefined') {
-                        return;
-                    }
-                    return true_value;
                 } else {
-                    var false_value = evaluate(code.cdr.cdr.car, {
+                    return evaluate(code.cdr.cdr.car, {
                         env,
                         dynamic_scope,
                         error
                     });
-                    if (typeof false_value === 'undefined') {
-                        return false;
-                    }
-                    return false_value;
                 }
             };
             var cond = evaluate(code.car, { env, dynamic_scope, error });
@@ -1774,8 +1766,6 @@
             var args = new Array(length).fill(0).map((_, i) => 'a' + i).join(',');
             // hack that create function with specific length
             var wrapper = new Function(`f`, `return function(${args}) {
-                window.calls = window.calls || [];
-                window.calls.push([...arguments]);
                 return f.apply(this, arguments);
             };`);
             return wrapper(lambda);
@@ -2680,17 +2670,17 @@
         }
         var value = macro.invoke(code, eval_args);
         value = maybe_promise(value, true);
-        if (value && value.data) {
-            return value;
-        } else if (isPromise(value)) {
-            return value.then((value) => {
-                if (value && value.data) {
-                    return value;
-                }
+        function ret(value) {
+            if (value && value.data || !(value instanceof Pair)) {
+                return value;
+            } else{
                 return evaluate(value, eval_args);
-            });
+            }
         }
-        return evaluate(value, eval_args);
+        if (isPromise(value)) {
+            return value.then(ret);
+        }
+        return ret(value);
     }
     // ----------------------------------------------------------------------
     function evaluate(code, { env, dynamic_scope, error = () => {} } = {}) {
