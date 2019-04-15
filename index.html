@@ -319,6 +319,7 @@ parse(tokenize(string)).foEach(function(code) {
                }
            }
        });
+       term.env = function() { return env; };
        term.echo('LIPS Demo version ' + lips.version + ' with [[b;#fff;]' +
                  (dynamic ? 'dynamic' : 'lexical') + ' scope]\n' +
                  'type [[b;#fff;](env)] to see environment with ' +
