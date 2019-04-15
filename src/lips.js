@@ -2673,7 +2673,7 @@
         function ret(value) {
             if (value && value.data || !(value instanceof Pair)) {
                 return value;
-            } else{
+            } else {
                 return evaluate(value, eval_args);
             }
         }
