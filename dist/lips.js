@@ -1,12 +1,12 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.9.1
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Mon, 15 Apr 2019 10:27:16 +0000
+ * build: Wed, 17 Apr 2019 08:55:17 +0000
  */
 (function () {
 'use strict';
@@ -1281,6 +1281,25 @@ function _typeof(obj) {
       return arg;
     });
   } // ----------------------------------------------------------------------
+  // :: documentaton decorator to LIPS functions if lines starts with :
+  // :: they are ignored (not trim) otherwise it trim so
+  // :: so you can have indent in source code
+  // ----------------------------------------------------------------------
+
+
+  function doc(fn, docs) {
+    if (docs) {
+      fn.__doc__ = docs.split('\n').map(function (line) {
+        if (line.match(/^:/)) {
+          return line.replace(/^\s*:/, '');
+        } else {
+          return line.trim();
+        }
+      }).join('\n');
+    }
+
+    return fn;
+  } // ----------------------------------------------------------------------
   // return last S-Expression
   // ----------------------------------------------------------------------
 
@@ -1856,11 +1875,12 @@ function _typeof(obj) {
   // ----------------------------------------------------------------------
 
 
-  function Macro(name, fn) {
+  function Macro(name, fn, doc) {
     if (typeof this !== 'undefined' && this.constructor !== Macro || typeof this === 'undefined') {
       return new Macro(name, fn);
     }
 
+    this.__doc__ = doc;
     this.name = name;
     this.fn = fn;
   }
@@ -2048,7 +2068,7 @@ function _typeof(obj) {
   // :: check for nullish values
 
 
-  function is_null(value) {
+  function isNull(value) {
     return typeof value === 'undefined' || value === nil || value === null;
   } // ----------------------------------------------------------------------
 
@@ -2059,7 +2079,7 @@ function _typeof(obj) {
 
 
   function isPromise(o) {
-    return o instanceof Promise || typeof o !== 'undefined' && typeof o.then === 'function';
+    return o instanceof Promise || o && typeof o !== 'undefined' && typeof o.then === 'function';
   } // ----------------------------------------------------------------------
   // :: weak version fn.bind as function - it can be rebinded and
   // :: and applied with different context after bind
@@ -2076,6 +2096,10 @@ function _typeof(obj) {
       return binded.__bind.fn.apply(context, args);
     };
 
+    if (fn.__doc__) {
+      binded.__doc__ = fn.__doc__;
+    }
+
     for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
       args[_key - 2] = arguments[_key];
     }
@@ -2083,6 +2107,10 @@ function _typeof(obj) {
     binded.__bind = {
       args: fn.__bind ? fn.__bind.args.concat(args) : args,
       fn: fn.__bind ? fn.__bind.fn : fn
+    };
+
+    binded.toString = function () {
+      return binded.__bind.fn.toString();
     };
 
     binded.apply = function (context, args) {
@@ -2543,7 +2571,7 @@ function _typeof(obj) {
         if (type === 'function') {
           // this is maily done for console.log
           if (isNativeFunction(root[name])) {
-            return root[name].bind(root);
+            return weakBind(root[name], root);
           } else {
             return root[name];
           }
@@ -2661,35 +2689,33 @@ function _typeof(obj) {
     'this': function _this() {
       return this;
     },
-
-    /*
-    test: function() {
-        return Promise.resolve(undefined);
-    },*/
+    help: doc(function (obj) {
+      return obj.__doc__;
+    }, "(help object)\n\n            Function returns documentation for function or macro."),
     // ------------------------------------------------------------------
-    cons: function cons(car, cdr) {
+    cons: doc(function (car, cdr) {
       if (isEmptyList(cdr)) {
         cdr = nil;
       }
 
       return new Pair(car, cdr);
-    },
+    }, "(cons left right)\n\n            Function return new Pair out of two arguments."),
     // ------------------------------------------------------------------
-    car: function car(list) {
+    car: doc(function (list) {
       if (list instanceof Pair) {
         return list.car;
       } else {
         throw new Error('argument to car need to be a list');
       }
-    },
+    }, "(car pair)\n\n            Function returns car (head) of the list/pair."),
     // ------------------------------------------------------------------
-    cdr: function cdr(list) {
+    cdr: doc(function (list) {
       if (list instanceof Pair) {
         return list.cdr;
       } else {
         throw new Error('argument to cdr need to be a list');
       }
-    },
+    }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
     // ------------------------------------------------------------------
     'set!': new Macro('set!', function (code) {
       var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
@@ -2749,21 +2775,21 @@ function _typeof(obj) {
       } else {
         ref.set(code.car, value);
       }
-    }),
+    }, "(set! name value)\n\n            Macro that can be used to set the value of the variable (mutate)\n            it search the scope chain until it finds first non emtpy slot and set it."),
     // ------------------------------------------------------------------
-    'set-car!': function setCar(slot, value) {
+    'set-car!': doc(function (slot, value) {
       slot.car = value;
-    },
+    }, "(set-car! obj value)\n\n            Function that set car (head) of the list/pair to specified value.\n            It can destroy the list. Old value is lost."),
     // ------------------------------------------------------------------
-    'set-cdr!': function setCdr(slot, value) {
+    'set-cdr!': doc(function (slot, value) {
       slot.cdr = value;
-    },
+    }, "(set-cdr! obj value)\n\n            Function that set cdr (tail) of the list/pair to specified value.\n            It can destroy the list. Old value is lost."),
     // ------------------------------------------------------------------
-    'empty?': function empty(x) {
+    'empty?': doc(function (x) {
       return typeof x === 'undefined' || isEmptyList(x);
-    },
+    }, "(empty? object)\n\n            Function return true if value is undfined empty list."),
     // ------------------------------------------------------------------
-    assoc: function assoc(key, list) {
+    assoc: doc(function (key, list) {
       if (key instanceof Pair && !(list instanceof Pair)) {
         throw new Error('First argument to assoc new to a key');
       }
@@ -2785,11 +2811,11 @@ function _typeof(obj) {
       }
 
       return nil;
-    },
+    }, "(assoc key alist)\n\n            Function search Alist (list of pairs) until it find the one that\n            have head set equal to key, and return found pair."),
     // ------------------------------------------------------------------
-    gensym: gensym,
+    gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
     // ------------------------------------------------------------------
-    load: function load(file) {
+    load: doc(function (file) {
       var _this2 = this;
 
       root.fetch(file).then(function (res) {
@@ -2797,7 +2823,7 @@ function _typeof(obj) {
       }).then(function (code) {
         _this2.get('eval')(_this2.get('read')(code));
       });
-    },
+    }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
     // ------------------------------------------------------------------
     'while': new Macro('while',
     /*#__PURE__*/
@@ -2865,7 +2891,7 @@ function _typeof(obj) {
       return function (_x4, _x5) {
         return _ref6.apply(this, arguments);
       };
-    }()),
+    }(), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
     // ------------------------------------------------------------------
     'if': new Macro('if', function (code, _ref8) {
       var dynamic_scope = _ref8.dynamic_scope,
@@ -2908,11 +2934,11 @@ function _typeof(obj) {
       } else {
         return resolve(cond);
       }
-    }),
+    }, "(if cond true-expr false-expr)\n\n            Macro evaluate condition expression and if the value is true, it\n            evaluate and return true expression if not it evaluate and return\n            false expression"),
     // ------------------------------------------------------------------
-    'let*': let_macro(true),
+    'let*': doc(let_macro(true), "(let* ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy and next value can access to\n             previous values/names."),
     // ------------------------------------------------------------------
-    'let': let_macro(false),
+    'let': doc(let_macro(false), "(let ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy but you can't access\n             previous values/names when next are evaluated. You can only get them\n             from body of let expression."),
     // ------------------------------------------------------------------
     'begin': new Macro('begin', function (code, _ref9) {
       var dynamic_scope = _ref9.dynamic_scope,
@@ -3045,6 +3071,12 @@ function _typeof(obj) {
 
       var self = this;
 
+      var __doc__;
+
+      if (code.cdr instanceof Pair && typeof code.cdr.car === 'string' && code.cdr.cdr !== nil) {
+        __doc__ = code.cdr.car;
+      }
+
       function lambda() {
         var env = (dynamic_scope ? this : self).inherit('lambda');
         var name = code.car;
@@ -3087,7 +3119,8 @@ function _typeof(obj) {
           dynamic_scope = env;
         }
 
-        var output = new Pair(new _Symbol('begin'), code.cdr);
+        var rest = __doc__ ? code.cdr.cdr : code.cdr;
+        var output = new Pair(new _Symbol('begin'), rest);
         return evaluate(output, {
           env: env,
           dynamic_scope: dynamic_scope,
@@ -3098,7 +3131,7 @@ function _typeof(obj) {
       var length = code.car instanceof Pair ? code.car.length() : null;
 
       if (!(code.car instanceof Pair)) {
-        return lambda; // variable arguments
+        return doc(lambda, __doc__); // variable arguments
       } // list of arguments (name don't matter
 
 
@@ -3106,9 +3139,10 @@ function _typeof(obj) {
         return 'a' + i;
       }).join(','); // hack that create function with specific length
 
-      var wrapper = new Function("f", "return function(".concat(args, ") {\n                return f.apply(this, arguments);\n            };"));
-      return wrapper(lambda);
-    }),
+      var wrapper = new Function("f", "return function(".concat(args, ") {\n                return f.apply(this, arguments);\n            };")); // wrap and decorate with __doc__
+
+      return doc(wrapper(lambda), __doc__);
+    }, "(lambda (a b) body)\n            (lambda args body)\n            (lambda (a b . rest) body)\n\n            Macro lambda create new anonymous function, if first element of the body\n            is string and there is more elements it will be documentation, that can\n            be read using (help fn)"),
     'macroexpand': new Macro('macro-expand', macro_expand()),
     'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
     // ------------------------------------------------------------------
@@ -3184,11 +3218,11 @@ function _typeof(obj) {
           }
         });
       }
-    }),
+    }, "(define-macro (name . args) body)\n\n             Meta macro, macro that create new macros, if return value is list structure\n             it will be evaluated when macro is invoked. You can use quasiquote ` and\n             unquote , and unquote-splice ,@ inside to create expression that will be\n             evaluated on runtime. Macros works like this: if you pass any expression to\n             macro the arguments will not be evaluated unless macro itself evaluate it.\n             Because of this macro can manipulate expression (arguments) as lists."),
     // ------------------------------------------------------------------
     quote: new Macro('quote', function (arg) {
       return quote(arg.car);
-    }),
+    }, "(quote expression)\n\n            Macro that return single lips expression as data (it don't evaluate its\n            argument). It will return list of pairs if put in front of lips code.\n            And if put in fron of symbol it will return that symbol not value\n            associated with that name."),
     // ------------------------------------------------------------------
     quasiquote: new Macro('quasiquote', function (arg, _ref14) {
       var dynamic_scope = _ref14.dynamic_scope,
@@ -3497,17 +3531,24 @@ function _typeof(obj) {
       }
 
       return recur(arg.car).then(unquoting).then(quote);
-    }),
+    }, "(quasiquote list ,value ,@value)\n\n            Similar macro to `quote` but inside it you can use special\n            expressions unquote abbreviated to , that will evaluate expresion inside\n            and return its value or unquote-splicing abbreviated to ,@ that will\n            evaluate expression but return value without parenthesis (it will join)\n            the list with its value. Best used with macros but it can be used outside"),
     // ------------------------------------------------------------------
-    clone: function clone(list) {
+    clone: doc(function (list) {
       return list.clone();
-    },
+    }, "(clone list)\n\n            Function return clone of the list."),
     // ------------------------------------------------------------------
-    append: function append(list, item) {
-      return list.clone().append([item]);
-    },
+    append: doc(function (list, item) {
+      return this.get('append!')(list.clone(), item);
+    }, "(append list item)\n\n            Function will create new list with value appended to the end. It return\n            New list."),
+    'append!': doc(function (list, item) {
+      if (isNull(item) || isEmptyList(item)) {
+        return list;
+      }
+
+      return list.append(item);
+    }, "(append! name expression)\n\n             Destructive version of append, it modify the list in place. It return\n             original list."),
     // ------------------------------------------------------------------
-    reverse: function reverse(arg) {
+    reverse: doc(function (arg) {
       if (arg instanceof Pair) {
         var arr = this.get('list->array')(arg).reverse();
         return this.get('array->list')(arr);
@@ -3516,9 +3557,9 @@ function _typeof(obj) {
       } else {
         return arg.reverse();
       }
-    },
+    }, "(reverse list)\n\n            Function will reverse the list or array. If value is not a list\n            or array it will throw exception."),
     // ------------------------------------------------------------------
-    nth: function nth(index, obj) {
+    nth: doc(function (index, obj) {
       if (obj instanceof Pair) {
         var node = obj;
         var count = 0;
@@ -3538,52 +3579,36 @@ function _typeof(obj) {
       } else {
         throw new Error('Invalid object for nth');
       }
-    },
+    }, "(nth index obj)\n\n            Function return nth element of the list or array. If used with different\n            value it will throw exception"),
     // ------------------------------------------------------------------
-    'append!': new Macro('append!', function (code, _ref15) {
-      var dynamic_scope = _ref15.dynamic_scope,
-          error = _ref15.error;
-
-      if (dynamic_scope) {
-        dynamic_scope = this;
-      }
-
-      var value = evaluate(code.cdr.car, {
-        env: this,
-        dynamic_scope: dynamic_scope,
-        error: error
-      });
-      return this.get(code.car).append([value]);
-    }),
-    // ------------------------------------------------------------------
-    list: function list() {
+    list: doc(function () {
       return Pair.fromArray([].slice.call(arguments));
-    },
-    concat: function concat() {
+    }, "(list . args)\n\n            Function create new list out of its arguments."),
+    concat: doc(function () {
       return [].join.call(arguments, '');
-    },
+    }, "(concat . strings)\n\n            Function create new string by joining its arguments"),
     // ------------------------------------------------------------------
-    join: function join(separator, list) {
+    join: doc(function (separator, list) {
       return this.get('list->array')(list).join(separator);
-    },
+    }, "(join separator list)\n\n            Function return string by joining elements of the list"),
     // ------------------------------------------------------------------
-    split: function split(string, separator) {
+    split: doc(function (separator, string) {
       return this.get('array->list')(string.split(separator));
-    },
+    }, "(split separator string)\n\n            Function create list by splitting string by separatar that can\n            be a string or regular expression."),
     // ------------------------------------------------------------------
-    replace: function replace(string, pattern, replacement) {
+    replace: doc(function (pattern, replacement, string) {
       return string.replace(pattern, replacement);
-    },
+    }, "(replace pattern replacement string)\n\n            Function change patter to replacement inside string."),
     // ------------------------------------------------------------------
-    match: function match(string, pattern) {
+    match: doc(function (pattern, string) {
       return this.get('array->list')(string.match(pattern));
-    },
+    }, "(match pattern string)\n\n            function return match object from JavaScript as list."),
     // ------------------------------------------------------------------
-    search: function search(string, pattern) {
+    search: doc(function (pattern, string) {
       return string.search(pattern);
-    },
+    }, "(search pattern string)\n\n            Function return first found index of the pattern inside a string"),
     // ------------------------------------------------------------------
-    string: function string(obj, quote) {
+    string: doc(function string(obj, quote) {
       if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
         return '<#jQuery(' + obj.length + ')>';
       }
@@ -3637,11 +3662,11 @@ function _typeof(obj) {
       }
 
       return obj;
-    },
+    }, "(string obj)\n\n            Function return string LIPS representation of an object as string."),
     // ------------------------------------------------------------------
-    env: function env(_env) {
-      _env = _env || this;
-      var names = Object.keys(_env.env);
+    env: doc(function (env) {
+      env = env || this;
+      var names = Object.keys(env.env);
       var result;
 
       if (names.length) {
@@ -3650,21 +3675,25 @@ function _typeof(obj) {
         result = nil;
       }
 
-      if (_env.parent !== undefined) {
-        return this.get('env').call(this, _env.parent).append(result);
+      if (env.parent !== undefined) {
+        return this.get('env').call(this, env.parent).append(result);
       }
 
       return result;
-    },
-    'new': function _new(obj) {
+    }, "(env obj)\n\n            Function return list values (functions and variables) inside environment."),
+    'new': doc(function (obj) {
       for (var _len6 = arguments.length, args = new Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
         args[_key6 - 1] = arguments[_key6];
       }
 
       return _construct(obj, args);
-    },
+    }, "(new obj . args)\n\n            Function create new JavaScript instance of an object."),
     // ------------------------------------------------------------------
-    '.': function _(obj) {
+    '.': doc(function (obj) {
+      if (typeof obj === 'function' && obj.__bind) {
+        obj = obj.__bind.fn;
+      }
+
       for (var _len7 = arguments.length, args = new Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
         args[_key7 - 1] = arguments[_key7];
       }
@@ -3684,9 +3713,16 @@ function _typeof(obj) {
       }
 
       return value;
+    }, "(. obj . args)\n\n            Function use object as based and keep using arguments to get the\n            property of JavaScript object. Arguments need to be a strings.\n            e.g. `(. console \"log\")` if you use any function inside LIPS is\n            will be weakly bind (can be rebind), so you can call this log function\n            without problem unlike in JavaScript when you use\n           `var log = console.log`."),
+    'unbind': function unbind(obj) {
+      if (typeof obj === 'function' && obj.__bind) {
+        return obj.__bind.fn;
+      }
+
+      return obj;
     },
     // ------------------------------------------------------------------
-    type: function type(obj) {
+    type: doc(function (obj) {
       var mapping = {
         'pair': Pair,
         'symbol': _Symbol
@@ -3706,18 +3742,18 @@ function _typeof(obj) {
 
       if (obj instanceof LNumber) {
         if (obj.isBigNumber()) {
-          return 'LNumber(bigint)';
+          return 'bigint';
         }
 
         return 'number';
       }
 
       return _typeof(obj);
-    },
+    }, "(type object)\n\n            Function return type of an object as string."),
     // ------------------------------------------------------------------
-    'instanceof': function _instanceof(obj, type) {
+    'instanceof': doc(function (type, obj) {
       return obj instanceof type;
-    },
+    }, "(instanceof type obj)\n\n            Function check of object is instance of object."),
     // ------------------------------------------------------------------
     'number?': LNumber.isNumber,
     // ------------------------------------------------------------------
@@ -3734,7 +3770,7 @@ function _typeof(obj) {
     },
     // ------------------------------------------------------------------
     'null?': function _null(obj) {
-      return is_null(obj) || obj instanceof Pair && obj.isEmptyList();
+      return isNull(obj) || obj instanceof Pair && obj.isEmptyList();
     },
     // ------------------------------------------------------------------
     'boolean?': function boolean(obj) {
@@ -3815,9 +3851,9 @@ function _typeof(obj) {
     apply: new Macro('apply', function (code) {
       var _this6 = this;
 
-      var _ref16 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref16.dynamic_scope,
-          error = _ref16.error;
+      var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref15.dynamic_scope,
+          error = _ref15.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -4327,9 +4363,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': equal,
     // ------------------------------------------------------------------
-    or: new Macro('or', function (code, _ref17) {
-      var dynamic_scope = _ref17.dynamic_scope,
-          error = _ref17.error;
+    or: new Macro('or', function (code, _ref16) {
+      var dynamic_scope = _ref16.dynamic_scope,
+          error = _ref16.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -4377,9 +4413,9 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     and: new Macro('and', function (code) {
-      var _ref18 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref18.dynamic_scope,
-          error = _ref18.error;
+      var _ref17 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref17.dynamic_scope,
+          error = _ref17.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -4620,10 +4656,10 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function get_function_args(rest, _ref19) {
-    var env = _ref19.env,
-        dynamic_scope = _ref19.dynamic_scope,
-        error = _ref19.error;
+  function get_function_args(rest, _ref18) {
+    var env = _ref18.env,
+        dynamic_scope = _ref18.dynamic_scope,
+        error = _ref18.error;
     var args = [];
     var node = rest;
 
@@ -4634,20 +4670,6 @@ function _typeof(obj) {
           dynamic_scope: dynamic_scope,
           error: error
         });
-
-        if (dynamic_scope) {
-          if (isPromise(arg)) {
-            arg = arg.then(function (arg) {
-              if (typeof arg === 'function') {
-                return arg.bind(dynamic_scope);
-              }
-
-              return arg;
-            });
-          } else if (typeof arg === 'function') {
-            arg = arg.bind(dynamic_scope);
-          }
-        }
 
         args.push(arg);
         node = node.cdr;
@@ -4685,11 +4707,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref20 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref20.env,
-        dynamic_scope = _ref20.dynamic_scope,
-        _ref20$error = _ref20.error,
-        error = _ref20$error === void 0 ? function () {} : _ref20$error;
+    var _ref19 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref19.env,
+        dynamic_scope = _ref19.dynamic_scope,
+        _ref19$error = _ref19.error,
+        error = _ref19$error === void 0 ? function () {} : _ref19$error;
 
     try {
       if (dynamic_scope === true) {
@@ -4707,7 +4729,7 @@ function _typeof(obj) {
       };
       var value;
 
-      if (is_null(code)) {
+      if (isNull(code)) {
         return code;
       }
 
@@ -4973,7 +4995,7 @@ function _typeof(obj) {
   }); // --------------------------------------
 
   return {
-    version: '0.9.1',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

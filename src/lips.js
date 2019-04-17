@@ -351,6 +351,23 @@
         });
     }
     // ----------------------------------------------------------------------
+    // :: documentaton decorator to LIPS functions if lines starts with :
+    // :: they are ignored (not trim) otherwise it trim so
+    // :: so you can have indent in source code
+    // ----------------------------------------------------------------------
+    function doc(fn, docs) {
+        if (docs) {
+            fn.__doc__ = docs.split('\n').map(line => {
+                if (line.match(/^:/)) {
+                    return line.replace(/^\s*:/, '');
+                } else {
+                    return line.trim();
+                }
+            }).join('\n');
+        }
+        return fn;
+    }
+    // ----------------------------------------------------------------------
     function dump(arr) {
         if (false) {
             console.log(arr.map((arg) => {
@@ -858,11 +875,12 @@
     // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
-    function Macro(name, fn) {
+    function Macro(name, fn, doc) {
         if (typeof this !== 'undefined' && this.constructor !== Macro ||
             typeof this === 'undefined') {
             return new Macro(name, fn);
         }
+        this.__doc__ = doc;
         this.name = name;
         this.fn = fn;
     }
@@ -929,7 +947,7 @@
     }
     // ----------------------------------------------------------------------
     // :: check for nullish values
-    function is_null(value) {
+    function isNull(value) {
         return typeof value === 'undefined' || value === nil || value === null;
     }
     // ----------------------------------------------------------------------
@@ -940,20 +958,26 @@
     // ----------------------------------------------------------------------
     function isPromise(o) {
         return o instanceof Promise ||
-            (typeof o !== 'undefined' && typeof o.then === 'function');
+            (o && typeof o !== 'undefined' && typeof o.then === 'function');
     }
     // ----------------------------------------------------------------------
     // :: weak version fn.bind as function - it can be rebinded and
     // :: and applied with different context after bind
     // ----------------------------------------------------------------------
     function weakBind(fn, context, ...args) {
-        let binded = function(...moreArgs) {
+        let binded = function binded(...moreArgs) {
             const args = [...binded.__bind.args, ...moreArgs];
             return binded.__bind.fn.apply(context, args);
         };
+        if (fn.__doc__) {
+            binded.__doc__ = fn.__doc__;
+        }
         binded.__bind = {
             args: fn.__bind ? fn.__bind.args.concat(args) : args,
             fn: fn.__bind ? fn.__bind.fn : fn
+        };
+        binded.toString = function() {
+            return binded.__bind.fn.toString();
         };
         binded.apply = function(context, args) {
             return binded.__bind.fn.apply(context, args);
@@ -1347,7 +1371,7 @@
                 if (type === 'function') {
                     // this is maily done for console.log
                     if (isNativeFunction(root[name])) {
-                        return root[name].bind(root);
+                        return weakBind(root[name], root);
                     } else {
                         return root[name];
                     }
@@ -1444,33 +1468,40 @@
         'this': function() {
             return this;
         },
-        /*
-        test: function() {
-            return Promise.resolve(undefined);
-        },*/
+        help: doc(function(obj) {
+            return obj.__doc__;
+        }, `(help object)
+
+            Function returns documentation for function or macro.`),
         // ------------------------------------------------------------------
-        cons: function(car, cdr) {
+        cons: doc(function(car, cdr) {
             if (isEmptyList(cdr)) {
                 cdr = nil;
             }
             return new Pair(car, cdr);
-        },
+        }, `(cons left right)
+
+            Function return new Pair out of two arguments.`),
         // ------------------------------------------------------------------
-        car: function(list) {
+        car: doc(function(list) {
             if (list instanceof Pair) {
                 return list.car;
             } else {
                 throw new Error('argument to car need to be a list');
             }
-        },
+        }, `(car pair)
+
+            Function returns car (head) of the list/pair.`),
         // ------------------------------------------------------------------
-        cdr: function(list) {
+        cdr: doc(function(list) {
             if (list instanceof Pair) {
                 return list.cdr;
             } else {
                 throw new Error('argument to cdr need to be a list');
             }
-        },
+        }, `(cdr pair)
+
+            Function returns cdr (tail) of the list/pair.`),
         // ------------------------------------------------------------------
         'set!': new Macro('set!', function(code, { dynamic_scope, error } = {}) {
             if (dynamic_scope) {
@@ -1505,21 +1536,32 @@
             } else {
                 ref.set(code.car, value);
             }
-        }),
+        }, `(set! name value)
+
+            Macro that can be used to set the value of the variable (mutate)
+            it search the scope chain until it finds first non emtpy slot and set it.`),
         // ------------------------------------------------------------------
-        'set-car!': function(slot, value) {
+        'set-car!': doc(function(slot, value) {
             slot.car = value;
-        },
+        }, `(set-car! obj value)
+
+            Function that set car (head) of the list/pair to specified value.
+            It can destroy the list. Old value is lost.`),
         // ------------------------------------------------------------------
-        'set-cdr!': function(slot, value) {
+        'set-cdr!': doc(function(slot, value) {
             slot.cdr = value;
-        },
+        }, `(set-cdr! obj value)
+
+            Function that set cdr (tail) of the list/pair to specified value.
+            It can destroy the list. Old value is lost.`),
         // ------------------------------------------------------------------
-        'empty?': function(x) {
+        'empty?': doc(function(x) {
             return typeof x === 'undefined' || isEmptyList(x);
-        },
+        }, `(empty? object)
+
+            Function return true if value is undfined empty list.`),
         // ------------------------------------------------------------------
-        assoc: function(key, list) {
+        assoc: doc(function(key, list) {
             if (key instanceof Pair && !(list instanceof Pair)) {
                 throw new Error('First argument to assoc new to a key');
             }
@@ -1536,15 +1578,24 @@
                 }
             }
             return nil;
-        },
+        }, `(assoc key alist)
+
+            Function search Alist (list of pairs) until it find the one that
+            have head set equal to key, and return found pair.`),
         // ------------------------------------------------------------------
-        gensym: gensym,
+        gensym: doc(
+            gensym,
+            `(gensym)
+
+             Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
-        load: function(file) {
+        load: doc(function(file) {
             root.fetch(file).then(res => res.text()).then(code => {
                 this.get('eval')(this.get('read')(code));
             });
-        },
+        }, `(load filename)
+
+            Function fetch the file and evaluate its content as LIPS code.`),
         // ------------------------------------------------------------------
         'while': new Macro('while', async function(code, { dynamic_scope, error }) {
             var self = this;
@@ -1572,7 +1623,9 @@
                     return result;
                 }
             }
-        }),
+        }, `(while cond . body)
+
+            Macro that create a loop, it exectue body untill cond expression is false`),
         // ------------------------------------------------------------------
         'if': new Macro('if', function(code, { dynamic_scope, error }) {
             if (dynamic_scope) {
@@ -1603,11 +1656,30 @@
             } else {
                 return resolve(cond);
             }
-        }),
+        }, `(if cond true-expr false-expr)
+
+            Macro evaluate condition expression and if the value is true, it
+            evaluate and return true expression if not it evaluate and return
+            false expression`),
         // ------------------------------------------------------------------
-        'let*': let_macro(true),
+        'let*': doc(
+            let_macro(true),
+            `(let* ((a value-a) (b value-b)) body)
+
+             Macro that creates new environment, then evaluate and assign values to
+             names and then evaluate the body in context of that environment.
+             Values are evaluated sequentialy and next value can access to
+             previous values/names.`),
         // ------------------------------------------------------------------
-        'let': let_macro(false),
+        'let': doc(
+            let_macro(false),
+            `(let ((a value-a) (b value-b)) body)
+
+             Macro that creates new environment, then evaluate and assign values to
+             names and then evaluate the body in context of that environment.
+             Values are evaluated sequentialy but you can't access
+             previous values/names when next are evaluated. You can only get them
+             from body of let expression.`),
         // ------------------------------------------------------------------
         'begin': new Macro('begin', function(code, { dynamic_scope, error }) {
             var arr = this.get('list->array')(code);
@@ -1723,6 +1795,12 @@
         // ------------------------------------------------------------------
         lambda: new Macro('lambda', function(code, { dynamic_scope, error } = {}) {
             var self = this;
+            var __doc__;
+            if (code.cdr instanceof Pair &&
+                typeof code.cdr.car === 'string' &&
+                code.cdr.cdr !== nil) {
+                __doc__ = code.cdr.car;
+            }
             function lambda(...args) {
                 var env = (dynamic_scope ? this : self).inherit('lambda');
                 var name = code.car;
@@ -1755,12 +1833,13 @@
                 if (dynamic_scope) {
                     dynamic_scope = env;
                 }
-                var output = new Pair(new Symbol('begin'), code.cdr);
+                var rest = __doc__ ? code.cdr.cdr : code.cdr;
+                var output = new Pair(new Symbol('begin'), rest);
                 return evaluate(output, { env, dynamic_scope, error });
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
             if (!(code.car instanceof Pair)) {
-                return lambda; // variable arguments
+                return doc(lambda, __doc__); // variable arguments
             }
             // list of arguments (name don't matter
             var args = new Array(length).fill(0).map((_, i) => 'a' + i).join(',');
@@ -1768,8 +1847,15 @@
             var wrapper = new Function(`f`, `return function(${args}) {
                 return f.apply(this, arguments);
             };`);
-            return wrapper(lambda);
-        }),
+            // wrap and decorate with __doc__
+            return doc(wrapper(lambda), __doc__);
+        }, `(lambda (a b) body)
+            (lambda args body)
+            (lambda (a b . rest) body)
+
+            Macro lambda create new anonymous function, if first element of the body
+            is string and there is more elements it will be documentation, that can
+            be read using (help fn)`),
         'macroexpand': new Macro('macro-expand', macro_expand()),
         'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
         // ------------------------------------------------------------------
@@ -1822,11 +1908,23 @@
                     }
                 });
             }
-        }),
+        }, `(define-macro (name . args) body)
+
+             Meta macro, macro that create new macros, if return value is list structure
+             it will be evaluated when macro is invoked. You can use quasiquote \` and
+             unquote , and unquote-splice ,@ inside to create expression that will be
+             evaluated on runtime. Macros works like this: if you pass any expression to
+             macro the arguments will not be evaluated unless macro itself evaluate it.
+             Because of this macro can manipulate expression (arguments) as lists.`),
         // ------------------------------------------------------------------
         quote: new Macro('quote', function(arg) {
             return quote(arg.car);
-        }),
+        }, `(quote expression)
+
+            Macro that return single lips expression as data (it don't evaluate its
+            argument). It will return list of pairs if put in front of lips code.
+            And if put in fron of symbol it will return that symbol not value
+            associated with that name.`),
         // ------------------------------------------------------------------
         quasiquote: new Macro('quasiquote', function(arg, { dynamic_scope, error }) {
             var self = this;
@@ -1933,17 +2031,37 @@
                 return pair;
             }
             return recur(arg.car).then(unquoting).then(quote);
-        }),
+        }, `(quasiquote list ,value ,@value)
+
+            Similar macro to \`quote\` but inside it you can use special
+            expressions unquote abbreviated to , that will evaluate expresion inside
+            and return its value or unquote-splicing abbreviated to ,@ that will
+            evaluate expression but return value without parenthesis (it will join)
+            the list with its value. Best used with macros but it can be used outside`),
         // ------------------------------------------------------------------
-        clone: function(list) {
+        clone: doc(function(list) {
             return list.clone();
-        },
+        }, `(clone list)
+
+            Function return clone of the list.`),
         // ------------------------------------------------------------------
-        append: function(list, item) {
-            return list.clone().append([item]);
-        },
+        append: doc(function(list, item) {
+            return this.get('append!')(list.clone(), item);
+        }, `(append list item)
+
+            Function will create new list with value appended to the end. It return
+            New list.`),
+        'append!': doc(function(list, item) {
+            if (isNull(item) || isEmptyList(item)) {
+                return list;
+            }
+            return list.append(item);
+        }, `(append! name expression)
+
+             Destructive version of append, it modify the list in place. It return
+             original list.`),
         // ------------------------------------------------------------------
-        reverse: function(arg) {
+        reverse: doc(function(arg) {
             if (arg instanceof Pair) {
                 var arr = this.get('list->array')(arg).reverse();
                 return this.get('array->list')(arr);
@@ -1952,9 +2070,12 @@
             } else {
                 return arg.reverse();
             }
-        },
+        }, `(reverse list)
+
+            Function will reverse the list or array. If value is not a list
+            or array it will throw exception.`),
         // ------------------------------------------------------------------
-        nth: function(index, obj) {
+        nth: doc(function(index, obj) {
             if (obj instanceof Pair) {
                 var node = obj;
                 var count = 0;
@@ -1971,44 +2092,54 @@
             } else {
                 throw new Error('Invalid object for nth');
             }
-        },
+        }, `(nth index obj)
+
+            Function return nth element of the list or array. If used with different
+            value it will throw exception`),
         // ------------------------------------------------------------------
-        'append!': new Macro('append!', function(code, { dynamic_scope, error }) {
-            if (dynamic_scope) {
-                dynamic_scope = this;
-            }
-            var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
-            return this.get(code.car).append([value]);
-        }),
-        // ------------------------------------------------------------------
-        list: function() {
+        list: doc(function() {
             return Pair.fromArray([].slice.call(arguments));
-        },
-        concat: function() {
+        }, `(list . args)
+
+            Function create new list out of its arguments.`),
+        concat: doc(function() {
             return [].join.call(arguments, '');
-        },
+        }, `(concat . strings)
+
+            Function create new string by joining its arguments`),
         // ------------------------------------------------------------------
-        join: function(separator, list) {
+        join: doc(function(separator, list) {
             return this.get('list->array')(list).join(separator);
-        },
+        }, `(join separator list)
+
+            Function return string by joining elements of the list`),
         // ------------------------------------------------------------------
-        split: function(string, separator) {
+        split: doc(function(separator, string) {
             return this.get('array->list')(string.split(separator));
-        },
+        }, `(split separator string)
+
+            Function create list by splitting string by separatar that can
+            be a string or regular expression.`),
         // ------------------------------------------------------------------
-        replace: function(string, pattern, replacement) {
+        replace: doc(function(pattern, replacement, string) {
             return string.replace(pattern, replacement);
-        },
+        }, `(replace pattern replacement string)
+
+            Function change patter to replacement inside string.`),
         // ------------------------------------------------------------------
-        match: function(string, pattern) {
+        match: doc(function(pattern, string) {
             return this.get('array->list')(string.match(pattern));
-        },
+        }, `(match pattern string)
+
+            function return match object from JavaScript as list.`),
         // ------------------------------------------------------------------
-        search: function(string, pattern) {
+        search: doc(function(pattern, string) {
             return string.search(pattern);
-        },
+        }, `(search pattern string)
+
+            Function return first found index of the pattern inside a string`),
         // ------------------------------------------------------------------
-        string: function string(obj, quote) {
+        string: doc(function string(obj, quote) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
                 return '<#jQuery(' + obj.length + ')>';
@@ -2048,9 +2179,11 @@
                 return obj.toString();
             }
             return obj;
-        },
+        }, `(string obj)
+
+            Function return string LIPS representation of an object as string.`),
         // ------------------------------------------------------------------
-        env: function(env) {
+        env: doc(function(env) {
             env = env || this;
             var names = Object.keys(env.env);
             var result;
@@ -2063,12 +2196,19 @@
                 return this.get('env').call(this, env.parent).append(result);
             }
             return result;
-        },
-        'new': function(obj, ...args) {
+        }, `(env obj)
+
+            Function return list values (functions and variables) inside environment.`),
+        'new': doc(function(obj, ...args) {
             return new obj(...args);
-        },
+        }, `(new obj . args)
+
+            Function create new JavaScript instance of an object.`),
         // ------------------------------------------------------------------
-        '.': function(obj, ...args) {
+        '.': doc(function(obj, ...args) {
+            if (typeof obj === 'function' && obj.__bind) {
+                obj = obj.__bind.fn;
+            }
             for (let arg of args) {
                 var name = arg instanceof Symbol ? arg.name : arg;
                 var value = obj[name];
@@ -2078,9 +2218,22 @@
                 obj = value;
             }
             return value;
+        }, `(. obj . args)
+
+            Function use object as based and keep using arguments to get the
+            property of JavaScript object. Arguments need to be a strings.
+            e.g. \`(. console "log")\` if you use any function inside LIPS is
+            will be weakly bind (can be rebind), so you can call this log function
+            without problem unlike in JavaScript when you use
+           \`var log = console.log\`.`),
+        'unbind': function(obj) {
+            if (typeof obj === 'function' && obj.__bind) {
+                return obj.__bind.fn;
+            }
+            return obj;
         },
         // ------------------------------------------------------------------
-        type: function(obj) {
+        type: doc(function(obj) {
             var mapping = {
                 'pair': Pair,
                 'symbol': Symbol
@@ -2092,16 +2245,20 @@
             }
             if (obj instanceof LNumber) {
                 if (obj.isBigNumber()) {
-                    return 'LNumber(bigint)';
+                    return 'bigint';
                 }
                 return 'number';
             }
             return typeof obj;
-        },
+        }, `(type object)
+
+            Function return type of an object as string.`),
         // ------------------------------------------------------------------
-        'instanceof': function(obj, type) {
+        'instanceof': doc(function(type, obj) {
             return obj instanceof type;
-        },
+        }, `(instanceof type obj)
+
+            Function check of object is instance of object.`),
         // ------------------------------------------------------------------
         'number?': LNumber.isNumber,
         // ------------------------------------------------------------------
@@ -2118,7 +2275,7 @@
         },
         // ------------------------------------------------------------------
         'null?': function(obj) {
-            return is_null(obj) || (obj instanceof Pair && obj.isEmptyList());
+            return isNull(obj) || (obj instanceof Pair && obj.isEmptyList());
         },
         // ------------------------------------------------------------------
         'boolean?': function(obj) {
@@ -2643,7 +2800,7 @@
         while (true) {
             if (node instanceof Pair) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
-                if (dynamic_scope) {
+                if (false && dynamic_scope) {
                     if (isPromise(arg)) {
                         arg = arg.then(arg => {
                             if (typeof arg === 'function') {
@@ -2694,7 +2851,7 @@
             }
             var eval_args = { env, dynamic_scope, error };
             var value;
-            if (is_null(code)) {
+            if (isNull(code)) {
                 return code;
             }
             if (isEmptyList(code)) {
