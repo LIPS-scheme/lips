@@ -152,15 +152,8 @@
         str.split(pre_parse_re).filter(Boolean).forEach(function(string) {
             if (string.match(pre_parse_re)) {
                 col = 0;
-                var indent;
                 if (current_line.length) {
                     var last_token = last_item(current_line);
-                    if (string.match(string_re) && last_token.token.match(/^\s+$/) &&
-                        line > 0) {
-                        indent = current_line.reduce((acc, token) => {
-                            return acc + token.token.length;
-                        }, 0) + 1;
-                    }
                     if (last_token.token.match(/\n/)) {
                         var last_line = last_token.token.split('\n').pop();
                         col += last_line.length;
@@ -175,9 +168,6 @@
                     token: string,
                     offset: count
                 };
-                if (typeof indent !== 'undefined') {
-                    token.indent = indent;
-                }
                 tokens.push(token);
                 current_line.push(token);
                 count += string.length;
@@ -2935,9 +2925,9 @@
         }
         // proper indent of multi line strings
         var tokens = tokenize(string, true).map(function(token) {
-            if (token.token.match(string_re) && token.indent) {
-                var indent = new Array(token.indent + 1).join(' ');
-                var re = new RegExp('^' + indent);
+            if (token.token.match(string_re) && token.col) {
+                // col + 1 because of open quote character
+                var re = new RegExp(`^ {${token.col + 1}}`);
                 return token.token.split('\n').map(line => {
                     return line.replace(re, '');
                 }).join('\n');
