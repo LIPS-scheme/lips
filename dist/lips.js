@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Wed, 17 Apr 2019 10:38:27 +0000
+ * build: Wed, 17 Apr 2019 10:50:48 +0000
  */
 (function () {
 'use strict';
@@ -1058,13 +1058,15 @@ function _typeof(obj) {
     str.split(pre_parse_re).filter(Boolean).forEach(function (string) {
       if (string.match(pre_parse_re)) {
         col = 0;
-        var indent = 0;
+        var indent;
 
         if (current_line.length) {
           var last_token = last_item(current_line);
 
           if (string.match(string_re) && last_token.token.match(/^\s+$/) && line > 0) {
-            indent = last_token.token.length + 1;
+            indent = current_line.reduce(function (acc, token) {
+              return acc + token.token.length;
+            }, 0) + 1;
           }
 
           if (last_token.token.match(/\n/)) {
@@ -1079,11 +1081,15 @@ function _typeof(obj) {
 
         var token = {
           col: col,
-          indent: indent,
           line: line,
           token: string,
           offset: count
         };
+
+        if (typeof indent !== 'undefined') {
+          token.indent = indent;
+        }
+
         tokens.push(token);
         current_line.push(token);
         count += string.length;

@@ -152,12 +152,14 @@
         str.split(pre_parse_re).filter(Boolean).forEach(function(string) {
             if (string.match(pre_parse_re)) {
                 col = 0;
-                var indent = 0;
+                var indent;
                 if (current_line.length) {
                     var last_token = last_item(current_line);
                     if (string.match(string_re) && last_token.token.match(/^\s+$/) &&
                         line > 0) {
-                        indent = last_token.token.length + 1;
+                        indent = current_line.reduce((acc, token) => {
+                            return acc + token.token.length;
+                        }, 0) + 1;
                     }
                     if (last_token.token.match(/\n/)) {
                         var last_line = last_token.token.split('\n').pop();
@@ -169,11 +171,13 @@
                 }
                 var token = {
                     col,
-                    indent,
                     line,
                     token: string,
                     offset: count
                 };
+                if (typeof indent !== 'undefined') {
+                    token.indent = indent;
+                }
                 tokens.push(token);
                 current_line.push(token);
                 count += string.length;
