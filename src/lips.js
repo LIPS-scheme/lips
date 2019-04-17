@@ -134,11 +134,12 @@
     // ----------------------------------------------------------------------
     /* eslint-disable */
     var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
+    var string_re = /"(?:\\[\S\s]|[^"])*"/g;
     var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|`|[^(\s)]+)/gim;
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function last_item(array) {
-        return array[array.length - 1];
+    function last_item(array, n = 1) {
+        return array[array.length - n];
     }
     // ----------------------------------------------------------------------
     function tokens(str) {
@@ -151,8 +152,13 @@
         str.split(pre_parse_re).filter(Boolean).forEach(function(string) {
             if (string.match(pre_parse_re)) {
                 col = 0;
+                var indent = 0;
                 if (current_line.length) {
                     var last_token = last_item(current_line);
+                    if (string.match(string_re) && last_token.token.match(/^\s+$/) &&
+                        line > 0) {
+                        indent = last_token.token.length + 1;
+                    }
                     if (last_token.token.match(/\n/)) {
                         var last_line = last_token.token.split('\n').pop();
                         col += last_line.length;
@@ -163,6 +169,7 @@
                 }
                 var token = {
                     col,
+                    indent,
                     line,
                     token: string,
                     offset: count
@@ -355,15 +362,15 @@
     // :: they are ignored (not trim) otherwise it trim so
     // :: so you can have indent in source code
     // ----------------------------------------------------------------------
-    function doc(fn, docs) {
-        if (docs) {
-            fn.__doc__ = docs.split('\n').map(line => {
-                if (line.match(/^:/)) {
-                    return line.replace(/^\s*:/, '');
-                } else {
+    function doc(fn, doc, dump) {
+        if (doc) {
+            if (dump) {
+                fn.__doc__ = doc;
+            } else {
+                fn.__doc__ = doc.split('\n').map(line => {
                     return line.trim();
-                }
-            }).join('\n');
+                }).join('\n');
+            }
         }
         return fn;
     }
@@ -884,8 +891,8 @@
         this.name = name;
         this.fn = fn;
     }
-    Macro.defmacro = function(name, fn) {
-        var macro = new Macro(name, fn);
+    Macro.defmacro = function(name, fn, doc) {
+        var macro = new Macro(name, fn, doc);
         macro.defmacro = true;
         return macro;
     };
@@ -1839,7 +1846,7 @@
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
             if (!(code.car instanceof Pair)) {
-                return doc(lambda, __doc__); // variable arguments
+                return doc(lambda, __doc__, true); // variable arguments
             }
             // list of arguments (name don't matter
             var args = new Array(length).fill(0).map((_, i) => 'a' + i).join(',');
@@ -1848,7 +1855,7 @@
                 return f.apply(this, arguments);
             };`);
             // wrap and decorate with __doc__
-            return doc(wrapper(lambda), __doc__);
+            return doc(wrapper(lambda), __doc__, true);
         }, `(lambda (a b) body)
             (lambda args body)
             (lambda (a b . rest) body)
@@ -1868,6 +1875,11 @@
             }
             if (macro.car instanceof Pair && macro.car.car instanceof Symbol) {
                 var name = macro.car.car.name;
+                var __doc__;
+                if (typeof macro.cdr.car === 'string' &&
+                    macro.cdr.cdr !== nil) {
+                    __doc__ = macro.cdr.car;
+                }
                 this.env[name] = Macro.defmacro(name, function(code, { macro_expand }) {
                     var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
@@ -1891,7 +1903,8 @@
                     // evaluate macro
                     if (macro.cdr instanceof Pair) {
                         // this eval will return lips code
-                        var pair = macro.cdr.reduce(function(result, node) {
+                        var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
+                        var pair = rest.reduce(function(result, node) {
                             return evaluate(node, { env, dynamic_scope, error });
                         });
                         if (macro_expand) {
@@ -1906,7 +1919,7 @@
                         }
                         return clear(pair);
                     }
-                });
+                }, __doc__);
             }
         }, `(define-macro (name . args) body)
 
@@ -2233,26 +2246,11 @@
             return obj;
         },
         // ------------------------------------------------------------------
-        type: doc(function(obj) {
-            var mapping = {
-                'pair': Pair,
-                'symbol': Symbol
-            };
-            for (let [key, value] of Object.entries(mapping)) {
-                if (obj instanceof value) {
-                    return key;
-                }
-            }
-            if (obj instanceof LNumber) {
-                if (obj.isBigNumber()) {
-                    return 'bigint';
-                }
-                return 'number';
-            }
-            return typeof obj;
-        }, `(type object)
+        type: doc(
+            type,
+            `(type object)
 
-            Function return type of an object as string.`),
+             Function return type of an object as string.`),
         // ------------------------------------------------------------------
         'instanceof': doc(function(type, obj) {
             return obj instanceof type;
@@ -2739,18 +2737,28 @@
     } else if (typeof window !== 'undefined') {
         global_env.set('window', window);
     }
-    function type(value) {
-        if (typeof value === "string") {
-            return "string";
-        } else if (value instanceof LNumber) {
-            return "number";
-        } else if (value instanceof RegExp) {
-            return "regex";
-        } else if (typeof value === 'boolean') {
-            return 'boolean';
-        } else {
-            return 'unknown type';
+    // ----------------------------------------------------------------------
+    function type(obj) {
+        var mapping = {
+            'pair': Pair,
+            'symbol': Symbol,
+            'native_symbol': root.Symbol
+        };
+        for (let [key, value] of Object.entries(mapping)) {
+            if (obj instanceof value) {
+                return key;
+            }
         }
+        if (obj instanceof LNumber) {
+            if (obj.isBigNumber()) {
+                return 'bigint';
+            }
+            return 'number';
+        }
+        if (obj instanceof RegExp) {
+            return "regex";
+        }
+        return typeof obj;
     }
     // ----------------------------------------------------------------------
     // :; wrap tree of Promises with single Promise or return argument as is
@@ -2886,30 +2894,14 @@
             } else if (typeof first === 'function') {
                 value = first;
             }
-            /*
-            function debug(args, flag, scope) {
-                if (false) {
-                    window.args = window.args || {};
-                    if (first instanceof Symbol) {
-                        window.args[first.name] = window.args[first.name] || [];
-                        window.args[first.name].push(args);
-                        if (Symbol.is(first, /fn|\+|user-age/)) {
-                            console.log({fn: first.name, flag, args});
-                        }
-                    }
-                }
-            }
-            */
             if (typeof value === 'function') {
                 var args = get_function_args(rest, eval_args);
                 if (isPromise(args)) {
                     return args.then((args) => {
                         var scope = dynamic_scope || env;
-                        //debug(first, 'async', scope);
                         return quote(maybe_promise(value.apply(scope, args)));
                     });
                 }
-                //debug(first, 'sync', dynamic_scope || env);
                 return quote(maybe_promise(value.apply(dynamic_scope || env, args)));
             } else if (code instanceof Symbol) {
                 value = env.get(code);
@@ -2937,7 +2929,20 @@
         } else {
             env = env || global_env;
         }
-        var list = parse(tokenize(string));
+        // proper indent of multi line strings
+        var tokens = tokenize(string, true).map(function(token) {
+            if (token.token.match(string_re) && token.indent) {
+                var indent = new Array(token.indent + 1).join(' ');
+                var re = new RegExp('^' + indent);
+                return token.token.split('\n').map(line => {
+                    return line.replace(re, '');
+                }).join('\n');
+            }
+            return token.token.trim();
+        }).filter(function(token) {
+            return token && !token.match(/^;/);
+        });
+        var list = parse(tokens);
         var results = [];
         while (true) {
             var code = list.shift();

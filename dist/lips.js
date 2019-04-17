@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Wed, 17 Apr 2019 08:55:17 +0000
+ * build: Wed, 17 Apr 2019 10:38:27 +0000
  */
 (function () {
 'use strict';
@@ -1037,12 +1037,14 @@ function _typeof(obj) {
 
 
   var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
+  var string_re = /"(?:\\[\S\s]|[^"])*"/g;
   var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|`|[^(\s)]+)/gim;
   /* eslint-enable */
   // ----------------------------------------------------------------------
 
   function last_item(array) {
-    return array[array.length - 1];
+    var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+    return array[array.length - n];
   } // ----------------------------------------------------------------------
 
 
@@ -1056,9 +1058,14 @@ function _typeof(obj) {
     str.split(pre_parse_re).filter(Boolean).forEach(function (string) {
       if (string.match(pre_parse_re)) {
         col = 0;
+        var indent = 0;
 
         if (current_line.length) {
           var last_token = last_item(current_line);
+
+          if (string.match(string_re) && last_token.token.match(/^\s+$/) && line > 0) {
+            indent = last_token.token.length + 1;
+          }
 
           if (last_token.token.match(/\n/)) {
             var last_line = last_token.token.split('\n').pop();
@@ -1072,6 +1079,7 @@ function _typeof(obj) {
 
         var token = {
           col: col,
+          indent: indent,
           line: line,
           token: string,
           offset: count
@@ -1287,15 +1295,15 @@ function _typeof(obj) {
   // ----------------------------------------------------------------------
 
 
-  function doc(fn, docs) {
-    if (docs) {
-      fn.__doc__ = docs.split('\n').map(function (line) {
-        if (line.match(/^:/)) {
-          return line.replace(/^\s*:/, '');
-        } else {
+  function doc(fn, doc, dump) {
+    if (doc) {
+      if (dump) {
+        fn.__doc__ = doc;
+      } else {
+        fn.__doc__ = doc.split('\n').map(function (line) {
           return line.trim();
-        }
-      }).join('\n');
+        }).join('\n');
+      }
     }
 
     return fn;
@@ -1885,8 +1893,8 @@ function _typeof(obj) {
     this.fn = fn;
   }
 
-  Macro.defmacro = function (name, fn) {
-    var macro = new Macro(name, fn);
+  Macro.defmacro = function (name, fn, doc) {
+    var macro = new Macro(name, fn, doc);
     macro.defmacro = true;
     return macro;
   };
@@ -3131,7 +3139,7 @@ function _typeof(obj) {
       var length = code.car instanceof Pair ? code.car.length() : null;
 
       if (!(code.car instanceof Pair)) {
-        return doc(lambda, __doc__); // variable arguments
+        return doc(lambda, __doc__, true); // variable arguments
       } // list of arguments (name don't matter
 
 
@@ -3141,7 +3149,7 @@ function _typeof(obj) {
 
       var wrapper = new Function("f", "return function(".concat(args, ") {\n                return f.apply(this, arguments);\n            };")); // wrap and decorate with __doc__
 
-      return doc(wrapper(lambda), __doc__);
+      return doc(wrapper(lambda), __doc__, true);
     }, "(lambda (a b) body)\n            (lambda args body)\n            (lambda (a b . rest) body)\n\n            Macro lambda create new anonymous function, if first element of the body\n            is string and there is more elements it will be documentation, that can\n            be read using (help fn)"),
     'macroexpand': new Macro('macro-expand', macro_expand()),
     'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
@@ -3160,6 +3168,13 @@ function _typeof(obj) {
 
       if (macro.car instanceof Pair && macro.car.car instanceof _Symbol) {
         var name = macro.car.car.name;
+
+        var __doc__;
+
+        if (typeof macro.cdr.car === 'string' && macro.cdr.cdr !== nil) {
+          __doc__ = macro.cdr.car;
+        }
+
         this.env[name] = Macro.defmacro(name, function (code, _ref13) {
           var macro_expand = _ref13.macro_expand;
           var env = new Environment({}, this, 'defmacro');
@@ -3189,7 +3204,8 @@ function _typeof(obj) {
 
           if (macro.cdr instanceof Pair) {
             // this eval will return lips code
-            var pair = macro.cdr.reduce(function (result, node) {
+            var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
+            var pair = rest.reduce(function (result, node) {
               return evaluate(node, {
                 env: env,
                 dynamic_scope: dynamic_scope,
@@ -3216,7 +3232,7 @@ function _typeof(obj) {
 
             return clear(pair);
           }
-        });
+        }, __doc__);
       }
     }, "(define-macro (name . args) body)\n\n             Meta macro, macro that create new macros, if return value is list structure\n             it will be evaluated when macro is invoked. You can use quasiquote ` and\n             unquote , and unquote-splice ,@ inside to create expression that will be\n             evaluated on runtime. Macros works like this: if you pass any expression to\n             macro the arguments will not be evaluated unless macro itself evaluate it.\n             Because of this macro can manipulate expression (arguments) as lists."),
     // ------------------------------------------------------------------
@@ -3722,34 +3738,7 @@ function _typeof(obj) {
       return obj;
     },
     // ------------------------------------------------------------------
-    type: doc(function (obj) {
-      var mapping = {
-        'pair': Pair,
-        'symbol': _Symbol
-      };
-
-      var _arr2 = Object.entries(mapping);
-
-      for (var _i2 = 0; _i2 < _arr2.length; _i2++) {
-        var _arr2$_i = _slicedToArray(_arr2[_i2], 2),
-            key = _arr2$_i[0],
-            value = _arr2$_i[1];
-
-        if (obj instanceof value) {
-          return key;
-        }
-      }
-
-      if (obj instanceof LNumber) {
-        if (obj.isBigNumber()) {
-          return 'bigint';
-        }
-
-        return 'number';
-      }
-
-      return _typeof(obj);
-    }, "(type object)\n\n            Function return type of an object as string."),
+    type: doc(type, "(type object)\n\n             Function return type of an object as string."),
     // ------------------------------------------------------------------
     'instanceof': doc(function (type, obj) {
       return obj instanceof type;
@@ -4559,20 +4548,41 @@ function _typeof(obj) {
     global_env.set('global', global);
   } else if (typeof window !== 'undefined') {
     global_env.set('window', window);
-  }
+  } // ----------------------------------------------------------------------
 
-  function type(value) {
-    if (typeof value === "string") {
-      return "string";
-    } else if (value instanceof LNumber) {
-      return "number";
-    } else if (value instanceof RegExp) {
-      return "regex";
-    } else if (typeof value === 'boolean') {
-      return 'boolean';
-    } else {
-      return 'unknown type';
+
+  function type(obj) {
+    var mapping = {
+      'pair': Pair,
+      'symbol': _Symbol,
+      'native_symbol': root.Symbol
+    };
+
+    var _arr2 = Object.entries(mapping);
+
+    for (var _i2 = 0; _i2 < _arr2.length; _i2++) {
+      var _arr2$_i = _slicedToArray(_arr2[_i2], 2),
+          key = _arr2$_i[0],
+          value = _arr2$_i[1];
+
+      if (obj instanceof value) {
+        return key;
+      }
     }
+
+    if (obj instanceof LNumber) {
+      if (obj.isBigNumber()) {
+        return 'bigint';
+      }
+
+      return 'number';
+    }
+
+    if (obj instanceof RegExp) {
+      return "regex";
+    }
+
+    return _typeof(obj);
   } // ----------------------------------------------------------------------
   // :; wrap tree of Promises with single Promise or return argument as is
   // :: if tree have no Promises
@@ -4768,33 +4778,16 @@ function _typeof(obj) {
       } else if (typeof first === 'function') {
         value = first;
       }
-      /*
-      function debug(args, flag, scope) {
-          if (false) {
-              window.args = window.args || {};
-              if (first instanceof Symbol) {
-                  window.args[first.name] = window.args[first.name] || [];
-                  window.args[first.name].push(args);
-                  if (Symbol.is(first, /fn|\+|user-age/)) {
-                      console.log({fn: first.name, flag, args});
-                  }
-              }
-          }
-      }
-      */
-
 
       if (typeof value === 'function') {
         var args = get_function_args(rest, eval_args);
 
         if (isPromise(args)) {
           return args.then(function (args) {
-            var scope = dynamic_scope || env; //debug(first, 'async', scope);
-
+            var scope = dynamic_scope || env;
             return quote(maybe_promise(value.apply(scope, args)));
           });
-        } //debug(first, 'sync', dynamic_scope || env);
-
+        }
 
         return quote(maybe_promise(value.apply(dynamic_scope || env, args)));
       } else if (code instanceof _Symbol) {
@@ -4828,7 +4821,7 @@ function _typeof(obj) {
     _exec = _asyncToGenerator(
     /*#__PURE__*/
     regenerator.mark(function _callee12(string, env, dynamic_scope) {
-      var list, results, code, result;
+      var tokens, list, results, code, result;
       return regenerator.wrap(function _callee12$(_context12) {
         while (1) {
           switch (_context12.prev = _context12.next) {
@@ -4839,24 +4832,38 @@ function _typeof(obj) {
                 env = dynamic_scope = global_env;
               } else {
                 env = env || global_env;
-              }
+              } // proper indent of multi line strings
 
-              list = parse(tokenize(string));
+
+              tokens = tokenize(string, true).map(function (token) {
+                if (token.token.match(string_re) && token.indent) {
+                  var indent = new Array(token.indent + 1).join(' ');
+                  var re = new RegExp('^' + indent);
+                  return token.token.split('\n').map(function (line) {
+                    return line.replace(re, '');
+                  }).join('\n');
+                }
+
+                return token.token.trim();
+              }).filter(function (token) {
+                return token && !token.match(/^;/);
+              });
+              list = parse(tokens);
               results = [];
 
-            case 3:
+            case 4:
 
               code = list.shift();
 
               if (code) {
-                _context12.next = 9;
+                _context12.next = 10;
                 break;
               }
 
               return _context12.abrupt("return", results);
 
-            case 9:
-              _context12.next = 11;
+            case 10:
+              _context12.next = 12;
               return evaluate(code, {
                 env: env,
                 dynamic_scope: dynamic_scope,
@@ -4866,15 +4873,15 @@ function _typeof(obj) {
                 }
               });
 
-            case 11:
+            case 12:
               result = _context12.sent;
               results.push(result);
 
-            case 13:
-              _context12.next = 3;
+            case 14:
+              _context12.next = 4;
               break;
 
-            case 15:
+            case 16:
             case "end":
               return _context12.stop();
           }
