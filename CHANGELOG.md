@@ -1,11 +1,11 @@
 ## 0.10.0
 ### Breaking
 * change order of `split`, `replace`, `match`, `search` and `instanceof` so you can use them with `curry`
-* append and append! no require list or nil second argument
+* `append` and `append!` no require list or nil second argument
 ### Features
-* change append! from macro to function (it will work with any value as fist list argument not only with names
-* help function and help system inside function. First argument to lambda and define is now documentation.
-* add pipe function
+* change `append!` from macro to function (it will work with any value as fist list argument not only with names
+* `help` function and help system inside functions. First expression after function arguments is docs.
+* add `pipe` and `compose` function
 ### Bug fixes
 * fix `if` it should not return false if false value is undefined
 * fix even and odd functions with BigInt

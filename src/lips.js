@@ -1093,12 +1093,6 @@
         return fn(...args);
     }
     // ----------------------------------------------------------------------
-    function guardMathOp(fn) {
-        return function(...args) {
-            return guardMathCall(fn, ...args);
-        };
-    }
-    // ----------------------------------------------------------------------
     function pipe(...fns) {
         return function(...args) {
             return fns.reduce((args, f) => [f(...args)], args)[0];
@@ -1109,8 +1103,13 @@
         return pipe(...fns.reverse());
     }
     // ----------------------------------------------------------------------
-    var singleMathOp = compose(curry(limit, 1), guardMathOp);
-    var binaryMathOp = compose(curry(limit, 2), guardMathOp);
+    function limitMathOp(n, fn) {
+        // + 1 so it inlcude function in guardMathCall
+        return limit(n + 1, curry(guardMathCall, fn));
+    }
+    // ----------------------------------------------------------------------
+    var singleMathOp = curry(limitMathOp, 1);
+    var binaryMathOp = curry(limitMathOp, 2);
     // ----------------------------------------------------------------------
     function reduceMathOp(fn) {
         return function(...args) {
@@ -2624,7 +2623,25 @@
 
             Function return list of n numbers from 0 to n - 1`),
         // ------------------------------------------------------------------
-        pipe: pipe,
+        compose: doc(
+            compose,
+            `(compose . fns)
+
+             Higher order function and create new function that apply all functions
+             From right to left and return it's value. Reverse of compose.
+             e.g.:
+             ((compose (curry + 2) (curry * 3)) 3)
+             11
+            `),
+        pipe: doc(
+            pipe,
+            `(pipe . fns)
+
+             Higher order function and create new function that apply all functions
+             From left to right and return it's value. Reverse of compose.
+             e.g.:
+             ((pipe (curry + 2) (curry * 3)) 3)
+             15`),
         curry: doc(
             curry,
             `(curry fn . args)
@@ -2661,8 +2678,8 @@
                 return LNumber(args[0]).neg();
             }
             if (args.length) {
-                return args.reduce(guardMathOp(function(a, b) {
-                    return LNumber(a).add(b);
+                return args.reduce(binaryMathOp(function(a, b) {
+                    return LNumber(a).sub(b);
                 }));
             }
         },
@@ -2895,10 +2912,15 @@
         var mapping = {
             'pair': Pair,
             'symbol': Symbol,
+            'macro': Macro,
+            'array': Array,
             'native_symbol': root.Symbol
         };
         if (obj === nil) {
             return 'nil';
+        }
+        if (obj === null) {
+            return 'null';
         }
         for (let [key, value] of Object.entries(mapping)) {
             if (obj instanceof value) {
@@ -2913,6 +2935,9 @@
         }
         if (obj instanceof RegExp) {
             return "regex";
+        }
+        if (typeof obj === 'object') {
+            return obj.constructor.name;
         }
         return typeof obj;
     }

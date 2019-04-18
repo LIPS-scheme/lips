@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Thu, 18 Apr 2019 20:41:39 +0000
+ * build: Thu, 18 Apr 2019 22:17:27 +0000
  */
 (function () {
 'use strict';
@@ -2257,25 +2257,14 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function guardMathOp(fn) {
-    return function () {
-      for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
-      }
-
-      return guardMathCall.apply(void 0, [fn].concat(args));
-    };
-  } // ----------------------------------------------------------------------
-
-
   function pipe() {
-    for (var _len7 = arguments.length, fns = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-      fns[_key7] = arguments[_key7];
+    for (var _len6 = arguments.length, fns = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      fns[_key6] = arguments[_key6];
     }
 
     return function () {
-      for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
+      for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+        args[_key7] = arguments[_key7];
       }
 
       return fns.reduce(function (args, f) {
@@ -2286,21 +2275,27 @@ function _typeof(obj) {
 
 
   function compose() {
-    for (var _len9 = arguments.length, fns = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-      fns[_key9] = arguments[_key9];
+    for (var _len8 = arguments.length, fns = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+      fns[_key8] = arguments[_key8];
     }
 
     return pipe.apply(void 0, _toConsumableArray(fns.reverse()));
   } // ----------------------------------------------------------------------
 
 
-  var singleMathOp = compose(curry(limit, 1), guardMathOp);
-  var binaryMathOp = compose(curry(limit, 2), guardMathOp); // ----------------------------------------------------------------------
+  function limitMathOp(n, fn) {
+    // + 1 so it inlcude function in guardMathCall
+    return limit(n + 1, curry(guardMathCall, fn));
+  } // ----------------------------------------------------------------------
+
+
+  var singleMathOp = curry(limitMathOp, 1);
+  var binaryMathOp = curry(limitMathOp, 2); // ----------------------------------------------------------------------
 
   function reduceMathOp(fn) {
     return function () {
-      for (var _len10 = arguments.length, args = new Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-        args[_key10] = arguments[_key10];
+      for (var _len9 = arguments.length, args = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        args[_key9] = arguments[_key9];
       }
 
       if (args.length) {
@@ -2311,8 +2306,8 @@ function _typeof(obj) {
 
 
   function curry(fn) {
-    for (var _len11 = arguments.length, init_args = new Array(_len11 > 1 ? _len11 - 1 : 0), _key11 = 1; _key11 < _len11; _key11++) {
-      init_args[_key11 - 1] = arguments[_key11];
+    for (var _len10 = arguments.length, init_args = new Array(_len10 > 1 ? _len10 - 1 : 0), _key10 = 1; _key10 < _len10; _key10++) {
+      init_args[_key10 - 1] = arguments[_key10];
     }
 
     var len = fn.length;
@@ -2320,8 +2315,8 @@ function _typeof(obj) {
       var args = init_args.slice();
 
       function call() {
-        for (var _len12 = arguments.length, more_args = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-          more_args[_key12] = arguments[_key12];
+        for (var _len11 = arguments.length, more_args = new Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+          more_args[_key11] = arguments[_key11];
         }
 
         args = args.concat(more_args);
@@ -2341,8 +2336,8 @@ function _typeof(obj) {
 
   function limit(n, fn) {
     return function () {
-      for (var _len13 = arguments.length, args = new Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-        args[_key13] = arguments[_key13];
+      for (var _len12 = arguments.length, args = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
       }
 
       return fn.apply(void 0, _toConsumableArray(args.slice(0, n)));
@@ -3222,8 +3217,8 @@ function _typeof(obj) {
         var value;
 
         if (name instanceof _Symbol || !isEmptyList(name)) {
-          for (var _len14 = arguments.length, args = new Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-            args[_key14] = arguments[_key14];
+          for (var _len13 = arguments.length, args = new Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+            args[_key13] = arguments[_key13];
           }
 
           while (true) {
@@ -3822,8 +3817,8 @@ function _typeof(obj) {
       return result;
     }, "(env obj)\n\n            Function return list values (functions and variables) inside environment."),
     'new': doc(function (obj) {
-      for (var _len15 = arguments.length, args = new Array(_len15 > 1 ? _len15 - 1 : 0), _key15 = 1; _key15 < _len15; _key15++) {
-        args[_key15 - 1] = arguments[_key15];
+      for (var _len14 = arguments.length, args = new Array(_len14 > 1 ? _len14 - 1 : 0), _key14 = 1; _key14 < _len14; _key14++) {
+        args[_key14 - 1] = arguments[_key14];
       }
 
       return _construct(obj, args);
@@ -3834,8 +3829,8 @@ function _typeof(obj) {
         obj = obj.__bind.fn;
       }
 
-      for (var _len16 = arguments.length, args = new Array(_len16 > 1 ? _len16 - 1 : 0), _key16 = 1; _key16 < _len16; _key16++) {
-        args[_key16 - 1] = arguments[_key16];
+      for (var _len15 = arguments.length, args = new Array(_len15 > 1 ? _len15 - 1 : 0), _key15 = 1; _key15 < _len15; _key15++) {
+        args[_key15 - 1] = arguments[_key15];
       }
 
       var _arr = args;
@@ -3927,8 +3922,8 @@ function _typeof(obj) {
       var _this$get,
           _this5 = this;
 
-      for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
-        args[_key17] = arguments[_key17];
+      for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+        args[_key16] = arguments[_key16];
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
@@ -4089,17 +4084,17 @@ function _typeof(obj) {
       var _ref17 = _asyncToGenerator(
       /*#__PURE__*/
       regenerator.mark(function _callee7(fn) {
-        var _len18,
+        var _len17,
             args,
-            _key18,
+            _key17,
             _args7 = arguments;
 
         return regenerator.wrap(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
               case 0:
-                for (_len18 = _args7.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
-                  args[_key18 - 1] = _args7[_key18];
+                for (_len17 = _args7.length, args = new Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
+                  args[_key17 - 1] = _args7[_key17];
                 }
 
                 _context7.next = 3;
@@ -4126,9 +4121,9 @@ function _typeof(obj) {
       regenerator.mark(function _callee8(fn) {
         var _this7 = this;
 
-        var _len19,
+        var _len18,
             args,
-            _key19,
+            _key18,
             array,
             result,
             i,
@@ -4140,8 +4135,8 @@ function _typeof(obj) {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
-                for (_len19 = _args8.length, args = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
-                  args[_key19 - 1] = _args8[_key19];
+                for (_len18 = _args8.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
+                  args[_key18 - 1] = _args8[_key18];
                 }
 
                 array = args.map(function (list) {
@@ -4320,7 +4315,8 @@ function _typeof(obj) {
       }));
     }, "(range n)\n\n            Function return list of n numbers from 0 to n - 1"),
     // ------------------------------------------------------------------
-    pipe: pipe,
+    compose: doc(compose, "(compose . fns)\n\n             Higher order function and create new function that apply all functions\n             From right to left and return it's value. Reverse of compose.\n             e.g.:\n             ((compose (curry + 2) (curry * 3)) 3)\n             11\n            "),
+    pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
     curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (print (add12 3 4))"),
     // ------------------------------------------------------------------
     odd: singleMathOp(function (num) {
@@ -4341,8 +4337,8 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     '-': function _() {
-      for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
-        args[_key20] = arguments[_key20];
+      for (var _len19 = arguments.length, args = new Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
+        args[_key19] = arguments[_key19];
       }
 
       if (args.length === 1) {
@@ -4350,8 +4346,8 @@ function _typeof(obj) {
       }
 
       if (args.length) {
-        return args.reduce(guardMathOp(function (a, b) {
-          return LNumber(a).add(b);
+        return args.reduce(binaryMathOp(function (a, b) {
+          return LNumber(a).sub(b);
         }));
       }
     },
@@ -4544,8 +4540,8 @@ function _typeof(obj) {
       return !value;
     },
     '->': function _(obj, name) {
-      for (var _len21 = arguments.length, args = new Array(_len21 > 2 ? _len21 - 2 : 0), _key21 = 2; _key21 < _len21; _key21++) {
-        args[_key21 - 2] = arguments[_key21];
+      for (var _len20 = arguments.length, args = new Array(_len20 > 2 ? _len20 - 2 : 0), _key20 = 2; _key20 < _len20; _key20++) {
+        args[_key20 - 2] = arguments[_key20];
       }
 
       return obj[name].apply(obj, args);
@@ -4624,11 +4620,17 @@ function _typeof(obj) {
     var mapping = {
       'pair': Pair,
       'symbol': _Symbol,
+      'macro': Macro,
+      'array': Array,
       'native_symbol': root.Symbol
     };
 
     if (obj === nil) {
       return 'nil';
+    }
+
+    if (obj === null) {
+      return 'null';
     }
 
     var _arr2 = Object.entries(mapping);
@@ -4653,6 +4655,10 @@ function _typeof(obj) {
 
     if (obj instanceof RegExp) {
       return "regex";
+    }
+
+    if (_typeof(obj) === 'object') {
+      return obj.constructor.name;
     }
 
     return _typeof(obj);
