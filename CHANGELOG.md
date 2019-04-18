@@ -5,8 +5,11 @@
 ### Features
 * change append! from macro to function (it will work with any value as fist list argument not only with names
 * help function and help system inside function. First argument to lambda and define is now documentation.
+* add pipe function
 ### Bug fixes
 * fix `if` it should not return false if false value is undefined
+* fix even and odd functions with BigInt
+* fix curry
 
 ## 0.9.0
 ### Breaking

@@ -361,12 +361,16 @@
             if (dump) {
                 fn.__doc__ = doc;
             } else {
-                fn.__doc__ = doc.split('\n').map(line => {
-                    return line.trim();
-                }).join('\n');
+                fn.__doc__ = trimLines(doc);
             }
         }
         return fn;
+    }
+    // ----------------------------------------------------------------------
+    function trimLines(string) {
+        return string.split('\n').map(line => {
+            return line.trim();
+        }).join('\n');
     }
     // ----------------------------------------------------------------------
     function dump(arr) {
@@ -616,7 +620,6 @@
     Pair.prototype.flatten = function() {
         return Pair.fromArray(flatten(this.toArray()));
     };
-
     // ----------------------------------------------------------------------
     Pair.prototype.length = function() {
         if (isEmptyList(this)) {
@@ -989,7 +992,26 @@
         binded.bind = function(context, ...moreArgs) {
             return weakBind(binded, context, ...moreArgs);
         };
-        return binded;
+        return setFnLength(binded, binded.__bind.fn.length);
+    }
+    // ----------------------------------------------------------------------
+    function setFnLength(fn, length) {
+        try {
+            Object.defineProperty(fn, 'length', {
+                get: function() {
+                    return length;
+                }
+            });
+            return fn;
+        } catch (e) {
+            // hack that create function with specific length should work for browsers
+            // that don't support Object.defineProperty like old IE
+            var args = new Array(length).fill(0).map((_, i) => 'a' + i).join(',');
+            var wrapper = new Function(`f`, `return function(${args}) {
+                return f.apply(this, arguments);
+            };`);
+            return wrapper(fn);
+        }
     }
     // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
@@ -1060,6 +1082,65 @@
                 }
             })();
         });
+    }
+    // ----------------------------------------------------------------------
+    function guardMathCall(fn, ...args) {
+        args.forEach(arg => {
+            if (!LNumber.isNumber(arg)) {
+                throw new Error(`${type(arg)} is not a number!`);
+            }
+        });
+        return fn(...args);
+    }
+    // ----------------------------------------------------------------------
+    function guardMathOp(fn) {
+        return function(...args) {
+            return guardMathCall(fn, ...args);
+        };
+    }
+    // ----------------------------------------------------------------------
+    function pipe(...fns) {
+        return function(...args) {
+            return fns.reduce((args, f) => [f(...args)], args)[0];
+        };
+    }
+    // ----------------------------------------------------------------------
+    function compose(...fns) {
+        return pipe(...fns.reverse());
+    }
+    // ----------------------------------------------------------------------
+    var singleMathOp = compose(curry(limit, 1), guardMathOp);
+    var binaryMathOp = compose(curry(limit, 2), guardMathOp);
+    // ----------------------------------------------------------------------
+    function reduceMathOp(fn) {
+        return function(...args) {
+            if (args.length) {
+                return args.reduce(binaryMathOp(fn));
+            }
+        };
+    }
+    // ----------------------------------------------------------------------
+    function curry(fn, ...init_args) {
+        var len = fn.length;
+        return function() {
+            var args = init_args.slice();
+            function call(...more_args) {
+                args = args.concat(more_args);
+                if (args.length >= len) {
+                    return fn.apply(this, args);
+                } else {
+                    return call;
+                }
+            }
+            return call.apply(this, arguments);
+        };
+    }
+    // ----------------------------------------------------------------------
+    // return function with limited number of arguments
+    function limit(n, fn) {
+        return function(...args) {
+            return fn(...args.slice(0, n));
+        };
     }
     // ----------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
@@ -1292,6 +1373,9 @@
     // ----------------------------------------------------------------------
     LNumber.prototype.isOdd = function() {
         if (LNumber.isNative(this.value)) {
+            if (this.isBigNumber()) {
+                return this.value % BigInt(2) === BigInt(1);
+            }
             return this.value % 2 === 1;
         } else if (LNumber.isBN(this.value)) {
             return this.value.isOdd();
@@ -1504,7 +1588,7 @@
 
             Function returns cdr (tail) of the list/pair.`),
         // ------------------------------------------------------------------
-        'set!': new Macro('set!', function(code, { dynamic_scope, error } = {}) {
+        'set!': doc(new Macro('set!', function(code, { dynamic_scope, error } = {}) {
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
@@ -1537,7 +1621,7 @@
             } else {
                 ref.set(code.car, value);
             }
-        }, `(set! name value)
+        }), `(set! name value)
 
             Macro that can be used to set the value of the variable (mutate)
             it search the scope chain until it finds first non emtpy slot and set it.`),
@@ -1598,7 +1682,7 @@
 
             Function fetch the file and evaluate its content as LIPS code.`),
         // ------------------------------------------------------------------
-        'while': new Macro('while', async function(code, { dynamic_scope, error }) {
+        'while': doc(new Macro('while', async function(code, { dynamic_scope, error }) {
             var self = this;
             var begin = new Pair(
                 new Symbol('begin'),
@@ -1624,11 +1708,11 @@
                     return result;
                 }
             }
-        }, `(while cond . body)
+        }), `(while cond . body)
 
             Macro that create a loop, it exectue body untill cond expression is false`),
         // ------------------------------------------------------------------
-        'if': new Macro('if', function(code, { dynamic_scope, error }) {
+        'if': doc(new Macro('if', function(code, { dynamic_scope, error }) {
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
@@ -1657,7 +1741,7 @@
             } else {
                 return resolve(cond);
             }
-        }, `(if cond true-expr false-expr)
+        }), `(if cond true-expr false-expr)
 
             Macro evaluate condition expression and if the value is true, it
             evaluate and return true expression if not it evaluate and return
@@ -1682,7 +1766,7 @@
              previous values/names when next are evaluated. You can only get them
              from body of let expression.`),
         // ------------------------------------------------------------------
-        'begin': new Macro('begin', function(code, { dynamic_scope, error }) {
+        'begin': doc(new Macro('begin', function(code, { dynamic_scope, error }) {
             var arr = this.get('list->array')(code);
             if (dynamic_scope) {
                 dynamic_scope = this;
@@ -1705,10 +1789,22 @@
                     return result;
                 }
             })();
-        }),
-        nop: function() {},
+        }), `(begin . args)
+
+             Macro runs list of expression and return valuate of the list one.
+             It can be used in place where you can only have single exression,
+             like if expression.`),
+        nop: doc(function() {
+        }, `(nop)
+
+            Empty function you can pass list of exressions to the function.
+            like every function each expression will be evaluated and it will
+            not return any value. you can also put this function as last to
+            let or begin. This function is usefull if you want to return
+            undefined, like when you call function from terminal and don't
+            want any output.`),
         // ------------------------------------------------------------------
-        timer: new Macro('timer', function(code, { dynamic_scope, error } = {}) {
+        timer: doc(new Macro('timer', function(code, { dynamic_scope, error } = {}) {
             var env = this;
             if (dynamic_scope) {
                 dynamic_scope = this;
@@ -1722,9 +1818,15 @@
                     }));
                 }, code.car);
             });
-        }),
+        }), `(timer time function)
+
+             Function return a promise, and it will be automatically evaluated
+             after specific time passes. The return value of the function
+             will be value of the timer exprssion. If you want to do side effect
+             only expression you can return nop from lambda or wrap the code
+             in call to nop.`),
         // ------------------------------------------------------------------
-        define: Macro.defmacro('define', function(code, eval_args) {
+        define: doc(Macro.defmacro('define', function(code, eval_args) {
             var env = this;
             if (code.car instanceof Pair &&
                 code.car.car instanceof Symbol) {
@@ -1767,13 +1869,21 @@
                     env.set(code.car, value);
                 }
             }
-        }),
+        }), `(define name expression)
+             (define (function-name . args) body)
+
+             Macro for defining values. It can be used to define variables,
+             or function. If first argument is list it will create function
+             with name beeing first element of the list. The macro evalute
+             code \`(define function (lambda args body))\``),
         // ------------------------------------------------------------------
-        'set-obj': function(obj, key, value) {
+        'set-obj!': doc(function(obj, key, value) {
             obj[key] = value;
-        },
+        }, `(set-obj! obj key value)
+
+            Function set property of JavaScript object`),
         // ------------------------------------------------------------------
-        'eval': function(code) {
+        'eval': doc(function(code) {
             if (code instanceof Pair) {
                 return evaluate(code, {
                     env: this,
@@ -1792,7 +1902,9 @@
                 });
                 return result;
             }
-        },
+        }, `(eval list)
+
+            Function evalute LIPS code as list structure.`),
         // ------------------------------------------------------------------
         lambda: new Macro('lambda', function(code, { dynamic_scope, error } = {}) {
             var self = this;
@@ -1842,14 +1954,8 @@
             if (!(code.car instanceof Pair)) {
                 return doc(lambda, __doc__, true); // variable arguments
             }
-            // list of arguments (name don't matter
-            var args = new Array(length).fill(0).map((_, i) => 'a' + i).join(',');
-            // hack that create function with specific length
-            var wrapper = new Function(`f`, `return function(${args}) {
-                return f.apply(this, arguments);
-            };`);
             // wrap and decorate with __doc__
-            return doc(wrapper(lambda), __doc__, true);
+            return doc(setFnLength(lambda, length), __doc__, true);
         }, `(lambda (a b) body)
             (lambda args body)
             (lambda (a b . rest) body)
@@ -1860,7 +1966,7 @@
         'macroexpand': new Macro('macro-expand', macro_expand()),
         'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
         // ------------------------------------------------------------------
-        'define-macro': new Macro(macro, function(macro, { dynamic_scope, error }) {
+        'define-macro': doc(new Macro(macro, function(macro, { dynamic_scope, error }) {
             function clear(node) {
                 if (node instanceof Pair) {
                     delete node.data;
@@ -1915,7 +2021,7 @@
                     }
                 }, __doc__);
             }
-        }, `(define-macro (name . args) body)
+        }), `(define-macro (name . args) body)
 
              Meta macro, macro that create new macros, if return value is list structure
              it will be evaluated when macro is invoked. You can use quasiquote \` and
@@ -1924,16 +2030,16 @@
              macro the arguments will not be evaluated unless macro itself evaluate it.
              Because of this macro can manipulate expression (arguments) as lists.`),
         // ------------------------------------------------------------------
-        quote: new Macro('quote', function(arg) {
+        quote: doc(new Macro('quote', function(arg) {
             return quote(arg.car);
-        }, `(quote expression)
+        }), `(quote expression)
 
-            Macro that return single lips expression as data (it don't evaluate its
-            argument). It will return list of pairs if put in front of lips code.
-            And if put in fron of symbol it will return that symbol not value
-            associated with that name.`),
+             Macro that return single lips expression as data (it don't evaluate its
+             argument). It will return list of pairs if put in front of lips code.
+             And if put in fron of symbol it will return that symbol not value
+             associated with that name.`),
         // ------------------------------------------------------------------
-        quasiquote: new Macro('quasiquote', function(arg, { dynamic_scope, error }) {
+        quasiquote: doc(new Macro('quasiquote', function(arg, { dynamic_scope, error }) {
             var self = this;
             var max_unquote = 0;
             if (dynamic_scope) {
@@ -2038,7 +2144,7 @@
                 return pair;
             }
             return recur(arg.car).then(unquoting).then(quote);
-        }, `(quasiquote list ,value ,@value)
+        }), `(quasiquote list ,value ,@value)
 
             Similar macro to \`quote\` but inside it you can use special
             expressions unquote abbreviated to , that will evaluate expresion inside
@@ -2251,42 +2357,67 @@
         }, `(instanceof type obj)
 
             Function check of object is instance of object.`),
+        'function?': doc(function(obj) {
+            return typeof obj === 'function';
+        }, `(function? expression)
+
+            Function check if value is a function.`),
         // ------------------------------------------------------------------
-        'number?': LNumber.isNumber,
+        'number?': doc(
+            LNumber.isNumber,
+            `(number? expression)
+
+             Function check if value is a number`),
         // ------------------------------------------------------------------
-        'string?': function(obj) {
+        'string?': doc(function(obj) {
             return typeof obj === 'string';
-        },
+        }, `(string? expression)
+
+            Function check if value is a string.`),
         // ------------------------------------------------------------------
-        'pair?': function(obj) {
+        'pair?': doc(function(obj) {
             return obj instanceof Pair;
-        },
+        }, `(pair? expression)
+
+            Function check if value is a pair or list structure.`),
         // ------------------------------------------------------------------
-        'regex?': function(obj) {
+        'regex?': doc(function(obj) {
             return obj instanceof RegExp;
-        },
+        }, `(regex? expression)
+
+            Function check if value is regular expression.`),
         // ------------------------------------------------------------------
-        'null?': function(obj) {
+        'null?': doc(function(obj) {
             return isNull(obj) || (obj instanceof Pair && obj.isEmptyList());
-        },
+        }, `(null? expression)
+
+            Function check if value is nulish.`),
         // ------------------------------------------------------------------
-        'boolean?': function(obj) {
+        'boolean?': doc(function(obj) {
             return typeof obj === 'boolean';
-        },
+        }, `(boolean? expression)
+
+            Function check if value is boolean.`),
         // ------------------------------------------------------------------
-        'symbol?': function(obj) {
+        'symbol?': doc(function(obj) {
             return obj instanceof Symbol;
-        },
+        }, `(symbol? expression)
+
+            Function check if value is LIPS symbol`),
         // ------------------------------------------------------------------
-        'array?': function(obj) {
+        'array?': doc(function(obj) {
             return obj instanceof Array;
-        },
+        }, `(array? expression)
+
+            Function check if value is an arrray.`),
         // ------------------------------------------------------------------
-        'object?': function(obj) {
+        'object?': doc(function(obj) {
             return obj !== null && typeof obj === 'object' && !(obj instanceof Array);
-        },
+        }, `(object? expression)
+
+            Function check if value is an object.`),
         // ------------------------------------------------------------------
-        read: function read(arg) {
+        read: doc(function read(arg) {
             if (typeof arg === 'string') {
                 arg = parse(tokenize(arg));
                 if (arg.length) {
@@ -2297,23 +2428,38 @@
             return this.get('stdin').read().then((text) => {
                 return read.call(this, text);
             });
-        },
+        }, `(read [string])
+
+            Function if used with string will parse the string and return
+            list structure of LIPS code. If called without an argument it
+            will read string from standard input (using browser prompt or
+            user defined way) and call itself with that string (parse is)
+            function can be used together with eval to evaluate code from
+            string`),
         // ------------------------------------------------------------------
-        print: function(...args) {
+        print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
                 return this.get('string')(arg);
             }));
-        },
+        }, `(print . args)
+
+            Function convert each argument to string and print the result to
+            standard output (by default it's console but it can be defined
+            it user code)`),
         // ------------------------------------------------------------------
-        flatten: function(list) {
+        flatten: doc(function(list) {
             return list.flatten();
-        },
+        }, `(flatten list)
+
+            Return shallow list from tree structure (pairs).`),
         // ------------------------------------------------------------------
-        'array->list': function(array) {
+        'array->list': doc(function(array) {
             return Pair.fromArray(array);
-        },
+        }, `(array->list array)
+
+            Function convert JavaScript array to LIPS list.`),
         // ------------------------------------------------------------------
-        'list->array': function(list) {
+        'list->array': doc(function(list) {
             if (list instanceof Pair && list.isEmptyList()) {
                 return [];
             }
@@ -2328,9 +2474,11 @@
                 }
             }
             return result;
-        },
+        }, `(list->array list)
+
+            Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
-        apply: new Macro('apply', function(code, { dynamic_scope, error } = {}) {
+        apply: doc(new Macro('apply', function(code, { dynamic_scope, error } = {}) {
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
@@ -2363,9 +2511,12 @@
             } else {
                 return invoke(fn);
             }
-        }),
+        }), `(apply fn args)
+
+             Macro that call function or expression that can be evaluated
+             to function with list of arguments as list structure.`),
         // ------------------------------------------------------------------
-        'length': function(obj) {
+        'length': doc(function(obj) {
             if (!obj) {
                 return LNumber(0);
             }
@@ -2375,22 +2526,33 @@
             if ("length" in obj) {
                 return LNumber(obj.length);
             }
-        },
+        }, `(length expression)
+
+            Function return length of the object, the object can be list
+            or any object that have length property.`),
         // ------------------------------------------------------------------
-        find: async function(fn, list) {
+        find: doc(async function(fn, list) {
             var array = this.get('list->array')(list);
             for (var i = 0; i < array.length; ++i) {
                 if (await fn(array[i], i)) {
                     return array[i];
                 }
             }
-        },
+        }, `(Find fn list)
+
+            Higher order Function find first value for which function
+            return true.`),
         // ------------------------------------------------------------------
-        'for-each': async function(fn, ...args) {
+        'for-each': doc(async function(fn, ...args) {
             await this.get('map')(fn, ...args);
-        },
+        }, `(for-each fn . args)
+
+            Higher order function that call function \`fn\` by for each
+            value of the argument. If you provide more then one list as argument
+            it will take each value from each list and call \`fn\` function
+            with that many argument as number of list arguments.`),
         // ------------------------------------------------------------------
-        map: async function(fn, ...args) {
+        map: doc(async function(fn, ...args) {
             var array = args.map(list => this.get('list->array')(list));
             var result = [];
             var i = 0;
@@ -2401,9 +2563,16 @@
                 i++;
             }
             return Pair.fromArray(result);
-        },
+        }, `(map fn . args)
+
+            Higher order function that call function \`fn\` by for each
+            value of the argument. If you provide more then one list as argument
+            it will take each value from each list and call \`fn\` function
+            with that many argument as number of list arguments. The return
+            values of the function call is acumulated in result list and
+            returned by the call to map.`),
         // ------------------------------------------------------------------
-        reduce: async function(fn, list, init = null) {
+        reduce: doc(async function(fn, list, init = null) {
             var array = this.get('list->array')(list);
             if (list.length === 0) {
                 return nil;
@@ -2421,9 +2590,14 @@
                 return LNumber(result);
             }
             return result;
-        },
+        }, `(reduce fn list [init])
+
+            Higher order  Function take each element of the list and call
+            the function with result of previous call or init and next element
+            on the list until each element is processed and return single value
+            as result of last call to \`fn\` function.`),
         // ------------------------------------------------------------------
-        filter: async function(fn, list) {
+        filter: doc(async function(fn, list) {
             var array = this.get('list->array')(list);
             var result = [];
             var i = 0;
@@ -2435,102 +2609,87 @@
                 }
             }
             return Pair.fromArray(result, true);
-        },
+        }, `(filter fn list)
+
+            Higher order function that call \`fn\` for each element of the list
+            and return list for only those elements for which funtion return
+            true value.`),
         // ------------------------------------------------------------------
-        range: function(n) {
+        range: doc(function(n) {
             if (n instanceof LNumber) {
                 n = n.valueOf();
             }
             return Pair.fromArray(new Array(n).fill(0).map((_, i) => LNumber(i)));
-        },
+        }, `(range n)
+
+            Function return list of n numbers from 0 to n - 1`),
         // ------------------------------------------------------------------
-        curry: function(fn, ...init_args) {
-            var len = fn.length;
-            return function() {
-                var args = init_args.slice();
-                function call(...more_args) {
-                    args = args.concat(more_args);
-                    if (args.length >= len) {
-                        return fn.apply(this, args);
-                    } else {
-                        return call;
-                    }
-                }
-                return call.apply(this, arguments);
-            };
-        },
+        pipe: pipe,
+        curry: doc(
+            curry,
+            `(curry fn . args)
+
+             Higher order function that create curried version of the function.
+             The result function will have parially applied arguments and it
+             will keep returning functions until all arguments are added
+
+             e.g.:
+             (define (add a b c d) (+ a b c d))
+             (define add1 (curry add 1))
+             (define add12 (add 2))
+             (print (add12 3 4))`),
         // ------------------------------------------------------------------
-        odd: function(num) {
+        odd: singleMathOp(function(num) {
             return LNumber(num).isOdd();
-        },
+        }),
         // ------------------------------------------------------------------
-        even: function(num) {
+        even: singleMathOp(function(num) {
             return LNumber(num).isEvent();
-        },
+        }),
         // ------------------------------------------------------------------
         // math functions
-        '*': function(...args) {
-            if (args.length) {
-                return args.reduce(function(a, b) {
-                    return LNumber(a).mul(b);
-                });
-            }
-        },
+        '*': reduceMathOp(function(a, b) {
+            return LNumber(a).mul(b);
+        }),
         // ------------------------------------------------------------------
-        '+': function(...args) {
-            if (args.length) {
-                return args.reduce(function(a, b) {
-                    if (LNumber.isNumber(a) && LNumber.isNumber(b)) {
-                        return LNumber(a).add(b);
-                    } else if (typeof a === 'string') {
-                        throw new Error("To concatenate strings use `concat`");
-                    }
-                    return a + b;
-                });
-            }
-        },
+        '+': reduceMathOp(function(a, b) {
+            return LNumber(a).add(b);
+        }),
         // ------------------------------------------------------------------
         '-': function(...args) {
             if (args.length === 1) {
                 return LNumber(args[0]).neg();
             }
             if (args.length) {
-                return args.reduce(function(a, b) {
-                    return LNumber(a).sub(b);
-                });
+                return args.reduce(guardMathOp(function(a, b) {
+                    return LNumber(a).add(b);
+                }));
             }
         },
         // ------------------------------------------------------------------
-        '/': function(...args) {
-            if (args.length) {
-                return args.reduce(function(a, b) {
-                    return LNumber(a).div(b);
-                });
-            }
-        },
+        '/': reduceMathOp(function(a, b) {
+            return LNumber(a).div(b);
+        }),
         // ------------------------------------------------------------------
-        'abs': function(n) {
+        'abs': singleMathOp(function(n) {
             return LNumber(n).abs();
-        },
+        }),
         // ------------------------------------------------------------------
-        'sqrt': function(n) {
-            if (n instanceof LNumber) {
-                return Math.sqrt(n.valueOf());
-            }
+        'sqrt': singleMathOp(function(n) {
             return Math.sqrt(n);
-        },
+        }),
         // ------------------------------------------------------------------
-        '**': function(a, b) {
+        '**': binaryMathOp(function(a, b) {
             return LNumber(a).pow(b);
-        },
+        }),
         // ------------------------------------------------------------------
-        '1+': function(number) {
+        '1+': singleMathOp(function(number) {
             return LNumber(number).add(1);
-        },
+        }),
         // ------------------------------------------------------------------
-        '1-': function(number) {
+        '1-': singleMathOp(function(number) {
             return LNumber(number).sub(1);
-        },
+        }),
         // ------------------------------------------------------------------
         '++': new Macro('++', function(code) {
             var car = this.get(code.car);
@@ -2546,9 +2705,9 @@
             return value;
         }),
         // ------------------------------------------------------------------
-        '%': function(a, b) {
+        '%': reduceMathOp(function(a, b) {
             return LNumber(a).mod(b);
-        },
+        }),
         // ------------------------------------------------------------------
         // Booleans
         '==': function(a, b) {
@@ -2738,6 +2897,9 @@
             'symbol': Symbol,
             'native_symbol': root.Symbol
         };
+        if (obj === nil) {
+            return 'nil';
+        }
         for (let [key, value] of Object.entries(mapping)) {
             if (obj instanceof value) {
                 return key;
@@ -2800,7 +2962,7 @@
         var args = [];
         var node = rest;
         while (true) {
-            if (node instanceof Pair) {
+            if (node instanceof Pair && !isEmptyList(node)) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
                 if (false && dynamic_scope) {
                     if (isPromise(arg)) {
