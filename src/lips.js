@@ -5,6 +5,7 @@
  * Released under the MIT license
  *
  */
+/* TODO: remove async from functions: find, for-each, map, reduce, filter */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require, Blob */
 (function(root, factory) {
@@ -807,17 +808,38 @@
     };
 
     // ----------------------------------------------------------------------
+    function toString(value) {
+        if (typeof value === 'function') {
+            return '<#function ' + (value.name || 'anonymous') + '>';
+        } else if (typeof value === 'string') {
+            return JSON.stringify(value);
+        } else if (isPromise(value)) {
+            return '<#Promise>';
+        } else if (value instanceof Symbol ||
+                  value instanceof LNumber ||
+                  value instanceof Pair) {
+            return value.toString();
+        } else if (typeof value === 'object') {
+            if (value === null) {
+                return 'null';
+            }
+            var name = value.constructor.name;
+            if (name === 'Object') {
+                return JSON.stringify(value);
+            }
+            return '<#object(' + value.constructor.name + ')>';
+        } else if (typeof value !== 'undefined') {
+            return value;
+        }
+    }
+
+    // ----------------------------------------------------------------------
     Pair.prototype.toString = function() {
         var arr = ['('];
         if (this.car !== undefined) {
-            if (typeof this.car === 'function') {
-                arr.push('<#function ' + (this.car.name || 'anonymous') + '>');
-            } else if (typeof this.car === 'string') {
-                arr.push(JSON.stringify(this.car));
-            } else if (this.car instanceof Symbol) {
-                arr.push(this.car.toString());
-            } else if (typeof this.car !== 'undefined') {
-                arr.push(this.car);
+            var value = toString(this.car);
+            if (value) {
+                arr.push(value);
             }
             if (this.cdr instanceof Pair) {
                 arr.push(' ');
@@ -826,7 +848,7 @@
                 if (typeof this.cdr === 'string') {
                     arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
                 } else {
-                    arr = arr.concat([' . ', this.cdr]);
+                    arr = arr.concat([' . ', toString(this.cdr)]);
                 }
             }
         }
@@ -888,11 +910,13 @@
         this.name = name;
         this.fn = fn;
     }
+    // ----------------------------------------------------------------------
     Macro.defmacro = function(name, fn, doc) {
         var macro = new Macro(name, fn, doc);
         macro.defmacro = true;
         return macro;
     };
+    // ----------------------------------------------------------------------
     Macro.prototype.invoke = function(code, { env, dynamic_scope, error }, macro_expand) {
         var args = {
             dynamic_scope,
@@ -902,10 +926,13 @@
         var result = this.fn.call(env, code, args, this.name);
         return macro_expand ? quote(result) : result;
     };
+    // ----------------------------------------------------------------------
     Macro.prototype.toString = function() {
         return '#<Macro ' + this.name + '>';
     };
+    // ----------------------------------------------------------------------
     var macro = 'define-macro';
+    // ----------------------------------------------------------------------
     function macro_expand(single) {
         return async function(code, args) {
             var env = args['env'] = this;
@@ -975,6 +1002,9 @@
         };
         if (fn.__doc__) {
             binded.__doc__ = fn.__doc__;
+        }
+        if (fn.__code__) {
+            binded.__code__ = fn.__code__;
         }
         binded.__bind = {
             args: fn.__bind ? fn.__bind.args.concat(args) : args,
@@ -1141,6 +1171,30 @@
             return fn(...args.slice(0, n));
         };
     }
+    var get = doc(function(obj, ...args) {
+        if (typeof obj === 'function' && obj.__bind) {
+            obj = obj.__bind.fn;
+        }
+        for (let arg of args) {
+            var name = arg instanceof Symbol ? arg.name : arg;
+            var value = obj[name];
+            if (typeof value === 'function') {
+                value = value.bind(obj);
+            }
+            obj = value;
+        }
+        return value;
+    }, `(. obj . args)
+        (get obj . args)
+
+        Function use object as based and keep using arguments to get the
+        property of JavaScript object. Arguments need to be a strings.
+        e.g. \`(. console "log")\` if you use any function inside LIPS is
+        will be weakly bind (can be rebind), so you can call this log function
+        without problem unlike in JavaScript when you use
+       \`var log = console.log\`.
+       \`get\` is an alias because . don't work in every place, you can't
+        pass it as argument`);
     // ----------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
     // ----------------------------------------------------------------------
@@ -1594,19 +1648,22 @@
             var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
             value = maybe_promise(value);
             var ref;
+            function set(key, value) {
+                if (isPromise(key)) {
+                    return key.then(key => set(key, value));
+                }
+                if (isPromise(value)) {
+                    return value.then(value => set(key, value));
+                }
+                object[key] = value;
+                return value;
+            }
             if (code.car instanceof Pair && Symbol.is(code.car.car, '.')) {
                 var second = code.car.cdr.car;
                 var thrid = code.car.cdr.cdr.car;
                 var object = evaluate(second, { env: this, dynamic_scope, error });
                 var key = evaluate(thrid, { env: this, dynamic_scope, error });
-                if (isPromise(value)) {
-                    return value.then(value => {
-                        object[key] = value;
-                    });
-                } else {
-                    object[key] = value;
-                    return value;
-                }
+                return set(key, value);
             }
             if (!(code.car instanceof Symbol)) {
                 throw new Error('set! first argument need to be a symbol');
@@ -1647,7 +1704,7 @@
         // ------------------------------------------------------------------
         assoc: doc(function(key, list) {
             if (key instanceof Pair && !(list instanceof Pair)) {
-                throw new Error('First argument to assoc new to a key');
+                throw new Error('First argument to assoc ned to be a key');
             }
             var node = list;
             while (true) {
@@ -1681,7 +1738,7 @@
 
             Function fetch the file and evaluate its content as LIPS code.`),
         // ------------------------------------------------------------------
-        'while': doc(new Macro('while', async function(code, { dynamic_scope, error }) {
+        'while': doc(new Macro('while', function(code, { dynamic_scope, error }) {
             var self = this;
             var begin = new Pair(
                 new Symbol('begin'),
@@ -1691,13 +1748,45 @@
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
+            return (function loop() {
+                var cond = evaluate(code.car, {
+                    env: self,
+                    dynamic_scope,
+                    error
+                });
+                function next(cond) {
+                    if (cond && !isNull(cond) && !isEmptyList(cond)) {
+                        result = evaluate(begin, {
+                            env: self,
+                            dynamic_scope,
+                            error
+                        });
+                        if (isPromise(result)) {
+                            return result.then(ret => {
+                                result = ret;
+                                return loop();
+                            });
+                        } else {
+                            return loop();
+                        }
+                    } else {
+                        return result;
+                    }
+                }
+                if (isPromise(cond)) {
+                    return cond.then(next);
+                } else {
+                    return next(cond);
+                }
+            })();
+            /*
             while (true) {
                 var cond = await evaluate(code.car, {
                     env: self,
                     dynamic_scope,
                     error
                 });
-                if (cond && !isEmptyList(cond)) {
+                if (cond && !isNull(cond) && !isEmptyList(cond)) {
                     result = await evaluate(begin, {
                         env: self,
                         dynamic_scope,
@@ -1707,6 +1796,7 @@
                     return result;
                 }
             }
+            */
         }), `(while cond . body)
 
             Macro that create a loop, it exectue body untill cond expression is false`),
@@ -1953,6 +2043,7 @@
             if (!(code.car instanceof Pair)) {
                 return doc(lambda, __doc__, true); // variable arguments
             }
+            lambda.__code__ = new Pair(new Symbol('lambda'), code);
             // wrap and decorate with __doc__
             return doc(setFnLength(lambda, length), __doc__, true);
         }, `(lambda (a b) body)
@@ -2044,30 +2135,64 @@
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
-            async function recur(pair) {
-                if (pair instanceof Pair) {
+            function promise(value, fn = x => x) {
+                if (isPromise(value)) {
+                    return value.then(fn);
+                } else {
+                    return fn(value);
+                }
+            }
+            function isPair(value) {
+                return value instanceof Pair;
+            }
+            function resolve_pair(pair, fn, test = isPair) {
+                if (pair instanceof Pair && !isEmptyList(pair)) {
+                    var car = pair.car;
+                    var cdr = pair.cdr;
+                    if (test(car)) {
+                        car = fn(car);
+                    }
+                    if (test(cdr)) {
+                        cdr = fn(cdr);
+                    }
+                    if (isPromise(car) || isPromise(cdr)) {
+                        return Promise.all([car, cdr]).then(([car, cdr]) => {
+                            return new Pair(car, cdr);
+                        });
+                    } else {
+                        return new Pair(car, cdr);
+                    }
+                }
+                return pair;
+            }
+            function join(eval_pair, value) {
+                if (eval_pair instanceof Pair) {
+                    eval_pair.append(value);
+                } else {
+                    eval_pair = new Pair(
+                        eval_pair,
+                        value
+                    );
+                }
+                return eval_pair;
+            }
+            function recur(pair) {
+                if (pair instanceof Pair && !isEmptyList(pair)) {
                     var eval_pair;
                     if (Symbol.is(pair.car.car, 'unquote-splicing')) {
-                        eval_pair = await evaluate(pair.car.cdr.car, {
+                        eval_pair = evaluate(pair.car.cdr.car, {
                             env: self,
                             dynamic_scope,
                             error
                         });
-                        if (!eval_pair instanceof Pair) {
-                            throw new Error('Value of unquote-splicing need' +
-                                            ' to be pair');
-                        }
-                        if (pair.cdr instanceof Pair) {
-                            if (eval_pair instanceof Pair) {
-                                eval_pair.cdr.append(await recur(pair.cdr));
-                            } else {
-                                eval_pair = new Pair(
-                                    eval_pair,
-                                    await recur(pair.cdr)
-                                );
+                        return promise(eval_pair, function(eval_pair) {
+                            if (!eval_pair instanceof Pair) {
+                                throw new Error('Value of unquote-splicing need' +
+                                                ' to be pair');
                             }
-                        }
-                        return eval_pair;
+                            const value = recur(pair.cdr);
+                            return promise(value, value => join(eval_pair, value));
+                        });
                     }
                     if (Symbol.is(pair.car, 'unquote')) {
                         var head = pair.cdr;
@@ -2086,63 +2211,54 @@
                         // in unquote function afer processing whole s-expression
                         if (parent === node) {
                             if (pair.cdr.cdr !== nil) {
-                                return new Pair(
-                                    new Unquote(pair.cdr.car, unquote_count),
-                                    await recur(pair.cdr.cdr)
-                                );
+                                return promise(recur(pair.cdr.cdr), function(value) {
+                                    return new Pair(
+                                        new Unquote(pair.cdr.car, unquote_count),
+                                        value
+                                    );
+                                });
                             } else {
                                 return new Unquote(pair.cdr.car, unquote_count);
                             }
                         } else if (parent.cdr.cdr !== nil) {
-                            parent.car.cdr = new Pair(
-                                new Unquote(node, unquote_count),
-                                parent.cdr === nil ? nil : await recur(parent.cdr.cdr)
-                            );
+                            return promise(recur(parent.cdr.cdr), function(value) {
+                                parent.car.cdr = new Pair(
+                                    new Unquote(node, unquote_count),
+                                    parent.cdr === nil ? nil : value
+                                );
+                                return head.car;
+                            });
                         } else {
                             parent.car.cdr = new Unquote(node, unquote_count);
                         }
                         return head.car;
                     }
-                    var car = pair.car;
-                    var cdr = pair.cdr;
-                    if (car instanceof Pair) {
-                        car = await recur(car);
-                    }
-                    if (cdr instanceof Pair) {
-                        cdr = await recur(cdr);
-                    }
-                    return new Pair(car, cdr);
+                    return resolve_pair(pair, recur);
                 }
                 return pair;
             }
-            async function unquoting(pair) {
+            const unquoteTest = v => isPair(v) || v instanceof Unquote;
+            function unquoting(pair) {
                 if (pair instanceof Unquote) {
                     if (max_unquote === pair.count) {
                         return evaluate(pair.value, { env: self, dynamic_scope, error });
                     } else {
-                        return new Pair(
-                            new Symbol('unquote'),
-                            new Pair(
-                                await unquoting(pair.value),
-                                nil
-                            )
-                        );
+                        return promise(unquoting(pair.value), function(value) {
+                            return new Pair(
+                                new Symbol('unquote'),
+                                new Pair(
+                                    value,
+                                    nil
+                                )
+                            );
+                        });
                     }
                 }
-                if (pair instanceof Pair) {
-                    var car = pair.car;
-                    if (car instanceof Pair || car instanceof Unquote) {
-                        car = await unquoting(car);
-                    }
-                    var cdr = pair.cdr;
-                    if (cdr instanceof Pair || cdr instanceof Unquote) {
-                        cdr = await unquoting(cdr);
-                    }
-                    return new Pair(car, cdr);
-                }
-                return pair;
+                return resolve_pair(pair, unquoting, unquoteTest);
             }
-            return recur(arg.car).then(unquoting).then(quote);
+            return promise(recur(arg.car), value => {
+                return promise(unquoting(value), quote);
+            });
         }), `(quasiquote list ,value ,@value)
 
             Similar macro to \`quote\` but inside it you can use special
@@ -2214,6 +2330,9 @@
         }, `(list . args)
 
             Function create new list out of its arguments.`),
+        substring: function(string, start, end) {
+            return string.substring(start.valueOf(), end && end.valueOf());
+        },
         concat: doc(function() {
             return [].join.call(arguments, '');
         }, `(concat . strings)
@@ -2317,27 +2436,9 @@
 
             Function create new JavaScript instance of an object.`),
         // ------------------------------------------------------------------
-        '.': doc(function(obj, ...args) {
-            if (typeof obj === 'function' && obj.__bind) {
-                obj = obj.__bind.fn;
-            }
-            for (let arg of args) {
-                var name = arg instanceof Symbol ? arg.name : arg;
-                var value = obj[name];
-                if (typeof value === 'function') {
-                    value = value.bind(obj);
-                }
-                obj = value;
-            }
-            return value;
-        }, `(. obj . args)
-
-            Function use object as based and keep using arguments to get the
-            property of JavaScript object. Arguments need to be a strings.
-            e.g. \`(. console "log")\` if you use any function inside LIPS is
-            will be weakly bind (can be rebind), so you can call this log function
-            without problem unlike in JavaScript when you use
-           \`var log = console.log\`.`),
+        'get': get,
+        '.': get,
+        // ------------------------------------------------------------------
         'unbind': function(obj) {
             if (typeof obj === 'function' && obj.__bind) {
                 return obj.__bind.fn;
@@ -2755,34 +2856,32 @@
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
-            return new Promise(function(resolve) {
-                var result;
-                (function loop() {
-                    function next(value) {
-                        result = value;
-                        if (result) {
-                            resolve(value);
-                        } else {
-                            loop();
-                        }
-                    }
-                    var arg = args.shift();
-                    if (typeof arg === 'undefined') {
-                        if (result) {
-                            resolve(result);
-                        } else {
-                            resolve(false);
-                        }
+            var result;
+            return (function loop() {
+                function next(value) {
+                    result = value;
+                    if (result) {
+                        return value;
                     } else {
-                        var value = evaluate(arg, { env: self, dynamic_scope, error });
-                        if (isPromise(value)) {
-                            value.then(next);
-                        } else {
-                            next(value);
-                        }
+                        return loop();
                     }
-                })();
-            });
+                }
+                var arg = args.shift();
+                if (typeof arg === 'undefined') {
+                    if (result) {
+                        return result;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    var value = evaluate(arg, { env: self, dynamic_scope, error });
+                    if (isPromise(value)) {
+                        return value.then(next);
+                    } else {
+                        return next(value);
+                    }
+                }
+            })();
         }),
         // ------------------------------------------------------------------
         and: new Macro('and', function(code, { dynamic_scope, error } = {}) {
@@ -2791,34 +2890,32 @@
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
-            return new Promise(function(resolve) {
-                var result;
-                (function loop() {
-                    function next(value) {
-                        result = value;
-                        if (!result) {
-                            resolve(false);
-                        } else {
-                            loop();
-                        }
-                    }
-                    var arg = args.shift();
-                    if (typeof arg === 'undefined') {
-                        if (result) {
-                            resolve(result);
-                        } else {
-                            resolve(false);
-                        }
+            var result;
+            return (function loop() {
+                function next(value) {
+                    result = value;
+                    if (!result) {
+                        return false;
                     } else {
-                        var value = evaluate(arg, { env: self, dynamic_scope, error });
-                        if (isPromise(value)) {
-                            value.then(next);
-                        } else {
-                            next(value);
-                        }
+                        return loop();
                     }
-                })();
-            });
+                }
+                var arg = args.shift();
+                if (typeof arg === 'undefined') {
+                    if (result) {
+                        return result;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    var value = evaluate(arg, { env: self, dynamic_scope, error });
+                    if (isPromise(value)) {
+                        return value.then(next);
+                    } else {
+                        return next(value);
+                    }
+                }
+            })();
         }),
         // bit operations
         '|': function(a, b) {
@@ -3007,7 +3104,7 @@
                 break;
             }
         }
-        return maybe_promise(args);
+        return maybe_promise(args, rest);
     }
     // ----------------------------------------------------------------------
     function evaluate_macro(macro, code, eval_args) {
@@ -3015,7 +3112,7 @@
             code = code.clone();
         }
         var value = macro.invoke(code, eval_args);
-        value = maybe_promise(value, true);
+        value = maybe_promise(value);
         function ret(value) {
             if (value && value.data || !(value instanceof Pair)) {
                 return value;
