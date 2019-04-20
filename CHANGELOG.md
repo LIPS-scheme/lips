@@ -9,11 +9,15 @@
 * new function `unbind` to help write function that work with functions as objects (LIPS wrap them)
 * add alias for `.` as `get` so you can pass it to curry, with `.` LIPS will try to create pair
 * lambda function introspection
+* hypeapp example
+* better loading of code
+* make `map` sync
 ### Bug fixes
 * fix `if` it should not return false if false value is undefined
 * fix even and odd functions with BigInt
 * fix curry
 * fix when inside quasiquote there is empty list
+* make `load` use `lips.exec`, so it execute code sequentially
 
 ## 0.9.0
 ### Breaking

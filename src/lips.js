@@ -4,8 +4,23 @@
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
+ * includes:
+ * contentloaded.js
+ *
+ * Author: Diego Perini (diego.perini at gmail.com)
+ * Summary: cross-browser wrapper for DOMContentLoaded
+ * Updated: 20101020
+ * License: MIT
+ * Version: 1.2
+ *
+ * URL:
+ * http://javascript.nwbox.com/ContentLoaded/
+ * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
+ *
  */
-/* TODO: remove async from functions: find, for-each, map, reduce, filter */
+/* TODO: remove async from functions: find, for-each, map, reduce, filter
+ *       consider using exec in eval or use different maybe_async code
+ */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require, Blob */
 (function(root, factory) {
@@ -21,6 +36,41 @@
         root.lips = factory(root, root.BN);
     }
 })(typeof window !== 'undefined' ? window : global, function(root, BN, undefined) {
+    /* eslint-disable */
+    /* istanbul ignore next */
+    function contentLoaded(win, fn) {
+        var done = false, top = true,
+
+            doc = win.document,
+            root = doc.documentElement,
+            modern = doc.addEventListener,
+
+            add = modern ? 'addEventListener' : 'attachEvent',
+            rem = modern ? 'removeEventListener' : 'detachEvent',
+            pre = modern ? '' : 'on',
+
+            init = function(e) {
+                if (e.type == 'readystatechange' && doc.readyState != 'complete') return;
+                (e.type == 'load' ? win : doc)[rem](pre + e.type, init, false);
+                if (!done && (done = true)) fn.call(win, e.type || e);
+            },
+
+            poll = function() {
+                try { root.doScroll('left'); } catch(e) { setTimeout(poll, 50); return; }
+                init('poll');
+            };
+
+        if (doc.readyState == 'complete') fn.call(win, 'lazy');
+        else {
+            if (!modern && root.doScroll) {
+                try { top = !win.frameElement; } catch(e) { }
+                if (top) poll();
+            }
+            doc[add](pre + 'DOMContentLoaded', init, false);
+            doc[add](pre + 'readystatechange', init, false);
+            win[add](pre + 'load', init, false);
+        }
+    }
     /* eslint-disable */
     function log(x, regex = null) {
         function msg(x) {
@@ -819,6 +869,8 @@
                   value instanceof LNumber ||
                   value instanceof Pair) {
             return value.toString();
+        } else if (value instanceof Array) {
+            return value.map(toString);
         } else if (typeof value === 'object') {
             if (value === null) {
                 return 'null';
@@ -1731,9 +1783,7 @@
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
         load: doc(function(file) {
-            root.fetch(file).then(res => res.text()).then(code => {
-                this.get('eval')(this.get('read')(code));
-            });
+            return root.fetch(file).then(res => res.text()).then(exec);
         }, `(load filename)
 
             Function fetch the file and evaluate its content as LIPS code.`),
@@ -2115,7 +2165,7 @@
 
              Meta macro, macro that create new macros, if return value is list structure
              it will be evaluated when macro is invoked. You can use quasiquote \` and
-             unquote , and unquote-splice ,@ inside to create expression that will be
+             unquote , and unquote-splicing ,@ inside to create expression that will be
              evaluated on runtime. Macros works like this: if you pass any expression to
              macro the arguments will not be evaluated unless macro itself evaluate it.
              Because of this macro can manipulate expression (arguments) as lists.`),
@@ -2176,6 +2226,15 @@
                 }
                 return eval_pair;
             }
+            /*
+            function clean(node) {
+                if (node instanceof Pair) {
+                    delete node.data;
+                    clean(node.cdr);
+                    clean(node.car);
+                }
+            }
+            */
             function recur(pair) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
                     var eval_pair;
@@ -2238,12 +2297,12 @@
                 return pair;
             }
             const unquoteTest = v => isPair(v) || v instanceof Unquote;
-            function unquoting(pair) {
-                if (pair instanceof Unquote) {
-                    if (max_unquote === pair.count) {
-                        return evaluate(pair.value, { env: self, dynamic_scope, error });
+            function unquoting(node) {
+                if (node instanceof Unquote) {
+                    if (max_unquote === node.count) {
+                        return evaluate(node.value, { env: self, dynamic_scope, error });
                     } else {
-                        return promise(unquoting(pair.value), function(value) {
+                        return promise(unquoting(node.value), function(value) {
                             return new Pair(
                                 new Symbol('unquote'),
                                 new Pair(
@@ -2254,7 +2313,7 @@
                         });
                     }
                 }
-                return resolve_pair(pair, unquoting, unquoteTest);
+                return resolve_pair(node, unquoting, unquoteTest);
             }
             return promise(recur(arg.car), value => {
                 return promise(unquoting(value), quote);
@@ -2652,17 +2711,25 @@
             it will take each value from each list and call \`fn\` function
             with that many argument as number of list arguments.`),
         // ------------------------------------------------------------------
-        map: doc(async function(fn, ...args) {
+        map: doc(function(fn, ...args) {
             var array = args.map(list => this.get('list->array')(list));
             var result = [];
-            var i = 0;
-            while (i < array[0].length) {
+            return (function loop(i) {
+                if (i === array[0].length) {
+                    return Pair.fromArray(result);
+                }
                 var item = array.map((_, j) => array[j][i]);
-                var value = await fn(...item);
-                result.push(value);
-                i++;
-            }
-            return Pair.fromArray(result);
+                var value = fn(...item);
+                if (isPromise(value)) {
+                    return value.then(value => {
+                        result.push(value);
+                        return loop(++i);
+                    });
+                } else {
+                    result.push(value);
+                    return loop(++i);
+                }
+            })(0);
         }, `(map fn . args)
 
             Higher order function that call function \`fn\` by for each
@@ -3295,44 +3362,31 @@
     function init() {
         var lips_mime = 'text/x-lips';
         if (window.document) {
-            Array.from(document.querySelectorAll('script')).forEach((script) => {
-                var type = script.getAttribute('type');
-                if (type === lips_mime) {
-                    var src = script.getAttribute('src');
-                    if (src) {
-                        root.fetch(src).then(res => res.text()).then(exec);
-                    } else {
-                        exec(script.innerHTML);
+            var scripts = Array.from(document.querySelectorAll('script'));
+            return (function loop() {
+                var script = scripts.shift();
+                if (script) {
+                    var type = script.getAttribute('type');
+                    if (type === lips_mime) {
+                        var src = script.getAttribute('src');
+                        if (src) {
+                            return root.fetch(src).then(res => res.text())
+                                .then(exec).then(loop);
+                        } else {
+                            return exec(script.innerHTML).then(loop);
+                        }
+                    } else if (type && type.match(/lips|lisp/)) {
+                        console.warn('Expecting ' + lips_mime + ' found ' + type);
                     }
-                } else if (type && type.match(/lips|lisp/)) {
-                    console.warn('Expecting ' + lips_mime + ' found ' + type);
+                    return loop();
                 }
-            });
+            })();
         }
     }
     // ----------------------------------------------------------------------
-    function load(callback) {
-        if (typeof window !== 'undefined') {
-            if (window.addEventListener) {
-                window.addEventListener("load", callback, false);
-            } else if (window.attachEvent) {
-                window.attachEvent("onload", callback);
-            } else if (typeof window.onload === 'function') {
-                (function(old) {
-                    window.onload = function() {
-                        callback();
-                        old();
-                    };
-                })(window.onload);
-            } else {
-                window.onload = callback;
-            }
-        }
+    if (typeof window !== 'undefined') {
+        contentLoaded(window, init);
     }
-    // ----------------------------------------------------------------------
-    load(function() {
-        setTimeout(init, 0);
-    });
     // --------------------------------------
     return {
         version: '{{VER}}',
