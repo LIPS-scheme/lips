@@ -1,6 +1,6 @@
 ;; -*- scheme -*-
 
-(load "examples/hyper.lips")
+(load "hyper.lips")
 
 (define (new-state alist)
   "(new-state alist)
