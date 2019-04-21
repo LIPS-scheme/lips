@@ -6,14 +6,14 @@
 ### Features
 * change `append!` from macro to function (it will work with any value as fist list argument not only with names
 * `help` function and help system inside functions. First expression after function arguments is docs.
-* add `pipe` and `compose` function
+* add `pipe`, `compose` and `some` function
 * new function `unbind` to help write function that work with functions as objects (LIPS wrap them)
 * add alias for `.` as `get` so you can pass it to curry, with `.` LIPS will try to create pair
 * lambda function introspection
 * hypeapp example
 * better loading of code
 * make `map`, `filter`, `find`, `for-each` and `reduce` sync when possible
-* type checking
+* basic type checking
 ### Bug fixes
 * fix `if` it should not return false if false value is undefined
 * fix even and odd functions with BigInt

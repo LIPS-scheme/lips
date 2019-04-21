@@ -402,6 +402,14 @@
             return arg;
         });
     }
+    // ----------------------------------------------------------------------
+    function unpromise(value, fn = x => x) {
+        if (isPromise(value)) {
+            return value.then(fn);
+        }
+        return fn(value);
+    }
+    // ----------------------------------------------------------------------
     function matcher(name, arg) {
         if (arg instanceof RegExp) {
             return x => String(x).match(arg);
@@ -1171,12 +1179,7 @@
                         dynamic_scope,
                         error
                     });
-                    var promise = set(value);
-                    if (isPromise(promise)) {
-                        return promise.then(loop);
-                    } else {
-                        return loop();
-                    }
+                    return unpromise(set(value), loop);
                 }
             })();
         });
@@ -1740,11 +1743,7 @@
             if (!ref) {
                 ref = this;
             }
-            if (isPromise(value)) {
-                return value.then(value => ref.set(code.car, value));
-            } else {
-                ref.set(code.car, value);
-            }
+            return unpromise(value, value => ref.set(code.car, value));
         }), `(set! name value)
 
             Macro that can be used to set the value of the variable (mutate)
@@ -1842,11 +1841,7 @@
                         return result;
                     }
                 }
-                if (isPromise(cond)) {
-                    return cond.then(next);
-                } else {
-                    return next(cond);
-                }
+                return unpromise(cond, next);
             })();
         }), `(while cond . body)
 
@@ -1874,11 +1869,7 @@
                 }
             };
             var cond = evaluate(code.car, { env, dynamic_scope, error });
-            if (isPromise(cond)) {
-                return cond.then(resolve);
-            } else {
-                return resolve(cond);
-            }
+            return unpromise(cond, resolve);
         }), `(if cond true-expr false-expr)
 
             Macro evaluate condition expression and if the value is true, it
@@ -1914,15 +1905,11 @@
             return (function loop() {
                 if (arr.length) {
                     var code = arr.shift();
-                    result = evaluate(code, { env, dynamic_scope, error });
-                    if (isPromise(result)) {
-                        return result.then(value => {
-                            result = value;
-                            return loop();
-                        });
-                    } else {
+                    var ret = evaluate(code, { env, dynamic_scope, error });
+                    return unpromise(ret, value => {
+                        result = value;
                         return loop();
-                    }
+                    });
                 } else {
                     return result;
                 }
@@ -1999,13 +1986,9 @@
                 value = env.get(value);
             }
             if (code.car instanceof Symbol) {
-                if (isPromise(value)) {
-                    return value.then(value => {
-                        env.set(code.car, value);
-                    });
-                } else {
+                unpromise(value, value => {
                     env.set(code.car, value);
-                }
+                });
             }
         }), `(define name expression)
              (define (function-name . args) body)
@@ -2156,10 +2139,7 @@
                         // need different env because we need to call it in scope
                         // were it was called
                         pair = evaluate(pair, { env: this, dynamic_scope, error });
-                        if (isPromise(pair)) {
-                            return pair.then(clear);
-                        }
-                        return clear(pair);
+                        return unpromise(pair, clear);
                     }
                 }, __doc__);
             }
@@ -2186,13 +2166,6 @@
             var max_unquote = 0;
             if (dynamic_scope) {
                 dynamic_scope = self;
-            }
-            function promise(value, fn = x => x) {
-                if (isPromise(value)) {
-                    return value.then(fn);
-                } else {
-                    return fn(value);
-                }
             }
             function isPair(value) {
                 return value instanceof Pair;
@@ -2237,13 +2210,13 @@
                             dynamic_scope,
                             error
                         });
-                        return promise(eval_pair, function(eval_pair) {
+                        return unpromise(eval_pair, function(eval_pair) {
                             if (!eval_pair instanceof Pair) {
                                 throw new Error('Value of unquote-splicing need' +
                                                 ' to be pair');
                             }
                             const value = recur(pair.cdr);
-                            return promise(value, value => join(eval_pair, value));
+                            return unpromise(value, value => join(eval_pair, value));
                         });
                     }
                     if (Symbol.is(pair.car, 'unquote')) {
@@ -2263,7 +2236,7 @@
                         // in unquote function afer processing whole s-expression
                         if (parent === node) {
                             if (pair.cdr.cdr !== nil) {
-                                return promise(recur(pair.cdr.cdr), function(value) {
+                                return unpromise(recur(pair.cdr.cdr), function(value) {
                                     return new Pair(
                                         new Unquote(pair.cdr.car, unquote_count),
                                         value
@@ -2273,7 +2246,7 @@
                                 return new Unquote(pair.cdr.car, unquote_count);
                             }
                         } else if (parent.cdr.cdr !== nil) {
-                            return promise(recur(parent.cdr.cdr), function(value) {
+                            return unpromise(recur(parent.cdr.cdr), function(value) {
                                 parent.car.cdr = new Pair(
                                     new Unquote(node, unquote_count),
                                     parent.cdr === nil ? nil : value
@@ -2295,7 +2268,7 @@
                     if (max_unquote === node.count) {
                         return evaluate(node.value, { env: self, dynamic_scope, error });
                     } else {
-                        return promise(unquoting(node.value), function(value) {
+                        return unpromise(unquoting(node.value), function(value) {
                             return new Pair(
                                 new Symbol('unquote'),
                                 new Pair(
@@ -2308,8 +2281,8 @@
                 }
                 return resolve_pair(node, unquoting, unquoteTest);
             }
-            return promise(recur(arg.car), value => {
-                return promise(unquoting(value), quote);
+            return unpromise(recur(arg.car), value => {
+                return unpromise(unquoting(value), quote);
             });
         }), `(quasiquote list ,value ,@value)
 
@@ -2658,27 +2631,17 @@
             Function return length of the object, the object can be list
             or any object that have length property.`),
         // ------------------------------------------------------------------
-        find: doc(async function(arg, list) {
-            var array = this.get('list->array')(list);
+        find: doc(function find(arg, list) {
+            if (isNull(list)) {
+                return nil;
+            }
             var fn = matcher('find', arg);
-            return (function loop(i) {
-                function next(value) {
-                    if (value) {
-                        return item;
-                    }
-                    return loop(++i);
+            return unpromise(fn(list.car), function(value) {
+                if (value) {
+                    return list.car;
                 }
-                if (i === array.length) {
-                    return;
-                }
-                var item = array[i];
-                var value = fn(item);
-                if (isPromise(value)) {
-                    return value.then(next);
-                } else {
-                    return next(value);
-                }
-            })(0);
+                return find(arg, list.cdr);
+            });
         }, `(Find fn list)
 
             Higher order Function find first value for which function
@@ -2710,12 +2673,7 @@
                     return Pair.fromArray(result);
                 }
                 var item = array.map((_, j) => array[j][i]);
-                var value = fn(...item);
-                if (isPromise(value)) {
-                    return value.then(next);
-                } else {
-                    return next(value);
-                }
+                return unpromise(fn(...item), next);
             })(0);
         }, `(map fn . args)
 
@@ -2726,37 +2684,32 @@
             values of the function call is acumulated in result list and
             returned by the call to map.`),
         // ------------------------------------------------------------------
-        reduce: doc(function(fn, init, list) {
+        some: doc(function some(fn, list) {
+            if (isNull(list)) {
+                return false;
+            } else {
+                return unpromise(fn(list.car), (value) => {
+                    return value || some(fn, list.cdr);
+                });
+            }
+        }, `(some fn list)
+
+            Higher order function that call argument on each element of the list.
+            It stops when function fn return true for a value if so it will
+            return true. If it don't find the value it will return false`),
+        // ------------------------------------------------------------------
+        reduce: doc(function reduce(fn, init, ...lists) {
             typeCheck('reduce', fn, 'function');
-            if (isEmptyList(list) || isNull(list)) {
-                return list;
+            if (lists.some(l => isEmptyList(l) || isNull(l))) {
+                if (typeof init === 'number') {
+                    return LNumber(init);
+                }
+                return init;
+            } else {
+                return unpromise(fn(...lists.map(l => l.car), init), (value) => {
+                    return reduce.call(this, fn, value, ...lists.map(l => l.cdr));
+                });
             }
-            let result = init;
-            let node = list;
-            if (init === null) {
-                result = list.car;
-                node = list.cdr;
-            }
-            return (function loop() {
-                function next(value) {
-                    result = value;
-                    node = node.cdr;
-                    return loop();
-                }
-                if (node === nil || !(node instanceof Pair)) {
-                    if (typeof result === 'number') {
-                        return LNumber(result);
-                    }
-                    return result;
-                }
-                const item = node.car;
-                const value = fn(result, item);
-                if (isPromise(value)) {
-                    return value.then(next);
-                } else {
-                    return next(value);
-                }
-            })();
         }, `(reduce fn list [init])
 
             Higher order function take each element of the list and call
@@ -2764,7 +2717,7 @@
             on the list until each element is processed and return single value
             as result of last call to \`fn\` function.`),
         // ------------------------------------------------------------------
-        filter: doc(async function(arg, list) {
+        filter: doc(function(arg, list) {
             var array = this.get('list->array')(list);
             var result = [];
             var fn = matcher('filter', arg);
@@ -2779,12 +2732,7 @@
                     return Pair.fromArray(result);
                 }
                 var item = array[i];
-                var value = fn(item, i);
-                if (isPromise(value)) {
-                    return value.then(next);
-                } else {
-                    return next(value);
-                }
+                return unpromise(fn(item, i), next);
             })(0);
         }, `(filter fn list)
 
@@ -2955,11 +2903,7 @@
                     }
                 } else {
                     var value = evaluate(arg, { env: self, dynamic_scope, error });
-                    if (isPromise(value)) {
-                        return value.then(next);
-                    } else {
-                        return next(value);
-                    }
+                    return unpromise(value, next);
                 }
             })();
         }),
@@ -2989,11 +2933,7 @@
                     }
                 } else {
                     var value = evaluate(arg, { env: self, dynamic_scope, error });
-                    if (isPromise(value)) {
-                        return value.then(next);
-                    } else {
-                        return next(value);
-                    }
+                    return unpromise(value, next);
                 }
             })();
         }),
@@ -3205,17 +3145,13 @@
         }
         var value = macro.invoke(code, eval_args);
         value = maybe_promise(value);
-        function ret(value) {
+        return unpromise(value, function ret(value) {
             if (value && value.data || !(value instanceof Pair)) {
                 return value;
             } else {
                 return evaluate(value, eval_args);
             }
-        }
-        if (isPromise(value)) {
-            return value.then(ret);
-        }
-        return ret(value);
+        });
     }
     // ----------------------------------------------------------------------
     function evaluate(code, { env, dynamic_scope, error = () => {} } = {}) {
@@ -3266,13 +3202,10 @@
             }
             if (typeof value === 'function') {
                 var args = get_function_args(rest, eval_args);
-                if (isPromise(args)) {
-                    return args.then((args) => {
-                        var scope = dynamic_scope || env;
-                        return quote(maybe_promise(value.apply(scope, args)));
-                    });
-                }
-                return quote(maybe_promise(value.apply(dynamic_scope || env, args)));
+                return unpromise(args, function(args) {
+                    var scope = dynamic_scope || env;
+                    return quote(maybe_promise(value.apply(scope, args)));
+                });
             } else if (code instanceof Symbol) {
                 value = env.get(code);
                 if (value === 'undefined') {
