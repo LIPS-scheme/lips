@@ -23,6 +23,7 @@
 * make `load` use `lips.exec`, so it execute code sequentially
 * fix `append`
 * fix `timer` to use with expression
+* fix macros without arguments
 
 ## 0.9.0
 ### Breaking

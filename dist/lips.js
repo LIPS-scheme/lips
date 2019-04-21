@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 21 Apr 2019 22:28:10 +0000
+ * build: Sun, 21 Apr 2019 23:34:35 +0000
  */
 (function () {
 'use strict';
@@ -3063,17 +3063,19 @@ function _typeof(obj) {
       }
 
       if (!(code.car instanceof _Symbol)) {
-        throw new Error('set! first argument need to be a symbol');
+        throw new Error('set! first argument need to be a symbol or ' + 'dot accessor that evaluate to object.');
       }
 
       ref = this.ref(code.car.name);
 
       if (!ref) {
         ref = this;
-      }
+      } // we don't return value because we only care about sync of set value
+      // when value is a promise
+
 
       return unpromise(value, function (value) {
-        return ref.set(code.car, value);
+        ref.set(code.car, value);
       });
     }), "(set! name value)\n\n            Macro that can be used to set the value of the variable (mutate)\n            it search the scope chain until it finds first non emtpy slot and set it."),
     // ------------------------------------------------------------------
@@ -3432,6 +3434,10 @@ function _typeof(obj) {
           var arg = code;
 
           while (true) {
+            if (name === nil) {
+              break;
+            }
+
             if (name instanceof _Symbol) {
               env.env[name.name] = arg;
               break;
@@ -3758,6 +3764,10 @@ function _typeof(obj) {
         return obj.toString();
       }
 
+      if (root.HTMLElement && obj instanceof root.HTMLElement) {
+        return "<#HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
+      }
+
       if (_typeof(obj) === 'object') {
         var name = obj.constructor.name;
 
@@ -3916,7 +3926,7 @@ function _typeof(obj) {
     apply: doc(function (fn, args) {
       typecheck('call', fn, 'function', 1);
       typecheck('call', args, 'pair', 2);
-      return fn.apply(this, this.get('list->array')(args));
+      return fn.apply(void 0, _toConsumableArray(this.get('list->array')(args)));
     }, "(apply fn args)\n\n            Function that call function with list of arguments."),
     // ------------------------------------------------------------------
     'length': doc(function (obj) {

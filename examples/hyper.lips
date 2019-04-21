@@ -5,23 +5,27 @@
 
 (define log (. console "log"))
 
+(define (symbol->string symbol)
+  "(symbol->string symbol)
+
+   Function return LIPS symbol name."
+  (. symbol "name"))
+
 (define-macro (--> expr . code)
   "Helper macro similar to -> that works well with jQuery chaining
    where method call look function invocation.
 
            usage: (--> ($ \"body\")
                        (css \"color\" \"red\")
-                       (on \"click\" (lambda () (print \"click\"))))"
+                       (on \"click\" (lambda () (print \"click\"))))
+
+                  (--> document (querySelectorAll \"div\"))"
   (let ((obj (gensym)))
     `(let ((,obj ,expr))
-       ,@(let ((result '()))
-           (while code
-             (let ((lst `(set! ,obj (apply (. ,obj ,(. (caar code) "name"))
-                                           (list ,@(cdar code))))))
-               (append! result lst))
-             (set! code (cdr code)))
-           (append! result obj)
-           result))))
+       ,@(map (lambda ()
+                `(set! ,obj (apply (. ,obj ,(symbol->string (caar code))) (list ,@(cdar code)))))
+              code)
+       ,obj)))
 
 (define (dir obj)
   "(dir obj)

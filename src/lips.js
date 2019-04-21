@@ -1751,13 +1751,18 @@
                 return set(key, value);
             }
             if (!(code.car instanceof Symbol)) {
-                throw new Error('set! first argument need to be a symbol');
+                throw new Error('set! first argument need to be a symbol or ' +
+                                'dot accessor that evaluate to object.');
             }
             ref = this.ref(code.car.name);
             if (!ref) {
                 ref = this;
             }
-            return unpromise(value, value => ref.set(code.car, value));
+            // we don't return value because we only care about sync of set value
+            // when value is a promise
+            return unpromise(value, value => {
+                ref.set(code.car, value);
+            });
         }), `(set! name value)
 
             Macro that can be used to set the value of the variable (mutate)
@@ -2124,6 +2129,9 @@
                     var name = macro.car.cdr;
                     var arg = code;
                     while (true) {
+                        if (name === nil) {
+                            break;
+                        }
                         if (name instanceof Symbol) {
                             env.env[name.name] = arg;
                             break;
@@ -2458,6 +2466,9 @@
             if (obj instanceof Pair || obj instanceof Symbol) {
                 return obj.toString();
             }
+            if (root.HTMLElement && obj instanceof root.HTMLElement) {
+                return `<#HTMLElement(${obj.tagName.toLowerCase()})>`;
+            }
             if (typeof obj === 'object') {
                 var name = obj.constructor.name;
                 if (name !== '') {
@@ -2641,7 +2652,7 @@
         apply: doc(function(fn, args) {
             typecheck('call', fn, 'function', 1);
             typecheck('call', args, 'pair', 2);
-            return fn.apply(this, this.get('list->array')(args));
+            return fn(...this.get('list->array')(args));
         }, `(apply fn args)
 
             Function that call function with list of arguments.`),
