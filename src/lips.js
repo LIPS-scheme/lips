@@ -2783,14 +2783,14 @@
             return (function loop() {
                 function next(value) {
                     result = value;
-                    if (node.cdr === nil) {
-                        if (typeof result === 'number') {
-                            return LNumber(result);
-                        }
-                        return result;
-                    }
                     node = node.cdr;
                     return loop();
+                }
+                if (node === nil || !(node instanceof Pair)) {
+                    if (typeof result === 'number') {
+                        return LNumber(result);
+                    }
+                    return result;
                 }
                 const item = node.car;
                 const value = fn(result, item);

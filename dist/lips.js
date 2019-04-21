@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 21 Apr 2019 10:37:47 +0000
+ * build: Sun, 21 Apr 2019 11:15:43 +0000
  */
 (function () {
 'use strict';
@@ -4116,17 +4116,16 @@ function _typeof(obj) {
       return function loop() {
         function next(value) {
           result = value;
-
-          if (node.cdr === nil) {
-            if (typeof result === 'number') {
-              return LNumber(result);
-            }
-
-            return result;
-          }
-
           node = node.cdr;
           return loop();
+        }
+
+        if (node === nil || !(node instanceof Pair)) {
+          if (typeof result === 'number') {
+            return LNumber(result);
+          }
+
+          return result;
         }
 
         var item = node.car;
