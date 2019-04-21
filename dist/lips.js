@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 21 Apr 2019 17:09:18 +0000
+ * build: Sun, 21 Apr 2019 22:28:10 +0000
  */
 (function () {
 'use strict';
@@ -1965,7 +1965,7 @@ function _typeof(obj) {
 
       if (pair instanceof Pair) {
         p.cdr = pair;
-      } else {
+      } else if (pair !== nil) {
         p.cdr = new Pair(pair, nil);
       }
     }

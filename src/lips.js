@@ -951,7 +951,7 @@
             }
             if (pair instanceof Pair) {
                 p.cdr = pair;
-            } else {
+            } else if (pair !== nil) {
                 p.cdr = new Pair(pair, nil);
             }
         }

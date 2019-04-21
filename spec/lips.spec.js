@@ -602,14 +602,42 @@ describe('docs', function() {
     });
 });
 const str2list = code => lips.parse(lips.tokenize(code))[0];
+describe('lists', function() {
+    describe('append', function() {
+        it('should append value', function() {
+            [
+                ['(1 2 3)', '(1 2 3 10)'],
+                ['((1 2 3))', '((1 2 3) 10)'],
+                ['(1 2 (3) 4)', '(1 2 (3) 4 10)'],
+                ['(1 2 3 (4))', '(1 2 3 (4) 10)']
+            ].forEach(([code, expected]) => {
+                var input = str2list(code);
+                input.append(LNumber(10));
+                expect(input).toEqual(str2list(expected));
+            });
+        });
+        it('should not append nil', function() {
+            [
+                '(1 2 3)',
+                '((1 2 3))',
+                '(1 2 (3) 4)',
+                '(1 2 3 (4))'
+            ].forEach((code) => {
+                var input = str2list(code);
+                input.append(lips.nil);
+                expect(input).toEqual(str2list(code));
+            });
+        });
+    });
+});
 describe('env', function() {
     function testList(code, expected) {
-        lips.exec(code).then(list => {
+        lips.exec(code).then(([list]) => {
             expect(list).toEqual(str2list(expected));
         });
     }
     function testValue([code, expected]) {
-        lips.exec(code).then(result => {
+        lips.exec(code).then(([result]) => {
             expect(result).toEqual(expected);
         });
     }
@@ -630,7 +658,7 @@ describe('env', function() {
     });
     describe('dot function', function() {
         it('sould call pair method on list structure', function() {
-            lips.exec(`((. '((a . "10") (b . 20)) "toObject"))`).then(result => {
+            lips.exec(`((. '((a . "10") (b . 20)) "toObject"))`).then(([result]) => {
                 expect(result).toEqual({ a: "10", b: 20 });
             });
         });
@@ -650,51 +678,3 @@ describe('env', function() {
         ].forEach(testValue);
     });
 });
-
-
-/*
-
-var code = parse(tokenize(`
-    (print (cons 1 (cons 2 (cons 3 nil))))
-    (print (list 1 2 3 4))
-    (print (car (list 1 2 3)))
-    (print (concat "hello" " " "world"))
-    (print (append (list 1 2 3) (list 10)))
-    (print nil)
-    (define x 10)
-    (print (* x x))
-    (print (/ 1 2))
-    (define l1 (list 1 2 3 4))
-    (define l2 (append l1 (list 5 6)))
-    (print l1)
-    (print l2)
-    (defmacro (foo code) \`(print ,(string (car code))))
-    (foo (name baz))
-    (print \`(,(car (list "a" "b" "c")) 2 3))
-    (print \`(,@(list 1 2 3)))
-    (print \`(1 2 3 ,@(list 4 5) 6))
-    (defmacro (xxx code) \`(list 1 ,(car (cdr code)) 2))
-    (print (xxx ("10" "20")))
-    (if (== 10 20) (print "1 true") (print "1 false"))
-    (if (== 10 10) (print "2 true") (print "2 false"))
-    (print (concat "if " (if (== x 10) "10" "20")))
-`));
-
-(function() {
-  var env = new Environment({}, global_environment);
-  var c = parse(tokenize([
-    "(define x '(1 2 3))",
-    "(print x)",
-    "(print `(1 2 ,@x 4 5))",
-    "(print `(foo bar ,@x 4 5))"
-  ].join(' ')));
-  c.forEach(function(code) {
-    console.log(code.toString());
-    try {
-      evaluate(code, env);
-    } catch (e) {
-      console.error(e.message);
-    }
-  })
-})();
-*/
