@@ -2,6 +2,7 @@
 ### Breaking
 * change order of `split`, `replace`, `match`, `search` and `instanceof` so you can use them with `curry`
 * `append` and `append!` no require list or nil second argument
+* apply is no longer Macro it's now a function (so it can be used in curry)
 ### Features
 * change `append!` from macro to function (it will work with any value as fist list argument not only with names
 * `help` function and help system inside functions. First expression after function arguments is docs.
@@ -12,6 +13,7 @@
 * hypeapp example
 * better loading of code
 * make `map`, `filter`, `find`, `for-each` and `reduce` sync when possible
+* type checking
 ### Bug fixes
 * fix `if` it should not return false if false value is undefined
 * fix even and odd functions with BigInt
@@ -19,6 +21,7 @@
 * fix when inside quasiquote there is empty list
 * make `load` use `lips.exec`, so it execute code sequentially
 * fix `append`
+* fix `timer` to use with expression
 
 ## 0.9.0
 ### Breaking

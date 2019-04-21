@@ -548,6 +548,8 @@
                     }
                 }
             }
+        } else {
+            return 0;
         }
         return spaces + settings.indent;
     };
@@ -1182,20 +1184,24 @@
     // ----------------------------------------------------------------------
     function guardMathCall(fn, ...args) {
         args.forEach(arg => {
-            if (!LNumber.isNumber(arg)) {
-                throw new Error(`${type(arg)} is not a number!`);
-            }
+            typeCheck('', arg, 'number');
         });
         return fn(...args);
     }
     // ----------------------------------------------------------------------
     function pipe(...fns) {
+        fns.forEach((fn, i) => {
+            typeCheck('pipe', fn, 'function', i + 1);
+        });
         return function(...args) {
             return fns.reduce((args, f) => [f(...args)], args)[0];
         };
     }
     // ----------------------------------------------------------------------
     function compose(...fns) {
+        fns.forEach((fn, i) => {
+            typeCheck('compose', fn, 'function', i + 1);
+        });
         return pipe(...fns.reverse());
     }
     // ----------------------------------------------------------------------
@@ -1216,6 +1222,7 @@
     }
     // ----------------------------------------------------------------------
     function curry(fn, ...init_args) {
+        typeCheck('curry', fn, 'function');
         var len = fn.length;
         return function() {
             var args = init_args.slice();
@@ -1233,6 +1240,7 @@
     // ----------------------------------------------------------------------
     // return function with limited number of arguments
     function limit(n, fn) {
+        typeCheck('limit', fn, 'function', 2);
         return function(...args) {
             return fn(...args.slice(0, n));
         };
@@ -1273,7 +1281,7 @@
             return LNumber(n.value, n.float);
         }
         if (!LNumber.isNumber(n)) {
-            throw new Error("You can't create LNumber from " + typeof n);
+            throw new Error(`You can't create LNumber from ${type(n)}`);
         }
         // prevent infite loop https://github.com/indutny/bn.js/issues/186
         if (n === null) {
@@ -1688,21 +1696,15 @@
             Function return new Pair out of two arguments.`),
         // ------------------------------------------------------------------
         car: doc(function(list) {
-            if (list instanceof Pair) {
-                return list.car;
-            } else {
-                throw new Error('argument to car need to be a list');
-            }
+            typeCheck('car', list, 'pair');
+            return list.car;
         }, `(car pair)
 
             Function returns car (head) of the list/pair.`),
         // ------------------------------------------------------------------
         cdr: doc(function(list) {
-            if (list instanceof Pair) {
-                return list.cdr;
-            } else {
-                throw new Error('argument to cdr need to be a list');
-            }
+            typeCheck('cdr', list, 'pair');
+            return list.cdr;
         }, `(cdr pair)
 
             Function returns cdr (tail) of the list/pair.`),
@@ -1749,6 +1751,7 @@
             it search the scope chain until it finds first non emtpy slot and set it.`),
         // ------------------------------------------------------------------
         'set-car!': doc(function(slot, value) {
+            typeCheck('set-car!', slot, 'pair');
             slot.car = value;
         }, `(set-car! obj value)
 
@@ -1756,6 +1759,7 @@
             It can destroy the list. Old value is lost.`),
         // ------------------------------------------------------------------
         'set-cdr!': doc(function(slot, value) {
+            typeCheck('set-cdr!', slot, 'pair');
             slot.cdr = value;
         }, `(set-cdr! obj value)
 
@@ -1797,6 +1801,7 @@
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
         load: doc(function(file) {
+            typeCheck('load', file, 'string');
             return root.fetch(file).then(res => res.text()).then(exec);
         }, `(load filename)
 
@@ -1843,24 +1848,6 @@
                     return next(cond);
                 }
             })();
-            /*
-            while (true) {
-                var cond = await evaluate(code.car, {
-                    env: self,
-                    dynamic_scope,
-                    error
-                });
-                if (cond && !isNull(cond) && !isEmptyList(cond)) {
-                    result = await evaluate(begin, {
-                        env: self,
-                        dynamic_scope,
-                        error
-                    });
-                } else {
-                    return result;
-                }
-            }
-            */
         }), `(while cond . body)
 
             Macro that create a loop, it exectue body untill cond expression is false`),
@@ -1871,9 +1858,7 @@
             }
             var env = this;
             var resolve = (cond) => {
-                if (typeof cond !== 'boolean') {
-                    throw new Error('if: value need to be boolean');
-                }
+                typeCheck('if', cond, 'boolean');
                 if (cond) {
                     return evaluate(code.cdr.car, {
                         env,
@@ -1958,26 +1943,26 @@
             want any output.`),
         // ------------------------------------------------------------------
         timer: doc(new Macro('timer', function(code, { dynamic_scope, error } = {}) {
+            typeCheck('timer', code.car, 'number');
             var env = this;
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
             return new Promise((resolve) => {
                 setTimeout(() => {
-                    resolve(evaluate(code.cdr, {
+                    resolve(evaluate(code.cdr.car, {
                         env,
                         dynamic_scope,
                         error
                     }));
                 }, code.car);
-            });
-        }), `(timer time function)
+            }).then(quote);
+        }), `(timer time expression)
 
              Function return a promise, and it will be automatically evaluated
              after specific time passes. The return value of the function
              will be value of the timer exprssion. If you want to do side effect
-             only expression you can return nop from lambda or wrap the code
-             in call to nop.`),
+             only expression you can wrap your expression in nol call.`),
         // ------------------------------------------------------------------
         define: doc(Macro.defmacro('define', function(code, eval_args) {
             var env = this;
@@ -2031,6 +2016,9 @@
              code \`(define function (lambda args body))\``),
         // ------------------------------------------------------------------
         'set-obj!': doc(function(obj, key, value) {
+            if (typeof obj !== 'object' || isNull(obj)) {
+                throw new Error(typeErrorMessage('set-obj!', type(obj), 'object'));
+            }
             obj[key] = value;
         }, `(set-obj! obj key value)
 
@@ -2240,15 +2228,6 @@
                 }
                 return eval_pair;
             }
-            /*
-            function clean(node) {
-                if (node instanceof Pair) {
-                    delete node.data;
-                    clean(node.cdr);
-                    clean(node.car);
-                }
-            }
-            */
             function recur(pair) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
                     var eval_pair;
@@ -2367,7 +2346,7 @@
                 var arr = this.get('list->array')(arg).reverse();
                 return this.get('array->list')(arr);
             } else if (!(arg instanceof Array)) {
-                throw new Error('Invlid value for reverse');
+                throw new Error(typeErrorMessage('reverse', type(arg), 'array or pair'));
             } else {
                 return arg.reverse();
             }
@@ -2391,7 +2370,7 @@
             } else if (obj instanceof Array) {
                 return obj[index];
             } else {
-                throw new Error('Invalid object for nth');
+                throw new Error(typeErrorMessage('nth', type(obj), 'array or pair', 2));
             }
         }, `(nth index obj)
 
@@ -2403,9 +2382,13 @@
         }, `(list . args)
 
             Function create new list out of its arguments.`),
-        substring: function(string, start, end) {
+        // ------------------------------------------------------------------
+        substring: doc(function(string, start, end) {
             return string.substring(start.valueOf(), end && end.valueOf());
-        },
+        }, `(substring string start end)
+
+            Function return part of the string starting at start ending with end.`),
+        // ------------------------------------------------------------------
         concat: doc(function() {
             return [].join.call(arguments, '');
         }, `(concat . strings)
@@ -2512,12 +2495,13 @@
         'get': get,
         '.': get,
         // ------------------------------------------------------------------
-        'unbind': function(obj) {
+        'unbind': doc(function(obj) {
             if (typeof obj === 'function' && obj.__bind) {
                 return obj.__bind.fn;
             }
             return obj;
-        },
+        }, `(unbind fn)
+            Function remove bidning from function so you can get props from it.`),
         // ------------------------------------------------------------------
         type: doc(
             type,
@@ -2651,43 +2635,13 @@
 
             Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
-        apply: doc(new Macro('apply', function(code, { dynamic_scope, error } = {}) {
-            if (dynamic_scope) {
-                dynamic_scope = this;
-            }
-            function type_check(fn) {
-                if (typeof fn !== 'function') {
-                    var message;
-                    if (code.car instanceof Symbol) {
-                        message = "Variable `" + code.car.name +
-                            "' is not a function";
-                    } else {
-                        message = "Expression `" + code.car.toString() +
-                            "' is not a function";
-                    }
-                    throw new Error(message);
-                }
-            }
-            var invoke = fn => {
-                type_check(fn);
-                var args = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
-                args = this.get('list->array')(args);
-                if (args.filter(isPromise).length) {
-                    return Promise.all(args).then(args => fn.apply(this, args));
-                } else {
-                    return fn.apply(this, args);
-                }
-            };
-            var fn = evaluate(code.car, { env: this, dynamic_scope, error });
-            if (isPromise(fn)) {
-                return fn.then(invoke);
-            } else {
-                return invoke(fn);
-            }
-        }), `(apply fn args)
+        apply: doc(function(fn, args) {
+            typeCheck('call', fn, 'function', 1);
+            typeCheck('call', args, 'pair', 2);
+            return fn.apply(this, this.get('list->array')(args));
+        }, `(apply fn args)
 
-             Macro that call function or expression that can be evaluated
-             to function with list of arguments as list structure.`),
+            Function that call function with list of arguments.`),
         // ------------------------------------------------------------------
         'length': doc(function(obj) {
             if (!obj) {
@@ -2731,6 +2685,7 @@
             return true.`),
         // ------------------------------------------------------------------
         'for-each': doc(function(fn, ...args) {
+            typeCheck('for-each', fn, 'function');
             var ret = this.get('map')(fn, ...args);
             if (isPromise(ret)) {
                 return ret.then(() => {});
@@ -2743,6 +2698,7 @@
             with that many argument as number of list arguments.`),
         // ------------------------------------------------------------------
         map: doc(function(fn, ...args) {
+            typeCheck('map', fn, 'function');
             var array = args.map(list => this.get('list->array')(list));
             var result = [];
             return (function loop(i) {
@@ -2770,7 +2726,8 @@
             values of the function call is acumulated in result list and
             returned by the call to map.`),
         // ------------------------------------------------------------------
-        reduce: doc(function(fn, list, init = null) {
+        reduce: doc(function(fn, init, list) {
+            typeCheck('reduce', fn, 'function');
             if (isEmptyList(list) || isNull(list)) {
                 return list;
             }
@@ -2877,13 +2834,16 @@
              (define add12 (add 2))
              (print (add12 3 4))`),
         // ------------------------------------------------------------------
-        odd: singleMathOp(function(num) {
+        odd: doc(singleMathOp(function(num) {
             return LNumber(num).isOdd();
-        }),
+        }), `(odd number)
+             Function check if number os odd.`),
         // ------------------------------------------------------------------
-        even: singleMathOp(function(num) {
+        even: doc(singleMathOp(function(num) {
             return LNumber(num).isEvent();
-        }),
+        }), `(even number)
+
+             Function check if number is even.`),
         // ------------------------------------------------------------------
         // math functions
         '*': reduceMathOp(function(a, b) {
@@ -3125,6 +3085,21 @@
         global_env.set('window', window);
     }
     // ----------------------------------------------------------------------
+    function typeErrorMessage(fn, got, expected, position = null) {
+        let postfix = fn ? ` in function \`${fn}\`` : '';
+        if (position !== null) {
+            postfix += ` argument ${position}`;
+        }
+        return `Expecting ${expected} got ${got}${postfix}`;
+    }
+    // ----------------------------------------------------------------------
+    function typeCheck(fn, arg, expected, position = null) {
+        const arg_type = type(arg);
+        if (arg_type !== expected) {
+            throw new Error(typeErrorMessage(fn, arg_type, expected, position));
+        }
+    }
+    // ----------------------------------------------------------------------
     function type(obj) {
         var mapping = {
             'pair': Pair,
@@ -3145,9 +3120,6 @@
             }
         }
         if (obj instanceof LNumber) {
-            if (obj.isBigNumber()) {
-                return 'bigint';
-            }
             return 'number';
         }
         if (obj instanceof RegExp) {
