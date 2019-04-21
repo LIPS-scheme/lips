@@ -18,8 +18,8 @@
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
  */
-/* TODO: remove async from functions: find, for-each, map, reduce, filter
- *       consider using exec in eval or use different maybe_async code
+/*
+ * TODO: consider using exec in env.eval or use different maybe_async code
  */
 "use strict";
 /* global define, module, setTimeout, jQuery, global, BigInt, require, Blob */
@@ -401,6 +401,15 @@
             }
             return arg;
         });
+    }
+    function matcher(name, arg) {
+        if (arg instanceof RegExp) {
+            return x => String(x).match(arg);
+        } else if (typeof arg !== 'function') {
+            throw new Error(`${name} argument need to be a function or RegExp`);
+        } else {
+            return arg;
+        }
     }
     // ----------------------------------------------------------------------
     // :: documentaton decorator to LIPS functions if lines starts with :
@@ -867,7 +876,8 @@
             return '<#Promise>';
         } else if (value instanceof Symbol ||
                   value instanceof LNumber ||
-                  value instanceof Pair) {
+                  value instanceof Pair ||
+                  value === nil) {
             return value.toString();
         } else if (value instanceof Array) {
             return value.map(toString);
@@ -919,7 +929,7 @@
                 this.car = pair.car;
                 this.cdr = pair.cdr;
             } else {
-                return pair;
+                this.car = pair;
             }
         } else {
             while (true) {
@@ -929,7 +939,11 @@
                     break;
                 }
             }
-            p.cdr = pair;
+            if (pair instanceof Pair) {
+                p.cdr = pair;
+            } else {
+                p.cdr = new Pair(pair, nil);
+            }
         }
         return this;
     };
@@ -2690,20 +2704,37 @@
             Function return length of the object, the object can be list
             or any object that have length property.`),
         // ------------------------------------------------------------------
-        find: doc(async function(fn, list) {
+        find: doc(async function(arg, list) {
             var array = this.get('list->array')(list);
-            for (var i = 0; i < array.length; ++i) {
-                if (await fn(array[i], i)) {
-                    return array[i];
+            var fn = matcher('find', arg);
+            return (function loop(i) {
+                function next(value) {
+                    if (value) {
+                        return item;
+                    }
+                    return loop(++i);
                 }
-            }
+                if (i === array.length) {
+                    return;
+                }
+                var item = array[i];
+                var value = fn(item);
+                if (isPromise(value)) {
+                    return value.then(next);
+                } else {
+                    return next(value);
+                }
+            })(0);
         }, `(Find fn list)
 
             Higher order Function find first value for which function
             return true.`),
         // ------------------------------------------------------------------
-        'for-each': doc(async function(fn, ...args) {
-            await this.get('map')(fn, ...args);
+        'for-each': doc(function(fn, ...args) {
+            var ret = this.get('map')(fn, ...args);
+            if (isPromise(ret)) {
+                return ret.then(() => {});
+            }
         }, `(for-each fn . args)
 
             Higher order function that call function \`fn\` by for each
@@ -2715,19 +2746,19 @@
             var array = args.map(list => this.get('list->array')(list));
             var result = [];
             return (function loop(i) {
+                function next(value) {
+                    result.push(value);
+                    return loop(++i);
+                }
                 if (i === array[0].length) {
                     return Pair.fromArray(result);
                 }
                 var item = array.map((_, j) => array[j][i]);
                 var value = fn(...item);
                 if (isPromise(value)) {
-                    return value.then(value => {
-                        result.push(value);
-                        return loop(++i);
-                    });
+                    return value.then(next);
                 } else {
-                    result.push(value);
-                    return loop(++i);
+                    return next(value);
                 }
             })(0);
         }, `(map fn . args)
@@ -2739,43 +2770,65 @@
             values of the function call is acumulated in result list and
             returned by the call to map.`),
         // ------------------------------------------------------------------
-        reduce: doc(async function(fn, list, init = null) {
-            var array = this.get('list->array')(list);
-            if (list.length === 0) {
-                return nil;
+        reduce: doc(function(fn, list, init = null) {
+            if (isEmptyList(list) || isNull(list)) {
+                return list;
             }
-            var result = init;
+            let result = init;
+            let node = list;
             if (init === null) {
-                result = array.unshift();
+                result = list.car;
+                node = list.cdr;
             }
-            var i = 0;
-            while (i < array.length) {
-                var item = array[i++];
-                result = await fn(result, item);
-            }
-            if (typeof result === 'number') {
-                return LNumber(result);
-            }
-            return result;
+            return (function loop() {
+                function next(value) {
+                    result = value;
+                    if (node.cdr === nil) {
+                        if (typeof result === 'number') {
+                            return LNumber(result);
+                        }
+                        return result;
+                    }
+                    node = node.cdr;
+                    return loop();
+                }
+                const item = node.car;
+                const value = fn(result, item);
+                if (isPromise(value)) {
+                    return value.then(next);
+                } else {
+                    return next(value);
+                }
+            })();
         }, `(reduce fn list [init])
 
-            Higher order  Function take each element of the list and call
+            Higher order function take each element of the list and call
             the function with result of previous call or init and next element
             on the list until each element is processed and return single value
             as result of last call to \`fn\` function.`),
         // ------------------------------------------------------------------
-        filter: doc(async function(fn, list) {
+        filter: doc(async function(arg, list) {
             var array = this.get('list->array')(list);
             var result = [];
-            var i = 0;
-            while (i < array.length) {
-                var item = array[i++];
-                var cond = await fn(item, i);
-                if (cond) {
-                    result.push(item);
+            var fn = matcher('filter', arg);
+            return (function loop(i) {
+                function next(value) {
+                    if (value) {
+                        result.push(item);
+                    }
+                    return loop(++i);
                 }
-            }
-            return Pair.fromArray(result, true);
+                if (i === array.length) {
+                    return Pair.fromArray(result);
+                }
+                var item = array[i];
+                var value = fn(item, i);
+                if (isPromise(value)) {
+                    return value.then(next);
+                } else {
+                    return next(value);
+                }
+            })(0);
         }, `(filter fn list)
 
             Higher order function that call \`fn\` for each element of the list
@@ -3171,7 +3224,7 @@
                 break;
             }
         }
-        return maybe_promise(args, rest);
+        return maybe_promise(args);
     }
     // ----------------------------------------------------------------------
     function evaluate_macro(macro, code, eval_args) {

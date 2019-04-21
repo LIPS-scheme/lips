@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sat, 20 Apr 2019 19:55:35 +0000
+ * build: Sun, 21 Apr 2019 10:37:47 +0000
  */
 (function () {
 'use strict';
@@ -1337,6 +1337,18 @@ function _typeof(obj) {
 
       return arg;
     });
+  }
+
+  function matcher(name, arg) {
+    if (arg instanceof RegExp) {
+      return function (x) {
+        return String(x).match(arg);
+      };
+    } else if (typeof arg !== 'function') {
+      throw new Error("".concat(name, " argument need to be a function or RegExp"));
+    } else {
+      return arg;
+    }
   } // ----------------------------------------------------------------------
   // :: documentaton decorator to LIPS functions if lines starts with :
   // :: they are ignored (not trim) otherwise it trim so
@@ -1863,7 +1875,7 @@ function _typeof(obj) {
       return JSON.stringify(value);
     } else if (isPromise(value)) {
       return '<#Promise>';
-    } else if (value instanceof _Symbol || value instanceof LNumber || value instanceof Pair) {
+    } else if (value instanceof _Symbol || value instanceof LNumber || value instanceof Pair || value === nil) {
       return value.toString();
     } else if (value instanceof Array) {
       return value.map(toString);
@@ -1924,7 +1936,7 @@ function _typeof(obj) {
         this.car = pair.car;
         this.cdr = pair.cdr;
       } else {
-        return pair;
+        this.car = pair;
       }
     } else {
       while (true) {
@@ -1935,7 +1947,11 @@ function _typeof(obj) {
         }
       }
 
-      p.cdr = pair;
+      if (pair instanceof Pair) {
+        p.cdr = pair;
+      } else {
+        p.cdr = new Pair(pair, nil);
+      }
     }
 
     return this;
@@ -3992,38 +4008,38 @@ function _typeof(obj) {
     function () {
       var _ref17 = _asyncToGenerator(
       /*#__PURE__*/
-      regenerator.mark(function _callee3(fn, list) {
-        var array, i;
+      regenerator.mark(function _callee3(arg, list) {
+        var array, fn;
         return regenerator.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
                 array = this.get('list->array')(list);
-                i = 0;
+                fn = matcher('find', arg);
+                return _context3.abrupt("return", function loop(i) {
+                  function next(value) {
+                    if (value) {
+                      return item;
+                    }
 
-              case 2:
-                if (!(i < array.length)) {
-                  _context3.next = 10;
-                  break;
-                }
+                    return loop(++i);
+                  }
 
-                _context3.next = 5;
-                return fn(array[i], i);
+                  if (i === array.length) {
+                    return;
+                  }
 
-              case 5:
-                if (!_context3.sent) {
-                  _context3.next = 7;
-                  break;
-                }
+                  var item = array[i];
+                  var value = fn(item);
 
-                return _context3.abrupt("return", array[i]);
+                  if (isPromise(value)) {
+                    return value.then(next);
+                  } else {
+                    return next(value);
+                  }
+                }(0));
 
-              case 7:
-                ++i;
-                _context3.next = 2;
-                break;
-
-              case 10:
+              case 3:
               case "end":
                 return _context3.stop();
             }
@@ -4036,40 +4052,17 @@ function _typeof(obj) {
       };
     }(), "(Find fn list)\n\n            Higher order Function find first value for which function\n            return true."),
     // ------------------------------------------------------------------
-    'for-each': doc(
-    /*#__PURE__*/
-    function () {
-      var _ref18 = _asyncToGenerator(
-      /*#__PURE__*/
-      regenerator.mark(function _callee4(fn) {
-        var _len17,
-            args,
-            _key17,
-            _args4 = arguments;
+    'for-each': doc(function (fn) {
+      for (var _len17 = arguments.length, args = new Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
+        args[_key17 - 1] = arguments[_key17];
+      }
 
-        return regenerator.wrap(function _callee4$(_context4) {
-          while (1) {
-            switch (_context4.prev = _context4.next) {
-              case 0:
-                for (_len17 = _args4.length, args = new Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
-                  args[_key17 - 1] = _args4[_key17];
-                }
+      var ret = this.get('map').apply(void 0, [fn].concat(args));
 
-                _context4.next = 3;
-                return this.get('map').apply(void 0, [fn].concat(args));
-
-              case 3:
-              case "end":
-                return _context4.stop();
-            }
-          }
-        }, _callee4, this);
-      }));
-
-      return function (_x6) {
-        return _ref18.apply(this, arguments);
-      };
-    }(), "(for-each fn . args)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
+      if (isPromise(ret)) {
+        return ret.then(function () {});
+      }
+    }, "(for-each fn . args)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
     // ------------------------------------------------------------------
     map: doc(function (fn) {
       var _this6 = this;
@@ -4083,6 +4076,11 @@ function _typeof(obj) {
       });
       var result = [];
       return function loop(i) {
+        function next(value) {
+          result.push(value);
+          return loop(++i);
+        }
+
         if (i === array[0].length) {
           return Pair.fromArray(result);
         }
@@ -4093,139 +4091,102 @@ function _typeof(obj) {
         var value = fn.apply(void 0, _toConsumableArray(item));
 
         if (isPromise(value)) {
-          return value.then(function (value) {
-            result.push(value);
-            return loop(++i);
-          });
+          return value.then(next);
         } else {
-          result.push(value);
-          return loop(++i);
+          return next(value);
         }
       }(0);
     }, "(map fn . args)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments. The return\n            values of the function call is acumulated in result list and\n            returned by the call to map."),
     // ------------------------------------------------------------------
-    reduce: doc(
-    /*#__PURE__*/
-    function () {
-      var _ref19 = _asyncToGenerator(
-      /*#__PURE__*/
-      regenerator.mark(function _callee5(fn, list) {
-        var init,
-            array,
-            result,
-            i,
-            item,
-            _args5 = arguments;
-        return regenerator.wrap(function _callee5$(_context5) {
-          while (1) {
-            switch (_context5.prev = _context5.next) {
-              case 0:
-                init = _args5.length > 2 && _args5[2] !== undefined ? _args5[2] : null;
-                array = this.get('list->array')(list);
+    reduce: doc(function (fn, list) {
+      var init = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
-                if (!(list.length === 0)) {
-                  _context5.next = 4;
-                  break;
-                }
+      if (isEmptyList(list) || isNull(list)) {
+        return list;
+      }
 
-                return _context5.abrupt("return", nil);
+      var result = init;
+      var node = list;
 
-              case 4:
-                result = init;
+      if (init === null) {
+        result = list.car;
+        node = list.cdr;
+      }
 
-                if (init === null) {
-                  result = array.unshift();
-                }
+      return function loop() {
+        function next(value) {
+          result = value;
 
-                i = 0;
-
-              case 7:
-                if (!(i < array.length)) {
-                  _context5.next = 14;
-                  break;
-                }
-
-                item = array[i++];
-                _context5.next = 11;
-                return fn(result, item);
-
-              case 11:
-                result = _context5.sent;
-                _context5.next = 7;
-                break;
-
-              case 14:
-                if (!(typeof result === 'number')) {
-                  _context5.next = 16;
-                  break;
-                }
-
-                return _context5.abrupt("return", LNumber(result));
-
-              case 16:
-                return _context5.abrupt("return", result);
-
-              case 17:
-              case "end":
-                return _context5.stop();
+          if (node.cdr === nil) {
+            if (typeof result === 'number') {
+              return LNumber(result);
             }
-          }
-        }, _callee5, this);
-      }));
 
-      return function (_x7, _x8) {
-        return _ref19.apply(this, arguments);
-      };
-    }(), "(reduce fn list [init])\n\n            Higher order  Function take each element of the list and call\n            the function with result of previous call or init and next element\n            on the list until each element is processed and return single value\n            as result of last call to `fn` function."),
+            return result;
+          }
+
+          node = node.cdr;
+          return loop();
+        }
+
+        var item = node.car;
+        var value = fn(result, item);
+
+        if (isPromise(value)) {
+          return value.then(next);
+        } else {
+          return next(value);
+        }
+      }();
+    }, "(reduce fn list [init])\n\n            Higher order function take each element of the list and call\n            the function with result of previous call or init and next element\n            on the list until each element is processed and return single value\n            as result of last call to `fn` function."),
     // ------------------------------------------------------------------
     filter: doc(
     /*#__PURE__*/
     function () {
-      var _ref20 = _asyncToGenerator(
+      var _ref18 = _asyncToGenerator(
       /*#__PURE__*/
-      regenerator.mark(function _callee6(fn, list) {
-        var array, result, i, item, cond;
-        return regenerator.wrap(function _callee6$(_context6) {
+      regenerator.mark(function _callee4(arg, list) {
+        var array, result, fn;
+        return regenerator.wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
                 array = this.get('list->array')(list);
                 result = [];
-                i = 0;
+                fn = matcher('filter', arg);
+                return _context4.abrupt("return", function loop(i) {
+                  function next(value) {
+                    if (value) {
+                      result.push(item);
+                    }
 
-              case 3:
-                if (!(i < array.length)) {
-                  _context6.next = 11;
-                  break;
-                }
+                    return loop(++i);
+                  }
 
-                item = array[i++];
-                _context6.next = 7;
-                return fn(item, i);
+                  if (i === array.length) {
+                    return Pair.fromArray(result);
+                  }
 
-              case 7:
-                cond = _context6.sent;
+                  var item = array[i];
+                  var value = fn(item, i);
 
-                if (cond) {
-                  result.push(item);
-                }
+                  if (isPromise(value)) {
+                    return value.then(next);
+                  } else {
+                    return next(value);
+                  }
+                }(0));
 
-                _context6.next = 3;
-                break;
-
-              case 11:
-                return _context6.abrupt("return", Pair.fromArray(result, true));
-
-              case 12:
+              case 4:
               case "end":
-                return _context6.stop();
+                return _context4.stop();
             }
           }
-        }, _callee6, this);
+        }, _callee4, this);
       }));
 
-      return function (_x9, _x10) {
-        return _ref20.apply(this, arguments);
+      return function (_x6, _x7) {
+        return _ref18.apply(this, arguments);
       };
     }(), "(filter fn list)\n\n            Higher order function that call `fn` for each element of the list\n            and return list for only those elements for which funtion return\n            true value."),
     // ------------------------------------------------------------------
@@ -4341,9 +4302,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': equal,
     // ------------------------------------------------------------------
-    or: new Macro('or', function (code, _ref21) {
-      var dynamic_scope = _ref21.dynamic_scope,
-          error = _ref21.error;
+    or: new Macro('or', function (code, _ref19) {
+      var dynamic_scope = _ref19.dynamic_scope,
+          error = _ref19.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -4388,9 +4349,9 @@ function _typeof(obj) {
     }),
     // ------------------------------------------------------------------
     and: new Macro('and', function (code) {
-      var _ref22 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref22.dynamic_scope,
-          error = _ref22.error;
+      var _ref20 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref20.dynamic_scope,
+          error = _ref20.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -4607,44 +4568,44 @@ function _typeof(obj) {
       }
     }
 
-    function promise(_x11) {
+    function promise(_x8) {
       return _promise.apply(this, arguments);
     }
 
     function _promise() {
       _promise = _asyncToGenerator(
       /*#__PURE__*/
-      regenerator.mark(function _callee7(node) {
+      regenerator.mark(function _callee5(node) {
         var pair;
-        return regenerator.wrap(function _callee7$(_context7) {
+        return regenerator.wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
-                _context7.t0 = Pair;
-                _context7.next = 3;
+                _context5.t0 = Pair;
+                _context5.next = 3;
                 return resolve(node.car);
 
               case 3:
-                _context7.t1 = _context7.sent;
-                _context7.next = 6;
+                _context5.t1 = _context5.sent;
+                _context5.next = 6;
                 return resolve(node.cdr);
 
               case 6:
-                _context7.t2 = _context7.sent;
-                pair = new _context7.t0(_context7.t1, _context7.t2);
+                _context5.t2 = _context5.sent;
+                pair = new _context5.t0(_context5.t1, _context5.t2);
 
                 if (node.data) {
                   pair.data = true;
                 }
 
-                return _context7.abrupt("return", pair);
+                return _context5.abrupt("return", pair);
 
               case 10:
               case "end":
-                return _context7.stop();
+                return _context5.stop();
             }
           }
-        }, _callee7);
+        }, _callee5);
       }));
       return _promise.apply(this, arguments);
     }
@@ -4663,10 +4624,10 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function get_function_args(rest, _ref23) {
-    var env = _ref23.env,
-        dynamic_scope = _ref23.dynamic_scope,
-        error = _ref23.error;
+  function get_function_args(rest, _ref21) {
+    var env = _ref21.env,
+        dynamic_scope = _ref21.dynamic_scope,
+        error = _ref21.error;
     var args = [];
     var node = rest;
 
@@ -4685,7 +4646,7 @@ function _typeof(obj) {
       }
     }
 
-    return maybe_promise(args, rest);
+    return maybe_promise(args);
   } // ----------------------------------------------------------------------
 
 
@@ -4714,11 +4675,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref24 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref24.env,
-        dynamic_scope = _ref24.dynamic_scope,
-        _ref24$error = _ref24.error,
-        error = _ref24$error === void 0 ? function () {} : _ref24$error;
+    var _ref22 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref22.env,
+        dynamic_scope = _ref22.dynamic_scope,
+        _ref22$error = _ref22.error,
+        error = _ref22$error === void 0 ? function () {} : _ref22$error;
 
     try {
       if (dynamic_scope === true) {
@@ -4807,7 +4768,7 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function exec(_x12, _x13, _x14) {
+  function exec(_x9, _x10, _x11) {
     return _exec.apply(this, arguments);
   } // ----------------------------------------------------------------------
   // create token matcher that work with string and object token
@@ -4817,11 +4778,11 @@ function _typeof(obj) {
   function _exec() {
     _exec = _asyncToGenerator(
     /*#__PURE__*/
-    regenerator.mark(function _callee8(string, env, dynamic_scope) {
+    regenerator.mark(function _callee6(string, env, dynamic_scope) {
       var tokens, list, results, code, result;
-      return regenerator.wrap(function _callee8$(_context8) {
+      return regenerator.wrap(function _callee6$(_context6) {
         while (1) {
-          switch (_context8.prev = _context8.next) {
+          switch (_context6.prev = _context6.next) {
             case 0:
               if (dynamic_scope === true) {
                 env = dynamic_scope = env || global_env;
@@ -4853,14 +4814,14 @@ function _typeof(obj) {
               code = list.shift();
 
               if (code) {
-                _context8.next = 10;
+                _context6.next = 10;
                 break;
               }
 
-              return _context8.abrupt("return", results);
+              return _context6.abrupt("return", results);
 
             case 10:
-              _context8.next = 12;
+              _context6.next = 12;
               return evaluate(code, {
                 env: env,
                 dynamic_scope: dynamic_scope,
@@ -4871,19 +4832,19 @@ function _typeof(obj) {
               });
 
             case 12:
-              result = _context8.sent;
+              result = _context6.sent;
               results.push(result);
 
             case 14:
-              _context8.next = 4;
+              _context6.next = 4;
               break;
 
             case 16:
             case "end":
-              return _context8.stop();
+              return _context6.stop();
           }
         }
-      }, _callee8);
+      }, _callee6);
     }));
     return _exec.apply(this, arguments);
   }

@@ -11,13 +11,14 @@
 * lambda function introspection
 * hypeapp example
 * better loading of code
-* make `map` sync
+* make `map`, `filter`, `find`, `for-each` and `reduce` sync when possible
 ### Bug fixes
 * fix `if` it should not return false if false value is undefined
 * fix even and odd functions with BigInt
 * fix curry
 * fix when inside quasiquote there is empty list
 * make `load` use `lips.exec`, so it execute code sequentially
+* fix `append`
 
 ## 0.9.0
 ### Breaking
