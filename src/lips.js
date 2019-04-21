@@ -1187,14 +1187,14 @@
     // ----------------------------------------------------------------------
     function guardMathCall(fn, ...args) {
         args.forEach(arg => {
-            typeCheck('', arg, 'number');
+            typecheck('', arg, 'number');
         });
         return fn(...args);
     }
     // ----------------------------------------------------------------------
     function pipe(...fns) {
         fns.forEach((fn, i) => {
-            typeCheck('pipe', fn, 'function', i + 1);
+            typecheck('pipe', fn, 'function', i + 1);
         });
         return function(...args) {
             return fns.reduce((args, f) => [f(...args)], args)[0];
@@ -1203,7 +1203,7 @@
     // ----------------------------------------------------------------------
     function compose(...fns) {
         fns.forEach((fn, i) => {
-            typeCheck('compose', fn, 'function', i + 1);
+            typecheck('compose', fn, 'function', i + 1);
         });
         return pipe(...fns.reverse());
     }
@@ -1225,7 +1225,7 @@
     }
     // ----------------------------------------------------------------------
     function curry(fn, ...init_args) {
-        typeCheck('curry', fn, 'function');
+        typecheck('curry', fn, 'function');
         var len = fn.length;
         return function() {
             var args = init_args.slice();
@@ -1243,7 +1243,7 @@
     // ----------------------------------------------------------------------
     // return function with limited number of arguments
     function limit(n, fn) {
-        typeCheck('limit', fn, 'function', 2);
+        typecheck('limit', fn, 'function', 2);
         return function(...args) {
             return fn(...args.slice(0, n));
         };
@@ -1680,9 +1680,6 @@
                 });
             }
         },
-        'this': function() {
-            return this;
-        },
         help: doc(function(obj) {
             return obj.__doc__;
         }, `(help object)
@@ -1699,14 +1696,14 @@
             Function return new Pair out of two arguments.`),
         // ------------------------------------------------------------------
         car: doc(function(list) {
-            typeCheck('car', list, 'pair');
+            typecheck('car', list, 'pair');
             return list.car;
         }, `(car pair)
 
             Function returns car (head) of the list/pair.`),
         // ------------------------------------------------------------------
         cdr: doc(function(list) {
-            typeCheck('cdr', list, 'pair');
+            typecheck('cdr', list, 'pair');
             return list.cdr;
         }, `(cdr pair)
 
@@ -1750,7 +1747,7 @@
             it search the scope chain until it finds first non emtpy slot and set it.`),
         // ------------------------------------------------------------------
         'set-car!': doc(function(slot, value) {
-            typeCheck('set-car!', slot, 'pair');
+            typecheck('set-car!', slot, 'pair');
             slot.car = value;
         }, `(set-car! obj value)
 
@@ -1758,7 +1755,7 @@
             It can destroy the list. Old value is lost.`),
         // ------------------------------------------------------------------
         'set-cdr!': doc(function(slot, value) {
-            typeCheck('set-cdr!', slot, 'pair');
+            typecheck('set-cdr!', slot, 'pair');
             slot.cdr = value;
         }, `(set-cdr! obj value)
 
@@ -1800,7 +1797,7 @@
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
         load: doc(function(file) {
-            typeCheck('load', file, 'string');
+            typecheck('load', file, 'string');
             return root.fetch(file).then(res => res.text()).then(exec);
         }, `(load filename)
 
@@ -1853,7 +1850,7 @@
             }
             var env = this;
             var resolve = (cond) => {
-                typeCheck('if', cond, 'boolean');
+                typecheck('if', cond, 'boolean');
                 if (cond) {
                     return evaluate(code.cdr.car, {
                         env,
@@ -1930,7 +1927,7 @@
             want any output.`),
         // ------------------------------------------------------------------
         timer: doc(new Macro('timer', function(code, { dynamic_scope, error } = {}) {
-            typeCheck('timer', code.car, 'number');
+            typecheck('timer', code.car, 'number');
             var env = this;
             if (dynamic_scope) {
                 dynamic_scope = this;
@@ -2609,8 +2606,8 @@
             Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
         apply: doc(function(fn, args) {
-            typeCheck('call', fn, 'function', 1);
-            typeCheck('call', args, 'pair', 2);
+            typecheck('call', fn, 'function', 1);
+            typecheck('call', args, 'pair', 2);
             return fn.apply(this, this.get('list->array')(args));
         }, `(apply fn args)
 
@@ -2648,7 +2645,7 @@
             return true.`),
         // ------------------------------------------------------------------
         'for-each': doc(function(fn, ...args) {
-            typeCheck('for-each', fn, 'function');
+            typecheck('for-each', fn, 'function');
             var ret = this.get('map')(fn, ...args);
             if (isPromise(ret)) {
                 return ret.then(() => {});
@@ -2661,7 +2658,7 @@
             with that many argument as number of list arguments.`),
         // ------------------------------------------------------------------
         map: doc(function(fn, ...args) {
-            typeCheck('map', fn, 'function');
+            typecheck('map', fn, 'function');
             var array = args.map(list => this.get('list->array')(list));
             var result = [];
             return (function loop(i) {
@@ -2699,7 +2696,7 @@
             return true. If it don't find the value it will return false`),
         // ------------------------------------------------------------------
         reduce: doc(function reduce(fn, init, ...lists) {
-            typeCheck('reduce', fn, 'function');
+            typecheck('reduce', fn, 'function');
             if (lists.some(l => isEmptyList(l) || isNull(l))) {
                 if (typeof init === 'number') {
                     return LNumber(init);
@@ -2794,15 +2791,21 @@
              Function check if number is even.`),
         // ------------------------------------------------------------------
         // math functions
-        '*': reduceMathOp(function(a, b) {
+        '*': doc(reduceMathOp(function(a, b) {
             return LNumber(a).mul(b);
-        }),
+        }), `(* . numbers)
+
+             Multiplicate all numbers passed as arguments. If single value is passed
+              it will return that value.`),
         // ------------------------------------------------------------------
-        '+': reduceMathOp(function(a, b) {
+        '+': doc(reduceMathOp(function(a, b) {
             return LNumber(a).add(b);
-        }),
+        }), `(+ . numbers)
+
+             Sum all numbers passed as arguments. If single value is passed it will
+             return that value.`),
         // ------------------------------------------------------------------
-        '-': function(...args) {
+        '-': doc(function(...args) {
             if (args.length === 1) {
                 return LNumber(args[0]).neg();
             }
@@ -2811,74 +2814,119 @@
                     return LNumber(a).sub(b);
                 }));
             }
-        },
+        }, `(- . numbers)
+            (- number)
+
+            Substract number passed as argument. If only one argument is passed
+            it will negate the value.`),
         // ------------------------------------------------------------------
-        '/': reduceMathOp(function(a, b) {
+        '/': doc(reduceMathOp(function(a, b) {
             return LNumber(a).div(b);
-        }),
+        }), `(/ . numbers)
+
+             Divide number passed as arguments one by one. If single argument
+             is passed it will return that value.`),
         // ------------------------------------------------------------------
-        'abs': singleMathOp(function(n) {
+        'abs': doc(singleMathOp(function(n) {
             return LNumber(n).abs();
-        }),
+        }), `(abs number)
+
+             Function create absolute value from number.`),
         // ------------------------------------------------------------------
-        'sqrt': singleMathOp(function(n) {
+        'sqrt': doc(singleMathOp(function(n) {
             return Math.sqrt(n);
-        }),
+        }), `(sqrt number)
+
+             Function return square root of the number.`),
         // ------------------------------------------------------------------
-        '**': binaryMathOp(function(a, b) {
+        '**': doc(binaryMathOp(function(a, b) {
             return LNumber(a).pow(b);
-        }),
+        }), `(** a b)
+
+            Function calculate number a to to the power of b. It can throw
+            exception when ** native operator is not supported.`),
         // ------------------------------------------------------------------
-        '1+': singleMathOp(function(number) {
+        '1+': doc(singleMathOp(function(number) {
             return LNumber(number).add(1);
-        }),
+        }), `(1+ number)
+
+             Function add 1 to the number and return result.`),
         // ------------------------------------------------------------------
-        '1-': singleMathOp(function(number) {
+        '1-': doc(singleMathOp(function(number) {
             return LNumber(number).sub(1);
-        }),
+        }), `(1- number)
+
+             Function substract 1 from the number and return result.`),
         // ------------------------------------------------------------------
-        '++': new Macro('++', function(code) {
+        '++': doc(new Macro('++', function(code) {
+            typecheck('++', code.car, 'symbol');
             var car = this.get(code.car);
             var value = LNumber(car).add(1);
             this.set(code.car, value);
             return value;
-        }),
+        }), `(++ variable)
+
+             Macro that work only on variables and increment the value by one.`),
         // ------------------------------------------------------------------
-        '--': new Macro('--', function(code) {
+        '--': doc(new Macro('--', function(code) {
+            typecheck('--', code.car, 'symbol');
             var car = this.get(code.car);
             var value = LNumber(car).sub(1);
             this.set(code.car, value);
             return value;
-        }),
+        }), `(-- variable)
+
+             Macro that decrement the value it work only on symbols`),
         // ------------------------------------------------------------------
-        '%': reduceMathOp(function(a, b) {
+        '%': doc(reduceMathOp(function(a, b) {
             return LNumber(a).mod(b);
-        }),
+        }), `(% . numbers)
+
+             Function use modulo operation on each of the numbers. It return
+             single number.`),
         // ------------------------------------------------------------------
         // Booleans
-        '==': function(a, b) {
+        '==': doc(function(a, b) {
             return LNumber(a).cmp(b) === 0;
-        },
+        }, `(== a b)
+
+            Function compare two numbers and check if they are equal.`),
         // ------------------------------------------------------------------
-        '>': function(a, b) {
+        '>': doc(function(a, b) {
             return LNumber(a).cmp(b) === 1;
-        },
+        }, `(> a b)
+
+            Function compare two numbers and check if first argument is greater
+            than the second one`),
         // ------------------------------------------------------------------
-        '<': function(a, b) {
+        '<': doc(function(a, b) {
             return LNumber(a).cmp(b) === -1;
-        },
+        }, `(< a b)
+
+            Function compare two numbers and check if first argument is less
+            than the second one`),
         // ------------------------------------------------------------------
-        '<=': function(a, b) {
+        '<=': doc(function(a, b) {
             return [0, -1].includes(LNumber(a).cmp(b));
-        },
+        }, `(<= a b)
+
+            Function compare two numbers and check if first argument is less or
+            equal to the second one`),
         // ------------------------------------------------------------------
-        '>=': function(a, b) {
+        '>=': doc(function(a, b) {
             return [0, 1].includes(LNumber(a).cmp(b));
-        },
+        }, `(>= a b)
+
+            Function compare two numbers and check if first argument is less or
+            equal to the second one`),
         // ------------------------------------------------------------------
-        'eq?': equal,
+        'eq?': doc(
+            equal,
+            `(eq? a b)
+
+             Function compare two values if they are identical.`),
         // ------------------------------------------------------------------
-        or: new Macro('or', function(code, { dynamic_scope, error }) {
+        or: doc(new Macro('or', function(code, { dynamic_scope, error }) {
             var args = this.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
@@ -2889,7 +2937,7 @@
                 function next(value) {
                     result = value;
                     if (result) {
-                        return value;
+                        return result;
                     } else {
                         return loop();
                     }
@@ -2906,13 +2954,19 @@
                     return unpromise(value, next);
                 }
             })();
-        }),
+        }), `(or . expressions)
+
+             Macro execute the values one by one and return the one that is truthy value.
+             If there are no expression that evaluate to true it return false.`),
         // ------------------------------------------------------------------
-        and: new Macro('and', function(code, { dynamic_scope, error } = {}) {
+        and: doc(new Macro('and', function(code, { dynamic_scope, error } = {}) {
             var args = this.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
                 dynamic_scope = self;
+            }
+            if (!args.length) {
+                return true;
             }
             var result;
             return (function loop() {
@@ -2936,41 +2990,61 @@
                     return unpromise(value, next);
                 }
             })();
-        }),
+        }), `(and . expressions)
+
+             Macro evalute each expression in sequence if any value return false it will
+             return false. If each value return true it will return the last value.
+             If it's called without arguments it will return true.`),
         // bit operations
-        '|': function(a, b) {
+        '|': doc(function(a, b) {
             return LNumber(a).or(b);
-        },
-        '&': function(a, b) {
+        }, `(& a b)
+
+            Function calculate or bit operation.`),
+        '&': doc(function(a, b) {
             return LNumber(a).and(b);
-        },
-        '~': function(a) {
+        }, `(& a b)
+
+            Function calculate and bit operation.`),
+        '~': doc(function(a) {
             return LNumber(a).neg();
-        },
-        '>>': function(a, b) {
+        }, `(~ number)
+
+            Function negate the value.`),
+        '>>': doc(function(a, b) {
             return LNumber(a).shr(b);
-        },
-        '<<': function(a, b) {
+        }, `(>> a b)
+
+            Function right shit the value a by value b.`),
+        '<<': doc(function(a, b) {
             return LNumber(a).shl(b);
-        },
-        not: function(value) {
+        }, `(<< a b)
+
+            Function left shit the value a by value b.`),
+        not: doc(function(value) {
             if (isEmptyList(value)) {
                 return true;
             }
             return !value;
-        },
-        '->': function(obj, name, ...args) {
+        }, `(not object)
+
+            Function return negation of the argument.`),
+        '->': doc(function(obj, name, ...args) {
             return obj[name](...args);
-        }
+        }, `(-> obj name . args)
+
+            Function get function from object and call it with arguments.`)
     }, undefined, 'global');
     // ----------------------------------------------------------------------
     ['floor', 'round', 'ceil'].forEach(fn => {
-        global_env.set(fn, function(value) {
+        global_env.set(fn, doc(function(value) {
             if (value instanceof LNumber) {
                 return value[fn]();
             }
             throw new Error(`${typeof value} ${value.toString()} is not a number`);
-        });
+        }, `(${fn} number)
+
+            Function calculate ${fn} of a number.`));
     });
     // ----------------------------------------------------------------------
     // source: https://stackoverflow.com/a/4331218/387194
@@ -3005,17 +3079,22 @@
 
     // ----------------------------------------------------------------------
     // cadr caddr cadadr etc.
-    combinations(['d', 'a'], 2, 5).forEach((spec) => {
-        var chars = spec.split('').reverse();
-        global_env.set('c' + spec + 'r', function(arg) {
-            return chars.reduce(function(list, type) {
+    combinations(['d', 'a'], 2, 5).forEach(spec => {
+        const s = spec.split('');
+        const chars = s.slice().reverse();
+        const code = s.map(c => `(c${c}r`).join(' ') + ' arg' + ')'.repeat(s.length);
+        const name = 'c' + spec + 'r';
+        global_env.set(name, doc(function(arg) {
+            return log(chars.reduce(function(list, type) {
                 if (type === 'a') {
                     return list.car;
                 } else {
                     return list.cdr;
                 }
-            }, arg);
-        });
+            }, arg));
+        }, `(${name} arg)
+
+            Function calculate ${code}`));
     });
 
     // ----------------------------------------------------------------------
@@ -3033,7 +3112,7 @@
         return `Expecting ${expected} got ${got}${postfix}`;
     }
     // ----------------------------------------------------------------------
-    function typeCheck(fn, arg, expected, position = null) {
+    function typecheck(fn, arg, expected, position = null) {
         const arg_type = type(arg);
         if (arg_type !== expected) {
             throw new Error(typeErrorMessage(fn, arg_type, expected, position));

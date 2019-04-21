@@ -636,6 +636,18 @@ describe('scope', function() {
         });
     });
 });
+describe('docs', function() {
+    it('all functions should have docs', function() {
+        Object.keys(lips.env.env).forEach(key => {
+            var value = lips.env.env[key];
+            if (typeof value === 'function') {
+                var __doc__ = value.__doc__;
+                expect([key, typeof __doc__]).toEqual([key, 'string']);
+                expect(__doc__.length).toBeGreaterThan(0);
+            }
+        });
+    });
+});
 
 
 /*
