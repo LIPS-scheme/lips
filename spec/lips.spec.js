@@ -137,53 +137,6 @@ describe('tokenizer', function() {
             { col: 28, line: 6, token: ')', offset: 238 },
             { col: 29, line: 6, token: '\n', offset: 239 }
         ];
-        /*
-            { col: 2, line: 3, token: '"Third Line."', offset: 75 },
-            { col: 0, line: 4, token: '  ', offset: 89 },
-            { col: 2, line: 4, token: '(', offset: 91 },
-            { col: 3, line: 4, token: 'let', offset: 92 },
-            { col: 6, line: 4, token: ' ', offset: 95 },
-            { col: 7, line: 4, token: '(', offset: 96 },
-            { col: 8, line: 4, token: '(', offset: 97 },
-            { col: 9, line: 4, token: 'names', offset: 98 },
-            { col: 14, line: 4, token: ' ', offset: 103 },
-            { col: 15, line: 4, token: '(', offset: 104 },
-            { col: 16, line: 4, token: 'map', offset: 105 },
-            { col: 19, line: 4, token: ' ', offset: 108 },
-            { col: 20, line: 4, token: '(', offset: 109 },
-            { col: 21, line: 4, token: 'lambda', offset: 110 },
-            { col: 27, line: 4, token: ' ', offset: 116 },
-            { col: 28, line: 4, token: '(', offset: 117 },
-            { col: 29, line: 4, token: 'symbol', offset: 118 },
-            { col: 35, line: 4, token: ')', offset: 124 },
-            { col: 36, line: 4, token: ' ', offset: 125 },
-            { col: 37, line: 4, token: '(', offset: 126 },
-            { col: 38, line: 4, token: 'gensym', offset: 127 },
-            { col: 44, line: 4, token: ')', offset: 133 },
-            { col: 45, line: 4, token: ')', offset: 134 },
-            { col: 46, line: 4, token: ' ', offset: 135 },
-            { col: 47, line: 4, token: 'fields', offset: 136 },
-            { col: 53, line: 4, token: ')', offset: 142 },
-            { col: 54, line: 4, token: ')', offset: 143 },
-            { col: 0, line: 5, token: '        ', offset: 145 },
-            { col: 8, line: 5, token: '(', offset: 153 },
-            { col: 9, line: 5, token: 'struct', offset: 154 },
-            { col: 15, line: 5, token: ' ', offset: 160 },
-            { col: 16, line: 5, token: '(', offset: 161 },
-            { col: 17, line: 5, token: 'gensym', offset: 162 },
-            { col: 23, line: 5, token: ')', offset: 168 },
-            { col: 24, line: 5, token: ')', offset: 169 },
-            { col: 0, line: 7, token: '        ', offset: 172 },
-            { col: 8, line: 7, token: '(', offset: 180 },
-            { col: 9, line: 7, token: 'field-arg', offset: 181 },
-            { col: 18, line: 7, token: ' ', offset: 190 },
-            { col: 19, line: 7, token: '(', offset: 191 },
-            { col: 20, line: 7, token: 'gensym', offset: 192 },
-            { col: 26, line: 7, token: ')', offset: 198 },
-            { col: 27, line: 7, token: ')', offset: 199 },
-            { col: 28, line: 7, token: ')', offset: 200 }
-        ];
-        // */
         expect(tokenize(code, true).slice(0, output.length)).toEqual(output);
     });
 });
