@@ -648,6 +648,55 @@ describe('docs', function() {
         });
     });
 });
+const str2list = code => lips.parse(lips.tokenize(code))[0];
+describe('env', function() {
+    function testList(code, expected) {
+        lips.exec(code).then(list => {
+            expect(list).toEqual(str2list(expected));
+        });
+    }
+    function testValue([code, expected]) {
+        lips.exec(code).then(result => {
+            expect(result).toEqual(expected);
+        });
+    }
+    describe('reduce', function() {
+        it('should create and reduce async list', function() {
+            const code = `(reduce (lambda (x) (+ x 10))
+                                   0
+                                   (list (timer 1000 10) (timer 2000 30)))`;
+            testList(code, '(20 40)');
+        });
+        it('should reverse list', function() {
+            const code = `(reduce cons '() '(1 2 3))`;
+            testList(code, '(3 2 1)');
+        });
+        it('should create wrong list', function() {
+            testList(`(reduce list '() '(1 2 3)`, '(1 (2 (3 ())))');
+        });
+    });
+    describe('dot function', function() {
+        it('sould call pair method on list structure', function() {
+            lips.exec(`((. '((a . "10") (b . 20)) "toObject"))`).then(result => {
+                expect(result).toEqual({ a: "10", b: 20 });
+            });
+        });
+    });
+    describe('gensym', function() {
+        [
+            [`(eq? (gensym "foo") (gensym "foo"))`, false],
+            [`(eq? 'foo 'foo)`, true],
+            [`(eq? (string (gensym "foo")) (string (gensym "foo")))`, true]
+        ].forEach(testValue);
+    });
+    describe('math', function() {
+        [
+            ['(* 1 2 3 4 5)', 120],
+            ['(+ 1 2 3 4 5)', 15],
+            ['(- 10 2 3)', 5]
+        ].forEach(testValue);
+    });
+});
 
 
 /*

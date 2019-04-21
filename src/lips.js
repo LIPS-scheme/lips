@@ -1208,6 +1208,23 @@
         return pipe(...fns.reverse());
     }
     // ----------------------------------------------------------------------
+    // :: fold functions generator
+    // ----------------------------------------------------------------------
+    function fold(name, fold) {
+        var self = this;
+        return function recur(fn, init, ...lists) {
+            typecheck(name, fn, 'function');
+            if (lists.some(l => isEmptyList(l) || isNull(l))) {
+                if (typeof init === 'number') {
+                    return LNumber(init);
+                }
+                return init;
+            } else {
+                return fold.call(self, recur, fn, init, ...lists);
+            }
+        };
+    }
+    // ----------------------------------------------------------------------
     function limitMathOp(n, fn) {
         // + 1 so it inlcude function in guardMathCall
         return limit(n + 1, curry(guardMathCall, fn));
@@ -2157,6 +2174,22 @@
              argument). It will return list of pairs if put in front of lips code.
              And if put in fron of symbol it will return that symbol not value
              associated with that name.`),
+        'unquote-splicing': doc(function() {
+            throw new Error(`You can't call \`unquote-splicing\` outside of quasiquote`);
+        }, `(unquote-splicing code)
+
+            Special form to be used in quasiquote macro, parser is processing special
+            characters ,@ and create call to this pseudo function. It can be used
+            to evalute expression inside and return the value without parenthesis.
+            the value will be joined to the output list structure.`),
+        'unquote': doc(function() {
+            throw new Error(`You can't call \`unquote\` outside of quasiquote`);
+        }, `(unquote code)
+
+            Special form to be used in quasiquote macro, parser is processing special
+            characters , and create call to this pseudo function. It can be used
+            to evalute expression inside and return the value, the output is inserted
+            into list structure created by queasiquote.`),
         // ------------------------------------------------------------------
         quasiquote: doc(new Macro('quasiquote', function(arg, { dynamic_scope, error }) {
             var self = this;
@@ -2695,24 +2728,30 @@
             It stops when function fn return true for a value if so it will
             return true. If it don't find the value it will return false`),
         // ------------------------------------------------------------------
-        reduce: doc(function reduce(fn, init, ...lists) {
-            typecheck('reduce', fn, 'function');
-            if (lists.some(l => isEmptyList(l) || isNull(l))) {
-                if (typeof init === 'number') {
-                    return LNumber(init);
-                }
-                return init;
-            } else {
-                return unpromise(fn(...lists.map(l => l.car), init), (value) => {
-                    return reduce.call(this, fn, value, ...lists.map(l => l.cdr));
-                });
-            }
-        }, `(reduce fn list [init])
+        fold: doc(fold('fold', function(fold, fn, init, ...lists) {
+            const value = fold.call(this, fn, init, ...lists.map(l => l.cdr));
+            return unpromise(value, value => {
+                return fn(...lists.map(l => l.car), value);
+            });
+        }), `(fold fn init . lists)
 
-            Higher order function take each element of the list and call
-            the function with result of previous call or init and next element
-            on the list until each element is processed and return single value
-            as result of last call to \`fn\` function.`),
+             Function fold is reverse of the reduce. it call function \`fn\`
+             on each elements on the list and return single value.
+             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))
+             for: (fold fn '() alist blist`),
+        // ------------------------------------------------------------------
+        reduce: doc(fold('reduce', function(reduce, fn, init, ...lists) {
+            return unpromise(fn(...lists.map(l => l.car), init), (value) => {
+                return reduce.call(this, fn, value, ...lists.map(l => l.cdr));
+            });
+        }), `(reduce fn init list . lists)
+
+             Higher order function take each element of the list and call
+             the function with result of previous call or init and next element
+             on the list until each element is processed and return single value
+             as result of last call to \`fn\` function.
+             e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))
+             for (reduce fn init alist blist`),
         // ------------------------------------------------------------------
         filter: doc(function(arg, list) {
             var array = this.get('list->array')(list);
@@ -3085,13 +3124,13 @@
         const code = s.map(c => `(c${c}r`).join(' ') + ' arg' + ')'.repeat(s.length);
         const name = 'c' + spec + 'r';
         global_env.set(name, doc(function(arg) {
-            return log(chars.reduce(function(list, type) {
+            return chars.reduce(function(list, type) {
                 if (type === 'a') {
                     return list.car;
                 } else {
                     return list.cdr;
                 }
-            }, arg));
+            }, arg);
         }, `(${name} arg)
 
             Function calculate ${code}`));

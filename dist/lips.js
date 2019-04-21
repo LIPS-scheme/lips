@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 21 Apr 2019 16:11:48 +0000
+ * build: Sun, 21 Apr 2019 17:09:18 +0000
  */
 (function () {
 'use strict';
@@ -971,28 +971,6 @@ function _typeof(obj) {
       doc[add](pre + 'readystatechange', init, false);
       win[add](pre + 'load', init, false);
     }
-  }
-  /* eslint-disable */
-
-
-  function log(x) {
-    var regex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-    function msg(x) {
-      var value = global_env.get('string')(x);
-
-      if (regex === null || regex.test(value)) {
-        console.log(global_env.get('type')(x) + ": " + value);
-      }
-    }
-
-    if (isPromise(x)) {
-      x.then(msg);
-    } else {
-      msg(x);
-    }
-
-    return x;
   }
 
   if (!root.fetch) {
@@ -2421,6 +2399,32 @@ function _typeof(obj) {
     });
     return pipe.apply(void 0, _toConsumableArray(fns.reverse()));
   } // ----------------------------------------------------------------------
+  // :: fold functions generator
+  // ----------------------------------------------------------------------
+
+
+  function fold(name, fold) {
+    var self = this;
+    return function recur(fn, init) {
+      typecheck(name, fn, 'function');
+
+      for (var _len9 = arguments.length, lists = new Array(_len9 > 2 ? _len9 - 2 : 0), _key9 = 2; _key9 < _len9; _key9++) {
+        lists[_key9 - 2] = arguments[_key9];
+      }
+
+      if (lists.some(function (l) {
+        return isEmptyList(l) || isNull(l);
+      })) {
+        if (typeof init === 'number') {
+          return LNumber(init);
+        }
+
+        return init;
+      } else {
+        return fold.call.apply(fold, [self, recur, fn, init].concat(lists));
+      }
+    };
+  } // ----------------------------------------------------------------------
 
 
   function limitMathOp(n, fn) {
@@ -2434,8 +2438,8 @@ function _typeof(obj) {
 
   function reduceMathOp(fn) {
     return function () {
-      for (var _len9 = arguments.length, args = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        args[_key9] = arguments[_key9];
+      for (var _len10 = arguments.length, args = new Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        args[_key10] = arguments[_key10];
       }
 
       if (args.length) {
@@ -2446,8 +2450,8 @@ function _typeof(obj) {
 
 
   function curry(fn) {
-    for (var _len10 = arguments.length, init_args = new Array(_len10 > 1 ? _len10 - 1 : 0), _key10 = 1; _key10 < _len10; _key10++) {
-      init_args[_key10 - 1] = arguments[_key10];
+    for (var _len11 = arguments.length, init_args = new Array(_len11 > 1 ? _len11 - 1 : 0), _key11 = 1; _key11 < _len11; _key11++) {
+      init_args[_key11 - 1] = arguments[_key11];
     }
 
     typecheck('curry', fn, 'function');
@@ -2456,8 +2460,8 @@ function _typeof(obj) {
       var args = init_args.slice();
 
       function call() {
-        for (var _len11 = arguments.length, more_args = new Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-          more_args[_key11] = arguments[_key11];
+        for (var _len12 = arguments.length, more_args = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+          more_args[_key12] = arguments[_key12];
         }
 
         args = args.concat(more_args);
@@ -2478,8 +2482,8 @@ function _typeof(obj) {
   function limit(n, fn) {
     typecheck('limit', fn, 'function', 2);
     return function () {
-      for (var _len12 = arguments.length, args = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        args[_key12] = arguments[_key12];
+      for (var _len13 = arguments.length, args = new Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+        args[_key13] = arguments[_key13];
       }
 
       return fn.apply(void 0, _toConsumableArray(args.slice(0, n)));
@@ -2491,8 +2495,8 @@ function _typeof(obj) {
       obj = obj.__bind.fn;
     }
 
-    for (var _len13 = arguments.length, args = new Array(_len13 > 1 ? _len13 - 1 : 0), _key13 = 1; _key13 < _len13; _key13++) {
-      args[_key13 - 1] = arguments[_key13];
+    for (var _len14 = arguments.length, args = new Array(_len14 > 1 ? _len14 - 1 : 0), _key14 = 1; _key14 < _len14; _key14++) {
+      args[_key14 - 1] = arguments[_key14];
     }
 
     var _arr = args;
@@ -3343,8 +3347,8 @@ function _typeof(obj) {
         var value;
 
         if (name instanceof _Symbol || !isEmptyList(name)) {
-          for (var _len14 = arguments.length, args = new Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-            args[_key14] = arguments[_key14];
+          for (var _len15 = arguments.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+            args[_key15] = arguments[_key15];
           }
 
           while (true) {
@@ -3480,6 +3484,12 @@ function _typeof(obj) {
     quote: doc(new Macro('quote', function (arg) {
       return quote(arg.car);
     }), "(quote expression)\n\n             Macro that return single lips expression as data (it don't evaluate its\n             argument). It will return list of pairs if put in front of lips code.\n             And if put in fron of symbol it will return that symbol not value\n             associated with that name."),
+    'unquote-splicing': doc(function () {
+      throw new Error("You can't call `unquote-splicing` outside of quasiquote");
+    }, "(unquote-splicing code)\n\n            Special form to be used in quasiquote macro, parser is processing special\n            characters ,@ and create call to this pseudo function. It can be used\n            to evalute expression inside and return the value without parenthesis.\n            the value will be joined to the output list structure."),
+    'unquote': doc(function () {
+      throw new Error("You can't call `unquote` outside of quasiquote");
+    }, "(unquote code)\n\n            Special form to be used in quasiquote macro, parser is processing special\n            characters , and create call to this pseudo function. It can be used\n            to evalute expression inside and return the value, the output is inserted\n            into list structure created by queasiquote."),
     // ------------------------------------------------------------------
     quasiquote: doc(new Macro('quasiquote', function (arg, _ref13) {
       var dynamic_scope = _ref13.dynamic_scope,
@@ -3783,8 +3793,8 @@ function _typeof(obj) {
       return result;
     }, "(env obj)\n\n            Function return list values (functions and variables) inside environment."),
     'new': doc(function (obj) {
-      for (var _len15 = arguments.length, args = new Array(_len15 > 1 ? _len15 - 1 : 0), _key15 = 1; _key15 < _len15; _key15++) {
-        args[_key15 - 1] = arguments[_key15];
+      for (var _len16 = arguments.length, args = new Array(_len16 > 1 ? _len16 - 1 : 0), _key16 = 1; _key16 < _len16; _key16++) {
+        args[_key16 - 1] = arguments[_key16];
       }
 
       return _construct(obj, args);
@@ -3866,8 +3876,8 @@ function _typeof(obj) {
       var _this$get,
           _this3 = this;
 
-      for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-        args[_key16] = arguments[_key16];
+      for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+        args[_key17] = arguments[_key17];
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
@@ -3941,8 +3951,8 @@ function _typeof(obj) {
     'for-each': doc(function (fn) {
       typecheck('for-each', fn, 'function');
 
-      for (var _len17 = arguments.length, args = new Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
-        args[_key17 - 1] = arguments[_key17];
+      for (var _len18 = arguments.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
+        args[_key18 - 1] = arguments[_key18];
       }
 
       var ret = this.get('map').apply(void 0, [fn].concat(args));
@@ -3957,8 +3967,8 @@ function _typeof(obj) {
 
       typecheck('map', fn, 'function');
 
-      for (var _len18 = arguments.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
-        args[_key18 - 1] = arguments[_key18];
+      for (var _len19 = arguments.length, args = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
+        args[_key19 - 1] = arguments[_key19];
       }
 
       var array = args.map(function (list) {
@@ -3992,33 +4002,36 @@ function _typeof(obj) {
       }
     }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If it don't find the value it will return false"),
     // ------------------------------------------------------------------
-    reduce: doc(function reduce(fn, init) {
+    fold: doc(fold('fold', function (fold, fn, init) {
+      for (var _len20 = arguments.length, lists = new Array(_len20 > 3 ? _len20 - 3 : 0), _key20 = 3; _key20 < _len20; _key20++) {
+        lists[_key20 - 3] = arguments[_key20];
+      }
+
+      var value = fold.call.apply(fold, [this, fn, init].concat(_toConsumableArray(lists.map(function (l) {
+        return l.cdr;
+      }))));
+      return unpromise(value, function (value) {
+        return fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
+          return l.car;
+        })).concat([value]));
+      });
+    }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
+    // ------------------------------------------------------------------
+    reduce: doc(fold('reduce', function (reduce, fn, init) {
       var _this5 = this;
 
-      for (var _len19 = arguments.length, lists = new Array(_len19 > 2 ? _len19 - 2 : 0), _key19 = 2; _key19 < _len19; _key19++) {
-        lists[_key19 - 2] = arguments[_key19];
+      for (var _len21 = arguments.length, lists = new Array(_len21 > 3 ? _len21 - 3 : 0), _key21 = 3; _key21 < _len21; _key21++) {
+        lists[_key21 - 3] = arguments[_key21];
       }
 
-      typecheck('reduce', fn, 'function');
-
-      if (lists.some(function (l) {
-        return isEmptyList(l) || isNull(l);
-      })) {
-        if (typeof init === 'number') {
-          return LNumber(init);
-        }
-
-        return init;
-      } else {
-        return unpromise(fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
-          return l.car;
-        })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this5, fn, value].concat(_toConsumableArray(lists.map(function (l) {
-            return l.cdr;
-          }))));
-        });
-      }
-    }, "(reduce fn list [init])\n\n            Higher order function take each element of the list and call\n            the function with result of previous call or init and next element\n            on the list until each element is processed and return single value\n            as result of last call to `fn` function."),
+      return unpromise(fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
+        return l.car;
+      })).concat([init])), function (value) {
+        return reduce.call.apply(reduce, [_this5, fn, value].concat(_toConsumableArray(lists.map(function (l) {
+          return l.cdr;
+        }))));
+      });
+    }), "(reduce fn init list . lists)\n\n             Higher order function take each element of the list and call\n             the function with result of previous call or init and next element\n             on the list until each element is processed and return single value\n             as result of last call to `fn` function.\n             e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))\n             for (reduce fn init alist blist"),
     // ------------------------------------------------------------------
     filter: doc(function (arg, list) {
       var array = this.get('list->array')(list);
@@ -4074,8 +4087,8 @@ function _typeof(obj) {
     }), "(+ . numbers)\n\n             Sum all numbers passed as arguments. If single value is passed it will\n             return that value."),
     // ------------------------------------------------------------------
     '-': doc(function () {
-      for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
-        args[_key20] = arguments[_key20];
+      for (var _len22 = arguments.length, args = new Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
+        args[_key22] = arguments[_key22];
       }
 
       if (args.length === 1) {
@@ -4267,8 +4280,8 @@ function _typeof(obj) {
       return !value;
     }, "(not object)\n\n            Function return negation of the argument."),
     '->': doc(function (obj, name) {
-      for (var _len21 = arguments.length, args = new Array(_len21 > 2 ? _len21 - 2 : 0), _key21 = 2; _key21 < _len21; _key21++) {
-        args[_key21 - 2] = arguments[_key21];
+      for (var _len23 = arguments.length, args = new Array(_len23 > 2 ? _len23 - 2 : 0), _key23 = 2; _key23 < _len23; _key23++) {
+        args[_key23 - 2] = arguments[_key23];
       }
 
       return obj[name].apply(obj, args);
@@ -4331,13 +4344,13 @@ function _typeof(obj) {
     }).join(' ') + ' arg' + ')'.repeat(s.length);
     var name = 'c' + spec + 'r';
     global_env.set(name, doc(function (arg) {
-      return log(chars.reduce(function (list, type) {
+      return chars.reduce(function (list, type) {
         if (type === 'a') {
           return list.car;
         } else {
           return list.cdr;
         }
-      }, arg));
+      }, arg);
     }, "(".concat(name, " arg)\n\n            Function calculate ").concat(code)));
   }); // ----------------------------------------------------------------------
 
