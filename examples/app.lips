@@ -1,4 +1,10 @@
 ;; -*- scheme -*-
+;; This is example hyperapp application written in LISP
+;;
+;; This file is part of the LISP JavaScript interpter
+;; Copyriht (C) Jakub T. Jankiewicz <https://jcubic.pl>
+;; Released under MIT license
+;;
 
 (load "hyper.lips")
 

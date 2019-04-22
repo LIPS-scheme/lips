@@ -1,4 +1,10 @@
 ;; -*- scheme -*-
+;; This is example code that's needed to create shorter hyperapp applications
+;;
+;; This file is part of the LISP JavaScript interpter
+;; Copyriht (C) Jakub T. Jankiewicz <https://jcubic.pl>
+;; Released under MIT license
+;;
 
 (define h (. hyperapp "h"))
 (define app (. hyperapp "app"))
