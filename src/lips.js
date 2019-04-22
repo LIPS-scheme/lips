@@ -2637,6 +2637,18 @@
             standard output (by default it's console but it can be defined
             it user code)`),
         // ------------------------------------------------------------------
+        error: doc(function(...args) {
+            if (root.console) {
+                if (root.console.error) {
+                    root.console.error(...args);
+                } else if (root.console.log) {
+                    root.console.log(...args);
+                }
+            }
+        }, `(error . args)
+
+            Display error message.`),
+        // ------------------------------------------------------------------
         flatten: doc(function(list) {
             return list.flatten();
         }, `(flatten list)

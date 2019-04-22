@@ -1,6 +1,7 @@
 ## 0.10.1
-### Breaking
+### Bug fixes
 * fix for babel when using for-each (weakBind was not working because babel was using `apply(void 0, ...`)
+* add missing `error` function used in example macros
 
 ## 0.10.0
 ### Breaking
@@ -14,7 +15,7 @@
 * new function `unbind` to help write function that work with functions as objects (LIPS wrap them)
 * add alias for `.` as `get` so you can pass it to curry, with `.` LIPS will try to create pair
 * lambda function introspection
-* hypeapp example
+* hyperapp example
 * better loading of code
 * make `map`, `filter`, `find`, `for-each` and `reduce` sync when possible
 * basic type checking
