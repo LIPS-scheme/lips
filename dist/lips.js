@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Mon, 22 Apr 2019 09:40:45 +0000
+ * build: Mon, 22 Apr 2019 09:54:07 +0000
  */
 (function () {
 'use strict';
@@ -3743,7 +3743,7 @@ function _typeof(obj) {
       return string.search(pattern);
     }, "(search pattern string)\n\n            Function return first found index of the pattern inside a string"),
     // ------------------------------------------------------------------
-    string: doc(function string(obj, quote) {
+    string: doc(function string(obj) {
       if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
         return '<#jQuery(' + obj.length + ')>';
       }
@@ -3769,12 +3769,10 @@ function _typeof(obj) {
       }
 
       if (obj instanceof Array) {
-        return '[' + obj.map(function (x) {
-          return string(x, true);
-        }).join(', ') + ']';
+        return '[' + obj.map(string).join(', ') + ']';
       }
 
-      if (obj === null || typeof obj === 'string' && quote) {
+      if (obj === null || typeof obj === 'string') {
         return JSON.stringify(obj);
       }
 

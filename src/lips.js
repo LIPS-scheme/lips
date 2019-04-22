@@ -2453,7 +2453,7 @@
 
             Function return first found index of the pattern inside a string`),
         // ------------------------------------------------------------------
-        string: doc(function string(obj, quote) {
+        string: doc(function string(obj) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
                 return '<#jQuery(' + obj.length + ')>';
@@ -2474,9 +2474,9 @@
                 return 'nil';
             }
             if (obj instanceof Array) {
-                return '[' + obj.map(x => string(x, true)).join(', ') + ']';
+                return '[' + obj.map(string).join(', ') + ']';
             }
-            if (obj === null || (typeof obj === 'string' && quote)) {
+            if (obj === null || typeof obj === 'string') {
                 return JSON.stringify(obj);
             }
             if (obj instanceof Pair || obj instanceof Symbol) {
@@ -3264,16 +3264,12 @@
             if (node instanceof Pair && !isEmptyList(node)) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
                 if (false && dynamic_scope) {
-                    if (isPromise(arg)) {
-                        arg = arg.then(arg => {
-                            if (typeof arg === 'function') {
-                                return arg.bind(dynamic_scope);
-                            }
-                            return arg;
-                        });
-                    } else if (typeof arg === 'function') {
-                        arg = arg.bind(dynamic_scope);
-                    }
+                    arg = unpromise(arg, arg => {
+                        if (typeof arg === 'function') {
+                            return arg.bind(dynamic_scope);
+                        }
+                        return arg;
+                    });
                 }
                 args.push(arg);
                 node = node.cdr;
