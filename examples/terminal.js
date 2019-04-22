@@ -95,7 +95,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                 const globals = Object.getOwnPropertyNames(window);
                 const prefix = tokens.join('');
                 const re = new RegExp('^' + $.terminal.escape_regex(last));
-                var commands = env.get('env')().toArray().concat(globals).filter(name => {
+                var commands = env.get('env')(env).toArray().concat(globals).filter(name => {
                     return re.test(name);
                 }).map(name => prefix + name);
                 // it don't return instanceof Array that is check by jQuery Terminal when using
