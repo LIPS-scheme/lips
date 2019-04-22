@@ -26,6 +26,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         },
         help: function(fn) {
             term.echo(help(fn));
+        },
+        error: function(message) {
+            term.error(message);
         }
     });
     var term = jQuery(selector).terminal(function(code, term) {
