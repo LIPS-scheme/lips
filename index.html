@@ -18,6 +18,7 @@
     <![endif]-->
     <link href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/>
     <link href="https://unpkg.com/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+    <link href="./examples/common.css" rel="stylesheet"/>
     <link href="style.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Play" rel="stylesheet"/>
     <meta property="og:locale" content="en_US"/>
@@ -171,7 +172,8 @@ parse(tokenize(string)).foEach(function(code) {
   </footer>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
   <script src="https://code.jquery.com/jquery-latest.min.js"></script>
-  <script src="https://unpkg.com/@jcubic/lips/dist/lips.min.js"></script>
+  <script src="https://unpkg.com/@jcubic/lips/dist/lips.js"></script>
+  <!-- <script src="./src/lips.js"></script> -->
   <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.min.js"></script>
   <!--<script src="../terminal/repo/js/jquery.terminal-src.js"></script>-->
   <script src="https://cdn.rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
@@ -180,6 +182,8 @@ parse(tokenize(string)).foEach(function(code) {
   <script src="https://unpkg.com/prismjs/components/prism-scheme.min.js"></script>
   <script src="https://unpkg.com/prismjs/components/prism-javascript.min.js"></script>
   <script src="https://unpkg.com/prismjs/components/prism-markup.min.js"></script>
+  <script src="./examples/terminal.js"></script>
+  <script src="./examples/prism.js"></script>
   <style>
    .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
        background: inherit;
@@ -191,158 +195,13 @@ parse(tokenize(string)).foEach(function(code) {
   </style>
   <script>
    function interpreter(selector, dynamic) {
-       var env = lips.env.inherit('demo', {
-           stdout: {
-               write: function() {
-                   var args = Array.from(arguments);
-                   args.forEach(function(arg) {
-                       term.echo(arg, {keepWords: true, formatters: false});
-                   });
-               }
-           },
-           stdin: {
-               read: function() {
-                   return term.read('');
-               }
-           }
-       });
-       var position;
-       var timer;
-
-       var term = $(selector).terminal(function(code, term) {
-           lips.exec(code, env, dynamic).then(function(ret) {
-               ret.forEach(function(ret) {
-                   if (ret !== undefined) {
-                       if (ret instanceof lips.Symbol) {
-                           ret = ret.name;
-                       }
-                       env.get('print').call(env, ret);
-                   }
-               });
-           }).catch(function(e) {
-               term.error(e.message);
-           });
-       }, {
-           name: 'lisp',
-           prompt: 'lips> ',
-           enabled: false,
-           greetings: false,
-           keymap: {
-               ENTER: function(e, original) {
-                   if (lips.balanced_parenthesis(this.get_command())) {
-                       original();
-                   } else {
-                       var code = term.before_cursor();
-                       var prompt = this.get_prompt();
-                       var formatter = new lips.Formatter(code);
-                       var i = formatter.indent({
-                           indent: 2,
-                           offset: prompt.length
-                       });
-                       this.insert('\n' + (new Array(i + 1).join(' ')));
-                   }
-               }
-           },
-           onPaste: function(e) {
-               if (e.text) {
-                   var code = e.text;
-                   var prompt = this.get_prompt();
-                   var formatter = new lips.Formatter(code);
-                   var output = formatter.format({
-                       offset: prompt.length
-                   });
-                   return Promise.resolve(output);
-               }
-           },
-           completionEscape: false,
-           wordAutocomplete: false,
-           doubleTab: function(string, maches, echo_command) {
-               echo_command();
-               this.echo(maches.map(command => {
-                   return lips.tokenize(command).pop();
-               }));
-           },
-           completion: function(string) {
-               let tokens = lips.tokenize(this.before_cursor(), true);
-               tokens = tokens.map(token => token.token);
-               const last = tokens.pop();
-               if (last.trim().length) {
-                   const prefix = tokens.join('');
-                   const re = new RegExp('^' + $.terminal.escape_regex(last));
-                   return env.get('env')(env).toArray().filter(name => {
-                       return re.test(name);
-                   }).map(name => prefix + name);
-               }
-           },
-           keydown: function() {
-               if (position) {
-                   term.set_position(position);
-                   position = false;
-               }
-           },
-           keypress: function(e) {
-               var term = this;
-               if (e.key == ')') {
-                   setTimeout(function() {
-                       position = term.get_position();
-                       var command = term.get_command().substring(0, position);
-                       var len = command.split(/\n/)[0].length;
-                       var tokens = lips.tokenize(command, true);
-                       var count = 1;
-                       var token;
-                       var i = tokens.length - 1;
-                       while (count > 0) {
-                           token = tokens[--i];
-                           if (!token) {
-                               return;
-                           }
-                           if (token.token === '(') {
-                               count--;
-                           } else if (token.token == ')') {
-                               count++;
-                           }
-                       }
-                       if (token.token == '(' && count === 0) {
-                           clearTimeout(timer);
-                           setTimeout(function() {
-                               var offset = token.offset;
-                               term.set_position(offset);
-                               timer = setTimeout(function() {
-                                   term.set_position(position)
-                                   position = false;
-                               }, 200);
-                           }, 0);
-                       }
-                   }, 0);
-               } else {
-                   position = false;
-               }
-           }
-       });
-       term.env = function() { return env; };
-
+       var term = terminal({ selector, dynamic, name: 'demo', lips });
        term.echo('LIPS Demo version ' + lips.version + ' with [[b;#fff;]' +
                  (dynamic ? 'dynamic' : 'lexical') + ' scope]\n' +
                  'type [[b;#fff;](env)] to see environment with ' +
-                 'functions macros and variables\n', {formatters: false});
+                 'functions macros and variables\n', { formatters: false });
    }
    $(function() {
-       // extend scheme syntax in PrismJS to inlcude regular expressions
-       Prism.languages.insertBefore('scheme', 'character', {
-           regex: {
-               pattern: /\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)/g,
-               greedy: true
-           }
-       });
-       // symbols
-       Prism.languages.insertBefore('scheme', 'string', {
-           symbol: {
-               pattern: /'[^\s()]+/g,
-               greedy: true
-           }
-       });
-       // and define-macro as keyword (update original regex)
-       Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:\*|rec)?(?:-values)?|else|if|cond|begin|delay(?:-force)?|parameterize|define-macro|guard|set!|(?:quasi-)?quote|syntax-rules)(?=[()\s])/;
 
        function select(li) {
            li = $(li);
@@ -367,35 +226,7 @@ parse(tokenize(string)).foEach(function(code) {
        });
    });
   </script>
-  <script type="text/x-lips">
-;; helper macros taken from todo app
-;; run terminal method and don't show return value
-;; (begin (--> ((. $ "terminal" "active")) (echo "hello")) undefined)
-;; (nop (--> ((... $ terminal active)) (echo "hello world")))
-
-(define-macro (-> expr method . args)
-  "Helper macro that invoke method on object"
-  `(apply (. ,expr (. ',method "name")) (list ,@args)))
-
-
-(define-macro (--> expr . code)
-  "Helper macro similar to -> that works well with jQuery chaining
-            where method call look function invocation.
-
-            usage: (--> ($ \"body\")
-                        (css \"color\" \"red\")
-                        (on \"click\" (lambda () (print \"click\"))))"
-  (let ((obj (gensym)))
-    `(let ((,obj ,expr))
-       ,@(let ((result '()))
-           (while code
-             (let ((lst `(set! ,obj (apply (. ,obj ,(. (caar code) "name"))
-                                           (list ,@(cdar code))))))
-               (append! result lst))
-             (set! code (cdr code)))
-           (append! result obj)
-           result))))
-  </script>
+  <script type="text/x-lips" src="examples/helpers.lips"></script>
   <script type="text/x-lips" src="examples/defstruct.lips"></script>
 </body>
 </html>
