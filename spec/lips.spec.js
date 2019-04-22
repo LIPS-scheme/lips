@@ -670,7 +670,8 @@ describe('env', function() {
     });
     describe('dot function', function() {
         it('sould call pair method on list structure', function() {
-            return lips.exec(`((. '((a . "10") (b . 20)) "toObject"))`).then(([result]) => {
+            var code = `((. '((a . "10") (b . 20)) "toObject"))`;
+            return lips.exec(code).then(([result]) => {
                 expect(result).toEqual({ a: "10", b: 20 });
             });
         });
