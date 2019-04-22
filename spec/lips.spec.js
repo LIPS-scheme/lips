@@ -631,9 +631,21 @@ describe('lists', function() {
     });
 });
 describe('env', function() {
+    // data on lists are leftovers after macro processing
+    // it prevent to evalute retults of macros we need to remove
+    // it to have same value is parsing clean data
+    // using str2list helper
+    function clean(node) {
+        if (node instanceof Pair) {
+            delete node.data;
+            clean(node.car);
+            clean(node.cdr);
+        }
+        return node;
+    }
     function testList(code, expected) {
         return lips.exec(code).then(([list]) => {
-            expect(list.toString()).toEqual(expected);
+            expect(clean(list)).toEqual(str2list(expected));
         });
     }
     function testValue([code, expected]) {
