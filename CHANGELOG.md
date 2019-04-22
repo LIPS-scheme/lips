@@ -1,3 +1,32 @@
+## 0.10.0
+### Breaking
+* change order of `split`, `replace`, `match`, `search` and `instanceof` so you can use them with `curry`
+* `append` and `append!` no require list or nil second argument
+* apply is no longer Macro it's now a function (so it can be used in curry)
+### Features
+* change `append!` from macro to function (it will work with any value as fist list argument not only with names
+* `help` function and help system inside functions. First expression after function arguments is docs.
+* add `pipe`, `compose`, `fold` and `some` functions
+* new function `unbind` to help write function that work with functions as objects (LIPS wrap them)
+* add alias for `.` as `get` so you can pass it to curry, with `.` LIPS will try to create pair
+* lambda function introspection
+* hypeapp example
+* better loading of code
+* make `map`, `filter`, `find`, `for-each` and `reduce` sync when possible
+* basic type checking
+* documented `unquote-splicing` and `unquote` functions that throw error when used outside of `quasiquote`
+* allow to extend the parser (kind of reader macros)
+### Bug fixes
+* fix `if` it should not return false if false value is undefined
+* fix even and odd functions with BigInt
+* fix curry
+* fix when inside quasiquote there is empty list
+* make `load` use `lips.exec`, so it execute code sequentially
+* fix `append`
+* fix `timer` to use with expression
+* fix macros without arguments
+* fix calling `setTimeout` [#5](https://github.com/jcubic/lips/issues/5)
+
 ## 0.9.0
 ### Breaking
 * `for-each` and `map` works as in Scheme spec (use multiple arguments and don't use index)
@@ -9,7 +38,7 @@
 * add `undefined` to default Environment so you can use it in Lips code
 * add function `nop`
 * tokenizer with meta data now include newlines and comments (nothing is removed)
-### Bugs
+### Bug fixes
 * fix offset in tokenizer
 * fix assign variables from variables (e.g. function or variable aliases)
 * fix return value of Math operation that should return float [#1](https://github.com/jcubic/lips/issues/1)
@@ -23,7 +52,7 @@
 * don't evaluate next expressions in `and` and `or` macros
 
 ## 0.8.1
-### Bugfix
+### Bug fixes
 * use exception.code for code that triggered exception
 
 ## 0.8.0
@@ -31,25 +60,25 @@
 * new nth and reverse functions
 * new type checking functions null? regex? pair? string? number? symbol? array? object? boolean?
 * add lips source code that throwed exception in JavaScript error message
-### Bugfix
+### Bug fixes
 * fix lambda with rest parameter
 ### Breaking
 * `if` now check if argument is boolean
 
 ## 0.7.1
-### Bugfix
+### Bug fixes
 * fix curry function
 
 ## 0.7.0
 ### Features
 * `(let iter` macro that's transformation of `(let* ((iter (lambda () ...`
 * expandable `(let iter` and `(define (foo)` by macroexpand
-### Bugfix
+### Bug fixes
 * fix macroexpand evaluation of code
 * use nil in cons when cdr is empty list
 
 ## 0.6.1
-### Bugfix
+### Bug fixes
 * fix reduce infinite loop
 * fix invoking lambdas in dynamic scope
 * fix print of Array with multi line strings and BigInts
@@ -60,7 +89,7 @@
 * rename set to set!, set-cdr to set-cdr! and set-car to set-car!
 * rename defmacro to define-macro like in scheme
 * change order of arguments in env.inherit
-## Features
+### Features
 * add bit operation functions
 * add float, round and ceil functions
 * add env variable to lips namespace which is alias to global_environment
@@ -70,7 +99,7 @@
 * allow to set value using set! and dot expression that is used to get the value
 * better invalid mime on script tag detection
 * use ES6 symbols as names for lips symbols in gensym function
-### Bugs
+### Bug fixes
 * show error when invoking trampoline in dynamic scope
 * fix eq? and >= functions
 * fix set! (change existing reference or create new if not existing in scope chain)
@@ -90,20 +119,20 @@
 * fix access variables that have value of undefined
 
 ## 0.5.4
-### Bugs
+### Bug fixes
 * use src file for node and dist build file for unpkg
 
 ## 0.5.3
-### Bugs
+### Bug fixes
 * fix version number in exported field
 
 ## 0.5.2
-### Bugs
+### Bug fixes
 * use dist/lips.min.js as main for unpkg
 * npm housekeeping
 
 ## 0.5.1
-### Bugs
+### Bug fixes
 * fix lambda with symbol as parameters
 * fix for TCO factorial using Y combinator & trampoline
 
@@ -116,13 +145,13 @@
 * optional dynamic scope
 * add `not`, `abs`, `sqrt` and `**` functions
 * wrap numbers in LNumber that use BigInt or bn.js if possible
-### Bugs
+### Bug fixes
 * fix lambda with no parameters
 * fix define with Promise like `(define x (let ...`
 * fix - with single argument
 
 ## 0.4.1-2
-### Bugs
+### Bug fixes
 * fix for Node
 
 ## 0.4.0
@@ -133,8 +162,7 @@
 * add string functions: join, split, replace, match, search
 * new second parameter to `tokenize` that make it return array of extra objects `{token, col, line, offset}`
 * Pair.flatten and lips function flatten
-
-### Bugs
+### Bug fixes
 * fix (reduce + list)
 * fix handling of empty list
 * make let* handle promises
@@ -144,7 +172,7 @@
 ## 0.3.0
 ### Features
 * exec api method
-### Bugfixes
+### Bug fixes
 * fix processing of multiple backquote and unquote
 
 ## 0.2.1/0.2.2
@@ -159,8 +187,7 @@
 * better string function
 * Pair methods for working with ALists + Pair::reduce
 * throw exception on car/cdr with non list
-
-### Bugs
+### Bug fixes
 * fix parsing empty strings
 * fix various errors catch by lint
 * fix parsing ALists with list as keys and values
