@@ -137,53 +137,6 @@ describe('tokenizer', function() {
             { col: 28, line: 6, token: ')', offset: 238 },
             { col: 29, line: 6, token: '\n', offset: 239 }
         ];
-        /*
-            { col: 2, line: 3, token: '"Third Line."', offset: 75 },
-            { col: 0, line: 4, token: '  ', offset: 89 },
-            { col: 2, line: 4, token: '(', offset: 91 },
-            { col: 3, line: 4, token: 'let', offset: 92 },
-            { col: 6, line: 4, token: ' ', offset: 95 },
-            { col: 7, line: 4, token: '(', offset: 96 },
-            { col: 8, line: 4, token: '(', offset: 97 },
-            { col: 9, line: 4, token: 'names', offset: 98 },
-            { col: 14, line: 4, token: ' ', offset: 103 },
-            { col: 15, line: 4, token: '(', offset: 104 },
-            { col: 16, line: 4, token: 'map', offset: 105 },
-            { col: 19, line: 4, token: ' ', offset: 108 },
-            { col: 20, line: 4, token: '(', offset: 109 },
-            { col: 21, line: 4, token: 'lambda', offset: 110 },
-            { col: 27, line: 4, token: ' ', offset: 116 },
-            { col: 28, line: 4, token: '(', offset: 117 },
-            { col: 29, line: 4, token: 'symbol', offset: 118 },
-            { col: 35, line: 4, token: ')', offset: 124 },
-            { col: 36, line: 4, token: ' ', offset: 125 },
-            { col: 37, line: 4, token: '(', offset: 126 },
-            { col: 38, line: 4, token: 'gensym', offset: 127 },
-            { col: 44, line: 4, token: ')', offset: 133 },
-            { col: 45, line: 4, token: ')', offset: 134 },
-            { col: 46, line: 4, token: ' ', offset: 135 },
-            { col: 47, line: 4, token: 'fields', offset: 136 },
-            { col: 53, line: 4, token: ')', offset: 142 },
-            { col: 54, line: 4, token: ')', offset: 143 },
-            { col: 0, line: 5, token: '        ', offset: 145 },
-            { col: 8, line: 5, token: '(', offset: 153 },
-            { col: 9, line: 5, token: 'struct', offset: 154 },
-            { col: 15, line: 5, token: ' ', offset: 160 },
-            { col: 16, line: 5, token: '(', offset: 161 },
-            { col: 17, line: 5, token: 'gensym', offset: 162 },
-            { col: 23, line: 5, token: ')', offset: 168 },
-            { col: 24, line: 5, token: ')', offset: 169 },
-            { col: 0, line: 7, token: '        ', offset: 172 },
-            { col: 8, line: 7, token: '(', offset: 180 },
-            { col: 9, line: 7, token: 'field-arg', offset: 181 },
-            { col: 18, line: 7, token: ' ', offset: 190 },
-            { col: 19, line: 7, token: '(', offset: 191 },
-            { col: 20, line: 7, token: 'gensym', offset: 192 },
-            { col: 26, line: 7, token: ')', offset: 198 },
-            { col: 27, line: 7, token: ')', offset: 199 },
-            { col: 28, line: 7, token: ')', offset: 200 }
-        ];
-        // */
         expect(tokenize(code, true).slice(0, output.length)).toEqual(output);
     });
 });
@@ -636,51 +589,111 @@ describe('scope', function() {
         });
     });
 });
-
-
-/*
-
-var code = parse(tokenize(`
-    (print (cons 1 (cons 2 (cons 3 nil))))
-    (print (list 1 2 3 4))
-    (print (car (list 1 2 3)))
-    (print (concat "hello" " " "world"))
-    (print (append (list 1 2 3) (list 10)))
-    (print nil)
-    (define x 10)
-    (print (* x x))
-    (print (/ 1 2))
-    (define l1 (list 1 2 3 4))
-    (define l2 (append l1 (list 5 6)))
-    (print l1)
-    (print l2)
-    (defmacro (foo code) \`(print ,(string (car code))))
-    (foo (name baz))
-    (print \`(,(car (list "a" "b" "c")) 2 3))
-    (print \`(,@(list 1 2 3)))
-    (print \`(1 2 3 ,@(list 4 5) 6))
-    (defmacro (xxx code) \`(list 1 ,(car (cdr code)) 2))
-    (print (xxx ("10" "20")))
-    (if (== 10 20) (print "1 true") (print "1 false"))
-    (if (== 10 10) (print "2 true") (print "2 false"))
-    (print (concat "if " (if (== x 10) "10" "20")))
-`));
-
-(function() {
-  var env = new Environment({}, global_environment);
-  var c = parse(tokenize([
-    "(define x '(1 2 3))",
-    "(print x)",
-    "(print `(1 2 ,@x 4 5))",
-    "(print `(foo bar ,@x 4 5))"
-  ].join(' ')));
-  c.forEach(function(code) {
-    console.log(code.toString());
-    try {
-      evaluate(code, env);
-    } catch (e) {
-      console.error(e.message);
+describe('docs', function() {
+    it('all functions should have docs', function() {
+        Object.keys(lips.env.env).forEach(key => {
+            var value = lips.env.env[key];
+            if (typeof value === 'function') {
+                var __doc__ = value.__doc__;
+                expect([key, typeof __doc__]).toEqual([key, 'string']);
+                expect(__doc__.length).toBeGreaterThan(0);
+            }
+        });
+    });
+});
+const str2list = code => lips.parse(lips.tokenize(code))[0];
+describe('lists', function() {
+    describe('append', function() {
+        it('should append value', function() {
+            [
+                ['(1 2 3)', '(1 2 3 10)'],
+                ['((1 2 3))', '((1 2 3) 10)'],
+                ['(1 2 (3) 4)', '(1 2 (3) 4 10)'],
+                ['(1 2 3 (4))', '(1 2 3 (4) 10)']
+            ].forEach(([code, expected]) => {
+                var input = str2list(code);
+                input.append(LNumber(10));
+                expect(input).toEqual(str2list(expected));
+            });
+        });
+        it('should not append nil', function() {
+            [
+                '(1 2 3)',
+                '((1 2 3))',
+                '(1 2 (3) 4)',
+                '(1 2 3 (4))',
+                '(1 . 2)',
+                '((1 . 2))'
+            ].forEach((code) => {
+                var input = str2list(code);
+                input.append(lips.nil);
+                expect(input).toEqual(str2list(code));
+            });
+        });
+    });
+});
+describe('env', function() {
+    // data on lists are leftovers after macro processing
+    // it prevent to evalute retults of macros we need to remove
+    // it to have same value is parsing clean data
+    // using str2list helper
+    function clean(node) {
+        if (node instanceof Pair) {
+            delete node.data;
+            clean(node.car);
+            clean(node.cdr);
+        }
+        return node;
     }
-  })
-})();
-*/
+    function testList(code, expected) {
+        return lips.exec(code).then(([list]) => {
+            expect(clean(list)).toEqual(str2list(expected));
+        });
+    }
+    function testValue([code, expected]) {
+        return lips.exec(code).then(([result]) => {
+            expect(result).toEqual(expected);
+        });
+    }
+    describe('reduce', function() {
+        it('should create and reduce async list', function() {
+            const code = `(reduce +
+                                  0
+                                  (list (timer 1000 10) (timer 2000 30)))`;
+            return testValue([code, LNumber(40)]);
+        });
+        it('should reverse list', function() {
+            const code = `(reduce cons '() '(1 2 3))`;
+            return testList(code, '(3 2 1)');
+        });
+        it('should create wrong list', function() {
+            return testList(`(reduce list '() '(1 2 3))`, '(3 (2 (1 ())))');
+        });
+    });
+    describe('dot function', function() {
+        it('sould call pair method on list structure', function() {
+            var code = `((. '((a . "10") (b . 20)) "toObject"))`;
+            return lips.exec(code).then(([result]) => {
+                expect(result).toEqual({ a: "10", b: 20 });
+            });
+        });
+    });
+    describe('gensym', function() {
+        it('should create uniqe symbols', function() {
+            return Promise.all([
+                [`(eq? (gensym "foo") (gensym "foo"))`, false],
+                [`(eq? 'foo 'foo)`, true],
+                [`(eq? (string (gensym "foo")) (string (gensym "foo")))`, true]
+            ].map(testValue));
+        });
+    });
+    describe('math', function() {
+        it('should calculate math operations', function() {
+            return Promise.all([
+                ['(* 1 2 3 4 5)', LNumber(120)],
+                ['(+ 1 2 3 4 5)', LNumber(15)],
+                ['(- 10 2 3)', LNumber(5)]
+            ].map(testValue));
+        });
+    });
+});

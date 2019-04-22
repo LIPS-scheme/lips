@@ -1,6 +1,31 @@
-## 0.9.1
+## 0.10.0
+### Breaking
+* change order of `split`, `replace`, `match`, `search` and `instanceof` so you can use them with `curry`
+* `append` and `append!` no require list or nil second argument
+* apply is no longer Macro it's now a function (so it can be used in curry)
+### Features
+* change `append!` from macro to function (it will work with any value as fist list argument not only with names
+* `help` function and help system inside functions. First expression after function arguments is docs.
+* add `pipe`, `compose`, `fold` and `some` functions
+* new function `unbind` to help write function that work with functions as objects (LIPS wrap them)
+* add alias for `.` as `get` so you can pass it to curry, with `.` LIPS will try to create pair
+* lambda function introspection
+* hypeapp example
+* better loading of code
+* make `map`, `filter`, `find`, `for-each` and `reduce` sync when possible
+* basic type checking
+* documented `unquote-splicing` and `unquote` functions that throw error when used outside of `quasiquote`
+* allow to extend the parser (kind of reader macros)
 ### Bug fixes
 * fix `if` it should not return false if false value is undefined
+* fix even and odd functions with BigInt
+* fix curry
+* fix when inside quasiquote there is empty list
+* make `load` use `lips.exec`, so it execute code sequentially
+* fix `append`
+* fix `timer` to use with expression
+* fix macros without arguments
+* fix calling `setTimeout` [#5](https://github.com/jcubic/lips/issues/5)
 
 ## 0.9.0
 ### Breaking
