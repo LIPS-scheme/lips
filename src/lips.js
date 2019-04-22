@@ -186,14 +186,27 @@
     /* eslint-disable */
     var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"/g;
-    var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|`|[^(\s)]+)/gim;
+    //var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|#|`|[^(\s)]+)/gim;
+    // ----------------------------------------------------------------------
+    function makeTokenRe() {
+        var tokens = Object.keys(specials).map(escapeRegex).join('|');
+        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|\\/(?! )[^\\/\\\\]*(?:\\\\[\\S\\s][^\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]|\\.{2,}|${tokens}|[^(\\s)]+)`, 'gim');
+    }
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function last_item(array, n = 1) {
+    function lastItem(array, n = 1) {
         return array[array.length - n];
     }
     // ----------------------------------------------------------------------
+    function escapeRegex(str) {
+        if (typeof str === 'string') {
+            var special = /([-\\^$[\]()+{}?*.|])/g;
+            return str.replace(special, '\\$1');
+        }
+    }
+    // ----------------------------------------------------------------------
     function tokens(str) {
+        var tokens_re = makeTokenRe();
         str = str.replace(/\n\r|\r/g, '\n');
         var count = 0;
         var line = 0;
@@ -204,14 +217,14 @@
             if (string.match(pre_parse_re)) {
                 col = 0;
                 if (current_line.length) {
-                    var last_token = last_item(current_line);
-                    if (last_token.token.match(/\n/)) {
-                        var last_line = last_token.token.split('\n').pop();
+                    var lastToken = lastItem(current_line);
+                    if (lastToken.token.match(/\n/)) {
+                        var last_line = lastToken.token.split('\n').pop();
                         col += last_line.length;
                     } else {
-                        col += last_token.token.length;
+                        col += lastToken.token.length;
                     }
-                    col += last_token.col;
+                    col += lastToken.col;
                 }
                 var token = {
                     col,
@@ -262,8 +275,8 @@
     var specials = {
         "'": new Symbol('quote'),
         '`': new Symbol('quasiquote'),
-        ',': new Symbol('unquote'),
-        ',@': new Symbol('unquote-splicing')
+        ',@': new Symbol('unquote-splicing'),
+        ',': new Symbol('unquote')
     };
     // ----------------------------------------------------------------------
     // :: tokens are the array of strings from tokenizer
@@ -982,6 +995,8 @@
             typeof this === 'undefined') {
             return new Macro(name, fn);
         }
+        typecheck('Macro', name, 'string', 1);
+        typecheck('Macro', fn, 'function', 2);
         this.__doc__ = doc;
         this.name = name;
         this.fn = fn;
@@ -3489,6 +3504,7 @@
         quote,
         Pair,
         Formatter,
+        specials,
         nil,
         maybe_promise,
         Symbol,

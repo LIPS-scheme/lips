@@ -15,6 +15,7 @@
 * make `map`, `filter`, `find`, `for-each` and `reduce` sync when possible
 * basic type checking
 * documented `unquote-splicing` and `unquote` functions that throw error when used outside of `quasiquote`
+* allow to extend the parser (kind of reader macros)
 ### Bug fixes
 * fix `if` it should not return false if false value is undefined
 * fix even and odd functions with BigInt

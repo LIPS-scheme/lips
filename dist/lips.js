@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Sun, 21 Apr 2019 23:34:35 +0000
+ * build: Mon, 22 Apr 2019 08:59:55 +0000
  */
 (function () {
 'use strict';
@@ -1092,18 +1092,33 @@ function _typeof(obj) {
 
 
   var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
-  var string_re = /"(?:\\[\S\s]|[^"])*"/g;
-  var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|`|[^(\s)]+)/gim;
+  var string_re = /"(?:\\[\S\s]|[^"])*"/g; //var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|#|`|[^(\s)]+)/gim;
+  // ----------------------------------------------------------------------
+
+  function makeTokenRe() {
+    var tokens = Object.keys(specials).map(escapeRegex).join('|');
+    return new RegExp("(\"(?:\\\\[\\S\\s]|[^\"])*\"|\\/(?! )[^\\/\\\\]*(?:\\\\[\\S\\s][^\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|\"(?:\\\\[\\S\\s]|[^\"])+|\\n|(?:\\\\[\\S\\s]|[^\"])*\"|;.*|(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]|\\.{2,}|".concat(tokens, "|[^(\\s)]+)"), 'gim');
+  }
   /* eslint-enable */
   // ----------------------------------------------------------------------
 
-  function last_item(array) {
+
+  function lastItem(array) {
     var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
     return array[array.length - n];
   } // ----------------------------------------------------------------------
 
 
+  function escapeRegex(str) {
+    if (typeof str === 'string') {
+      var special = /([-\\^$[\]()+{}?*.|])/g;
+      return str.replace(special, '\\$1');
+    }
+  } // ----------------------------------------------------------------------
+
+
   function tokens(str) {
+    var tokens_re = makeTokenRe();
     str = str.replace(/\n\r|\r/g, '\n');
     var count = 0;
     var line = 0;
@@ -1115,16 +1130,16 @@ function _typeof(obj) {
         col = 0;
 
         if (current_line.length) {
-          var last_token = last_item(current_line);
+          var lastToken = lastItem(current_line);
 
-          if (last_token.token.match(/\n/)) {
-            var last_line = last_token.token.split('\n').pop();
+          if (lastToken.token.match(/\n/)) {
+            var last_line = lastToken.token.split('\n').pop();
             col += last_line.length;
           } else {
-            col += last_token.token.length;
+            col += lastToken.token.length;
           }
 
-          col += last_token.col;
+          col += lastToken.col;
         }
 
         var token = {
@@ -1180,8 +1195,8 @@ function _typeof(obj) {
   var specials = {
     "'": new _Symbol('quote'),
     '`': new _Symbol('quasiquote'),
-    ',': new _Symbol('unquote'),
-    ',@': new _Symbol('unquote-splicing')
+    ',@': new _Symbol('unquote-splicing'),
+    ',': new _Symbol('unquote')
   }; // ----------------------------------------------------------------------
   // :: tokens are the array of strings from tokenizer
   // :: the return value is lisp code created out of Pair class
@@ -1999,6 +2014,8 @@ function _typeof(obj) {
       return new Macro(name, fn);
     }
 
+    typecheck('Macro', name, 'string', 1);
+    typecheck('Macro', fn, 'function', 2);
     this.__doc__ = doc;
     this.name = name;
     this.fn = fn;
@@ -4843,6 +4860,7 @@ function _typeof(obj) {
     quote: quote,
     Pair: Pair,
     Formatter: Formatter,
+    specials: specials,
     nil: nil,
     maybe_promise: maybe_promise,
     Symbol: _Symbol,

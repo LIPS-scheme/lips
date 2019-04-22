@@ -621,7 +621,9 @@ describe('lists', function() {
                 '(1 2 3)',
                 '((1 2 3))',
                 '(1 2 (3) 4)',
-                '(1 2 3 (4))'
+                '(1 2 3 (4))',
+                '(1 . 2)',
+                '((1 . 2))'
             ].forEach((code) => {
                 var input = str2list(code);
                 input.append(lips.nil);
