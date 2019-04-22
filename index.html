@@ -173,7 +173,7 @@ parse(tokenize(string)).foEach(function(code) {
   </footer>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
   <script src="https://code.jquery.com/jquery-latest.min.js"></script>
-  <script src="https://unpkg.com/@jcubic/lips/dist/lips.js"></script>
+  <script src="https://unpkg.com/@jcubic/lips@0.x.x/dist/lips.js"></script>
   <!-- <script src="./src/lips.js"></script> -->
   <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.min.js"></script>
   <!--<script src="../terminal/repo/js/jquery.terminal-src.js"></script>-->
@@ -193,6 +193,10 @@ parse(tokenize(string)).foEach(function(code) {
        font-weight: normal !important;
        color: inherit !important;
    }
+   .terminal token.comment,
+   .terminal .token.block-comment {
+       color: #3d464f;
+   }
   </style>
   <script>
    function interpreter(selector, dynamic) {
@@ -200,7 +204,8 @@ parse(tokenize(string)).foEach(function(code) {
        term.echo('LIPS Demo version ' + lips.version + ' with [[b;#fff;]' +
                  (dynamic ? 'dynamic' : 'lexical') + ' scope]\n' +
                  'type [[b;#fff;](env)] to see environment with ' +
-                 'functions macros and variables\n', { formatters: false });
+                 'functions macros and variables\nYou can also use [[b;#fff;](help obj)]' +
+                 ' to display help for specic function or macro.', { formatters: false });
    }
    $(function() {
 
