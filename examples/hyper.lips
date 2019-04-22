@@ -1,90 +1,25 @@
 ;; -*- scheme -*-
 ;; This is example code that's needed to create shorter hyperapp applications
 ;;
-;; This file is part of the LISP JavaScript interpter
-;; Copyriht (C) Jakub T. Jankiewicz <https://jcubic.pl>
+;; This file is part of the LIPS - Simple lisp in JavaScript
+;; Copyriht (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
 
 (define h (. hyperapp "h"))
 (define app (. hyperapp "app"))
 
-(define log (. console "log"))
-
-(define (symbol->string symbol)
-  "(symbol->string symbol)
-
-   Function return LIPS symbol name."
-  (. symbol "name"))
-
-(define-macro (--> expr . code)
-  "Helper macro similar to -> that works well with jQuery chaining
-   where method call look function invocation.
-
-           usage: (--> ($ \"body\")
-                       (css \"color\" \"red\")
-                       (on \"click\" (lambda () (print \"click\"))))
-
-                  (--> document (querySelectorAll \"div\"))"
-  (let ((obj (gensym)))
-    `(let ((,obj ,expr))
-       ,@(map (lambda ()
-                `(set! ,obj (apply (. ,obj ,(symbol->string (caar code))) (list ,@(cdar code)))))
-              code)
-       ,obj)))
-
-(define (dir obj)
-  "(dir obj)
-
-   Function return all props on the object including those in prototype chain."
-  (if (null? obj) nil
-      (append (array->list ((. Object "getOwnPropertyNames") (unbind obj)))
-              (dir ((. Object "getPrototypeOf") (unbind obj))))))
-
-(define (symbol->string s)
-  "(symbol->string symbol)
-
-   Function convert LIPS symbol to string."
-  (and (symbol? s) (. s "name")))
-
-(define (string->symbol string)
-  "(string->symbol string)
-
-   Function convert string to LIPS symbol."
-  (and (string? string) (new (. lips "Symbol") string)))
 
 (define key-list '(:foo 10 :bar 20))
 
-(define (value obj)
-  "(value obj)
-
-   Function unwrap LNumbers and convert nil value to undefined."
-  (if (eq? obj nil)
-      undefined
-      (if (number? obj)
-          ((. obj "valueOf"))
-          obj)))
-
-(define (substring string start end)
-  "(substring string start [end])
-
-   Function return part of the string that start with start index
-   and end in end index, if end is undfined it return to the end."
-  ((. string "substring") (value start) (value end)))
-
-
-(define (concat . args)
-  "(concat . strings)
-
-   Function create new string by joining its arguments"
-  ((. (list->array args) "join") ""))
-
+;; ---------------------------------------------------------------------------------------
 (define (key? symbol)
   "(key? symbol)
 
    Function check if symbol is key symbol, have colon as first character."
   (and (symbol? symbol) (eq? ":" (substring (symbol->string symbol) 0 1))))
 
+;; ---------------------------------------------------------------------------------------
 (define (key->string symbol)
   "(key->string symbol)
 
@@ -92,6 +27,7 @@
   (if (key? symbol)
       (substring (symbol->string symbol) 1)))
 
+;; ---------------------------------------------------------------------------------------
 (define (alist->object alist)
   "(alist->object alist)
 
@@ -99,6 +35,7 @@
   (if (pair? alist)
       ((. alist "toObject"))))
 
+;; ---------------------------------------------------------------------------------------
 (define (pair-map fn seq-list)
   "(seq-map fn list)
 
@@ -116,6 +53,7 @@
                   (iter (cddr seq-list) (cons value result))))))))
 
 
+;; ---------------------------------------------------------------------------------------
 (define (klist->alist klist)
   "(klist->alist klist)
 
@@ -125,8 +63,10 @@
               (if (key? first)
                   (cons (key->string first) second)) klist)))
 
+;; ---------------------------------------------------------------------------------------
 (define klist->object (pipe klist->alist alist->object))
 
+;; ---------------------------------------------------------------------------------------
 (define (make-tags expr)
   "(make-tags expression)
 
@@ -143,6 +83,7 @@
                (caddr expr)))))
 
 
+;; ---------------------------------------------------------------------------------------
 (define-macro (with-tags expr)
   "(with-tags expression)
 
@@ -164,6 +105,3 @@
 ;;                   (list (:h1 () (value (cdr (assoc 'count (. state "counter")))))
 ;;                         (:button (:onclick (lambda () (--> actions (down 1)))) "-")
 ;;                         (:button (:onclick (lambda () (--> actions (up 1)))) "+")))))
-
-(define-macro (global name)
-  `(set-obj! window ,(symbol->string name) ,name))
