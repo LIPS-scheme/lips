@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.10.1
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Mon, 22 Apr 2019 20:00:11 +0000
+ * build: Mon, 22 Apr 2019 20:33:17 +0000
  */
 (function () {
 'use strict';
@@ -3902,6 +3902,20 @@ function _typeof(obj) {
       })));
     }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
     // ------------------------------------------------------------------
+    error: doc(function () {
+      if (root.console) {
+        if (root.console.error) {
+          var _root$console;
+
+          (_root$console = root.console).error.apply(_root$console, arguments);
+        } else if (root.console.log) {
+          var _root$console2;
+
+          (_root$console2 = root.console).log.apply(_root$console2, arguments);
+        }
+      }
+    }, "(error . args)\n\n            Display error message."),
+    // ------------------------------------------------------------------
     flatten: doc(function (list) {
       return list.flatten();
     }, "(flatten list)\n\n            Return shallow list from tree structure (pairs)."),
@@ -4841,7 +4855,7 @@ function _typeof(obj) {
 
 
   return {
-    version: '0.10.1',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
