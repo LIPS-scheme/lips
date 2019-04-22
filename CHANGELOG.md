@@ -25,6 +25,7 @@
 * fix `append`
 * fix `timer` to use with expression
 * fix macros without arguments
+* fix calling setTimeout [#5](https://github.com/jcubic/lips/issues/5)
 
 ## 0.9.0
 ### Breaking
