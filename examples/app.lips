@@ -1,58 +1,49 @@
 ;; -*- scheme -*-
-;; This is example hyperapp application written in LISP
+;; This is example hyperapp application written in LIPS
 ;;
-;; This file is part of the LISP JavaScript interpter
-;; Copyriht (C) Jakub T. Jankiewicz <https://jcubic.pl>
+;; This file is part of the LIPS - Simple lisp in JavaScript
+;; Copyriht (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
 
 (load "hyper.lips")
 
-(define (new-state alist)
-  "(new-state alist)
+;; helper for this specific app - hyperapp action generator that create new state
 
-   Helper function that create new state based on alist with date for counter"
-  (let ((state (alist->object '())))
-    (set-obj! state "counter" alist)
-    state))
+(define (update fn)
+  "(update fn)
+
+   Function create new action that create new state with updated alist value
+   that is returned from function."
+  (lambda (value)
+    (lambda (state)
+      (let* ((alist (. state "counter"))
+             (old (cdr (assoc 'count alist))))
+        (make-object :counter (alist->assign '() alist `((count . ,(fn old value)))))))))
+
+
+
+
+;; -----------------------------------------------------------------------------
+;; MAIN APPLICATION CODE
+;; -----------------------------------------------------------------------------
+
+;; Hyper app actions
+(define actions (make-object :up (update +)
+                             :down (update -)))
+
 
 ;; inital state
-(define state (new-state '((count . 0))))
+(define state (make-object :counter '((count . 0))))
 
 (define (view state actions)
   "hyperapp view"
   (with-tags (:div ()
-                   (list (:h1 () (value (cdr (assoc 'count (. state "counter")))))
+                   (list (:h1 ()
+                              (concat "Counter: "
+                                      (value (cdr (assoc 'count (. state "counter"))))))
                          (:button (:onclick (lambda () (--> actions (down 1)))) "-")
                          (:button (:onclick (lambda () (--> actions (up 1)))) "+")))))
-
-
- (define (setter prop . rest)
-   "(setter name fn)
-
-    Function return hyperapp action taht set the value. The function is called with old state value
-    and value from action. and based on those two values it should return new prop value."
-     (lambda (value)
-         (lambda (state)
-             (let* ((alist ((. (. state "counter") "clone")))
-                 (pair (assoc prop alist)))
-                 (if (null? rest)
-                     (set-cdr pair value)
-                     (let ((fn (car rest)))
-                         (set-cdr! pair (fn value (cdr pair)))))
-                 (new-state alist)))))
-
-
-(define (mod fn)
-  "(mod fn)
-
-   Function create new action with and combine value when calling the action and old value."
-  (setter 'count (lambda (new old) (fn old new))))
-
-
-;; Hype app actions
-(define actions (alist->object `((up . ,(mod +))
-                                  (down . ,(mod -)))))
 
 ;; main hyper app
 (define main (app state actions view (--> document (querySelector "#app"))))

@@ -1,0 +1,47 @@
+.tabs .panels > :not(.active) {
+  display: none;
+}
+.tabs ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tabs .panels {
+  clear: both;
+}
+.tabs li {
+  display: inline-block;
+  position: relative;
+  border-radius: 10px 10px 0 0;
+}
+.tabs li:hover {
+/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#e5e5e5+0,ffffff+100 */
+background: #e5e5e5; /* Old browsers */
+background: -moz-linear-gradient(-45deg, #e5e5e5 0%, #ffffff 100%); /* FF3.6-15 */
+background: -webkit-linear-gradient(-45deg, #e5e5e5 0%,#ffffff 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(135deg, #e5e5e5 0%,#ffffff 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e5e5e5', endColorstr='#ffffff',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+}
+.tabs li.active:after {
+  content: '';
+  display: block;
+  border-bottom: 5px solid #295ee5;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+}
+.tabs li a {
+  text-decoration: none;
+  padding: 10px;
+  display: inline-block;
+  border: 1px solid black;
+  border-radius: 10px 10px 0 0;
+  border-bottom: none;
+}
+.tabs li + li a {
+  border-left: none;
+}
+code[class*="language-"], pre[class*="language-"] {
+    white-space: pre-wrap;
+    word-break: break-word;
+}

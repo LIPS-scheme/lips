@@ -1090,7 +1090,7 @@
     // :: and applied with different context after bind
     // ----------------------------------------------------------------------
     function weakBind(fn, context, ...args) {
-        let binded = function binded(...moreArgs) {
+        let binded = function(...moreArgs) {
             const args = [...binded.__bind.args, ...moreArgs];
             return binded.__bind.fn.apply(context, args);
         };
@@ -2456,7 +2456,7 @@
 
             Function return first found index of the pattern inside a string`),
         // ------------------------------------------------------------------
-        string: doc(function string(obj) {
+        string: doc(function string(obj, quote) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
                 return '<#jQuery(' + obj.length + ')>';
@@ -2477,9 +2477,9 @@
                 return 'nil';
             }
             if (obj instanceof Array) {
-                return '[' + obj.map(string).join(', ') + ']';
+                return '[' + obj.map(x => string(x, true)).join(', ') + ']';
             }
-            if (obj === null || typeof obj === 'string') {
+            if (obj === null || (typeof obj === 'string' && quote)) {
                 return JSON.stringify(obj);
             }
             if (obj instanceof Pair || obj instanceof Symbol) {
@@ -2709,7 +2709,10 @@
         // ------------------------------------------------------------------
         'for-each': doc(function(fn, ...args) {
             typecheck('for-each', fn, 'function');
-            var ret = this.get('map')(fn, ...args);
+            // we need to use call(this because babel transpile this code into:
+            // var ret = map.apply(void 0, [fn].concat(args));
+            // it don't work with weakBind
+            var ret = this.get('map').call(this, fn, ...args);
             if (isPromise(ret)) {
                 return ret.then(() => {});
             }
@@ -3325,8 +3328,8 @@
                     });
                 } else if (typeof value !== 'function') {
                     throw new Error(
-                        env.get('string')(value) + ' is not a function' +
-                            ' while evaluating ' + first.toString()
+                        type(value) + ' ' + env.get('string')(value) +
+                            ' is not a function while evaluating ' + code.toString()
                     );
                 }
             }
