@@ -28,54 +28,15 @@
       (substring (symbol->string symbol) 1)))
 
 ;; ---------------------------------------------------------------------------------------
-(define (alist->object alist)
-  "(alist->object alist)
-
-   Function convert alist pairs to JavaScript object."
-  (if (pair? alist)
-      ((. alist "toObject"))))
-
-;; ---------------------------------------------------------------------------------------
-(define (pair-map fn seq-list)
-  "(seq-map fn list)
-
-   Function call fn argument for pairs in a list and return combined list with
-   values returned from function fn. It work like the map but take two items from list"
-  (let iter ((seq-list seq-list) (result '()))
-    (if (null? seq-list)
-        result
-        (if (and (pair? seq-list) (pair? (cdr seq-list)))
-            (let* ((first (car seq-list))
-                   (second (cadr seq-list))
-                   (value (fn first second)))
-              (if (null? value)
-                  (iter (cddr seq-list) result)
-                  (iter (cddr seq-list) (cons value result))))))))
-
-
-;; ---------------------------------------------------------------------------------------
-(define (klist->alist klist)
-  "(klist->alist klist)
-
-   Function convert klist in form (:foo 10 :bar 20) into alist
-   in form ((foo . 10) (bar . 20))."
-  (pair-map (lambda (first second)
-              (if (key? first)
-                  (cons (key->string first) second)) klist)))
-
-;; ---------------------------------------------------------------------------------------
-(define klist->object (pipe klist->alist alist->object))
-
-;; ---------------------------------------------------------------------------------------
 (define (make-tags expr)
   "(make-tags expression)
 
    Function that return list structure of code with better syntax then raw LIPS"
   `(h ,(key->string (car expr))
-       (alist->object (quasiquote ,@(pair-map (lambda (car cdr)
-                                                (cons (cons (key->string car)
-                                                            (list 'unquote cdr))))
-                                              (cadr expr))))
+      (alist->object (quasiquote ,@(pair-map (lambda (car cdr)
+                                               (cons (cons (key->string car)
+                                                           (list 'unquote cdr))))
+                                             (cadr expr))))
       ,(if (not (null? (cddr expr)))
            (if (and (pair? (caddr expr)) (let ((s (caaddr expr)))
                                            (and (symbol? s) (eq? s 'list))))
@@ -105,3 +66,5 @@
 ;;                   (list (:h1 () (value (cdr (assoc 'count (. state "counter")))))
 ;;                         (:button (:onclick (lambda () (--> actions (down 1)))) "-")
 ;;                         (:button (:onclick (lambda () (--> actions (up 1)))) "+")))))
+
+
