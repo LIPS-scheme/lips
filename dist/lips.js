@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.10.0
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Mon, 22 Apr 2019 17:06:44 +0000
+ * build: Mon, 22 Apr 2019 19:53:44 +0000
  */
 (function () {
 'use strict';
@@ -3732,7 +3732,7 @@ function _typeof(obj) {
       return string.search(pattern);
     }, "(search pattern string)\n\n            Function return first found index of the pattern inside a string"),
     // ------------------------------------------------------------------
-    string: doc(function string(obj) {
+    string: doc(function string(obj, quote) {
       if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
         return '<#jQuery(' + obj.length + ')>';
       }
@@ -3758,10 +3758,12 @@ function _typeof(obj) {
       }
 
       if (obj instanceof Array) {
-        return '[' + obj.map(string).join(', ') + ']';
+        return '[' + obj.map(function (x) {
+          return string(x, true);
+        }).join(', ') + ']';
       }
 
-      if (obj === null || typeof obj === 'string') {
+      if (obj === null || typeof obj === 'string' && quote) {
         return JSON.stringify(obj);
       }
 
@@ -4839,7 +4841,7 @@ function _typeof(obj) {
 
 
   return {
-    version: '0.10.0',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

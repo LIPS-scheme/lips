@@ -2456,7 +2456,7 @@
 
             Function return first found index of the pattern inside a string`),
         // ------------------------------------------------------------------
-        string: doc(function string(obj) {
+        string: doc(function string(obj, quote) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
                 return '<#jQuery(' + obj.length + ')>';
@@ -2477,9 +2477,9 @@
                 return 'nil';
             }
             if (obj instanceof Array) {
-                return '[' + obj.map(string).join(', ') + ']';
+                return '[' + obj.map(x => string(x, true)).join(', ') + ']';
             }
-            if (obj === null || typeof obj === 'string') {
+            if (obj === null || (typeof obj === 'string' && quote)) {
                 return JSON.stringify(obj);
             }
             if (obj instanceof Pair || obj instanceof Symbol) {
