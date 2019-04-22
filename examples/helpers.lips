@@ -1,0 +1,86 @@
+;; -*- scheme -*-
+;; Helper functions and macros to be used with LIPS
+;;
+;; This file is part of the LIPS - Simple lisp in JavaScript
+;; Copyriht (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Released under MIT license
+;;
+
+(define-macro (--> expr . code)
+  "Helper macro that simplify calling methods on objects. It work with chaining
+
+   usage: (--> ($ \"body\")
+               (css \"color\" \"red\")
+               (on \"click\" (lambda () (print \"click\"))))
+
+          (--> document (querySelectorAll \"div\"))"
+  (let ((obj (gensym)))
+    `(let ((,obj ,expr))
+       ,@(map (lambda (code)
+                (let ((name (gensym))
+                      (fn (gensym)))
+                  `(let* ((,name ,(symbol->string (car code)))
+                          (,fn (. ,obj ,name)))
+                     (if (not (function? ,fn))
+                         (error (concat ,name " is not a function"))
+                         (set! ,obj (apply ,fn (list ,@(cdr code))))))))
+              code)
+       ,obj)))
+
+;; ---------------------------------------------------------------------------------------
+(define (dir obj)
+  "(dir obj)
+
+   Function return all props on the object including those in prototype chain."
+  (if (null? obj) nil
+      (append (array->list ((. Object "getOwnPropertyNames") (unbind obj)))
+              (dir ((. Object "getPrototypeOf") (unbind obj))))))
+
+
+;; ---------------------------------------------------------------------------------------
+(define log (. console "log"))
+
+
+;; ---------------------------------------------------------------------------------------
+(define (symbol->string s)
+  "(symbol->string symbol)
+
+   Function convert LIPS symbol to string."
+  (and (symbol? s) (. s "name")))
+
+;; ---------------------------------------------------------------------------------------
+(define (string->symbol string)
+  "(string->symbol string)
+
+   Function convert string to LIPS symbol."
+  (and (string? string) (new (. lips "Symbol") string)))
+
+;; ---------------------------------------------------------------------------------------
+(define (value obj)
+  "(value obj)
+
+   Function unwrap LNumbers and convert nil value to undefined."
+  (if (eq? obj nil)
+      undefined
+      (if (number? obj)
+          ((. obj "valueOf"))
+          obj)))
+
+;;defined in JS, you can easily create them in LIPS
+;;(define (substring string start end)
+;;  "(substring string start [end])
+;;
+;;   Function return part of the string that start with start index
+;;   and end in end index, if end is undfined it return to the end."
+;;  ((. string "substring") (value start) (value end)))
+;;
+;;
+;;(define (concat . args)
+;;  "(concat . strings)
+;;
+;;   Function create new string by joining its arguments"
+;;  ((. (list->array args) "join") ""))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (global name)
+  `(set-obj! window ,(symbol->string name) ,name))

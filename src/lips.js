@@ -5,6 +5,10 @@
  * Released under the MIT license
  *
  * includes:
+ *
+ * unfetch by Jason Miller (@developit) MIT License
+ *
+ * includes:
  * contentloaded.js
  *
  * Author: Diego Perini (diego.perini at gmail.com)
@@ -16,7 +20,6 @@
  * URL:
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
- *
  */
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code

@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <meta name="Description" content=""/>
+    <link rel="shortcut icon" href=""/>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <style>
+     body {
+         margin: 0;
+         min-height: 100vh;
+         position: relative;
+     }
+     .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
+         background: inherit;
+     }
+     .terminal span.token.boolean {
+         font-weight: normal !important;
+         color: inherit !important;
+     }
+     .terminal span.token.function {
+         color: #caa0bd;
+     }
+     .container {
+         display: grid;
+         grid-template-areas:
+             "header doc tabs"
+             "app doc tabs"
+             "term term tabs";
+         grid-template-columns: 1fr 700px 600px;
+         grid-template-rows: 60px 1fr 150px;
+         max-height: 100vh;
+         min-height: 100vh;
+     }
+     h1 {
+         grid-area: header;
+         margin: 8px;
+     }
+     .app {
+         grid-area: app;
+     }
+     .right {
+         grid-area: tabs;
+         padding-top: 15px;
+     }
+     #term {
+         grid-area: term;
+     }
+     .readme {
+         grid-area: doc;
+         padding: 10px;
+         overflow: auto;
+     }
+     .tabs {
+         height: 100%;
+     }
+     .tabs .panels {
+         height: calc(100% - 39px);
+         overflow: auto;
+     }
+     iframe {
+         margin: 10px;
+         width: calc(100% - 24px);
+         height: calc(100% - 24px);
+     }
+  </style>
+  <link href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/>
+  <link href="https://unpkg.com/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+  <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+  <!-- <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.js"></script> -->
+  <script src="../../terminal/repo/js/jquery.terminal-src.js"></script>
+  <script src="https://unpkg.com/js-polyfills/keyboard.js"></script>
+  <script src="https://unpkg.com/prismjs/prism.js"></script>
+  <script src="https://unpkg.com/hyperapp"></script>
+  <script src="https://unpkg.com/jquery.terminal/js/prism.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-scheme.min.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-javascript.min.js"></script>
+  <script src="https://unpkg.com/prismjs/components/prism-markup.min.js"></script>
+  <script src="./terminal.js"></script>
+  <script src="./prism.js"></script>
+  <link href="./common.css" rel="stylesheet"/>
+  <script>
+   var lips;
+   var term;
+   $(function() {
+       $.terminal.syntax("scheme");
+       $('#demo').load(() => {
+           lips = $('#demo')[0].contentWindow.lips;
+           term = terminal({
+               selector: '#term',
+               name: 'hyper',
+               lips
+           });
+       });
+       const files = ['app.lips', 'helpers.lips', 'hyper.lips'];
+       const $tabs = $('.tabs').css('visibility', 'hidden');
+       (async function() {
+           const $ul = $tabs.find('ul');
+           const $panels = $ul.next();
+           for (let file of files) {
+               const r = await fetch(file);
+               const content = await r.text();
+               var html = Prism.highlight(content, Prism.languages.scheme, 'scheme');
+               $(`<li><a href="#">${file}<\/a><\/li>`).appendTo($ul);
+               $(`<div><pre>${html}<\/pre><\/div>`).appendTo($panels);
+           }
+           $tabs.css('visibility', '');
+           select($tabs.find('ul li:eq(0)'));
+       })();
+       function select(li) {
+           var $li = $(li);
+           var index = $li.index();
+           $li.addClass('active')
+             .siblings().removeClass('active');
+           var panel = $tabs.find('.panels').children().eq(index)
+                          .addClass('active');
+           panel.siblings().removeClass('active');
+           return panel;
+       }
+       $tabs.on('click', 'ul li', function() {
+           select(this);
+           return false;
+       });
+   });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Hyperapp LIPS demo</h1>
+    <div class="app left">
+      <iframe id="demo" src="hyper.html"></iframe>
+    </div>
+    <div class="readme">
+      <h2>README</h2>
+      <p>
+        This is example applictation using <a href="https://github.com/JorgeBucaran/hyperapp">Hyperapp</a>
+        together with LIPS interpter. Main application code is in <strong>app.lips</strong> file. The
+        rest of the files are just helper macros and functions.
+      </p>
+      <h2>This demo</h2>
+      <p>
+        This page is created using jQuery code and in JavaScript but the hyper app is created using only
+        LIPS code. It's inserted into iframe. Terminal on this is page can interact with lips instance
+        from iframe.</p>
+      <h2>Playing with terminal</h2>
+      <p>You can execute example codes:</p>
+      <pre><code class="language-scheme">
+;; this will call up method on main app object
+;; --> is macro defined in helpers.lips
+(--> main (up 10))
+      </code></pre>
+      <h2>Hyperapp</h2>
+      <p>LIPS code for the hyperapp is based on example from readme. I've used direct calls of h function in form:</p>
+      <pre><code class="language-javascript">
+import { h } from "hyperapp"
+
+export const view = (state, actions) =>
+  h("div", {}, [
+    h("h1", {}, state.count),
+    h("button", { onclick: () => actions.down(1) }, "-"),
+    h("button", { onclick: () => actions.up(1) }, "+")
+  ])
+      </code></pre>
+    </div>
+    <div class="right">
+      <div class="tabs">
+        <ul></ul>
+        <div class="panels">
+        </div>
+      </div>
+    </div>
+    <div id="term"></div>
+  </div>
+</body>
+</html>

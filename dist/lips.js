@@ -4,9 +4,24 @@
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
- * includes unfetch by Jason Miller (@developit) MIT License
+ * includes:
  *
- * build: Mon, 22 Apr 2019 09:56:07 +0000
+ * unfetch by Jason Miller (@developit) MIT License
+ *
+ * includes:
+ * contentloaded.js
+ *
+ * Author: Diego Perini (diego.perini at gmail.com)
+ * Summary: cross-browser wrapper for DOMContentLoaded
+ * Updated: 20101020
+ * License: MIT
+ * Version: 1.2
+ *
+ * URL:
+ * http://javascript.nwbox.com/ContentLoaded/
+ * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
+ *
+ * build: Mon, 22 Apr 2019 11:50:37 +0000
  */
 (function () {
 'use strict';
@@ -93,12 +108,6 @@ function createCommonjsModule(fn, module) {
 }
 
 var runtime_1 = createCommonjsModule(function (module) {
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
 
 var runtime = (function (exports) {
 
@@ -896,26 +905,6 @@ function _typeof(obj) {
   return _typeof(obj);
 }
 
-/**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript
- *
- * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
- * Released under the MIT license
- *
- * includes:
- * contentloaded.js
- *
- * Author: Diego Perini (diego.perini at gmail.com)
- * Summary: cross-browser wrapper for DOMContentLoaded
- * Updated: 20101020
- * License: MIT
- * Version: 1.2
- *
- * URL:
- * http://javascript.nwbox.com/ContentLoaded/
- * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
- *
- */
 
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
