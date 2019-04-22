@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Mon, 22 Apr 2019 11:50:37 +0000
+ * build: Mon, 22 Apr 2019 17:06:44 +0000
  */
 (function () {
 'use strict';
@@ -3964,13 +3964,17 @@ function _typeof(obj) {
     }, "(Find fn list)\n\n            Higher order Function find first value for which function\n            return true."),
     // ------------------------------------------------------------------
     'for-each': doc(function (fn) {
-      typecheck('for-each', fn, 'function');
+      var _this$get2;
+
+      typecheck('for-each', fn, 'function'); // we need to use call(this because babel transpile this code into:
+      // var ret = map.apply(void 0, [fn].concat(args));
+      // it don't work with weakBind
 
       for (var _len18 = arguments.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
         args[_key18 - 1] = arguments[_key18];
       }
 
-      var ret = this.get('map').apply(void 0, [fn].concat(args));
+      var ret = (_this$get2 = this.get('map')).call.apply(_this$get2, [this, fn].concat(args));
 
       if (isPromise(ret)) {
         return ret.then(function () {});
@@ -4608,7 +4612,7 @@ function _typeof(obj) {
             return evaluate(new Pair(value, code.cdr), eval_args);
           });
         } else if (typeof value !== 'function') {
-          throw new Error(env.get('string')(value) + ' is not a function' + ' while evaluating ' + first.toString());
+          throw new Error(type(value) + ' ' + env.get('string')(value) + ' is not a function while evaluating ' + code.toString());
         }
       }
 

@@ -1,3 +1,7 @@
+## 0.10.1
+### Breaking
+* fix for babel when using for-each (weakBind was not working because babel was using `apply(void 0, ...`)
+
 ## 0.10.0
 ### Breaking
 * change order of `split`, `replace`, `match`, `search` and `instanceof` so you can use them with `curry`
