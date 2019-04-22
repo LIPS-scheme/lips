@@ -1618,7 +1618,8 @@
                 if (type === 'function') {
                     // this is maily done for console.log
                     if (isNativeFunction(root[name])) {
-                        return weakBind(root[name], root);
+                        // hard bind of native functions
+                        return root[name].bind(root);
                     } else {
                         return root[name];
                     }

@@ -6,7 +6,7 @@
  *
  * includes unfetch by Jason Miller (@developit) MIT License
  *
- * build: Mon, 22 Apr 2019 08:59:55 +0000
+ * build: Mon, 22 Apr 2019 09:40:45 +0000
  */
 (function () {
 'use strict';
@@ -2892,7 +2892,8 @@ function _typeof(obj) {
         if (type === 'function') {
           // this is maily done for console.log
           if (isNativeFunction(root[name])) {
-            return weakBind(root[name], root);
+            // hard bind of native functions
+            return root[name].bind(root);
           } else {
             return root[name];
           }
