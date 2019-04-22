@@ -1,6 +1,6 @@
 /* global require, describe, it, expect */
 
-var lips = require('../src/lips');
+var lips = require('../dist/lips');
 
 /* TODO
  *     test quasiquote
