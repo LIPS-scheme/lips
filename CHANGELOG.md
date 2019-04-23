@@ -1,3 +1,7 @@
+## 0.11.0
+### Features
+* Add support to list cycles
+
 ## 0.10.4
 ### Bug fixes
 * fix accessing props on native objects like Object function [#6](https://github.com/jcubic/lips/issues/6)

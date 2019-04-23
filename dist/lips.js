@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.10.4
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Tue, 23 Apr 2019 10:49:23 +0000
+ * build: Tue, 23 Apr 2019 19:31:47 +0000
  */
 (function () {
 'use strict';
@@ -1684,7 +1684,7 @@ function _typeof(obj) {
     var node = this;
 
     while (true) {
-      if (!node || node === nil || !(node instanceof Pair)) {
+      if (!node || node === nil || !(node instanceof Pair) || node.haveCycles('cdr')) {
         break;
       }
 
@@ -1697,18 +1697,25 @@ function _typeof(obj) {
 
 
   Pair.prototype.clone = function () {
-    var cdr = this.cdr;
-    var car = this.car;
+    var visited = new Map();
 
-    if (car instanceof Pair) {
-      car = car.clone();
+    function clone(node) {
+      if (node instanceof Pair) {
+        if (visited.has(node)) {
+          return visited.get(node);
+        }
+
+        var pair = new Pair();
+        visited.set(node, pair);
+        pair.car = clone(node.car);
+        pair.cdr = clone(node.cdr);
+        return pair;
+      }
+
+      return node;
     }
 
-    if (cdr instanceof Pair) {
-      cdr = this.cdr.clone();
-    }
-
-    return new Pair(car, cdr);
+    return clone(this);
   }; // ----------------------------------------------------------------------
 
 
@@ -1834,6 +1841,10 @@ function _typeof(obj) {
 
 
   Pair.prototype.reverse = function () {
+    if (this.haveCycles()) {
+      throw new Error("You can't reverse list that have cycles");
+    }
+
     var node = this;
     var prev = nil;
 
@@ -1914,22 +1925,104 @@ function _typeof(obj) {
     } else if (typeof value !== 'undefined') {
       return value;
     }
+  } // ----------------------------------------------------------------------------
+
+
+  Pair.prototype.markCycles = function () {
+    markCycles(this);
+    return this;
+  }; // ----------------------------------------------------------------------------
+
+
+  Pair.prototype.haveCycles = function () {
+    var name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+    if (!name) {
+      return this.haveCycles('car') || this.haveCycles('cdr');
+    }
+
+    return !!(this.cycles && this.cycles[name]);
+  }; // ----------------------------------------------------------------------------
+
+
+  function markCycles(pair) {
+    var seenPairs = [];
+    var cycles = [];
+
+    function cycleName(pair) {
+      if (pair instanceof Pair) {
+        if (seenPairs.includes(pair)) {
+          if (!cycles.includes(pair)) {
+            cycles.push(pair);
+          }
+
+          return "#".concat(cycles.length - 1, "#");
+        }
+      }
+    }
+
+    function detect(pair) {
+      if (pair instanceof Pair) {
+        seenPairs.push(pair);
+        var cycles = {};
+        var carCycle = cycleName(pair.car);
+        var cdrCycle = cycleName(pair.cdr);
+
+        if (carCycle) {
+          cycles['car'] = carCycle;
+        } else {
+          detect(pair.car);
+        }
+
+        if (cdrCycle) {
+          cycles['cdr'] = cdrCycle;
+        } else {
+          detect(pair.cdr);
+        }
+
+        if (carCycle || cdrCycle) {
+          pair.cycles = cycles;
+        } else if (pair.cycles) {
+          delete pair.cycles;
+        }
+      }
+    }
+
+    detect(pair);
   } // ----------------------------------------------------------------------
 
 
-  Pair.prototype.toString = function () {
+  Pair.prototype.toString = function (cycle) {
     var arr = ['('];
 
     if (this.car !== undefined) {
-      var value = toString(this.car);
+      var value;
+
+      if (this.cycles && this.cycles.car) {
+        value = this.cycles.car;
+      } else {
+        value = toString(this.car);
+      }
 
       if (value) {
         arr.push(value);
       }
 
       if (this.cdr instanceof Pair) {
-        arr.push(' ');
-        arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
+        if (this.cycles && this.cycles.cdr) {
+          arr.push(' . ');
+          arr.push(this.cycles.cdr);
+        } else {
+          var name;
+
+          if (this.cycles && this.cycles.cdr) {
+            name = this.cycles.cdr;
+          }
+
+          var cdr = this.cdr.toString(name).replace(/^\(|\)$/g, '');
+          arr.push(' ');
+          arr.push(cdr);
+        }
       } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
         if (typeof this.cdr === 'string') {
           arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
@@ -1941,6 +2034,15 @@ function _typeof(obj) {
 
     arr.push(')');
     return arr.join('');
+  }; // ----------------------------------------------------------------------
+
+
+  Pair.prototype.set = function (prop, value) {
+    this[prop] = value;
+
+    if (value instanceof Pair) {
+      this.markCycles();
+    }
   }; // ----------------------------------------------------------------------
 
 
@@ -2096,6 +2198,7 @@ function _typeof(obj) {
                               _context.t0 = _context["catch"](1);
 
                             case 13:
+                              // CYCLE DETECT
                               car = node.car;
 
                               if (!(car instanceof Pair)) {
@@ -2521,7 +2624,8 @@ function _typeof(obj) {
 
       return fn.apply(void 0, _toConsumableArray(args.slice(0, n)));
     };
-  }
+  } // ----------------------------------------------------------------------------
+
 
   var get = doc(function (obj) {
     if (typeof obj === 'function' && obj.__bind) {
@@ -2887,6 +2991,10 @@ function _typeof(obj) {
         return LNumber(value);
       }
 
+      if (value instanceof Pair) {
+        return value.markCycles();
+      }
+
       if (typeof value === 'function') {
         // bind only functions that are not binded for case:
         // (let ((x Object)) (. x 'keys))
@@ -3072,7 +3180,7 @@ function _typeof(obj) {
         dynamic_scope: dynamic_scope,
         error: error
       });
-      value = maybe_promise(value);
+      value = resolvePromises(value);
       var ref;
 
       function set(key, value) {
@@ -3155,7 +3263,7 @@ function _typeof(obj) {
 
         if (equal(car, key)) {
           return node.car;
-        } else {
+        } else if (!node.haveCycles('cdr')) {
           node = node.cdr;
         }
       }
@@ -3723,7 +3831,7 @@ function _typeof(obj) {
         var count = 0;
 
         while (count < index) {
-          if (!node.cdr || node.cdr === nil) {
+          if (!node.cdr || node.cdr === nil || node.haveCycles('cdr')) {
             return nil;
           }
 
@@ -3967,6 +4075,10 @@ function _typeof(obj) {
 
       while (true) {
         if (node instanceof Pair) {
+          if (node.haveCycles('cdr')) {
+            break;
+          }
+
           result.push(node.car);
           node = node.cdr;
         } else {
@@ -4497,7 +4609,7 @@ function _typeof(obj) {
   // ----------------------------------------------------------------------
 
 
-  function maybe_promise(arg) {
+  function resolvePromises(arg) {
     var promises = [];
     traverse(arg);
 
@@ -4511,8 +4623,13 @@ function _typeof(obj) {
       if (isPromise(node)) {
         promises.push(node);
       } else if (node instanceof Pair) {
-        traverse(node.car);
-        traverse(node.cdr);
+        if (!node.haveCycles('car')) {
+          traverse(node.car);
+        }
+
+        if (!node.haveCycles('cdr')) {
+          traverse(node.cdr);
+        }
       } else if (node instanceof Array) {
         node.forEach(traverse);
       }
@@ -4532,17 +4649,45 @@ function _typeof(obj) {
             switch (_context3.prev = _context3.next) {
               case 0:
                 _context3.t0 = Pair;
-                _context3.next = 3;
+
+                if (!node.haveCycles('car')) {
+                  _context3.next = 5;
+                  break;
+                }
+
+                _context3.t1 = node.car;
+                _context3.next = 8;
+                break;
+
+              case 5:
+                _context3.next = 7;
                 return resolve(node.car);
 
-              case 3:
+              case 7:
                 _context3.t1 = _context3.sent;
-                _context3.next = 6;
+
+              case 8:
+                _context3.t2 = _context3.t1;
+
+                if (!node.haveCycles('cdr')) {
+                  _context3.next = 13;
+                  break;
+                }
+
+                _context3.t3 = node.cdr;
+                _context3.next = 16;
+                break;
+
+              case 13:
+                _context3.next = 15;
                 return resolve(node.cdr);
 
-              case 6:
-                _context3.t2 = _context3.sent;
-                pair = new _context3.t0(_context3.t1, _context3.t2);
+              case 15:
+                _context3.t3 = _context3.sent;
+
+              case 16:
+                _context3.t4 = _context3.t3;
+                pair = new _context3.t0(_context3.t2, _context3.t4);
 
                 if (node.data) {
                   pair.data = true;
@@ -4550,7 +4695,7 @@ function _typeof(obj) {
 
                 return _context3.abrupt("return", pair);
 
-              case 10:
+              case 20:
               case "end":
                 return _context3.stop();
             }
@@ -4580,6 +4725,7 @@ function _typeof(obj) {
         error = _ref18.error;
     var args = [];
     var node = rest;
+    markCycles(node);
 
     while (true) {
       if (node instanceof Pair && !isEmptyList(node)) {
@@ -4600,23 +4746,25 @@ function _typeof(obj) {
         }
 
         args.push(arg);
+
+        if (node.haveCycles('cdr')) {
+          break;
+        }
+
         node = node.cdr;
       } else {
         break;
       }
     }
 
-    return maybe_promise(args);
+    return resolvePromises(args);
   } // ----------------------------------------------------------------------
 
 
   function evaluate_macro(macro, code, eval_args) {
-    if (code instanceof Pair) {
-      code = code.clone();
-    }
 
     var value = macro.invoke(code, eval_args);
-    value = maybe_promise(value);
+    value = resolvePromises(value);
     return unpromise(value, function ret(value) {
       if (value && value.data || !(value instanceof Pair)) {
         return value;
@@ -4662,12 +4810,12 @@ function _typeof(obj) {
       var rest = code.cdr;
 
       if (first instanceof Pair) {
-        value = maybe_promise(evaluate(first, eval_args));
+        value = resolvePromises(evaluate(first, eval_args));
 
         if (isPromise(value)) {
           return value.then(function (value) {
             return evaluate(new Pair(value, code.cdr), eval_args);
-          });
+          }); // else is later in code
         } else if (typeof value !== 'function') {
           throw new Error(type(value) + ' ' + env.get('string')(value) + ' is not a function while evaluating ' + code.toString());
         }
@@ -4677,7 +4825,13 @@ function _typeof(obj) {
         value = env.get(first, true);
 
         if (value instanceof Macro) {
-          return evaluate_macro(value, rest, eval_args);
+          return unpromise(evaluate_macro(value, rest, eval_args), function (result) {
+            if (result instanceof Pair) {
+              return result.markCycles();
+            }
+
+            return result;
+          });
         } else if (typeof value !== 'function') {
           if (value) {
             var msg = "".concat(type(value), " `").concat(value, "' is not a function");
@@ -4694,7 +4848,13 @@ function _typeof(obj) {
         var args = get_function_args(rest, eval_args);
         return unpromise(args, function (args) {
           var scope = dynamic_scope || env;
-          return quote(maybe_promise(value.apply(scope, args)));
+          return unpromise(resolvePromises(value.apply(scope, args)), function (result) {
+            if (result instanceof Pair) {
+              return quote(result.markCycles());
+            }
+
+            return result;
+          });
         });
       } else if (code instanceof _Symbol) {
         value = env.get(code);
@@ -4896,7 +5056,7 @@ function _typeof(obj) {
 
 
   return {
-    version: '0.10.4',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
@@ -4911,7 +5071,7 @@ function _typeof(obj) {
     Formatter: Formatter,
     specials: specials,
     nil: nil,
-    maybe_promise: maybe_promise,
+    resolvePromises: resolvePromises,
     Symbol: _Symbol,
     LNumber: LNumber
   };

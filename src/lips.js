@@ -701,7 +701,6 @@
     function emptyList() {
         return new Pair(undefined, nil);
     }
-
     // ----------------------------------------------------------------------
     Pair.prototype.flatten = function() {
         return Pair.fromArray(flatten(this.toArray()));
@@ -714,7 +713,8 @@
         var len = 0;
         var node = this;
         while (true) {
-            if (!node || node === nil || !(node instanceof Pair)) {
+            if (!node || node === nil || !(node instanceof Pair) ||
+                 node.haveCycles('cdr')) {
                 break;
             }
             len++;
@@ -725,15 +725,21 @@
 
     // ----------------------------------------------------------------------
     Pair.prototype.clone = function() {
-        var cdr = this.cdr;
-        var car = this.car;
-        if (car instanceof Pair) {
-            car = car.clone();
+        var visited = new Map();
+        function clone(node) {
+            if (node instanceof Pair) {
+                if (visited.has(node)) {
+                    return visited.get(node);
+                }
+                var pair = new Pair();
+                visited.set(node, pair);
+                pair.car = clone(node.car);
+                pair.cdr = clone(node.cdr);
+                return pair;
+            }
+            return node;
         }
-        if (cdr instanceof Pair) {
-            cdr = this.cdr.clone();
-        }
-        return new Pair(car, cdr);
+        return clone(this);
     };
 
     // ----------------------------------------------------------------------
@@ -846,6 +852,9 @@
 
     // ----------------------------------------------------------------------
     Pair.prototype.reverse = function() {
+        if (this.haveCycles()) {
+            throw new Error("You can't reverse list that have cycles");
+        }
         var node = this;
         var prev = nil;
         while (node !== nil) {
@@ -921,17 +930,86 @@
         }
     }
 
+    // ----------------------------------------------------------------------------
+    Pair.prototype.markCycles = function() {
+        markCycles(this);
+        return this;
+    };
+
+    // ----------------------------------------------------------------------------
+    Pair.prototype.haveCycles = function(name = null) {
+        if (!name) {
+            return this.haveCycles('car') || this.haveCycles('cdr');
+        }
+        return !!(this.cycles && this.cycles[name]);
+    };
+
+    // ----------------------------------------------------------------------------
+    function markCycles(pair) {
+        var seenPairs = [];
+        var cycles = [];
+        function cycleName(pair) {
+            if (pair instanceof Pair) {
+                if (seenPairs.includes(pair)) {
+                    if (!cycles.includes(pair)) {
+                        cycles.push(pair);
+                    }
+                    return `#${cycles.length - 1}#`;
+                }
+            }
+        }
+        function detect(pair) {
+            if (pair instanceof Pair) {
+                seenPairs.push(pair);
+                var cycles = {};
+                var carCycle = cycleName(pair.car);
+                var cdrCycle = cycleName(pair.cdr);
+                if (carCycle) {
+                    cycles['car'] = carCycle;
+                } else {
+                    detect(pair.car);
+                }
+                if (cdrCycle) {
+                    cycles['cdr'] = cdrCycle;
+                } else {
+                    detect(pair.cdr);
+                }
+                if (carCycle || cdrCycle) {
+                    pair.cycles = cycles;
+                } else if (pair.cycles) {
+                    delete pair.cycles;
+                }
+            }
+        }
+        detect(pair);
+    }
+
     // ----------------------------------------------------------------------
-    Pair.prototype.toString = function() {
+    Pair.prototype.toString = function(cycle) {
         var arr = ['('];
         if (this.car !== undefined) {
-            var value = toString(this.car);
+            var value;
+            if (this.cycles && this.cycles.car) {
+                value = this.cycles.car;
+            } else {
+                value = toString(this.car);
+            }
             if (value) {
                 arr.push(value);
             }
             if (this.cdr instanceof Pair) {
-                arr.push(' ');
-                arr.push(this.cdr.toString().replace(/^\(|\)$/g, ''));
+                if (this.cycles && this.cycles.cdr) {
+                    arr.push(' . ');
+                    arr.push(this.cycles.cdr);
+                } else {
+                    var name;
+                    if (this.cycles && this.cycles.cdr) {
+                        name = this.cycles.cdr;
+                    }
+                    var cdr = this.cdr.toString(name).replace(/^\(|\)$/g, '');
+                    arr.push(' ');
+                    arr.push(cdr);
+                }
             } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
                 if (typeof this.cdr === 'string') {
                     arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
@@ -942,6 +1020,14 @@
         }
         arr.push(')');
         return arr.join('');
+    };
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.set = function(prop, value) {
+        this[prop] = value;
+        if (value instanceof Pair) {
+            this.markCycles();
+        }
     };
 
     // ----------------------------------------------------------------------
@@ -1044,6 +1130,7 @@
                         // ignore variables
                     }
                 }
+                // CYCLE DETECT
                 var car = node.car;
                 if (car instanceof Pair) {
                     car = await traverse(car);
@@ -1307,6 +1394,7 @@
             return fn(...args.slice(0, n));
         };
     }
+    // ----------------------------------------------------------------------------
     var get = doc(function(obj, ...args) {
         if (typeof obj === 'function' && obj.__bind) {
             obj = obj.__bind.fn;
@@ -1629,6 +1717,9 @@
             if (LNumber.isNumber(value)) {
                 return LNumber(value);
             }
+            if (value instanceof Pair) {
+                return value.markCycles();
+            }
             if (typeof value === 'function') {
                 // bind only functions that are not binded for case:
                 // (let ((x Object)) (. x 'keys))
@@ -1784,7 +1875,7 @@
                 dynamic_scope = this;
             }
             var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
-            value = maybe_promise(value);
+            value = resolvePromises(value);
             var ref;
             function set(key, value) {
                 if (isPromise(key)) {
@@ -1855,7 +1946,7 @@
                 var car = node.car.car;
                 if (equal(car, key)) {
                     return node.car;
-                } else {
+                } else if (!node.haveCycles('cdr')) {
                     node = node.cdr;
                 }
             }
@@ -2424,7 +2515,7 @@
                 var node = obj;
                 var count = 0;
                 while (count < index) {
-                    if (!node.cdr || node.cdr === nil) {
+                    if (!node.cdr || node.cdr === nil || node.haveCycles('cdr')) {
                         return nil;
                     }
                     node = node.cdr;
@@ -2701,6 +2792,9 @@
             var node = list;
             while (true) {
                 if (node instanceof Pair) {
+                    if (node.haveCycles('cdr')) {
+                        break;
+                    }
                     result.push(node.car);
                     node = node.cdr;
                 } else {
@@ -3269,7 +3363,7 @@
     // :; wrap tree of Promises with single Promise or return argument as is
     // :: if tree have no Promises
     // ----------------------------------------------------------------------
-    function maybe_promise(arg) {
+    function resolvePromises(arg) {
         var promises = [];
         traverse(arg);
         if (promises.length) {
@@ -3280,16 +3374,20 @@
             if (isPromise(node)) {
                 promises.push(node);
             } else if (node instanceof Pair) {
-                traverse(node.car);
-                traverse(node.cdr);
+                if (!node.haveCycles('car')) {
+                    traverse(node.car);
+                }
+                if (!node.haveCycles('cdr')) {
+                    traverse(node.cdr);
+                }
             } else if (node instanceof Array) {
                 node.forEach(traverse);
             }
         }
         async function promise(node) {
             var pair = new Pair(
-                await resolve(node.car),
-                await resolve(node.cdr)
+                node.haveCycles('car') ? node.car : await resolve(node.car),
+                node.haveCycles('cdr') ? node.cdr : await resolve(node.cdr)
             );
             if (node.data) {
                 pair.data = true;
@@ -3310,6 +3408,7 @@
     function get_function_args(rest, { env, dynamic_scope, error }) {
         var args = [];
         var node = rest;
+        markCycles(node);
         while (true) {
             if (node instanceof Pair && !isEmptyList(node)) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
@@ -3322,20 +3421,23 @@
                     });
                 }
                 args.push(arg);
+                if (node.haveCycles('cdr')) {
+                    break;
+                }
                 node = node.cdr;
             } else {
                 break;
             }
         }
-        return maybe_promise(args);
+        return resolvePromises(args);
     }
     // ----------------------------------------------------------------------
     function evaluate_macro(macro, code, eval_args) {
         if (code instanceof Pair) {
-            code = code.clone();
+            //code = code.clone();
         }
         var value = macro.invoke(code, eval_args);
-        value = maybe_promise(value);
+        value = resolvePromises(value);
         return unpromise(value, function ret(value) {
             if (value && value.data || !(value instanceof Pair)) {
                 return value;
@@ -3365,11 +3467,12 @@
             var first = code.car;
             var rest = code.cdr;
             if (first instanceof Pair) {
-                value = maybe_promise(evaluate(first, eval_args));
+                value = resolvePromises(evaluate(first, eval_args));
                 if (isPromise(value)) {
                     return value.then((value) => {
                         return evaluate(new Pair(value, code.cdr), eval_args);
                     });
+                    // else is later in code
                 } else if (typeof value !== 'function') {
                     throw new Error(
                         type(value) + ' ' + env.get('string')(value) +
@@ -3380,7 +3483,12 @@
             if (first instanceof Symbol) {
                 value = env.get(first, true);
                 if (value instanceof Macro) {
-                    return evaluate_macro(value, rest, eval_args);
+                    return unpromise(evaluate_macro(value, rest, eval_args), result => {
+                        if (result instanceof Pair) {
+                            return result.markCycles();
+                        }
+                        return result;
+                    });
                 } else if (typeof value !== 'function') {
                     if (value) {
                         var msg = `${type(value)} \`${value}' is not a function`;
@@ -3395,7 +3503,12 @@
                 var args = get_function_args(rest, eval_args);
                 return unpromise(args, function(args) {
                     var scope = dynamic_scope || env;
-                    return quote(maybe_promise(value.apply(scope, args)));
+                    return unpromise(resolvePromises(value.apply(scope, args)), (result) => {
+                        if (result instanceof Pair) {
+                            return quote(result.markCycles());
+                        }
+                        return result;
+                    });
                 });
             } else if (code instanceof Symbol) {
                 value = env.get(code);
@@ -3553,7 +3666,7 @@
         Formatter,
         specials,
         nil,
-        maybe_promise,
+        resolvePromises,
         Symbol,
         LNumber
     };

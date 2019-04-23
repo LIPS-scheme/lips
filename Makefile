@@ -58,10 +58,10 @@ publish:
 	$(CD) npm && $(NPM) publish --access=public
 	$(RM) -rf npm
 
-test:
+test: dist/lips.js
 	$(JEST)
 
-coveralls:
+coveralls: test
 	$(CAT) ./coverage/lcov.info | $(COVERALLS)
 
 lint:

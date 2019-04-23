@@ -2,14 +2,6 @@
 
 var lips = require('../dist/lips');
 
-/* TODO
- *     test quasiquote
- *  (define (test)
- *       (let ((struct 'foo)
- *             (name 'bar))
- *         (print `(define (,(make-predicate name)  ,struct)))))
- */
-
 var {
     parse,
     tokenize,
@@ -628,6 +620,51 @@ describe('lists', function() {
                 var input = str2list(code);
                 input.append(lips.nil);
                 expect(input).toEqual(str2list(code));
+            });
+        });
+    });
+});
+describe('cycles', function() {
+    it('should print simple cycles', function() {
+        var code = `(let ((x '(1 2 3))) (set-cdr! (cddr x) x) x)`;
+        return lips.exec(code + code + code).then(results => {
+            expect(results.length).toEqual(3);
+            results.forEach(result => {
+                expect(result.toString()).toEqual('(1 2 3 . #0#)');
+            });
+        });
+    });
+    it('should print cons withs cycles', function() {
+        var code = `(let ((x '(1 2 3))) (set-cdr! (cddr x) (cons x x)) x)`;
+        return lips.exec(code + code + code).then(results => {
+            expect(results.length).toEqual(3);
+            results.forEach(result => {
+                expect(result.toString()).toEqual('(1 2 3 #0# . #0#)');
+            });
+        });
+    });
+    it('should define list with two references', function() {
+        var code = `(define l (let ((x '(1 2 3))
+                                    (y '(1 2 3)))
+                                (set-cdr! (cddr x) x)
+                                (set-cdr! (cddr y) y)
+                                (cons x y)))
+                     l`;
+        return lips.exec(code).then(results => {
+            expect(results[0]).not.toBeDefined();
+            expect(results[1].toString()).toEqual('((1 2 3 . #0#) 1 2 3 . #1#)');
+        });
+    });
+    it('shoulde create double reference', function() {
+        var code = `(let ((x '(1 2 3))
+                          (y '(1 2 3)))
+                       (set-cdr! (cddr x) x)
+                       (set-cdr! (cddr y) y)
+                       (cons x y))`;
+        return lips.exec(code + code + code).then(results => {
+            expect(results.length).toEqual(3);
+            results.forEach(result => {
+                expect(result.toString()).toEqual('((1 2 3 . #0#) 1 2 3 . #1#)');
             });
         });
     });

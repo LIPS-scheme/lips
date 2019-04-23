@@ -154,6 +154,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             }
         }
     });
+    term.env = env;
     env.set('term', term);
     return term;
 }
