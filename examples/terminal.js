@@ -10,6 +10,11 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
     var position;
     var timer;
     var help = lips.env.get('help');
+    function doc(fn, doc) {
+        fn.__doc__ = doc;
+        return fn;
+    }
+    // -------------------------------------------------------------------------
     var env = lips.env.inherit(name, {
         stdout: {
             write: function() {
@@ -19,18 +24,22 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                 });
             }
         },
+        // ---------------------------------------------------------------------
         stdin: {
             read: function() {
                 return term.read('');
             }
         },
-        help: function(fn) {
-            term.echo(help(fn));
-        },
-        error: function(message) {
+        // ---------------------------------------------------------------------
+        help: doc(function(fn) {
+            term.echo(help(fn), { formatters: false });
+        }, lips.env.env.help.__doc__),
+        // ---------------------------------------------------------------------
+        error: doc(function(message) {
             term.error(message);
-        }
+        }, lips.env.env.error.__doc__)
     });
+    // -------------------------------------------------------------------------
     var term = jQuery(selector).terminal(function(code, term) {
         lips.exec(code, env, dynamic).then(function(ret) {
             ret.forEach(function(ret) {

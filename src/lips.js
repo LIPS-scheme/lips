@@ -1119,6 +1119,13 @@
         return setFnLength(binded, binded.__bind.fn.length);
     }
     // ----------------------------------------------------------------------
+    function unbind(obj) {
+        if (typeof obj === 'function' && obj.__bind) {
+            return obj.__bind.fn;
+        }
+        return obj;
+    }
+    // ----------------------------------------------------------------------
     function setFnLength(fn, length) {
         try {
             Object.defineProperty(fn, 'length', {
@@ -1584,7 +1591,10 @@
         return new Environment(obj || {}, this, name);
     };
     // ----------------------------------------------------------------------
-    Environment.prototype.get = function(symbol) {
+    Environment.prototype.get = function(symbol, weak, context) {
+        // we keep original environment as context for bind
+        // so print will get user stdout
+        context = context || this;
         var value;
         var defined = false;
         if (symbol instanceof Symbol) {
@@ -1603,12 +1613,15 @@
                 return LNumber(value);
             }
             if (typeof value === 'function') {
-                return weakBind(value, this);
+                if (weak) {
+                    return weakBind(value, context);
+                }
+                return value.bind(context);
             }
             return value;
         }
         if (this.parent instanceof Environment) {
-            return this.parent.get(symbol);
+            return this.parent.get(symbol, weak, context);
         } else {
             var name;
             if (symbol instanceof Symbol) {
@@ -2528,13 +2541,11 @@
         'get': get,
         '.': get,
         // ------------------------------------------------------------------
-        'unbind': doc(function(obj) {
-            if (typeof obj === 'function' && obj.__bind) {
-                return obj.__bind.fn;
-            }
-            return obj;
-        }, `(unbind fn)
-            Function remove bidning from function so you can get props from it.`),
+        'unbind': doc(
+            unbind,
+            `(unbind fn)
+
+             Function remove bidning from function so you can get props from it.`),
         // ------------------------------------------------------------------
         type: doc(
             type,
@@ -2724,7 +2735,7 @@
             // we need to use call(this because babel transpile this code into:
             // var ret = map.apply(void 0, [fn].concat(args));
             // it don't work with weakBind
-            var ret = this.get('map').call(this, fn, ...args);
+            var ret = this.get('map')(fn, ...args);
             if (isPromise(ret)) {
                 return ret.then(() => {});
             }
@@ -3346,7 +3357,7 @@
                 }
             }
             if (first instanceof Symbol) {
-                value = env.get(first);
+                value = env.get(first, true);
                 if (value instanceof Macro) {
                     return evaluate_macro(value, rest, eval_args);
                 } else if (typeof value !== 'function') {

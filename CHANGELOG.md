@@ -1,3 +1,7 @@
+## 0.10.3
+### Bug fixes
+* fix print that get stdout from global env not from user one + better babel fix added in 0.10.1
+
 ## 0.10.2
 ### Bug fixes
 * fix version number in source code
