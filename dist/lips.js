@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.10.2
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Mon, 22 Apr 2019 20:50:49 +0000
+ * build: Tue, 23 Apr 2019 07:56:30 +0000
  */
 (function () {
 'use strict';
@@ -2272,6 +2272,15 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
+  function unbind(obj) {
+    if (typeof obj === 'function' && obj.__bind) {
+      return obj.__bind.fn;
+    }
+
+    return obj;
+  } // ----------------------------------------------------------------------
+
+
   function setFnLength(fn, length) {
     try {
       Object.defineProperty(fn, 'length', {
@@ -2836,7 +2845,10 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
-  Environment.prototype.get = function (symbol) {
+  Environment.prototype.get = function (symbol, weak, context) {
+    // we keep original environment as context for bind
+    // so print will get user stdout
+    context = context || this;
     var value;
     var defined = false;
 
@@ -2858,14 +2870,18 @@ function _typeof(obj) {
       }
 
       if (typeof value === 'function') {
-        return weakBind(value, this);
+        if (weak) {
+          return weakBind(value, context);
+        }
+
+        return value.bind(context);
       }
 
       return value;
     }
 
     if (this.parent instanceof Environment) {
-      return this.parent.get(symbol);
+      return this.parent.get(symbol, weak, context);
     } else {
       var name;
 
@@ -3820,13 +3836,7 @@ function _typeof(obj) {
     'get': get,
     '.': get,
     // ------------------------------------------------------------------
-    'unbind': doc(function (obj) {
-      if (typeof obj === 'function' && obj.__bind) {
-        return obj.__bind.fn;
-      }
-
-      return obj;
-    }, "(unbind fn)\n            Function remove bidning from function so you can get props from it."),
+    'unbind': doc(unbind, "(unbind fn)\n\n             Function remove bidning from function so you can get props from it."),
     // ------------------------------------------------------------------
     type: doc(type, "(type object)\n\n             Function return type of an object as string."),
     // ------------------------------------------------------------------
@@ -3980,8 +3990,6 @@ function _typeof(obj) {
     }, "(Find fn list)\n\n            Higher order Function find first value for which function\n            return true."),
     // ------------------------------------------------------------------
     'for-each': doc(function (fn) {
-      var _this$get2;
-
       typecheck('for-each', fn, 'function'); // we need to use call(this because babel transpile this code into:
       // var ret = map.apply(void 0, [fn].concat(args));
       // it don't work with weakBind
@@ -3990,7 +3998,7 @@ function _typeof(obj) {
         args[_key18 - 1] = arguments[_key18];
       }
 
-      var ret = (_this$get2 = this.get('map')).call.apply(_this$get2, [this, fn].concat(args));
+      var ret = this.get('map').apply(void 0, [fn].concat(args));
 
       if (isPromise(ret)) {
         return ret.then(function () {});
@@ -4633,7 +4641,7 @@ function _typeof(obj) {
       }
 
       if (first instanceof _Symbol) {
-        value = env.get(first);
+        value = env.get(first, true);
 
         if (value instanceof Macro) {
           return evaluate_macro(value, rest, eval_args);
@@ -4855,7 +4863,7 @@ function _typeof(obj) {
 
 
   return {
-    version: '0.10.2',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
