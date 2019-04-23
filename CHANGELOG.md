@@ -1,3 +1,7 @@
+## 0.10.2
+### Bug fixes
+* fix version number in source code
+
 ## 0.10.1
 ### Bug fixes
 * fix for babel when using for-each (weakBind was not working because babel was using `apply(void 0, ...`)
