@@ -25,7 +25,7 @@
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
 "use strict";
-/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob */
+/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -985,7 +985,7 @@
     }
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toString = function(cycle) {
+    Pair.prototype.toString = function() {
         var arr = ['('];
         if (this.car !== undefined) {
             var value;
@@ -3503,7 +3503,8 @@
                 var args = get_function_args(rest, eval_args);
                 return unpromise(args, function(args) {
                     var scope = dynamic_scope || env;
-                    return unpromise(resolvePromises(value.apply(scope, args)), (result) => {
+                    var result = resolvePromises(value.apply(scope, args));
+                    return unpromise(result, (result) => {
                         if (result instanceof Pair) {
                             return quote(result.markCycles());
                         }
