@@ -1078,7 +1078,8 @@
     // ----------------------------------------------------------------------
     function isNativeFunction(fn) {
         return typeof fn === 'function' &&
-            fn.toString().match(/\{\s*\[native code\]\s*\}/);
+            fn.toString().match(/\{\s*\[native code\]\s*\}/) &&
+            !fn.name.match(/^bound /);
     }
     // ----------------------------------------------------------------------
     function isPromise(o) {
@@ -1124,6 +1125,22 @@
             return obj.__bind.fn;
         }
         return obj;
+    }
+    // ----------------------------------------------------------------------
+    // :: function bind fn with context but it also move all props
+    // :: mostly used for Object function
+    // ----------------------------------------------------------------------
+    function filterFnNames(name) {
+        return !['name', 'length'].includes(name);
+    }
+    // ----------------------------------------------------------------------
+    function bindWithProps(fn, context) {
+        const bound = fn.bind(context);
+        const props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
+        props.forEach(prop => {
+            bound[prop] = fn[prop];
+        });
+        return bound;
     }
     // ----------------------------------------------------------------------
     function setFnLength(fn, length) {
@@ -1298,7 +1315,7 @@
             var name = arg instanceof Symbol ? arg.name : arg;
             var value = obj[name];
             if (typeof value === 'function') {
-                value = value.bind(obj);
+                value = bindWithProps(value, obj);
             }
             obj = value;
         }
@@ -1613,10 +1630,15 @@
                 return LNumber(value);
             }
             if (typeof value === 'function') {
-                if (weak) {
-                    return weakBind(value, context);
+                // bind only functions that are not binded for case:
+                // (let ((x Object)) (. x 'keys))
+                // second x access is already bound when accessing Object
+                if (!value.name.match(/^bound /)) {
+                    if (weak) {
+                        return weakBind(value, context);
+                    }
+                    return value.bind(context);
                 }
-                return value.bind(context);
             }
             return value;
         }
@@ -1632,13 +1654,12 @@
             if (name) {
                 var type = typeof root[name];
                 if (type === 'function') {
-                    // this is maily done for console.log
                     if (isNativeFunction(root[name])) {
-                        // hard bind of native functions
-                        return root[name].bind(root);
-                    } else {
-                        return root[name];
+                        // hard bind of native functions with props for Object
+                        // hard because of console.log
+                        return bindWithProps(root[name], root);
                     }
+                    return root[name];
                 } else if (type !== 'undefined') {
                     return root[name];
                 }
@@ -3292,9 +3313,9 @@
         while (true) {
             if (node instanceof Pair && !isEmptyList(node)) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
-                if (false && dynamic_scope) {
+                if (dynamic_scope) {
                     arg = unpromise(arg, arg => {
-                        if (typeof arg === 'function') {
+                        if (typeof arg === 'function' && isNativeFunction(arg)) {
                             return arg.bind(dynamic_scope);
                         }
                         return arg;

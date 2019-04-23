@@ -1,3 +1,7 @@
+## 0.10.4
+### Bug fixes
+* fix accessing props on native objects like Object function [#6](https://github.com/jcubic/lips/issues/6)
+
 ## 0.10.3
 ### Bug fixes
 * fix print that get stdout from global env not from user one + better babel fix added in 0.10.1

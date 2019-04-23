@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.10.3
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Tue, 23 Apr 2019 07:59:38 +0000
+ * build: Tue, 23 Apr 2019 10:39:29 +0000
  */
 (function () {
 'use strict';
@@ -2203,7 +2203,7 @@ function _typeof(obj) {
 
 
   function isNativeFunction(fn) {
-    return typeof fn === 'function' && fn.toString().match(/\{\s*\[native code\]\s*\}/);
+    return typeof fn === 'function' && fn.toString().match(/\{\s*\[native code\]\s*\}/) && !fn.name.match(/^bound /);
   } // ----------------------------------------------------------------------
 
 
@@ -2278,6 +2278,24 @@ function _typeof(obj) {
     }
 
     return obj;
+  } // ----------------------------------------------------------------------
+  // :: function bind fn with context but it also move all props
+  // :: mostly used for Object function
+  // ----------------------------------------------------------------------
+
+
+  function filterFnNames(name) {
+    return !['name', 'length'].includes(name);
+  } // ----------------------------------------------------------------------
+
+
+  function bindWithProps(fn, context) {
+    var bound = fn.bind(context);
+    var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
+    props.forEach(function (prop) {
+      bound[prop] = fn[prop];
+    });
+    return bound;
   } // ----------------------------------------------------------------------
 
 
@@ -2522,7 +2540,7 @@ function _typeof(obj) {
       var value = obj[name];
 
       if (typeof value === 'function') {
-        value = value.bind(obj);
+        value = bindWithProps(value, obj);
       }
 
       obj = value;
@@ -2870,11 +2888,16 @@ function _typeof(obj) {
       }
 
       if (typeof value === 'function') {
-        if (weak) {
-          return weakBind(value, context);
-        }
+        // bind only functions that are not binded for case:
+        // (let ((x Object)) (. x 'keys))
+        // second x access is already bound when accessing Object
+        if (!value.name.match(/^bound /)) {
+          if (weak) {
+            return weakBind(value, context);
+          }
 
-        return value.bind(context);
+          return value.bind(context);
+        }
       }
 
       return value;
@@ -2895,13 +2918,13 @@ function _typeof(obj) {
         var type = _typeof(root[name]);
 
         if (type === 'function') {
-          // this is maily done for console.log
           if (isNativeFunction(root[name])) {
-            // hard bind of native functions
-            return root[name].bind(root);
-          } else {
-            return root[name];
+            // hard bind of native functions with props for Object
+            // hard because of console.log
+            return bindWithProps(root[name], root);
           }
+
+          return root[name];
         } else if (type !== 'undefined') {
           return root[name];
         }
@@ -4566,6 +4589,16 @@ function _typeof(obj) {
           error: error
         });
 
+        if (dynamic_scope) {
+          arg = unpromise(arg, function (arg) {
+            if (typeof arg === 'function' && isNativeFunction(arg)) {
+              return arg.bind(dynamic_scope);
+            }
+
+            return arg;
+          });
+        }
+
         args.push(arg);
         node = node.cdr;
       } else {
@@ -4863,7 +4896,7 @@ function _typeof(obj) {
 
 
   return {
-    version: '0.10.3',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
