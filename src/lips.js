@@ -1078,7 +1078,8 @@
     // ----------------------------------------------------------------------
     function isNativeFunction(fn) {
         return typeof fn === 'function' &&
-            fn.toString().match(/\{\s*\[native code\]\s*\}/);
+            fn.toString().match(/\{\s*\[native code\]\s*\}/) &&
+            !fn.name.match(/^bound /);
     }
     // ----------------------------------------------------------------------
     function isPromise(o) {
@@ -1117,6 +1118,29 @@
             return weakBind(binded, context, ...moreArgs);
         };
         return setFnLength(binded, binded.__bind.fn.length);
+    }
+    // ----------------------------------------------------------------------
+    function unbind(obj) {
+        if (typeof obj === 'function' && obj.__bind) {
+            return obj.__bind.fn;
+        }
+        return obj;
+    }
+    // ----------------------------------------------------------------------
+    // :: function bind fn with context but it also move all props
+    // :: mostly used for Object function
+    // ----------------------------------------------------------------------
+    function filterFnNames(name) {
+        return !['name', 'length'].includes(name);
+    }
+    // ----------------------------------------------------------------------
+    function bindWithProps(fn, context) {
+        const bound = fn.bind(context);
+        const props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
+        props.forEach(prop => {
+            bound[prop] = fn[prop];
+        });
+        return bound;
     }
     // ----------------------------------------------------------------------
     function setFnLength(fn, length) {
@@ -1291,7 +1315,7 @@
             var name = arg instanceof Symbol ? arg.name : arg;
             var value = obj[name];
             if (typeof value === 'function') {
-                value = value.bind(obj);
+                value = bindWithProps(value, obj);
             }
             obj = value;
         }
@@ -1584,7 +1608,10 @@
         return new Environment(obj || {}, this, name);
     };
     // ----------------------------------------------------------------------
-    Environment.prototype.get = function(symbol) {
+    Environment.prototype.get = function(symbol, weak, context) {
+        // we keep original environment as context for bind
+        // so print will get user stdout
+        context = context || this;
         var value;
         var defined = false;
         if (symbol instanceof Symbol) {
@@ -1603,12 +1630,20 @@
                 return LNumber(value);
             }
             if (typeof value === 'function') {
-                return weakBind(value, this);
+                // bind only functions that are not binded for case:
+                // (let ((x Object)) (. x 'keys))
+                // second x access is already bound when accessing Object
+                if (!value.name.match(/^bound /)) {
+                    if (weak) {
+                        return weakBind(value, context);
+                    }
+                    return value.bind(context);
+                }
             }
             return value;
         }
         if (this.parent instanceof Environment) {
-            return this.parent.get(symbol);
+            return this.parent.get(symbol, weak, context);
         } else {
             var name;
             if (symbol instanceof Symbol) {
@@ -1619,13 +1654,12 @@
             if (name) {
                 var type = typeof root[name];
                 if (type === 'function') {
-                    // this is maily done for console.log
                     if (isNativeFunction(root[name])) {
-                        // hard bind of native functions
-                        return root[name].bind(root);
-                    } else {
-                        return root[name];
+                        // hard bind of native functions with props for Object
+                        // hard because of console.log
+                        return bindWithProps(root[name], root);
                     }
+                    return root[name];
                 } else if (type !== 'undefined') {
                     return root[name];
                 }
@@ -2528,13 +2562,11 @@
         'get': get,
         '.': get,
         // ------------------------------------------------------------------
-        'unbind': doc(function(obj) {
-            if (typeof obj === 'function' && obj.__bind) {
-                return obj.__bind.fn;
-            }
-            return obj;
-        }, `(unbind fn)
-            Function remove bidning from function so you can get props from it.`),
+        'unbind': doc(
+            unbind,
+            `(unbind fn)
+
+             Function remove bidning from function so you can get props from it.`),
         // ------------------------------------------------------------------
         type: doc(
             type,
@@ -2724,7 +2756,7 @@
             // we need to use call(this because babel transpile this code into:
             // var ret = map.apply(void 0, [fn].concat(args));
             // it don't work with weakBind
-            var ret = this.get('map').call(this, fn, ...args);
+            var ret = this.get('map')(fn, ...args);
             if (isPromise(ret)) {
                 return ret.then(() => {});
             }
@@ -3281,9 +3313,9 @@
         while (true) {
             if (node instanceof Pair && !isEmptyList(node)) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
-                if (false && dynamic_scope) {
+                if (dynamic_scope) {
                     arg = unpromise(arg, arg => {
-                        if (typeof arg === 'function') {
+                        if (typeof arg === 'function' && isNativeFunction(arg)) {
                             return arg.bind(dynamic_scope);
                         }
                         return arg;
@@ -3346,7 +3378,7 @@
                 }
             }
             if (first instanceof Symbol) {
-                value = env.get(first);
+                value = env.get(first, true);
                 if (value instanceof Macro) {
                     return evaluate_macro(value, rest, eval_args);
                 } else if (typeof value !== 'function') {

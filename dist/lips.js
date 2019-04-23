@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.10.4
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Mon, 22 Apr 2019 20:33:17 +0000
+ * build: Tue, 23 Apr 2019 10:49:23 +0000
  */
 (function () {
 'use strict';
@@ -2203,7 +2203,7 @@ function _typeof(obj) {
 
 
   function isNativeFunction(fn) {
-    return typeof fn === 'function' && fn.toString().match(/\{\s*\[native code\]\s*\}/);
+    return typeof fn === 'function' && fn.toString().match(/\{\s*\[native code\]\s*\}/) && !fn.name.match(/^bound /);
   } // ----------------------------------------------------------------------
 
 
@@ -2269,6 +2269,33 @@ function _typeof(obj) {
     };
 
     return setFnLength(binded, binded.__bind.fn.length);
+  } // ----------------------------------------------------------------------
+
+
+  function unbind(obj) {
+    if (typeof obj === 'function' && obj.__bind) {
+      return obj.__bind.fn;
+    }
+
+    return obj;
+  } // ----------------------------------------------------------------------
+  // :: function bind fn with context but it also move all props
+  // :: mostly used for Object function
+  // ----------------------------------------------------------------------
+
+
+  function filterFnNames(name) {
+    return !['name', 'length'].includes(name);
+  } // ----------------------------------------------------------------------
+
+
+  function bindWithProps(fn, context) {
+    var bound = fn.bind(context);
+    var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
+    props.forEach(function (prop) {
+      bound[prop] = fn[prop];
+    });
+    return bound;
   } // ----------------------------------------------------------------------
 
 
@@ -2513,7 +2540,7 @@ function _typeof(obj) {
       var value = obj[name];
 
       if (typeof value === 'function') {
-        value = value.bind(obj);
+        value = bindWithProps(value, obj);
       }
 
       obj = value;
@@ -2836,7 +2863,10 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
-  Environment.prototype.get = function (symbol) {
+  Environment.prototype.get = function (symbol, weak, context) {
+    // we keep original environment as context for bind
+    // so print will get user stdout
+    context = context || this;
     var value;
     var defined = false;
 
@@ -2858,14 +2888,23 @@ function _typeof(obj) {
       }
 
       if (typeof value === 'function') {
-        return weakBind(value, this);
+        // bind only functions that are not binded for case:
+        // (let ((x Object)) (. x 'keys))
+        // second x access is already bound when accessing Object
+        if (!value.name.match(/^bound /)) {
+          if (weak) {
+            return weakBind(value, context);
+          }
+
+          return value.bind(context);
+        }
       }
 
       return value;
     }
 
     if (this.parent instanceof Environment) {
-      return this.parent.get(symbol);
+      return this.parent.get(symbol, weak, context);
     } else {
       var name;
 
@@ -2879,13 +2918,13 @@ function _typeof(obj) {
         var type = _typeof(root[name]);
 
         if (type === 'function') {
-          // this is maily done for console.log
           if (isNativeFunction(root[name])) {
-            // hard bind of native functions
-            return root[name].bind(root);
-          } else {
-            return root[name];
+            // hard bind of native functions with props for Object
+            // hard because of console.log
+            return bindWithProps(root[name], root);
           }
+
+          return root[name];
         } else if (type !== 'undefined') {
           return root[name];
         }
@@ -3820,13 +3859,7 @@ function _typeof(obj) {
     'get': get,
     '.': get,
     // ------------------------------------------------------------------
-    'unbind': doc(function (obj) {
-      if (typeof obj === 'function' && obj.__bind) {
-        return obj.__bind.fn;
-      }
-
-      return obj;
-    }, "(unbind fn)\n            Function remove bidning from function so you can get props from it."),
+    'unbind': doc(unbind, "(unbind fn)\n\n             Function remove bidning from function so you can get props from it."),
     // ------------------------------------------------------------------
     type: doc(type, "(type object)\n\n             Function return type of an object as string."),
     // ------------------------------------------------------------------
@@ -3980,8 +4013,6 @@ function _typeof(obj) {
     }, "(Find fn list)\n\n            Higher order Function find first value for which function\n            return true."),
     // ------------------------------------------------------------------
     'for-each': doc(function (fn) {
-      var _this$get2;
-
       typecheck('for-each', fn, 'function'); // we need to use call(this because babel transpile this code into:
       // var ret = map.apply(void 0, [fn].concat(args));
       // it don't work with weakBind
@@ -3990,7 +4021,7 @@ function _typeof(obj) {
         args[_key18 - 1] = arguments[_key18];
       }
 
-      var ret = (_this$get2 = this.get('map')).call.apply(_this$get2, [this, fn].concat(args));
+      var ret = this.get('map').apply(void 0, [fn].concat(args));
 
       if (isPromise(ret)) {
         return ret.then(function () {});
@@ -4558,6 +4589,16 @@ function _typeof(obj) {
           error: error
         });
 
+        if (dynamic_scope) {
+          arg = unpromise(arg, function (arg) {
+            if (typeof arg === 'function' && isNativeFunction(arg)) {
+              return arg.bind(dynamic_scope);
+            }
+
+            return arg;
+          });
+        }
+
         args.push(arg);
         node = node.cdr;
       } else {
@@ -4633,7 +4674,7 @@ function _typeof(obj) {
       }
 
       if (first instanceof _Symbol) {
-        value = env.get(first);
+        value = env.get(first, true);
 
         if (value instanceof Macro) {
           return evaluate_macro(value, rest, eval_args);
@@ -4855,7 +4896,7 @@ function _typeof(obj) {
 
 
   return {
-    version: 'DEV',
+    version: '0.10.4',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
