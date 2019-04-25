@@ -1,6 +1,7 @@
 ## 0.11.0
 ### Features
 * Add support to list cycles
+* new function `ignore` that will swallow promises
 
 ## 0.10.4
 ### Bug fixes

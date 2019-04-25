@@ -2082,6 +2082,20 @@
              Macro runs list of expression and return valuate of the list one.
              It can be used in place where you can only have single exression,
              like if expression.`),
+        // ------------------------------------------------------------------
+        'ignore': new Macro('ignore', function(code, { dynamic_scope, error }) {
+            var args = { env: this, error };
+            if (dynamic_scope) {
+                args.dynamic_scope = this;
+            }
+            evaluate(code, args);
+        }, `(ignore expression)
+
+            Macro that will evaluate expression and swallow any promises that may
+            be created. It wil run and ignore any value that may be returned by
+            expression. The code should have side effects and/or when it's promise
+            it should resolve to undefined.`),
+        // ------------------------------------------------------------------
         nop: doc(function() {
         }, `(nop)
 
