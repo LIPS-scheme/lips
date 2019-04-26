@@ -2,6 +2,10 @@
 ### Features
 * Add support to list cycles
 * new function `ignore` that will swallow promises
+* add `try` macro
+### Bug fixes
+* call error in evaluate when promise returned from function is rejected
+* fix errors in `map`, `reduce`, `fold` and `for-each` (that use `map`)
 
 ## 0.10.4
 ### Bug fixes

@@ -419,9 +419,14 @@
         });
     }
     // ----------------------------------------------------------------------
-    function unpromise(value, fn = x => x) {
+    function unpromise(value, fn = x => x, error = null) {
         if (isPromise(value)) {
-            return value.then(fn);
+            var ret = value.then(fn);
+            if (error === null) {
+                return ret;
+            } else {
+                return ret.catch(error);
+            }
         }
         return fn(value);
     }
@@ -1218,7 +1223,7 @@
     // :: mostly used for Object function
     // ----------------------------------------------------------------------
     function filterFnNames(name) {
-        return !['name', 'length'].includes(name);
+        return !['name', 'length', 'caller', 'callee', 'arguments'].includes(name);
     }
     // ----------------------------------------------------------------------
     function bindWithProps(fn, context) {
@@ -2183,6 +2188,11 @@
         }, `(set-obj! obj key value)
 
             Function set property of JavaScript object`),
+        'this': doc(function() {
+            return this;
+        }, `(this)
+
+            Function return current environement.`),
         // ------------------------------------------------------------------
         'eval': doc(function(code) {
             if (code instanceof Pair) {
@@ -2193,15 +2203,10 @@
                 });
             }
             if (code instanceof Array) {
-                var result;
-                code.forEach((code) => {
-                    result = evaluate(code, {
-                        env: this,
-                        dynamic_scope: this,
-                        error: e => this.get('print')(e.message)
-                    });
+                var _eval = this.get('eval');
+                return code.reduce((_, code) => {
+                    return _eval(code);
                 });
-                return result;
             }
         }, `(eval list)
 
@@ -2842,6 +2847,34 @@
 
             Function return length of the object, the object can be list
             or any object that have length property.`),
+        'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
+            return new Promise((resolve) => {
+                var args = {
+                    env: this,
+                    error: (e) => {
+                        var env = this.inherit('try');
+                        env.set(code.cdr.car.cdr.car.car, e);
+                        var args = {
+                            env,
+                            error
+                        };
+                        if (dynamic_scope) {
+                            args.dynamic_scope = this;
+                        }
+                        unpromise(evaluate(new Pair(
+                            new Symbol('begin'),
+                            code.cdr.car.cdr.cdr
+                        ), args), function(result) {
+                            resolve(result);
+                        });
+                    }
+                };
+                if (dynamic_scope) {
+                    args.dynamic_scope = this;
+                }
+                unpromise(evaluate(code.car, args), resolve);
+            });
+        }), `(try expr (catch (e) code)`),
         // ------------------------------------------------------------------
         find: doc(function find(arg, list) {
             if (isNull(list)) {
@@ -2875,22 +2908,17 @@
             it will take each value from each list and call \`fn\` function
             with that many argument as number of list arguments.`),
         // ------------------------------------------------------------------
-        map: doc(function(fn, ...args) {
+        map: doc(function map(fn, ...lists) {
             typecheck('map', fn, 'function');
-            var array = args.map(list => this.get('list->array')(list));
-            var result = [];
-            return (function loop(i) {
-                function next(value) {
-                    result.push(value);
-                    return loop(++i);
-                }
-                if (i === array[0].length) {
-                    return Pair.fromArray(result);
-                }
-                var item = array.map((_, j) => array[j][i]);
-                return unpromise(fn(...item), next);
-            })(0);
-        }, `(map fn . args)
+            if (lists.some((x) => isEmptyList(x))) {
+                return nil;
+            }
+            return unpromise(fn.call(this, ...lists.map(l => l.car)), (head) => {
+                return unpromise(map.call(this, fn, ...lists.map(l => l.cdr)), (rest) => {
+                    return new Pair(head, rest);
+                });
+            });
+        }, `(map fn . lists)
 
             Higher order function that call function \`fn\` by for each
             value of the argument. If you provide more then one list as argument
@@ -2914,6 +2942,9 @@
             return true. If it don't find the value it will return false`),
         // ------------------------------------------------------------------
         fold: doc(fold('fold', function(fold, fn, init, ...lists) {
+            if (lists.some(isEmptyList)) {
+                return init;
+            }
             const value = fold.call(this, fn, init, ...lists.map(l => l.cdr));
             return unpromise(value, value => {
                 return fn(...lists.map(l => l.car), value);
@@ -2926,6 +2957,9 @@
              for: (fold fn '() alist blist`),
         // ------------------------------------------------------------------
         reduce: doc(fold('reduce', function(reduce, fn, init, ...lists) {
+            if (lists.some(isEmptyList)) {
+                return init;
+            }
             return unpromise(fn(...lists.map(l => l.car), init), (value) => {
                 return reduce.call(this, fn, value, ...lists.map(l => l.cdr));
             });
@@ -3523,7 +3557,7 @@
                             return quote(result.markCycles());
                         }
                         return result;
-                    });
+                    }, error);
                 });
             } else if (code instanceof Symbol) {
                 value = env.get(code);
@@ -3665,7 +3699,7 @@
         contentLoaded(window, init);
     }
     // --------------------------------------
-    return {
+    var lips = {
         version: '{{VER}}',
         exec,
         parse,
@@ -3685,4 +3719,7 @@
         Symbol,
         LNumber
     };
+    // so it work when used with webpack where it will be not global
+    global_env.set('lips', lips);
+    return lips;
 });

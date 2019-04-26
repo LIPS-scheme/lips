@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Thu, 25 Apr 2019 07:57:38 +0000
+ * build: Fri, 26 Apr 2019 17:01:50 +0000
  */
 (function () {
 'use strict';
@@ -1348,9 +1348,16 @@ function _typeof(obj) {
     var fn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function (x) {
       return x;
     };
+    var error = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
     if (isPromise(value)) {
-      return value.then(fn);
+      var ret = value.then(fn);
+
+      if (error === null) {
+        return ret;
+      } else {
+        return ret.catch(error);
+      }
     }
 
     return fn(value);
@@ -2388,7 +2395,7 @@ function _typeof(obj) {
 
 
   function filterFnNames(name) {
-    return !['name', 'length'].includes(name);
+    return !['name', 'length', 'caller', 'callee', 'arguments'].includes(name);
   } // ----------------------------------------------------------------------
 
 
@@ -3470,6 +3477,9 @@ function _typeof(obj) {
 
       obj[key] = value;
     }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
+    'this': doc(function () {
+      return this;
+    }, "(this)\n\n            Function return current environement."),
     // ------------------------------------------------------------------
     'eval': doc(function (code) {
       var _this = this;
@@ -3485,17 +3495,11 @@ function _typeof(obj) {
       }
 
       if (code instanceof Array) {
-        var result;
-        code.forEach(function (code) {
-          result = evaluate(code, {
-            env: _this,
-            dynamic_scope: _this,
-            error: function error(e) {
-              return _this.get('print')(e.message);
-            }
-          });
+        var _eval = this.get('eval');
+
+        return code.reduce(function (_, code) {
+          return _eval(code);
         });
-        return result;
       }
     }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
     // ------------------------------------------------------------------
@@ -4124,6 +4128,40 @@ function _typeof(obj) {
         return LNumber(obj.length);
       }
     }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
+    'try': doc(new Macro('try', function (code, _ref17) {
+      var _this4 = this;
+
+      var dynamic_scope = _ref17.dynamic_scope,
+          _error = _ref17.error;
+      return new Promise(function (resolve) {
+        var args = {
+          env: _this4,
+          error: function error(e) {
+            var env = _this4.inherit('try');
+
+            env.set(code.cdr.car.cdr.car.car, e);
+            var args = {
+              env: env,
+              error: _error
+            };
+
+            if (dynamic_scope) {
+              args.dynamic_scope = _this4;
+            }
+
+            unpromise(evaluate(new Pair(new _Symbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
+              resolve(result);
+            });
+          }
+        };
+
+        if (dynamic_scope) {
+          args.dynamic_scope = _this4;
+        }
+
+        unpromise(evaluate(code.car, args), resolve);
+      });
+    }), "(try expr (catch (e) code)"),
     // ------------------------------------------------------------------
     find: doc(function find(arg, list) {
       if (isNull(list)) {
@@ -4156,35 +4194,31 @@ function _typeof(obj) {
       }
     }, "(for-each fn . args)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
     // ------------------------------------------------------------------
-    map: doc(function (fn) {
-      var _this4 = this;
+    map: doc(function map(fn) {
+      var _this5 = this;
+
+      for (var _len19 = arguments.length, lists = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
+        lists[_key19 - 1] = arguments[_key19];
+      }
 
       typecheck('map', fn, 'function');
 
-      for (var _len19 = arguments.length, args = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
-        args[_key19 - 1] = arguments[_key19];
+      if (lists.some(function (x) {
+        return isEmptyList(x);
+      })) {
+        return nil;
       }
 
-      var array = args.map(function (list) {
-        return _this4.get('list->array')(list);
-      });
-      var result = [];
-      return function loop(i) {
-        function next(value) {
-          result.push(value);
-          return loop(++i);
-        }
-
-        if (i === array[0].length) {
-          return Pair.fromArray(result);
-        }
-
-        var item = array.map(function (_, j) {
-          return array[j][i];
+      return unpromise(fn.call.apply(fn, [this].concat(_toConsumableArray(lists.map(function (l) {
+        return l.car;
+      })))), function (head) {
+        return unpromise(map.call.apply(map, [_this5, fn].concat(_toConsumableArray(lists.map(function (l) {
+          return l.cdr;
+        })))), function (rest) {
+          return new Pair(head, rest);
         });
-        return unpromise(fn.apply(void 0, _toConsumableArray(item)), next);
-      }(0);
-    }, "(map fn . args)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments. The return\n            values of the function call is acumulated in result list and\n            returned by the call to map."),
+      });
+    }, "(map fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments. The return\n            values of the function call is acumulated in result list and\n            returned by the call to map."),
     // ------------------------------------------------------------------
     some: doc(function some(fn, list) {
       if (isNull(list)) {
@@ -4201,6 +4235,10 @@ function _typeof(obj) {
         lists[_key20 - 3] = arguments[_key20];
       }
 
+      if (lists.some(isEmptyList)) {
+        return init;
+      }
+
       var value = fold.call.apply(fold, [this, fn, init].concat(_toConsumableArray(lists.map(function (l) {
         return l.cdr;
       }))));
@@ -4212,16 +4250,20 @@ function _typeof(obj) {
     }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
     // ------------------------------------------------------------------
     reduce: doc(fold('reduce', function (reduce, fn, init) {
-      var _this5 = this;
+      var _this6 = this;
 
       for (var _len21 = arguments.length, lists = new Array(_len21 > 3 ? _len21 - 3 : 0), _key21 = 3; _key21 < _len21; _key21++) {
         lists[_key21 - 3] = arguments[_key21];
       }
 
+      if (lists.some(isEmptyList)) {
+        return init;
+      }
+
       return unpromise(fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
         return l.car;
       })).concat([init])), function (value) {
-        return reduce.call.apply(reduce, [_this5, fn, value].concat(_toConsumableArray(lists.map(function (l) {
+        return reduce.call.apply(reduce, [_this6, fn, value].concat(_toConsumableArray(lists.map(function (l) {
           return l.cdr;
         }))));
       });
@@ -4363,9 +4405,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
     // ------------------------------------------------------------------
-    or: doc(new Macro('or', function (code, _ref17) {
-      var dynamic_scope = _ref17.dynamic_scope,
-          error = _ref17.error;
+    or: doc(new Macro('or', function (code, _ref18) {
+      var dynamic_scope = _ref18.dynamic_scope,
+          error = _ref18.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -4405,9 +4447,9 @@ function _typeof(obj) {
     }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function (code) {
-      var _ref18 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref18.dynamic_scope,
-          error = _ref18.error;
+      var _ref19 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref19.dynamic_scope,
+          error = _ref19.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -4735,10 +4777,10 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function get_function_args(rest, _ref19) {
-    var env = _ref19.env,
-        dynamic_scope = _ref19.dynamic_scope,
-        error = _ref19.error;
+  function get_function_args(rest, _ref20) {
+    var env = _ref20.env,
+        dynamic_scope = _ref20.dynamic_scope,
+        error = _ref20.error;
     var args = [];
     var node = rest;
     markCycles(node);
@@ -4792,11 +4834,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref20 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref20.env,
-        dynamic_scope = _ref20.dynamic_scope,
-        _ref20$error = _ref20.error,
-        error = _ref20$error === void 0 ? function () {} : _ref20$error;
+    var _ref21 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref21.env,
+        dynamic_scope = _ref21.dynamic_scope,
+        _ref21$error = _ref21.error,
+        error = _ref21$error === void 0 ? function () {} : _ref21$error;
 
     try {
       if (dynamic_scope === true) {
@@ -4871,7 +4913,7 @@ function _typeof(obj) {
             }
 
             return result;
-          });
+          }, error);
         });
       } else if (code instanceof _Symbol) {
         value = env.get(code);
@@ -5072,7 +5114,7 @@ function _typeof(obj) {
   } // --------------------------------------
 
 
-  return {
+  var lips = {
     version: 'DEV',
     exec: exec,
     parse: parse,
@@ -5091,7 +5133,10 @@ function _typeof(obj) {
     resolvePromises: resolvePromises,
     Symbol: _Symbol,
     LNumber: LNumber
-  };
+  }; // so it work when used with webpack where it will be not global
+
+  global_env.set('lips', lips);
+  return lips;
 });
 
 }());
