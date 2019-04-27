@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sat, 27 Apr 2019 07:39:52 +0000
+ * build: Sat, 27 Apr 2019 07:47:24 +0000
  */
 (function () {
 'use strict';
@@ -1643,7 +1643,7 @@ function _typeof(obj) {
   _Symbol.prototype.toJSON = _Symbol.prototype.toString = function () {
     //return '<#symbol \'' + this.name + '\'>';
     if (isSymbol(this.name)) {
-      return this.name.toString();
+      return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
     }
 
     return this.name;
@@ -3120,11 +3120,11 @@ function _typeof(obj) {
 
       // use ES6 symbol as name for lips symbol (they are unique)
       if (name !== null) {
-        return new _Symbol(root.Symbol('#' + name));
+        return new _Symbol(root.Symbol("#".concat(name)));
       }
 
       count++;
-      return new _Symbol(root.Symbol('#gensym_' + count));
+      return new _Symbol(root.Symbol("#gensym_".concat(count, "#")));
     };
   }(); // ----------------------------------------------------------------------
 

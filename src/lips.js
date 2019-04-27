@@ -678,7 +678,7 @@
     Symbol.prototype.toJSON = Symbol.prototype.toString = function() {
         //return '<#symbol \'' + this.name + '\'>';
         if (isSymbol(this.name)) {
-            return this.name.toString();
+            return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
         }
         return this.name;
     };
@@ -1819,10 +1819,10 @@
         return function(name = null) {
             // use ES6 symbol as name for lips symbol (they are unique)
             if (name !== null) {
-                return new Symbol(root.Symbol('#' + name));
+                return new Symbol(root.Symbol(`#${name}`));
             }
             count++;
-            return new Symbol(root.Symbol('#gensym_' + count));
+            return new Symbol(root.Symbol(`#gensym_${count}#`));
         };
     })();
     // ----------------------------------------------------------------------

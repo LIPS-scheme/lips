@@ -5,6 +5,7 @@
 * add `try` macro
 * add `current-environment` function
 * `eval` LIPS function now accept environment as second argument
+* better toString of gensym symbols (it now shows `#gensym_1#` instead of `Symbol(#gensym)` check `macroexpand`)
 ### Bug fixes
 * call error in evaluate when promise returned from function is rejected
 * fix errors in `map`, `reduce`, `fold` and `for-each` (that use `map`)
