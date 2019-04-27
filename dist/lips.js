@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Fri, 26 Apr 2019 17:01:50 +0000
+ * build: Sat, 27 Apr 2019 07:39:52 +0000
  */
 (function () {
 'use strict';
@@ -3477,16 +3477,17 @@ function _typeof(obj) {
 
       obj[key] = value;
     }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
-    'this': doc(function () {
+    'current-environment': doc(function () {
       return this;
-    }, "(this)\n\n            Function return current environement."),
+    }, "(current-environment)\n\n            Function return current environement."),
     // ------------------------------------------------------------------
-    'eval': doc(function (code) {
+    'eval': doc(function (code, env) {
       var _this = this;
 
       if (code instanceof Pair) {
+        env = env || this;
         return evaluate(code, {
-          env: this,
+          env: env,
           dynamic_scope: this,
           error: function error(e) {
             return _this.get('print')(e.message);
@@ -3498,7 +3499,7 @@ function _typeof(obj) {
         var _eval = this.get('eval');
 
         return code.reduce(function (_, code) {
-          return _eval(code);
+          return _eval(code, env);
         });
       }
     }, "(eval list)\n\n            Function evalute LIPS code as list structure."),

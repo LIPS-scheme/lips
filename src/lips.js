@@ -2188,16 +2188,17 @@
         }, `(set-obj! obj key value)
 
             Function set property of JavaScript object`),
-        'this': doc(function() {
+        'current-environment': doc(function() {
             return this;
-        }, `(this)
+        }, `(current-environment)
 
             Function return current environement.`),
         // ------------------------------------------------------------------
-        'eval': doc(function(code) {
+        'eval': doc(function(code, env) {
             if (code instanceof Pair) {
+                env = env || this;
                 return evaluate(code, {
-                    env: this,
+                    env,
                     dynamic_scope: this,
                     error: e => this.get('print')(e.message)
                 });
@@ -2205,7 +2206,7 @@
             if (code instanceof Array) {
                 var _eval = this.get('eval');
                 return code.reduce((_, code) => {
-                    return _eval(code);
+                    return _eval(code, env);
                 });
             }
         }, `(eval list)

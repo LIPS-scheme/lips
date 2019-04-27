@@ -1,8 +1,10 @@
 ## 0.11.0
 ### Features
 * Add support to list cycles
-* new function `ignore` that will swallow promises
+* new macro `ignore` that will swallow promises
 * add `try` macro
+* add `current-environment` function
+* `eval` LIPS function now accept environment as second argument
 ### Bug fixes
 * call error in evaluate when promise returned from function is rejected
 * fix errors in `map`, `reduce`, `fold` and `for-each` (that use `map`)
