@@ -3024,7 +3024,7 @@
                 if (dynamic_scope) {
                     args.dynamic_scope = this;
                 }
-                unpromise(evaluate(code.car, args), resolve);
+                unpromise(evaluate(code.car, args), resolve).catch(args.error);
             });
         }), `(try expr (catch (e) code)`),
         // ------------------------------------------------------------------
@@ -3709,7 +3709,7 @@
                             return quote(result.markCycles());
                         }
                         return result;
-                    }, error);
+                    });
                 });
             } else if (code instanceof Symbol) {
                 value = env.get(code);
@@ -3761,7 +3761,9 @@
                     env,
                     dynamic_scope,
                     error: (e, code) => {
-                        e.code = code.toString();
+                        if (code) {
+                            e.code = code.toString();
+                        }
                         throw e;
                     }
                 });

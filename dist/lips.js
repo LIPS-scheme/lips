@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 28 Apr 2019 14:40:45 +0000
+ * build: Sun, 28 Apr 2019 15:16:32 +0000
  */
 (function () {
 'use strict';
@@ -4364,7 +4364,7 @@ function _typeof(obj) {
           args.dynamic_scope = _this4;
         }
 
-        unpromise(evaluate(code.car, args), resolve);
+        unpromise(evaluate(code.car, args), resolve).catch(args.error);
       });
     }), "(try expr (catch (e) code)"),
     // ------------------------------------------------------------------
@@ -5118,7 +5118,7 @@ function _typeof(obj) {
             }
 
             return result;
-          }, error);
+          });
         });
       } else if (code instanceof _Symbol) {
         value = env.get(code);
@@ -5198,7 +5198,10 @@ function _typeof(obj) {
                 env: env,
                 dynamic_scope: dynamic_scope,
                 error: function error(e, code) {
-                  e.code = code.toString();
+                  if (code) {
+                    e.code = code.toString();
+                  }
+
                   throw e;
                 }
               });
