@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sat, 27 Apr 2019 07:47:24 +0000
+ * build: Sun, 28 Apr 2019 14:40:45 +0000
  */
 (function () {
 'use strict';
@@ -63,44 +63,6 @@ function _construct(Parent, args, Class) {
   }
 
   return _construct.apply(null, arguments);
-}
-
-function _arrayWithHoles(arr) {
-  if (Array.isArray(arr)) return arr;
-}
-
-function _iterableToArrayLimit(arr, i) {
-  var _arr = [];
-  var _n = true;
-  var _d = false;
-  var _e = undefined;
-
-  try {
-    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-      _arr.push(_s.value);
-
-      if (i && _arr.length === i) break;
-    }
-  } catch (err) {
-    _d = true;
-    _e = err;
-  } finally {
-    try {
-      if (!_n && _i["return"] != null) _i["return"]();
-    } finally {
-      if (_d) throw _e;
-    }
-  }
-
-  return _arr;
-}
-
-function _nonIterableRest() {
-  throw new TypeError("Invalid attempt to destructure non-iterable instance");
-}
-
-function _slicedToArray(arr, i) {
-  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
 }
 
 function createCommonjsModule(fn, module) {
@@ -889,6 +851,44 @@ function _toConsumableArray(arr) {
   return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
 }
 
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+
+function _iterableToArrayLimit(arr, i) {
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+  var _e = undefined;
+
+  try {
+    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance");
+}
+
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+}
+
 function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
 
 function _typeof(obj) {
@@ -1192,6 +1192,10 @@ function _typeof(obj) {
   // ----------------------------------------------------------------------
 
   function parse(tokens) {
+    if (typeof tokens === 'string') {
+      throw new Error('parse require tokenized array of tokens not string');
+    }
+
     var stack = [];
     var result = [];
     var special = null;
@@ -1404,24 +1408,34 @@ function _typeof(obj) {
 
 
   function previousSexp(tokens) {
-    var count = 1;
+    var sexp = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
     var i = tokens.length;
 
-    while (count > 0) {
-      var token = tokens[--i];
-
-      if (!token) {
-        return;
-      }
-
-      if (token.token === '(') {
-        count--;
-      } else if (token.token === ')') {
-        count++;
-      }
+    if (sexp <= 0) {
+      throw Error("previousSexp: Invlaid argument sexp = ".concat(sexp));
     }
 
-    return tokens.slice(i);
+    outer: while (sexp-- && i >= 0) {
+      var count = 1;
+
+      while (count > 0) {
+        var token = tokens[--i];
+
+        if (!token) {
+          break outer;
+        }
+
+        if (token === '(' || token.token === '(') {
+          count--;
+        } else if (token === ')' || token.token === ')') {
+          count++;
+        }
+      }
+
+      i--;
+    }
+
+    return tokens.slice(i + 1);
   } // ----------------------------------------------------------------------
   // :: find number of spaces in line
   // ----------------------------------------------------------------------
@@ -1450,6 +1464,99 @@ function _typeof(obj) {
 
     return 0;
   } // ----------------------------------------------------------------------
+  // :: token based pattern matching
+  // ----------------------------------------------------------------------
+
+
+  function match(pattern, input) {
+    return inner_match(pattern, input) === input.length;
+
+    function inner_match(pattern, input) {
+      var p = 0;
+      var glob = {};
+
+      for (var i = 0; i < input.length; ++i) {
+        if (typeof pattern[p] === 'undefined') {
+          return i;
+        }
+
+        if (!input[i].trim()) {
+          continue;
+        }
+
+        if (pattern[p] instanceof Pattern) {
+          if (pattern[p].flag === '+') {
+            var m;
+
+            while (i < input.length) {
+              m = inner_match(pattern[p].pattern, input.slice(i));
+
+              if (m === -1) {
+                break;
+              }
+
+              i += m;
+            }
+
+            if (m === -1) {
+              return false;
+            }
+
+            p++;
+            i -= 1;
+            continue;
+          }
+        }
+
+        if (pattern[p] instanceof RegExp) {
+          if (!input[i].match(pattern[p])) {
+            return -1;
+          }
+        } else if (typeof pattern[p] === 'string') {
+          if (pattern[p] !== input[i]) {
+            return -1;
+          }
+        } else if (_typeof(pattern[p]) === 'symbol') {
+          if (pattern[p] === root.Symbol.for('*')) {
+            // ignore S-expressions inside for case when next pattern is ')'
+            glob[p] = glob[p] || 0;
+
+            if (input[i] === '(') {
+              glob[p]++;
+            } else if (input[i] === ')') {
+              glob[p]--;
+            }
+
+            if (typeof pattern[p + 1] !== 'undefined' && glob[p] === 0 && pattern[p + 1] !== input[i + 1] || glob[p] > 0) {
+              continue;
+            }
+          }
+        } else if (pattern[p] instanceof Array) {
+          var inc = inner_match(pattern[p], input.slice(i));
+
+          if (inc === -1 || inc + i > input.length) {
+            // if no more input it's not match
+            return -1;
+          }
+
+          i += inc - 1;
+          p++;
+          continue;
+        } else {
+          return -1;
+        }
+
+        p++;
+      }
+
+      if (pattern.length !== p) {
+        // if there are still patterns it's not match
+        return -1;
+      }
+
+      return input.length;
+    }
+  } // ----------------------------------------------------------------------
   // :: Code formatter class
   // :: based on http://community.schemewiki.org/?scheme-style
   // :: and GNU Emacs scheme mode
@@ -1466,7 +1573,8 @@ function _typeof(obj) {
     offset: 0,
     indent: 2,
     specials: ['define', 'lambda', 'let', 'let*', 'define-macro']
-  }; // ----------------------------------------------------------------------
+  };
+  Formatter.match = match; // ----------------------------------------------------------------------
   // :: return indent for next line
   // ----------------------------------------------------------------------
 
@@ -1532,6 +1640,98 @@ function _typeof(obj) {
     }
 
     return spaces + settings.indent;
+  };
+
+  function Ahead(pattern) {
+    this.pattern = pattern;
+  }
+
+  Ahead.prototype.match = function (string) {
+    return string.match(this.pattern);
+  };
+
+  function Pattern(pattern, flag) {
+    this.pattern = pattern;
+    this.flag = flag;
+  } // ----------------------------------------------------------------------
+
+
+  Formatter.Pattern = Pattern;
+  Formatter.Ahead = Ahead;
+  var notParen = new Ahead(/[^)]/);
+  var glob = root.Symbol.for('*');
+  var sexp = new Pattern(['(', glob, ')'], '+'); // rules for breaking S-Expressions into lines
+
+  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, new Pattern(['(', glob, ')'], '+')], 1, notParen], [['(', /^let\*?$/, '(', ['(', glob, ')']], 2, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1], [['(', glob, ')'], 1], [['(', /^define/, '(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], sexp], 1], [['(', 'lambda', '(', glob, ')'], 1], [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
+
+  Formatter.prototype.break = function () {
+    var code = this._code.replace(/\n\s*/g, '\n ');
+
+    var token = function token(t) {
+      return t.token.replace(/\s+/, ' ');
+    };
+
+    var tokens = tokenize(code, true).map(token).filter(function (t) {
+      return t !== '\n';
+    });
+    var rules = Formatter.rules;
+
+    for (var i = 0; i < tokens.length; ++i) {
+      if (!tokens[i].trim()) {
+        continue;
+      }
+
+      var sub = tokens.slice(0, i);
+      var sexp = {};
+      rules.map(function (b) {
+        return b[1];
+      }).forEach(function (count) {
+        if (!sexp[count]) {
+          sexp[count] = previousSexp(sub, count);
+        }
+      });
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = rules[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var _step$value = _slicedToArray(_step.value, 3),
+              pattern = _step$value[0],
+              count = _step$value[1],
+              ext = _step$value[2];
+
+          var m = match(pattern, sexp[count].filter(function (t) {
+            return t.trim();
+          }));
+          var next = tokens.slice(i).find(function (t) {
+            return t.trim();
+          });
+
+          if (m && (ext instanceof Ahead && ext.match(next) || !ext)) {
+            tokens.splice(i, 0, '\n');
+            i++;
+            continue;
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return != null) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+
+    this._code = tokens.join('');
+    return this;
   }; // ----------------------------------------------------------------------
 
 
@@ -1545,7 +1745,7 @@ function _typeof(obj) {
   Formatter.prototype.format = function format(options) {
     // prepare code with single space after newline
     // so we have space token to align
-    var code = this._code.replace(/\n\s*/g, '\n ');
+    var code = this._code.replace(/\s*\n\s*/g, '\n ');
 
     var tokens = tokenize(code, true);
 
@@ -3935,7 +4135,11 @@ function _typeof(obj) {
         return JSON.stringify(obj);
       }
 
-      if (obj instanceof Pair || obj instanceof _Symbol) {
+      if (obj instanceof Pair) {
+        return new lips.Formatter(obj.toString()).break().format();
+      }
+
+      if (obj instanceof _Symbol) {
         return obj.toString();
       }
 
@@ -5133,6 +5337,11 @@ function _typeof(obj) {
     nil: nil,
     resolvePromises: resolvePromises,
     Symbol: _Symbol,
+    format: function format(code) {
+      var f = new lips.Formatter(code);
+      f.break();
+      return f.format();
+    },
     LNumber: LNumber
   }; // so it work when used with webpack where it will be not global
 

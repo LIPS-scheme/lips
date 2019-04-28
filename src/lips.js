@@ -286,6 +286,9 @@
     // :: the return value is lisp code created out of Pair class
     // ----------------------------------------------------------------------
     function parse(tokens) {
+        if (typeof tokens === 'string') {
+            throw new Error('parse require tokenized array of tokens not string');
+        }
         var stack = [];
         var result = [];
         var special = null;
@@ -475,21 +478,27 @@
     // ----------------------------------------------------------------------
     // return last S-Expression
     // ----------------------------------------------------------------------
-    function previousSexp(tokens) {
-        var count = 1;
+    function previousSexp(tokens, sexp = 1) {
         var i = tokens.length;
-        while (count > 0) {
-            var token = tokens[--i];
-            if (!token) {
-                return;
-            }
-            if (token.token === '(') {
-                count--;
-            } else if (token.token === ')') {
-                count++;
-            }
+        if (sexp <= 0) {
+            throw Error(`previousSexp: Invlaid argument sexp = ${sexp}`);
         }
-        return tokens.slice(i);
+        outer: while (sexp-- && i >= 0) {
+            var count = 1;
+            while (count > 0) {
+                var token = tokens[--i];
+                if (!token) {
+                    break outer;
+                }
+                if (token === '(' || token.token === '(') {
+                    count--;
+                } else if (token === ')' || token.token === ')') {
+                    count++;
+                }
+            }
+            i--;
+        }
+        return tokens.slice(i + 1);
     }
     // ----------------------------------------------------------------------
     // :: find number of spaces in line
@@ -513,6 +522,82 @@
         return 0;
     }
     // ----------------------------------------------------------------------
+    // :: token based pattern matching
+    // ----------------------------------------------------------------------
+    function match(pattern, input) {
+        return inner_match(pattern, input) === input.length;
+        function inner_match(pattern, input) {
+            var p = 0;
+            var glob = {};
+            for (let i = 0; i < input.length; ++i) {
+                if (typeof pattern[p] === 'undefined') {
+                    return i;
+                }
+                if (!input[i].trim()) {
+                    continue;
+                }
+                if (pattern[p] instanceof Pattern) {
+                    if (pattern[p].flag === '+') {
+                        var m;
+                        while (i < input.length) {
+                            m = inner_match(pattern[p].pattern, input.slice(i));
+                            if (m === -1) {
+                                break;
+                            }
+                            i += m;
+                        }
+                        if (m === -1) {
+                            return false;
+                        }
+                        p++;
+                        i -= 1;
+                        continue;
+                    }
+                }
+                if (pattern[p] instanceof RegExp) {
+                    if (!input[i].match(pattern[p])) {
+                        return -1;
+                    }
+                } else if (typeof pattern[p] === 'string') {
+                    if (pattern[p] !== input[i]) {
+                        return -1;
+                    }
+                } else if (typeof pattern[p] === 'symbol') {
+                    if (pattern[p] === root.Symbol.for('*')) {
+                        // ignore S-expressions inside for case when next pattern is ')'
+                        glob[p] = glob[p] || 0;
+                        if (input[i] === '(') {
+                            glob[p]++;
+                        } else if (input[i] === ')') {
+                            glob[p]--;
+                        }
+                        if ((typeof pattern[p + 1] !== 'undefined' && glob[p] === 0 &&
+                             pattern[p + 1] !== input[i + 1]) || glob[p] > 0) {
+                            continue;
+                        }
+                    }
+                } else if (pattern[p] instanceof Array) {
+                    var inc = inner_match(pattern[p], input.slice(i));
+                    if (inc === -1 || inc + i > input.length) {
+                        // if no more input it's not match
+                        return -1;
+                    }
+                    i += inc - 1;
+                    p++;
+                    continue;
+                } else {
+                    return -1;
+                }
+                p++;
+            }
+            if (pattern.length !== p) {
+                // if there are still patterns it's not match
+                return -1;
+            }
+            return input.length;
+        }
+    }
+    // ----------------------------------------------------------------------
     // :: Code formatter class
     // :: based on http://community.schemewiki.org/?scheme-style
     // :: and GNU Emacs scheme mode
@@ -527,6 +612,7 @@
         indent: 2,
         specials: ['define', 'lambda', 'let', 'let*', 'define-macro']
     };
+    Formatter.match = match;
     // ----------------------------------------------------------------------
     // :: return indent for next line
     // ----------------------------------------------------------------------
@@ -582,6 +668,68 @@
         }
         return spaces + settings.indent;
     };
+    function Ahead(pattern) {
+        this.pattern = pattern;
+    }
+    Ahead.prototype.match = function(string) {
+        return string.match(this.pattern);
+    };
+    function Pattern(pattern, flag) {
+        this.pattern = pattern;
+        this.flag = flag;
+    }
+    // ----------------------------------------------------------------------
+    Formatter.Pattern = Pattern;
+    Formatter.Ahead = Ahead;
+    const notParen = new Ahead(/[^)]/);
+    const glob = root.Symbol.for('*');
+    const sexp = new Pattern(['(', glob, ')'], '+');
+    // rules for breaking S-Expressions into lines
+    Formatter.rules = [
+        [['(', 'begin'], 1],
+        [['(', 'begin', sexp], 1, notParen],
+        [['(', /^let\*?$/, '(', glob, ')'], 1],
+        [['(', /^let\*?$/, new Pattern(['(', glob, ')'], '+')], 1, notParen],
+        [['(', /^let\*?$/, '(', ['(', glob, ')']], 2, notParen],
+        [['(', 'if', /[^()]/], 1],
+        [['(', 'if', ['(', glob, ')']], 1],
+        [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1],
+        [['(', glob, ')'], 1],
+        [['(', /^define/, '(', glob, ')'], 1],
+        [['(', /^define/, ['(', glob, ')'], sexp], 1],
+        [['(', 'lambda', '(', glob, ')'], 1],
+        [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]
+    ];
+    // ----------------------------------------------------------------------
+    Formatter.prototype.break = function() {
+        var code = this._code.replace(/\n\s*/g, '\n ');
+        const token = t => t.token.replace(/\s+/, ' ');
+        var tokens = tokenize(code, true).map(token).filter(t => t !== '\n');
+        const { rules } = Formatter;
+        for (let i = 0; i < tokens.length; ++i) {
+            if (!tokens[i].trim()) {
+                continue;
+            }
+            var sub = tokens.slice(0, i);
+            var sexp = {};
+            rules.map(b => b[1]).forEach(count => {
+                if (!sexp[count]) {
+                    sexp[count] = previousSexp(sub, count);
+                }
+            });
+            for (let [pattern, count, ext] of rules) {
+                var m = match(pattern, sexp[count].filter(t => t.trim()));
+                var next = tokens.slice(i).find(t => t.trim());
+                if (m && (ext instanceof Ahead && ext.match(next) || !ext)) {
+                    tokens.splice(i, 0, '\n');
+                    i++;
+                    continue;
+                }
+            }
+        }
+        this._code = tokens.join('');
+        return this;
+    };
     // ----------------------------------------------------------------------
     Formatter.prototype._spaces = function(i) {
         return new Array(i + 1).join(' ');
@@ -592,7 +740,7 @@
     Formatter.prototype.format = function format(options) {
         // prepare code with single space after newline
         // so we have space token to align
-        var code = this._code.replace(/\n\s*/g, '\n ');
+        var code = this._code.replace(/\s*\n\s*/g, '\n ');
         var tokens = tokenize(code, true);
         var settings = this._options(options);
         var indent = 0;
@@ -2627,7 +2775,10 @@
             if (obj === null || (typeof obj === 'string' && quote)) {
                 return JSON.stringify(obj);
             }
-            if (obj instanceof Pair || obj instanceof Symbol) {
+            if (obj instanceof Pair) {
+                return new lips.Formatter(obj.toString()).break().format();
+            }
+            if (obj instanceof Symbol) {
                 return obj.toString();
             }
             if (root.HTMLElement && obj instanceof root.HTMLElement) {
@@ -3718,6 +3869,11 @@
         nil,
         resolvePromises,
         Symbol,
+        format: function(code) {
+            var f = new lips.Formatter(code);
+            f.break();
+            return f.format();
+        },
         LNumber
     };
     // so it work when used with webpack where it will be not global
