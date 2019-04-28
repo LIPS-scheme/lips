@@ -10,6 +10,7 @@
 ### Bug fixes
 * call error in evaluate when promise returned from function is rejected
 * fix errors in `map`, `reduce`, `fold` and `for-each` (that use `map`)
+* fix exception when call to match fail to match
 
 ## 0.10.4
 ### Bug fixes

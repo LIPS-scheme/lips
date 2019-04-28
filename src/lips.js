@@ -2741,7 +2741,8 @@
             Function change patter to replacement inside string.`),
         // ------------------------------------------------------------------
         match: doc(function(pattern, string) {
-            return this.get('array->list')(string.match(pattern));
+            var m = string.match(pattern);
+            return m ? this.get('array->list')(m) : nil;
         }, `(match pattern string)
 
             function return match object from JavaScript as list.`),

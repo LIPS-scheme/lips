@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 28 Apr 2019 15:22:02 +0000
+ * build: Sun, 28 Apr 2019 15:29:52 +0000
  */
 (function () {
 'use strict';
@@ -4098,7 +4098,8 @@ function _typeof(obj) {
     }, "(replace pattern replacement string)\n\n            Function change patter to replacement inside string."),
     // ------------------------------------------------------------------
     match: doc(function (pattern, string) {
-      return this.get('array->list')(string.match(pattern));
+      var m = string.match(pattern);
+      return m ? this.get('array->list')(m) : nil;
     }, "(match pattern string)\n\n            function return match object from JavaScript as list."),
     // ------------------------------------------------------------------
     search: doc(function (pattern, string) {
