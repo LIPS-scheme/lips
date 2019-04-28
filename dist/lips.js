@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 28 Apr 2019 15:16:32 +0000
+ * build: Sun, 28 Apr 2019 15:22:02 +0000
  */
 (function () {
 'use strict';
@@ -3684,8 +3684,13 @@ function _typeof(obj) {
     'eval': doc(function (code, env) {
       var _this = this;
 
+      env = env || this;
+
+      if (code instanceof _Symbol) {
+        return env.get(code);
+      }
+
       if (code instanceof Pair) {
-        env = env || this;
         return evaluate(code, {
           env: env,
           dynamic_scope: this,

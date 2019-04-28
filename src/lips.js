@@ -2343,8 +2343,11 @@
             Function return current environement.`),
         // ------------------------------------------------------------------
         'eval': doc(function(code, env) {
+            env = env || this;
+            if (code instanceof Symbol) {
+                return env.get(code);
+            }
             if (code instanceof Pair) {
-                env = env || this;
                 return evaluate(code, {
                     env,
                     dynamic_scope: this,
