@@ -1316,16 +1316,12 @@
         return typeof value === 'undefined' || value === nil || value === null;
     }
     // ----------------------------------------------------------------------
-    function isNativeFunction(fn) {
-        return typeof fn === 'function' &&
-            fn.toString().match(/\{\s*\[native code\]\s*\}/) &&
-            !fn.name.match(/^bound /);
-    }
-    // ----------------------------------------------------------------------
     function isPromise(o) {
         return o instanceof Promise ||
             (o && typeof o !== 'undefined' && typeof o.then === 'function');
     }
+    // ----------------------------------------------------------------------
+    // :: Function utilities
     // ----------------------------------------------------------------------
     // :: weak version fn.bind as function - it can be rebinded and
     // :: and applied with different context after bind
@@ -1380,6 +1376,14 @@
         props.forEach(prop => {
             bound[prop] = fn[prop];
         });
+        if (isNativeFunction(fn)) {
+            Object.defineProperty(bound, root.Symbol.for('__native__'), {
+                value: true,
+                writable: false,
+                configurable: false,
+                enumerable: false
+            });
+        }
         return bound;
     }
     // ----------------------------------------------------------------------
@@ -1400,6 +1404,14 @@
             };`);
             return wrapper(fn);
         }
+    }
+    // ----------------------------------------------------------------------
+    function isNativeFunction(fn) {
+        var native = root.Symbol.for('__native__');
+        return typeof fn === 'function' &&
+            fn.toString().match(/\{\s*\[native code\]\s*\}/) &&
+            ((fn.name.match(/^bound /) && fn[native] === true) ||
+             (!fn.name.match(/^bound /) && !fn[native]));
     }
     // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
@@ -1881,7 +1893,7 @@
                     if (weak) {
                         return weakBind(value, context);
                     }
-                    return value.bind(context);
+                    return bindWithProps(value, context);
                 }
             }
             return value;
@@ -3713,7 +3725,7 @@
                             return quote(result.markCycles());
                         }
                         return result;
-                    });
+                    }, error);
                 });
             } else if (code instanceof Symbol) {
                 value = env.get(code);

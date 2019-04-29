@@ -51,7 +51,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                 }
             });
         }).catch(function(e) {
-            term.error(e.message);
+            term.error(e.message || e);
         });
     }, {
         name,
