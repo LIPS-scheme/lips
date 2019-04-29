@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Mon, 29 Apr 2019 19:04:40 +0000
+ * build: Mon, 29 Apr 2019 19:05:41 +0000
  */
 (function () {
 'use strict';
@@ -5361,11 +5361,6 @@ function _typeof(obj) {
     nil: nil,
     resolvePromises: resolvePromises,
     Symbol: _Symbol,
-    format: function format(code) {
-      var f = new lips.Formatter(code);
-      f.break();
-      return f.format();
-    },
     LNumber: LNumber
   }; // so it work when used with webpack where it will be not global
 

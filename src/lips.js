@@ -3889,11 +3889,6 @@
         nil,
         resolvePromises,
         Symbol,
-        format: function(code) {
-            var f = new lips.Formatter(code);
-            f.break();
-            return f.format();
-        },
         LNumber
     };
     // so it work when used with webpack where it will be not global
