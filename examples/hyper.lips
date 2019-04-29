@@ -13,26 +13,11 @@
 (define key-list '(:foo 10 :bar 20))
 
 ;; ---------------------------------------------------------------------------------------
-(define (key? symbol)
-  "(key? symbol)
-
-   Function check if symbol is key symbol, have colon as first character."
-  (and (symbol? symbol) (eq? ":" (substring (symbol->string symbol) 0 1))))
-
-;; ---------------------------------------------------------------------------------------
-(define (key->string symbol)
-  "(key->string symbol)
-
-   If symbol is key it convert that to string - remove colon."
-  (if (key? symbol)
-      (substring (symbol->string symbol) 1)))
-
-;; ---------------------------------------------------------------------------------------
 (define (make-tags expr)
   "(make-tags expression)
 
    Function that return list structure of code with better syntax then raw LIPS"
-  `(h ,(key->string (car expr))
+  `(h ,(let ((val (car expr))) (if (key? val) (key->string val) val))
       (alist->object (quasiquote ,@(pair-map (lambda (car cdr)
                                                (cons (cons (key->string car)
                                                            (list 'unquote cdr))))

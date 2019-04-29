@@ -5,12 +5,14 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow: hidden;
 }
 .tabs .panels {
   clear: both;
 }
 .tabs li {
-  display: inline-block;
+  display: block;
+  float: left;
   position: relative;
   border-radius: 10px 10px 0 0;
 }

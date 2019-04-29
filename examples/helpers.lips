@@ -154,3 +154,19 @@
                         source))
             sources)
   desc)
+
+
+;; ---------------------------------------------------------------------------------------
+(define (key? symbol)
+  "(key? symbol)
+
+   Function check if symbol is key symbol, have colon as first character."
+  (and (symbol? symbol) (eq? ":" (substring (symbol->string symbol) 0 1))))
+
+;; ---------------------------------------------------------------------------------------
+(define (key->string symbol)
+  "(key->string symbol)
+
+   If symbol is key it convert that to string - remove colon."
+  (if (key? symbol)
+      (substring (symbol->string symbol) 1)))
