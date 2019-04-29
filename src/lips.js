@@ -3621,7 +3621,7 @@
         }
     }
     // ----------------------------------------------------------------------
-    function get_function_args(rest, { env, dynamic_scope, error }) {
+    function getFunctionArgs(rest, { env, dynamic_scope, error }) {
         var args = [];
         var node = rest;
         markCycles(node);
@@ -3648,7 +3648,7 @@
         return resolvePromises(args);
     }
     // ----------------------------------------------------------------------
-    function evaluate_macro(macro, code, eval_args) {
+    function evaluateMacro(macro, code, eval_args) {
         if (code instanceof Pair) {
             //code = code.clone();
         }
@@ -3699,7 +3699,7 @@
             if (first instanceof Symbol) {
                 value = env.get(first, true);
                 if (value instanceof Macro) {
-                    return unpromise(evaluate_macro(value, rest, eval_args), result => {
+                    return unpromise(evaluateMacro(value, rest, eval_args), result => {
                         if (result instanceof Pair) {
                             return result.markCycles();
                         }
@@ -3716,7 +3716,7 @@
                 value = first;
             }
             if (typeof value === 'function') {
-                var args = get_function_args(rest, eval_args);
+                var args = getFunctionArgs(rest, eval_args);
                 return unpromise(args, function(args) {
                     var scope = dynamic_scope || env;
                     var result = resolvePromises(value.apply(scope, args));
@@ -3877,8 +3877,10 @@
         evaluate,
         Environment,
         global_environment: global_env,
+        globalEnvironment: global_env,
         env: global_env,
         balanced_parenthesis: balanced,
+        balancedParenthesis: balanced,
         Macro,
         quote,
         Pair,

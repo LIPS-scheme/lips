@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Mon, 29 Apr 2019 16:19:49 +0000
+ * build: Mon, 29 Apr 2019 16:34:09 +0000
  */
 (function () {
 'use strict';
@@ -5001,7 +5001,7 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function get_function_args(rest, _ref20) {
+  function getFunctionArgs(rest, _ref20) {
     var env = _ref20.env,
         dynamic_scope = _ref20.dynamic_scope,
         error = _ref20.error;
@@ -5043,7 +5043,7 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function evaluate_macro(macro, code, eval_args) {
+  function evaluateMacro(macro, code, eval_args) {
 
     var value = macro.invoke(code, eval_args);
     value = resolvePromises(value);
@@ -5107,7 +5107,7 @@ function _typeof(obj) {
         value = env.get(first, true);
 
         if (value instanceof Macro) {
-          return unpromise(evaluate_macro(value, rest, eval_args), function (result) {
+          return unpromise(evaluateMacro(value, rest, eval_args), function (result) {
             if (result instanceof Pair) {
               return result.markCycles();
             }
@@ -5127,7 +5127,7 @@ function _typeof(obj) {
       }
 
       if (typeof value === 'function') {
-        var args = get_function_args(rest, eval_args);
+        var args = getFunctionArgs(rest, eval_args);
         return unpromise(args, function (args) {
           var scope = dynamic_scope || env;
           var result = resolvePromises(value.apply(scope, args));
@@ -5349,8 +5349,10 @@ function _typeof(obj) {
     evaluate: evaluate,
     Environment: Environment,
     global_environment: global_env,
+    globalEnvironment: global_env,
     env: global_env,
     balanced_parenthesis: balanced,
+    balancedParenthesis: balanced,
     Macro: Macro,
     quote: quote,
     Pair: Pair,
