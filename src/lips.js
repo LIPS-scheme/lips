@@ -2562,6 +2562,9 @@
             }
             function join(eval_pair, value) {
                 if (eval_pair instanceof Pair) {
+                    if (isEmptyList(eval_pair) && value === nil) {
+                        return nil;
+                    }
                     eval_pair.append(value);
                 } else {
                     eval_pair = new Pair(

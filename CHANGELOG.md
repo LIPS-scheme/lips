@@ -1,6 +1,7 @@
 ## 0.11.1
 ### Bug fixes
-* fix parsing special forms as literal symbols
+* fix parsing special forms as literal symbols [#7](https://github.com/jcubic/lips/issues/7)
+* fix unquote-splicing of empty list (e.g. processing of `` `(list ,@(list))``)
 
 ## 0.11.0
 ### Features

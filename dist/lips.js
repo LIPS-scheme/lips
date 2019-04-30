@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Tue, 30 Apr 2019 13:35:06 +0000
+ * build: Tue, 30 Apr 2019 14:50:55 +0000
  */
 (function () {
 'use strict';
@@ -3941,6 +3941,10 @@ function _typeof(obj) {
 
       function join(eval_pair, value) {
         if (eval_pair instanceof Pair) {
+          if (isEmptyList(eval_pair) && value === nil) {
+            return nil;
+          }
+
           eval_pair.append(value);
         } else {
           eval_pair = new Pair(eval_pair, value);
