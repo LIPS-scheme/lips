@@ -1,3 +1,7 @@
+## 0.11.1
+### Bug fixes
+* fix parsing special forms as literal symbols
+
 ## 0.11.0
 ### Features
 * Add support to list cycles
