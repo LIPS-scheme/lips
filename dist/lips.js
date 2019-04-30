@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.11.0
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Mon, 29 Apr 2019 19:05:41 +0000
+ * build: Tue, 30 Apr 2019 14:50:55 +0000
  */
 (function () {
 'use strict';
@@ -1212,7 +1212,7 @@ function _typeof(obj) {
     function pop_join() {
       var top = stack[stack.length - 1];
 
-      if (top instanceof Array && top[0] instanceof _Symbol && special_forms.includes(top[0].name) && stack.length > 1) {
+      if (top instanceof Array && top[0] instanceof _Symbol && special_forms.includes(top[0].name) && stack.length > 1 && !top[0].literal) {
         stack.pop();
 
         if (stack[stack.length - 1].length === 1 && stack[stack.length - 1][0] instanceof _Symbol) {
@@ -1305,6 +1305,10 @@ function _typeof(obj) {
 
             special_count = 0;
             special = false;
+          } else if (value instanceof _Symbol && special_forms.includes(value.name)) {
+            // handle parsing os special forms as literal symbols
+            // (values they expand into)
+            value.literal = true;
           }
 
           top = stack[stack.length - 1];
@@ -3937,6 +3941,10 @@ function _typeof(obj) {
 
       function join(eval_pair, value) {
         if (eval_pair instanceof Pair) {
+          if (isEmptyList(eval_pair) && value === nil) {
+            return nil;
+          }
+
           eval_pair.append(value);
         } else {
           eval_pair = new Pair(eval_pair, value);
@@ -5342,7 +5350,7 @@ function _typeof(obj) {
 
 
   var lips = {
-    version: '0.11.0',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

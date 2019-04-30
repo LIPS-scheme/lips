@@ -175,6 +175,46 @@ describe('parser', function() {
             )
         );
     });
+    function testQuasituote(input, literal) {
+        var tokens = tokenize(input);
+        var array = parse(tokens);
+        var q = new Symbol('quasiquote');
+        if (literal) {
+            q.literal = true;
+        }
+        var u = new Symbol('unquote-splicing');
+        if (literal) {
+            u.literal = true;
+        }
+        expect(array[0]).toEqual(
+            new Pair(
+                q,
+                new Pair(
+                    new Pair(
+                        new Symbol('list'),
+                        new Pair(
+                            new Pair(
+                                u,
+                                new Pair(
+                                    new Pair(
+                                        new Symbol('list'),
+                                        nil
+                                    ),
+                                    nil)
+                            ),
+                            nil)
+                    ),
+                    nil
+                )
+            )
+        );
+    }
+    it('should create quasiquote list from literals', function() {
+        testQuasituote('(quasiquote (list (unquote-splicing (list))))', true);
+    });
+    it('should use reader macros', function() {
+        testQuasituote('`(list ,@(list))');
+    });
     it('should create AList', function() {
         var tokens = tokenize('((foo . 10) (bar . 20) (baz . 30))');
         var array = parse(tokens);

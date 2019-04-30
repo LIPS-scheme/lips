@@ -303,7 +303,7 @@
             var top = stack[stack.length - 1];
             if (top instanceof Array && top[0] instanceof Symbol &&
                 special_forms.includes(top[0].name) &&
-                stack.length > 1) {
+                stack.length > 1 && !top[0].literal) {
                 stack.pop();
                 if (stack[stack.length - 1].length === 1 &&
                     stack[stack.length - 1][0] instanceof Symbol) {
@@ -386,6 +386,11 @@
                         }
                         special_count = 0;
                         special = false;
+                    } else if (value instanceof Symbol &&
+                               special_forms.includes(value.name)) {
+                        // handle parsing os special forms as literal symbols
+                        // (values they expand into)
+                        value.literal = true;
                     }
                     top = stack[stack.length - 1];
                     if (top instanceof Pair) {
@@ -2557,6 +2562,9 @@
             }
             function join(eval_pair, value) {
                 if (eval_pair instanceof Pair) {
+                    if (isEmptyList(eval_pair) && value === nil) {
+                        return nil;
+                    }
                     eval_pair.append(value);
                 } else {
                     eval_pair = new Pair(
