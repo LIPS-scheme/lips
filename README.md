@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&48a816cd407774b16c8dc1e55593d3a290870f1f)](https://travis-ci.org/jcubic/jquery.terminal)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&fe76cc879b949a71d18d6747ff774914)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&cf65665e3c6c56c883d64f236cefc937e2230b9e)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&110f6cd11b4248d82def43f1304a4037)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
@@ -14,6 +14,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 * Full lisp macros and backquote,
 * Functions in lips are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
+* Library agnostic - you can use it with any library,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
 * Promises are treated as values they resolve to (so async code look like sync),

@@ -14,6 +14,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 * Full lisp macros and backquote,
 * Functions in lips are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
+* Library agnostic - you can use it with any library,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
 * Promises are treated as values they resolve to (so async code look like sync),
