@@ -51,9 +51,9 @@
       <ul>
         <li><a href="/lips/#demo">Demo</a></li>
         <li><a href="/lips/docs.html">Docs</a></li>
-        <li><a href="/lips/#installation">Installation</a></li>
+        <li><a href="https://github.com/jcubic/lips/wiki/Getting-Started">Getting Started</a></li>
         <li><a href="https://github.com/jcubic/lips">github</a></li>
-        <li><a href="/lips/examples/index.html">Hyper App Example</a></li>
+        <li><a href="/lips/examples/index.html">Hyper App</a></li>
         <li><a href="https://rawgit.com/jcubic/lips/master/todo.html#/all">TODO app</a></li>
       </ul>
     </nav>
@@ -105,57 +105,7 @@ import {exec} from '@jcubic/lips';
     <pre><code class="language-markup">
 &lt;script src="https://unpkg.com/@jcubic/lips"&gt;&lt;/script&gt;
     </code></pre>
-    <p>Then you have access to lips object that you can upack with ES6.</p>
-    <pre><code class="language-javascript">
-var {exec} = lips;
-    </code></pre>
-    <p>You can use lips.exec to evaluate the code:</p>
-    <pre><code class="language-javascript">
-exec(string).then(function(results) {
-     results.forEach(function(result) {
-         console.log(result);
-     });
-});
-    </code></pre>
-    <p>
-      <strong><code>exec</code></strong> function always return a promise event that any of the expressions
-      return promise. The only expression that explicitly return promise is <strong><code>let</code></strong>
-      and <strong><code>let*</code></strong>, so you can use <strong><code>fetch</code></strong> and
-      <strong><code>json</code></strong> or <strong><code>text</code></strong> in one expression.
-    </p>
-    <p>Or you can split the process using this functions:</p>
-    <pre><code class="language-javascript">
-var {evaluate, parse, tokenize, exec} = lips;
-parse(tokenize(string)).foEach(function(code) {
-    evaluate(code);
-});
-    </code></pre>
-    <p>
-      with <strong><code>evaluate</code></strong> you need to check the type if it's Promise you need to wait for it.
-    </p>
-    <p><strong><code>evaluate</code></strong> function also accept two more arguments:
-      <ul>
-        <li>first Environment.
-            By default it's <strong><code>lips.env</code></strong>. You can use it if you want to
-            have separated instances of the interpreter.</li>
-        <li>
-          Second can be value <strong><code>true</code></strong> or Environment, this argument mean that
-          the scope should be dynamic, if you pass Env object in most cases it should be your global object.
-        </li>
-      </ul>
-    </p>
-    <p>
-      The result of both <strong><code>exec</code></strong> and
-      <strong><code>evaluate</code></strong> can also be <strong><code>lips.Pair</code></strong>
-      that you can convert to Array using <strong><code>pair.toArray()</code></strong>. If the
-      function return number it will be wrapped with <strong><code>lips.LNumber</code></strong>, the
-      value will be in value property it will be BigInt, bn.js or normal JavaScript number. To get
-      value of the <strong><code>LNumber</code></strong> you can call
-      <strong><code>toString()</code></strong> or <strong><code>valueOf()</code></strong> that will
-      convert to native number but you may lost precision or its bigness.
-    </p>
-    <p>You can also create dynamic scope if you call <strong><code>evaluate('code', true)</code></strong>.</p>
-    <p>You can also execute LIPS code from script tag, just include code like this</p>
+    <header><h2>Usage</h2></header>
     <pre><code class="language-html">
   &lt;script type="text/x-lips"&gt;
     (print "hello")
