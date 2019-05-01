@@ -1,3 +1,9 @@
+## 0.11.2
+### Breaking
+* remove `nop` (you can use `(begin undefined)`)
+### Bug fixes
+* fix unquote-splicing on nil (e.g. processing of `` `(list ,@nil)``)
+
 ## 0.11.1
 ### Bug fixes
 * fix parsing special forms as literal symbols [#7](https://github.com/jcubic/lips/issues/7)

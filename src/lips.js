@@ -2266,16 +2266,6 @@
             expression. The code should have side effects and/or when it's promise
             it should resolve to undefined.`),
         // ------------------------------------------------------------------
-        nop: doc(function() {
-        }, `(nop)
-
-            Empty function you can pass list of exressions to the function.
-            like every function each expression will be evaluated and it will
-            not return any value. you can also put this function as last to
-            let or begin. This function is usefull if you want to return
-            undefined, like when you call function from terminal and don't
-            want any output.`),
-        // ------------------------------------------------------------------
         timer: doc(new Macro('timer', function(code, { dynamic_scope, error } = {}) {
             typecheck('timer', code.car, 'number');
             var env = this;
@@ -2589,6 +2579,9 @@
                                                 ' to be pair');
                             }
                             const value = recur(pair.cdr);
+                            if (value === nil && eval_pair === nil) {
+                                return undefined;
+                            }
                             return unpromise(value, value => join(eval_pair, value));
                         });
                     }

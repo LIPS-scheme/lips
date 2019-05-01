@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Tue, 30 Apr 2019 15:41:26 +0000
+ * build: Wed, 01 May 2019 10:22:25 +0000
  */
 (function () {
 'use strict';
@@ -3631,8 +3631,6 @@ function _typeof(obj) {
       evaluate(code, args);
     }, "(ignore expression)\n\n            Macro that will evaluate expression and swallow any promises that may\n            be created. It wil run and ignore any value that may be returned by\n            expression. The code should have side effects and/or when it's promise\n            it should resolve to undefined."),
     // ------------------------------------------------------------------
-    nop: doc(function () {}, "(nop)\n\n            Empty function you can pass list of exressions to the function.\n            like every function each expression will be evaluated and it will\n            not return any value. you can also put this function as last to\n            let or begin. This function is usefull if you want to return\n            undefined, like when you call function from terminal and don't\n            want any output."),
-    // ------------------------------------------------------------------
     timer: doc(new Macro('timer', function (code) {
       var _ref10 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           dynamic_scope = _ref10.dynamic_scope,
@@ -3969,6 +3967,11 @@ function _typeof(obj) {
               }
 
               var value = recur(pair.cdr);
+
+              if (value === nil && eval_pair === nil) {
+                return undefined;
+              }
+
               return unpromise(value, function (value) {
                 return join(eval_pair, value);
               });
