@@ -1,0 +1,146 @@
+;; -*- scheme -*-
+
+
+(define (require url)
+  (new Promise (lambda (resolve)
+                 (if (null? (match /.css$/ url))
+                     ((. $ 'getScript) url resolve)
+                     (let ((link ($ (concat "<link type=\"text/css\" rel=\"stylesheet\" href=\""
+                                             url
+                                             "\"/>"))))
+                       (--> link (on "load" resolve) (appendTo "head")))))))
+
+
+(define $ jQuery)
+(require "https://unpkg.com/alasql@0.4.11/dist/alasql.min.js")
+;; (require "https://unpkg.com/@isomorphic-git/lightning-fs")
+;;(require "http://localhost/projects/jcubic/lightning-fs/dist/lightning-fs.min.js")
+
+;;(require "https://unpkg.com/isomorphic-git")
+;;(require "https://unpkg.com/jquery.terminal/js/jquery.terminal.js")
+;;(let ((codemirror "https://unpkg.com/codemirror@5.x.x"))
+;;  (require (concat codemirror "/lib/codemirror.js"))
+;;  (require (concat codemirror "/mode/scheme/scheme.js"))
+;;  (require (concat codemirror "/addon/edit/matchbrackets.js"))
+;;  (require (concat codemirror "/mode/css/css.js"))
+;;  (require (concat codemirror "/theme/twilight.css"))
+;;  (require (concat codemirror "/lib/codemirror.css")))
+;;(require "https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css")
+;;(require "https://unpkg.com/prismjs/prism.js")
+;;(require "https://unpkg.com/prismjs/themes/prism-coy.css")
+;;(require "https://unpkg.com/jquery.terminal/js/prism.js")
+;;(require "https://unpkg.com/prismjs/components/prism-scheme.min.js")
+;; (require "bundle.js")
+(require "../examples/prism.js")
+
+(define (prn x)
+  (print x)
+  x)
+
+(define-macro (define-global first . rest)
+  "(define-global var value)
+   (define-global (name . args) body)
+
+   Macro that define functions or variables in global context, so they can be used
+   inside let and get let variables in closure, Useful for universal macros."
+  (if (pair? first)
+      (let ((name (car first)))
+        `(--> (. lips 'env)
+              (set ,(symbol->string name) (lambda ,(cdr first) ,@rest))))
+      `(--> (. lips 'env) ,first ,(car rest))))
+
+(define-macro (globalize expr . rest)
+  "(globalize expr)
+
+   Macro will get the value of the expression and add each method as function to global
+   scope."
+  (let ((obj (eval expr (current-environment)))
+        (make-name (if (pair? rest)
+                       (let ((pre (car rest)))
+                         (lambda (name) (string->symbol (concat pre name))))
+                       string->symbol)))
+    `(begin
+       ,@(filter pair?
+                 (map (lambda (key)
+                        (if (function? (. obj key))
+                            (let* ((fname (gensym))
+                                   (args (gensym)))
+                              `(define-global (,(make-name key) . ,args)
+                                 (apply (. ,expr ,key) ,args)))))
+                        (array->list (--> Object (keys obj))))))))
+;;(array->list (--> Object (keys obj)))
+
+;; setup isomorphic-git and global fs methods as functions
+
+(let* ((fs (new LightningFS "fs"))
+       (pfs (. fs 'promises)))
+  (global fs)
+  (--> (. git 'plugins) (set "fs" fs))
+  (globalize git git.)
+  (globalize (let ((x pfs)) x)))
+
+
+;; Vanila JavaScript example
+;;(let* ((body (. document 'body))
+;;       (div (--> document (createElement "div"))))
+;;  (--> body (appendChild div))
+;;  (set-obj! div "innerHTML" "hello word"))
+;;
+;;;; jQuery Example
+;;(--> ($ "<div>Hello jQuery</div>") (appendTo ($ "body")))
+;;
+
+(define (new-repo dir)
+  (let ((dir (if (null? (match /^\// dir)) (concat "/" dir) dir)))
+    (if (not (is-dir dir))
+        (begin
+          (mkdir dir)
+          (git.init (make-object :dir dir))))))
+
+
+(define (is-dir x)
+  (try (eq? (. (stat x) 'type) "dir")
+       (catch (e) false)))
+
+
+(define (resiter-service-worker file)
+  (let* ((scope (replace /\/[^\/]+$/ "/" (. location 'pathname)))
+         (register (. navigator 'serviceWorker 'register)))
+    (register "sw.js" (make-object :scope scope))))
+
+;; registering service worker
+(try (let ((req (resiter-service-worker "sw.js")))
+       (global req)
+       (--> req (addEventListener "updatefound" (lambda ()
+                                                  (let ((msg (concat "A new service worker is being installed"
+                                                                     (. req 'installing))))
+                                                    (--> console (log msg))))))
+       (--> console (log (concat "Registration succeeded. Scope is " (. req 'scope)))))
+     (catch (e)
+            (--> console (log (concat "Registration failed " e)))))
+
+;;(require "https://unpkg.com/jquery.splitter")
+;;(require "https://unpkg.com/jquery.splitter/css/jquery.splitter.css")
+
+(--> ($ ".container")
+     (split (make-object :orientation "horizontal"
+                         :limit 10
+                         :position "70%"))
+     (find ".panels")
+     (split (make-object :orientation "vertical"
+                         :limit 10
+                         :position "50%")))
+
+
+(define (editor selector mode)
+  (--> CodeMirror (fromTextArea (--> document (querySelector selector))
+                                (make-object :mode mode
+                                             :theme "twilight"
+                                             :matchBrackets true
+                                             :lineNumbers true))))
+
+(define css-editor (editor ".css .code" "css"))
+(define css-editor (editor ".lips .code" "scheme"))
+(define term (terminal (make-object :selector ($ ".term") :lips lips :name "lips-editor")))
+(--> (. $ 'terminal) (syntax "scheme"))
+(--> ($ "body") (removeClass "cloak"))

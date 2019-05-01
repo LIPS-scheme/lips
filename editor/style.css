@@ -1,0 +1,36 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+.container {
+    height: calc(100vh - 50px) !important;
+}
+.term, .code + .CodeMirror {
+    height: 100%;
+}
+.cloak {
+    visibility: hidden;
+}
+.navbar {
+    background: #ff6600;
+    -webkit-box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+.logo img {
+    height: 30px;
+    margin: 8px;
+}
+.panels {
+    background: #1d1e22;
+    color: white;
+}
+.panels .wrapper {
+    height: calc(100% - 29px);
+}
+.panels header {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(0,0,0,0.1);
+    padding: 5px;
+    color: #aaaebc;
+    font-family: arial;
+}

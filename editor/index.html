@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <meta name="Description" content=""/>
+    <link rel="shortcut icon" href=""/>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--
+    <link href="css/style.css" rel="stylesheet"/>
+    -->
+    <style>
+
+    </style>
+    <!-- <link href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/> -->
+    <!-- <script src="https://unpkg.com/hyperapp"></script>-->
+    <!-- <script src="https://unpkg.com/jquery@3.3.x/dist/jquery.min.js"></script> -->
+    <!-- <script src="https://unpkg.com/alasql@0.4.11/dist/alasql.min.js"></script> -->
+    <!-- <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.js"></script> -->
+    <!-- <script src="https://unpkg.com/codemirror@5.x.x/lib/codemirror.js"></script> -->
+    <!-- <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script> -->
+    <!-- <script src="https://unpkg.com/isomorphic-git"></script> -->
+    <script src="bundle.js"></script>
+    <script src="../src/lips.js"></script>
+    <script src="../examples/terminal.js"></script>
+    <script type="text/x-lips" src="../examples/helpers.lips"></script>
+    <!-- <script type="text/x-lips" src="../examples/hyper.lips"></script> -->
+    <script type="text/x-lips" src="app.lips"></script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="cloak">
+  <div class="navbar">
+    <header>
+      <span class="logo">
+        <img src="logo.svg"/>
+      </span>
+    </header>
+  </div>
+  <div class="container">
+    <div class="panels">
+      <div class="lips">
+        <header>LIPS</header>
+        <div class="wrapper">
+          <textarea class="code"></textarea>
+        </div>
+      </div>
+      <div class="css">
+        <header>CSS</header>
+        <div class="wrapper">
+          <textarea class="code"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="term"></div>
+    </div>
+  </div>
+</body>
+</html>
