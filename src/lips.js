@@ -2027,14 +2027,26 @@
             Function return new Pair out of two arguments.`),
         // ------------------------------------------------------------------
         car: doc(function(list) {
+            if (list === nil) {
+                return nil;
+            }
             typecheck('car', list, 'pair');
+            if (isEmptyList(list)) {
+                return nil;
+            }
             return list.car;
         }, `(car pair)
 
             Function returns car (head) of the list/pair.`),
         // ------------------------------------------------------------------
         cdr: doc(function(list) {
+            if (list === nil) {
+                return nil;
+            }
             typecheck('cdr', list, 'pair');
+            if (isEmptyList(list)) {
+                return nil;
+            }
             return list.cdr;
         }, `(cdr pair)
 
@@ -3513,6 +3525,10 @@
         const name = 'c' + spec + 'r';
         global_env.set(name, doc(function(arg) {
             return chars.reduce(function(list, type) {
+                if (list === nil) {
+                    return nil;
+                }
+                typecheck(name, list, 'pair');
                 if (type === 'a') {
                     return list.car;
                 } else {

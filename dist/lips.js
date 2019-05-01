@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 01 May 2019 10:23:31 +0000
+ * build: Wed, 01 May 2019 10:31:05 +0000
  */
 (function () {
 'use strict';
@@ -3381,12 +3381,30 @@ function _typeof(obj) {
     }, "(cons left right)\n\n            Function return new Pair out of two arguments."),
     // ------------------------------------------------------------------
     car: doc(function (list) {
+      if (list === nil) {
+        return nil;
+      }
+
       typecheck('car', list, 'pair');
+
+      if (isEmptyList(list)) {
+        return nil;
+      }
+
       return list.car;
     }, "(car pair)\n\n            Function returns car (head) of the list/pair."),
     // ------------------------------------------------------------------
     cdr: doc(function (list) {
+      if (list === nil) {
+        return nil;
+      }
+
       typecheck('cdr', list, 'pair');
+
+      if (isEmptyList(list)) {
+        return nil;
+      }
+
       return list.cdr;
     }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
     // ------------------------------------------------------------------
@@ -4816,6 +4834,12 @@ function _typeof(obj) {
     var name = 'c' + spec + 'r';
     global_env.set(name, doc(function (arg) {
       return chars.reduce(function (list, type) {
+        if (list === nil) {
+          return nil;
+        }
+
+        typecheck(name, list, 'pair');
+
         if (type === 'a') {
           return list.car;
         } else {

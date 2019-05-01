@@ -3,6 +3,8 @@
 * remove `nop` (you can use `(begin undefined)`)
 ### Bug fixes
 * fix unquote-splicing on nil (e.g. processing of `` `(list ,@nil)``)
+* cdr and car should return nil on empty list
+* typecheck and process nil in c[ad]+r functions
 
 ## 0.11.1
 ### Bug fixes
