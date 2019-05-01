@@ -1,3 +1,30 @@
+## 0.11.2
+### Breaking
+* remove `nop` (you can use `(begin undefined)`)
+### Bug fixes
+* fix unquote-splicing on nil (e.g. processing of `` `(list ,@nil)``)
+* cdr and car should return nil on empty list
+* typecheck and process nil in c[ad]+r functions
+
+## 0.11.1
+### Bug fixes
+* fix parsing special forms as literal symbols [#7](https://github.com/jcubic/lips/issues/7)
+* fix unquote-splicing of empty list (e.g. processing of `` `(list ,@(list))``)
+
+## 0.11.0
+### Features
+* Add support to list cycles
+* new macro `ignore` that will swallow promises
+* add `try` macro
+* add `current-environment` function
+* `eval` LIPS function now accept environment as second argument
+* better toString of gensym symbols (it now shows `#gensym_1#` instead of `Symbol(#gensym)` check `macroexpand`)
+* macroexpand now produce formatted LIPS code (API exposed in Formatter::break that break LIPS code into lines)
+### Bug fixes
+* call error in evaluate when promise returned from function is rejected
+* fix errors in `map`, `reduce`, `fold` and `for-each` (that use `map`)
+* fix exception when call to match fail to match
+
 ## 0.10.4
 ### Bug fixes
 * fix accessing props on native objects like Object function [#6](https://github.com/jcubic/lips/issues/6)

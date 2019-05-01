@@ -36,14 +36,16 @@
 ;; inital state
 (define state (make-object :counter '((count . 0))))
 
+(define (Counter obj)
+  (with-tags (:h1 () (concat "Counter: " (. obj 'count)))))
+
 (define (view state actions)
   "hyperapp view"
-  (with-tags (:div ()
-                   (list (:h1 ()
-                              (concat "Counter: "
-                                      (value (cdr (assoc 'count (. state "counter"))))))
-                         (:button (:onclick (lambda () (--> actions (down 1)))) "-")
-                         (:button (:onclick (lambda () (--> actions (up 1)))) "+")))))
+  (let ((counter (. state "counter")))
+    (with-tags (:div ()
+                     (list (Counter (:count (cdr (assoc 'count counter))))
+                           (:button (:onclick (lambda () (--> actions (down 1)))) "-")
+                           (:button (:onclick (lambda () (--> actions (up 1)))) "+"))))))
 
 ;; main hyper app
 (define main (app state actions view (--> document (querySelector "#app"))))
