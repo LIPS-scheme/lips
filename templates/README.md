@@ -11,13 +11,13 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 ## Key features
 
-* Full lisp macros and backquote,
+* Full lisp macros, backquote and macroexpand,
 * Functions in lips are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
+* Promises are treated as values they resolve to (so async code look like sync - like auto `async/await`),
 * Library agnostic - you can use it with any library,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
-* Promises are treated as values they resolve to (so async code look like sync),
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Optional dynamic scope.
 
@@ -60,9 +60,7 @@ or use `src` attribute:
 <script type="text/x-lips" src="example.lips"></script>
 ```
 
-
-You can also run the interpreter programmatically:
-
+Running programmatically:
 
 ```javascript
 var {exec} = require('@jcubic/lips'); // node
@@ -76,64 +74,8 @@ exec(string).then(function(results) {
 });
 ```
 
-there is also longer version if you want to split the process of evaluation:
-
-```
-var {parse, tokenize, evaluate} = require('@jcubic/lips');
-
-parse(tokenize(string)).forEach(function(code) {
-    evaluate(code);
-});
-```
-
-`evaluate` and `exec` functions also accept second argument, which is Environment.  By
-default it's `lips.env`. You can use it if you want to have separated instances of the
-interpreter.
-
-You can create new environment using:
-
-```javascript
-var env = new Environment({}, lips.env);
-```
-
-First argument is an object with functions, macros and variables (see Extending LIPS at
-the end of [docs](https://jcubic.github.io/lips/docs.html)).  Second argument is parent
-environment, you need to use global environment (or other that extend global) otherwise
-you will not have any functions.
-
-You can also use helper function:
-
-
-```javascript
-var env = lips.env.inherit('name', {});
-```
-
-
-While calling exec, optionally you can provide 3rd options as environment for dynamic
-scope or value `true`, you can also use 2 arguments where first is code (string) or AST
-(tree of Pairs) with `evaluate` and second is value `true`:
-
-```
-// dynamic scope
-exec('(+ 10 10)', env, env)
-exec('(+ 10 10)', true)
-
-// lexical scope
-exec('(+ 10 10)')
-exec('(+ 10 10)', env)
-```
-
-Exec function always return a `Promise` for array of values, value can be Pair that you
-can convert to Array using `Pair::toArray()`, `LNumber` that wrap BigInt or native numbers
-(if your browser don't support BigInt and you don't include bn.js). You can get native
-value out if BigInt using `LNumber::valueOf()` but you may lost precision or get
-completely different value if your value is big. You can also use `LNumber::toString()` to
-get number representation as string (works for all values).
-
-`evaluate` function return normal values or a Promise, so you will need to check the type
-of the value, some expressions return explicit `Promise` like `let` and `let*`, so you can
-use fetch to get text value in one `let`. `exec` make this easier to always return
-`Promise`.
+More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
+in [docs page](https://jcubic.github.io/lips/docs.html).
 
 ## License
 
