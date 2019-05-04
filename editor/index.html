@@ -14,19 +14,11 @@
     <style>
 
     </style>
-    <!-- <link href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/> -->
-    <!-- <script src="https://unpkg.com/hyperapp"></script>-->
-    <!-- <script src="https://unpkg.com/jquery@3.3.x/dist/jquery.min.js"></script> -->
-    <!-- <script src="https://unpkg.com/alasql@0.4.11/dist/alasql.min.js"></script> -->
-    <!-- <script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.js"></script> -->
-    <!-- <script src="https://unpkg.com/codemirror@5.x.x/lib/codemirror.js"></script> -->
-    <!-- <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script> -->
-    <!-- <script src="https://unpkg.com/isomorphic-git"></script> -->
     <script src="bundle.js"></script>
+    <script src="http://localhost/projects/jcubic/lightning-fs/dist/lightning-fs.min.js"></script>
     <script src="../src/lips.js"></script>
     <script src="../examples/terminal.js"></script>
     <script type="text/x-lips" src="../examples/helpers.lips"></script>
-    <!-- <script type="text/x-lips" src="../examples/hyper.lips"></script> -->
     <script type="text/x-lips" src="app.lips"></script>
     <link rel="stylesheet" href="style.css"/>
 </head>
@@ -40,14 +32,20 @@
   </div>
   <div class="container">
     <div class="panels">
-      <div class="lips">
-        <header>LIPS</header>
+      <div class="html">
+        <header>HTML</header>
         <div class="wrapper">
           <textarea class="code"></textarea>
         </div>
       </div>
       <div class="css">
         <header>CSS</header>
+        <div class="wrapper">
+          <textarea class="code"></textarea>
+        </div>
+      </div>
+      <div class="lips">
+        <header>LIPS</header>
         <div class="wrapper">
           <textarea class="code"></textarea>
         </div>

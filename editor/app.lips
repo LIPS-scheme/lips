@@ -12,25 +12,8 @@
 
 
 (define $ jQuery)
-(require "https://unpkg.com/alasql@0.4.11/dist/alasql.min.js")
-;; (require "https://unpkg.com/@isomorphic-git/lightning-fs")
-;;(require "http://localhost/projects/jcubic/lightning-fs/dist/lightning-fs.min.js")
+;; (require "https://unpkg.com/alasql@0.4.11/dist/alasql.min.js")
 
-;;(require "https://unpkg.com/isomorphic-git")
-;;(require "https://unpkg.com/jquery.terminal/js/jquery.terminal.js")
-;;(let ((codemirror "https://unpkg.com/codemirror@5.x.x"))
-;;  (require (concat codemirror "/lib/codemirror.js"))
-;;  (require (concat codemirror "/mode/scheme/scheme.js"))
-;;  (require (concat codemirror "/addon/edit/matchbrackets.js"))
-;;  (require (concat codemirror "/mode/css/css.js"))
-;;  (require (concat codemirror "/theme/twilight.css"))
-;;  (require (concat codemirror "/lib/codemirror.css")))
-;;(require "https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css")
-;;(require "https://unpkg.com/prismjs/prism.js")
-;;(require "https://unpkg.com/prismjs/themes/prism-coy.css")
-;;(require "https://unpkg.com/jquery.terminal/js/prism.js")
-;;(require "https://unpkg.com/prismjs/components/prism-scheme.min.js")
-;; (require "bundle.js")
 (require "../examples/prism.js")
 
 (define (prn x)
@@ -47,7 +30,7 @@
       (let ((name (car first)))
         `(--> (. lips 'env)
               (set ,(symbol->string name) (lambda ,(cdr first) ,@rest))))
-      `(--> (. lips 'env) ,first ,(car rest))))
+      `(--> (. lips 'env) (set ,(symbol->string first) ,(car rest)))))
 
 (define-macro (globalize expr . rest)
   "(globalize expr)
@@ -123,13 +106,15 @@
 ;;(require "https://unpkg.com/jquery.splitter/css/jquery.splitter.css")
 
 (--> ($ ".container")
-     (split (make-object :orientation "horizontal"
+     (split (make-object :percent true
+                         :orientation "horizontal"
                          :limit 10
                          :position "70%"))
      (find ".panels")
-     (split (make-object :orientation "vertical"
+     (split (make-object :percent true
+                         :orientation "vertical"
                          :limit 10
-                         :position "50%")))
+                         :position (list->array '("33%" "33%")))))
 
 
 (define (editor selector mode)
@@ -141,6 +126,13 @@
 
 (define css-editor (editor ".css .code" "css"))
 (define css-editor (editor ".lips .code" "scheme"))
+(define html-editor (editor ".html .code" "html"))
+
+;; terminal function defined in examples/terminal.js
 (define term (terminal (make-object :selector ($ ".term") :lips lips :name "lips-editor")))
 (--> (. $ 'terminal) (syntax "scheme"))
+
+
+
 (--> ($ "body") (removeClass "cloak"))
+
