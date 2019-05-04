@@ -1,11 +1,15 @@
 const path = require('path');
+const webpack = require('webpack');
+
 module.exports = {
     mode: "production",
-    entry: "./index.js",
+    entry: {
+        'a': "./src/a.js",
+        'b': "./src/b.js"
+    },
     output: {
-        filename: "bundle.js",
+        filename: 'bundle-[name].js',
         path: path.resolve(__dirname)
-        //libraryTarget: "umd"
     },
     module: {
         rules: [

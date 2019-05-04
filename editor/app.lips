@@ -110,6 +110,8 @@
   (--> CodeMirror (fromTextArea (--> document (querySelector selector))
                                 (make-object :mode mode
                                              :theme "twilight"
+                                             :scrollbarStyle "simple"
+                                             :lineWrapping true
                                              :matchBrackets true
                                              :lineNumbers true))))
 

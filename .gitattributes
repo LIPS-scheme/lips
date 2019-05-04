@@ -2,4 +2,4 @@
 .* text eol=lf
 dist/* binary
 *.png binary
-editor/bundle.js binary
+editor/bundle*.js binary
