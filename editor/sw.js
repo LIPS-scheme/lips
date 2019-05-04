@@ -11,8 +11,8 @@
  *
  */
 /* global BrowserFS, Response, setTimeout, fetch, Blob, Headers */
-self.importScripts('https://cdn.jsdelivr.net/npm/browserfs');
-self.importScripts('http://localhost/projects/jcubic/lightning-fs/dist/lightning-fs.min.js');
+//self.importScripts('https://cdn.jsdelivr.net/npm/browserfs');
+self.importScripts('./lightning-fs.min.js');
 //https://unpkg.com/@isomorphic-git/lightning-fs@3.2.0/dist/lightning-fs.min.js');
 
 self.addEventListener('install', self.skipWaiting);
@@ -20,17 +20,6 @@ self.addEventListener('install', self.skipWaiting);
 self.addEventListener('activate', self.skipWaiting);
 
 self.addEventListener('fetch', function (event) {
-    let path = BrowserFS.BFSRequire('path');
-    /*let fs = new Promise(function(resolve, reject) {
-        BrowserFS.configure({ fs: 'IndexedDB', options: {} }, function (err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(BrowserFS.BFSRequire('fs'));
-            }
-        });
-    });
-    */
     let fs = Promise.resolve(new LightningFS('fs'));
     event.respondWith(fs.then(function(fs) {
         return new Promise(function(resolve, reject) {

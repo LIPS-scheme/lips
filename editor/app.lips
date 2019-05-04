@@ -2,6 +2,7 @@
 
 
 (define (require url)
+  "Load JS or script tag"
   (new Promise (lambda (resolve)
                  (if (null? (match /.css$/ url))
                      ((. $ 'getScript) url resolve)
@@ -51,7 +52,7 @@
                               `(define-global (,(make-name key) . ,args)
                                  (apply (. ,expr ,key) ,args)))))
                         (array->list (--> Object (keys obj))))))))
-;;(array->list (--> Object (keys obj)))
+
 
 ;; setup isomorphic-git and global fs methods as functions
 
@@ -60,29 +61,21 @@
   (global fs)
   (--> (. git 'plugins) (set "fs" fs))
   (globalize git git.)
-  (globalize (let ((x pfs)) x)))
+  (globalize (let ((x pfs)) x) fs.))
 
-
-;; Vanila JavaScript example
-;;(let* ((body (. document 'body))
-;;       (div (--> document (createElement "div"))))
-;;  (--> body (appendChild div))
-;;  (set-obj! div "innerHTML" "hello word"))
-;;
-;;;; jQuery Example
-;;(--> ($ "<div>Hello jQuery</div>") (appendTo ($ "body")))
-;;
 
 (define (new-repo dir)
+  "Prepare new git repo with base app"
   (let ((dir (if (null? (match /^\// dir)) (concat "/" dir) dir)))
     (if (not (is-dir dir))
         (begin
-          (mkdir dir)
+          (fs.mkdir dir)
           (git.init (make-object :dir dir))))))
 
 
 (define (is-dir x)
-  (try (eq? (. (stat x) 'type) "dir")
+  "check if value is directory. if it don't exists it return false."
+  (try (eq? (. (fs.stat x) 'type) "dir")
        (catch (e) false)))
 
 
@@ -95,16 +88,11 @@
 (ignore (try (let ((req (resiter-service-worker "sw.js")))
                (global req)
                (--> req (addEventListener "updatefound" (lambda ()
-                                                          (let ((msg (concat
-                                                                      "A new service worker is being installed"
-                                                                      (. req 'installing))))
+                                                          (let ((msg "A new service worker is being installed"))
                                                             (--> console (log msg))))))
                (--> console (log (concat "Registration succeeded. Scope is " (. req 'scope)))))
              (catch (e)
                     (--> console (log (concat "Registration failed " e))))))
-
-;;(require "https://unpkg.com/jquery.splitter")
-;;(require "https://unpkg.com/jquery.splitter/css/jquery.splitter.css")
 
 (--> ($ ".container")
      (split (make-object :percent true
@@ -126,14 +114,34 @@
                                              :lineNumbers true))))
 
 (define css-editor (editor ".css .code" "css"))
-(define css-editor (editor ".lips .code" "scheme"))
-(define html-editor (editor ".html .code" "html"))
+(define lips-editor (editor ".lips .code" "scheme"))
+(define html-editor (editor ".html .code" "htmlmixed"))
 
-;; terminal function defined in examples/terminal.js
+;; terminal function defined in ../examples/terminal.js
 (define term (terminal (make-object :selector ($ ".term") :lips lips :name "lips-editor")))
 (--> (. $ 'terminal) (syntax "scheme"))
 
 
 
 (--> ($ "body") (removeClass "cloak"))
+
+(define-macro (let** list . body)
+  `(apply (lambda ,(map car list) ,@body) (list* ,@(map cadr list))))
+
+(define (ajax path)
+  (--> (fetch path) (text)))
+
+(define (new-app dir)
+  (let ((helpers.lips (ajax "../examples/helpers.lips"))
+        (index.html (ajax "template/index.html"))
+        (app.lips (ajax "template/app.lips")))
+    (fs.writeFile (join "/" (list dir "index.html")) index.html)
+    (fs.writeFile (join "/" (list dir "app.lips")) app.lips)
+    (fs.writeFile (join "/" (list dir "helpers.lips")) helpers.lips)
+    (--> html-editor (setValue index.html))
+    (--> lips-editor (setValue app.lips))))
+
+(define (readFile path)
+  (let ((d (new TextDecoder "utf-8")))
+    (--> d (decode (fs.readFile path)))))
 
