@@ -16,6 +16,15 @@ body {
     -webkit-box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
+.navbar header {
+    position: relative;
+}
+.navbar nav {
+    position: absolute;
+    top: 50%;
+    left: 55px;
+    transform: translateY(-50%);
+}
 .logo img {
     height: 30px;
     margin: 8px;
@@ -42,4 +51,12 @@ body {
     border-radius: 5px;
     margin-right: 2px;
     border: 1px solid #aeaeae;
+}
+iframe {
+    border: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: block;
 }

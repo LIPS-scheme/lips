@@ -67,16 +67,17 @@
 (define (new-repo dir)
   "Prepare new git repo with base app"
   (let ((dir (if (null? (match /^\// dir)) (concat "/" dir) dir)))
-    (if (not (is-dir dir))
+    (if (not (directory? dir))
         (begin
           (fs.mkdir dir)
           (git.init (make-object :dir dir))))))
 
-
-(define (is-dir x)
-  "check if value is directory. if it don't exists it return false."
-  (try (eq? (. (fs.stat x) 'type) "dir")
+(define (have-type type x)
+  (try (eq? (. (fs.stat x) 'type) type)
        (catch (e) false)))
+
+(define directory? (curry have-type "dir"))
+(define file? (curry have-type "file"))
 
 
 (define (resiter-service-worker file)
@@ -94,14 +95,21 @@
              (catch (e)
                     (--> console (log (concat "Registration failed " e))))))
 
+(define refresh-editors (debounce (lambda ()
+                                    (for-each (lambda (editor) (--> editor (refresh)))
+                                              (list html-editor css-editor lips-editor)))
+                                  40))
+
 (--> ($ ".container")
      (split (make-object :percent true
                          :orientation "horizontal"
                          :limit 10
-                         :position "70%"))
+                         :onDrag refresh-editors
+                         :position (list->array '("50%" "30%"))))
      (find ".panels")
      (split (make-object :percent true
                          :orientation "vertical"
+                         :onDrag refresh-editors
                          :limit 10
                          :position (list->array '("33%" "33%")))))
 
@@ -143,7 +151,63 @@
     (--> html-editor (setValue index.html))
     (--> lips-editor (setValue app.lips))))
 
+(define struct `((,css-editor . "style.css")
+                 (,html-editor . "index.html")
+                 (,lips-editor . "app.lips")))
+
+(define (load-into-editor editor filename)
+  (--> editor (setValue (if (file? filename) (readFile filename) ""))))
+
+(define (editor-to-file editor file)
+  (fs.writeFile file (--> editor (getValue))))
+
+(define (do-editors fn name)
+  (for-each (lambda (pair)
+              (if (not (directory? name))
+                  (error (concat name " is not directory"))
+                  (let ((path (join "/" (list name (cdr pair)))))
+                    (fn (car pair) path))))
+            struct))
+
+(define load-app (curry do-editors load-into-editor))
+(define save-app (curry do-editors editor-to-file))
+
+(define (run-app name)
+  (let* (($iframe ($ ".preview iframe"))
+         (src (--> $iframe (val))))
+    (if (null? (match (new RegExp (concat "__browserfs__/" name)) src))
+        (--> $iframe (attr "src" (concat "./__browserfs__/" name "/")))
+        (refresh-src $iframe))))
+
+
 (define (readFile path)
   (let ((d (new TextDecoder "utf-8")))
     (--> d (decode (fs.readFile path)))))
 
+(define-macro (.on $element event . code)
+  `(--> ,$element (on ,event (lambda ()
+                              ,@code))))
+
+(define (refresh-src $node)
+  (let* ((old (--> $node (attr "src")))
+         (now (--> Date (now)))
+         (new-src (if (null? (match /\?/ old))
+                      (concat old "?" now)
+                      (replace /[^?]*$/ now))))
+    (--> $node (attr "src" new-src))))
+
+
+
+(let ((apps (array->list (fs.readdir "/")))
+      ($save ($ "#save"))
+      ($iframe ($ ".preview iframe"))
+      ($run ($ "#run"))
+      ($apps ($ "#apps")))
+  (--> $apps (empty))
+  (.on $apps "change" (load-app (concat "/" (--> $apps (val)))))
+  (.on $save "click" (save-app (concat "/" (--> $apps (val)))))
+  (.on $run "click" (run-app (--> $apps (val))))
+  (for-each (lambda (app)
+              (--> $apps (append (concat "<option>" app "</option>"))))
+            apps)
+  (--> $apps (trigger "change")))

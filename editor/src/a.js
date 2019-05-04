@@ -1,4 +1,5 @@
 require('expose-loader?CodeMirror!codemirror/lib/codemirror');
+require('expose-loader?debounce!debounce');
 //require('expose-loader?LightningFS!../../lightning-fs');
 require('expose-loader?LightningFS!../lightning-fs.min.js');
 require("codemirror/lib/codemirror.css");
