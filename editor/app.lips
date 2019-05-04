@@ -92,15 +92,16 @@
     (register "sw.js" (make-object :scope scope))))
 
 ;; registering service worker
-(try (let ((req (resiter-service-worker "sw.js")))
-       (global req)
-       (--> req (addEventListener "updatefound" (lambda ()
-                                                  (let ((msg (concat "A new service worker is being installed"
-                                                                     (. req 'installing))))
-                                                    (--> console (log msg))))))
-       (--> console (log (concat "Registration succeeded. Scope is " (. req 'scope)))))
-     (catch (e)
-            (--> console (log (concat "Registration failed " e)))))
+(ignore (try (let ((req (resiter-service-worker "sw.js")))
+               (global req)
+               (--> req (addEventListener "updatefound" (lambda ()
+                                                          (let ((msg (concat
+                                                                      "A new service worker is being installed"
+                                                                      (. req 'installing))))
+                                                            (--> console (log msg))))))
+               (--> console (log (concat "Registration succeeded. Scope is " (. req 'scope)))))
+             (catch (e)
+                    (--> console (log (concat "Registration failed " e))))))
 
 ;;(require "https://unpkg.com/jquery.splitter")
 ;;(require "https://unpkg.com/jquery.splitter/css/jquery.splitter.css")
