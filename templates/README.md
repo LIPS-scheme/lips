@@ -60,6 +60,20 @@ or use `src` attribute:
 <script type="text/x-lips" src="example.lips"></script>
 ```
 
+Running programmatically:
+
+```javascript
+var {exec} = require('@jcubic/lips'); // node
+// or
+var {exec} = lips; // browser
+
+exec(string).then(function(results) {
+     results.forEach(function(result) {
+        console.log(result.toString());
+     });
+});
+```
+
 More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
 in [docs page](https://jcubic.github.io/lips/docs.html).
 

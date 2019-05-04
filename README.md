@@ -1,7 +1,7 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-0.11.2-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&53e08fd34b6a625664c8c5bac7a20aae0bdccf02)](https://travis-ci.org/jcubic/jquery.terminal)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=master&0009eb93a38e65e8338c2c093606cbf38dd9218a)](https://travis-ci.org/jcubic/jquery.terminal)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&110f6cd11b4248d82def43f1304a4037)](https://coveralls.io/github/jcubic/lips?branch=master)
 
 
@@ -11,7 +11,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 
 ## Key features
 
-* Full lisp macros and backquote,
+* Full lisp macros, backquote and macroexpand,
 * Functions in lips are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Promises are treated as values they resolve to (so async code look like sync - like auto `async/await`),
@@ -58,6 +58,20 @@ or use `src` attribute:
 
 ```html
 <script type="text/x-lips" src="example.lips"></script>
+```
+
+Running programmatically:
+
+```javascript
+var {exec} = require('@jcubic/lips'); // node
+// or
+var {exec} = lips; // browser
+
+exec(string).then(function(results) {
+     results.forEach(function(result) {
+        console.log(result.toString());
+     });
+});
 ```
 
 More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
