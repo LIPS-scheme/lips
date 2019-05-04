@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.11.2
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 01 May 2019 10:31:05 +0000
+ * build: Sat, 04 May 2019 12:44:31 +0000
  */
 (function () {
 'use strict';
@@ -2714,6 +2714,41 @@ function _typeof(obj) {
         }
       }();
     });
+  }
+
+  function pararel(name, fn) {
+    return new Macro(name, function (code) {
+
+      var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref5.dynamic_scope,
+          error = _ref5.error;
+
+      var env = this;
+
+      if (dynamic_scope === true) {
+        dynamic_scope = this;
+      }
+
+      var node = code;
+      var results = [];
+
+      while (node instanceof Pair && !isEmptyList(node)) {
+        results.push(evaluate(node.car, {
+          env: env,
+          dynamic_scope: dynamic_scope,
+          error: error
+        }));
+        node = node.cdr;
+      }
+
+      var havePromises = results.filter(isPromise).length;
+
+      if (havePromises) {
+        return Promise.all(results).then(fn.bind(this));
+      } else {
+        return fn.call(this, results);
+      }
+    });
   } // ----------------------------------------------------------------------
 
 
@@ -3409,9 +3444,9 @@ function _typeof(obj) {
     }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
     // ------------------------------------------------------------------
     'set!': doc(new Macro('set!', function (code) {
-      var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref5.dynamic_scope,
-          error = _ref5.error;
+      var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref6.dynamic_scope,
+          error = _ref6.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3522,9 +3557,9 @@ function _typeof(obj) {
       }).then(exec);
     }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
     // ------------------------------------------------------------------
-    'while': doc(new Macro('while', function (code, _ref6) {
-      var dynamic_scope = _ref6.dynamic_scope,
-          error = _ref6.error;
+    'while': doc(new Macro('while', function (code, _ref7) {
+      var dynamic_scope = _ref7.dynamic_scope,
+          error = _ref7.error;
       var self = this;
       var begin = new Pair(new _Symbol('begin'), code.cdr);
       var result;
@@ -3565,9 +3600,9 @@ function _typeof(obj) {
       }();
     }), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
     // ------------------------------------------------------------------
-    'if': doc(new Macro('if', function (code, _ref7) {
-      var dynamic_scope = _ref7.dynamic_scope,
-          error = _ref7.error;
+    'if': doc(new Macro('if', function (code, _ref8) {
+      var dynamic_scope = _ref8.dynamic_scope,
+          error = _ref8.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3605,9 +3640,13 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'let': doc(let_macro(false), "(let ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy but you can't access\n             previous values/names when next are evaluated. You can only get them\n             from body of let expression."),
     // ------------------------------------------------------------------
-    'begin': doc(new Macro('begin', function (code, _ref8) {
-      var dynamic_scope = _ref8.dynamic_scope,
-          error = _ref8.error;
+    'begin*': doc(pararel('begin*', function (values) {
+      return values.pop();
+    }), "(begin* . expr)\n\n             This macro is parallel version of begin. It evaluate each expression and\n             if it's a promise it will evaluate it in parallel and return value\n             of last expression."),
+    // ------------------------------------------------------------------
+    'begin': doc(new Macro('begin', function (code, _ref9) {
+      var dynamic_scope = _ref9.dynamic_scope,
+          error = _ref9.error;
       var arr = this.get('list->array')(code);
 
       if (dynamic_scope) {
@@ -3634,9 +3673,9 @@ function _typeof(obj) {
       }();
     }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
     // ------------------------------------------------------------------
-    'ignore': new Macro('ignore', function (code, _ref9) {
-      var dynamic_scope = _ref9.dynamic_scope,
-          error = _ref9.error;
+    'ignore': new Macro('ignore', function (code, _ref10) {
+      var dynamic_scope = _ref10.dynamic_scope,
+          error = _ref10.error;
       var args = {
         env: this,
         error: error
@@ -3648,16 +3687,22 @@ function _typeof(obj) {
 
       evaluate(code, args);
     }, "(ignore expression)\n\n            Macro that will evaluate expression and swallow any promises that may\n            be created. It wil run and ignore any value that may be returned by\n            expression. The code should have side effects and/or when it's promise\n            it should resolve to undefined."),
+    'list*': doc(pararel('list*', function (array) {
+      array = array.map(function (value) {
+        return value === undefined ? nil : value;
+      });
+      return quote(this.get('array->list')(array));
+    }), "(list* . expr)\n\n             This macro is parallel version of list. It evaluate each expression and\n             if it's a promise it will evaluate them in parallel and create list from\n             Each value after promises will resolve."),
     // ------------------------------------------------------------------
     timer: doc(new Macro('timer', function (code) {
-      var _ref10 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref10.dynamic_scope,
-          error = _ref10.error;
+      var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref11.dynamic_scope,
+          error = _ref11.error;
 
       typecheck('timer', code.car, 'number');
       var env = this;
 
-      if (dynamic_scope) {
+      if (dynamic_scope === true) {
         dynamic_scope = this;
       }
 
@@ -3715,7 +3760,7 @@ function _typeof(obj) {
     }, "(current-environment)\n\n            Function return current environement."),
     // ------------------------------------------------------------------
     'eval': doc(function (code, env) {
-      var _this = this;
+      var _this2 = this;
 
       env = env || this;
 
@@ -3728,7 +3773,7 @@ function _typeof(obj) {
           env: env,
           dynamic_scope: this,
           error: function error(e) {
-            return _this.get('print')(e.message);
+            return _this2.get('print')(e.message);
           }
         });
       }
@@ -3743,9 +3788,9 @@ function _typeof(obj) {
     }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
-      var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref11.dynamic_scope,
-          error = _ref11.error;
+      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref12.dynamic_scope,
+          error = _ref12.error;
 
       var self = this;
 
@@ -3819,9 +3864,9 @@ function _typeof(obj) {
     'macroexpand': new Macro('macro-expand', macro_expand()),
     'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
     // ------------------------------------------------------------------
-    'define-macro': doc(new Macro(macro, function (macro, _ref12) {
-      var dynamic_scope = _ref12.dynamic_scope,
-          error = _ref12.error;
+    'define-macro': doc(new Macro(macro, function (macro, _ref13) {
+      var dynamic_scope = _ref13.dynamic_scope,
+          error = _ref13.error;
 
       function clear(node) {
         if (node instanceof Pair) {
@@ -3840,8 +3885,8 @@ function _typeof(obj) {
           __doc__ = macro.cdr.car;
         }
 
-        this.env[name] = Macro.defmacro(name, function (code, _ref13) {
-          var macro_expand = _ref13.macro_expand;
+        this.env[name] = Macro.defmacro(name, function (code, _ref14) {
+          var macro_expand = _ref14.macro_expand;
           var env = new Environment({}, this, 'defmacro');
           var name = macro.car.cdr;
           var arg = code;
@@ -3910,9 +3955,9 @@ function _typeof(obj) {
       throw new Error("You can't call `unquote` outside of quasiquote");
     }, "(unquote code)\n\n            Special form to be used in quasiquote macro, parser is processing special\n            characters , and create call to this pseudo function. It can be used\n            to evalute expression inside and return the value, the output is inserted\n            into list structure created by queasiquote."),
     // ------------------------------------------------------------------
-    quasiquote: doc(new Macro('quasiquote', function (arg, _ref14) {
-      var dynamic_scope = _ref14.dynamic_scope,
-          error = _ref14.error;
+    quasiquote: doc(new Macro('quasiquote', function (arg, _ref15) {
+      var dynamic_scope = _ref15.dynamic_scope,
+          error = _ref15.error;
       var self = this;
       var max_unquote = 0;
 
@@ -3940,10 +3985,10 @@ function _typeof(obj) {
           }
 
           if (isPromise(car) || isPromise(cdr)) {
-            return Promise.all([car, cdr]).then(function (_ref15) {
-              var _ref16 = _slicedToArray(_ref15, 2),
-                  car = _ref16[0],
-                  cdr = _ref16[1];
+            return Promise.all([car, cdr]).then(function (_ref16) {
+              var _ref17 = _slicedToArray(_ref16, 2),
+                  car = _ref17[0],
+                  cdr = _ref17[1];
 
               return new Pair(car, cdr);
             });
@@ -4286,7 +4331,7 @@ function _typeof(obj) {
     }, "(object? expression)\n\n            Function check if value is an object."),
     // ------------------------------------------------------------------
     read: doc(function read(arg) {
-      var _this2 = this;
+      var _this3 = this;
 
       if (typeof arg === 'string') {
         arg = parse(tokenize(arg));
@@ -4299,20 +4344,20 @@ function _typeof(obj) {
       }
 
       return this.get('stdin').read().then(function (text) {
-        return read.call(_this2, text);
+        return read.call(_this3, text);
       });
     }, "(read [string])\n\n            Function if used with string will parse the string and return\n            list structure of LIPS code. If called without an argument it\n            will read string from standard input (using browser prompt or\n            user defined way) and call itself with that string (parse is)\n            function can be used together with eval to evaluate code from\n            string"),
     // ------------------------------------------------------------------
     print: doc(function () {
       var _this$get,
-          _this3 = this;
+          _this4 = this;
 
       for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
         args[_key17] = arguments[_key17];
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
-        return _this3.get('string')(arg);
+        return _this4.get('string')(arg);
       })));
     }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
     // ------------------------------------------------------------------
@@ -4381,16 +4426,16 @@ function _typeof(obj) {
         return LNumber(obj.length);
       }
     }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
-    'try': doc(new Macro('try', function (code, _ref17) {
-      var _this4 = this;
+    'try': doc(new Macro('try', function (code, _ref18) {
+      var _this5 = this;
 
-      var dynamic_scope = _ref17.dynamic_scope,
-          _error = _ref17.error;
+      var dynamic_scope = _ref18.dynamic_scope,
+          _error = _ref18.error;
       return new Promise(function (resolve) {
         var args = {
-          env: _this4,
+          env: _this5,
           error: function error(e) {
-            var env = _this4.inherit('try');
+            var env = _this5.inherit('try');
 
             env.set(code.cdr.car.cdr.car.car, e);
             var args = {
@@ -4399,7 +4444,7 @@ function _typeof(obj) {
             };
 
             if (dynamic_scope) {
-              args.dynamic_scope = _this4;
+              args.dynamic_scope = _this5;
             }
 
             unpromise(evaluate(new Pair(new _Symbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
@@ -4409,7 +4454,7 @@ function _typeof(obj) {
         };
 
         if (dynamic_scope) {
-          args.dynamic_scope = _this4;
+          args.dynamic_scope = _this5;
         }
 
         unpromise(evaluate(code.car, args), resolve).catch(args.error);
@@ -4448,7 +4493,7 @@ function _typeof(obj) {
     }, "(for-each fn . args)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
     // ------------------------------------------------------------------
     map: doc(function map(fn) {
-      var _this5 = this;
+      var _this6 = this;
 
       for (var _len19 = arguments.length, lists = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
         lists[_key19 - 1] = arguments[_key19];
@@ -4465,7 +4510,7 @@ function _typeof(obj) {
       return unpromise(fn.call.apply(fn, [this].concat(_toConsumableArray(lists.map(function (l) {
         return l.car;
       })))), function (head) {
-        return unpromise(map.call.apply(map, [_this5, fn].concat(_toConsumableArray(lists.map(function (l) {
+        return unpromise(map.call.apply(map, [_this6, fn].concat(_toConsumableArray(lists.map(function (l) {
           return l.cdr;
         })))), function (rest) {
           return new Pair(head, rest);
@@ -4503,7 +4548,7 @@ function _typeof(obj) {
     }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
     // ------------------------------------------------------------------
     reduce: doc(fold('reduce', function (reduce, fn, init) {
-      var _this6 = this;
+      var _this7 = this;
 
       for (var _len21 = arguments.length, lists = new Array(_len21 > 3 ? _len21 - 3 : 0), _key21 = 3; _key21 < _len21; _key21++) {
         lists[_key21 - 3] = arguments[_key21];
@@ -4516,7 +4561,7 @@ function _typeof(obj) {
       return unpromise(fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
         return l.car;
       })).concat([init])), function (value) {
-        return reduce.call.apply(reduce, [_this6, fn, value].concat(_toConsumableArray(lists.map(function (l) {
+        return reduce.call.apply(reduce, [_this7, fn, value].concat(_toConsumableArray(lists.map(function (l) {
           return l.cdr;
         }))));
       });
@@ -4658,9 +4703,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
     // ------------------------------------------------------------------
-    or: doc(new Macro('or', function (code, _ref18) {
-      var dynamic_scope = _ref18.dynamic_scope,
-          error = _ref18.error;
+    or: doc(new Macro('or', function (code, _ref19) {
+      var dynamic_scope = _ref19.dynamic_scope,
+          error = _ref19.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -4700,9 +4745,9 @@ function _typeof(obj) {
     }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function (code) {
-      var _ref19 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref19.dynamic_scope,
-          error = _ref19.error;
+      var _ref20 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref20.dynamic_scope,
+          error = _ref20.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -5036,10 +5081,10 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function getFunctionArgs(rest, _ref20) {
-    var env = _ref20.env,
-        dynamic_scope = _ref20.dynamic_scope,
-        error = _ref20.error;
+  function getFunctionArgs(rest, _ref21) {
+    var env = _ref21.env,
+        dynamic_scope = _ref21.dynamic_scope,
+        error = _ref21.error;
     var args = [];
     var node = rest;
     markCycles(node);
@@ -5093,11 +5138,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref21 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref21.env,
-        dynamic_scope = _ref21.dynamic_scope,
-        _ref21$error = _ref21.error,
-        error = _ref21$error === void 0 ? function () {} : _ref21$error;
+    var _ref22 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref22.env,
+        dynamic_scope = _ref22.dynamic_scope,
+        _ref22$error = _ref22.error,
+        error = _ref22$error === void 0 ? function () {} : _ref22$error;
 
     try {
       if (dynamic_scope === true) {
@@ -5377,7 +5422,7 @@ function _typeof(obj) {
 
 
   var lips = {
-    version: '0.11.2',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

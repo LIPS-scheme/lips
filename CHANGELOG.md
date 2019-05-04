@@ -1,3 +1,7 @@
+## 0.12.0
+### Features
+* new macros `list*` and `begin*` that run their arguments in parallel if they async
+
 ## 0.11.2
 ### Breaking
 * remove `nop` (you can use `(begin undefined)`)
