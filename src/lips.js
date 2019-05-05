@@ -3629,8 +3629,11 @@
     // ----------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
         const arg_type = type(arg);
-        if ((expected instanceof Array && !expected.includes(arg_type)) ||
-            arg_type !== expected) {
+        var match = false;
+        if (expected instanceof Array && expected.includes(arg_type)) {
+            match = true;
+        }
+        if (!match && arg_type !== expected) {
             throw new Error(typeErrorMessage(fn, arg_type, expected, position));
         }
     }

@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 05 May 2019 12:16:32 +0000
+ * build: Sun, 05 May 2019 12:26:00 +0000
  */
 (function () {
 'use strict';
@@ -4981,8 +4981,13 @@ function _typeof(obj) {
   function typecheck(fn, arg, expected) {
     var position = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
     var arg_type = type(arg);
+    var match = false;
 
-    if (expected instanceof Array && !expected.includes(arg_type) || arg_type !== expected) {
+    if (expected instanceof Array && expected.includes(arg_type)) {
+      match = true;
+    }
+
+    if (!match && arg_type !== expected) {
       throw new Error(typeErrorMessage(fn, arg_type, expected, position));
     }
   } // ----------------------------------------------------------------------
