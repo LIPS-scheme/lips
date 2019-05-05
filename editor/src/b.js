@@ -8,3 +8,4 @@ require('expose-loader?Prism!prismjs');
 require('prismjs/components/prism-scheme.min');
 require('prismjs/themes/prism-coy.css');
 require('jquery.terminal/js/prism');
+require('expose-loader?JSZip!jszip');
