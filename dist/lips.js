@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 05 May 2019 13:18:36 +0000
+ * build: Sun, 05 May 2019 14:06:20 +0000
  */
 (function () {
 'use strict';
@@ -4522,13 +4522,13 @@ function _typeof(obj) {
 
       var fn = matcher('find', arg);
       return unpromise(fn(list.car), function (value) {
-        if (value) {
+        if (value && value !== nil) {
           return list.car;
         }
 
         return find(arg, list.cdr);
       });
-    }, "(Find fn list)\n\n            Higher order Function find first value for which function\n            return true."),
+    }, "(find fn list)\n            (find regex list)\n\n            Higher order Function find first value for which function return true.\n            If called with regex it will create matcher function."),
     // ------------------------------------------------------------------
     'for-each': doc(function (fn) {
       typecheck('for-each', fn, 'function');
@@ -4677,7 +4677,7 @@ function _typeof(obj) {
       var fn = matcher('filter', arg);
       return function loop(i) {
         function next(value) {
-          if (value) {
+          if (value && value !== nil) {
             result.push(item);
           }
 
@@ -4691,7 +4691,7 @@ function _typeof(obj) {
         var item = array[i];
         return unpromise(fn(item, i), next);
       }(0);
-    }, "(filter fn list)\n\n            Higher order function that call `fn` for each element of the list\n            and return list for only those elements for which funtion return\n            true value."),
+    }, "(filter fn list)\n            (filter regex list)\n\n            Higher order function that call `fn` for each element of the list\n            and return list for only those elements for which funtion return\n            true value. If called with regex it will create matcher function."),
     // ------------------------------------------------------------------
     range: doc(function (n) {
       typecheck('range', n, 'number');

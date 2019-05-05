@@ -3136,15 +3136,16 @@
             }
             var fn = matcher('find', arg);
             return unpromise(fn(list.car), function(value) {
-                if (value) {
+                if (value && value !== nil) {
                     return list.car;
                 }
                 return find(arg, list.cdr);
             });
-        }, `(Find fn list)
+        }, `(find fn list)
+            (find regex list)
 
-            Higher order Function find first value for which function
-            return true.`),
+            Higher order Function find first value for which function return true.
+            If called with regex it will create matcher function.`),
         // ------------------------------------------------------------------
         'for-each': doc(function(fn, ...lists) {
             typecheck('for-each', fn, 'function');
@@ -3271,7 +3272,7 @@
             var fn = matcher('filter', arg);
             return (function loop(i) {
                 function next(value) {
-                    if (value) {
+                    if (value && value !== nil) {
                         result.push(item);
                     }
                     return loop(++i);
@@ -3283,10 +3284,11 @@
                 return unpromise(fn(item, i), next);
             })(0);
         }, `(filter fn list)
+            (filter regex list)
 
             Higher order function that call \`fn\` for each element of the list
             and return list for only those elements for which funtion return
-            true value.`),
+            true value. If called with regex it will create matcher function.`),
         // ------------------------------------------------------------------
         range: doc(function(n) {
             typecheck('range', n, 'number');
