@@ -2144,6 +2144,7 @@
             if (key instanceof Pair && !(list instanceof Pair)) {
                 throw new Error('First argument to assoc ned to be a key');
             }
+            typecheck('assoc', list, 'pair');
             var node = list;
             while (true) {
                 if (!(node instanceof Pair) || this.get('empty?')(node)) {
@@ -2402,6 +2403,7 @@
             Function return current environement.`),
         // ------------------------------------------------------------------
         'eval': doc(function(code, env) {
+            typecheck('eval', code, ['symbol', 'pair', 'array']);
             env = env || this;
             if (code instanceof Symbol) {
                 return env.get(code);
@@ -2711,18 +2713,21 @@
             the list with its value. Best used with macros but it can be used outside`),
         // ------------------------------------------------------------------
         clone: doc(function(list) {
+            typecheck('clone', list, 'pair');
             return list.clone();
         }, `(clone list)
 
             Function return clone of the list.`),
         // ------------------------------------------------------------------
         append: doc(function(list, item) {
+            typecheck('append', list, 'pair');
             return this.get('append!')(list.clone(), item);
         }, `(append list item)
 
             Function will create new list with value appended to the end. It return
             New list.`),
         'append!': doc(function(list, item) {
+            typecheck('append!', list, 'pair');
             if (isNull(item) || isEmptyList(item)) {
                 return list;
             }
@@ -2733,6 +2738,7 @@
              original list.`),
         // ------------------------------------------------------------------
         reverse: doc(function(arg) {
+            typecheck('reverse', arg, ['array', 'pair']);
             if (arg instanceof Pair) {
                 var arr = this.get('list->array')(arg).reverse();
                 return this.get('array->list')(arr);
@@ -2747,6 +2753,8 @@
             or array it will throw exception.`),
         // ------------------------------------------------------------------
         nth: doc(function(index, obj) {
+            typecheck('nth', index, 'number');
+            typecheck('nth', obj, ['array', 'pair']);
             if (obj instanceof Pair) {
                 var node = obj;
                 var count = 0;
@@ -2768,31 +2776,39 @@
             Function return nth element of the list or array. If used with different
             value it will throw exception`),
         // ------------------------------------------------------------------
-        list: doc(function() {
-            return Pair.fromArray([].slice.call(arguments));
+        list: doc(function(...args) {
+            return Pair.fromArray(args);
         }, `(list . args)
 
             Function create new list out of its arguments.`),
         // ------------------------------------------------------------------
         substring: doc(function(string, start, end) {
+            typecheck('substring', string, 'string');
+            typecheck('substring', start, 'number');
+            typecheck('substring', end, ['number', 'undefined']);
             return string.substring(start.valueOf(), end && end.valueOf());
         }, `(substring string start end)
 
             Function return part of the string starting at start ending with end.`),
         // ------------------------------------------------------------------
-        concat: doc(function() {
-            return [].join.call(arguments, '');
+        concat: doc(function(...args) {
+            args.forEach((arg, i) => typecheck('concat', arg, 'string', i + 1));
+            return args.join('');
         }, `(concat . strings)
 
             Function create new string by joining its arguments`),
         // ------------------------------------------------------------------
         join: doc(function(separator, list) {
+            typecheck('join', separator, 'string');
+            typecheck('join', list, 'pair');
             return this.get('list->array')(list).join(separator);
         }, `(join separator list)
 
             Function return string by joining elements of the list`),
         // ------------------------------------------------------------------
         split: doc(function(separator, string) {
+            typecheck('split', separator, ['regex', 'string']);
+            typecheck('split', string, 'string');
             return this.get('array->list')(string.split(separator));
         }, `(split separator string)
 
@@ -2800,12 +2816,18 @@
             be a string or regular expression.`),
         // ------------------------------------------------------------------
         replace: doc(function(pattern, replacement, string) {
+            typecheck('replace', pattern, ['regex', 'string']);
+            typecheck('replace', replacement, ['string', 'function']);
+            typecheck('replace', string, 'string');
             return string.replace(pattern, replacement);
         }, `(replace pattern replacement string)
 
-            Function change patter to replacement inside string.`),
+            Function change pattern to replacement inside string. Pattern can be string
+            or regex and replacement can be function or string.`),
         // ------------------------------------------------------------------
         match: doc(function(pattern, string) {
+            typecheck('match', pattern, ['regex', 'string']);
+            typecheck('match', string, 'string');
             var m = string.match(pattern);
             return m ? this.get('array->list')(m) : nil;
         }, `(match pattern string)
@@ -2813,6 +2835,8 @@
             function return match object from JavaScript as list.`),
         // ------------------------------------------------------------------
         search: doc(function(pattern, string) {
+            typecheck('search', pattern, ['regex', 'string']);
+            typecheck('search', string, 'string');
             return string.search(pattern);
         }, `(search pattern string)
 
@@ -3013,18 +3037,21 @@
             Display error message.`),
         // ------------------------------------------------------------------
         flatten: doc(function(list) {
+            typecheck('flatten', list, 'pair');
             return list.flatten();
         }, `(flatten list)
 
             Return shallow list from tree structure (pairs).`),
         // ------------------------------------------------------------------
         'array->list': doc(function(array) {
+            typecheck('array->list', array, 'array');
             return Pair.fromArray(array);
         }, `(array->list array)
 
             Function convert JavaScript array to LIPS list.`),
         // ------------------------------------------------------------------
         'list->array': doc(function(list) {
+            typecheck('list->array', list, 'pair');
             if (list instanceof Pair && list.isEmptyList()) {
                 return [];
             }
@@ -3046,11 +3073,11 @@
 
             Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
-        apply: doc(function(fn, args) {
+        apply: doc(function(fn, list) {
             typecheck('call', fn, 'function', 1);
-            typecheck('call', args, 'pair', 2);
-            return fn(...this.get('list->array')(args));
-        }, `(apply fn args)
+            typecheck('call', list, 'pair', 2);
+            return fn(...this.get('list->array')(list));
+        }, `(apply fn list)
 
             Function that call function with list of arguments.`),
         // ------------------------------------------------------------------
@@ -3098,6 +3125,8 @@
         }), `(try expr (catch (e) code)`),
         // ------------------------------------------------------------------
         find: doc(function find(arg, list) {
+            typecheck('find', arg, ['regex', 'function']);
+            typecheck('find', list, 'pair');
             if (isNull(list)) {
                 return nil;
             }
@@ -3113,16 +3142,17 @@
             Higher order Function find first value for which function
             return true.`),
         // ------------------------------------------------------------------
-        'for-each': doc(function(fn, ...args) {
+        'for-each': doc(function(fn, ...lists) {
             typecheck('for-each', fn, 'function');
+            lists.forEach((arg, i) => typecheck('for-each', arg, 'pair', i + 1));
             // we need to use call(this because babel transpile this code into:
-            // var ret = map.apply(void 0, [fn].concat(args));
+            // var ret = map.apply(void 0, [fn].concat(lists));
             // it don't work with weakBind
-            var ret = this.get('map')(fn, ...args);
+            var ret = this.get('map')(fn, ...lists);
             if (isPromise(ret)) {
                 return ret.then(() => {});
             }
-        }, `(for-each fn . args)
+        }, `(for-each fn . lists)
 
             Higher order function that call function \`fn\` by for each
             value of the argument. If you provide more then one list as argument
@@ -3131,6 +3161,7 @@
         // ------------------------------------------------------------------
         map: doc(function map(fn, ...lists) {
             typecheck('map', fn, 'function');
+            lists.forEach((arg, i) => typecheck('map', arg, 'pair', i + 1));
             if (lists.some((x) => isEmptyList(x))) {
                 return nil;
             }
@@ -3149,6 +3180,8 @@
             returned by the call to map.`),
         // ------------------------------------------------------------------
         some: doc(function some(fn, list) {
+            typecheck('some', fn, 'function');
+            typecheck('some', list, 'pair');
             if (isNull(list)) {
                 return false;
             } else {
@@ -3163,6 +3196,8 @@
             return true. If it don't find the value it will return false`),
         // ------------------------------------------------------------------
         fold: doc(fold('fold', function(fold, fn, init, ...lists) {
+            typecheck('fold', fn, 'function');
+            lists.forEach((arg, i) => typecheck('fold', arg, 'pair', i + 1));
             if (lists.some(isEmptyList)) {
                 return init;
             }
@@ -3178,6 +3213,8 @@
              for: (fold fn '() alist blist`),
         // ------------------------------------------------------------------
         reduce: doc(fold('reduce', function(reduce, fn, init, ...lists) {
+            typecheck('reduce', fn, 'function');
+            lists.forEach((arg, i) => typecheck('reduce', arg, 'pair', i + 1));
             if (lists.some(isEmptyList)) {
                 return init;
             }
@@ -3194,6 +3231,8 @@
              for (reduce fn init alist blist`),
         // ------------------------------------------------------------------
         filter: doc(function(arg, list) {
+            typecheck('filter', arg, ['regex', 'function']);
+            typecheck('filter', list, 'pair');
             var array = this.get('list->array')(list);
             var result = [];
             var fn = matcher('filter', arg);
@@ -3217,6 +3256,7 @@
             true value.`),
         // ------------------------------------------------------------------
         range: doc(function(n) {
+            typecheck('range', n, 'number');
             if (n instanceof LNumber) {
                 n = n.valueOf();
             }
@@ -3592,12 +3632,17 @@
         if (position !== null) {
             postfix += ` argument ${position}`;
         }
+        if (expected instanceof Array) {
+            const last = expected[expected.length - 1];
+            expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+        }
         return `Expecting ${expected} got ${got}${postfix}`;
     }
     // ----------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
         const arg_type = type(arg);
-        if (arg_type !== expected) {
+        if ((expected instanceof Array && !expected.includes(arg_type)) ||
+            arg_type !== expected) {
             throw new Error(typeErrorMessage(fn, arg_type, expected, position));
         }
     }
