@@ -1710,6 +1710,10 @@
         return LNumber(value);
     };
     // ----------------------------------------------------------------------
+    LNumber.prototype.isFloat = function() {
+        return !!(LNumber.isFloat(this.value) || this.float);
+    };
+    // ----------------------------------------------------------------------
     LNumber.prototype.op = function(op, n) {
         var ops = {
             '*': function(a, b) {
@@ -1743,9 +1747,8 @@
                 return a << b;
             }
         };
-        if (LNumber.isFloat(n) || (n instanceof LNumber &&
-                                   (LNumber.isFloat(n.value) || n.float)) ||
-            (LNumber.isFloat(this.value) || this.float)) {
+        if (LNumber.isFloat(n) || (n instanceof LNumber && n.isFloat()) ||
+            this.isFloat()) {
             var value = n instanceof LNumber ? n.valueOf() : n;
             return LNumber(ops[op](this.valueOf(), value), true);
         }
@@ -2922,11 +2925,24 @@
         }, `(instanceof type obj)
 
             Function check of object is instance of object.`),
+        // ------------------------------------------------------------------
         'function?': doc(function(obj) {
             return typeof obj === 'function';
         }, `(function? expression)
 
             Function check if value is a function.`),
+        // ------------------------------------------------------------------
+        'real?': doc(function(value) {
+            if (type(value) !== 'number') {
+                return false;
+            }
+            if (value instanceof LNumber) {
+                return value.isFloat();
+            }
+            return LNumber.isFloat(value);
+        }, `(real? number)
+
+            Function check if value is real number.`),
         // ------------------------------------------------------------------
         'number?': doc(
             LNumber.isNumber,
@@ -3039,7 +3055,7 @@
             Function convert JavaScript array to LIPS list.`),
         // ------------------------------------------------------------------
         'list->array': doc(function(list) {
-            typecheck('list->array', list, 'pair');
+            typecheck('list->array', list, ['pair', 'nil']);
             if (list instanceof Pair && list.isEmptyList()) {
                 return [];
             }
@@ -3132,7 +3148,9 @@
         // ------------------------------------------------------------------
         'for-each': doc(function(fn, ...lists) {
             typecheck('for-each', fn, 'function');
-            lists.forEach((arg, i) => typecheck('for-each', arg, 'pair', i + 1));
+            lists.forEach((arg, i) => {
+                typecheck('for-each', arg, ['pair', 'nil'], i + 1);
+            });
             // we need to use call(this because babel transpile this code into:
             // var ret = map.apply(void 0, [fn].concat(lists));
             // it don't work with weakBind
@@ -3149,7 +3167,9 @@
         // ------------------------------------------------------------------
         map: doc(function map(fn, ...lists) {
             typecheck('map', fn, 'function');
-            lists.forEach((arg, i) => typecheck('map', arg, 'pair', i + 1));
+            lists.forEach((arg, i) => {
+                typecheck('map', arg, ['pair', 'nil'], i + 1);
+            });
             if (lists.some((x) => isEmptyList(x))) {
                 return nil;
             }
@@ -3169,7 +3189,7 @@
         // ------------------------------------------------------------------
         some: doc(function some(fn, list) {
             typecheck('some', fn, 'function');
-            typecheck('some', list, 'pair');
+            typecheck('some', list, ['pair', 'nil']);
             if (isNull(list)) {
                 return false;
             } else {
@@ -3185,7 +3205,9 @@
         // ------------------------------------------------------------------
         fold: doc(fold('fold', function(fold, fn, init, ...lists) {
             typecheck('fold', fn, 'function');
-            lists.forEach((arg, i) => typecheck('fold', arg, 'pair', i + 1));
+            lists.forEach((arg, i) => {
+                typecheck('fold', arg, ['pair', 'nil'], i + 1);
+            });
             if (lists.some(isEmptyList)) {
                 return init;
             }
@@ -3200,9 +3222,32 @@
              e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))
              for: (fold fn '() alist blist`),
         // ------------------------------------------------------------------
+        pluck: doc(function(...keys) {
+            return function(obj) {
+                keys = keys.map(x => x instanceof Symbol ? x.name : x);
+                if (keys.length === 0) {
+                    return nil;
+                } else if (keys.length === 1) {
+                    const [key] = keys;
+                    return obj[key];
+                }
+                var result = {};
+                keys.forEach((key) => {
+                    result[key] = obj[key];
+                });
+                return result;
+            };
+        }, `(pluck . string)
+
+            If called with single string it will return function that will return
+            key from object. If called with more then one argument function will
+            return new object by taking all properties from given object.`),
+        // ------------------------------------------------------------------
         reduce: doc(fold('reduce', function(reduce, fn, init, ...lists) {
             typecheck('reduce', fn, 'function');
-            lists.forEach((arg, i) => typecheck('reduce', arg, 'pair', i + 1));
+            lists.forEach((arg, i) => {
+                typecheck('reduce', arg, ['pair', 'nil'], i + 1);
+            });
             if (lists.some(isEmptyList)) {
                 return init;
             }
@@ -3220,7 +3265,7 @@
         // ------------------------------------------------------------------
         filter: doc(function(arg, list) {
             typecheck('filter', arg, ['regex', 'function']);
-            typecheck('filter', list, 'pair');
+            typecheck('filter', list, ['pair', 'nil']);
             var array = this.get('list->array')(list);
             var result = [];
             var fn = matcher('filter', arg);
@@ -3545,10 +3590,10 @@
     // ----------------------------------------------------------------------
     ['floor', 'round', 'ceil'].forEach(fn => {
         global_env.set(fn, doc(function(value) {
+            typecheck(fn, value, 'number');
             if (value instanceof LNumber) {
                 return value[fn]();
             }
-            throw new Error(`${typeof value} ${value.toString()} is not a number`);
         }, `(${fn} number)
 
             Function calculate ${fn} of a number.`));

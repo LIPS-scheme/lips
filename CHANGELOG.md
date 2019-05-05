@@ -2,6 +2,7 @@
 ### Features
 * new macro `begin*` that run their arguments in parallel if they async
 * add typecheck to rest of the functions
+* new `real?` and `pluck` functions
 
 ## 0.11.2
 ### Breaking

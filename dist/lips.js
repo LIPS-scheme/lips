@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 05 May 2019 12:26:00 +0000
+ * build: Sun, 05 May 2019 13:18:36 +0000
  */
 (function () {
 'use strict';
@@ -3023,6 +3023,11 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
+  LNumber.prototype.isFloat = function () {
+    return !!(LNumber.isFloat(this.value) || this.float);
+  }; // ----------------------------------------------------------------------
+
+
   LNumber.prototype.op = function (op, n) {
     var ops = {
       '*': function _(a, b) {
@@ -3057,7 +3062,7 @@ function _typeof(obj) {
       }
     };
 
-    if (LNumber.isFloat(n) || n instanceof LNumber && (LNumber.isFloat(n.value) || n.float) || LNumber.isFloat(this.value) || this.float) {
+    if (LNumber.isFloat(n) || n instanceof LNumber && n.isFloat() || this.isFloat()) {
       var value = n instanceof LNumber ? n.valueOf() : n;
       return LNumber(ops[op](this.valueOf(), value), true);
     }
@@ -4321,9 +4326,22 @@ function _typeof(obj) {
     'instanceof': doc(function (type, obj) {
       return obj instanceof type;
     }, "(instanceof type obj)\n\n            Function check of object is instance of object."),
+    // ------------------------------------------------------------------
     'function?': doc(function (obj) {
       return typeof obj === 'function';
     }, "(function? expression)\n\n            Function check if value is a function."),
+    // ------------------------------------------------------------------
+    'real?': doc(function (value) {
+      if (type(value) !== 'number') {
+        return false;
+      }
+
+      if (value instanceof LNumber) {
+        return value.isFloat();
+      }
+
+      return LNumber.isFloat(value);
+    }, "(real? number)\n\n            Function check if value is real number."),
     // ------------------------------------------------------------------
     'number?': doc(LNumber.isNumber, "(number? expression)\n\n             Function check if value is a number"),
     // ------------------------------------------------------------------
@@ -4415,7 +4433,7 @@ function _typeof(obj) {
     }, "(array->list array)\n\n            Function convert JavaScript array to LIPS list."),
     // ------------------------------------------------------------------
     'list->array': doc(function (list) {
-      typecheck('list->array', list, 'pair');
+      typecheck('list->array', list, ['pair', 'nil']);
 
       if (list instanceof Pair && list.isEmptyList()) {
         return [];
@@ -4520,7 +4538,7 @@ function _typeof(obj) {
       }
 
       lists.forEach(function (arg, i) {
-        return typecheck('for-each', arg, 'pair', i + 1);
+        typecheck('for-each', arg, ['pair', 'nil'], i + 1);
       }); // we need to use call(this because babel transpile this code into:
       // var ret = map.apply(void 0, [fn].concat(lists));
       // it don't work with weakBind
@@ -4541,7 +4559,7 @@ function _typeof(obj) {
 
       typecheck('map', fn, 'function');
       lists.forEach(function (arg, i) {
-        return typecheck('map', arg, 'pair', i + 1);
+        typecheck('map', arg, ['pair', 'nil'], i + 1);
       });
 
       if (lists.some(function (x) {
@@ -4563,7 +4581,7 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     some: doc(function some(fn, list) {
       typecheck('some', fn, 'function');
-      typecheck('some', list, 'pair');
+      typecheck('some', list, ['pair', 'nil']);
 
       if (isNull(list)) {
         return false;
@@ -4581,7 +4599,7 @@ function _typeof(obj) {
 
       typecheck('fold', fn, 'function');
       lists.forEach(function (arg, i) {
-        return typecheck('fold', arg, 'pair', i + 1);
+        typecheck('fold', arg, ['pair', 'nil'], i + 1);
       });
 
       if (lists.some(isEmptyList)) {
@@ -4598,16 +4616,44 @@ function _typeof(obj) {
       });
     }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
     // ------------------------------------------------------------------
+    pluck: doc(function () {
+      for (var _len23 = arguments.length, keys = new Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+        keys[_key23] = arguments[_key23];
+      }
+
+      return function (obj) {
+        keys = keys.map(function (x) {
+          return x instanceof _Symbol ? x.name : x;
+        });
+
+        if (keys.length === 0) {
+          return nil;
+        } else if (keys.length === 1) {
+          var _keys2 = keys,
+              _keys3 = _slicedToArray(_keys2, 1),
+              key = _keys3[0];
+
+          return obj[key];
+        }
+
+        var result = {};
+        keys.forEach(function (key) {
+          result[key] = obj[key];
+        });
+        return result;
+      };
+    }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
+    // ------------------------------------------------------------------
     reduce: doc(fold('reduce', function (reduce, fn, init) {
       var _this6 = this;
 
-      for (var _len23 = arguments.length, lists = new Array(_len23 > 3 ? _len23 - 3 : 0), _key23 = 3; _key23 < _len23; _key23++) {
-        lists[_key23 - 3] = arguments[_key23];
+      for (var _len24 = arguments.length, lists = new Array(_len24 > 3 ? _len24 - 3 : 0), _key24 = 3; _key24 < _len24; _key24++) {
+        lists[_key24 - 3] = arguments[_key24];
       }
 
       typecheck('reduce', fn, 'function');
       lists.forEach(function (arg, i) {
-        return typecheck('reduce', arg, 'pair', i + 1);
+        typecheck('reduce', arg, ['pair', 'nil'], i + 1);
       });
 
       if (lists.some(isEmptyList)) {
@@ -4625,7 +4671,7 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     filter: doc(function (arg, list) {
       typecheck('filter', arg, ['regex', 'function']);
-      typecheck('filter', list, 'pair');
+      typecheck('filter', list, ['pair', 'nil']);
       var array = this.get('list->array')(list);
       var result = [];
       var fn = matcher('filter', arg);
@@ -4681,8 +4727,8 @@ function _typeof(obj) {
     }), "(+ . numbers)\n\n             Sum all numbers passed as arguments. If single value is passed it will\n             return that value."),
     // ------------------------------------------------------------------
     '-': doc(function () {
-      for (var _len24 = arguments.length, args = new Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
-        args[_key24] = arguments[_key24];
+      for (var _len25 = arguments.length, args = new Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
+        args[_key25] = arguments[_key25];
       }
 
       if (args.length === 1) {
@@ -4874,8 +4920,8 @@ function _typeof(obj) {
       return !value;
     }, "(not object)\n\n            Function return negation of the argument."),
     '->': doc(function (obj, name) {
-      for (var _len25 = arguments.length, args = new Array(_len25 > 2 ? _len25 - 2 : 0), _key25 = 2; _key25 < _len25; _key25++) {
-        args[_key25 - 2] = arguments[_key25];
+      for (var _len26 = arguments.length, args = new Array(_len26 > 2 ? _len26 - 2 : 0), _key26 = 2; _key26 < _len26; _key26++) {
+        args[_key26 - 2] = arguments[_key26];
       }
 
       return obj[name].apply(obj, args);
@@ -4884,11 +4930,11 @@ function _typeof(obj) {
 
   ['floor', 'round', 'ceil'].forEach(function (fn) {
     global_env.set(fn, doc(function (value) {
+      typecheck(fn, value, 'number');
+
       if (value instanceof LNumber) {
         return value[fn]();
       }
-
-      throw new Error("".concat(_typeof(value), " ").concat(value.toString(), " is not a number"));
     }, "(".concat(fn, " number)\n\n            Function calculate ").concat(fn, " of a number.")));
   }); // ----------------------------------------------------------------------
   // source: https://stackoverflow.com/a/4331218/387194
