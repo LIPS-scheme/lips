@@ -1496,10 +1496,6 @@
                 node = node.cdr;
             }
             var havePromises = results.filter(isPromise).length;
-            const value = array => {
-                array = array.map(value => value === undefined ? nil : value);
-                return quote(this.get('array->list')(array));
-            };
             if (havePromises) {
                 return Promise.all(results).then(fn.bind(this));
             } else {
@@ -2310,14 +2306,6 @@
             be created. It wil run and ignore any value that may be returned by
             expression. The code should have side effects and/or when it's promise
             it should resolve to undefined.`),
-        'list*': doc(pararel('list*', function(array) {
-            array = array.map(value => value === undefined ? nil : value);
-            return quote(this.get('array->list')(array));
-        }), `(list* . expr)
-
-             This macro is parallel version of list. It evaluate each expression and
-             if it's a promise it will evaluate them in parallel and create list from
-             Each value after promises will resolve.`),
         // ------------------------------------------------------------------
         timer: doc(new Macro('timer', function(code, { dynamic_scope, error } = {}) {
             typecheck('timer', code.car, 'number');

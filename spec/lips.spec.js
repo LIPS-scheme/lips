@@ -533,6 +533,24 @@ describe('evaluate', function() {
             });
         });
     });
+    describe('parallel invocation', function() {
+        it('should run async code sequentially', function() {
+            var start = Date.now();
+            var output = LNumber(30);
+            function test(code, range) {
+                return lips.exec(code).then(result => {
+                    var time = Date.now() - start;
+                    expect(result[0]).toEqual(output);
+                    expect(time).not.toBeLessThan(range[0]);
+                    expect(time).not.toBeGreaterThan(range[1]);
+                });
+            }
+            return Promise.all([
+                test('(begin (timer 300 10) (timer 300 20) (timer 300 30))', [800, 1000]),
+                test('(begin* (timer 300 10) (timer 300 20) (timer 300 30))', [300, 350])
+            ]);
+        });
+    });
 });
 describe('environment', function() {
     const env = global_environment;

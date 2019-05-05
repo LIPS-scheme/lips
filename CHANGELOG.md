@@ -1,6 +1,6 @@
 ## 0.12.0
 ### Features
-* new macros `list*` and `begin*` that run their arguments in parallel if they async
+* new macro `begin*` that run their arguments in parallel if they async
 * add typecheck to rest of the functions
 
 ## 0.11.2
