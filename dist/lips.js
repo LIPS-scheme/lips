@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 05 May 2019 14:06:20 +0000
+ * build: Sun, 05 May 2019 15:58:55 +0000
  */
 (function () {
 'use strict';
@@ -2595,8 +2595,10 @@ function _typeof(obj) {
   // ----------------------------------------------------------------------
 
 
+  var exludedNames = ['name', 'length', 'caller', 'callee', 'arguments', 'prototype'];
+
   function filterFnNames(name) {
-    return !['name', 'length', 'caller', 'callee', 'arguments'].includes(name);
+    return !exludedNames.includes(name);
   } // ----------------------------------------------------------------------
 
 

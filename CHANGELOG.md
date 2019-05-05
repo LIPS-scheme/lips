@@ -5,6 +5,7 @@
 * new `real?` and `pluck` functions
 ### Bug fixes
 * fix `find` and `filter` to check if function from argument return nil
+* fix accessing FileReader object (try to copy read only prototype)
 
 ## 0.11.2
 ### Breaking

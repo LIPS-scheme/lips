@@ -1371,8 +1371,9 @@
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
     // ----------------------------------------------------------------------
+    var exludedNames = ['name', 'length', 'caller', 'callee', 'arguments', 'prototype'];
     function filterFnNames(name) {
-        return !['name', 'length', 'caller', 'callee', 'arguments'].includes(name);
+        return !exludedNames.includes(name);
     }
     // ----------------------------------------------------------------------
     function bindWithProps(fn, context) {
