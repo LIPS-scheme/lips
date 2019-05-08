@@ -2530,7 +2530,7 @@
                         // this eval will return lips code
                         var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
                         if (macro_expand) {
-                            return rest;
+                            return rest.car;
                         }
                         var pair = rest.reduce(function(result, node) {
                             return evaluate(node, { env, dynamic_scope, error });

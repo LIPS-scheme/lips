@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 08 May 2019 16:38:16 +0000
+ * build: Wed, 08 May 2019 16:45:14 +0000
  */
 (function () {
 'use strict';
@@ -3937,7 +3937,7 @@ function _typeof(obj) {
             var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
 
             if (macro_expand) {
-              return rest;
+              return rest.car;
             }
 
             var pair = rest.reduce(function (result, node) {
