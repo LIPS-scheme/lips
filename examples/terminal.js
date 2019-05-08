@@ -31,14 +31,19 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             }
         },
         // ---------------------------------------------------------------------
-        help: doc(function(fn) {
-            term.echo(help(fn), { formatters: false });
-        }, lips.env.env.help.__doc__),
+        help: doc(new lips.Macro('help', function(code, { error }) {
+            const { evaluate, Pair, Symbol, nil } = lips;
+            var new_code = new Pair(new Symbol('__help'), code);
+            var doc = evaluate(new_code, { env: this, error });
+            term.echo(doc, { formatters: false });
+        }), lips.env.env.help.__doc__),
         // ---------------------------------------------------------------------
         error: doc(function(message) {
             term.error(message);
         }, lips.env.env.error.__doc__)
     });
+    // hack so (let ((x help)) (help x))
+    env.env.__help = lips.env.env.help;
     // -------------------------------------------------------------------------
     var term = jQuery(selector).terminal(function(code, term) {
         lips.exec(code, env, dynamic).then(function(ret) {
@@ -52,6 +57,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             });
         }).catch(function(e) {
             term.error(e.message || e);
+            if (e.code) {
+                term.error(e.code.map((line, i) => `[${i+1}]: ${line}`).join('\n'));
+            }
         });
     }, {
         name,

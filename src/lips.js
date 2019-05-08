@@ -1247,7 +1247,9 @@
         }
         typecheck('Macro', name, 'string', 1);
         typecheck('Macro', fn, 'function', 2);
-        this.__doc__ = doc;
+        if (doc) {
+            this.__doc__ = trimLines(doc);
+        }
         this.name = name;
         this.fn = fn;
     }
@@ -2038,11 +2040,29 @@
                 });
             }
         },
-        help: doc(function(obj) {
-            return obj.__doc__;
-        }, `(help object)
+        // ------------------------------------------------------------------
+        help: doc(new Macro('help', function(code, { dynamic_scope, error }) {
+            var symbol;
+            if (code.car instanceof Symbol) {
+                symbol = code.car;
+            } else if (code.car instanceof Pair && code.car.car instanceof Symbol) {
+                symbol = code.car.car;
+            } else {
+                var env = this;
+                if (dynamic_scope === true) {
+                    dynamic_scope = this;
+                }
+                var ret = evaluate(code.car, { env, error, dynamic_scope });
+                if (ret && ret.__doc__) {
+                    return ret.__doc__;
+                }
+            }
+            return this.get(symbol).__doc__;
+        }), `(help object)
 
-            Function returns documentation for function or macro.`),
+             Macro returns documentation for function or macros including parser
+             macros but only if called with parser macro symbol like (help \`).
+             For normal functions and macros you can save the function in variable.`),
         // ------------------------------------------------------------------
         cons: doc(function(car, cdr) {
             if (isEmptyList(cdr)) {
@@ -2914,6 +2934,30 @@
         }, `(new obj . args)
 
             Function create new JavaScript instance of an object.`),
+        // ------------------------------------------------------------------
+        'unset!': doc(function(symbol) {
+            typecheck('unset!', symbol, 'symbol');
+            delete this.env[symbol.name];
+        }, `(unset! name)
+
+            Function delete specified name from environment.`),
+        // ------------------------------------------------------------------
+        'remove-special!': doc(function(symbol) {
+            typecheck('remove-special!', symbol, 'symbol');
+            delete specials[symbol.name];
+        }, `(remove-special! symbol)
+
+            Function remove special symbol from parser. Added by \`add-special!\``),
+        // ------------------------------------------------------------------
+        'add-special!': doc(function(symbol) {
+            typecheck('remove-special!', symbol, 'symbol');
+            lips.specials[symbol.name] = symbol;
+        }, `(add-special! symbol)
+
+            Add special symbol to the list of transforming operators by the parser.
+            e.g.: \`(add-special! '#)\` will allow to use \`#(1 2 3)\` and it will be
+            transformed into (# (1 2 3)) so you can write # macro that will process
+            the list. It's main purpose to to allow to use \`define-symbol-macro\``),
         // ------------------------------------------------------------------
         'get': get,
         '.': get,

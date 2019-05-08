@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.12.0
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 08 May 2019 18:44:04 +0000
+ * build: Wed, 08 May 2019 21:34:30 +0000
  */
 (function () {
 'use strict';
@@ -2325,7 +2325,11 @@ function _typeof(obj) {
 
     typecheck('Macro', name, 'string', 1);
     typecheck('Macro', fn, 'function', 2);
-    this.__doc__ = doc;
+
+    if (doc) {
+      this.__doc__ = trimLines(doc);
+    }
+
     this.name = name;
     this.fn = fn;
   } // ----------------------------------------------------------------------
@@ -3416,9 +3420,36 @@ function _typeof(obj) {
         });
       }
     },
-    help: doc(function (obj) {
-      return obj.__doc__;
-    }, "(help object)\n\n            Function returns documentation for function or macro."),
+    // ------------------------------------------------------------------
+    help: doc(new Macro('help', function (code, _ref6) {
+      var dynamic_scope = _ref6.dynamic_scope,
+          error = _ref6.error;
+      var symbol;
+
+      if (code.car instanceof _Symbol) {
+        symbol = code.car;
+      } else if (code.car instanceof Pair && code.car.car instanceof _Symbol) {
+        symbol = code.car.car;
+      } else {
+        var env = this;
+
+        if (dynamic_scope === true) {
+          dynamic_scope = this;
+        }
+
+        var ret = evaluate(code.car, {
+          env: env,
+          error: error,
+          dynamic_scope: dynamic_scope
+        });
+
+        if (ret && ret.__doc__) {
+          return ret.__doc__;
+        }
+      }
+
+      return this.get(symbol).__doc__;
+    }), "(help object)\n\n             Macro returns documentation for function or macros including parser\n             macros but only if called with parser macro symbol like (help `).\n             For normal functions and macros you can save the function in variable."),
     // ------------------------------------------------------------------
     cons: doc(function (car, cdr) {
       if (isEmptyList(cdr)) {
@@ -3457,9 +3488,9 @@ function _typeof(obj) {
     }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
     // ------------------------------------------------------------------
     'set!': doc(new Macro('set!', function (code) {
-      var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref6.dynamic_scope,
-          error = _ref6.error;
+      var _ref7 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref7.dynamic_scope,
+          error = _ref7.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3571,9 +3602,9 @@ function _typeof(obj) {
       }).then(exec);
     }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
     // ------------------------------------------------------------------
-    'while': doc(new Macro('while', function (code, _ref7) {
-      var dynamic_scope = _ref7.dynamic_scope,
-          error = _ref7.error;
+    'while': doc(new Macro('while', function (code, _ref8) {
+      var dynamic_scope = _ref8.dynamic_scope,
+          error = _ref8.error;
       var self = this;
       var begin = new Pair(new _Symbol('begin'), code.cdr);
       var result;
@@ -3614,9 +3645,9 @@ function _typeof(obj) {
       }();
     }), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
     // ------------------------------------------------------------------
-    'if': doc(new Macro('if', function (code, _ref8) {
-      var dynamic_scope = _ref8.dynamic_scope,
-          error = _ref8.error;
+    'if': doc(new Macro('if', function (code, _ref9) {
+      var dynamic_scope = _ref9.dynamic_scope,
+          error = _ref9.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3658,9 +3689,9 @@ function _typeof(obj) {
       return values.pop();
     }), "(begin* . expr)\n\n             This macro is parallel version of begin. It evaluate each expression and\n             if it's a promise it will evaluate it in parallel and return value\n             of last expression."),
     // ------------------------------------------------------------------
-    'begin': doc(new Macro('begin', function (code, _ref9) {
-      var dynamic_scope = _ref9.dynamic_scope,
-          error = _ref9.error;
+    'begin': doc(new Macro('begin', function (code, _ref10) {
+      var dynamic_scope = _ref10.dynamic_scope,
+          error = _ref10.error;
       var arr = this.get('list->array')(code);
 
       if (dynamic_scope) {
@@ -3687,9 +3718,9 @@ function _typeof(obj) {
       }();
     }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
     // ------------------------------------------------------------------
-    'ignore': new Macro('ignore', function (code, _ref10) {
-      var dynamic_scope = _ref10.dynamic_scope,
-          error = _ref10.error;
+    'ignore': new Macro('ignore', function (code, _ref11) {
+      var dynamic_scope = _ref11.dynamic_scope,
+          error = _ref11.error;
       var args = {
         env: this,
         error: error
@@ -3703,9 +3734,9 @@ function _typeof(obj) {
     }, "(ignore expression)\n\n            Macro that will evaluate expression and swallow any promises that may\n            be created. It wil run and ignore any value that may be returned by\n            expression. The code should have side effects and/or when it's promise\n            it should resolve to undefined."),
     // ------------------------------------------------------------------
     timer: doc(new Macro('timer', function (code) {
-      var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref11.dynamic_scope,
-          error = _ref11.error;
+      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref12.dynamic_scope,
+          error = _ref12.error;
 
       typecheck('timer', code.car, 'number');
       var env = this;
@@ -3797,9 +3828,9 @@ function _typeof(obj) {
     }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
-      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref12.dynamic_scope,
-          error = _ref12.error;
+      var _ref13 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref13.dynamic_scope,
+          error = _ref13.error;
 
       var self = this;
 
@@ -3873,9 +3904,9 @@ function _typeof(obj) {
     'macroexpand': new Macro('macro-expand', macro_expand()),
     'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
     // ------------------------------------------------------------------
-    'define-macro': doc(new Macro(macro, function (macro, _ref13) {
-      var dynamic_scope = _ref13.dynamic_scope,
-          error = _ref13.error;
+    'define-macro': doc(new Macro(macro, function (macro, _ref14) {
+      var dynamic_scope = _ref14.dynamic_scope,
+          error = _ref14.error;
 
       function clear(node) {
         if (node instanceof Pair) {
@@ -3894,8 +3925,8 @@ function _typeof(obj) {
           __doc__ = macro.cdr.car;
         }
 
-        this.env[name] = Macro.defmacro(name, function (code, _ref14) {
-          var macro_expand = _ref14.macro_expand;
+        this.env[name] = Macro.defmacro(name, function (code, _ref15) {
+          var macro_expand = _ref15.macro_expand;
           var env = new Environment({}, this, 'defmacro');
           var name = macro.car.cdr;
           var arg = code;
@@ -3971,9 +4002,9 @@ function _typeof(obj) {
       throw new Error("You can't call `unquote` outside of quasiquote");
     }, "(unquote code)\n\n            Special form to be used in quasiquote macro, parser is processing special\n            characters , and create call to this pseudo function. It can be used\n            to evalute expression inside and return the value, the output is inserted\n            into list structure created by queasiquote."),
     // ------------------------------------------------------------------
-    quasiquote: doc(new Macro('quasiquote', function (arg, _ref15) {
-      var dynamic_scope = _ref15.dynamic_scope,
-          error = _ref15.error;
+    quasiquote: doc(new Macro('quasiquote', function (arg, _ref16) {
+      var dynamic_scope = _ref16.dynamic_scope,
+          error = _ref16.error;
       var self = this;
       var max_unquote = 0;
 
@@ -4001,10 +4032,10 @@ function _typeof(obj) {
           }
 
           if (isPromise(car) || isPromise(cdr)) {
-            return Promise.all([car, cdr]).then(function (_ref16) {
-              var _ref17 = _slicedToArray(_ref16, 2),
-                  car = _ref17[0],
-                  cdr = _ref17[1];
+            return Promise.all([car, cdr]).then(function (_ref17) {
+              var _ref18 = _slicedToArray(_ref17, 2),
+                  car = _ref18[0],
+                  cdr = _ref18[1];
 
               return new Pair(car, cdr);
             });
@@ -4332,6 +4363,21 @@ function _typeof(obj) {
       return _construct(obj, args);
     }, "(new obj . args)\n\n            Function create new JavaScript instance of an object."),
     // ------------------------------------------------------------------
+    'unset!': doc(function (symbol) {
+      typecheck('unset!', symbol, 'symbol');
+      delete this.env[symbol.name];
+    }, "(unset! name)\n\n            Function delete specified name from environment."),
+    // ------------------------------------------------------------------
+    'remove-special!': doc(function (symbol) {
+      typecheck('remove-special!', symbol, 'symbol');
+      delete specials[symbol.name];
+    }, "(remove-special! symbol)\n\n            Function remove special symbol from parser. Added by `add-special!`"),
+    // ------------------------------------------------------------------
+    'add-special!': doc(function (symbol) {
+      typecheck('remove-special!', symbol, 'symbol');
+      lips.specials[symbol.name] = symbol;
+    }, "(add-special! symbol)\n\n            Add special symbol to the list of transforming operators by the parser.\n            e.g.: `(add-special! '#)` will allow to use `#(1 2 3)` and it will be\n            transformed into (# (1 2 3)) so you can write # macro that will process\n            the list. It's main purpose to to allow to use `define-symbol-macro`"),
+    // ------------------------------------------------------------------
     'get': get,
     '.': get,
     // ------------------------------------------------------------------
@@ -4493,11 +4539,11 @@ function _typeof(obj) {
         return LNumber(obj.length);
       }
     }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
-    'try': doc(new Macro('try', function (code, _ref18) {
+    'try': doc(new Macro('try', function (code, _ref19) {
       var _this4 = this;
 
-      var dynamic_scope = _ref18.dynamic_scope,
-          _error = _ref18.error;
+      var dynamic_scope = _ref19.dynamic_scope,
+          _error = _ref19.error;
       return new Promise(function (resolve) {
         var args = {
           env: _this4,
@@ -4825,9 +4871,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
     // ------------------------------------------------------------------
-    or: doc(new Macro('or', function (code, _ref19) {
-      var dynamic_scope = _ref19.dynamic_scope,
-          error = _ref19.error;
+    or: doc(new Macro('or', function (code, _ref20) {
+      var dynamic_scope = _ref20.dynamic_scope,
+          error = _ref20.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -4867,9 +4913,9 @@ function _typeof(obj) {
     }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function (code) {
-      var _ref20 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref20.dynamic_scope,
-          error = _ref20.error;
+      var _ref21 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref21.dynamic_scope,
+          error = _ref21.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -5213,10 +5259,10 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function getFunctionArgs(rest, _ref21) {
-    var env = _ref21.env,
-        dynamic_scope = _ref21.dynamic_scope,
-        error = _ref21.error;
+  function getFunctionArgs(rest, _ref22) {
+    var env = _ref22.env,
+        dynamic_scope = _ref22.dynamic_scope,
+        error = _ref22.error;
     var args = [];
     var node = rest;
     markCycles(node);
@@ -5270,11 +5316,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref22 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref22.env,
-        dynamic_scope = _ref22.dynamic_scope,
-        _ref22$error = _ref22.error,
-        error = _ref22$error === void 0 ? function () {} : _ref22$error;
+    var _ref23 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref23.env,
+        dynamic_scope = _ref23.dynamic_scope,
+        _ref23$error = _ref23.error,
+        error = _ref23$error === void 0 ? function () {} : _ref23$error;
 
     try {
       if (dynamic_scope === true) {
@@ -5556,7 +5602,7 @@ function _typeof(obj) {
 
 
   var lips = {
-    version: '0.12.0',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

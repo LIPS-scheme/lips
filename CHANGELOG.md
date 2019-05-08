@@ -1,3 +1,10 @@
+## 0.14.0
+### Features
+* add `unset!`, `add-special!` and `remove-special!` functions
+* add `define-symbol-macro` meta macro that create parser macros (parser transformer symbol)
+* rewrite `help` as macro so it works with parser macros
+* fix white space in docs for macros
+
 ## 0.12.0
 ### Features
 * new macro `begin*` that run their arguments in parallel if they async
