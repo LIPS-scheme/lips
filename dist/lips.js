@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 08 May 2019 16:07:40 +0000
+ * build: Wed, 08 May 2019 16:38:16 +0000
  */
 (function () {
 'use strict';
@@ -3935,20 +3935,20 @@ function _typeof(obj) {
           if (macro.cdr instanceof Pair) {
             // this eval will return lips code
             var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
+
+            if (macro_expand) {
+              return rest;
+            }
+
             var pair = rest.reduce(function (result, node) {
               return evaluate(node, {
                 env: env,
                 dynamic_scope: dynamic_scope,
                 error: error
               });
-            });
-
-            if (macro_expand) {
-              return pair;
-            } // second evalute of code that is returned from macro
+            }); // second evalute of code that is returned from macro
             // need different env because we need to call it in scope
             // were it was called
-
 
             pair = evaluate(pair, {
               env: this,

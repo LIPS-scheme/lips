@@ -2529,12 +2529,12 @@
                     if (macro.cdr instanceof Pair) {
                         // this eval will return lips code
                         var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
+                        if (macro_expand) {
+                            return rest;
+                        }
                         var pair = rest.reduce(function(result, node) {
                             return evaluate(node, { env, dynamic_scope, error });
                         });
-                        if (macro_expand) {
-                            return pair;
-                        }
                         // second evalute of code that is returned from macro
                         // need different env because we need to call it in scope
                         // were it was called
