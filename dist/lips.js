@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 08 May 2019 15:51:52 +0000
+ * build: Wed, 08 May 2019 16:07:40 +0000
  */
 (function () {
 'use strict';
@@ -3908,15 +3908,22 @@ function _typeof(obj) {
             if (name instanceof _Symbol) {
               env.env[name.name] = arg;
               break;
-            } else if (name.car !== nil && arg.car !== nil) {
-              env.env[name.car.name] = arg.car;
+            } else if (name.car !== nil) {
+              if (arg === nil) {
+                env.env[name.car.name] = nil;
+              } else {
+                env.env[name.car.name] = arg.car;
+              }
             }
 
             if (name.cdr === nil) {
               break;
             }
 
-            arg = arg.cdr;
+            if (arg !== nil) {
+              arg = arg.cdr;
+            }
+
             name = name.cdr;
           }
 

@@ -2507,13 +2507,19 @@
                         if (name instanceof Symbol) {
                             env.env[name.name] = arg;
                             break;
-                        } else if (name.car !== nil && arg.car !== nil) {
-                            env.env[name.car.name] = arg.car;
+                        } else if (name.car !== nil) {
+                            if (arg === nil) {
+                                env.env[name.car.name] = nil;
+                            } else {
+                                env.env[name.car.name] = arg.car;
+                            }
                         }
                         if (name.cdr === nil) {
                             break;
                         }
-                        arg = arg.cdr;
+                        if (arg !== nil) {
+                            arg = arg.cdr;
+                        }
                         name = name.cdr;
                     }
                     if (dynamic_scope) {
