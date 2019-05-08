@@ -705,7 +705,7 @@
         [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1],
         [['(', glob, ')'], 1],
         [['(', /^define/, '(', glob, ')'], 1],
-        [['(', /^define/, ['(', glob, ')'], sexp], 1],
+        [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen],
         [['(', 'lambda', '(', glob, ')'], 1],
         [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]
     ];

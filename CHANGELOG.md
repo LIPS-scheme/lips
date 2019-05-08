@@ -10,6 +10,7 @@
 * fix parser error when parsing symbol macros [#10](https://github.com/jcubic/lips/issues/10)
 * fix undefined values in macro with missing arguments [#11](https://github.com/jcubic/lips/issues/11)
 * fix macroexpand [#9](https://github.com/jcubic/lips/issues/9)
+* fix line breaking in S-Expression Formatter
 
 ## 0.11.2
 ### Breaking
