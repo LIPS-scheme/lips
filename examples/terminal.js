@@ -106,7 +106,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             if (last.trim().length) {
                 const globals = Object.getOwnPropertyNames(window);
                 const prefix = tokens.join('');
-                const re = new RegExp('^' + $.terminal.escape_regex(last));
+                const re = new RegExp('^' + jQuery.terminal.escape_regex(last));
                 var commands = env.get('env')(env).toArray().concat(globals).filter(name => {
                     return re.test(name);
                 }).map(name => prefix + name);

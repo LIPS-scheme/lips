@@ -528,9 +528,28 @@ describe('evaluate', function() {
         });
         it('should throw exception', function() {
             return lips.exec(code, env, env).catch(e => {
-                expect(e.code).toEqual('(string (! 1000))');
+                expect(e.code instanceof Array).toBeTruthy();
+                expect(e.code.pop()).toEqual('(string (! 1000))');
                 expect(e).toEqual(new Error("Unbound variable `f'"));
             });
+        });
+    });
+    describe('parallel invocation', function() {
+        it('should run async code sequentially', function() {
+            var start = Date.now();
+            var output = LNumber(30);
+            function test(code, range) {
+                return lips.exec(code).then(result => {
+                    var time = Date.now() - start;
+                    expect(result[0]).toEqual(output);
+                    expect(time).not.toBeLessThan(range[0]);
+                    expect(time).not.toBeGreaterThan(range[1]);
+                });
+            }
+            return Promise.all([
+                test('(begin (timer 300 10) (timer 300 20) (timer 300 30))', [800, 1000]),
+                test('(begin* (timer 300 10) (timer 300 20) (timer 300 30))', [300, 350])
+            ]);
         });
     });
 });

@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.11.2
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 01 May 2019 10:31:05 +0000
+ * build: Wed, 08 May 2019 17:12:23 +0000
  */
 (function () {
 'use strict';
@@ -1338,6 +1338,13 @@ function _typeof(obj) {
       }
     });
 
+    if (!tokens.filter(function (t) {
+      return t.match(/^[()]$/);
+    }).length && stack.length) {
+      result = result.concat(stack);
+      stack = [];
+    }
+
     if (stack.length) {
       throw new Error('Unbalanced parenthesis 2');
     }
@@ -1666,7 +1673,7 @@ function _typeof(obj) {
   var glob = root.Symbol.for('*');
   var sexp = new Pattern(['(', glob, ')'], '+'); // rules for breaking S-Expressions into lines
 
-  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, new Pattern(['(', glob, ')'], '+')], 1, notParen], [['(', /^let\*?$/, '(', ['(', glob, ')']], 2, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1], [['(', glob, ')'], 1], [['(', /^define/, '(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], sexp], 1], [['(', 'lambda', '(', glob, ')'], 1], [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
+  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, '(', new Pattern(['(', glob, ')'], '+')], 2, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1], [['(', glob, ')'], 1], [['(', /^define/, '(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'lambda', '(', glob, ')'], 1], [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
 
   Formatter.prototype.break = function () {
     var code = this._code.replace(/\n\s*/g, '\n ');
@@ -2595,8 +2602,10 @@ function _typeof(obj) {
   // ----------------------------------------------------------------------
 
 
+  var exludedNames = ['name', 'length', 'caller', 'callee', 'arguments', 'prototype'];
+
   function filterFnNames(name) {
-    return !['name', 'length', 'caller', 'callee', 'arguments'].includes(name);
+    return !exludedNames.includes(name);
   } // ----------------------------------------------------------------------
 
 
@@ -2713,6 +2722,40 @@ function _typeof(obj) {
           return unpromise(set(value), loop);
         }
       }();
+    });
+  }
+
+  function pararel(name, fn) {
+    return new Macro(name, function (code) {
+      var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref5.dynamic_scope,
+          error = _ref5.error;
+
+      var env = this;
+
+      if (dynamic_scope === true) {
+        dynamic_scope = this;
+      }
+
+      var node = code;
+      var results = [];
+
+      while (node instanceof Pair && !isEmptyList(node)) {
+        results.push(evaluate(node.car, {
+          env: env,
+          dynamic_scope: dynamic_scope,
+          error: error
+        }));
+        node = node.cdr;
+      }
+
+      var havePromises = results.filter(isPromise).length;
+
+      if (havePromises) {
+        return Promise.all(results).then(fn.bind(this));
+      } else {
+        return fn.call(this, results);
+      }
     });
   } // ----------------------------------------------------------------------
 
@@ -2989,6 +3032,11 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
+  LNumber.prototype.isFloat = function () {
+    return !!(LNumber.isFloat(this.value) || this.float);
+  }; // ----------------------------------------------------------------------
+
+
   LNumber.prototype.op = function (op, n) {
     var ops = {
       '*': function _(a, b) {
@@ -3023,7 +3071,7 @@ function _typeof(obj) {
       }
     };
 
-    if (LNumber.isFloat(n) || n instanceof LNumber && (LNumber.isFloat(n.value) || n.float) || LNumber.isFloat(this.value) || this.float) {
+    if (LNumber.isFloat(n) || n instanceof LNumber && n.isFloat() || this.isFloat()) {
       var value = n instanceof LNumber ? n.valueOf() : n;
       return LNumber(ops[op](this.valueOf(), value), true);
     }
@@ -3409,9 +3457,9 @@ function _typeof(obj) {
     }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
     // ------------------------------------------------------------------
     'set!': doc(new Macro('set!', function (code) {
-      var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref5.dynamic_scope,
-          error = _ref5.error;
+      var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref6.dynamic_scope,
+          error = _ref6.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3494,6 +3542,7 @@ function _typeof(obj) {
         throw new Error('First argument to assoc ned to be a key');
       }
 
+      typecheck('assoc', list, 'pair');
       var node = list;
 
       while (true) {
@@ -3522,9 +3571,9 @@ function _typeof(obj) {
       }).then(exec);
     }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
     // ------------------------------------------------------------------
-    'while': doc(new Macro('while', function (code, _ref6) {
-      var dynamic_scope = _ref6.dynamic_scope,
-          error = _ref6.error;
+    'while': doc(new Macro('while', function (code, _ref7) {
+      var dynamic_scope = _ref7.dynamic_scope,
+          error = _ref7.error;
       var self = this;
       var begin = new Pair(new _Symbol('begin'), code.cdr);
       var result;
@@ -3565,9 +3614,9 @@ function _typeof(obj) {
       }();
     }), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
     // ------------------------------------------------------------------
-    'if': doc(new Macro('if', function (code, _ref7) {
-      var dynamic_scope = _ref7.dynamic_scope,
-          error = _ref7.error;
+    'if': doc(new Macro('if', function (code, _ref8) {
+      var dynamic_scope = _ref8.dynamic_scope,
+          error = _ref8.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -3605,9 +3654,13 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'let': doc(let_macro(false), "(let ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy but you can't access\n             previous values/names when next are evaluated. You can only get them\n             from body of let expression."),
     // ------------------------------------------------------------------
-    'begin': doc(new Macro('begin', function (code, _ref8) {
-      var dynamic_scope = _ref8.dynamic_scope,
-          error = _ref8.error;
+    'begin*': doc(pararel('begin*', function (values) {
+      return values.pop();
+    }), "(begin* . expr)\n\n             This macro is parallel version of begin. It evaluate each expression and\n             if it's a promise it will evaluate it in parallel and return value\n             of last expression."),
+    // ------------------------------------------------------------------
+    'begin': doc(new Macro('begin', function (code, _ref9) {
+      var dynamic_scope = _ref9.dynamic_scope,
+          error = _ref9.error;
       var arr = this.get('list->array')(code);
 
       if (dynamic_scope) {
@@ -3634,9 +3687,9 @@ function _typeof(obj) {
       }();
     }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
     // ------------------------------------------------------------------
-    'ignore': new Macro('ignore', function (code, _ref9) {
-      var dynamic_scope = _ref9.dynamic_scope,
-          error = _ref9.error;
+    'ignore': new Macro('ignore', function (code, _ref10) {
+      var dynamic_scope = _ref10.dynamic_scope,
+          error = _ref10.error;
       var args = {
         env: this,
         error: error
@@ -3650,14 +3703,14 @@ function _typeof(obj) {
     }, "(ignore expression)\n\n            Macro that will evaluate expression and swallow any promises that may\n            be created. It wil run and ignore any value that may be returned by\n            expression. The code should have side effects and/or when it's promise\n            it should resolve to undefined."),
     // ------------------------------------------------------------------
     timer: doc(new Macro('timer', function (code) {
-      var _ref10 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref10.dynamic_scope,
-          error = _ref10.error;
+      var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref11.dynamic_scope,
+          error = _ref11.error;
 
       typecheck('timer', code.car, 'number');
       var env = this;
 
-      if (dynamic_scope) {
+      if (dynamic_scope === true) {
         dynamic_scope = this;
       }
 
@@ -3717,6 +3770,7 @@ function _typeof(obj) {
     'eval': doc(function (code, env) {
       var _this = this;
 
+      typecheck('eval', code, ['symbol', 'pair', 'array']);
       env = env || this;
 
       if (code instanceof _Symbol) {
@@ -3743,9 +3797,9 @@ function _typeof(obj) {
     }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
-      var _ref11 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref11.dynamic_scope,
-          error = _ref11.error;
+      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref12.dynamic_scope,
+          error = _ref12.error;
 
       var self = this;
 
@@ -3819,9 +3873,9 @@ function _typeof(obj) {
     'macroexpand': new Macro('macro-expand', macro_expand()),
     'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
     // ------------------------------------------------------------------
-    'define-macro': doc(new Macro(macro, function (macro, _ref12) {
-      var dynamic_scope = _ref12.dynamic_scope,
-          error = _ref12.error;
+    'define-macro': doc(new Macro(macro, function (macro, _ref13) {
+      var dynamic_scope = _ref13.dynamic_scope,
+          error = _ref13.error;
 
       function clear(node) {
         if (node instanceof Pair) {
@@ -3840,8 +3894,8 @@ function _typeof(obj) {
           __doc__ = macro.cdr.car;
         }
 
-        this.env[name] = Macro.defmacro(name, function (code, _ref13) {
-          var macro_expand = _ref13.macro_expand;
+        this.env[name] = Macro.defmacro(name, function (code, _ref14) {
+          var macro_expand = _ref14.macro_expand;
           var env = new Environment({}, this, 'defmacro');
           var name = macro.car.cdr;
           var arg = code;
@@ -3854,15 +3908,22 @@ function _typeof(obj) {
             if (name instanceof _Symbol) {
               env.env[name.name] = arg;
               break;
-            } else if (name.car !== nil && arg.car !== nil) {
-              env.env[name.car.name] = arg.car;
+            } else if (name.car !== nil) {
+              if (arg === nil) {
+                env.env[name.car.name] = nil;
+              } else {
+                env.env[name.car.name] = arg.car;
+              }
             }
 
             if (name.cdr === nil) {
               break;
             }
 
-            arg = arg.cdr;
+            if (arg !== nil) {
+              arg = arg.cdr;
+            }
+
             name = name.cdr;
           }
 
@@ -3874,20 +3935,20 @@ function _typeof(obj) {
           if (macro.cdr instanceof Pair) {
             // this eval will return lips code
             var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
+
+            if (macro_expand) {
+              return rest.car;
+            }
+
             var pair = rest.reduce(function (result, node) {
               return evaluate(node, {
                 env: env,
                 dynamic_scope: dynamic_scope,
                 error: error
               });
-            });
-
-            if (macro_expand) {
-              return pair;
-            } // second evalute of code that is returned from macro
+            }); // second evalute of code that is returned from macro
             // need different env because we need to call it in scope
             // were it was called
-
 
             pair = evaluate(pair, {
               env: this,
@@ -3910,9 +3971,9 @@ function _typeof(obj) {
       throw new Error("You can't call `unquote` outside of quasiquote");
     }, "(unquote code)\n\n            Special form to be used in quasiquote macro, parser is processing special\n            characters , and create call to this pseudo function. It can be used\n            to evalute expression inside and return the value, the output is inserted\n            into list structure created by queasiquote."),
     // ------------------------------------------------------------------
-    quasiquote: doc(new Macro('quasiquote', function (arg, _ref14) {
-      var dynamic_scope = _ref14.dynamic_scope,
-          error = _ref14.error;
+    quasiquote: doc(new Macro('quasiquote', function (arg, _ref15) {
+      var dynamic_scope = _ref15.dynamic_scope,
+          error = _ref15.error;
       var self = this;
       var max_unquote = 0;
 
@@ -3940,10 +4001,10 @@ function _typeof(obj) {
           }
 
           if (isPromise(car) || isPromise(cdr)) {
-            return Promise.all([car, cdr]).then(function (_ref15) {
-              var _ref16 = _slicedToArray(_ref15, 2),
-                  car = _ref16[0],
-                  cdr = _ref16[1];
+            return Promise.all([car, cdr]).then(function (_ref16) {
+              var _ref17 = _slicedToArray(_ref16, 2),
+                  car = _ref17[0],
+                  cdr = _ref17[1];
 
               return new Pair(car, cdr);
             });
@@ -4068,13 +4129,17 @@ function _typeof(obj) {
     }), "(quasiquote list ,value ,@value)\n\n            Similar macro to `quote` but inside it you can use special\n            expressions unquote abbreviated to , that will evaluate expresion inside\n            and return its value or unquote-splicing abbreviated to ,@ that will\n            evaluate expression but return value without parenthesis (it will join)\n            the list with its value. Best used with macros but it can be used outside"),
     // ------------------------------------------------------------------
     clone: doc(function (list) {
+      typecheck('clone', list, 'pair');
       return list.clone();
     }, "(clone list)\n\n            Function return clone of the list."),
     // ------------------------------------------------------------------
     append: doc(function (list, item) {
+      typecheck('append', list, 'pair');
       return this.get('append!')(list.clone(), item);
     }, "(append list item)\n\n            Function will create new list with value appended to the end. It return\n            New list."),
     'append!': doc(function (list, item) {
+      typecheck('append!', list, 'pair');
+
       if (isNull(item) || isEmptyList(item)) {
         return list;
       }
@@ -4083,6 +4148,8 @@ function _typeof(obj) {
     }, "(append! name expression)\n\n             Destructive version of append, it modify the list in place. It return\n             original list."),
     // ------------------------------------------------------------------
     reverse: doc(function (arg) {
+      typecheck('reverse', arg, ['array', 'pair']);
+
       if (arg instanceof Pair) {
         var arr = this.get('list->array')(arg).reverse();
         return this.get('array->list')(arr);
@@ -4094,6 +4161,9 @@ function _typeof(obj) {
     }, "(reverse list)\n\n            Function will reverse the list or array. If value is not a list\n            or array it will throw exception."),
     // ------------------------------------------------------------------
     nth: doc(function (index, obj) {
+      typecheck('nth', index, 'number');
+      typecheck('nth', obj, ['array', 'pair']);
+
       if (obj instanceof Pair) {
         var node = obj;
         var count = 0;
@@ -4116,35 +4186,60 @@ function _typeof(obj) {
     }, "(nth index obj)\n\n            Function return nth element of the list or array. If used with different\n            value it will throw exception"),
     // ------------------------------------------------------------------
     list: doc(function () {
-      return Pair.fromArray([].slice.call(arguments));
+      for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+        args[_key16] = arguments[_key16];
+      }
+
+      return Pair.fromArray(args);
     }, "(list . args)\n\n            Function create new list out of its arguments."),
     // ------------------------------------------------------------------
     substring: doc(function (string, start, end) {
+      typecheck('substring', string, 'string');
+      typecheck('substring', start, 'number');
+      typecheck('substring', end, ['number', 'undefined']);
       return string.substring(start.valueOf(), end && end.valueOf());
     }, "(substring string start end)\n\n            Function return part of the string starting at start ending with end."),
     // ------------------------------------------------------------------
     concat: doc(function () {
-      return [].join.call(arguments, '');
+      for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+        args[_key17] = arguments[_key17];
+      }
+
+      args.forEach(function (arg, i) {
+        return typecheck('concat', arg, 'string', i + 1);
+      });
+      return args.join('');
     }, "(concat . strings)\n\n            Function create new string by joining its arguments"),
     // ------------------------------------------------------------------
     join: doc(function (separator, list) {
+      typecheck('join', separator, 'string');
+      typecheck('join', list, 'pair');
       return this.get('list->array')(list).join(separator);
     }, "(join separator list)\n\n            Function return string by joining elements of the list"),
     // ------------------------------------------------------------------
     split: doc(function (separator, string) {
+      typecheck('split', separator, ['regex', 'string']);
+      typecheck('split', string, 'string');
       return this.get('array->list')(string.split(separator));
     }, "(split separator string)\n\n            Function create list by splitting string by separatar that can\n            be a string or regular expression."),
     // ------------------------------------------------------------------
     replace: doc(function (pattern, replacement, string) {
+      typecheck('replace', pattern, ['regex', 'string']);
+      typecheck('replace', replacement, ['string', 'function']);
+      typecheck('replace', string, 'string');
       return string.replace(pattern, replacement);
-    }, "(replace pattern replacement string)\n\n            Function change patter to replacement inside string."),
+    }, "(replace pattern replacement string)\n\n            Function change pattern to replacement inside string. Pattern can be string\n            or regex and replacement can be function or string."),
     // ------------------------------------------------------------------
     match: doc(function (pattern, string) {
+      typecheck('match', pattern, ['regex', 'string']);
+      typecheck('match', string, 'string');
       var m = string.match(pattern);
       return m ? this.get('array->list')(m) : nil;
     }, "(match pattern string)\n\n            function return match object from JavaScript as list."),
     // ------------------------------------------------------------------
     search: doc(function (pattern, string) {
+      typecheck('search', pattern, ['regex', 'string']);
+      typecheck('search', string, 'string');
       return string.search(pattern);
     }, "(search pattern string)\n\n            Function return first found index of the pattern inside a string"),
     // ------------------------------------------------------------------
@@ -4230,8 +4325,8 @@ function _typeof(obj) {
       return result;
     }, "(env obj)\n\n            Function return list values (functions and variables) inside environment."),
     'new': doc(function (obj) {
-      for (var _len16 = arguments.length, args = new Array(_len16 > 1 ? _len16 - 1 : 0), _key16 = 1; _key16 < _len16; _key16++) {
-        args[_key16 - 1] = arguments[_key16];
+      for (var _len18 = arguments.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
+        args[_key18 - 1] = arguments[_key18];
       }
 
       return _construct(obj, args);
@@ -4247,9 +4342,22 @@ function _typeof(obj) {
     'instanceof': doc(function (type, obj) {
       return obj instanceof type;
     }, "(instanceof type obj)\n\n            Function check of object is instance of object."),
+    // ------------------------------------------------------------------
     'function?': doc(function (obj) {
       return typeof obj === 'function';
     }, "(function? expression)\n\n            Function check if value is a function."),
+    // ------------------------------------------------------------------
+    'real?': doc(function (value) {
+      if (type(value) !== 'number') {
+        return false;
+      }
+
+      if (value instanceof LNumber) {
+        return value.isFloat();
+      }
+
+      return LNumber.isFloat(value);
+    }, "(real? number)\n\n            Function check if value is real number."),
     // ------------------------------------------------------------------
     'number?': doc(LNumber.isNumber, "(number? expression)\n\n             Function check if value is a number"),
     // ------------------------------------------------------------------
@@ -4307,8 +4415,8 @@ function _typeof(obj) {
       var _this$get,
           _this3 = this;
 
-      for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
-        args[_key17] = arguments[_key17];
+      for (var _len19 = arguments.length, args = new Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
+        args[_key19] = arguments[_key19];
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
@@ -4331,14 +4439,18 @@ function _typeof(obj) {
     }, "(error . args)\n\n            Display error message."),
     // ------------------------------------------------------------------
     flatten: doc(function (list) {
+      typecheck('flatten', list, 'pair');
       return list.flatten();
     }, "(flatten list)\n\n            Return shallow list from tree structure (pairs)."),
     // ------------------------------------------------------------------
     'array->list': doc(function (array) {
+      typecheck('array->list', array, 'array');
       return Pair.fromArray(array);
     }, "(array->list array)\n\n            Function convert JavaScript array to LIPS list."),
     // ------------------------------------------------------------------
     'list->array': doc(function (list) {
+      typecheck('list->array', list, ['pair', 'nil']);
+
       if (list instanceof Pair && list.isEmptyList()) {
         return [];
       }
@@ -4362,11 +4474,11 @@ function _typeof(obj) {
       return result;
     }, "(list->array list)\n\n            Function convert LIPS list into JavaScript array."),
     // ------------------------------------------------------------------
-    apply: doc(function (fn, args) {
+    apply: doc(function (fn, list) {
       typecheck('call', fn, 'function', 1);
-      typecheck('call', args, 'pair', 2);
-      return fn.apply(void 0, _toConsumableArray(this.get('list->array')(args)));
-    }, "(apply fn args)\n\n            Function that call function with list of arguments."),
+      typecheck('call', list, 'pair', 2);
+      return fn.apply(void 0, _toConsumableArray(this.get('list->array')(list)));
+    }, "(apply fn list)\n\n            Function that call function with list of arguments."),
     // ------------------------------------------------------------------
     'length': doc(function (obj) {
       if (!obj) {
@@ -4381,11 +4493,11 @@ function _typeof(obj) {
         return LNumber(obj.length);
       }
     }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
-    'try': doc(new Macro('try', function (code, _ref17) {
+    'try': doc(new Macro('try', function (code, _ref18) {
       var _this4 = this;
 
-      var dynamic_scope = _ref17.dynamic_scope,
-          _error = _ref17.error;
+      var dynamic_scope = _ref18.dynamic_scope,
+          _error = _ref18.error;
       return new Promise(function (resolve) {
         var args = {
           env: _this4,
@@ -4417,44 +4529,54 @@ function _typeof(obj) {
     }), "(try expr (catch (e) code)"),
     // ------------------------------------------------------------------
     find: doc(function find(arg, list) {
+      typecheck('find', arg, ['regex', 'function']);
+      typecheck('find', list, 'pair');
+
       if (isNull(list)) {
         return nil;
       }
 
       var fn = matcher('find', arg);
       return unpromise(fn(list.car), function (value) {
-        if (value) {
+        if (value && value !== nil) {
           return list.car;
         }
 
         return find(arg, list.cdr);
       });
-    }, "(Find fn list)\n\n            Higher order Function find first value for which function\n            return true."),
+    }, "(find fn list)\n            (find regex list)\n\n            Higher order Function find first value for which function return true.\n            If called with regex it will create matcher function."),
     // ------------------------------------------------------------------
     'for-each': doc(function (fn) {
-      typecheck('for-each', fn, 'function'); // we need to use call(this because babel transpile this code into:
-      // var ret = map.apply(void 0, [fn].concat(args));
-      // it don't work with weakBind
+      typecheck('for-each', fn, 'function');
 
-      for (var _len18 = arguments.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
-        args[_key18 - 1] = arguments[_key18];
+      for (var _len20 = arguments.length, lists = new Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
+        lists[_key20 - 1] = arguments[_key20];
       }
 
-      var ret = this.get('map').apply(void 0, [fn].concat(args));
+      lists.forEach(function (arg, i) {
+        typecheck('for-each', arg, ['pair', 'nil'], i + 1);
+      }); // we need to use call(this because babel transpile this code into:
+      // var ret = map.apply(void 0, [fn].concat(lists));
+      // it don't work with weakBind
+
+      var ret = this.get('map').apply(void 0, [fn].concat(lists));
 
       if (isPromise(ret)) {
         return ret.then(function () {});
       }
-    }, "(for-each fn . args)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
+    }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
     // ------------------------------------------------------------------
     map: doc(function map(fn) {
       var _this5 = this;
 
-      for (var _len19 = arguments.length, lists = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
-        lists[_key19 - 1] = arguments[_key19];
+      for (var _len21 = arguments.length, lists = new Array(_len21 > 1 ? _len21 - 1 : 0), _key21 = 1; _key21 < _len21; _key21++) {
+        lists[_key21 - 1] = arguments[_key21];
       }
 
       typecheck('map', fn, 'function');
+      lists.forEach(function (arg, i) {
+        typecheck('map', arg, ['pair', 'nil'], i + 1);
+      });
 
       if (lists.some(function (x) {
         return isEmptyList(x);
@@ -4474,6 +4596,9 @@ function _typeof(obj) {
     }, "(map fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments. The return\n            values of the function call is acumulated in result list and\n            returned by the call to map."),
     // ------------------------------------------------------------------
     some: doc(function some(fn, list) {
+      typecheck('some', fn, 'function');
+      typecheck('some', list, ['pair', 'nil']);
+
       if (isNull(list)) {
         return false;
       } else {
@@ -4484,9 +4609,14 @@ function _typeof(obj) {
     }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If it don't find the value it will return false"),
     // ------------------------------------------------------------------
     fold: doc(fold('fold', function (fold, fn, init) {
-      for (var _len20 = arguments.length, lists = new Array(_len20 > 3 ? _len20 - 3 : 0), _key20 = 3; _key20 < _len20; _key20++) {
-        lists[_key20 - 3] = arguments[_key20];
+      for (var _len22 = arguments.length, lists = new Array(_len22 > 3 ? _len22 - 3 : 0), _key22 = 3; _key22 < _len22; _key22++) {
+        lists[_key22 - 3] = arguments[_key22];
       }
+
+      typecheck('fold', fn, 'function');
+      lists.forEach(function (arg, i) {
+        typecheck('fold', arg, ['pair', 'nil'], i + 1);
+      });
 
       if (lists.some(isEmptyList)) {
         return init;
@@ -4502,12 +4632,45 @@ function _typeof(obj) {
       });
     }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
     // ------------------------------------------------------------------
+    pluck: doc(function () {
+      for (var _len23 = arguments.length, keys = new Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+        keys[_key23] = arguments[_key23];
+      }
+
+      return function (obj) {
+        keys = keys.map(function (x) {
+          return x instanceof _Symbol ? x.name : x;
+        });
+
+        if (keys.length === 0) {
+          return nil;
+        } else if (keys.length === 1) {
+          var _keys2 = keys,
+              _keys3 = _slicedToArray(_keys2, 1),
+              key = _keys3[0];
+
+          return obj[key];
+        }
+
+        var result = {};
+        keys.forEach(function (key) {
+          result[key] = obj[key];
+        });
+        return result;
+      };
+    }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
+    // ------------------------------------------------------------------
     reduce: doc(fold('reduce', function (reduce, fn, init) {
       var _this6 = this;
 
-      for (var _len21 = arguments.length, lists = new Array(_len21 > 3 ? _len21 - 3 : 0), _key21 = 3; _key21 < _len21; _key21++) {
-        lists[_key21 - 3] = arguments[_key21];
+      for (var _len24 = arguments.length, lists = new Array(_len24 > 3 ? _len24 - 3 : 0), _key24 = 3; _key24 < _len24; _key24++) {
+        lists[_key24 - 3] = arguments[_key24];
       }
+
+      typecheck('reduce', fn, 'function');
+      lists.forEach(function (arg, i) {
+        typecheck('reduce', arg, ['pair', 'nil'], i + 1);
+      });
 
       if (lists.some(isEmptyList)) {
         return init;
@@ -4523,12 +4686,14 @@ function _typeof(obj) {
     }), "(reduce fn init list . lists)\n\n             Higher order function take each element of the list and call\n             the function with result of previous call or init and next element\n             on the list until each element is processed and return single value\n             as result of last call to `fn` function.\n             e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))\n             for (reduce fn init alist blist"),
     // ------------------------------------------------------------------
     filter: doc(function (arg, list) {
+      typecheck('filter', arg, ['regex', 'function']);
+      typecheck('filter', list, ['pair', 'nil']);
       var array = this.get('list->array')(list);
       var result = [];
       var fn = matcher('filter', arg);
       return function loop(i) {
         function next(value) {
-          if (value) {
+          if (value && value !== nil) {
             result.push(item);
           }
 
@@ -4542,9 +4707,11 @@ function _typeof(obj) {
         var item = array[i];
         return unpromise(fn(item, i), next);
       }(0);
-    }, "(filter fn list)\n\n            Higher order function that call `fn` for each element of the list\n            and return list for only those elements for which funtion return\n            true value."),
+    }, "(filter fn list)\n            (filter regex list)\n\n            Higher order function that call `fn` for each element of the list\n            and return list for only those elements for which funtion return\n            true value. If called with regex it will create matcher function."),
     // ------------------------------------------------------------------
     range: doc(function (n) {
+      typecheck('range', n, 'number');
+
       if (n instanceof LNumber) {
         n = n.valueOf();
       }
@@ -4576,8 +4743,8 @@ function _typeof(obj) {
     }), "(+ . numbers)\n\n             Sum all numbers passed as arguments. If single value is passed it will\n             return that value."),
     // ------------------------------------------------------------------
     '-': doc(function () {
-      for (var _len22 = arguments.length, args = new Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
-        args[_key22] = arguments[_key22];
+      for (var _len25 = arguments.length, args = new Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
+        args[_key25] = arguments[_key25];
       }
 
       if (args.length === 1) {
@@ -4658,9 +4825,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
     // ------------------------------------------------------------------
-    or: doc(new Macro('or', function (code, _ref18) {
-      var dynamic_scope = _ref18.dynamic_scope,
-          error = _ref18.error;
+    or: doc(new Macro('or', function (code, _ref19) {
+      var dynamic_scope = _ref19.dynamic_scope,
+          error = _ref19.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -4700,9 +4867,9 @@ function _typeof(obj) {
     }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function (code) {
-      var _ref19 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref19.dynamic_scope,
-          error = _ref19.error;
+      var _ref20 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref20.dynamic_scope,
+          error = _ref20.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -4769,8 +4936,8 @@ function _typeof(obj) {
       return !value;
     }, "(not object)\n\n            Function return negation of the argument."),
     '->': doc(function (obj, name) {
-      for (var _len23 = arguments.length, args = new Array(_len23 > 2 ? _len23 - 2 : 0), _key23 = 2; _key23 < _len23; _key23++) {
-        args[_key23 - 2] = arguments[_key23];
+      for (var _len26 = arguments.length, args = new Array(_len26 > 2 ? _len26 - 2 : 0), _key26 = 2; _key26 < _len26; _key26++) {
+        args[_key26 - 2] = arguments[_key26];
       }
 
       return obj[name].apply(obj, args);
@@ -4779,11 +4946,11 @@ function _typeof(obj) {
 
   ['floor', 'round', 'ceil'].forEach(function (fn) {
     global_env.set(fn, doc(function (value) {
+      typecheck(fn, value, 'number');
+
       if (value instanceof LNumber) {
         return value[fn]();
       }
-
-      throw new Error("".concat(_typeof(value), " ").concat(value.toString(), " is not a number"));
     }, "(".concat(fn, " number)\n\n            Function calculate ").concat(fn, " of a number.")));
   }); // ----------------------------------------------------------------------
   // source: https://stackoverflow.com/a/4331218/387194
@@ -4864,6 +5031,11 @@ function _typeof(obj) {
       postfix += " argument ".concat(position);
     }
 
+    if (expected instanceof Array) {
+      var last = expected[expected.length - 1];
+      expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+    }
+
     return "Expecting ".concat(expected, " got ").concat(got).concat(postfix);
   } // ----------------------------------------------------------------------
 
@@ -4871,8 +5043,13 @@ function _typeof(obj) {
   function typecheck(fn, arg, expected) {
     var position = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
     var arg_type = type(arg);
+    var match = false;
 
-    if (arg_type !== expected) {
+    if (expected instanceof Array && expected.includes(arg_type)) {
+      match = true;
+    }
+
+    if (!match && arg_type !== expected) {
       throw new Error(typeErrorMessage(fn, arg_type, expected, position));
     }
   } // ----------------------------------------------------------------------
@@ -5036,10 +5213,10 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
-  function getFunctionArgs(rest, _ref20) {
-    var env = _ref20.env,
-        dynamic_scope = _ref20.dynamic_scope,
-        error = _ref20.error;
+  function getFunctionArgs(rest, _ref21) {
+    var env = _ref21.env,
+        dynamic_scope = _ref21.dynamic_scope,
+        error = _ref21.error;
     var args = [];
     var node = rest;
     markCycles(node);
@@ -5093,11 +5270,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref21 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref21.env,
-        dynamic_scope = _ref21.dynamic_scope,
-        _ref21$error = _ref21.error,
-        error = _ref21$error === void 0 ? function () {} : _ref21$error;
+    var _ref22 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref22.env,
+        dynamic_scope = _ref22.dynamic_scope,
+        _ref22$error = _ref22.error,
+        error = _ref22$error === void 0 ? function () {} : _ref22$error;
 
     try {
       if (dynamic_scope === true) {
@@ -5253,7 +5430,9 @@ function _typeof(obj) {
                 dynamic_scope: dynamic_scope,
                 error: function error(e, code) {
                   if (code) {
-                    e.code = code.toString();
+                    // LIPS stack trace
+                    e.code = e.code || [];
+                    e.code.push(code.toString());
                   }
 
                   throw e;
@@ -5377,7 +5556,7 @@ function _typeof(obj) {
 
 
   var lips = {
-    version: '0.11.2',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
