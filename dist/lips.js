@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 05 May 2019 15:58:55 +0000
+ * build: Wed, 08 May 2019 15:51:52 +0000
  */
 (function () {
 'use strict';
@@ -1337,6 +1337,13 @@ function _typeof(obj) {
         }
       }
     });
+
+    if (!tokens.filter(function (t) {
+      return t.match(/^[()]$/);
+    }).length && stack.length) {
+      result = result.concat(stack);
+      stack = [];
+    }
 
     if (stack.length) {
       throw new Error('Unbalanced parenthesis 2');
@@ -5416,7 +5423,9 @@ function _typeof(obj) {
                 dynamic_scope: dynamic_scope,
                 error: function error(e, code) {
                   if (code) {
-                    e.code = code.toString();
+                    // LIPS stack trace
+                    e.code = e.code || [];
+                    e.code.push(code.toString());
                   }
 
                   throw e;

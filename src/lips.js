@@ -415,6 +415,10 @@
                 }
             }
         });
+        if (!tokens.filter(t => t.match(/^[()]$/)).length && stack.length) {
+            result = result.concat(stack);
+            stack = [];
+        }
         if (stack.length) {
             dump(result);
             throw new Error('Unbalanced parenthesis 2');
@@ -3919,7 +3923,9 @@
                     dynamic_scope,
                     error: (e, code) => {
                         if (code) {
-                            e.code = code.toString();
+                            // LIPS stack trace
+                            e.code = e.code || [];
+                            e.code.push(code.toString());
                         }
                         throw e;
                     }
