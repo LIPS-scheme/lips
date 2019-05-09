@@ -72,14 +72,14 @@
 ;;
 ;;   Function return part of the string that start with start index
 ;;   and end in end index, if end is undfined it return to the end."
-;;  ((. string "substring") (value start) (value end)))
+;;  (--> string (substring (value start) (value end))))
 ;;
 ;;
 ;;(define (concat . args)
 ;;  "(concat . strings)
 ;;
 ;;   Function create new string by joining its arguments"
-;;  ((. (list->array args) "join") ""))
+;;  (--> (list->array args) (join "")))
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (global name)
@@ -130,11 +130,11 @@
        ,name)))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (make-object . expr)
-  "(make-object :name value)
-
-   Macro that create JavaScript object using key like syntax."
-  (object-expander expr))
+;; (define-macro (make-object . expr)
+;;   "(make-object :name value)
+;;
+;;    Macro that create JavaScript object using key like syntax."
+;;   (object-expander expr))
 
 
 
@@ -180,14 +180,23 @@
    ;; this is executed in two different ways one when there are no macro and the other
    ;; if there is macro defined, in second case it will put list as first element
    ;; of the body even is it's called like this (define-symbol-macro (# code)
-   (let* ((def (if (pair? (caar rest)) (caar rest) (car rest)))
-          (symbol (car def))
-          (code (cdr rest)))
-     `(begin (add-special! ',symbol) (define-macro ,def ,@code))))
+  (let* ((first (car rest))
+         (name (car first))
+         (args (cddr first))
+         (symbol (if (pair? (cadr first)) (caadr first) (cadr first)))
+         (code (cdr rest)))
+     `(begin (add-special! ',symbol ',name) (define-macro (,name ,@args) ,@code))))
 
+(define-symbol-macro (make-vector # . arg)
+  "(make-vector 1 2 3)
+   #(1 2 3)
 
-(define-symbol-macro (# arg)
-  "#(1 2 3)
-
-   Parser macro for defining arrays."
+   Macro for defining vectors (arrays)."
   `(list->array (list ,@arg)))
+
+(define-symbol-macro (make-object {} expr)
+  "(make-object :name value)
+   {}(:name value)
+
+   Macro that create JavaScript object using key like syntax."
+  (object-expander expr))

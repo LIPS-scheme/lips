@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 08 May 2019 21:34:30 +0000
+ * build: Thu, 09 May 2019 12:02:13 +0000
  */
 (function () {
 'use strict';
@@ -1217,8 +1217,6 @@ function _typeof(obj) {
 
         if (stack[stack.length - 1].length === 1 && stack[stack.length - 1][0] instanceof _Symbol) {
           stack[stack.length - 1].push(top);
-        } else if (stack[stack.length - 1].length === 0) {
-          stack[stack.length - 1] = top;
         } else if (stack[stack.length - 1] instanceof Pair) {
           if (stack[stack.length - 1].cdr instanceof Pair) {
             stack[stack.length - 1] = new Pair(stack[stack.length - 1], Pair.fromArray(top));
@@ -1299,10 +1297,11 @@ function _typeof(obj) {
           if (special) {
             // special without list like ,foo
             while (special_count--) {
-              stack[stack.length - 1][1] = value;
+              stack[stack.length - 1].push(value);
               value = stack.pop();
             }
 
+            specials_stack.pop();
             special_count = 0;
             special = false;
           } else if (value instanceof _Symbol && special_forms.includes(value.name)) {
@@ -1341,11 +1340,14 @@ function _typeof(obj) {
     if (!tokens.filter(function (t) {
       return t.match(/^[()]$/);
     }).length && stack.length) {
+      // list of parser macros
+      console.log(stack.slice());
       result = result.concat(stack);
       stack = [];
     }
 
     if (stack.length) {
+      dump(result);
       throw new Error('Unbalanced parenthesis 2');
     }
 
@@ -1413,6 +1415,19 @@ function _typeof(obj) {
     return string.split('\n').map(function (line) {
       return line.trim();
     }).join('\n');
+  } // ----------------------------------------------------------------------
+
+
+  function dump(arr) {
+    {
+      console.log(arr.map(function (arg) {
+        if (arg instanceof Array) {
+          return Pair.fromArray(arg);
+        }
+
+        return arg;
+      }).toString());
+    }
   } // ----------------------------------------------------------------------
   // return last S-Expression
   // ----------------------------------------------------------------------
@@ -4373,10 +4388,11 @@ function _typeof(obj) {
       delete specials[symbol.name];
     }, "(remove-special! symbol)\n\n            Function remove special symbol from parser. Added by `add-special!`"),
     // ------------------------------------------------------------------
-    'add-special!': doc(function (symbol) {
-      typecheck('remove-special!', symbol, 'symbol');
-      lips.specials[symbol.name] = symbol;
-    }, "(add-special! symbol)\n\n            Add special symbol to the list of transforming operators by the parser.\n            e.g.: `(add-special! '#)` will allow to use `#(1 2 3)` and it will be\n            transformed into (# (1 2 3)) so you can write # macro that will process\n            the list. It's main purpose to to allow to use `define-symbol-macro`"),
+    'add-special!': doc(function (symbol, name) {
+      typecheck('remove-special!', symbol, 'symbol', 1);
+      typecheck('remove-special!', name, 'symbol', 2);
+      lips.specials[symbol.name] = name;
+    }, "(add-special! symbol name)\n\n            Add special symbol to the list of transforming operators by the parser.\n            e.g.: `(add-special! '#)` will allow to use `#(1 2 3)` and it will be\n            transformed into (# (1 2 3)) so you can write # macro that will process\n            the list. It's main purpose to to allow to use `define-symbol-macro`"),
     // ------------------------------------------------------------------
     'get': get,
     '.': get,

@@ -58,7 +58,7 @@ publish:
 	$(CD) npm && $(NPM) publish --access=public
 	$(RM) -rf npm
 
-test:
+test: dist/lips.js
 	$(JEST)
 
 coveralls:

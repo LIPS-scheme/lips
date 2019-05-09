@@ -308,7 +308,7 @@
                 if (stack[stack.length - 1].length === 1 &&
                     stack[stack.length - 1][0] instanceof Symbol) {
                     stack[stack.length - 1].push(top);
-                } else if (stack[stack.length - 1].length === 0) {
+                } else if (false && stack[stack.length - 1].length === 0) {
                     stack[stack.length - 1] = top;
                 } else if (stack[stack.length - 1] instanceof Pair) {
                     if (stack[stack.length - 1].cdr instanceof Pair) {
@@ -381,9 +381,10 @@
                     if (special) {
                         // special without list like ,foo
                         while (special_count--) {
-                            stack[stack.length - 1][1] = value;
+                            stack[stack.length - 1].push(value);
                             value = stack.pop();
                         }
+                        specials_stack.pop();
                         special_count = 0;
                         special = false;
                     } else if (value instanceof Symbol &&
@@ -416,6 +417,8 @@
             }
         });
         if (!tokens.filter(t => t.match(/^[()]$/)).length && stack.length) {
+            // list of parser macros
+            console.log(stack.slice());
             result = result.concat(stack);
             stack = [];
         }
@@ -475,7 +478,7 @@
     }
     // ----------------------------------------------------------------------
     function dump(arr) {
-        if (false) {
+        if (true || false) {
             console.log(arr.map((arg) => {
                 if (arg instanceof Array) {
                     return Pair.fromArray(arg);
@@ -2949,10 +2952,11 @@
 
             Function remove special symbol from parser. Added by \`add-special!\``),
         // ------------------------------------------------------------------
-        'add-special!': doc(function(symbol) {
-            typecheck('remove-special!', symbol, 'symbol');
-            lips.specials[symbol.name] = symbol;
-        }, `(add-special! symbol)
+        'add-special!': doc(function(symbol, name) {
+            typecheck('remove-special!', symbol, 'symbol', 1);
+            typecheck('remove-special!', name, 'symbol', 2);
+            lips.specials[symbol.name] = name;
+        }, `(add-special! symbol name)
 
             Add special symbol to the list of transforming operators by the parser.
             e.g.: \`(add-special! '#)\` will allow to use \`#(1 2 3)\` and it will be

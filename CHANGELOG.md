@@ -3,7 +3,10 @@
 * add `unset!`, `add-special!` and `remove-special!` functions
 * add `define-symbol-macro` meta macro that create parser macros (parser transformer symbol)
 * rewrite `help` as macro so it works with parser macros
+### Bug fixes
 * fix white space in docs for macros
+* fix two cases in parser: `` `(,(list 1 2)) `` and `` `(+ ,,(list 'foo)) `` [#12](https://github.com/jcubic/lips/issues/12)
+
 
 ## 0.12.0
 ### Features

@@ -215,6 +215,24 @@ describe('parser', function() {
     it('should use reader macros', function() {
         testQuasituote('`(list ,@(list))');
     });
+    it('should parse quoted simbol inside multiple unquotes', function() {
+        var input = `\`(+ ,,(list 'foo))`;
+        var output = parse(tokenize(input))[0];
+        expect(output).toEqual(Pair.fromArray(
+            [
+                Symbol('quasiquote'),
+                [
+                    Symbol('+'),
+                    [
+                        Symbol('unquote'),
+                        [
+                            Symbol('unquote'),
+                            [
+                                Symbol('list'),
+                                [
+                                    Symbol('quote'),
+                                    Symbol('foo')]]]]]]));
+    });
     it('should create AList', function() {
         var tokens = tokenize('((foo . 10) (bar . 20) (baz . 30))');
         var array = parse(tokens);

@@ -42,7 +42,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             term.error(message);
         }, lips.env.env.error.__doc__)
     });
-    // hack so (let ((x help)) (help x))
+    // hack so (let ((x lambda)) (help x))
     env.env.__help = lips.env.env.help;
     // -------------------------------------------------------------------------
     var term = jQuery(selector).terminal(function(code, term) {
