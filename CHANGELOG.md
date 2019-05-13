@@ -6,7 +6,7 @@
 ### Bug fixes
 * fix white space in docs for macros
 * fix two cases in parser: `` `(,(list 1 2)) `` and `` `(+ ,,(list 'foo)) `` [#12](https://github.com/jcubic/lips/issues/12)
-
+* fix quaisquote macro (eval of single unquote in double quasiquote) [#14](https://github.com/jcubic/lips/issues/14)
 
 ## 0.12.0
 ### Features

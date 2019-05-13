@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Thu, 09 May 2019 12:02:13 +0000
+ * build: Mon, 13 May 2019 08:47:51 +0000
  */
 (function () {
 'use strict';
@@ -4021,7 +4021,7 @@ function _typeof(obj) {
       var dynamic_scope = _ref16.dynamic_scope,
           error = _ref16.error;
       var self = this;
-      var max_unquote = 0;
+      var max_unquote = 1;
 
       if (dynamic_scope) {
         dynamic_scope = self;
@@ -4101,6 +4101,10 @@ function _typeof(obj) {
                 return join(eval_pair, value);
               });
             });
+          }
+
+          if (_Symbol.is(pair.car, 'quasiquote')) {
+            max_unquote++;
           }
 
           if (_Symbol.is(pair.car, 'unquote')) {

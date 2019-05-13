@@ -2601,7 +2601,7 @@
         // ------------------------------------------------------------------
         quasiquote: doc(new Macro('quasiquote', function(arg, { dynamic_scope, error }) {
             var self = this;
-            var max_unquote = 0;
+            var max_unquote = 1;
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
@@ -2662,6 +2662,9 @@
                             }
                             return unpromise(value, value => join(eval_pair, value));
                         });
+                    }
+                    if (Symbol.is(pair.car, 'quasiquote')) {
+                        max_unquote++;
                     }
                     if (Symbol.is(pair.car, 'unquote')) {
                         var head = pair.cdr;

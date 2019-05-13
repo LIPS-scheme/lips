@@ -212,6 +212,15 @@ describe('parser', function() {
     it('should create quasiquote list from literals', function() {
         testQuasituote('(quasiquote (list (unquote-splicing (list))))', true);
     });
+    it('should unquote from single quasiquote', function() {
+        lips.exec("`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))").then(function(result) {
+            expect(result[0].toString()).toEqual(
+                ['(let ((name (quote x)))',
+                    '(quasiquote (let ((name (quote y)))',
+                         '(quasiquote (list (quote (unquote name)))))))'].join(' ')
+            );
+        });
+    });
     it('should use reader macros', function() {
         testQuasituote('`(list ,@(list))');
     });
