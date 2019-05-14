@@ -2204,18 +2204,21 @@
         // ------------------------------------------------------------------
         load: doc(function(file) {
             typecheck('load', file, 'string');
+            var env = this;
             if (this.get('global')) {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file, function(err, data) {
                         if (err) {
                             reject(err);
                         } else {
-                            resolve(exec(data.toString()));
+                            resolve(exec(data.toString(), env));
                         }
                     });
                 });
             }
-            return root.fetch(file).then(res => res.text()).then(exec);
+            return root.fetch(file).then(res => res.text()).then((code) => {
+                return exec(code, env);
+            });
         }, `(load filename)
 
             Function fetch the file and evaluate its content as LIPS code.`),

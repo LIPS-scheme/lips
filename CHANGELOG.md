@@ -4,10 +4,12 @@
 * add `define-symbol-macro` meta macro that create parser macros (parser transformer symbol)
 * rewrite `help` as macro so it works with parser macros
 * `require` function for Node.js + `load` work in Node using `fs.readFile`
+* stack trace in exception in lips binary
 ### Bug fixes
 * fix white space in docs for macros
 * fix two cases in parser: `` `(,(list 1 2)) `` and `` `(+ ,,(list 'foo)) `` [#12](https://github.com/jcubic/lips/issues/12)
 * fix quaisquote macro (eval of single unquote in double quasiquote) [#14](https://github.com/jcubic/lips/issues/14)
+* add scope to exec in `load` function
 
 ## 0.12.0
 ### Features

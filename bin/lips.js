@@ -61,6 +61,9 @@ function run(code) {
     }
     return exec(code).catch(function(e) {
         console.error(e.message);
+        if (e.code) {
+            console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`).join('\n'));
+        }
     });
 }
 

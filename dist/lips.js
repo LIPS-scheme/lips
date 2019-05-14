@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Tue, 14 May 2019 19:27:50 +0000
+ * build: Tue, 14 May 2019 20:16:46 +0000
  */
 (function () {
 'use strict';
@@ -3626,6 +3626,7 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     load: doc(function (file) {
       typecheck('load', file, 'string');
+      var env = this;
 
       if (this.get('global')) {
         return new Promise(function (resolve, reject) {
@@ -3633,7 +3634,7 @@ function _typeof(obj) {
             if (err) {
               reject(err);
             } else {
-              resolve(exec(data.toString()));
+              resolve(exec(data.toString(), env));
             }
           });
         });
@@ -3641,7 +3642,9 @@ function _typeof(obj) {
 
       return root.fetch(file).then(function (res) {
         return res.text();
-      }).then(exec);
+      }).then(function (code) {
+        return exec(code, env);
+      });
     }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
     // ------------------------------------------------------------------
     'while': doc(new Macro('while', function (code, _ref8) {
