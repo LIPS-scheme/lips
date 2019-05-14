@@ -213,12 +213,30 @@ describe('parser', function() {
         testQuasituote('(quasiquote (list (unquote-splicing (list))))', true);
     });
     it('should unquote from single quasiquote', function() {
-        lips.exec("`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))").then(function(result) {
+        var code = "`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))";
+        lips.exec(code).then(function(result) {
             expect(result[0].toString()).toEqual(
-                ['(let ((name (quote x)))',
+                [
+                    '(let ((name (quote x)))',
                     '(quasiquote (let ((name (quote y)))',
-                         '(quasiquote (list (quote (unquote name)))))))'].join(' ')
+                    '(quasiquote (list (quote (unquote name)))))))'
+                ].join(' ')
             );
+        });
+    });
+    it('should unquote from double quotation', function() {
+        var code = `(let ((x '(1 2)))
+                     \`(let ((x '(2 3)))
+                        (begin
+                          \`(list ,(car x))
+                          \`(list ,,(car x)))))`;
+        lips.exec(code).then(result => {
+            expect(result[0].toString()).toEqual([
+                '(let ((x (quote (2 3))))',
+                '(begin',
+                '(quasiquote (list (unquote (car x))))',
+                '(quasiquote (list (unquote 1)))))'
+            ].join(' '));
         });
     });
     it('should use reader macros', function() {

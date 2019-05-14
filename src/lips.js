@@ -418,7 +418,6 @@
         });
         if (!tokens.filter(t => t.match(/^[()]$/)).length && stack.length) {
             // list of parser macros
-            console.log(stack.slice());
             result = result.concat(stack);
             stack = [];
         }
@@ -701,7 +700,8 @@
         [['(', 'begin'], 1],
         [['(', 'begin', sexp], 1, notParen],
         [['(', /^let\*?$/, '(', glob, ')'], 1],
-        [['(', /^let\*?$/, '(', new Pattern(['(', glob, ')'], '+')], 2, notParen],
+        [['(', /^let\*?$/, '(', sexp], 2, notParen],
+        [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen],
         [['(', 'if', /[^()]/], 1],
         [['(', 'if', ['(', glob, ')']], 1],
         [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1],
@@ -1310,7 +1310,7 @@
             }
             var new_code = code;
             if (single) {
-                return quote((await traverse(code)).car);
+                return quote(await traverse((await traverse(code)).car));
             } else {
                 while (true) {
                     new_code = await traverse(code);
@@ -2003,9 +2003,10 @@
     // ----------------------------------------------------------------------
     // :: Unquote is used for multiple backticks and unquote
     // ----------------------------------------------------------------------
-    function Unquote(value, count) {
+    function Unquote(value, count, max) {
         this.value = value;
         this.count = count;
+        this.max = max;
     }
     Unquote.prototype.toString = function() {
         return '<#unquote[' + this.count + '] ' + this.value + '>';
@@ -2195,8 +2196,25 @@
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
+        'require': doc(function(module) {
+            return require(module);
+        }, `(require module)
+
+            Function to be used inside Node.js to import the module.`),
+        // ------------------------------------------------------------------
         load: doc(function(file) {
             typecheck('load', file, 'string');
+            if (this.get('global')) {
+                return new Promise((resolve, reject) => {
+                    require('fs').readFile(file, function(err, data) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(exec(data.toString()));
+                        }
+                    });
+                });
+            }
             return root.fetch(file).then(res => res.text()).then(exec);
         }, `(load filename)
 
@@ -2505,12 +2523,6 @@
         'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
         // ------------------------------------------------------------------
         'define-macro': doc(new Macro(macro, function(macro, { dynamic_scope, error }) {
-            function clear(node) {
-                if (node instanceof Pair) {
-                    delete node.data;
-                }
-                return node;
-            }
             if (macro.car instanceof Pair && macro.car.car instanceof Symbol) {
                 var name = macro.car.car.name;
                 var __doc__;
@@ -2561,7 +2573,7 @@
                         // need different env because we need to call it in scope
                         // were it was called
                         pair = evaluate(pair, { env: this, dynamic_scope, error });
-                        return unpromise(pair, clear);
+                        return unpromise(pair, quote);
                     }
                 }, __doc__);
             }
@@ -2599,10 +2611,11 @@
             to evalute expression inside and return the value, the output is inserted
             into list structure created by queasiquote.`),
         // ------------------------------------------------------------------
-        quasiquote: doc(new Macro('quasiquote', function(arg, { dynamic_scope, error }) {
+        quasiquote: Macro.defmacro('quasiquote', function(arg, env) {
+            const { dynamic_scope, error, macro_expand } = env;
             var self = this;
-            var max_unquote = 1;
-            if (dynamic_scope) {
+            //var max_unquote = 1;
+            if (dynamic_scope === true) {
                 dynamic_scope = self;
             }
             function isPair(value) {
@@ -2642,13 +2655,14 @@
                 }
                 return eval_pair;
             }
-            function recur(pair) {
+            function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
                     var eval_pair;
                     if (Symbol.is(pair.car.car, 'unquote-splicing')) {
                         eval_pair = evaluate(pair.car.cdr.car, {
                             env: self,
                             dynamic_scope,
+                            macro_expand,
                             error
                         });
                         return unpromise(eval_pair, function(eval_pair) {
@@ -2664,56 +2678,65 @@
                         });
                     }
                     if (Symbol.is(pair.car, 'quasiquote')) {
-                        max_unquote++;
+                        var cdr = recur(pair.cdr, unquote_cnt, max_unq + 1);
+                        return new Pair(pair.car, cdr);
                     }
                     if (Symbol.is(pair.car, 'unquote')) {
                         var head = pair.cdr;
                         var node = head;
                         var parent = node;
-                        var unquote_count = 1;
+                        unquote_cnt++;
                         while (Symbol.is(node.car.car, 'unquote')) {
                             parent = node;
-                            unquote_count++;
+                            unquote_cnt++;
                             node = node.car.cdr.car;
-                        }
-                        if (unquote_count > max_unquote) {
-                            max_unquote = unquote_count;
                         }
                         // we use Unquote to proccess inner most unquote first
                         // in unquote function afer processing whole s-expression
                         if (parent === node) {
                             if (pair.cdr.cdr !== nil) {
                                 return unpromise(recur(pair.cdr.cdr), function(value) {
-                                    return new Pair(
-                                        new Unquote(pair.cdr.car, unquote_count),
-                                        value
+                                    var unquoted = new Unquote(
+                                        pair.cdr.car,
+                                        unquote_cnt,
+                                        max_unq
                                     );
+                                    return new Pair(unquoted, value);
                                 });
                             } else {
-                                return new Unquote(pair.cdr.car, unquote_count);
+                                return new Unquote(pair.cdr.car, unquote_cnt, max_unq);
                             }
                         } else if (parent.cdr.cdr !== nil) {
-                            return unpromise(recur(parent.cdr.cdr), function(value) {
+                            var value = recur(parent.cdr.cdr, unquote_cnt, max_unq);
+                            return unpromise(value, function(value) {
                                 parent.car.cdr = new Pair(
-                                    new Unquote(node, unquote_count),
+                                    new Unquote(node, unquote_cnt, max_unq),
                                     parent.cdr === nil ? nil : value
                                 );
                                 return head.car;
                             });
                         } else {
-                            parent.car.cdr = new Unquote(node, unquote_count);
+                            parent.car.cdr = new Unquote(node, unquote_cnt, max_unq);
                         }
                         return head.car;
                     }
-                    return resolve_pair(pair, recur);
+                    return resolve_pair(pair, (pair) => {
+                        return recur(pair, unquote_cnt, max_unq);
+                    });
                 }
                 return pair;
             }
             const unquoteTest = v => isPair(v) || v instanceof Unquote;
             function unquoting(node) {
                 if (node instanceof Unquote) {
-                    if (max_unquote === node.count) {
-                        return evaluate(node.value, { env: self, dynamic_scope, error });
+                    if (node.max === node.count) {
+                        var ret = evaluate(node.value, {
+                            env: self,
+                            dynamic_scope,
+                            macro_expand,
+                            error
+                        });
+                        return ret;
                     } else {
                         return unpromise(unquoting(node.value), function(value) {
                             return new Pair(
@@ -2728,10 +2751,12 @@
                 }
                 return resolve_pair(node, unquoting, unquoteTest);
             }
-            return unpromise(recur(arg.car), value => {
-                return unpromise(unquoting(value), quote);
+            var x = recur(arg.car, 0, 1);
+            return unpromise(x, value => {
+                value = unquoting(value);
+                return unpromise(value, quote);
             });
-        }), `(quasiquote list ,value ,@value)
+        }, `(quasiquote list ,value ,@value)
 
             Similar macro to \`quote\` but inside it you can use special
             expressions unquote abbreviated to , that will evaluate expresion inside
@@ -3061,11 +3086,7 @@
         // ------------------------------------------------------------------
         read: doc(function read(arg) {
             if (typeof arg === 'string') {
-                arg = parse(tokenize(arg));
-                if (arg.length) {
-                    return arg[arg.length - 1];
-                }
-                return emptyList();
+                return parse(tokenize(arg));
             }
             return this.get('stdin').read().then((text) => {
                 return read.call(this, text);
@@ -3854,12 +3875,11 @@
             //code = code.clone();
         }
         var value = macro.invoke(code, eval_args);
-        value = resolvePromises(value);
-        return unpromise(value, function ret(value) {
+        return unpromise(resolvePromises(value), function ret(value) {
             if (value && value.data || !(value instanceof Pair)) {
                 return value;
             } else {
-                return evaluate(value, eval_args);
+                return quote(evaluate(value, eval_args));
             }
         });
     }

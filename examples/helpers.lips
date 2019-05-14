@@ -82,8 +82,8 @@
 ;;  (--> (list->array args) (join "")))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (global name)
-  `(set-obj! window ,(symbol->string name) ,name))
+(define-macro (define-global name)
+  `(set-obj! global ,(symbol->string name) ,name))
 
 ;; ---------------------------------------------------------------------------------------
 (define (alist->object alist)
