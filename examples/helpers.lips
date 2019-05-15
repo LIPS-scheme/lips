@@ -194,3 +194,20 @@
    Macro for defining vectors (arrays)."
   `(list->array (list ,@arg)))
 
+
+(define-macro (module name . body)
+  "(module module-name . body)
+
+   Macro for defining modules inside you can use define to create functions.
+   And use export name to add that name to defined environment."
+  (let ((parent (. (current-environment) 'parent)))
+    `(let ((__module-exports__ (new (. lips 'Environment) (concat "module-" ,(symbol->string name)))))
+       (define-macro (export name) `(--> __module-exports__ (set ',name ,name)))
+       ,@body
+       (--> ,parent (set ',name __module-exports__)))))
+
+(define-macro (import name module)
+  "(input function-name module)
+
+   Macro for importing function from module"
+  `(define ,name (--> ,module (get ',name))))
