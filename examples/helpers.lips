@@ -211,3 +211,70 @@
 
    Macro for importing function from module"
   `(define ,name (--> ,module (get ',name))))
+
+(define-macro (cond . list)
+  (if (pair? list)
+      (let* ((item (car list))
+             (first (car item))
+             (forms (cdr item))
+             (rest (cdr list)))
+        `(if ,first
+             (begin
+               ,@forms)
+             ,(if (and (pair? rest)
+                       (eq? (caar rest) true))
+                  `(begin
+                     ,@(cdar rest))
+                  `(cond ,@rest))))))
+
+(define (compare a b)
+  (cond ((and (pair? a) (pair? b)) (and (compare (car a) (car b))
+                                        (compare (cdr a) (cdr b))))
+        ((and (array? a) (array? b)) (compare (array->list a) (array->list b)))
+        ((and (object? a) (object? b))
+         (compare (array->list (--> Object (keys a)))
+                  (array->list (--> Object (keys b)))))
+        ((eq? (type a) (type b)) (eq? a b))
+        ((and (function? a) (not (function? b)))
+         (a b))
+        ((and (not (function? a)) (function? b))
+         (b a))
+        (true false)))
+
+(define-macro (auto-quote lst)
+  "(auto-quote list)
+
+   Macro that create list recursively but take symbols from scope"
+  (if (pair? lst)
+      `(list ,@(map (lambda (item)
+                      (if (symbol? item)
+                          item
+                          (if (pair? item)
+                              `(auto-quote ,item)
+                              `,item)))
+                    lst))))
+
+
+(define-macro (match expr . list)
+  "(match pattern ((pattern . body) ...))
+
+   Pattern matching macro. examples:
+   (match (1 (pair? pair?) 2) ((1 (() ()) 2) (print \"match\")))
+   ;; match
+   (match (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")))
+   (match (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")) (true \"rest\"))
+   ;; \"rest\""
+ (if (pair? list)
+     (let ((ex-name (gensym)))
+       `(let ((,ex-name (auto-quote ,expr)))
+          (cond ,@(map (lambda (item)
+                         (if (eq? (car item) true)
+                             `(true ,(cadr item))
+                             `((compare ,ex-name (auto-quote ,(car item))) ,(cadr item))))
+                       list))))))
+
+(define (defmacro? obj)
+  "(defmacro? expression)
+
+   Function check if object is macro and it's expandable"
+  (and (macro? obj) (. obj 'defmacro)))
