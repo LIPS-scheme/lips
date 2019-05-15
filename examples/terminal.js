@@ -46,6 +46,8 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
     env.env.__help = lips.env.env.help;
     // -------------------------------------------------------------------------
     var term = jQuery(selector).terminal(function(code, term) {
+        // format before executing mainly for strings in function docs
+        code = new lips.Formatter(code).format();
         lips.exec(code, env, dynamic).then(function(ret) {
             ret.forEach(function(ret) {
                 if (ret !== undefined) {
@@ -86,10 +88,15 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             if (e.text) {
                 var code = e.text;
                 var prompt = this.get_prompt();
-                var formatter = new lips.Formatter(code);
-                var output = formatter.format({
-                    offset: prompt.length
-                });
+                try {
+                    var formatter = new lips.Formatter(code);
+                    var output = formatter.format({
+                        offset: prompt.length
+                    });
+                } catch(e) {
+                    // boken LIPS code
+                    output = code;
+                }
                 return Promise.resolve(output);
             }
         },

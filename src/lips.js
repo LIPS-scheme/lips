@@ -287,7 +287,7 @@
     // ----------------------------------------------------------------------
     function parse(tokens) {
         if (typeof tokens === 'string') {
-            throw new Error('parse require tokenized array of tokens not string');
+            tokens = tokenize(tokens);
         }
         var stack = [];
         var result = [];
@@ -693,12 +693,15 @@
         }
         return spaces + settings.indent;
     };
+    // ----------------------------------------------------------------------
     function Ahead(pattern) {
         this.pattern = pattern;
     }
+    // ----------------------------------------------------------------------
     Ahead.prototype.match = function(string) {
         return string.match(this.pattern);
     };
+    // ----------------------------------------------------------------------
     function Pattern(pattern, flag) {
         this.pattern = pattern;
         this.flag = flag;
@@ -729,7 +732,13 @@
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
         var code = this._code.replace(/\n\s*/g, '\n ');
-        const token = t => t.token.replace(/\s+/, ' ');
+        const token = t => {
+            if (t.token.match(string_re)) {
+                return t.token;
+            } else {
+                return t.token.replace(/\s+/, ' ');
+            }
+        };
         var tokens = tokenize(code, true).map(token).filter(t => t !== '\n');
         const { rules } = Formatter;
         for (let i = 0; i < tokens.length; ++i) {
@@ -766,7 +775,7 @@
     Formatter.prototype.format = function format(options) {
         // prepare code with single space after newline
         // so we have space token to align
-        var code = this._code.replace(/\s*\n\s*/g, '\n ');
+        var code = this._code.replace(/[ \t]*\n[ \t]*/g, '\n ');
         var tokens = tokenize(code, true);
         var settings = this._options(options);
         var indent = 0;
@@ -793,7 +802,18 @@
                 }
             }
         }
-        return tokens.map(token => token.token).join('');
+        return tokens.map(token => {
+            if (token.token.match(string_re)) {
+                if (token.token.match(/\n/)) {
+                    var spaces = new Array(token.col + 1).join(' ');
+                    var lines = token.token.split('\n');
+                    token.token = [lines[0]].concat(lines.slice(1).map(line => {
+                        return spaces + line;
+                    })).join('\n');
+                }
+            }
+            return token.token;
+        }).join('');
     };
     // ----------------------------------------------------------------------
     // :: flatten nested arrays
@@ -1898,9 +1918,19 @@
     // :: Environment constructor (parent and name arguments are optional)
     // ----------------------------------------------------------------------
     function Environment(obj, parent, name) {
+        if (arguments.length === 1) {
+            if (typeof arguments[0] === 'object') {
+                obj = arguments[0];
+                this.parent = null;
+            } else if (typeof arguments[0] === 'string') {
+                obj = {};
+                parent = {};
+                name = arguments[0];
+            }
+        }
         this.env = obj;
         this.parent = parent;
-        this.name = name;
+        this.name = name || 'anonymous';
     }
     // ----------------------------------------------------------------------
     Environment.prototype.inherit = function(name, obj = {}) {
@@ -3991,20 +4021,7 @@
         } else {
             env = env || global_env;
         }
-        // proper indent of multi line strings
-        var tokens = tokenize(string, true).map(function(token) {
-            if (token.token.match(string_re) && token.col) {
-                // col + 1 because of open quote character
-                var re = new RegExp(`^ {${token.col + 1}}`);
-                return token.token.split('\n').map(line => {
-                    return line.replace(re, '');
-                }).join('\n');
-            }
-            return token.token.trim();
-        }).filter(function(token) {
-            return token && !token.match(/^;/);
-        });
-        var list = parse(tokens);
+        var list = parse(string);
         var results = [];
         while (true) {
             var code = list.shift();

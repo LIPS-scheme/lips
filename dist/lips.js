@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 15 May 2019 10:16:48 +0000
+ * build: Wed, 15 May 2019 14:01:14 +0000
  */
 (function () {
 'use strict';
@@ -1197,7 +1197,7 @@ function _typeof(obj) {
 
   function parse(tokens) {
     if (typeof tokens === 'string') {
-      throw new Error('parse require tokenized array of tokens not string');
+      tokens = tokenize(tokens);
     }
 
     var stack = [];
@@ -1709,15 +1709,18 @@ function _typeof(obj) {
     }
 
     return spaces + settings.indent;
-  };
+  }; // ----------------------------------------------------------------------
+
 
   function Ahead(pattern) {
     this.pattern = pattern;
-  }
+  } // ----------------------------------------------------------------------
+
 
   Ahead.prototype.match = function (string) {
     return string.match(this.pattern);
-  };
+  }; // ----------------------------------------------------------------------
+
 
   function Pattern(pattern, flag) {
     this.pattern = pattern;
@@ -1737,7 +1740,11 @@ function _typeof(obj) {
     var code = this._code.replace(/\n\s*/g, '\n ');
 
     var token = function token(t) {
-      return t.token.replace(/\s+/, ' ');
+      if (t.token.match(string_re)) {
+        return t.token;
+      } else {
+        return t.token.replace(/\s+/, ' ');
+      }
     };
 
     var tokens = tokenize(code, true).map(token).filter(function (t) {
@@ -1814,7 +1821,7 @@ function _typeof(obj) {
   Formatter.prototype.format = function format(options) {
     // prepare code with single space after newline
     // so we have space token to align
-    var code = this._code.replace(/\s*\n\s*/g, '\n ');
+    var code = this._code.replace(/[ \t]*\n[ \t]*/g, '\n ');
 
     var tokens = tokenize(code, true);
 
@@ -1851,6 +1858,16 @@ function _typeof(obj) {
     }
 
     return tokens.map(function (token) {
+      if (token.token.match(string_re)) {
+        if (token.token.match(/\n/)) {
+          var spaces = new Array(token.col + 1).join(' ');
+          var lines = token.token.split('\n');
+          token.token = [lines[0]].concat(lines.slice(1).map(function (line) {
+            return spaces + line;
+          })).join('\n');
+        }
+      }
+
       return token.token;
     }).join('');
   }; // ----------------------------------------------------------------------
@@ -3286,9 +3303,20 @@ function _typeof(obj) {
 
 
   function Environment(obj, parent, name) {
+    if (arguments.length === 1) {
+      if (_typeof(arguments[0]) === 'object') {
+        obj = arguments[0];
+        this.parent = null;
+      } else if (typeof arguments[0] === 'string') {
+        obj = {};
+        parent = {};
+        name = arguments[0];
+      }
+    }
+
     this.env = obj;
     this.parent = parent;
-    this.name = name;
+    this.name = name || 'anonymous';
   } // ----------------------------------------------------------------------
 
 
@@ -5509,7 +5537,7 @@ function _typeof(obj) {
     _exec = _asyncToGenerator(
     /*#__PURE__*/
     regenerator.mark(function _callee4(string, env, dynamic_scope) {
-      var tokens, list, results, code, result;
+      var list, results, code, result;
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -5520,38 +5548,24 @@ function _typeof(obj) {
                 env = dynamic_scope = global_env;
               } else {
                 env = env || global_env;
-              } // proper indent of multi line strings
+              }
 
-
-              tokens = tokenize(string, true).map(function (token) {
-                if (token.token.match(string_re) && token.col) {
-                  // col + 1 because of open quote character
-                  var re = new RegExp("^ {".concat(token.col + 1, "}"));
-                  return token.token.split('\n').map(function (line) {
-                    return line.replace(re, '');
-                  }).join('\n');
-                }
-
-                return token.token.trim();
-              }).filter(function (token) {
-                return token && !token.match(/^;/);
-              });
-              list = parse(tokens);
+              list = parse(string);
               results = [];
 
-            case 4:
+            case 3:
 
               code = list.shift();
 
               if (code) {
-                _context4.next = 10;
+                _context4.next = 9;
                 break;
               }
 
               return _context4.abrupt("return", results);
 
-            case 10:
-              _context4.next = 12;
+            case 9:
+              _context4.next = 11;
               return evaluate(code, {
                 env: env,
                 dynamic_scope: dynamic_scope,
@@ -5566,15 +5580,15 @@ function _typeof(obj) {
                 }
               });
 
-            case 12:
+            case 11:
               result = _context4.sent;
               results.push(result);
 
-            case 14:
-              _context4.next = 4;
+            case 13:
+              _context4.next = 3;
               break;
 
-            case 16:
+            case 15:
             case "end":
               return _context4.stop();
           }
