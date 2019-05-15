@@ -2665,8 +2665,6 @@
                         return nil;
                     }
                     eval_pair.append(value);
-                } else if (eval_pair instanceof Symbol) {
-                    return eval_pair;
                 } else {
                     eval_pair = new Pair(
                         eval_pair,
@@ -2686,9 +2684,8 @@
                             error
                         });
                         return unpromise(eval_pair, function(eval_pair) {
-                            if (!eval_pair instanceof Pair) {
-                                throw new Error('Value of unquote-splicing need' +
-                                                ' to be pair');
+                            if (!(eval_pair instanceof Pair)) {
+                                return eval_pair;
                             }
                             const value = recur(pair.cdr, 0, 1);
                             if (value === nil && eval_pair === nil) {
