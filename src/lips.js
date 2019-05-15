@@ -2665,6 +2665,8 @@
                         return nil;
                     }
                     eval_pair.append(value);
+                } else if (eval_pair instanceof Symbol) {
+                    return eval_pair;
                 } else {
                     eval_pair = new Pair(
                         eval_pair,

@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 15 May 2019 09:30:00 +0000
+ * build: Wed, 15 May 2019 09:52:55 +0000
  */
 (function () {
 'use strict';
@@ -4131,6 +4131,8 @@ function _typeof(obj) {
           }
 
           eval_pair.append(value);
+        } else if (eval_pair instanceof _Symbol) {
+          return eval_pair;
         } else {
           eval_pair = new Pair(eval_pair, value);
         }

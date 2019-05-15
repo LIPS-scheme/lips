@@ -224,6 +224,11 @@ describe('parser', function() {
             );
         });
     });
+    it('should join symbol', function() {
+        lips.exec("(let ((x 'foo)) `(a ,@x))").then(result => {
+            expect(result[0].toString()).toEqual('(a . foo)');
+        });
+    });
     it('should unquote from double quotation', function() {
         var code = `(let ((x '(1 2)))
                      \`(let ((x '(2 3)))
