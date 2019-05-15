@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Tue, 14 May 2019 20:16:46 +0000
+ * build: Wed, 15 May 2019 08:49:17 +0000
  */
 (function () {
 'use strict';
@@ -2922,7 +2922,7 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------------
 
 
-  var get = doc(function (obj) {
+  var get = doc(function get(obj) {
     if (typeof obj === 'function' && obj.__bind) {
       obj = obj.__bind.fn;
     }
@@ -4114,7 +4114,7 @@ function _typeof(obj) {
                 throw new Error('Value of unquote-splicing need' + ' to be pair');
               }
 
-              var value = recur(pair.cdr);
+              var value = recur(pair.cdr, 0, 1);
 
               if (value === nil && eval_pair === nil) {
                 return undefined;
@@ -4416,14 +4416,14 @@ function _typeof(obj) {
     }, "(unset! name)\n\n            Function delete specified name from environment."),
     // ------------------------------------------------------------------
     'remove-special!': doc(function (symbol) {
-      typecheck('remove-special!', symbol, 'symbol');
-      delete specials[symbol.name];
+      typecheck('remove-special!', symbol, 'string');
+      delete specials[symbol];
     }, "(remove-special! symbol)\n\n            Function remove special symbol from parser. Added by `add-special!`"),
     // ------------------------------------------------------------------
     'add-special!': doc(function (symbol, name) {
-      typecheck('remove-special!', symbol, 'symbol', 1);
+      typecheck('remove-special!', symbol, 'string', 1);
       typecheck('remove-special!', name, 'symbol', 2);
-      lips.specials[symbol.name] = name;
+      lips.specials[symbol] = name;
     }, "(add-special! symbol name)\n\n            Add special symbol to the list of transforming operators by the parser.\n            e.g.: `(add-special! '#)` will allow to use `#(1 2 3)` and it will be\n            transformed into (# (1 2 3)) so you can write # macro that will process\n            the list. It's main purpose to to allow to use `define-symbol-macro`"),
     // ------------------------------------------------------------------
     'get': get,

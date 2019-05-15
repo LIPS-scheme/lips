@@ -27,6 +27,19 @@
               code)
        ,obj)))
 
+;; (let ((expr '(list "x"))
+;;       (code '((list "y") (list "z")))
+;;       (obj (gensym)))
+;;   `(let ((,obj ,expr))
+;;      ,@(map (lambda (code)
+;;               (let ((name (gensym))
+;;                     (fn (gensym)))
+;;                 `(let ((,name ,(symbol->string (car code))))
+;;                    (display ',obj)
+;;                    (newline)
+;;                    (display ',name))))
+;;             code)))
+
 ;; ---------------------------------------------------------------------------------------
 (define (dir obj)
   "(dir obj)
@@ -130,11 +143,11 @@
        ,name)))
 
 ;; ---------------------------------------------------------------------------------------
-;; (define-macro (make-object . expr)
-;;   "(make-object :name value)
-;;
-;;    Macro that create JavaScript object using key like syntax."
-;;   (object-expander expr))
+(define-macro (make-object . expr)
+  "(make-object :name value)
+
+   Macro that create JavaScript object using key like syntax."
+  (object-expander expr))
 
 
 
@@ -181,10 +194,10 @@
    ;; if there is macro defined, in second case it will put list as first element
    ;; of the body even is it's called like this (define-symbol-macro (# code)
   (let* ((name (car spec))
-         (symbol (string->symbol (cadr spec)))
+         (symbol (cadr spec))
          (args (cddr spec)))
      `(begin
-        (add-special! ',symbol ',name)
+        (add-special! ,symbol ',name)
         (define-macro (,name ,@args) ,@rest))))
 
 (define-symbol-macro (make-vector "#" . arg)

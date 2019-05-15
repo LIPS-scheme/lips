@@ -1594,7 +1594,7 @@
         };
     }
     // ----------------------------------------------------------------------------
-    var get = doc(function(obj, ...args) {
+    var get = doc(function get(obj, ...args) {
         if (typeof obj === 'function' && obj.__bind) {
             obj = obj.__bind.fn;
         }
@@ -2673,7 +2673,7 @@
                                 throw new Error('Value of unquote-splicing need' +
                                                 ' to be pair');
                             }
-                            const value = recur(pair.cdr);
+                            const value = recur(pair.cdr, 0, 1);
                             if (value === nil && eval_pair === nil) {
                                 return undefined;
                             }
@@ -2977,16 +2977,16 @@
             Function delete specified name from environment.`),
         // ------------------------------------------------------------------
         'remove-special!': doc(function(symbol) {
-            typecheck('remove-special!', symbol, 'symbol');
-            delete specials[symbol.name];
+            typecheck('remove-special!', symbol, 'string');
+            delete specials[symbol];
         }, `(remove-special! symbol)
 
             Function remove special symbol from parser. Added by \`add-special!\``),
         // ------------------------------------------------------------------
         'add-special!': doc(function(symbol, name) {
-            typecheck('remove-special!', symbol, 'symbol', 1);
+            typecheck('remove-special!', symbol, 'string', 1);
             typecheck('remove-special!', name, 'symbol', 2);
-            lips.specials[symbol.name] = name;
+            lips.specials[symbol] = name;
         }, `(add-special! symbol name)
 
             Add special symbol to the list of transforming operators by the parser.
