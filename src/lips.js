@@ -2496,7 +2496,15 @@
                 return evaluate(code, {
                     env,
                     dynamic_scope: this,
-                    error: e => this.get('print')(e.message)
+                    error: e => {
+                        this.get('error')(e.message);
+                        if (e.code) {
+                            var stack = e.code.map((line, i) => {
+                                return `[${i + 1}]: ${line}`;
+                            }).join('\n');
+                            this.get('error')(stack);
+                        }
+                    }
                 });
             }
             if (code instanceof Array) {
@@ -3158,13 +3166,7 @@
             it user code)`),
         // ------------------------------------------------------------------
         error: doc(function(...args) {
-            if (root.console) {
-                if (root.console.error) {
-                    root.console.error(...args);
-                } else if (root.console.log) {
-                    root.console.log(...args);
-                }
-            }
+            this.get('print')(...args);
         }, `(error . args)
 
             Display error message.`),

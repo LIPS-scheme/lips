@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 15 May 2019 14:01:14 +0000
+ * build: Wed, 15 May 2019 15:15:57 +0000
  */
 (function () {
 'use strict';
@@ -3926,7 +3926,15 @@ function _typeof(obj) {
           env: env,
           dynamic_scope: this,
           error: function error(e) {
-            return _this.get('print')(e.message);
+            _this.get('error')(e.message);
+
+            if (e.code) {
+              var stack = e.code.map(function (line, i) {
+                return "[".concat(i + 1, "]: ").concat(line);
+              }).join('\n');
+
+              _this.get('error')(stack);
+            }
           }
         });
       }
@@ -4581,17 +4589,7 @@ function _typeof(obj) {
     }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
     // ------------------------------------------------------------------
     error: doc(function () {
-      if (root.console) {
-        if (root.console.error) {
-          var _root$console;
-
-          (_root$console = root.console).error.apply(_root$console, arguments);
-        } else if (root.console.log) {
-          var _root$console2;
-
-          (_root$console2 = root.console).log.apply(_root$console2, arguments);
-        }
-      }
+      this.get('print').apply(void 0, arguments);
     }, "(error . args)\n\n            Display error message."),
     // ------------------------------------------------------------------
     flatten: doc(function (list) {
