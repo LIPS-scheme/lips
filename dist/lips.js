@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 15 May 2019 08:49:17 +0000
+ * build: Wed, 15 May 2019 09:30:00 +0000
  */
 (function () {
 'use strict';
@@ -1601,7 +1601,7 @@ function _typeof(obj) {
   Formatter.defaults = {
     offset: 0,
     indent: 2,
-    specials: ['define', 'lambda', 'let', 'let*', 'define-macro']
+    specials: [/^define/, 'lambda', 'let', 'let*']
   };
   Formatter.match = match; // ----------------------------------------------------------------------
   // :: return indent for next line
@@ -1627,11 +1627,51 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
+  Formatter.matchSpecial = function (token, settings) {
+    var specials = settings.specials;
+
+    if (specials.indexOf(token) !== -1) {
+      return true;
+    } else {
+      var regexes = specials.filter(function (s) {
+        return s instanceof RegExp;
+      });
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = regexes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var re = _step.value;
+
+          if (token.match(re)) {
+            return true;
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return != null) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+
+    return false;
+  }; // ----------------------------------------------------------------------
+
+
   Formatter.prototype._indent = function _indent(tokens, options) {
     var settings = this._options(options);
 
     var spaces = lineIndent(tokens);
-    var specials = settings.specials;
     var sexp = previousSexp(tokens);
 
     if (sexp) {
@@ -1641,7 +1681,7 @@ function _typeof(obj) {
 
       if (sexp.length === 1) {
         return settings.offset + sexp[0].col + 1;
-      } else if (specials.indexOf(sexp[1].token) !== -1) {
+      } else if (Formatter.matchSpecial(sexp[1].token, settings)) {
         return settings.offset + sexp[0].col + settings.indent;
       } else if (sexp[0].line < sexp[1].line) {
         return settings.offset + sexp[0].col + 1;
@@ -1691,7 +1731,7 @@ function _typeof(obj) {
   var glob = root.Symbol.for('*');
   var sexp = new Pattern(['(', glob, ')'], '+'); // rules for breaking S-Expressions into lines
 
-  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, '(', sexp], 2, notParen], [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1], [['(', glob, ')'], 1], [['(', /^define/, '(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'lambda', '(', glob, ')'], 1], [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
+  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, '(', sexp], 2, notParen], [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen], [['(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], string_re], 1], [['(', /^define/, '(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'lambda', '(', glob, ')'], 1], [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
 
   Formatter.prototype.break = function () {
     var code = this._code.replace(/\n\s*/g, '\n ');
@@ -1719,16 +1759,16 @@ function _typeof(obj) {
           sexp[count] = previousSexp(sub, count);
         }
       });
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
 
       try {
-        for (var _iterator = rules[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = _slicedToArray(_step.value, 3),
-              pattern = _step$value[0],
-              count = _step$value[1],
-              ext = _step$value[2];
+        for (var _iterator2 = rules[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var _step2$value = _slicedToArray(_step2.value, 3),
+              pattern = _step2$value[0],
+              count = _step2$value[1],
+              ext = _step2$value[2];
 
           var m = match(pattern, sexp[count].filter(function (t) {
             return t.trim();
@@ -1744,16 +1784,16 @@ function _typeof(obj) {
           }
         }
       } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion && _iterator.return != null) {
-            _iterator.return();
+          if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
+            _iterator2.return();
           }
         } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
+          if (_didIteratorError2) {
+            throw _iteratorError2;
           }
         }
       }
@@ -5605,6 +5645,16 @@ function _typeof(obj) {
   }; // ----------------------------------------------------------------------
 
 
+  function execError(e) {
+    console.error(e.message || e);
+
+    if (e.code) {
+      console.error(e.code.map(function (line, i) {
+        return "[".concat(i + 1, "]: ").concat(line);
+      }));
+    }
+  }
+
   function init() {
     var lips_mime = 'text/x-lips';
 
@@ -5622,9 +5672,15 @@ function _typeof(obj) {
             if (src) {
               return root.fetch(src).then(function (res) {
                 return res.text();
-              }).then(exec).then(loop);
+              }).then(exec).then(loop).catch(function (e) {
+                execError(e);
+                loop();
+              });
             } else {
-              return exec(script.innerHTML).then(loop);
+              return exec(script.innerHTML).then(loop).catch(function (e) {
+                execError(e);
+                loop();
+              });
             }
           } else if (type && type.match(/lips|lisp/)) {
             console.warn('Expecting ' + lips_mime + ' found ' + type);

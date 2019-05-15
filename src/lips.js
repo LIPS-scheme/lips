@@ -621,7 +621,7 @@
     Formatter.defaults = {
         offset: 0,
         indent: 2,
-        specials: ['define', 'lambda', 'let', 'let*', 'define-macro']
+        specials: [/^define/, 'lambda', 'let', 'let*']
     };
     Formatter.match = match;
     // ----------------------------------------------------------------------
@@ -643,10 +643,24 @@
         return this._indent(tokens, options);
     };
     // ----------------------------------------------------------------------
+    Formatter.matchSpecial = function(token, settings) {
+        var specials = settings.specials;
+        if (specials.indexOf(token) !== -1) {
+            return true;
+        } else {
+            var regexes = specials.filter(s => s instanceof RegExp);
+            for (let re of regexes) {
+                if (token.match(re)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    // ----------------------------------------------------------------------
     Formatter.prototype._indent = function _indent(tokens, options) {
         var settings = this._options(options);
         var spaces = lineIndent(tokens);
-        var specials = settings.specials;
         var sexp = previousSexp(tokens);
         if (sexp) {
             if (sexp[0].line > 0) {
@@ -654,7 +668,7 @@
             }
             if (sexp.length === 1) {
                 return settings.offset + sexp[0].col + 1;
-            } else if (specials.indexOf(sexp[1].token) !== -1) {
+            } else if (Formatter.matchSpecial(sexp[1].token, settings)) {
                 return settings.offset + sexp[0].col + settings.indent;
             } else if (sexp[0].line < sexp[1].line) {
                 return settings.offset + sexp[0].col + 1;
@@ -704,8 +718,9 @@
         [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen],
         [['(', 'if', /[^()]/], 1],
         [['(', 'if', ['(', glob, ')']], 1],
-        [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1],
+        [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen],
         [['(', glob, ')'], 1],
+        [['(', /^define/, ['(', glob, ')'], string_re], 1],
         [['(', /^define/, '(', glob, ')'], 1],
         [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen],
         [['(', 'lambda', '(', glob, ')'], 1],
@@ -4066,6 +4081,12 @@
         return new Symbol(value.name);
     };
     // ----------------------------------------------------------------------
+    function execError(e) {
+        console.error(e.message || e);
+        if (e.code) {
+            console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`));
+        }
+    }
     function init() {
         var lips_mime = 'text/x-lips';
         if (window.document) {
@@ -4078,9 +4099,15 @@
                         var src = script.getAttribute('src');
                         if (src) {
                             return root.fetch(src).then(res => res.text())
-                                .then(exec).then(loop);
+                                .then(exec).then(loop).catch((e) => {
+                                    execError(e);
+                                    loop();
+                                });
                         } else {
-                            return exec(script.innerHTML).then(loop);
+                            return exec(script.innerHTML).then(loop).catch((e) => {
+                                execError(e);
+                                loop();
+                            });
                         }
                     } else if (type && type.match(/lips|lisp/)) {
                         console.warn('Expecting ' + lips_mime + ' found ' + type);

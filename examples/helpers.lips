@@ -27,19 +27,6 @@
               code)
        ,obj)))
 
-;; (let ((expr '(list "x"))
-;;       (code '((list "y") (list "z")))
-;;       (obj (gensym)))
-;;   `(let ((,obj ,expr))
-;;      ,@(map (lambda (code)
-;;               (let ((name (gensym))
-;;                     (fn (gensym)))
-;;                 `(let ((,name ,(symbol->string (car code))))
-;;                    (display ',obj)
-;;                    (newline)
-;;                    (display ',name))))
-;;             code)))
-
 ;; ---------------------------------------------------------------------------------------
 (define (dir obj)
   "(dir obj)
