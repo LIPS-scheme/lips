@@ -256,13 +256,13 @@
 
 
 (define-macro (match-pattern expr . list)
-  "(match pattern ((pattern . body) ...))
+  "(match-patternpattern ((pattern . body) ...))
 
    Pattern matching macro. examples:
-   (match (1 (pair? pair?) 2) ((1 (() ()) 2) (print \"match\")))
+   (match-pattern (1 (pair? pair?) 2) ((1 (() ()) 2) (print \"match\")))
    ;; match
-   (match (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")))
-   (match (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")) (true \"rest\"))
+   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")))
+   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")) (true \"rest\"))
    ;; \"rest\""
  (if (pair? list)
      (let ((ex-name (gensym)))
