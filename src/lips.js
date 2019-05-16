@@ -2593,7 +2593,7 @@
                     macro.cdr.cdr !== nil) {
                     __doc__ = macro.cdr.car;
                 }
-                this.env[name] = Macro.defmacro(name, function(code, { macro_expand }) {
+                this.env[name] = Macro.defmacro(name, function(code) {
                     var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
                     var arg = code;
@@ -2631,18 +2631,13 @@
                     if (macro.cdr instanceof Pair) {
                         // this eval will return lips code
                         var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
-                        var pair = rest.reduce(function(result, node) {
+                        var result = rest.reduce(function(result, node) {
                             return evaluate(node, eval_args);
                         });
-                        if (macro_expand) {
-                            return quote(pair);
+                        if (typeof result === 'object') {
+                            delete result.data;
                         }
-                        // second evalute of code that is returned from macro
-                        // need different env because we need to call it in scope
-                        // were it was called
-                        eval_args.env = this;
-                        pair = evaluate(pair, eval_args);
-                        return unpromise(pair, quote);
+                        return result;
                     }
                 }, __doc__);
             }

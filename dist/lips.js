@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.14.0
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Thu, 16 May 2019 10:14:09 +0000
+ * build: Thu, 16 May 2019 10:46:24 +0000
  */
 (function () {
 'use strict';
@@ -4036,8 +4036,7 @@ function _typeof(obj) {
           __doc__ = macro.cdr.car;
         }
 
-        this.env[name] = Macro.defmacro(name, function (code, _ref14) {
-          var macro_expand = _ref14.macro_expand;
+        this.env[name] = Macro.defmacro(name, function (code) {
           var env = new Environment({}, this, 'defmacro');
           var name = macro.car.cdr;
           var arg = code;
@@ -4082,20 +4081,15 @@ function _typeof(obj) {
           if (macro.cdr instanceof Pair) {
             // this eval will return lips code
             var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
-            var pair = rest.reduce(function (result, node) {
+            var result = rest.reduce(function (result, node) {
               return evaluate(node, eval_args);
             });
 
-            if (macro_expand) {
-              return quote(pair);
-            } // second evalute of code that is returned from macro
-            // need different env because we need to call it in scope
-            // were it was called
+            if (_typeof(result) === 'object') {
+              delete result.data;
+            }
 
-
-            eval_args.env = this;
-            pair = evaluate(pair, eval_args);
-            return unpromise(pair, quote);
+            return result;
           }
         }, __doc__);
       }
@@ -4140,10 +4134,10 @@ function _typeof(obj) {
           }
 
           if (isPromise(car) || isPromise(cdr)) {
-            return Promise.all([car, cdr]).then(function (_ref15) {
-              var _ref16 = _slicedToArray(_ref15, 2),
-                  car = _ref16[0],
-                  cdr = _ref16[1];
+            return Promise.all([car, cdr]).then(function (_ref14) {
+              var _ref15 = _slicedToArray(_ref14, 2),
+                  car = _ref15[0],
+                  cdr = _ref15[1];
 
               return new Pair(car, cdr);
             });
@@ -4644,11 +4638,11 @@ function _typeof(obj) {
         return LNumber(obj.length);
       }
     }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
-    'try': doc(new Macro('try', function (code, _ref17) {
+    'try': doc(new Macro('try', function (code, _ref16) {
       var _this4 = this;
 
-      var dynamic_scope = _ref17.dynamic_scope,
-          _error = _ref17.error;
+      var dynamic_scope = _ref16.dynamic_scope,
+          _error = _ref16.error;
       return new Promise(function (resolve) {
         var args = {
           env: _this4,
@@ -4976,9 +4970,9 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
     // ------------------------------------------------------------------
-    or: doc(new Macro('or', function (code, _ref18) {
-      var dynamic_scope = _ref18.dynamic_scope,
-          error = _ref18.error;
+    or: doc(new Macro('or', function (code, _ref17) {
+      var dynamic_scope = _ref17.dynamic_scope,
+          error = _ref17.error;
       var args = this.get('list->array')(code);
       var self = this;
 
@@ -5018,9 +5012,9 @@ function _typeof(obj) {
     }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function (code) {
-      var _ref19 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref19.dynamic_scope,
-          error = _ref19.error;
+      var _ref18 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref18.dynamic_scope,
+          error = _ref18.error;
 
       var args = this.get('list->array')(code);
       var self = this;
@@ -5363,10 +5357,10 @@ function _typeof(obj) {
     }
   }
 
-  function getFunctionArgs(rest, _ref20) {
-    var env = _ref20.env,
-        dynamic_scope = _ref20.dynamic_scope,
-        error = _ref20.error;
+  function getFunctionArgs(rest, _ref19) {
+    var env = _ref19.env,
+        dynamic_scope = _ref19.dynamic_scope,
+        error = _ref19.error;
     var args = [];
     var node = rest;
     markCycles(node);
@@ -5419,11 +5413,11 @@ function _typeof(obj) {
 
 
   function evaluate(code) {
-    var _ref21 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref21.env,
-        dynamic_scope = _ref21.dynamic_scope,
-        _ref21$error = _ref21.error,
-        error = _ref21$error === void 0 ? function () {} : _ref21$error;
+    var _ref20 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref20.env,
+        dynamic_scope = _ref20.dynamic_scope,
+        _ref20$error = _ref20.error,
+        error = _ref20$error === void 0 ? function () {} : _ref20$error;
 
     try {
       if (dynamic_scope === true) {
@@ -5714,7 +5708,7 @@ function _typeof(obj) {
 
 
   var lips = {
-    version: '0.14.0',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
