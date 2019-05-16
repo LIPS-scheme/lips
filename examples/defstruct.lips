@@ -31,23 +31,14 @@
 ;;   (print user))
 ;;
 
-;; helpers
-(define-macro (... obj . args)
-  "macro version of dot function, so don't need to use strings as arguments"
-  `(. ,obj ,@(map symbol->string args)))
-
-(define-macro (.. obj method . args)
-  "macro that get and apply object method"
-  `((. ,obj ,(symbol->string method)) ,@args))
-
 (define (length list)
   "return length of the list"
-  (.. list length))
+  (--> list (length)))
 
 (define (alist->object arg)
   "Function create JavaScript object from AList"
   (and (pair? arg)
-       (.. arg toObject)))
+       (--> arg (toObject))))
 
 (define (every fn list)
   "return true if every element return true for a function applied to every element"
@@ -60,7 +51,7 @@
          (let (($ (. window "jQuery")))
            (print $)
            (if (not (or (null? $) (null? (. jQuery "terminal"))))
-               (let ((term ((... jQuery terminal active))))
+               (let ((term ((.. jQuery.terminal.active))))
                  (--> term (error msg))))))))
 
 (define (symbol->string s)

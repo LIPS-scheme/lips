@@ -23,9 +23,19 @@
                           (,fn (. ,obj ,name)))
                      (if (not (function? ,fn))
                          (error (concat ,name " is not a function"))
-                         (set! ,obj (apply ,fn (list ,@(cdr code))))))))
+                         (set! ,obj (,fn ,@(cdr code)))))))
               code)
        ,obj)))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (.. expr)
+  "(.. foo.bar.baz)
+
+   Macro that gets value from nested object whenre argument is comma separated symbol"
+  (let ((parts (split "." (symbol->string expr))))
+    `(. ,(string->symbol (car parts)) ,@(map (lambda (string)
+                                               (list 'quote (string->symbol string)))
+                                             (cdr parts)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (dir obj)
@@ -155,7 +165,6 @@
             sources)
   desc)
 
-
 ;; ---------------------------------------------------------------------------------------
 (define (key? symbol)
   "(key? symbol)
@@ -171,6 +180,7 @@
   (if (key? symbol)
       (substring (symbol->string symbol) 1)))
 
+;; ---------------------------------------------------------------------------------------
 (define-macro (define-symbol-macro spec . rest)
   "(define-symbol-macro (name . args) . body)
 
@@ -187,6 +197,7 @@
         (add-special! ,symbol ',name)
         (define-macro (,name ,@args) ,@rest))))
 
+;; ---------------------------------------------------------------------------------------
 (define-symbol-macro (make-vector "#" arg)
   "(make-vector (1 2 3))
    #(1 2 3)
@@ -194,7 +205,7 @@
    Macro for defining vectors (arrays)."
   `(list->array (list ,@arg)))
 
-
+;; ---------------------------------------------------------------------------------------
 (define-macro (module name . body)
   "(module module-name . body)
 
@@ -206,13 +217,19 @@
        ,@body
        (--> ,parent (set ',name __module-exports__)))))
 
+;; ---------------------------------------------------------------------------------------
 (define-macro (import name module)
   "(input function-name module)
 
    Macro for importing function from module"
   `(define ,name (--> ,module (get ',name))))
 
+;; ---------------------------------------------------------------------------------------
 (define-macro (cond . list)
+  "(cond (predicate? . body)
+         (predicate? . body))
+
+   Macro for condition check. For usage instead of nested ifs."
   (if (pair? list)
       (let* ((item (car list))
              (first (car item))
@@ -226,8 +243,20 @@
                   `(begin
                      ,@(cdar rest))
                   `(cond ,@rest))))))
+;; ---------------------------------------------------------------------------------------
+;; formatter rules for cond to break after each S-Expression
+(let ((rules (.. lips.Formatter.rules))
+     (no-paren (new (.. lips.Formatter.Ahead) /[^)]/))
+     (sexp (new (.. lips.Formatter.Pattern) (list->array (list "(" ((.. Symbol.for) "*") ")")) "+")))
+ (--> rules (push (tree->array (list (list "(" "cond" sexp) (value 1) no-paren)))))
 
+;; ---------------------------------------------------------------------------------------
 (define (compare a b)
+  "(compare a b)
+
+   Function that compare two values. it compare lists and any element of the list
+   can be a function that will be called with other value. e.g.:
+   (compare (list (list 'a) 'b) (list pair? 'b))"
   (cond ((and (pair? a) (pair? b)) (and (compare (car a) (car b))
                                         (compare (cdr a) (cdr b))))
         ((and (array? a) (array? b)) (compare (array->list a) (array->list b)))
@@ -241,6 +270,7 @@
          (b a))
         (true false)))
 
+;; ---------------------------------------------------------------------------------------
 (define-macro (auto-quote lst)
   "(auto-quote list)
 
@@ -254,7 +284,7 @@
                               `,item)))
                     lst))))
 
-
+;; ---------------------------------------------------------------------------------------
 (define-macro (match-pattern expr . list)
   "(match-patternpattern ((pattern . body) ...))
 
@@ -273,6 +303,7 @@
                              `((compare ,ex-name (auto-quote ,(car item))) ,(cadr item))))
                        list))))))
 
+;; ---------------------------------------------------------------------------------------
 (define (defmacro? obj)
   "(defmacro? expression)
 

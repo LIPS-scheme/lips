@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Thu, 16 May 2019 10:46:24 +0000
+ * build: Thu, 16 May 2019 14:11:01 +0000
  */
 (function () {
 'use strict';
@@ -1963,6 +1963,41 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
+  function toArray(name, deep) {
+    return function recur(list) {
+      typecheck(name, list, ['pair', 'nil']);
+
+      if (list instanceof Pair && list.isEmptyList()) {
+        return [];
+      }
+
+      var result = [];
+      var node = list;
+
+      while (true) {
+        if (node instanceof Pair) {
+          if (node.haveCycles('cdr')) {
+            break;
+          }
+
+          var car = node.car;
+
+          if (deep && car instanceof Pair) {
+            car = this.get(name).call(this, car);
+          }
+
+          result.push(car);
+          node = node.cdr;
+        } else {
+          break;
+        }
+      }
+
+      return result;
+    };
+  } // ----------------------------------------------------------------------
+
+
   Pair.prototype.flatten = function () {
     return Pair.fromArray(flatten(this.toArray()));
   }; // ----------------------------------------------------------------------
@@ -2199,7 +2234,7 @@ function _typeof(obj) {
       return JSON.stringify(value).replace(/\\n/g, '\n');
     } else if (isPromise(value)) {
       return '<#Promise>';
-    } else if (value instanceof _Symbol || value instanceof LNumber || value instanceof Pair || value === nil) {
+    } else if (value instanceof _Symbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value === nil) {
       return value.toString();
     } else if (value instanceof Array) {
       return value.map(toString);
@@ -4405,6 +4440,10 @@ function _typeof(obj) {
         return '<#function>';
       }
 
+      if (obj instanceof RegExp) {
+        return obj.toString();
+      }
+
       if (obj === nil) {
         return 'nil';
       }
@@ -4432,7 +4471,14 @@ function _typeof(obj) {
       }
 
       if (_typeof(obj) === 'object') {
-        var name = obj.constructor.name;
+        var constructor = obj.constructor;
+        var name;
+
+        if (typeof constructor.__className === 'string') {
+          name = constructor.__className;
+        } else {
+          name = constructor.name;
+        }
 
         if (name !== '') {
           return '<#' + name + '>';
@@ -4593,31 +4639,9 @@ function _typeof(obj) {
       return Pair.fromArray(array);
     }, "(array->list array)\n\n            Function convert JavaScript array to LIPS list."),
     // ------------------------------------------------------------------
-    'list->array': doc(function (list) {
-      typecheck('list->array', list, ['pair', 'nil']);
-
-      if (list instanceof Pair && list.isEmptyList()) {
-        return [];
-      }
-
-      var result = [];
-      var node = list;
-
-      while (true) {
-        if (node instanceof Pair) {
-          if (node.haveCycles('cdr')) {
-            break;
-          }
-
-          result.push(node.car);
-          node = node.cdr;
-        } else {
-          break;
-        }
-      }
-
-      return result;
-    }, "(list->array list)\n\n            Function convert LIPS list into JavaScript array."),
+    'tree->array': doc(toArray('tree->array', true), "(tree->array list)\n\n             Function convert LIPS list structure into JavaScript array."),
+    // ------------------------------------------------------------------
+    'list->array': doc(toArray('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
     // ------------------------------------------------------------------
     apply: doc(function (fn, list) {
       typecheck('call', fn, 'function', 1);
@@ -5705,7 +5729,15 @@ function _typeof(obj) {
   if (typeof window !== 'undefined') {
     contentLoaded(window, init);
   } // -------------------------------------------------------------------------
+  // to be used with string function when code is minified
+  // -------------------------------------------------------------------------
 
+
+  Ahead.__className = 'Ahead';
+  Pattern.__className = 'Pattern';
+  Formatter.__className = 'Formatter';
+  Macro.__className = 'Macro';
+  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
   var lips = {
     version: 'DEV',
