@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 15 May 2019 21:12:34 +0000
+ * build: Thu, 16 May 2019 07:42:50 +0000
  */
 (function () {
 'use strict';
@@ -2542,48 +2542,42 @@ function _typeof(obj) {
                   new_code = code;
 
                   if (!single) {
-                    _context2.next = 17;
+                    _context2.next = 13;
                     break;
                   }
 
                   _context2.t0 = quote;
-                  _context2.t1 = traverse;
-                  _context2.next = 10;
+                  _context2.next = 9;
                   return traverse(code);
 
-                case 10:
-                  _context2.t2 = _context2.sent.car;
-                  _context2.next = 13;
-                  return (0, _context2.t1)(_context2.t2);
+                case 9:
+                  _context2.t1 = _context2.sent.car;
+                  return _context2.abrupt("return", (0, _context2.t0)(_context2.t1));
 
                 case 13:
-                  _context2.t3 = _context2.sent;
-                  return _context2.abrupt("return", (0, _context2.t0)(_context2.t3));
 
-                case 17:
-
-                  _context2.next = 20;
+                  _context2.next = 16;
                   return traverse(code);
 
-                case 20:
+                case 16:
                   new_code = _context2.sent;
 
                   if (!(code.toString() === new_code.toString())) {
-                    _context2.next = 23;
+                    _context2.next = 19;
                     break;
                   }
 
-                  return _context2.abrupt("break", 26);
+                  return _context2.abrupt("break", 22);
 
-                case 23:
+                case 19:
                   code = new_code;
-                  _context2.next = 17;
+                  _context2.next = 13;
                   break;
 
-                case 26:
+                case 22:
                   return _context2.abrupt("return", quote(new_code.car));
 
-                case 27:
+                case 23:
                 case "end":
                   return _context2.stop();
               }

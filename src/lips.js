@@ -1342,7 +1342,7 @@
             }
             var new_code = code;
             if (single) {
-                return quote(await traverse((await traverse(code)).car));
+                return quote((await traverse(code)).car);
             } else {
                 while (true) {
                     new_code = await traverse(code);
