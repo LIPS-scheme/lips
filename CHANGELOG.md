@@ -1,3 +1,24 @@
+## 0.14.0
+### Features
+* add `unset!`, `add-special!` and `remove-special!` functions
+* add `define-symbol-macro` meta macro that create parser macros (parser transformer symbol)
+* rewrite `help` as macro so it works with parser macros
+* `require` function for Node.js + `load` work in Node using `fs.readFile`
+* stack trace in exception in lips binary
+* parser accept strings as argument (no need to call tokenizer - but it also accept array of tokens)
+* modules mechanism as macros
+* pattern matching as macro
+* `macro?` function
+* `cond` macro
+### Bug fixes
+* fix white space in docs for macros
+* fix two cases in parser: `` `(,(list 1 2)) `` and `` `(+ ,,(list 'foo)) `` [#12](https://github.com/jcubic/lips/issues/12)
+* fix quaisquote macro (eval of single unquote in double quasiquote) [#14](https://github.com/jcubic/lips/issues/14)
+* add scope to exec in `load` function
+* fix formatting of multi line strings
+* fix `object?` when called with nil and number
+* fix `macroexpand` macro
+
 ## 0.12.0
 ### Features
 * new macro `begin*` that run their arguments in parallel if they async
