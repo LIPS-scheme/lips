@@ -1313,7 +1313,6 @@
     function macroExpand(single) {
         return async function(code, args) {
             var env = args['env'] = this;
-            args['macro_expand'] = true;
             async function traverse(node) {
                 if (node instanceof Pair && node.car instanceof Symbol) {
                     try {
@@ -1510,7 +1509,6 @@
                     var output = new Pair(new Symbol('begin'), code.cdr);
                     return evaluate(output, {
                         env,
-                        macro_expand,
                         dynamic_scope,
                         error
                     });
@@ -1518,7 +1516,6 @@
                     var value = evaluate(pair.cdr.car, {
                         env: asterisk ? env : self,
                         dynamic_scope,
-                        macro_expand,
                         error
                     });
                     return unpromise(set(value), loop);
@@ -2628,8 +2625,7 @@
                     var eval_args = {
                         env,
                         dynamic_scope,
-                        error,
-                        macro_expand
+                        error
                     };
                     // evaluate macro
                     if (macro.cdr instanceof Pair) {
@@ -2685,7 +2681,7 @@
             into list structure created by queasiquote.`),
         // ------------------------------------------------------------------
         quasiquote: Macro.defmacro('quasiquote', function(arg, env) {
-            const { dynamic_scope, error, macro_expand } = env;
+            const { dynamic_scope, error } = env;
             var self = this;
             //var max_unquote = 1;
             if (dynamic_scope) {
@@ -2735,7 +2731,6 @@
                         eval_pair = evaluate(pair.car.cdr.car, {
                             env: self,
                             dynamic_scope,
-                            macro_expand: macro_expand ? 1 : macro_expand,
                             error
                         });
                         return unpromise(eval_pair, function(eval_pair) {
@@ -2805,7 +2800,6 @@
                         var ret = evaluate(node.value, {
                             env: self,
                             dynamic_scope,
-                            macro_expand: 1,
                             error
                         });
                         return ret;
@@ -3949,8 +3943,7 @@
         }
         var value = macro.invoke(code, eval_args);
         return unpromise(resolvePromises(value), function ret(value) {
-            if (value && value.data || !(value instanceof Pair) ||
-                (eval_args.macro_expand && macro.defmacro)) {
+            if (value && value.data || !(value instanceof Pair)) {
                 return value;
             } else {
                 return quote(evaluate(value, eval_args));
@@ -3959,7 +3952,6 @@
     }
     // -------------------------------------------------------------------------
     function evaluate(code, { env, dynamic_scope, error = () => {} } = {}) {
-        const macro_expand = false;
         try {
             if (dynamic_scope === true) {
                 env = dynamic_scope = env || global_env;
@@ -3968,7 +3960,7 @@
             } else {
                 env = env || global_env;
             }
-            var eval_args = { env, dynamic_scope, error, macro_expand };
+            var eval_args = { env, dynamic_scope, error };
             var value;
             if (isNull(code)) {
                 return code;
@@ -4000,11 +3992,6 @@
                 value = env.get(first, true);
                 if (value instanceof Macro) {
                     var ret = evaluateMacro(value, rest, eval_args);
-                    if (macro_expand) {
-                        if (typeof ret === 'undefined') {
-                            return code;
-                        }
-                    }
                     return unpromise(ret, result => {
                         if (result instanceof Pair) {
                             return result.markCycles();
@@ -4039,7 +4026,7 @@
                     throw new Error('Unbound variable `' + code.name + '\'');
                 }
                 return value;
-            } else if (code instanceof Pair && !macro_expand) {
+            } else if (code instanceof Pair) {
                 value = first && first.toString();
                 throw new Error(`${type(first)} ${value} is not a function`);
             } else {

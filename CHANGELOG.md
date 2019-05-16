@@ -17,6 +17,8 @@
 * add scope to exec in `load` function
 * fix formatting of multi line strings
 * fix `object?` when called with nil and number
+* fix `macroexpand` macro
+
 ## 0.12.0
 ### Features
 * new macro `begin*` that run their arguments in parallel if they async

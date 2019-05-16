@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Thu, 16 May 2019 07:42:50 +0000
+ * build: Thu, 16 May 2019 09:10:34 +0000
  */
 (function () {
 'use strict';
@@ -2538,46 +2538,45 @@ function _typeof(obj) {
                   };
 
                   env = args['env'] = this;
-                  args['macro_expand'] = true;
                   new_code = code;
 
                   if (!single) {
-                    _context2.next = 13;
+                    _context2.next = 12;
                     break;
                   }
 
                   _context2.t0 = quote;
-                  _context2.next = 9;
+                  _context2.next = 8;
                   return traverse(code);
 
-                case 9:
+                case 8:
                   _context2.t1 = _context2.sent.car;
                   return _context2.abrupt("return", (0, _context2.t0)(_context2.t1));
 
-                case 13:
+                case 12:
 
-                  _context2.next = 16;
+                  _context2.next = 15;
                   return traverse(code);
 
-                case 16:
+                case 15:
                   new_code = _context2.sent;
 
                   if (!(code.toString() === new_code.toString())) {
-                    _context2.next = 19;
+                    _context2.next = 18;
                     break;
                   }
 
-                  return _context2.abrupt("break", 22);
+                  return _context2.abrupt("break", 21);
 
-                case 19:
+                case 18:
                   code = new_code;
-                  _context2.next = 13;
+                  _context2.next = 12;
                   break;
 
-                case 22:
+                case 21:
                   return _context2.abrupt("return", quote(new_code.car));
 
-                case 23:
+                case 22:
                 case "end":
                   return _context2.stop();
               }
@@ -2786,7 +2785,6 @@ function _typeof(obj) {
           var output = new Pair(new _Symbol('begin'), code.cdr);
           return evaluate(output, {
             env: env,
-            macro_expand: macro_expand,
             dynamic_scope: dynamic_scope,
             error: error
           });
@@ -2794,7 +2792,6 @@ function _typeof(obj) {
           var value = evaluate(pair.cdr.car, {
             env: asterisk ? env : self,
             dynamic_scope: dynamic_scope,
-            macro_expand: macro_expand,
             error: error
           });
           return unpromise(set(value), loop);
@@ -4079,8 +4076,7 @@ function _typeof(obj) {
           var eval_args = {
             env: env,
             dynamic_scope: dynamic_scope,
-            error: error,
-            macro_expand: macro_expand
+            error: error
           }; // evaluate macro
 
           if (macro.cdr instanceof Pair) {
@@ -4117,8 +4113,7 @@ function _typeof(obj) {
     // ------------------------------------------------------------------
     quasiquote: Macro.defmacro('quasiquote', function (arg, env) {
       var dynamic_scope = env.dynamic_scope,
-          error = env.error,
-          macro_expand = env.macro_expand;
+          error = env.error;
       var self = this; //var max_unquote = 1;
 
       if (dynamic_scope) {
@@ -4182,7 +4177,6 @@ function _typeof(obj) {
             eval_pair = evaluate(pair.car.cdr.car, {
               env: self,
               dynamic_scope: dynamic_scope,
-              macro_expand: macro_expand ? 1 : macro_expand,
               error: error
             });
             return unpromise(eval_pair, function (eval_pair) {
@@ -4261,7 +4255,6 @@ function _typeof(obj) {
             var ret = evaluate(node.value, {
               env: self,
               dynamic_scope: dynamic_scope,
-              macro_expand: 1,
               error: error
             });
             return ret;
@@ -5416,7 +5409,7 @@ function _typeof(obj) {
 
     var value = macro.invoke(code, eval_args);
     return unpromise(resolvePromises(value), function ret(value) {
-      if (value && value.data || !(value instanceof Pair) || eval_args.macro_expand && macro.defmacro) {
+      if (value && value.data || !(value instanceof Pair)) {
         return value;
       } else {
         return quote(evaluate(value, eval_args));
@@ -5432,8 +5425,6 @@ function _typeof(obj) {
         _ref21$error = _ref21.error,
         error = _ref21$error === void 0 ? function () {} : _ref21$error;
 
-    var macro_expand = false;
-
     try {
       if (dynamic_scope === true) {
         env = dynamic_scope = env || global_env;
@@ -5446,8 +5437,7 @@ function _typeof(obj) {
       var eval_args = {
         env: env,
         dynamic_scope: dynamic_scope,
-        error: error,
-        macro_expand: macro_expand
+        error: error
       };
       var value;
 
@@ -5484,13 +5474,6 @@ function _typeof(obj) {
 
         if (value instanceof Macro) {
           var ret = evaluateMacro(value, rest, eval_args);
-
-          if (macro_expand) {
-            if (typeof ret === 'undefined') {
-              return code;
-            }
-          }
-
           return unpromise(ret, function (result) {
             if (result instanceof Pair) {
               return result.markCycles();
@@ -5531,7 +5514,7 @@ function _typeof(obj) {
         }
 
         return value;
-      } else if (code instanceof Pair && !macro_expand) {
+      } else if (code instanceof Pair) {
         value = first && first.toString();
         throw new Error("".concat(type(first), " ").concat(value, " is not a function"));
       } else {
