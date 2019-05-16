@@ -72,18 +72,18 @@
 ;;
 ;;   Function return part of the string that start with start index
 ;;   and end in end index, if end is undfined it return to the end."
-;;  ((. string "substring") (value start) (value end)))
+;;  (--> string (substring (value start) (value end))))
 ;;
 ;;
 ;;(define (concat . args)
 ;;  "(concat . strings)
 ;;
 ;;   Function create new string by joining its arguments"
-;;  ((. (list->array args) "join") ""))
+;;  (--> (list->array args) (join "")))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (global name)
-  `(set-obj! window ,(symbol->string name) ,name))
+(define-macro (define-global name)
+  `(set-obj! global ,(symbol->string name) ,name))
 
 ;; ---------------------------------------------------------------------------------------
 (define (alist->object alist)
@@ -170,3 +170,111 @@
    If symbol is key it convert that to string - remove colon."
   (if (key? symbol)
       (substring (symbol->string symbol) 1)))
+
+(define-macro (define-symbol-macro spec . rest)
+  "(define-symbol-macro (name . args) . body)
+
+   Macro that creates special symbol macro for evaluator similar to build in , or `.
+   It's like alias for real macro. Similar to CL reader macros but it receive already
+   parsed code like normal macros."
+   ;; this is executed in two different ways one when there are no macro and the other
+   ;; if there is macro defined, in second case it will put list as first element
+   ;; of the body even is it's called like this (define-symbol-macro (# code)
+  (let* ((name (car spec))
+         (symbol (cadr spec))
+         (args (cddr spec)))
+     `(begin
+        (add-special! ,symbol ',name)
+        (define-macro (,name ,@args) ,@rest))))
+
+(define-symbol-macro (make-vector "#" arg)
+  "(make-vector (1 2 3))
+   #(1 2 3)
+
+   Macro for defining vectors (arrays)."
+  `(list->array (list ,@arg)))
+
+
+(define-macro (module name . body)
+  "(module module-name . body)
+
+   Macro for defining modules inside you can use define to create functions.
+   And use export name to add that name to defined environment."
+  (let ((parent (. (current-environment) 'parent)))
+    `(let ((__module-exports__ (new (. lips 'Environment) (concat "module-" ,(symbol->string name)))))
+       (define-macro (export name) `(--> __module-exports__ (set ',name ,name)))
+       ,@body
+       (--> ,parent (set ',name __module-exports__)))))
+
+(define-macro (import name module)
+  "(input function-name module)
+
+   Macro for importing function from module"
+  `(define ,name (--> ,module (get ',name))))
+
+(define-macro (cond . list)
+  (if (pair? list)
+      (let* ((item (car list))
+             (first (car item))
+             (forms (cdr item))
+             (rest (cdr list)))
+        `(if ,first
+             (begin
+               ,@forms)
+             ,(if (and (pair? rest)
+                       (eq? (caar rest) true))
+                  `(begin
+                     ,@(cdar rest))
+                  `(cond ,@rest))))))
+
+(define (compare a b)
+  (cond ((and (pair? a) (pair? b)) (and (compare (car a) (car b))
+                                        (compare (cdr a) (cdr b))))
+        ((and (array? a) (array? b)) (compare (array->list a) (array->list b)))
+        ((and (object? a) (object? b))
+         (compare (array->list (--> Object (keys a)))
+                  (array->list (--> Object (keys b)))))
+        ((eq? (type a) (type b)) (eq? a b))
+        ((and (function? a) (not (function? b)))
+         (a b))
+        ((and (not (function? a)) (function? b))
+         (b a))
+        (true false)))
+
+(define-macro (auto-quote lst)
+  "(auto-quote list)
+
+   Macro that create list recursively but take symbols from scope"
+  (if (pair? lst)
+      `(list ,@(map (lambda (item)
+                      (if (symbol? item)
+                          item
+                          (if (pair? item)
+                              `(auto-quote ,item)
+                              `,item)))
+                    lst))))
+
+
+(define-macro (match-pattern expr . list)
+  "(match pattern ((pattern . body) ...))
+
+   Pattern matching macro. examples:
+   (match (1 (pair? pair?) 2) ((1 (() ()) 2) (print \"match\")))
+   ;; match
+   (match (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")))
+   (match (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")) (true \"rest\"))
+   ;; \"rest\""
+ (if (pair? list)
+     (let ((ex-name (gensym)))
+       `(let ((,ex-name (auto-quote ,expr)))
+          (cond ,@(map (lambda (item)
+                         (if (eq? (car item) true)
+                             `(true ,(cadr item))
+                             `((compare ,ex-name (auto-quote ,(car item))) ,(cadr item))))
+                       list))))))
+
+(define (defmacro? obj)
+  "(defmacro? expression)
+
+   Function check if object is macro and it's expandable"
+  (and (macro? obj) (. obj 'defmacro)))

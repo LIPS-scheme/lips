@@ -212,8 +212,58 @@ describe('parser', function() {
     it('should create quasiquote list from literals', function() {
         testQuasituote('(quasiquote (list (unquote-splicing (list))))', true);
     });
+    it('should unquote from single quasiquote', function() {
+        var code = "`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))";
+        lips.exec(code).then(function(result) {
+            expect(result[0].toString()).toEqual(
+                [
+                    '(let ((name (quote x)))',
+                    '(quasiquote (let ((name (quote y)))',
+                    '(quasiquote (list (quote (unquote name)))))))'
+                ].join(' ')
+            );
+        });
+    });
+    it('should join symbol', function() {
+        lips.exec("(let ((x 'foo)) `(a ,@x))").then(result => {
+            expect(result[0].toString()).toEqual('(a . foo)');
+        });
+    });
+    it('should unquote from double quotation', function() {
+        var code = `(let ((x '(1 2)))
+                     \`(let ((x '(2 3)))
+                        (begin
+                          \`(list ,(car x))
+                          \`(list ,,(car x)))))`;
+        lips.exec(code).then(result => {
+            expect(result[0].toString()).toEqual([
+                '(let ((x (quote (2 3))))',
+                '(begin',
+                '(quasiquote (list (unquote (car x))))',
+                '(quasiquote (list (unquote 1)))))'
+            ].join(' '));
+        });
+    });
     it('should use reader macros', function() {
         testQuasituote('`(list ,@(list))');
+    });
+    it('should parse quoted simbol inside multiple unquotes', function() {
+        var input = `\`(+ ,,(list 'foo))`;
+        var output = parse(tokenize(input))[0];
+        expect(output).toEqual(Pair.fromArray(
+            [
+                Symbol('quasiquote'),
+                [
+                    Symbol('+'),
+                    [
+                        Symbol('unquote'),
+                        [
+                            Symbol('unquote'),
+                            [
+                                Symbol('list'),
+                                [
+                                    Symbol('quote'),
+                                    Symbol('foo')]]]]]]));
     });
     it('should create AList', function() {
         var tokens = tokenize('((foo . 10) (bar . 20) (baz . 30))');
@@ -528,7 +578,8 @@ describe('evaluate', function() {
         });
         it('should throw exception', function() {
             return lips.exec(code, env, env).catch(e => {
-                expect(e.code).toEqual('(string (! 1000))');
+                expect(e.code instanceof Array).toBeTruthy();
+                expect(e.code.pop()).toEqual('(string (! 1000))');
                 expect(e).toEqual(new Error("Unbound variable `f'"));
             });
         });

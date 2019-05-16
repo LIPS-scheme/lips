@@ -287,7 +287,7 @@
     // ----------------------------------------------------------------------
     function parse(tokens) {
         if (typeof tokens === 'string') {
-            throw new Error('parse require tokenized array of tokens not string');
+            tokens = tokenize(tokens);
         }
         var stack = [];
         var result = [];
@@ -308,7 +308,7 @@
                 if (stack[stack.length - 1].length === 1 &&
                     stack[stack.length - 1][0] instanceof Symbol) {
                     stack[stack.length - 1].push(top);
-                } else if (stack[stack.length - 1].length === 0) {
+                } else if (false && stack[stack.length - 1].length === 0) {
                     stack[stack.length - 1] = top;
                 } else if (stack[stack.length - 1] instanceof Pair) {
                     if (stack[stack.length - 1].cdr instanceof Pair) {
@@ -381,9 +381,10 @@
                     if (special) {
                         // special without list like ,foo
                         while (special_count--) {
-                            stack[stack.length - 1][1] = value;
+                            stack[stack.length - 1].push(value);
                             value = stack.pop();
                         }
+                        specials_stack.pop();
                         special_count = 0;
                         special = false;
                     } else if (value instanceof Symbol &&
@@ -415,6 +416,11 @@
                 }
             }
         });
+        if (!tokens.filter(t => t.match(/^[()]$/)).length && stack.length) {
+            // list of parser macros
+            result = result.concat(stack);
+            stack = [];
+        }
         if (stack.length) {
             dump(result);
             throw new Error('Unbalanced parenthesis 2');
@@ -471,7 +477,7 @@
     }
     // ----------------------------------------------------------------------
     function dump(arr) {
-        if (false) {
+        if (true || false) {
             console.log(arr.map((arg) => {
                 if (arg instanceof Array) {
                     return Pair.fromArray(arg);
@@ -615,7 +621,7 @@
     Formatter.defaults = {
         offset: 0,
         indent: 2,
-        specials: ['define', 'lambda', 'let', 'let*', 'define-macro']
+        specials: [/^define/, 'lambda', 'let', 'let*']
     };
     Formatter.match = match;
     // ----------------------------------------------------------------------
@@ -637,10 +643,24 @@
         return this._indent(tokens, options);
     };
     // ----------------------------------------------------------------------
+    Formatter.matchSpecial = function(token, settings) {
+        var specials = settings.specials;
+        if (specials.indexOf(token) !== -1) {
+            return true;
+        } else {
+            var regexes = specials.filter(s => s instanceof RegExp);
+            for (let re of regexes) {
+                if (token.match(re)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    // ----------------------------------------------------------------------
     Formatter.prototype._indent = function _indent(tokens, options) {
         var settings = this._options(options);
         var spaces = lineIndent(tokens);
-        var specials = settings.specials;
         var sexp = previousSexp(tokens);
         if (sexp) {
             if (sexp[0].line > 0) {
@@ -648,7 +668,7 @@
             }
             if (sexp.length === 1) {
                 return settings.offset + sexp[0].col + 1;
-            } else if (specials.indexOf(sexp[1].token) !== -1) {
+            } else if (Formatter.matchSpecial(sexp[1].token, settings)) {
                 return settings.offset + sexp[0].col + settings.indent;
             } else if (sexp[0].line < sexp[1].line) {
                 return settings.offset + sexp[0].col + 1;
@@ -673,12 +693,15 @@
         }
         return spaces + settings.indent;
     };
+    // ----------------------------------------------------------------------
     function Ahead(pattern) {
         this.pattern = pattern;
     }
+    // ----------------------------------------------------------------------
     Ahead.prototype.match = function(string) {
         return string.match(this.pattern);
     };
+    // ----------------------------------------------------------------------
     function Pattern(pattern, flag) {
         this.pattern = pattern;
         this.flag = flag;
@@ -694,21 +717,28 @@
         [['(', 'begin'], 1],
         [['(', 'begin', sexp], 1, notParen],
         [['(', /^let\*?$/, '(', glob, ')'], 1],
-        [['(', /^let\*?$/, new Pattern(['(', glob, ')'], '+')], 1, notParen],
-        [['(', /^let\*?$/, '(', ['(', glob, ')']], 2, notParen],
+        [['(', /^let\*?$/, '(', sexp], 2, notParen],
+        [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen],
         [['(', 'if', /[^()]/], 1],
         [['(', 'if', ['(', glob, ')']], 1],
-        [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1],
+        [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen],
         [['(', glob, ')'], 1],
+        [['(', /^define/, ['(', glob, ')'], string_re], 1],
         [['(', /^define/, '(', glob, ')'], 1],
-        [['(', /^define/, ['(', glob, ')'], sexp], 1],
+        [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen],
         [['(', 'lambda', '(', glob, ')'], 1],
         [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
-        var code = this._code.replace(/\n\s*/g, '\n ');
-        const token = t => t.token.replace(/\s+/, ' ');
+        var code = this._code.replace(/\n[ \t]*/g, '\n ');
+        const token = t => {
+            if (t.token.match(string_re)) {
+                return t.token;
+            } else {
+                return t.token.replace(/\s+/, ' ');
+            }
+        };
         var tokens = tokenize(code, true).map(token).filter(t => t !== '\n');
         const { rules } = Formatter;
         for (let i = 0; i < tokens.length; ++i) {
@@ -745,7 +775,7 @@
     Formatter.prototype.format = function format(options) {
         // prepare code with single space after newline
         // so we have space token to align
-        var code = this._code.replace(/\s*\n\s*/g, '\n ');
+        var code = this._code.replace(/[ \t]*\n[ \t]*/g, '\n ');
         var tokens = tokenize(code, true);
         var settings = this._options(options);
         var indent = 0;
@@ -772,7 +802,18 @@
                 }
             }
         }
-        return tokens.map(token => token.token).join('');
+        return tokens.map(token => {
+            if (token.token.match(string_re)) {
+                if (token.token.match(/\n/)) {
+                    var spaces = new Array(token.col + 1).join(' ');
+                    var lines = token.token.split('\n');
+                    token.token = [lines[0]].concat(lines.slice(1).map(line => {
+                        return spaces + line;
+                    })).join('\n');
+                }
+            }
+            return token.token;
+        }).join('');
     };
     // ----------------------------------------------------------------------
     // :: flatten nested arrays
@@ -1064,7 +1105,7 @@
         if (typeof value === 'function') {
             return '<#function ' + (value.name || 'anonymous') + '>';
         } else if (typeof value === 'string') {
-            return JSON.stringify(value);
+            return JSON.stringify(value).replace(/\\n/g, '\n');
         } else if (isPromise(value)) {
             return '<#Promise>';
         } else if (value instanceof Symbol ||
@@ -1169,11 +1210,7 @@
                     arr.push(cdr);
                 }
             } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-                if (typeof this.cdr === 'string') {
-                    arr = arr.concat([' . ', JSON.stringify(this.cdr)]);
-                } else {
-                    arr = arr.concat([' . ', toString(this.cdr)]);
-                }
+                arr = arr.concat([' . ', toString(this.cdr)]);
             }
         }
         arr.push(')');
@@ -1244,7 +1281,9 @@
         }
         typecheck('Macro', name, 'string', 1);
         typecheck('Macro', fn, 'function', 2);
-        this.__doc__ = doc;
+        if (doc) {
+            this.__doc__ = trimLines(doc);
+        }
         this.name = name;
         this.fn = fn;
     }
@@ -1271,7 +1310,7 @@
     // ----------------------------------------------------------------------
     var macro = 'define-macro';
     // ----------------------------------------------------------------------
-    function macro_expand(single) {
+    function macroExpand(single) {
         return async function(code, args) {
             var env = args['env'] = this;
             async function traverse(node) {
@@ -1484,10 +1523,11 @@
             })();
         });
     }
+    // -------------------------------------------------------------------------
     function pararel(name, fn) {
         return new Macro(name, function(code, { dynamic_scope, error } = {}) {
             var env = this;
-            if (dynamic_scope === true) {
+            if (dynamic_scope) {
                 dynamic_scope = this;
             }
             var node = code;
@@ -1504,7 +1544,7 @@
             }
         });
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function guardMathCall(fn, ...args) {
         args.forEach(arg => {
             typecheck('', arg, 'number');
@@ -1520,16 +1560,16 @@
             return fns.reduce((args, f) => [f(...args)], args)[0];
         };
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function compose(...fns) {
         fns.forEach((fn, i) => {
             typecheck('compose', fn, 'function', i + 1);
         });
         return pipe(...fns.reverse());
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // :: fold functions generator
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function fold(name, fold) {
         var self = this;
         return function recur(fn, init, ...lists) {
@@ -1544,15 +1584,15 @@
             }
         };
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function limitMathOp(n, fn) {
         // + 1 so it inlcude function in guardMathCall
         return limit(n + 1, curry(guardMathCall, fn));
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     var singleMathOp = curry(limitMathOp, 1);
     var binaryMathOp = curry(limitMathOp, 2);
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function reduceMathOp(fn) {
         return function(...args) {
             if (args.length) {
@@ -1560,7 +1600,7 @@
             }
         };
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function curry(fn, ...init_args) {
         typecheck('curry', fn, 'function');
         var len = fn.length;
@@ -1577,7 +1617,7 @@
             return call.apply(this, arguments);
         };
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // return function with limited number of arguments
     function limit(n, fn) {
         typecheck('limit', fn, 'function', 2);
@@ -1585,8 +1625,8 @@
             return fn(...args.slice(0, n));
         };
     }
-    // ----------------------------------------------------------------------------
-    var get = doc(function(obj, ...args) {
+    // -------------------------------------------------------------------------------
+    var get = doc(function get(obj, ...args) {
         if (typeof obj === 'function' && obj.__bind) {
             obj = obj.__bind.fn;
         }
@@ -1610,9 +1650,9 @@
        \`var log = console.log\`.
        \`get\` is an alias because . don't work in every place, you can't
         pass it as argument`);
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function LNumber(n, float) {
         if (typeof this !== 'undefined' && this.constructor !== LNumber ||
             typeof this === 'undefined') {
@@ -1645,33 +1685,33 @@
             this.value = n;
         }
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.isFloat = function isFloat(n) {
         return Number(n) === n && n % 1 !== 0;
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.isNumber = function(n) {
         return n instanceof LNumber ||
             (!Number.isNaN(n) && LNumber.isNative(n) || LNumber.isBN(n));
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.isNative = function(n) {
         return typeof n === 'bigint' || typeof n === 'number';
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.isBN = function(n) {
         return typeof BN !== 'undefined' && n instanceof BN;
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.toString = LNumber.prototype.toJSON = function() {
         return this.value.toString();
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.isBigNumber = function() {
         return typeof this.value === 'bigint' ||
             typeof BN !== 'undefined' && !(this.value instanceof BN);
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     ['floor', 'ceil', 'round'].forEach(fn => {
         LNumber.prototype[fn] = function() {
             if (this.float || LNumber.isFloat(this.value)) {
@@ -1681,7 +1721,7 @@
             }
         };
     });
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.valueOf = function() {
         if (LNumber.isNative(this.value)) {
             return Number(this.value);
@@ -1689,7 +1729,7 @@
             return this.value.toNumber();
         }
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.coerce = function(n) {
         if (n === null) {
             n = 0;
@@ -1710,11 +1750,11 @@
         }
         return LNumber(value);
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.isFloat = function() {
         return !!(LNumber.isFloat(this.value) || this.float);
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.op = function(op, n) {
         var ops = {
             '*': function(a, b) {
@@ -1774,7 +1814,7 @@
             return LNumber(this.value.clone()[op](n, value));
         }
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     var ops = {
         '+': 'add',
         '-': 'sub',
@@ -1792,7 +1832,7 @@
             return this.op(op, n);
         };
     });
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.sqrt = function() {
         var value;
         if (LNumber.isNative(this.value)) {
@@ -1802,7 +1842,7 @@
         }
         return new LNumber(value);
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.pow = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(this.value)) {
@@ -1819,7 +1859,7 @@
         }
         return n;
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.neg = function() {
         var value = this.value;
         if (LNumber.isNative(value)) {
@@ -1829,7 +1869,7 @@
         }
         return new LNumber(value);
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.abs = function() {
         var value = this.value;
         if (LNumber.isNative(this.value)) {
@@ -1841,7 +1881,7 @@
         }
         return new LNumber(value);
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.isOdd = function() {
         if (LNumber.isNative(this.value)) {
             if (this.isBigNumber()) {
@@ -1852,11 +1892,11 @@
             return this.value.isOdd();
         }
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.isEven = function() {
         return !this.isOdd();
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     LNumber.prototype.cmp = function(n) {
         n = this.coerce(n);
         if (LNumber.isNative(this.value)) {
@@ -1871,15 +1911,25 @@
             return this.value.cmp(n.value);
         }
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function Environment(obj, parent, name) {
+        if (arguments.length === 1) {
+            if (typeof arguments[0] === 'object') {
+                obj = arguments[0];
+                this.parent = null;
+            } else if (typeof arguments[0] === 'string') {
+                obj = {};
+                parent = {};
+                name = arguments[0];
+            }
+        }
         this.env = obj;
         this.parent = parent;
-        this.name = name;
+        this.name = name || 'anonymous';
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     Environment.prototype.inherit = function(name, obj = {}) {
         if (typeof name === "object") {
             obj = name;
@@ -1889,7 +1939,7 @@
         }
         return new Environment(obj || {}, this, name);
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     Environment.prototype.get = function(symbol, weak, context) {
         // we keep original environment as context for bind
         // so print will get user stdout
@@ -1953,7 +2003,7 @@
         name = (name.name || name).toString();
         throw new Error("Unbound variable `" + name + "'");
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     Environment.prototype.set = function(name, value) {
         if (LNumber.isNumber(value)) {
             value = LNumber(value);
@@ -1963,11 +2013,11 @@
         }
         this.env[name] = value;
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     Environment.prototype.has = function(name) {
         return typeof this.env[name] !== 'undefined';
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     Environment.prototype.ref = function(name) {
         var env = this;
         while (true) {
@@ -1980,9 +2030,18 @@
             env = env.parent;
         }
     };
-    // ----------------------------------------------------------------------
+    Environment.prototype.parents = function() {
+        var env = this;
+        var result = [];
+        while (env) {
+            result.unshift(env);
+            env = env.parent;
+        }
+        return result;
+    };
+    // -------------------------------------------------------------------------
     // :: Quote funtion used to pause evaluation from Macro
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function quote(value) {
         if (isPromise(value)) {
             return value.then(quote);
@@ -1992,17 +2051,18 @@
         }
         return value;
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // :: Unquote is used for multiple backticks and unquote
-    // ----------------------------------------------------------------------
-    function Unquote(value, count) {
+    // -------------------------------------------------------------------------
+    function Unquote(value, count, max) {
         this.value = value;
         this.count = count;
+        this.max = max;
     }
     Unquote.prototype.toString = function() {
         return '<#unquote[' + this.count + '] ' + this.value + '>';
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     var gensym = (function() {
         var count = 0;
         return function(name = null) {
@@ -2014,7 +2074,7 @@
             return new Symbol(root.Symbol(`#gensym_${count}#`));
         };
     })();
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     var global_env = new Environment({
         nil: nil,
         'undefined': undefined,
@@ -2035,11 +2095,29 @@
                 });
             }
         },
-        help: doc(function(obj) {
-            return obj.__doc__;
-        }, `(help object)
+        // ------------------------------------------------------------------
+        help: doc(new Macro('help', function(code, { dynamic_scope, error }) {
+            var symbol;
+            if (code.car instanceof Symbol) {
+                symbol = code.car;
+            } else if (code.car instanceof Pair && code.car.car instanceof Symbol) {
+                symbol = code.car.car;
+            } else {
+                var env = this;
+                if (dynamic_scope) {
+                    dynamic_scope = this;
+                }
+                var ret = evaluate(code.car, { env, error, dynamic_scope });
+                if (ret && ret.__doc__) {
+                    return ret.__doc__;
+                }
+            }
+            return this.get(symbol).__doc__;
+        }), `(help object)
 
-            Function returns documentation for function or macro.`),
+             Macro returns documentation for function or macros including parser
+             macros but only if called with parser macro symbol like (help \`).
+             For normal functions and macros you can save the function in variable.`),
         // ------------------------------------------------------------------
         cons: doc(function(car, cdr) {
             if (isEmptyList(cdr)) {
@@ -2169,9 +2247,29 @@
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
+        'require': doc(function(module) {
+            return require(module);
+        }, `(require module)
+
+            Function to be used inside Node.js to import the module.`),
+        // ------------------------------------------------------------------
         load: doc(function(file) {
             typecheck('load', file, 'string');
-            return root.fetch(file).then(res => res.text()).then(exec);
+            var env = this;
+            if (this.get('global')) {
+                return new Promise((resolve, reject) => {
+                    require('fs').readFile(file, function(err, data) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(exec(data.toString(), env));
+                        }
+                    });
+                });
+            }
+            return root.fetch(file).then(res => res.text()).then((code) => {
+                return exec(code, env);
+            });
         }, `(load filename)
 
             Function fetch the file and evaluate its content as LIPS code.`),
@@ -2273,17 +2371,18 @@
              if it's a promise it will evaluate it in parallel and return value
              of last expression.`),
         // ------------------------------------------------------------------
-        'begin': doc(new Macro('begin', function(code, { dynamic_scope, error }) {
+        'begin': doc(new Macro('begin', function(code, options) {
+            var args = Object.assign({ }, options);
             var arr = this.get('list->array')(code);
-            if (dynamic_scope) {
-                dynamic_scope = this;
+            if (args.dynamic_scope) {
+                args.dynamic_scope = this;
             }
-            var env = this;
+            args.env = this;
             var result;
             return (function loop() {
                 if (arr.length) {
                     var code = arr.shift();
-                    var ret = evaluate(code, { env, dynamic_scope, error });
+                    var ret = evaluate(code, args);
                     return unpromise(ret, value => {
                         result = value;
                         return loop();
@@ -2314,7 +2413,7 @@
         timer: doc(new Macro('timer', function(code, { dynamic_scope, error } = {}) {
             typecheck('timer', code.car, 'number');
             var env = this;
-            if (dynamic_scope === true) {
+            if (dynamic_scope) {
                 dynamic_scope = this;
             }
             return new Promise((resolve) => {
@@ -2404,7 +2503,15 @@
                 return evaluate(code, {
                     env,
                     dynamic_scope: this,
-                    error: e => this.get('print')(e.message)
+                    error: e => {
+                        this.get('error')(e.message);
+                        if (e.code) {
+                            var stack = e.code.map((line, i) => {
+                                return `[${i + 1}]: ${line}`;
+                            }).join('\n');
+                            this.get('error')(stack);
+                        }
+                    }
                 });
             }
             if (code instanceof Array) {
@@ -2475,16 +2582,10 @@
             Macro lambda create new anonymous function, if first element of the body
             is string and there is more elements it will be documentation, that can
             be read using (help fn)`),
-        'macroexpand': new Macro('macro-expand', macro_expand()),
-        'macroexpand-1': new Macro('macro-expand', macro_expand(true)),
+        'macroexpand': new Macro('macroexpand', macroExpand()),
+        'macroexpand-1': new Macro('macroexpand-1', macroExpand(true)),
         // ------------------------------------------------------------------
         'define-macro': doc(new Macro(macro, function(macro, { dynamic_scope, error }) {
-            function clear(node) {
-                if (node instanceof Pair) {
-                    delete node.data;
-                }
-                return node;
-            }
             if (macro.car instanceof Pair && macro.car.car instanceof Symbol) {
                 var name = macro.car.car.name;
                 var __doc__;
@@ -2492,7 +2593,7 @@
                     macro.cdr.cdr !== nil) {
                     __doc__ = macro.cdr.car;
                 }
-                this.env[name] = Macro.defmacro(name, function(code, { macro_expand }) {
+                this.env[name] = Macro.defmacro(name, function(code) {
                     var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
                     var arg = code;
@@ -2503,33 +2604,40 @@
                         if (name instanceof Symbol) {
                             env.env[name.name] = arg;
                             break;
-                        } else if (name.car !== nil && arg.car !== nil) {
-                            env.env[name.car.name] = arg.car;
+                        } else if (name.car !== nil) {
+                            if (arg === nil) {
+                                env.env[name.car.name] = nil;
+                            } else {
+                                env.env[name.car.name] = arg.car;
+                            }
                         }
                         if (name.cdr === nil) {
                             break;
                         }
-                        arg = arg.cdr;
+                        if (arg !== nil) {
+                            arg = arg.cdr;
+                        }
                         name = name.cdr;
                     }
                     if (dynamic_scope) {
                         dynamic_scope = env;
                     }
+                    var eval_args = {
+                        env,
+                        dynamic_scope,
+                        error
+                    };
                     // evaluate macro
                     if (macro.cdr instanceof Pair) {
                         // this eval will return lips code
                         var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
-                        var pair = rest.reduce(function(result, node) {
-                            return evaluate(node, { env, dynamic_scope, error });
+                        var result = rest.reduce(function(result, node) {
+                            return evaluate(node, eval_args);
                         });
-                        if (macro_expand) {
-                            return pair;
+                        if (typeof result === 'object') {
+                            delete result.data;
                         }
-                        // second evalute of code that is returned from macro
-                        // need different env because we need to call it in scope
-                        // were it was called
-                        pair = evaluate(pair, { env: this, dynamic_scope, error });
-                        return unpromise(pair, clear);
+                        return result;
                     }
                 }, __doc__);
             }
@@ -2567,9 +2675,10 @@
             to evalute expression inside and return the value, the output is inserted
             into list structure created by queasiquote.`),
         // ------------------------------------------------------------------
-        quasiquote: doc(new Macro('quasiquote', function(arg, { dynamic_scope, error }) {
+        quasiquote: Macro.defmacro('quasiquote', function(arg, env) {
+            const { dynamic_scope, error } = env;
             var self = this;
-            var max_unquote = 0;
+            //var max_unquote = 1;
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
@@ -2610,7 +2719,7 @@
                 }
                 return eval_pair;
             }
-            function recur(pair) {
+            function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
                     var eval_pair;
                     if (Symbol.is(pair.car.car, 'unquote-splicing')) {
@@ -2620,65 +2729,75 @@
                             error
                         });
                         return unpromise(eval_pair, function(eval_pair) {
-                            if (!eval_pair instanceof Pair) {
-                                throw new Error('Value of unquote-splicing need' +
-                                                ' to be pair');
+                            if (!(eval_pair instanceof Pair)) {
+                                return eval_pair;
                             }
-                            const value = recur(pair.cdr);
+                            const value = recur(pair.cdr, 0, 1);
                             if (value === nil && eval_pair === nil) {
                                 return undefined;
                             }
                             return unpromise(value, value => join(eval_pair, value));
                         });
                     }
+                    if (Symbol.is(pair.car, 'quasiquote')) {
+                        var cdr = recur(pair.cdr, unquote_cnt, max_unq + 1);
+                        return new Pair(pair.car, cdr);
+                    }
                     if (Symbol.is(pair.car, 'unquote')) {
                         var head = pair.cdr;
                         var node = head;
                         var parent = node;
-                        var unquote_count = 1;
+                        unquote_cnt++;
                         while (Symbol.is(node.car.car, 'unquote')) {
                             parent = node;
-                            unquote_count++;
+                            unquote_cnt++;
                             node = node.car.cdr.car;
-                        }
-                        if (unquote_count > max_unquote) {
-                            max_unquote = unquote_count;
                         }
                         // we use Unquote to proccess inner most unquote first
                         // in unquote function afer processing whole s-expression
                         if (parent === node) {
                             if (pair.cdr.cdr !== nil) {
                                 return unpromise(recur(pair.cdr.cdr), function(value) {
-                                    return new Pair(
-                                        new Unquote(pair.cdr.car, unquote_count),
-                                        value
+                                    var unquoted = new Unquote(
+                                        pair.cdr.car,
+                                        unquote_cnt,
+                                        max_unq
                                     );
+                                    return new Pair(unquoted, value);
                                 });
                             } else {
-                                return new Unquote(pair.cdr.car, unquote_count);
+                                return new Unquote(pair.cdr.car, unquote_cnt, max_unq);
                             }
                         } else if (parent.cdr.cdr !== nil) {
-                            return unpromise(recur(parent.cdr.cdr), function(value) {
+                            var value = recur(parent.cdr.cdr, unquote_cnt, max_unq);
+                            return unpromise(value, function(value) {
                                 parent.car.cdr = new Pair(
-                                    new Unquote(node, unquote_count),
+                                    new Unquote(node, unquote_cnt, max_unq),
                                     parent.cdr === nil ? nil : value
                                 );
                                 return head.car;
                             });
                         } else {
-                            parent.car.cdr = new Unquote(node, unquote_count);
+                            parent.car.cdr = new Unquote(node, unquote_cnt, max_unq);
                         }
                         return head.car;
                     }
-                    return resolve_pair(pair, recur);
+                    return resolve_pair(pair, (pair) => {
+                        return recur(pair, unquote_cnt, max_unq);
+                    });
                 }
                 return pair;
             }
             const unquoteTest = v => isPair(v) || v instanceof Unquote;
             function unquoting(node) {
                 if (node instanceof Unquote) {
-                    if (max_unquote === node.count) {
-                        return evaluate(node.value, { env: self, dynamic_scope, error });
+                    if (node.max === node.count) {
+                        var ret = evaluate(node.value, {
+                            env: self,
+                            dynamic_scope,
+                            error
+                        });
+                        return ret;
                     } else {
                         return unpromise(unquoting(node.value), function(value) {
                             return new Pair(
@@ -2693,10 +2812,12 @@
                 }
                 return resolve_pair(node, unquoting, unquoteTest);
             }
-            return unpromise(recur(arg.car), value => {
-                return unpromise(unquoting(value), quote);
+            var x = recur(arg.car, 0, 1);
+            return unpromise(x, value => {
+                value = unquoting(value);
+                return unpromise(value, quote);
             });
-        }), `(quasiquote list ,value ,@value)
+        }, `(quasiquote list ,value ,@value)
 
             Similar macro to \`quote\` but inside it you can use special
             expressions unquote abbreviated to , that will evaluate expresion inside
@@ -2858,7 +2979,7 @@
                 return '[' + obj.map(x => string(x, true)).join(', ') + ']';
             }
             if (obj === null || (typeof obj === 'string' && quote)) {
-                return JSON.stringify(obj);
+                return JSON.stringify(obj).replace(/\\n/g, '\n');
             }
             if (obj instanceof Pair) {
                 return new lips.Formatter(obj.toString()).break().format();
@@ -2906,6 +3027,31 @@
 
             Function create new JavaScript instance of an object.`),
         // ------------------------------------------------------------------
+        'unset!': doc(function(symbol) {
+            typecheck('unset!', symbol, 'symbol');
+            delete this.env[symbol.name];
+        }, `(unset! name)
+
+            Function delete specified name from environment.`),
+        // ------------------------------------------------------------------
+        'remove-special!': doc(function(symbol) {
+            typecheck('remove-special!', symbol, 'string');
+            delete specials[symbol];
+        }, `(remove-special! symbol)
+
+            Function remove special symbol from parser. Added by \`add-special!\``),
+        // ------------------------------------------------------------------
+        'add-special!': doc(function(symbol, name) {
+            typecheck('remove-special!', symbol, 'string', 1);
+            typecheck('remove-special!', name, 'symbol', 2);
+            lips.specials[symbol] = name;
+        }, `(add-special! symbol name)
+
+            Add special symbol to the list of transforming operators by the parser.
+            e.g.: \`(add-special! '#)\` will allow to use \`#(1 2 3)\` and it will be
+            transformed into (# (1 2 3)) so you can write # macro that will process
+            the list. It's main purpose to to allow to use \`define-symbol-macro\``),
+        // ------------------------------------------------------------------
         'get': get,
         '.': get,
         // ------------------------------------------------------------------
@@ -2926,6 +3072,12 @@
         }, `(instanceof type obj)
 
             Function check of object is instance of object.`),
+        // ------------------------------------------------------------------
+        'macro?': doc(function(obj) {
+            return obj instanceof Macro;
+        }, `(macro? expression)
+
+            Function check if value is a macro.`),
         // ------------------------------------------------------------------
         'function?': doc(function(obj) {
             return typeof obj === 'function';
@@ -2994,18 +3146,16 @@
             Function check if value is an arrray.`),
         // ------------------------------------------------------------------
         'object?': doc(function(obj) {
-            return obj !== null && typeof obj === 'object' && !(obj instanceof Array);
+            return obj !== nil && obj !== null &&
+                !(obj instanceof LNumber) && typeof obj === 'object' &&
+                !(obj instanceof Array);
         }, `(object? expression)
 
             Function check if value is an object.`),
         // ------------------------------------------------------------------
         read: doc(function read(arg) {
             if (typeof arg === 'string') {
-                arg = parse(tokenize(arg));
-                if (arg.length) {
-                    return arg[arg.length - 1];
-                }
-                return emptyList();
+                return parse(tokenize(arg));
             }
             return this.get('stdin').read().then((text) => {
                 return read.call(this, text);
@@ -3030,13 +3180,7 @@
             it user code)`),
         // ------------------------------------------------------------------
         error: doc(function(...args) {
-            if (root.console) {
-                if (root.console.error) {
-                    root.console.error(...args);
-                } else if (root.console.log) {
-                    root.console.log(...args);
-                }
-            }
+            this.get('print')(...args);
         }, `(error . args)
 
             Display error message.`),
@@ -3590,7 +3734,7 @@
 
             Function get function from object and call it with arguments.`)
     }, undefined, 'global');
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     ['floor', 'round', 'ceil'].forEach(fn => {
         global_env.set(fn, doc(function(value) {
             typecheck(fn, value, 'number');
@@ -3601,7 +3745,7 @@
 
             Function calculate ${fn} of a number.`));
     });
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // source: https://stackoverflow.com/a/4331218/387194
     function allPossibleCases(arr) {
         if (arr.length === 1) {
@@ -3619,7 +3763,7 @@
         }
     }
 
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function combinations(input, start, end) {
         var result = [];
         for (var i = start; i <= end; ++i) {
@@ -3632,7 +3776,7 @@
         return result;
     }
 
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // cadr caddr cadadr etc.
     combinations(['d', 'a'], 2, 5).forEach(spec => {
         const s = spec.split('');
@@ -3656,13 +3800,13 @@
             Function calculate ${code}`));
     });
 
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     if (typeof global !== 'undefined') {
         global_env.set('global', global);
     } else if (typeof window !== 'undefined') {
         global_env.set('window', window);
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function typeErrorMessage(fn, got, expected, position = null) {
         let postfix = fn ? ` in function \`${fn}\`` : '';
         if (position !== null) {
@@ -3674,7 +3818,7 @@
         }
         return `Expecting ${expected} got ${got}${postfix}`;
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
         const arg_type = type(arg);
         var match = false;
@@ -3685,7 +3829,7 @@
             throw new Error(typeErrorMessage(fn, arg_type, expected, position));
         }
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function type(obj) {
         var mapping = {
             'pair': Pair,
@@ -3716,10 +3860,10 @@
         }
         return typeof obj;
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // :; wrap tree of Promises with single Promise or return argument as is
     // :: if tree have no Promises
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function resolvePromises(arg) {
         var promises = [];
         traverse(arg);
@@ -3761,7 +3905,6 @@
             return node;
         }
     }
-    // ----------------------------------------------------------------------
     function getFunctionArgs(rest, { env, dynamic_scope, error }) {
         var args = [];
         var node = rest;
@@ -3788,22 +3931,21 @@
         }
         return resolvePromises(args);
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function evaluateMacro(macro, code, eval_args) {
         if (code instanceof Pair) {
             //code = code.clone();
         }
         var value = macro.invoke(code, eval_args);
-        value = resolvePromises(value);
-        return unpromise(value, function ret(value) {
+        return unpromise(resolvePromises(value), function ret(value) {
             if (value && value.data || !(value instanceof Pair)) {
                 return value;
             } else {
-                return evaluate(value, eval_args);
+                return quote(evaluate(value, eval_args));
             }
         });
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function evaluate(code, { env, dynamic_scope, error = () => {} } = {}) {
         try {
             if (dynamic_scope === true) {
@@ -3821,6 +3963,9 @@
             if (isEmptyList(code)) {
                 return emptyList();
             }
+            if (code instanceof Symbol) {
+                return env.get(code, true);
+            }
             var first = code.car;
             var rest = code.cdr;
             if (first instanceof Pair) {
@@ -3837,10 +3982,12 @@
                     );
                 }
             }
+            //console.log({first, code: code.toString()});
             if (first instanceof Symbol) {
                 value = env.get(first, true);
                 if (value instanceof Macro) {
-                    return unpromise(evaluateMacro(value, rest, eval_args), result => {
+                    var ret = evaluateMacro(value, rest, eval_args);
+                    return unpromise(ret, result => {
                         if (result instanceof Pair) {
                             return result.markCycles();
                         }
@@ -3885,7 +4032,7 @@
         }
     }
 
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     async function exec(string, env, dynamic_scope) {
         if (dynamic_scope === true) {
             env = dynamic_scope = env || global_env;
@@ -3894,20 +4041,7 @@
         } else {
             env = env || global_env;
         }
-        // proper indent of multi line strings
-        var tokens = tokenize(string, true).map(function(token) {
-            if (token.token.match(string_re) && token.col) {
-                // col + 1 because of open quote character
-                var re = new RegExp(`^ {${token.col + 1}}`);
-                return token.token.split('\n').map(line => {
-                    return line.replace(re, '');
-                }).join('\n');
-            }
-            return token.token.trim();
-        }).filter(function(token) {
-            return token && !token.match(/^;/);
-        });
-        var list = parse(tokens);
+        var list = parse(string);
         var results = [];
         while (true) {
             var code = list.shift();
@@ -3919,7 +4053,9 @@
                     dynamic_scope,
                     error: (e, code) => {
                         if (code) {
-                            e.code = code.toString();
+                            // LIPS stack trace
+                            e.code = e.code || [];
+                            e.code.push(code.toString());
                         }
                         throw e;
                     }
@@ -3929,9 +4065,9 @@
         }
     }
 
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // create token matcher that work with string and object token
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function matchToken(re) {
         return function(token) {
             if (!token) {
@@ -3941,7 +4077,7 @@
         };
     }
     var isParen = matchToken(/[()]/);
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     function balanced(code) {
         var tokens = typeof code === 'string' ? tokenize(code) : code;
         var parenthesis = tokens.filter(isParen);
@@ -3950,7 +4086,7 @@
         return open.length === close.length;
     }
 
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     Pair.unDry = function(value) {
         return new Pair(value.car, value.cdr);
     };
@@ -3980,7 +4116,14 @@
     Symbol.unDry = function(value) {
         return new Symbol(value.name);
     };
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    function execError(e) {
+        console.error(e.message || e);
+        if (e.code) {
+            console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`));
+        }
+    }
+    // -------------------------------------------------------------------------
     function init() {
         var lips_mime = 'text/x-lips';
         if (window.document) {
@@ -3993,9 +4136,15 @@
                         var src = script.getAttribute('src');
                         if (src) {
                             return root.fetch(src).then(res => res.text())
-                                .then(exec).then(loop);
+                                .then(exec).then(loop).catch((e) => {
+                                    execError(e);
+                                    loop();
+                                });
                         } else {
-                            return exec(script.innerHTML).then(loop);
+                            return exec(script.innerHTML).then(loop).catch((e) => {
+                                execError(e);
+                                loop();
+                            });
                         }
                     } else if (type && type.match(/lips|lisp/)) {
                         console.warn('Expecting ' + lips_mime + ' found ' + type);
@@ -4005,11 +4154,11 @@
             })();
         }
     }
-    // ----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     if (typeof window !== 'undefined') {
         contentLoaded(window, init);
     }
-    // --------------------------------------
+    // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',
         exec,
@@ -4035,4 +4184,5 @@
     // so it work when used with webpack where it will be not global
     global_env.set('lips', lips);
     return lips;
+
 });

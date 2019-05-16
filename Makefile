@@ -1,6 +1,6 @@
 .PHONY: publish test coveralls lint
 
-VERSION=0.11.2
+VERSION=0.14.0
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
@@ -58,7 +58,7 @@ publish:
 	$(CD) npm && $(NPM) publish --access=public
 	$(RM) -rf npm
 
-test:
+test: dist/lips.js
 	$(JEST)
 
 coveralls:

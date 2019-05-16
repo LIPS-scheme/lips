@@ -31,16 +31,23 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             }
         },
         // ---------------------------------------------------------------------
-        help: doc(function(fn) {
-            term.echo(help(fn), { formatters: false });
-        }, lips.env.env.help.__doc__),
+        help: doc(new lips.Macro('help', function(code, { error }) {
+            const { evaluate, Pair, Symbol, nil } = lips;
+            var new_code = new Pair(new Symbol('__help'), code);
+            var doc = evaluate(new_code, { env: this, error });
+            term.echo(doc, { formatters: false });
+        }), lips.env.env.help.__doc__),
         // ---------------------------------------------------------------------
         error: doc(function(message) {
             term.error(message);
         }, lips.env.env.error.__doc__)
     });
+    // hack so (let ((x lambda)) (help x))
+    env.env.__help = lips.env.env.help;
     // -------------------------------------------------------------------------
     var term = jQuery(selector).terminal(function(code, term) {
+        // format before executing mainly for strings in function docs
+        code = new lips.Formatter(code).format();
         lips.exec(code, env, dynamic).then(function(ret) {
             ret.forEach(function(ret) {
                 if (ret !== undefined) {
@@ -52,6 +59,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             });
         }).catch(function(e) {
             term.error(e.message || e);
+            if (e.code) {
+                term.error(e.code.map((line, i) => `[${i+1}]: ${line}`).join('\n'));
+            }
         });
     }, {
         name,
@@ -78,10 +88,15 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             if (e.text) {
                 var code = e.text;
                 var prompt = this.get_prompt();
-                var formatter = new lips.Formatter(code);
-                var output = formatter.format({
-                    offset: prompt.length
-                });
+                try {
+                    var formatter = new lips.Formatter(code);
+                    var output = formatter.format({
+                        offset: prompt.length
+                    });
+                } catch(e) {
+                    // boken LIPS code
+                    output = code;
+                }
                 return Promise.resolve(output);
             }
         },
