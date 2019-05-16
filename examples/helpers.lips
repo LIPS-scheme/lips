@@ -255,7 +255,7 @@
                     lst))))
 
 
-(define-macro (match expr . list)
+(define-macro (match-pattern expr . list)
   "(match pattern ((pattern . body) ...))
 
    Pattern matching macro. examples:
