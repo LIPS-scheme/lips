@@ -257,11 +257,40 @@
                   `(cond ,@rest))))))
 
 ;; ---------------------------------------------------------------------------------------
-;; formatter rules for cond to break after each S-Expression
-(let ((rules (.. lips.Formatter.rules))
-      (no-paren (new (.. lips.Formatter.Ahead) (new RegExp "[^)]"))) ;; regex with ) break scheme emacs mode
-      (sexp (new (.. lips.Formatter.Pattern) (list->array (list "(" ((.. Symbol.for) "*") ")")) "+")))
-  (--> rules (push (tree->array (list (list "(" "cond" sexp) (value 1) no-paren)))))
+(define (tree-map f tree)
+  "(tree-map fn tree)
+
+   Tree version of map. Function is invoked on every leaf."
+  (if (pair? tree)
+      (cons (tree-map f (car tree)) (tree-map f (cdr tree)))
+      (f tree)))
+
+;; ---------------------------------------------------------------------------------------
+(define (native.number x)
+  "(native.number obj)
+
+   If argument is number it will conver to native number."
+  (if (number? x)
+      (value x)
+      x))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (define-formatter-rule . patterns)
+  "(rule-pattern pattern)
+
+   Anaphoric Macro for defining patterns for formatter. With Ahead, Pattern and * defined values."
+  (let ((rules (gensym)))
+    `(let ((,rules (.. lips.Formatter.rules))
+           (Ahead (lambda (pattern)
+                    (let ((Ahead (.. lips.Formatter.Ahead)))
+                      (new Ahead (if (string? pattern) (new RegExp pattern) pattern)))))
+           (* ((.. Symbol.for) "*"))
+           (Pattern (lambda (pattern flag)
+                      (new (.. lips.Formatter.Pattern) (list->array pattern)
+                           (if (null? flag) undefined flag)))))
+       ,@(map (lambda (pattern)
+                `(--> ,rules (push (tree->array (tree-map native.number ,@pattern)))))
+              patterns))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (compare a b)
@@ -307,7 +336,7 @@
    ;; match
    (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")))
    (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")) (true \"rest\"))
-   ;; \"rest\""
+   ;; rest"
  (if (pair? list)
      (let ((ex-name (gensym)))
        `(let ((,ex-name (auto-quote ,expr)))
@@ -329,3 +358,7 @@
   (let ((pair (assoc key alist)))
     (if (pair? pair) (cdr pair) undefined)))
 
+;; ---------------------------------------------------------------------------------------
+;; formatter rules for cond to break after each S-Expression
+;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro use RegExp constructor
+(define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+")) 1 (Ahead "[^)]"))))

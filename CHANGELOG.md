@@ -4,6 +4,7 @@
 * formatter rules for example `cond` macro
 * `tree->array` function
 * `__code__` inside Macro
+* `define-formatter-rule` macro for breaking S-Expressions in Formatter
 ### Bug fixes
 * fix lips.Formatter pattern matching
 * better toString and `string` functions (keep class names for internal objects in minified js file)
