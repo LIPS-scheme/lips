@@ -103,8 +103,42 @@
 ;;  (--> (list->array args) (join "")))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (define-global name)
-  `(set-obj! global ,(symbol->string name) ,name))
+
+(define-macro (define-global first . rest)
+  "(define-global var value)
+   (define-global (name . args) body)
+
+   Macro that define functions or variables in global context, so they can be used
+   inside let and get let variables in closure, Useful for universal macros."
+  (if (pair? first)
+      (let ((name (car first)))
+        `(--> (. lips 'env)
+              (set ,(symbol->string name) (lambda ,(cdr first) ,@rest))))
+      `(--> (. lips 'env) (set ,(symbol->string first) ,(car rest)))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (globalize expr . rest)
+  "(globalize expr)
+
+    Macro will get the value of the expression and add each method as function to global
+    scope."
+  (let* ((env (current-environment))
+         (obj (eval expr env))
+         (name (gensym))
+         (env-name (gensym))
+         (make-name (if (pair? rest)
+                        (let ((pre (symbol->string (car rest))))
+                          (lambda (name) (string->symbol (concat pre name))))
+                        string->symbol)))
+    `(let ((,name ,expr))
+       ,@(filter pair?
+                 (map (lambda (key)
+                        (if (and (not (match /^_/ key)) (function? (. obj key)))
+                            (let* ((args (gensym)))
+                              `(define-global (',(make-name key) . ,args)
+                                 (apply (. ,name ,key) ,args)))))
+                        (array->list (--> Object (keys obj))))))))
+
 
 ;; ---------------------------------------------------------------------------------------
 (define (alist->object alist)

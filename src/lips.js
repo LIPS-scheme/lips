@@ -2530,7 +2530,7 @@
             if (code instanceof Pair) {
                 return evaluate(code, {
                     env,
-                    dynamic_scope: this,
+                    //dynamic_scope: this,
                     error: e => {
                         this.get('error')(e.message);
                         if (e.code) {
@@ -2662,10 +2662,12 @@
                         var result = rest.reduce(function(result, node) {
                             return evaluate(node, eval_args);
                         });
-                        if (typeof result === 'object') {
-                            delete result.data;
-                        }
-                        return result;
+                        return unpromise(result, function(result) {
+                            if (typeof result === 'object') {
+                                delete result.data;
+                            }
+                            return result;
+                        });
                     }
                 }, __doc__);
                 this.env[name].__code__ = new Pair(new Symbol('define-macro'), macro);
@@ -3296,7 +3298,12 @@
                 if (dynamic_scope) {
                     args.dynamic_scope = this;
                 }
-                unpromise(evaluate(code.car, args), resolve).catch(args.error);
+                var ret = evaluate(code.car, args);
+                if (isPromise(ret)) {
+                    ret.catch(args.error).then(resolve);
+                } else {
+                    resolve(ret);
+                }
             });
         }), `(try expr (catch (e) code)`),
         // ------------------------------------------------------------------
@@ -3857,6 +3864,13 @@
         }
     }
     // -------------------------------------------------------------------------
+    function selfEvaluated(obj) {
+        var type = typeof obj;
+        return ['string', 'function'].includes(type) ||
+            obj instanceof LNumber ||
+            obj instanceof RegExp;
+    }
+    // -------------------------------------------------------------------------
     function type(obj) {
         var mapping = {
             'pair': Pair,
@@ -3965,7 +3979,7 @@
         }
         var value = macro.invoke(code, eval_args);
         return unpromise(resolvePromises(value), function ret(value) {
-            if (value && value.data || !value) {
+            if (value && value.data || !value || selfEvaluated(value)) {
                 return value;
             } else {
                 return quote(evaluate(value, eval_args));

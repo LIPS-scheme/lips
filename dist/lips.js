@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Fri, 17 May 2019 11:00:55 +0000
+ * build: Fri, 17 May 2019 21:14:31 +0000
  */
 (function () {
 'use strict';
@@ -1350,7 +1350,6 @@ function _typeof(obj) {
     }
 
     if (stack.length) {
-      dump(result);
       throw new Error('Unbalanced parenthesis 2');
     }
 
@@ -1418,19 +1417,6 @@ function _typeof(obj) {
     return string.split('\n').map(function (line) {
       return line.trim();
     }).join('\n');
-  } // ----------------------------------------------------------------------
-
-
-  function dump(arr) {
-    {
-      console.log(arr.map(function (arg) {
-        if (arg instanceof Array) {
-          return Pair.fromArray(arg);
-        }
-
-        return arg;
-      }).toString());
-    }
   } // ----------------------------------------------------------------------
   // return last S-Expression
   // ----------------------------------------------------------------------
@@ -3957,7 +3943,7 @@ function _typeof(obj) {
       if (code instanceof Pair) {
         return evaluate(code, {
           env: env,
-          dynamic_scope: this,
+          //dynamic_scope: this,
           error: function error(e) {
             _this.get('error')(e.message);
 
@@ -4119,12 +4105,13 @@ function _typeof(obj) {
             var result = rest.reduce(function (result, node) {
               return evaluate(node, eval_args);
             });
+            return unpromise(result, function (result) {
+              if (_typeof(result) === 'object') {
+                delete result.data;
+              }
 
-            if (_typeof(result) === 'object') {
-              delete result.data;
-            }
-
-            return result;
+              return result;
+            });
           }
         }, __doc__);
         this.env[name].__code__ = new Pair(new _Symbol('define-macro'), macro);
@@ -4694,7 +4681,13 @@ function _typeof(obj) {
           args.dynamic_scope = _this4;
         }
 
-        unpromise(evaluate(code.car, args), resolve).catch(args.error);
+        var ret = evaluate(code.car, args);
+
+        if (isPromise(ret)) {
+          ret.catch(args.error).then(resolve);
+        } else {
+          resolve(ret);
+        }
       });
     }), "(try expr (catch (e) code)"),
     // ------------------------------------------------------------------
@@ -5225,6 +5218,13 @@ function _typeof(obj) {
   } // -------------------------------------------------------------------------
 
 
+  function selfEvaluated(obj) {
+    var type = _typeof(obj);
+
+    return ['string', 'function'].includes(type) || obj instanceof LNumber || obj instanceof RegExp;
+  } // -------------------------------------------------------------------------
+
+
   function type(obj) {
     var mapping = {
       'pair': Pair,
@@ -5428,7 +5428,7 @@ function _typeof(obj) {
 
     var value = macro.invoke(code, eval_args);
     return unpromise(resolvePromises(value), function ret(value) {
-      if (value && value.data || !value) {
+      if (value && value.data || !value || selfEvaluated(value)) {
         return value;
       } else {
         return quote(evaluate(value, eval_args));
