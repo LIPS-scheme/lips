@@ -58,12 +58,23 @@
    Function convert LIPS symbol to string."
   (and (symbol? s) (. s "name")))
 
+
+;; ---------------------------------------------------------------------------------------
+(define (as.data obj)
+  "(as.data obj)
+
+   Mark object as data to stop evaluation."
+  (if (object? obj)
+      (begin
+        (set-obj! obj 'data true)
+        obj)))
+
 ;; ---------------------------------------------------------------------------------------
 (define (string->symbol string)
   "(string->symbol string)
 
    Function convert string to LIPS symbol."
-  (and (string? string) (new (. lips "Symbol") string)))
+  (and (string? string) (as.data (new (. lips "Symbol") string))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (value obj)
@@ -211,11 +222,12 @@
 
    Macro for defining modules inside you can use define to create functions.
    And use export name to add that name to defined environment."
-  (let ((parent (. (current-environment) 'parent)))
-    `(let ((__module-exports__ (new (. lips 'Environment) (concat "module-" ,(symbol->string name)))))
-       (define-macro (export name) `(--> __module-exports__ (set ',name ,name)))
+  (let ((parent (. (current-environment) 'parent))
+        (module-name (gensym)))
+    `(let ((,module-name (new (. lips 'Environment) (concat "module-" ,(symbol->string name)))))
+       (define-macro (export name) `(--> ,,module-name (set ',name ,name)))
        ,@body
-       (--> ,parent (set ',name __module-exports__)))))
+       (--> ,parent (set ',name ,module-name)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (import name module)
@@ -243,12 +255,13 @@
                   `(begin
                      ,@(cdar rest))
                   `(cond ,@rest))))))
+
 ;; ---------------------------------------------------------------------------------------
 ;; formatter rules for cond to break after each S-Expression
 (let ((rules (.. lips.Formatter.rules))
-     (no-paren (new (.. lips.Formatter.Ahead) /[^)]/))
-     (sexp (new (.. lips.Formatter.Pattern) (list->array (list "(" ((.. Symbol.for) "*") ")")) "+")))
- (--> rules (push (tree->array (list (list "(" "cond" sexp) (value 1) no-paren)))))
+      (no-paren (new (.. lips.Formatter.Ahead) (new RegExp "[^)]"))) ;; regex with ) break scheme emacs mode
+      (sexp (new (.. lips.Formatter.Pattern) (list->array (list "(" ((.. Symbol.for) "*") ")")) "+")))
+  (--> rules (push (tree->array (list (list "(" "cond" sexp) (value 1) no-paren)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (compare a b)
@@ -271,18 +284,19 @@
         (true false)))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (auto-quote lst)
+(define-macro (auto-quote arg)
   "(auto-quote list)
 
    Macro that create list recursively but take symbols from scope"
-  (if (pair? lst)
+  (if (pair? arg)
       `(list ,@(map (lambda (item)
                       (if (symbol? item)
                           item
                           (if (pair? item)
                               `(auto-quote ,item)
                               `,item)))
-                    lst))))
+                    arg))
+      arg))
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (match-pattern expr . list)
@@ -314,3 +328,4 @@
 (define (assocv key alist)
   (let ((pair (assoc key alist)))
     (if (pair? pair) (cdr pair) undefined)))
+

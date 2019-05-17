@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Fri, 17 May 2019 09:13:49 +0000
+ * build: Fri, 17 May 2019 11:00:55 +0000
  */
 (function () {
 'use strict';
@@ -5428,7 +5428,7 @@ function _typeof(obj) {
 
     var value = macro.invoke(code, eval_args);
     return unpromise(resolvePromises(value), function ret(value) {
-      if (value && value.data || !(value instanceof Pair)) {
+      if (value && value.data || !value) {
         return value;
       } else {
         return quote(evaluate(value, eval_args));
@@ -5485,8 +5485,7 @@ function _typeof(obj) {
         } else if (typeof value !== 'function') {
           throw new Error(type(value) + ' ' + env.get('string')(value) + ' is not a function while evaluating ' + code.toString());
         }
-      } //console.log({first, code: code.toString()});
-
+      }
 
       if (first instanceof _Symbol) {
         value = env.get(first, true);

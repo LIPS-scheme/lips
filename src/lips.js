@@ -477,7 +477,7 @@
     }
     // ----------------------------------------------------------------------
     function dump(arr) {
-        if (true || false) {
+        if (false) {
             console.log(arr.map((arg) => {
                 if (arg instanceof Array) {
                     return Pair.fromArray(arg);
@@ -3965,7 +3965,7 @@
         }
         var value = macro.invoke(code, eval_args);
         return unpromise(resolvePromises(value), function ret(value) {
-            if (value && value.data || !(value instanceof Pair)) {
+            if (value && value.data || !value) {
                 return value;
             } else {
                 return quote(evaluate(value, eval_args));
@@ -4009,7 +4009,6 @@
                     );
                 }
             }
-            //console.log({first, code: code.toString()});
             if (first instanceof Symbol) {
                 value = env.get(first, true);
                 if (value instanceof Macro) {
@@ -4218,7 +4217,6 @@
     };
     // so it work when used with webpack where it will be not global
     global_env.set('lips', lips);
-
     return lips;
 
 });

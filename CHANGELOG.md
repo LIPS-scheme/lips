@@ -8,6 +8,7 @@
 * fix lips.Formatter pattern matching
 * better toString and `string` functions (keep class names for internal objects in minified js file)
 * fix `__code__` on lambda expressions (that also includes `(define (name . arg)`)
+* evaluate symbols returned from macros
 
 ## 0.14.0
 ### Features
