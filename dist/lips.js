@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Thu, 16 May 2019 14:11:01 +0000
+ * build: Fri, 17 May 2019 09:13:49 +0000
  */
 (function () {
 'use strict';
@@ -4046,12 +4046,12 @@ function _typeof(obj) {
       }
 
       var length = code.car instanceof Pair ? code.car.length() : null;
+      lambda.__code__ = new Pair(new _Symbol('lambda'), code);
 
       if (!(code.car instanceof Pair)) {
         return doc(lambda, __doc__, true); // variable arguments
-      }
+      } // wrap and decorate with __doc__
 
-      lambda.__code__ = new Pair(new _Symbol('lambda'), code); // wrap and decorate with __doc__
 
       return doc(setFnLength(lambda, length), __doc__, true);
     }, "(lambda (a b) body)\n            (lambda args body)\n            (lambda (a b . rest) body)\n\n            Macro lambda create new anonymous function, if first element of the body\n            is string and there is more elements it will be documentation, that can\n            be read using (help fn)"),
@@ -4127,6 +4127,7 @@ function _typeof(obj) {
             return result;
           }
         }, __doc__);
+        this.env[name].__code__ = new Pair(new _Symbol('define-macro'), macro);
       }
     }), "(define-macro (name . args) body)\n\n             Meta macro, macro that create new macros, if return value is list structure\n             it will be evaluated when macro is invoked. You can use quasiquote ` and\n             unquote , and unquote-splicing ,@ inside to create expression that will be\n             evaluated on runtime. Macros works like this: if you pass any expression to\n             macro the arguments will not be evaluated unless macro itself evaluate it.\n             Because of this macro can manipulate expression (arguments) as lists."),
     // ------------------------------------------------------------------

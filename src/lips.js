@@ -2597,10 +2597,10 @@
                 return evaluate(output, { env, dynamic_scope, error });
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
+            lambda.__code__ = new Pair(new Symbol('lambda'), code);
             if (!(code.car instanceof Pair)) {
                 return doc(lambda, __doc__, true); // variable arguments
             }
-            lambda.__code__ = new Pair(new Symbol('lambda'), code);
             // wrap and decorate with __doc__
             return doc(setFnLength(lambda, length), __doc__, true);
         }, `(lambda (a b) body)
@@ -2668,6 +2668,7 @@
                         return result;
                     }
                 }, __doc__);
+                this.env[name].__code__ = new Pair(new Symbol('define-macro'), macro);
             }
         }), `(define-macro (name . args) body)
 

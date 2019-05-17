@@ -309,3 +309,8 @@
 
    Function check if object is macro and it's expandable"
   (and (macro? obj) (. obj 'defmacro)))
+
+
+(define (assocv key alist)
+  (let ((pair (assoc key alist)))
+    (if (pair? pair) (cdr pair) undefined)))

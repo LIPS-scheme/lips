@@ -3,9 +3,11 @@
 * new macro `..`
 * formatter rules for example `cond` macro
 * `tree->array` function
+* `__code__` inside Macro
 ### Bug fixes
 * fix lips.Formatter pattern matching
 * better toString and `string` functions (keep class names for internal objects in minified js file)
+* fix `__code__` on lambda expressions (that also includes `(define (name . arg)`)
 
 ## 0.14.0
 ### Features
