@@ -2284,19 +2284,22 @@
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
-            if (this.get('global')) {
+            if (typeof this.env.global !== 'undefined') {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file, function(err, data) {
                         if (err) {
                             reject(err);
                         } else {
-                            resolve(exec(data.toString(), env));
+                            exec(data.toString(), env).then(() => {
+                                resolve();
+                            });
                         }
                     });
                 });
             }
             return root.fetch(file).then(res => res.text()).then((code) => {
                 return exec(code, env);
+            }).then(() => {
             });
         }, `(load filename)
 
