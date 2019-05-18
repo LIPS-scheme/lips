@@ -723,11 +723,10 @@
         [['(', 'if', ['(', glob, ')']], 1],
         [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen],
         [['(', glob, ')'], 1],
-        [['(', /^define/, ['(', glob, ')'], string_re], 1],
-        [['(', /^define/, '(', glob, ')'], 1],
-        [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen],
-        [['(', 'lambda', '(', glob, ')'], 1],
-        [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]
+        [['(', /^(define|lambda)/, ['(', glob, ')'], string_re], 1],
+        [['(', /^(define|lambda)/, '(', glob, ')'], 1],
+        [['(', /^(define|lambda)/, ['(', glob, ')'], string_re, sexp], 1, notParen],
+        [['(', /^(define|lambda)/, ['(', glob, ')'], sexp], 1, notParen]
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
@@ -2305,6 +2304,15 @@
 
             Function fetch the file and evaluate its content as LIPS code.`),
         // ------------------------------------------------------------------
+        'debugger': doc(function() {
+            return new Promise(resolve => {
+                debugger;
+                resolve();
+            });
+        }, `(debugger)
+
+            Function stops executing of LIPS code in dev tools debugger.`),
+        // ------------------------------------------------------------------
         'while': doc(new Macro('while', function(code, { dynamic_scope, error }) {
             var self = this;
             var begin = new Pair(
@@ -3214,7 +3222,7 @@
         // ------------------------------------------------------------------
         print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
-                return this.get('string')(arg);
+                return this.get('string').call(this, arg);
             }));
         }, `(print . args)
 

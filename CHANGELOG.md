@@ -2,6 +2,9 @@
 ### Bug fixes
 * fix `load` function outside of Node
 * return undefined from `load` function
+* fix formatting of lambda expressions
+* fix `symbol->string` function when called with gensym symbols
+* better `-->` macro
 
 ## 0.15.0
 ### Features

@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.15.1
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sat, 18 May 2019 07:42:16 +0000
+ * build: Sat, 18 May 2019 09:29:23 +0000
  */
 (function () {
 'use strict';
@@ -1720,7 +1720,7 @@ function _typeof(obj) {
   var glob = root.Symbol.for('*');
   var sexp = new Pattern(['(', glob, ')'], '+'); // rules for breaking S-Expressions into lines
 
-  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, '(', sexp], 2, notParen], [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen], [['(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], string_re], 1], [['(', /^define/, '(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'lambda', '(', glob, ')'], 1], [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
+  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, '(', sexp], 2, notParen], [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen], [['(', glob, ')'], 1], [['(', /^(define|lambda)/, ['(', glob, ')'], string_re], 1], [['(', /^(define|lambda)/, '(', glob, ')'], 1], [['(', /^(define|lambda)/, ['(', glob, ')'], string_re, sexp], 1, notParen], [['(', /^(define|lambda)/, ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
 
   Formatter.prototype.break = function () {
     var code = this._code.replace(/\n[ \t]*/g, '\n ');
@@ -3741,6 +3741,13 @@ function _typeof(obj) {
       }).then(function () {});
     }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
     // ------------------------------------------------------------------
+    'debugger': doc(function () {
+      return new Promise(function (resolve) {
+        debugger;
+        resolve();
+      });
+    }, "(debugger)\n\n            Function stops executing of LIPS code in dev tools debugger."),
+    // ------------------------------------------------------------------
     'while': doc(new Macro('while', function (code, _ref8) {
       var dynamic_scope = _ref8.dynamic_scope,
           error = _ref8.error;
@@ -4611,7 +4618,7 @@ function _typeof(obj) {
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
-        return _this3.get('string')(arg);
+        return _this3.get('string').call(_this3, arg);
       })));
     }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
     // ------------------------------------------------------------------
@@ -5742,7 +5749,7 @@ function _typeof(obj) {
   Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
   var lips = {
-    version: '0.15.1',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

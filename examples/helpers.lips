@@ -15,7 +15,9 @@
 
           (--> document (querySelectorAll \"div\"))"
   (let ((obj (gensym)))
-    `(let ((,obj ,expr))
+    `(let* ((,obj ,(if (and (symbol? expr) (not (null? (match /\./ (symbol->string expr)))))
+                       `(.. ,expr)
+                       expr)))
        ,@(map (lambda (code)
                 (let ((name (gensym))
                       (fn (gensym)))
@@ -56,7 +58,11 @@
   "(symbol->string symbol)
 
    Function convert LIPS symbol to string."
-  (and (symbol? s) (. s "name")))
+  (if (symbol? s)
+      (let ((name (. s "name")))
+        (if (string? name)
+            name
+            (--> name (toString))))))
 
 
 ;; ---------------------------------------------------------------------------------------
