@@ -39,9 +39,7 @@
       (let ((parts (split "." (symbol->string expr))))
         (if (== 1 (length parts))
             expr
-            `(. ,(string->symbol (car parts)) ,@(map (lambda (string)
-                                                       (list 'quote (string->symbol string)))
-                                                     (cdr parts)))))))
+            `(. ,(string->symbol (car parts)) ,@(cdr parts))))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (dir obj)
