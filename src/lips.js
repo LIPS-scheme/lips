@@ -2647,6 +2647,9 @@
                             if (arg === nil) {
                                 env.env[name.car.name] = nil;
                             } else {
+                                if (arg.car instanceof Pair) {
+                                    arg.car.data = true;
+                                }
                                 env.env[name.car.name] = arg.car;
                             }
                         }

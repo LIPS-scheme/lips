@@ -5,6 +5,7 @@
 * fix formatting of lambda expressions
 * fix `symbol->string` function when called with gensym symbols
 * better `-->` macro
+* quote `define-macro` arguments so they don't evaluated if inside expression
 
 ## 0.15.0
 ### Features
