@@ -1,3 +1,8 @@
+## 0.15.1
+### Bug fixes
+* fix `load` function outside of Node
+* return undefined from `load` function
+
 ## 0.15.0
 ### Features
 * new macro `..`
