@@ -2304,15 +2304,6 @@
 
             Function fetch the file and evaluate its content as LIPS code.`),
         // ------------------------------------------------------------------
-        'debugger': doc(function() {
-            return new Promise(resolve => {
-                debugger;
-                resolve();
-            });
-        }, `(debugger)
-
-            Function stops executing of LIPS code in dev tools debugger.`),
-        // ------------------------------------------------------------------
         'while': doc(new Macro('while', function(code, { dynamic_scope, error }) {
             var self = this;
             var begin = new Pair(
