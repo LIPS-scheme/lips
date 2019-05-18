@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.15.0
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.15.1
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sat, 18 May 2019 07:11:26 +0000
+ * build: Sat, 18 May 2019 07:42:16 +0000
  */
 (function () {
 'use strict';
@@ -3720,13 +3720,15 @@ function _typeof(obj) {
       typecheck('load', file, 'string');
       var env = this;
 
-      if (this.get('global')) {
+      if (typeof this.env.global !== 'undefined') {
         return new Promise(function (resolve, reject) {
           require('fs').readFile(file, function (err, data) {
             if (err) {
               reject(err);
             } else {
-              resolve(exec(data.toString(), env));
+              exec(data.toString(), env).then(function () {
+                resolve();
+              });
             }
           });
         });
@@ -3736,7 +3738,7 @@ function _typeof(obj) {
         return res.text();
       }).then(function (code) {
         return exec(code, env);
-      });
+      }).then(function () {});
     }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
     // ------------------------------------------------------------------
     'while': doc(new Macro('while', function (code, _ref8) {
@@ -5740,7 +5742,7 @@ function _typeof(obj) {
   Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
   var lips = {
-    version: '0.15.0',
+    version: '0.15.1',
     exec: exec,
     parse: parse,
     tokenize: tokenize,
