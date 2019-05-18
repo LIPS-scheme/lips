@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.15.1
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sat, 18 May 2019 09:50:58 +0000
+ * build: Sat, 18 May 2019 19:09:24 +0000
  */
 (function () {
 'use strict';
@@ -63,10 +63,6 @@ function _construct(Parent, args, Class) {
   }
 
   return _construct.apply(null, arguments);
-}
-
-function _readOnlyError(name) {
-  throw new Error("\"" + name + "\" is read-only");
 }
 
 function createCommonjsModule(fn, module) {
@@ -922,7 +918,7 @@ function _typeof(obj) {
   } else {
     root.lips = factory(root, root.BN);
   }
-})(typeof window !== 'undefined' ? window : global, function (root, BN, undefined) {
+})(typeof global !== 'undefined' ? global : window, function (root, BN, undefined) {
   /* eslint-disable */
 
   /* istanbul ignore next */
@@ -3347,10 +3343,15 @@ function _typeof(obj) {
   }; // -------------------------------------------------------------------------
 
 
-  Environment.prototype.get = function (symbol, weak, context) {
+  Environment.prototype.get = function (symbol) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     // we keep original environment as context for bind
     // so print will get user stdout
-    context = context || this;
+    var weak = options.weak,
+        _options$context = options.context,
+        context = _options$context === void 0 ? this : _options$context,
+        _options$throwError = options.throwError,
+        throwError = _options$throwError === void 0 ? true : _options$throwError;
     var value;
     var defined = false;
 
@@ -3392,7 +3393,11 @@ function _typeof(obj) {
     }
 
     if (this.parent instanceof Environment) {
-      return this.parent.get(symbol, weak, context);
+      return this.parent.get(symbol, {
+        weak: weak,
+        context: context,
+        throwError: throwError
+      });
     } else {
       var name;
 
@@ -3419,8 +3424,10 @@ function _typeof(obj) {
       }
     }
 
-    name = (name.name || name).toString();
-    throw new Error("Unbound variable `" + name + "'");
+    if (throwError) {
+      name = (name.name || name).toString();
+      throw new Error("Unbound variable `" + name + "'");
+    }
   }; // -------------------------------------------------------------------------
 
 
@@ -3720,7 +3727,9 @@ function _typeof(obj) {
       typecheck('load', file, 'string');
       var env = this;
 
-      if (typeof this.env.global !== 'undefined') {
+      if (typeof this.get('global', {
+        throwError: false
+      }) !== 'undefined') {
         return new Promise(function (resolve, reject) {
           require('fs').readFile(file, function (err, data) {
             if (err) {
@@ -3864,7 +3873,7 @@ function _typeof(obj) {
         args.dynamic_scope = this;
       }
 
-      evaluate(code, args);
+      evaluate(new Pair(new _Symbol('begin'), code), args);
     }, "(ignore expression)\n\n            Macro that will evaluate expression and swallow any promises that may\n            be created. It wil run and ignore any value that may be returned by\n            expression. The code should have side effects and/or when it's promise\n            it should resolve to undefined."),
     // ------------------------------------------------------------------
     timer: doc(new Macro('timer', function (code) {
@@ -4140,7 +4149,7 @@ function _typeof(obj) {
       var self = this; //var max_unquote = 1;
 
       if (dynamic_scope) {
-        dynamic_scope = (_readOnlyError("dynamic_scope"), self);
+        dynamic_scope = self;
       }
 
       function isPair(value) {
@@ -4615,7 +4624,7 @@ function _typeof(obj) {
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
-        return _this3.get('string').call(_this3, arg);
+        return _this3.get('string')(arg);
       })));
     }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
     // ------------------------------------------------------------------
@@ -5475,7 +5484,9 @@ function _typeof(obj) {
       }
 
       if (code instanceof _Symbol) {
-        return env.get(code, true);
+        return env.get(code, {
+          weak: true
+        });
       }
 
       var first = code.car;
@@ -5494,7 +5505,9 @@ function _typeof(obj) {
       }
 
       if (first instanceof _Symbol) {
-        value = env.get(first, true);
+        value = env.get(first, {
+          weak: true
+        });
 
         if (value instanceof Macro) {
           var ret = evaluateMacro(value, rest, eval_args);
@@ -5746,7 +5759,7 @@ function _typeof(obj) {
   Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
   var lips = {
-    version: '0.15.1',
+    version: 'DEV',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

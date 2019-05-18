@@ -1,3 +1,8 @@
+## 0.15.2
+### Bug fixes
+* fix `ignore` macro
+* fix `load` function in node
+
 ## 0.15.1
 ### Bug fixes
 * fix `load` function outside of Node

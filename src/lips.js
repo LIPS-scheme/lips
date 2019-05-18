@@ -38,7 +38,7 @@
     } else {
         root.lips = factory(root, root.BN);
     }
-})(typeof window !== 'undefined' ? window : global, function(root, BN, undefined) {
+})(typeof global !== 'undefined' ? global : window, function(root, BN, undefined) {
     /* eslint-disable */
     /* istanbul ignore next */
     function contentLoaded(win, fn) {
@@ -1967,10 +1967,10 @@
         return new Environment(obj || {}, this, name);
     };
     // -------------------------------------------------------------------------
-    Environment.prototype.get = function(symbol, weak, context) {
+    Environment.prototype.get = function(symbol, options = {}) {
         // we keep original environment as context for bind
         // so print will get user stdout
-        context = context || this;
+        const { weak, context = this, throwError = true } = options;
         var value;
         var defined = false;
         if (symbol instanceof Symbol) {
@@ -2005,7 +2005,7 @@
             return value;
         }
         if (this.parent instanceof Environment) {
-            return this.parent.get(symbol, weak, context);
+            return this.parent.get(symbol, { weak, context, throwError });
         } else {
             var name;
             if (symbol instanceof Symbol) {
@@ -2027,8 +2027,10 @@
                 }
             }
         }
-        name = (name.name || name).toString();
-        throw new Error("Unbound variable `" + name + "'");
+        if (throwError) {
+            name = (name.name || name).toString();
+            throw new Error("Unbound variable `" + name + "'");
+        }
     };
     // -------------------------------------------------------------------------
     Environment.prototype.set = function(name, value) {
@@ -2283,7 +2285,7 @@
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
-            if (typeof this.env.global !== 'undefined') {
+            if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file, function(err, data) {
                         if (err) {
@@ -2432,7 +2434,7 @@
             if (dynamic_scope) {
                 args.dynamic_scope = this;
             }
-            evaluate(code, args);
+            evaluate(new Pair(new Symbol('begin'), code), args);
         }, `(ignore expression)
 
             Macro that will evaluate expression and swallow any promises that may
@@ -2712,7 +2714,7 @@
             into list structure created by queasiquote.`),
         // ------------------------------------------------------------------
         quasiquote: Macro.defmacro('quasiquote', function(arg, env) {
-            const { dynamic_scope, error } = env;
+            var { dynamic_scope, error } = env;
             var self = this;
             //var max_unquote = 1;
             if (dynamic_scope) {
@@ -3216,7 +3218,7 @@
         // ------------------------------------------------------------------
         print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
-                return this.get('string').call(this, arg);
+                return this.get('string')(arg);
             }));
         }, `(print . args)
 
@@ -4010,7 +4012,7 @@
                 return emptyList();
             }
             if (code instanceof Symbol) {
-                return env.get(code, true);
+                return env.get(code, { weak: true });
             }
             var first = code.car;
             var rest = code.cdr;
@@ -4029,7 +4031,7 @@
                 }
             }
             if (first instanceof Symbol) {
-                value = env.get(first, true);
+                value = env.get(first, { weak: true });
                 if (value instanceof Macro) {
                     var ret = evaluateMacro(value, rest, eval_args);
                     return unpromise(ret, result => {
