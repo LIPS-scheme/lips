@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sat, 18 May 2019 09:50:00 +0000
+ * build: Sat, 18 May 2019 09:50:58 +0000
  */
 (function () {
 'use strict';
@@ -3740,13 +3740,6 @@ function _typeof(obj) {
         return exec(code, env);
       }).then(function () {});
     }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
-    // ------------------------------------------------------------------
-    'debugger': doc(function () {
-      return new Promise(function (resolve) {
-        debugger;
-        resolve();
-      });
-    }, "(debugger)\n\n            Function stops executing of LIPS code in dev tools debugger."),
     // ------------------------------------------------------------------
     'while': doc(new Macro('while', function (code, _ref8) {
       var dynamic_scope = _ref8.dynamic_scope,
