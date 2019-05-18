@@ -54,13 +54,6 @@
                (let ((term ((.. jQuery.terminal.active))))
                  (--> term (error msg))))))))
 
-(define (symbol->string s)
-  "Symbols in LIPS are just objects with name property"
-  (. s "name"))
-(define (string->symbol string)
-  "Create new LIPS Symbol object"
-  (new (. lips "Symbol") string))
-
 (define string-append concat)
 
 ;; updated original code
