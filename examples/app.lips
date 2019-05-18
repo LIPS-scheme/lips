@@ -36,8 +36,8 @@
 ;; inital state
 (define state (make-object :counter '((count . 0))))
 
-(define (Counter obj)
-  (with-tags (:h1 () (concat "Counter: " (. obj 'count)))))
+(define (Counter props)
+  (with-tags (:h1 () (concat "Counter: " (string (. props 'count))))))
 
 (define (view state actions)
   "hyperapp view"
