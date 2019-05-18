@@ -135,7 +135,7 @@
                  (map (lambda (key)
                         (if (and (not (match /^_/ key)) (function? (. obj key)))
                             (let* ((args (gensym)))
-                              `(define-global (',(make-name key) . ,args)
+                              `(define-global (,(make-name key) . ,args)
                                  (apply (. ,name ,key) ,args)))))
                         (array->list (--> Object (keys obj))))))))
 
