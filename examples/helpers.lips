@@ -33,11 +33,15 @@
 (define-macro (.. expr)
   "(.. foo.bar.baz)
 
-   Macro that gets value from nested object whenre argument is comma separated symbol"
-  (let ((parts (split "." (symbol->string expr))))
-    `(. ,(string->symbol (car parts)) ,@(map (lambda (string)
-                                               (list 'quote (string->symbol string)))
-                                             (cdr parts)))))
+   Macro that gets value from nested object where argument is comma separated symbol"
+  (if (not (symbol? expr))
+      expr
+      (let ((parts (split "." (symbol->string expr))))
+        (if (== 1 (length parts))
+            expr
+            `(. ,(string->symbol (car parts)) ,@(map (lambda (string)
+                                                       (list 'quote (string->symbol string)))
+                                                     (cdr parts)))))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (dir obj)
