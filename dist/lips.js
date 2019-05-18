@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.15.1
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Fri, 17 May 2019 21:14:31 +0000
+ * build: Sat, 18 May 2019 09:50:58 +0000
  */
 (function () {
 'use strict';
@@ -1720,7 +1720,7 @@ function _typeof(obj) {
   var glob = root.Symbol.for('*');
   var sexp = new Pattern(['(', glob, ')'], '+'); // rules for breaking S-Expressions into lines
 
-  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, '(', sexp], 2, notParen], [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen], [['(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], string_re], 1], [['(', /^define/, '(', glob, ')'], 1], [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'lambda', '(', glob, ')'], 1], [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
+  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, '(', glob, ')'], 1], [['(', /^let\*?$/, '(', sexp], 2, notParen], [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen], [['(', glob, ')'], 1], [['(', /^(define|lambda)/, ['(', glob, ')'], string_re], 1], [['(', /^(define|lambda)/, '(', glob, ')'], 1], [['(', /^(define|lambda)/, ['(', glob, ')'], string_re, sexp], 1, notParen], [['(', /^(define|lambda)/, ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
 
   Formatter.prototype.break = function () {
     var code = this._code.replace(/\n[ \t]*/g, '\n ');
@@ -3720,13 +3720,15 @@ function _typeof(obj) {
       typecheck('load', file, 'string');
       var env = this;
 
-      if (this.get('global')) {
+      if (typeof this.env.global !== 'undefined') {
         return new Promise(function (resolve, reject) {
           require('fs').readFile(file, function (err, data) {
             if (err) {
               reject(err);
             } else {
-              resolve(exec(data.toString(), env));
+              exec(data.toString(), env).then(function () {
+                resolve();
+              });
             }
           });
         });
@@ -3736,7 +3738,7 @@ function _typeof(obj) {
         return res.text();
       }).then(function (code) {
         return exec(code, env);
-      });
+      }).then(function () {});
     }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
     // ------------------------------------------------------------------
     'while': doc(new Macro('while', function (code, _ref8) {
@@ -4074,6 +4076,10 @@ function _typeof(obj) {
               if (arg === nil) {
                 env.env[name.car.name] = nil;
               } else {
+                if (arg.car instanceof Pair) {
+                  arg.car.data = true;
+                }
+
                 env.env[name.car.name] = arg.car;
               }
             }
@@ -4609,7 +4615,7 @@ function _typeof(obj) {
       }
 
       (_this$get = this.get('stdout')).write.apply(_this$get, _toConsumableArray(args.map(function (arg) {
-        return _this3.get('string')(arg);
+        return _this3.get('string').call(_this3, arg);
       })));
     }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
     // ------------------------------------------------------------------
@@ -5740,7 +5746,7 @@ function _typeof(obj) {
   Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
   var lips = {
-    version: 'DEV',
+    version: '0.15.1',
     exec: exec,
     parse: parse,
     tokenize: tokenize,

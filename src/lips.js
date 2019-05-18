@@ -723,11 +723,10 @@
         [['(', 'if', ['(', glob, ')']], 1],
         [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen],
         [['(', glob, ')'], 1],
-        [['(', /^define/, ['(', glob, ')'], string_re], 1],
-        [['(', /^define/, '(', glob, ')'], 1],
-        [['(', /^define/, ['(', glob, ')'], sexp], 1, notParen],
-        [['(', 'lambda', '(', glob, ')'], 1],
-        [['(', 'lambda', ['(', glob, ')'], sexp], 1, notParen]
+        [['(', /^(define|lambda)/, ['(', glob, ')'], string_re], 1],
+        [['(', /^(define|lambda)/, '(', glob, ')'], 1],
+        [['(', /^(define|lambda)/, ['(', glob, ')'], string_re, sexp], 1, notParen],
+        [['(', /^(define|lambda)/, ['(', glob, ')'], sexp], 1, notParen]
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
@@ -2284,19 +2283,22 @@
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
-            if (this.get('global')) {
+            if (typeof this.env.global !== 'undefined') {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file, function(err, data) {
                         if (err) {
                             reject(err);
                         } else {
-                            resolve(exec(data.toString(), env));
+                            exec(data.toString(), env).then(() => {
+                                resolve();
+                            });
                         }
                     });
                 });
             }
             return root.fetch(file).then(res => res.text()).then((code) => {
                 return exec(code, env);
+            }).then(() => {
             });
         }, `(load filename)
 
@@ -2636,6 +2638,9 @@
                             if (arg === nil) {
                                 env.env[name.car.name] = nil;
                             } else {
+                                if (arg.car instanceof Pair) {
+                                    arg.car.data = true;
+                                }
                                 env.env[name.car.name] = arg.car;
                             }
                         }
@@ -3211,7 +3216,7 @@
         // ------------------------------------------------------------------
         print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
-                return this.get('string')(arg);
+                return this.get('string').call(this, arg);
             }));
         }, `(print . args)
 

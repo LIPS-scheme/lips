@@ -1,3 +1,12 @@
+## 0.15.1
+### Bug fixes
+* fix `load` function outside of Node
+* return undefined from `load` function
+* fix formatting of lambda expressions
+* fix `symbol->string` function when called with gensym symbols
+* improve `-->` and `..` macros
+* quote `define-macro` arguments so they don't evaluated if inside expression
+
 ## 0.15.0
 ### Features
 * new macro `..`
