@@ -1253,17 +1253,17 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.prototype.append = function(pair) {
-        if (pair instanceof Array) {
-            return this.append(Pair.fromArray(pair));
+    Pair.prototype.append = function(arg) {
+        if (arg instanceof Array) {
+            return this.append(Pair.fromArray(arg));
         }
         var p = this;
         if (p.car === undefined) {
-            if (pair instanceof Pair) {
-                this.car = pair.car;
-                this.cdr = pair.cdr;
+            if (arg instanceof Pair) {
+                this.car = arg.car;
+                this.cdr = arg.cdr;
             } else {
-                this.car = pair;
+                this.car = arg;
             }
         } else {
             while (true) {
@@ -1273,11 +1273,7 @@
                     break;
                 }
             }
-            if (pair instanceof Pair) {
-                p.cdr = pair;
-            } else if (pair !== nil) {
-                p.cdr = new Pair(pair, nil);
-            }
+            p.cdr = arg;
         }
         return this;
     };

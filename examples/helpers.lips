@@ -29,6 +29,12 @@
               code)
        ,obj)))
 
+(define (single list)
+  "(single list)
+
+   Function check if argument is list with single element."
+  (and (pair? list) (not (cdr list))))
+
 ;; ---------------------------------------------------------------------------------------
 (define-macro (.. expr)
   "(.. foo.bar.baz)
@@ -37,7 +43,7 @@
   (if (not (symbol? expr))
       expr
       (let ((parts (split "." (symbol->string expr))))
-        (if (== 1 (length parts))
+        (if (single parts)
             expr
             `(. ,(string->symbol (car parts)) ,@(cdr parts))))))
 
