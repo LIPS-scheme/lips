@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Thu, 16 May 2019 10:46:24 +0000
+ * build: Fri, 17 May 2019 21:14:31 +0000
  */
 (function () {
 'use strict';
@@ -1350,7 +1350,6 @@ function _typeof(obj) {
     }
 
     if (stack.length) {
-      dump(result);
       throw new Error('Unbalanced parenthesis 2');
     }
 
@@ -1418,19 +1417,6 @@ function _typeof(obj) {
     return string.split('\n').map(function (line) {
       return line.trim();
     }).join('\n');
-  } // ----------------------------------------------------------------------
-
-
-  function dump(arr) {
-    {
-      console.log(arr.map(function (arg) {
-        if (arg instanceof Array) {
-          return Pair.fromArray(arg);
-        }
-
-        return arg;
-      }).toString());
-    }
   } // ----------------------------------------------------------------------
   // return last S-Expression
   // ----------------------------------------------------------------------
@@ -1963,6 +1949,41 @@ function _typeof(obj) {
   } // ----------------------------------------------------------------------
 
 
+  function toArray(name, deep) {
+    return function recur(list) {
+      typecheck(name, list, ['pair', 'nil']);
+
+      if (list instanceof Pair && list.isEmptyList()) {
+        return [];
+      }
+
+      var result = [];
+      var node = list;
+
+      while (true) {
+        if (node instanceof Pair) {
+          if (node.haveCycles('cdr')) {
+            break;
+          }
+
+          var car = node.car;
+
+          if (deep && car instanceof Pair) {
+            car = this.get(name).call(this, car);
+          }
+
+          result.push(car);
+          node = node.cdr;
+        } else {
+          break;
+        }
+      }
+
+      return result;
+    };
+  } // ----------------------------------------------------------------------
+
+
   Pair.prototype.flatten = function () {
     return Pair.fromArray(flatten(this.toArray()));
   }; // ----------------------------------------------------------------------
@@ -2199,7 +2220,7 @@ function _typeof(obj) {
       return JSON.stringify(value).replace(/\\n/g, '\n');
     } else if (isPromise(value)) {
       return '<#Promise>';
-    } else if (value instanceof _Symbol || value instanceof LNumber || value instanceof Pair || value === nil) {
+    } else if (value instanceof _Symbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value === nil) {
       return value.toString();
     } else if (value instanceof Array) {
       return value.map(toString);
@@ -3922,7 +3943,7 @@ function _typeof(obj) {
       if (code instanceof Pair) {
         return evaluate(code, {
           env: env,
-          dynamic_scope: this,
+          //dynamic_scope: this,
           error: function error(e) {
             _this.get('error')(e.message);
 
@@ -4011,12 +4032,12 @@ function _typeof(obj) {
       }
 
       var length = code.car instanceof Pair ? code.car.length() : null;
+      lambda.__code__ = new Pair(new _Symbol('lambda'), code);
 
       if (!(code.car instanceof Pair)) {
         return doc(lambda, __doc__, true); // variable arguments
-      }
+      } // wrap and decorate with __doc__
 
-      lambda.__code__ = new Pair(new _Symbol('lambda'), code); // wrap and decorate with __doc__
 
       return doc(setFnLength(lambda, length), __doc__, true);
     }, "(lambda (a b) body)\n            (lambda args body)\n            (lambda (a b . rest) body)\n\n            Macro lambda create new anonymous function, if first element of the body\n            is string and there is more elements it will be documentation, that can\n            be read using (help fn)"),
@@ -4084,14 +4105,16 @@ function _typeof(obj) {
             var result = rest.reduce(function (result, node) {
               return evaluate(node, eval_args);
             });
+            return unpromise(result, function (result) {
+              if (_typeof(result) === 'object') {
+                delete result.data;
+              }
 
-            if (_typeof(result) === 'object') {
-              delete result.data;
-            }
-
-            return result;
+              return result;
+            });
           }
         }, __doc__);
+        this.env[name].__code__ = new Pair(new _Symbol('define-macro'), macro);
       }
     }), "(define-macro (name . args) body)\n\n             Meta macro, macro that create new macros, if return value is list structure\n             it will be evaluated when macro is invoked. You can use quasiquote ` and\n             unquote , and unquote-splicing ,@ inside to create expression that will be\n             evaluated on runtime. Macros works like this: if you pass any expression to\n             macro the arguments will not be evaluated unless macro itself evaluate it.\n             Because of this macro can manipulate expression (arguments) as lists."),
     // ------------------------------------------------------------------
@@ -4405,6 +4428,10 @@ function _typeof(obj) {
         return '<#function>';
       }
 
+      if (obj instanceof RegExp) {
+        return obj.toString();
+      }
+
       if (obj === nil) {
         return 'nil';
       }
@@ -4432,7 +4459,14 @@ function _typeof(obj) {
       }
 
       if (_typeof(obj) === 'object') {
-        var name = obj.constructor.name;
+        var constructor = obj.constructor;
+        var name;
+
+        if (typeof constructor.__className === 'string') {
+          name = constructor.__className;
+        } else {
+          name = constructor.name;
+        }
 
         if (name !== '') {
           return '<#' + name + '>';
@@ -4593,31 +4627,9 @@ function _typeof(obj) {
       return Pair.fromArray(array);
     }, "(array->list array)\n\n            Function convert JavaScript array to LIPS list."),
     // ------------------------------------------------------------------
-    'list->array': doc(function (list) {
-      typecheck('list->array', list, ['pair', 'nil']);
-
-      if (list instanceof Pair && list.isEmptyList()) {
-        return [];
-      }
-
-      var result = [];
-      var node = list;
-
-      while (true) {
-        if (node instanceof Pair) {
-          if (node.haveCycles('cdr')) {
-            break;
-          }
-
-          result.push(node.car);
-          node = node.cdr;
-        } else {
-          break;
-        }
-      }
-
-      return result;
-    }, "(list->array list)\n\n            Function convert LIPS list into JavaScript array."),
+    'tree->array': doc(toArray('tree->array', true), "(tree->array list)\n\n             Function convert LIPS list structure into JavaScript array."),
+    // ------------------------------------------------------------------
+    'list->array': doc(toArray('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
     // ------------------------------------------------------------------
     apply: doc(function (fn, list) {
       typecheck('call', fn, 'function', 1);
@@ -4669,7 +4681,13 @@ function _typeof(obj) {
           args.dynamic_scope = _this4;
         }
 
-        unpromise(evaluate(code.car, args), resolve).catch(args.error);
+        var ret = evaluate(code.car, args);
+
+        if (isPromise(ret)) {
+          ret.catch(args.error).then(resolve);
+        } else {
+          resolve(ret);
+        }
       });
     }), "(try expr (catch (e) code)"),
     // ------------------------------------------------------------------
@@ -5200,6 +5218,13 @@ function _typeof(obj) {
   } // -------------------------------------------------------------------------
 
 
+  function selfEvaluated(obj) {
+    var type = _typeof(obj);
+
+    return ['string', 'function'].includes(type) || obj instanceof LNumber || obj instanceof RegExp;
+  } // -------------------------------------------------------------------------
+
+
   function type(obj) {
     var mapping = {
       'pair': Pair,
@@ -5403,7 +5428,7 @@ function _typeof(obj) {
 
     var value = macro.invoke(code, eval_args);
     return unpromise(resolvePromises(value), function ret(value) {
-      if (value && value.data || !(value instanceof Pair)) {
+      if (value && value.data || !value || selfEvaluated(value)) {
         return value;
       } else {
         return quote(evaluate(value, eval_args));
@@ -5460,8 +5485,7 @@ function _typeof(obj) {
         } else if (typeof value !== 'function') {
           throw new Error(type(value) + ' ' + env.get('string')(value) + ' is not a function while evaluating ' + code.toString());
         }
-      } //console.log({first, code: code.toString()});
-
+      }
 
       if (first instanceof _Symbol) {
         value = env.get(first, true);
@@ -5705,7 +5729,15 @@ function _typeof(obj) {
   if (typeof window !== 'undefined') {
     contentLoaded(window, init);
   } // -------------------------------------------------------------------------
+  // to be used with string function when code is minified
+  // -------------------------------------------------------------------------
 
+
+  Ahead.__className = 'Ahead';
+  Pattern.__className = 'Pattern';
+  Formatter.__className = 'Formatter';
+  Macro.__className = 'Macro';
+  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
   var lips = {
     version: 'DEV',

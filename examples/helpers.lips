@@ -23,9 +23,19 @@
                           (,fn (. ,obj ,name)))
                      (if (not (function? ,fn))
                          (error (concat ,name " is not a function"))
-                         (set! ,obj (apply ,fn (list ,@(cdr code))))))))
+                         (set! ,obj (,fn ,@(cdr code)))))))
               code)
        ,obj)))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (.. expr)
+  "(.. foo.bar.baz)
+
+   Macro that gets value from nested object whenre argument is comma separated symbol"
+  (let ((parts (split "." (symbol->string expr))))
+    `(. ,(string->symbol (car parts)) ,@(map (lambda (string)
+                                               (list 'quote (string->symbol string)))
+                                             (cdr parts)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (dir obj)
@@ -48,12 +58,23 @@
    Function convert LIPS symbol to string."
   (and (symbol? s) (. s "name")))
 
+
+;; ---------------------------------------------------------------------------------------
+(define (as.data obj)
+  "(as.data obj)
+
+   Mark object as data to stop evaluation."
+  (if (object? obj)
+      (begin
+        (set-obj! obj 'data true)
+        obj)))
+
 ;; ---------------------------------------------------------------------------------------
 (define (string->symbol string)
   "(string->symbol string)
 
    Function convert string to LIPS symbol."
-  (and (string? string) (new (. lips "Symbol") string)))
+  (and (string? string) (as.data (new (. lips "Symbol") string))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (value obj)
@@ -82,8 +103,42 @@
 ;;  (--> (list->array args) (join "")))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (define-global name)
-  `(set-obj! global ,(symbol->string name) ,name))
+
+(define-macro (define-global first . rest)
+  "(define-global var value)
+   (define-global (name . args) body)
+
+   Macro that define functions or variables in global context, so they can be used
+   inside let and get let variables in closure, Useful for universal macros."
+  (if (pair? first)
+      (let ((name (car first)))
+        `(--> (. lips 'env)
+              (set ,(symbol->string name) (lambda ,(cdr first) ,@rest))))
+      `(--> (. lips 'env) (set ,(symbol->string first) ,(car rest)))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (globalize expr . rest)
+  "(globalize expr)
+
+    Macro will get the value of the expression and add each method as function to global
+    scope."
+  (let* ((env (current-environment))
+         (obj (eval expr env))
+         (name (gensym))
+         (env-name (gensym))
+         (make-name (if (pair? rest)
+                        (let ((pre (symbol->string (car rest))))
+                          (lambda (name) (string->symbol (concat pre name))))
+                        string->symbol)))
+    `(let ((,name ,expr))
+       ,@(filter pair?
+                 (map (lambda (key)
+                        (if (and (not (match /^_/ key)) (function? (. obj key)))
+                            (let* ((args (gensym)))
+                              `(define-global (,(make-name key) . ,args)
+                                 (apply (. ,name ,key) ,args)))))
+                        (array->list (--> Object (keys obj))))))))
+
 
 ;; ---------------------------------------------------------------------------------------
 (define (alist->object alist)
@@ -155,7 +210,6 @@
             sources)
   desc)
 
-
 ;; ---------------------------------------------------------------------------------------
 (define (key? symbol)
   "(key? symbol)
@@ -171,6 +225,7 @@
   (if (key? symbol)
       (substring (symbol->string symbol) 1)))
 
+;; ---------------------------------------------------------------------------------------
 (define-macro (define-symbol-macro spec . rest)
   "(define-symbol-macro (name . args) . body)
 
@@ -187,6 +242,7 @@
         (add-special! ,symbol ',name)
         (define-macro (,name ,@args) ,@rest))))
 
+;; ---------------------------------------------------------------------------------------
 (define-symbol-macro (make-vector "#" arg)
   "(make-vector (1 2 3))
    #(1 2 3)
@@ -194,25 +250,32 @@
    Macro for defining vectors (arrays)."
   `(list->array (list ,@arg)))
 
-
+;; ---------------------------------------------------------------------------------------
 (define-macro (module name . body)
   "(module module-name . body)
 
    Macro for defining modules inside you can use define to create functions.
    And use export name to add that name to defined environment."
-  (let ((parent (. (current-environment) 'parent)))
-    `(let ((__module-exports__ (new (. lips 'Environment) (concat "module-" ,(symbol->string name)))))
-       (define-macro (export name) `(--> __module-exports__ (set ',name ,name)))
+  (let ((parent (. (current-environment) 'parent))
+        (module-name (gensym)))
+    `(let ((,module-name (new (. lips 'Environment) (concat "module-" ,(symbol->string name)))))
+       (define-macro (export name) `(--> ,,module-name (set ',name ,name)))
        ,@body
-       (--> ,parent (set ',name __module-exports__)))))
+       (--> ,parent (set ',name ,module-name)))))
 
+;; ---------------------------------------------------------------------------------------
 (define-macro (import name module)
   "(input function-name module)
 
    Macro for importing function from module"
   `(define ,name (--> ,module (get ',name))))
 
+;; ---------------------------------------------------------------------------------------
 (define-macro (cond . list)
+  "(cond (predicate? . body)
+         (predicate? . body))
+
+   Macro for condition check. For usage instead of nested ifs."
   (if (pair? list)
       (let* ((item (car list))
              (first (car item))
@@ -227,7 +290,49 @@
                      ,@(cdar rest))
                   `(cond ,@rest))))))
 
+;; ---------------------------------------------------------------------------------------
+(define (tree-map f tree)
+  "(tree-map fn tree)
+
+   Tree version of map. Function is invoked on every leaf."
+  (if (pair? tree)
+      (cons (tree-map f (car tree)) (tree-map f (cdr tree)))
+      (f tree)))
+
+;; ---------------------------------------------------------------------------------------
+(define (native.number x)
+  "(native.number obj)
+
+   If argument is number it will conver to native number."
+  (if (number? x)
+      (value x)
+      x))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (define-formatter-rule . patterns)
+  "(rule-pattern pattern)
+
+   Anaphoric Macro for defining patterns for formatter. With Ahead, Pattern and * defined values."
+  (let ((rules (gensym)))
+    `(let ((,rules (.. lips.Formatter.rules))
+           (Ahead (lambda (pattern)
+                    (let ((Ahead (.. lips.Formatter.Ahead)))
+                      (new Ahead (if (string? pattern) (new RegExp pattern) pattern)))))
+           (* ((.. Symbol.for) "*"))
+           (Pattern (lambda (pattern flag)
+                      (new (.. lips.Formatter.Pattern) (list->array pattern)
+                           (if (null? flag) undefined flag)))))
+       ,@(map (lambda (pattern)
+                `(--> ,rules (push (tree->array (tree-map native.number ,@pattern)))))
+              patterns))))
+
+;; ---------------------------------------------------------------------------------------
 (define (compare a b)
+  "(compare a b)
+
+   Function that compare two values. it compare lists and any element of the list
+   can be a function that will be called with other value. e.g.:
+   (compare (list (list 'a) 'b) (list pair? 'b))"
   (cond ((and (pair? a) (pair? b)) (and (compare (car a) (car b))
                                         (compare (cdr a) (cdr b))))
         ((and (array? a) (array? b)) (compare (array->list a) (array->list b)))
@@ -241,20 +346,22 @@
          (b a))
         (true false)))
 
-(define-macro (auto-quote lst)
+;; ---------------------------------------------------------------------------------------
+(define-macro (auto-quote arg)
   "(auto-quote list)
 
    Macro that create list recursively but take symbols from scope"
-  (if (pair? lst)
+  (if (pair? arg)
       `(list ,@(map (lambda (item)
                       (if (symbol? item)
                           item
                           (if (pair? item)
                               `(auto-quote ,item)
                               `,item)))
-                    lst))))
+                    arg))
+      arg))
 
-
+;; ---------------------------------------------------------------------------------------
 (define-macro (match-pattern expr . list)
   "(match-patternpattern ((pattern . body) ...))
 
@@ -263,7 +370,7 @@
    ;; match
    (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")))
    (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")) (true \"rest\"))
-   ;; \"rest\""
+   ;; rest"
  (if (pair? list)
      (let ((ex-name (gensym)))
        `(let ((,ex-name (auto-quote ,expr)))
@@ -273,8 +380,19 @@
                              `((compare ,ex-name (auto-quote ,(car item))) ,(cadr item))))
                        list))))))
 
+;; ---------------------------------------------------------------------------------------
 (define (defmacro? obj)
   "(defmacro? expression)
 
    Function check if object is macro and it's expandable"
   (and (macro? obj) (. obj 'defmacro)))
+
+
+(define (assocv key alist)
+  (let ((pair (assoc key alist)))
+    (if (pair? pair) (cdr pair) undefined)))
+
+;; ---------------------------------------------------------------------------------------
+;; formatter rules for cond to break after each S-Expression
+;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro use RegExp constructor
+(define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+")) 1 (Ahead "[^)]"))))

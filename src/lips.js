@@ -477,7 +477,7 @@
     }
     // ----------------------------------------------------------------------
     function dump(arr) {
-        if (true || false) {
+        if (false) {
             console.log(arr.map((arg) => {
                 if (arg instanceof Array) {
                     return Pair.fromArray(arg);
@@ -901,6 +901,33 @@
         return new Pair(undefined, nil);
     }
     // ----------------------------------------------------------------------
+    function toArray(name, deep) {
+        return function recur(list) {
+            typecheck(name, list, ['pair', 'nil']);
+            if (list instanceof Pair && list.isEmptyList()) {
+                return [];
+            }
+            var result = [];
+            var node = list;
+            while (true) {
+                if (node instanceof Pair) {
+                    if (node.haveCycles('cdr')) {
+                        break;
+                    }
+                    var car = node.car;
+                    if (deep && car instanceof Pair) {
+                        car = this.get(name).call(this, car);
+                    }
+                    result.push(car);
+                    node = node.cdr;
+                } else {
+                    break;
+                }
+            }
+            return result;
+        };
+    }
+    // ----------------------------------------------------------------------
     Pair.prototype.flatten = function() {
         return Pair.fromArray(flatten(this.toArray()));
     };
@@ -1109,9 +1136,10 @@
         } else if (isPromise(value)) {
             return '<#Promise>';
         } else if (value instanceof Symbol ||
-                  value instanceof LNumber ||
-                  value instanceof Pair ||
-                  value === nil) {
+                   value instanceof LNumber ||
+                   value instanceof RegExp ||
+                   value instanceof Pair ||
+                   value === nil) {
             return value.toString();
         } else if (value instanceof Array) {
             return value.map(toString);
@@ -2502,7 +2530,7 @@
             if (code instanceof Pair) {
                 return evaluate(code, {
                     env,
-                    dynamic_scope: this,
+                    //dynamic_scope: this,
                     error: e => {
                         this.get('error')(e.message);
                         if (e.code) {
@@ -2569,10 +2597,10 @@
                 return evaluate(output, { env, dynamic_scope, error });
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
+            lambda.__code__ = new Pair(new Symbol('lambda'), code);
             if (!(code.car instanceof Pair)) {
                 return doc(lambda, __doc__, true); // variable arguments
             }
-            lambda.__code__ = new Pair(new Symbol('lambda'), code);
             // wrap and decorate with __doc__
             return doc(setFnLength(lambda, length), __doc__, true);
         }, `(lambda (a b) body)
@@ -2634,12 +2662,15 @@
                         var result = rest.reduce(function(result, node) {
                             return evaluate(node, eval_args);
                         });
-                        if (typeof result === 'object') {
-                            delete result.data;
-                        }
-                        return result;
+                        return unpromise(result, function(result) {
+                            if (typeof result === 'object') {
+                                delete result.data;
+                            }
+                            return result;
+                        });
                     }
                 }, __doc__);
+                this.env[name].__code__ = new Pair(new Symbol('define-macro'), macro);
             }
         }), `(define-macro (name . args) body)
 
@@ -2972,6 +3003,9 @@
                 }
                 return '<#function>';
             }
+            if (obj instanceof RegExp) {
+                return obj.toString();
+            }
             if (obj === nil) {
                 return 'nil';
             }
@@ -2991,7 +3025,13 @@
                 return `<#HTMLElement(${obj.tagName.toLowerCase()})>`;
             }
             if (typeof obj === 'object') {
-                var name = obj.constructor.name;
+                var constructor = obj.constructor;
+                var name;
+                if (typeof constructor.__className === 'string') {
+                    name = constructor.__className;
+                } else {
+                    name = constructor.name;
+                }
                 if (name !== '') {
                     return '<#' + name + '>';
                 }
@@ -3199,28 +3239,17 @@
 
             Function convert JavaScript array to LIPS list.`),
         // ------------------------------------------------------------------
-        'list->array': doc(function(list) {
-            typecheck('list->array', list, ['pair', 'nil']);
-            if (list instanceof Pair && list.isEmptyList()) {
-                return [];
-            }
-            var result = [];
-            var node = list;
-            while (true) {
-                if (node instanceof Pair) {
-                    if (node.haveCycles('cdr')) {
-                        break;
-                    }
-                    result.push(node.car);
-                    node = node.cdr;
-                } else {
-                    break;
-                }
-            }
-            return result;
-        }, `(list->array list)
+        'tree->array': doc(
+            toArray('tree->array', true),
+            `(tree->array list)
 
-            Function convert LIPS list into JavaScript array.`),
+             Function convert LIPS list structure into JavaScript array.`),
+        // ------------------------------------------------------------------
+        'list->array': doc(
+            toArray('list->array'),
+            `(list->array list)
+
+             Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
         apply: doc(function(fn, list) {
             typecheck('call', fn, 'function', 1);
@@ -3269,7 +3298,12 @@
                 if (dynamic_scope) {
                     args.dynamic_scope = this;
                 }
-                unpromise(evaluate(code.car, args), resolve).catch(args.error);
+                var ret = evaluate(code.car, args);
+                if (isPromise(ret)) {
+                    ret.catch(args.error).then(resolve);
+                } else {
+                    resolve(ret);
+                }
             });
         }), `(try expr (catch (e) code)`),
         // ------------------------------------------------------------------
@@ -3830,6 +3864,13 @@
         }
     }
     // -------------------------------------------------------------------------
+    function selfEvaluated(obj) {
+        var type = typeof obj;
+        return ['string', 'function'].includes(type) ||
+            obj instanceof LNumber ||
+            obj instanceof RegExp;
+    }
+    // -------------------------------------------------------------------------
     function type(obj) {
         var mapping = {
             'pair': Pair,
@@ -3938,7 +3979,7 @@
         }
         var value = macro.invoke(code, eval_args);
         return unpromise(resolvePromises(value), function ret(value) {
-            if (value && value.data || !(value instanceof Pair)) {
+            if (value && value.data || !value || selfEvaluated(value)) {
                 return value;
             } else {
                 return quote(evaluate(value, eval_args));
@@ -3982,7 +4023,6 @@
                     );
                 }
             }
-            //console.log({first, code: code.toString()});
             if (first instanceof Symbol) {
                 value = env.get(first, true);
                 if (value instanceof Macro) {
@@ -4158,6 +4198,14 @@
     if (typeof window !== 'undefined') {
         contentLoaded(window, init);
     }
+    // -------------------------------------------------------------------------
+    // to be used with string function when code is minified
+    // -------------------------------------------------------------------------
+    Ahead.__className = 'Ahead';
+    Pattern.__className = 'Pattern';
+    Formatter.__className = 'Formatter';
+    Macro.__className = 'Macro';
+    Environment.__className = 'Environment';
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',
