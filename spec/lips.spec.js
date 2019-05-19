@@ -705,12 +705,24 @@ describe('docs', function() {
 const str2list = code => lips.parse(lips.tokenize(code))[0];
 describe('lists', function() {
     describe('append', function() {
-        it('should append value', function() {
+        it('should append pair', function() {
             [
                 ['(1 2 3)', '(1 2 3 10)'],
                 ['((1 2 3))', '((1 2 3) 10)'],
                 ['(1 2 (3) 4)', '(1 2 (3) 4 10)'],
                 ['(1 2 3 (4))', '(1 2 3 (4) 10)']
+            ].forEach(([code, expected]) => {
+                var input = str2list(code);
+                input.append(new Pair(LNumber(10), nil));
+                expect(input).toEqual(str2list(expected));
+            });
+        });
+        it('should append value', function() {
+            [
+                ['(1 2 3)', '(1 2 3 . 10)'],
+                ['((1 2 3))', '((1 2 3) . 10)'],
+                ['(1 2 (3) 4)', '(1 2 (3) 4 . 10)'],
+                ['(1 2 3 (4))', '(1 2 3 (4) . 10)']
             ].forEach(([code, expected]) => {
                 var input = str2list(code);
                 input.append(LNumber(10));

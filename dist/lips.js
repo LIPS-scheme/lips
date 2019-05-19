@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sat, 18 May 2019 19:39:29 +0000
+ * build: Sun, 19 May 2019 14:23:49 +0000
  */
 (function () {
 'use strict';
@@ -2366,7 +2366,7 @@ function _typeof(obj) {
       } else {
         this.car = arg;
       }
-    } else {
+    } else if (arg !== nil) {
       while (true) {
         if (p instanceof Pair && p.cdr !== nil) {
           p = p.cdr;

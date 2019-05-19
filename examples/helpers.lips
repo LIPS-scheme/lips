@@ -163,6 +163,11 @@
       ((. alist "toObject"))))
 
 
+(define-macro (delay time . expr)
+  `(new Promise (lambda (resolve)
+                  (setTimeout (lambda ()
+                                (resolve (begin ,@expr)))
+                              ,time))))
 ;; ---------------------------------------------------------------------------------------
 (define (pair-map fn seq-list)
   "(seq-map fn list)

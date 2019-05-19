@@ -1265,7 +1265,7 @@
             } else {
                 this.car = arg;
             }
-        } else {
+        } else if (arg !== nil) {
             while (true) {
                 if (p instanceof Pair && p.cdr !== nil) {
                     p = p.cdr;
