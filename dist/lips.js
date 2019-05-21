@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Tue, 21 May 2019 20:21:14 +0000
+ * build: Tue, 21 May 2019 20:44:17 +0000
  */
 (function () {
   'use strict';
@@ -930,6 +930,8 @@
    * http://javascript.nwbox.com/ContentLoaded/
    * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
    */
+  /* eslint-enable */
+
   /* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map */
 
   (function (root, factory) {
@@ -4266,7 +4268,7 @@
               }
 
               if (unquote_cnt > max_unq) {
-                throw new Error("You can't call `unquote` outside of quasiquote");
+                throw new Error("You can't call `unquote` outside " + "of quasiquote");
               } // we use Unquote to proccess inner most unquote first
               // in unquote function afer processing whole s-expression
 

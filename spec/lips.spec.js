@@ -230,14 +230,19 @@ describe('parser', function() {
             delete result[0].data;
             expect(result[0]).toEqual(Pair.fromArray([
                 new Symbol('let'), [[new Symbol('x'), new LNumber(10)]],
-                [new Symbol('quasiquote'),
-                 [new Symbol('list'),
-                  [new Symbol('unquote'),
-                   new Symbol('x')],
-                  [new Symbol('unquote'),
-                   new LNumber(20)
-                  ]
-                 ]
+                [
+                    new Symbol('quasiquote'),
+                    [
+                        new Symbol('list'),
+                        [
+                            new Symbol('unquote'),
+                            new Symbol('x')
+                        ],
+                        [
+                            new Symbol('unquote'),
+                            new LNumber(20)
+                        ]
+                    ]
                 ]
             ]));
         });
