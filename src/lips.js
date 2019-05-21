@@ -25,6 +25,9 @@
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
 "use strict";
+
+import regeneratorRuntime from '@babel/runtime/regenerator';
+
 /* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -2782,7 +2785,9 @@
                         var node = head;
                         var parent = node;
                         unquote_cnt++;
-                        while (Symbol.is(node.car.car, 'unquote')) {
+                        while (node instanceof Pair &&
+                               node.car instanceof Pair &&
+                               Symbol.is(node.car.car, 'unquote')) {
                             parent = node;
                             unquote_cnt++;
                             node = node.car.cdr.car;

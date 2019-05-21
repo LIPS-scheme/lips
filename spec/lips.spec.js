@@ -214,7 +214,7 @@ describe('parser', function() {
     });
     it('should unquote from single quasiquote', function() {
         var code = "`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))";
-        lips.exec(code).then(function(result) {
+        return lips.exec(code).then(function(result) {
             expect(result[0].toString()).toEqual(
                 [
                     '(let ((name (quote x)))',
@@ -222,6 +222,24 @@ describe('parser', function() {
                     '(quasiquote (list (quote (unquote name)))))))'
                 ].join(' ')
             );
+        });
+    });
+    it('should unquote symple and double unquote symbol', function() {
+        var code = "(let ((y 20)) `(let ((x 10)) `(list ,x ,,y)))";
+        return lips.exec(code).then(result => {
+            delete result[0].data;
+            expect(result[0]).toEqual(Pair.fromArray([
+                new Symbol('let'), [[new Symbol('x'), new LNumber(10)]],
+                [new Symbol('quasiquote'),
+                 [new Symbol('list'),
+                  [new Symbol('unquote'),
+                   new Symbol('x')],
+                  [new Symbol('unquote'),
+                   new LNumber(20)
+                  ]
+                 ]
+                ]
+            ]));
         });
     });
     it('should join symbol', function() {

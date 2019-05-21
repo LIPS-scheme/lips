@@ -10,24 +10,23 @@ export default {
         format: "iife"
     },
     plugins: [
-        commonjs({
-            include: "node_modules/**"
-        }),
-        nodeResolve({
-            jsnext: true,
-            main: false
-        }),
         babel({
             "babelrc": false,
             "runtimeHelpers": true,
             "plugins": [
                 "@babel/plugin-transform-async-to-generator",
-                ["@babel/plugin-transform-runtime", {useESModules: true}]
+                "@babel/plugin-transform-regenerator"
             ],
             "presets": [
                 "@babel/preset-env"
             ],
             "exclude": "node_modules/**"
+        }),
+        nodeResolve({
+            mainFields: ["jsnext:main"]
+        }),
+        commonjs({
+            include: "node_modules/**"
         })
     ]
 };

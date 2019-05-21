@@ -4,6 +4,7 @@
 * fix `load` function in node
 * fix `Pair::append` and `append` functions with non pair
 * throw exception when more unquote then quasiquotes
+* fix double unquote symbol
 
 ## 0.15.1
 ### Bug fixes
