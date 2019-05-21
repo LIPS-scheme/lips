@@ -2787,6 +2787,9 @@
                             unquote_cnt++;
                             node = node.car.cdr.car;
                         }
+                        if (unquote_cnt > max_unq) {
+                            throw new Error(`You can't call \`unquote\` outside of quasiquote`);
+                        }
                         // we use Unquote to proccess inner most unquote first
                         // in unquote function afer processing whole s-expression
                         if (parent === node) {

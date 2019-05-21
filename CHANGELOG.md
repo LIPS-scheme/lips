@@ -3,6 +3,7 @@
 * fix `ignore` macro
 * fix `load` function in node
 * fix `Pair::append` and `append` functions with non pair
+* throw exception when more unquote then quasiquotes
 
 ## 0.15.1
 ### Bug fixes

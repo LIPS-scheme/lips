@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Sun, 19 May 2019 14:23:49 +0000
+ * build: Tue, 21 May 2019 17:19:22 +0000
  */
 (function () {
 'use strict';
@@ -4239,6 +4239,10 @@ function _typeof(obj) {
               parent = node;
               unquote_cnt++;
               node = node.car.cdr.car;
+            }
+
+            if (unquote_cnt > max_unq) {
+              throw new Error("You can't call `unquote` outside of quasiquote");
             } // we use Unquote to proccess inner most unquote first
             // in unquote function afer processing whole s-expression
 
