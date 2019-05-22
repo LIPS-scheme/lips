@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 22 May 2019 17:18:10 +0000
+ * build: Wed, 22 May 2019 17:29:20 +0000
  */
 (function () {
   'use strict';
@@ -3492,6 +3492,8 @@
           return eval_pair;
         }
 
+        var splices = new Set();
+
         function recur(pair, unquote_cnt, max_unq) {
           if (pair instanceof Pair && !isEmptyList(pair)) {
             var eval_pair;
@@ -3510,6 +3512,13 @@
                   }
 
                   return eval_pair;
+                } // don't create Cycles
+
+
+                if (splices.has(eval_pair)) {
+                  eval_pair = eval_pair.clone();
+                } else {
+                  splices.add(eval_pair);
                 }
 
                 var value = recur(pair.cdr, 0, 1);
@@ -3603,7 +3612,9 @@
         var x = recur(arg.car, 0, 1);
         return unpromise(x, function (value) {
           value = unquoting(value);
-          return unpromise(value, quote);
+          return unpromise(value, function (value) {
+            return quote(value);
+          });
         });
       }, "(quasiquote list ,value ,@value)\n\n            Similar macro to `quote` but inside it you can use special\n            expressions unquote abbreviated to , that will evaluate expresion inside\n            and return its value or unquote-splicing abbreviated to ,@ that will\n            evaluate expression but return value without parenthesis (it will join)\n            the list with its value. Best used with macros but it can be used outside"),
       // ------------------------------------------------------------------

@@ -2757,6 +2757,7 @@
                 }
                 return eval_pair;
             }
+            var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
                     var eval_pair;
@@ -2773,6 +2774,12 @@
                                     throw new Error(msg);
                                 }
                                 return eval_pair;
+                            }
+                            // don't create Cycles
+                            if (splices.has(eval_pair)) {
+                                eval_pair = eval_pair.clone();
+                            } else {
+                                splices.add(eval_pair);
                             }
                             const value = recur(pair.cdr, 0, 1);
                             if (value === nil && eval_pair === nil) {
@@ -2863,7 +2870,9 @@
             var x = recur(arg.car, 0, 1);
             return unpromise(x, value => {
                 value = unquoting(value);
-                return unpromise(value, quote);
+                return unpromise(value, (value) => {
+                    return quote(value);
+                });
             });
         }, `(quasiquote list ,value ,@value)
 
