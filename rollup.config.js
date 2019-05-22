@@ -7,7 +7,10 @@ export default {
     output: {
         name: "lib",
         file: "dist/lips.js",
-        format: "iife"
+        format: "iife",
+        globals: {
+            "regeneratorRuntime": "_regenerator"
+        }
     },
     plugins: [
         babel({

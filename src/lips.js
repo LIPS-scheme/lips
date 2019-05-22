@@ -25,10 +25,6 @@
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
 "use strict";
-/* eslint-disable */
-import regeneratorRuntime from '@babel/runtime/regenerator';
-/* eslint-enable */
-
 /* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -44,6 +40,10 @@ import regeneratorRuntime from '@babel/runtime/regenerator';
     }
 })(typeof global !== 'undefined' ? global : window, function(root, BN, undefined) {
     /* eslint-disable */
+    if (typeof require === 'undefined') {
+        root.require = () => {};
+    }
+    var regeneratorRuntime = require('@babel/runtime/regenerator');
     /* istanbul ignore next */
     function contentLoaded(win, fn) {
         var done = false, top = true,
@@ -2768,6 +2768,10 @@ import regeneratorRuntime from '@babel/runtime/regenerator';
                         });
                         return unpromise(eval_pair, function(eval_pair) {
                             if (!(eval_pair instanceof Pair)) {
+                                if (pair.cdr !== nil) {
+                                    const msg = "You can't splice atom inside list";
+                                    throw new Error(msg);
+                                }
                                 return eval_pair;
                             }
                             const value = recur(pair.cdr, 0, 1);

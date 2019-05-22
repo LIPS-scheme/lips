@@ -5,6 +5,7 @@
 * fix `Pair::append` and `append` functions with non pair
 * throw exception when more unquote then quasiquotes
 * fix double unquote symbol
+* throw error when unquote-splice on atom in the middle of the list
 
 ## 0.15.1
 ### Bug fixes
