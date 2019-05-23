@@ -21,7 +21,7 @@
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
  *
- * build: Wed, 22 May 2019 17:29:20 +0000
+ * build: Thu, 23 May 2019 07:30:30 +0000
  */
 (function () {
   'use strict';
@@ -1316,6 +1316,7 @@
           visited.set(node, pair);
           pair.car = clone(node.car);
           pair.cdr = clone(node.cdr);
+          pair.cycles = node.cycles;
           return pair;
         }
 

@@ -964,6 +964,7 @@
                 visited.set(node, pair);
                 pair.car = clone(node.car);
                 pair.cdr = clone(node.cdr);
+                pair.cycles = node.cycles;
                 return pair;
             }
             return node;

@@ -7,6 +7,7 @@
 * fix double unquote symbol
 * throw error when unquote-splice on atom in the middle of the list
 * don't create cycles in unquote-splicing
+* fix cloning cycles
 
 ## 0.15.1
 ### Bug fixes
