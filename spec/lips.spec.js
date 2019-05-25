@@ -344,7 +344,7 @@ describe('evaluate', function() {
         function exec(code) {
             var env = lips.env.inherit('quasiquote');
             return lips.exec(code, env);
-        };
+        }
         it('should unquote from single quasiquote', function() {
             var code = "`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))";
             return exec(code).then(function(result) {
