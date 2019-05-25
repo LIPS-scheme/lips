@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.15.4
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 25 May 2019 22:02:59 +0000
+ * build: Sat, 25 May 2019 22:04:13 +0000
  */
 (function () {
 	'use strict';
@@ -5807,7 +5807,7 @@
 	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: 'DEV',
+	    version: '0.15.4',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
