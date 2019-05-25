@@ -1,3 +1,7 @@
+## 0.15.3
+### Bug fixes
+* fix regenerator from babel in dist files
+
 ## 0.15.2
 ### Bug fixes
 * fix `ignore` macro

@@ -40,10 +40,6 @@
     }
 })(typeof global !== 'undefined' ? global : window, function(root, BN, undefined) {
     /* eslint-disable */
-    if (typeof require === 'undefined') {
-        root.require = () => {};
-    }
-    var regeneratorRuntime = require('@babel/runtime/regenerator');
     /* istanbul ignore next */
     function contentLoaded(win, fn) {
         var done = false, top = true,

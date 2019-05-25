@@ -9,7 +9,7 @@ export default {
         file: "dist/lips.js",
         format: "iife",
         globals: {
-            "regeneratorRuntime": "_regenerator"
+            "@babel/runtime/regenerator": "regeneratorRuntime"
         }
     },
     plugins: [
@@ -18,7 +18,11 @@ export default {
             "runtimeHelpers": true,
             "plugins": [
                 "@babel/plugin-transform-async-to-generator",
-                "@babel/plugin-transform-regenerator"
+                "@babel/plugin-transform-regenerator",
+                ["@babel/plugin-transform-runtime", {
+                    "helpers": true,
+                    "regenerator": true
+                }]
             ],
             "presets": [
                 "@babel/preset-env"
