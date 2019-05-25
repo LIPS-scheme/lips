@@ -1,3 +1,8 @@
+## 0.15.4
+### Bug fixes
+* fix formatter when there is newline at the newline of the code
+* fix duplicated copyright notes and missing Facebook note in output from rollup and babel
+
 ## 0.15.3
 ### Bug fixes
 * fix regenerator from babel in dist files

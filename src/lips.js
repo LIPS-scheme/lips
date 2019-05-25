@@ -488,6 +488,8 @@
     }
     // ----------------------------------------------------------------------
     // return last S-Expression
+    // @param tokens - array of tokens (objects from tokenizer or strings)
+    // @param sexp - number of expression to look behind
     // ----------------------------------------------------------------------
     function previousSexp(tokens, sexp = 1) {
         var i = tokens.length;
@@ -662,7 +664,7 @@
         var settings = this._options(options);
         var spaces = lineIndent(tokens);
         var sexp = previousSexp(tokens);
-        if (sexp) {
+        if (sexp && sexp.length) {
             if (sexp[0].line > 0) {
                 settings.offset = 0;
             }
