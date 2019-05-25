@@ -1,3 +1,14 @@
+## 0.15.2
+### Bug fixes
+* fix `ignore` macro
+* fix `load` function in node
+* fix `Pair::append` and `append` functions with non pair
+* throw exception when more unquote then quasiquotes
+* fix double unquote symbol
+* throw error when unquote-splice on atom in the middle of the list
+* don't create cycles in unquote-splicing
+* fix cloning cycles
+
 ## 0.15.1
 ### Bug fixes
 * fix `load` function outside of Node
