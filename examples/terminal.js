@@ -117,6 +117,12 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         completion: function(string) {
             let tokens = lips.tokenize(this.before_cursor(), true);
             tokens = tokens.map(token => token.token);
+            // Array.from is need to for jQuery terminal version <2.5.0
+            // when terminal is outside iframe and lips is inside
+            // jQuery Terminal was using instanceof that don't work between iframes
+            if (!tokens.length) {
+                return Array.from(env.get('env')(env).toArray());
+            }
             const last = tokens.pop();
             if (last.trim().length) {
                 const globals = Object.getOwnPropertyNames(window);
@@ -125,8 +131,6 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                 var commands = env.get('env')(env).toArray().concat(globals).filter(name => {
                     return re.test(name);
                 }).map(name => prefix + name);
-                // it don't return instanceof Array that is check by jQuery Terminal when using
-                // iframes before version 2.4.2
                 return Array.from(commands);
             }
         },
