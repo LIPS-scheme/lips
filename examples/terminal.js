@@ -135,7 +135,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                 return Array.from(commands);
             }
         },
-        keypress: function(e) {
+        keydown: function(e) {
             var term = this;
             if (e.key == ')') {
                 setTimeout(function() {
