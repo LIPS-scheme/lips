@@ -1,6 +1,6 @@
 .PHONY: publish test coveralls lint
 
-VERSION=0.15.1
+VERSION=0.15.4
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
@@ -26,7 +26,7 @@ ALL: Makefile .$(VERSION) dist/lips.js dist/lips.min.js README.md package.json
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
-	$(SED) -i '/^\/\*\*/,/^\s*\*\//d' dist/lips.js
+	$(SED) -i '/^\s*\/\*\*/,/^\s*\*\//d' dist/lips.js
 	$(CAT) src/banner.js dist/lips.js > dist/tmp.js
 	$(CP) dist/tmp.js dist/lips.js
 	$(RM) dist/tmp.js

@@ -3,3 +3,4 @@
 dist/* binary
 *.png binary
 editor/bundle*.js binary
+package-lock.json binary

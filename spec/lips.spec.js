@@ -212,38 +212,6 @@ describe('parser', function() {
     it('should create quasiquote list from literals', function() {
         testQuasituote('(quasiquote (list (unquote-splicing (list))))', true);
     });
-    it('should unquote from single quasiquote', function() {
-        var code = "`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))";
-        lips.exec(code).then(function(result) {
-            expect(result[0].toString()).toEqual(
-                [
-                    '(let ((name (quote x)))',
-                    '(quasiquote (let ((name (quote y)))',
-                    '(quasiquote (list (quote (unquote name)))))))'
-                ].join(' ')
-            );
-        });
-    });
-    it('should join symbol', function() {
-        lips.exec("(let ((x 'foo)) `(a ,@x))").then(result => {
-            expect(result[0].toString()).toEqual('(a . foo)');
-        });
-    });
-    it('should unquote from double quotation', function() {
-        var code = `(let ((x '(1 2)))
-                     \`(let ((x '(2 3)))
-                        (begin
-                          \`(list ,(car x))
-                          \`(list ,,(car x)))))`;
-        lips.exec(code).then(result => {
-            expect(result[0].toString()).toEqual([
-                '(let ((x (quote (2 3))))',
-                '(begin',
-                '(quasiquote (list (unquote (car x))))',
-                '(quasiquote (list (unquote 1)))))'
-            ].join(' '));
-        });
-    });
     it('should use reader macros', function() {
         testQuasituote('`(list ,@(list))');
     });
@@ -371,6 +339,73 @@ describe('evaluate', function() {
     it('should create list', function() {
         expect(exec('(cons 1 (cons 2 (cons 3 nil)))'))
             .toEqual(deepQuote(Pair.fromArray([LNumber(1), LNumber(2), LNumber(3)])));
+    });
+    describe('quasiquote', function() {
+        function exec(code) {
+            var env = lips.env.inherit('quasiquote');
+            return lips.exec(code, env);
+        }
+        it('should unquote from single quasiquote', function() {
+            var code = "`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))";
+            return exec(code).then(function(result) {
+                expect(result[0].toString()).toEqual(
+                    [
+                        '(let ((name (quote x)))',
+                        '(quasiquote (let ((name (quote y)))',
+                        '(quasiquote (list (quote (unquote name)))))))'
+                    ].join(' ')
+                );
+            });
+        });
+        it('should quaisquote quoted unquoted function', function() {
+            // `',(foo) came from book "On Lips" by Paul Graham
+            return exec(`(define (foo) 'bar) \`',(foo)`).then(result => {
+                expect(result[1].toString()).toEqual('(quote bar)');
+            });
+        });
+        it('should unquote symple and double unquote symbol', function() {
+            var code = "(let ((y 20)) `(let ((x 10)) `(list ,x ,,y)))";
+            return exec(code).then(result => {
+                delete result[0].data;
+                expect(result[0]).toEqual(Pair.fromArray([
+                    new Symbol('let'), [[new Symbol('x'), new LNumber(10)]],
+                    [
+                        new Symbol('quasiquote'),
+                        [
+                            new Symbol('list'),
+                            [
+                                new Symbol('unquote'),
+                                new Symbol('x')
+                            ],
+                            [
+                                new Symbol('unquote'),
+                                new LNumber(20)
+                            ]
+                        ]
+                    ]
+                ]));
+            });
+        });
+        it('should join symbol', function() {
+            return exec("(let ((x 'foo)) `(a ,@x))").then(result => {
+                expect(result[0].toString()).toEqual('(a . foo)');
+            });
+        });
+        it('should unquote from double quotation', function() {
+            var code = `(let ((x '(1 2)))
+                     \`(let ((x '(2 3)))
+                        (begin
+                          \`(list ,(car x))
+                          \`(list ,,(car x)))))`;
+            return exec(code).then(result => {
+                expect(result[0].toString()).toEqual([
+                    '(let ((x (quote (2 3))))',
+                    '(begin',
+                    '(quasiquote (list (unquote (car x))))',
+                    '(quasiquote (list (unquote 1)))))'
+                ].join(' '));
+            });
+        });
     });
     describe('quote', function() {
         it('should return literal list', function() {
@@ -705,12 +740,24 @@ describe('docs', function() {
 const str2list = code => lips.parse(lips.tokenize(code))[0];
 describe('lists', function() {
     describe('append', function() {
-        it('should append value', function() {
+        it('should append pair', function() {
             [
                 ['(1 2 3)', '(1 2 3 10)'],
                 ['((1 2 3))', '((1 2 3) 10)'],
                 ['(1 2 (3) 4)', '(1 2 (3) 4 10)'],
                 ['(1 2 3 (4))', '(1 2 3 (4) 10)']
+            ].forEach(([code, expected]) => {
+                var input = str2list(code);
+                input.append(new Pair(LNumber(10), nil));
+                expect(input).toEqual(str2list(expected));
+            });
+        });
+        it('should append value', function() {
+            [
+                ['(1 2 3)', '(1 2 3 . 10)'],
+                ['((1 2 3))', '((1 2 3) . 10)'],
+                ['(1 2 (3) 4)', '(1 2 (3) 4 . 10)'],
+                ['(1 2 3 (4))', '(1 2 3 (4) . 10)']
             ].forEach(([code, expected]) => {
                 var input = str2list(code);
                 input.append(LNumber(10));

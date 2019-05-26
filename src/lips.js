@@ -25,7 +25,7 @@
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
 "use strict";
-/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map */
+/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map, Set */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -38,7 +38,7 @@
     } else {
         root.lips = factory(root, root.BN);
     }
-})(typeof window !== 'undefined' ? window : global, function(root, BN, undefined) {
+})(typeof global !== 'undefined' ? global : window, function(root, BN, undefined) {
     /* eslint-disable */
     /* istanbul ignore next */
     function contentLoaded(win, fn) {
@@ -488,6 +488,8 @@
     }
     // ----------------------------------------------------------------------
     // return last S-Expression
+    // @param tokens - array of tokens (objects from tokenizer or strings)
+    // @param sexp - number of expression to look behind
     // ----------------------------------------------------------------------
     function previousSexp(tokens, sexp = 1) {
         var i = tokens.length;
@@ -662,7 +664,7 @@
         var settings = this._options(options);
         var spaces = lineIndent(tokens);
         var sexp = previousSexp(tokens);
-        if (sexp) {
+        if (sexp && sexp.length) {
             if (sexp[0].line > 0) {
                 settings.offset = 0;
             }
@@ -960,6 +962,7 @@
                 visited.set(node, pair);
                 pair.car = clone(node.car);
                 pair.cdr = clone(node.cdr);
+                pair.cycles = node.cycles;
                 return pair;
             }
             return node;
@@ -1253,19 +1256,19 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.prototype.append = function(pair) {
-        if (pair instanceof Array) {
-            return this.append(Pair.fromArray(pair));
+    Pair.prototype.append = function(arg) {
+        if (arg instanceof Array) {
+            return this.append(Pair.fromArray(arg));
         }
         var p = this;
         if (p.car === undefined) {
-            if (pair instanceof Pair) {
-                this.car = pair.car;
-                this.cdr = pair.cdr;
+            if (arg instanceof Pair) {
+                this.car = arg.car;
+                this.cdr = arg.cdr;
             } else {
-                this.car = pair;
+                this.car = arg;
             }
-        } else {
+        } else if (arg !== nil) {
             while (true) {
                 if (p instanceof Pair && p.cdr !== nil) {
                     p = p.cdr;
@@ -1273,11 +1276,7 @@
                     break;
                 }
             }
-            if (pair instanceof Pair) {
-                p.cdr = pair;
-            } else if (pair !== nil) {
-                p.cdr = new Pair(pair, nil);
-            }
+            p.cdr = arg;
         }
         return this;
     };
@@ -1967,10 +1966,10 @@
         return new Environment(obj || {}, this, name);
     };
     // -------------------------------------------------------------------------
-    Environment.prototype.get = function(symbol, weak, context) {
+    Environment.prototype.get = function(symbol, options = {}) {
         // we keep original environment as context for bind
         // so print will get user stdout
-        context = context || this;
+        const { weak, context = this, throwError = true } = options;
         var value;
         var defined = false;
         if (symbol instanceof Symbol) {
@@ -2005,7 +2004,7 @@
             return value;
         }
         if (this.parent instanceof Environment) {
-            return this.parent.get(symbol, weak, context);
+            return this.parent.get(symbol, { weak, context, throwError });
         } else {
             var name;
             if (symbol instanceof Symbol) {
@@ -2027,8 +2026,10 @@
                 }
             }
         }
-        name = (name.name || name).toString();
-        throw new Error("Unbound variable `" + name + "'");
+        if (throwError) {
+            name = (name.name || name).toString();
+            throw new Error("Unbound variable `" + name + "'");
+        }
     };
     // -------------------------------------------------------------------------
     Environment.prototype.set = function(name, value) {
@@ -2283,7 +2284,7 @@
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
-            if (typeof this.env.global !== 'undefined') {
+            if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file, function(err, data) {
                         if (err) {
@@ -2432,7 +2433,7 @@
             if (dynamic_scope) {
                 args.dynamic_scope = this;
             }
-            evaluate(code, args);
+            evaluate(new Pair(new Symbol('begin'), code), args);
         }, `(ignore expression)
 
             Macro that will evaluate expression and swallow any promises that may
@@ -2712,7 +2713,7 @@
             into list structure created by queasiquote.`),
         // ------------------------------------------------------------------
         quasiquote: Macro.defmacro('quasiquote', function(arg, env) {
-            const { dynamic_scope, error } = env;
+            var { dynamic_scope, error } = env;
             var self = this;
             //var max_unquote = 1;
             if (dynamic_scope) {
@@ -2755,6 +2756,7 @@
                 }
                 return eval_pair;
             }
+            var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
                     var eval_pair;
@@ -2766,7 +2768,17 @@
                         });
                         return unpromise(eval_pair, function(eval_pair) {
                             if (!(eval_pair instanceof Pair)) {
+                                if (pair.cdr !== nil) {
+                                    const msg = "You can't splice atom inside list";
+                                    throw new Error(msg);
+                                }
                                 return eval_pair;
+                            }
+                            // don't create Cycles
+                            if (splices.has(eval_pair)) {
+                                eval_pair = eval_pair.clone();
+                            } else {
+                                splices.add(eval_pair);
                             }
                             const value = recur(pair.cdr, 0, 1);
                             if (value === nil && eval_pair === nil) {
@@ -2784,10 +2796,16 @@
                         var node = head;
                         var parent = node;
                         unquote_cnt++;
-                        while (Symbol.is(node.car.car, 'unquote')) {
+                        while (node instanceof Pair &&
+                               node.car instanceof Pair &&
+                               Symbol.is(node.car.car, 'unquote')) {
                             parent = node;
                             unquote_cnt++;
                             node = node.car.cdr.car;
+                        }
+                        if (unquote_cnt > max_unq) {
+                            throw new Error("You can't call `unquote` outside " +
+                                            "of quasiquote");
                         }
                         // we use Unquote to proccess inner most unquote first
                         // in unquote function afer processing whole s-expression
@@ -2851,7 +2869,9 @@
             var x = recur(arg.car, 0, 1);
             return unpromise(x, value => {
                 value = unquoting(value);
-                return unpromise(value, quote);
+                return unpromise(value, (value) => {
+                    return quote(value);
+                });
             });
         }, `(quasiquote list ,value ,@value)
 
@@ -3216,7 +3236,7 @@
         // ------------------------------------------------------------------
         print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
-                return this.get('string').call(this, arg);
+                return this.get('string')(arg);
             }));
         }, `(print . args)
 
@@ -4010,7 +4030,7 @@
                 return emptyList();
             }
             if (code instanceof Symbol) {
-                return env.get(code, true);
+                return env.get(code, { weak: true });
             }
             var first = code.car;
             var rest = code.cdr;
@@ -4029,7 +4049,7 @@
                 }
             }
             if (first instanceof Symbol) {
-                value = env.get(first, true);
+                value = env.get(first, { weak: true });
                 if (value instanceof Macro) {
                     var ret = evaluateMacro(value, rest, eval_args);
                     return unpromise(ret, result => {
