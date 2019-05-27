@@ -20,5 +20,6 @@ Prism.languages.insertBefore('scheme', 'string', {
        greedy: true
    }
 });
+
 // and define-macro as keyword (update original regex) don't need most of it
 Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:\*|rec)?(?:-values)?|else|if|cond|begin|delay(?:-force)?|parameterize|define-macro|guard|set!|(?:quasi-)?quote|syntax-rules)(?=[()\s])/;

@@ -137,6 +137,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         },
         keydown: function(e) {
             var term = this;
+            term.set_position(position);
             if (e.key == ')') {
                 setTimeout(function() {
                     position = term.get_position();
