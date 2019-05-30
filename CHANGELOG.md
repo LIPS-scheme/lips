@@ -1,3 +1,10 @@
+## 0.16.0
+### Features
+* `this` inside lambdas that are object created with new (same as in JS) [#19](https://github.com/jcubic/lips/issues/19)
+* `string` and `type` return `instance` for objects created by `new`
+### Bug fixes
+* fix set-obj! on functions [#18](https://github.com/jcubic/lips/issues/18)
+
 ## 0.15.4
 ### Bug fixes
 * fix formatter when there is newline at the newline of the code

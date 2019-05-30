@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.15.4
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 25 May 2019 22:04:13 +0000
+ * build: Thu, 30 May 2019 19:39:55 +0000
  */
 (function () {
 	'use strict';
@@ -3961,8 +3961,10 @@
 	    }), "(define name expression)\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
 	    // ------------------------------------------------------------------
 	    'set-obj!': doc(function (obj, key, value) {
-	      if (_typeof_1(obj) !== 'object' || isNull(obj)) {
-	        throw new Error(typeErrorMessage('set-obj!', type(obj), 'object'));
+	      var obj_type = _typeof_1(obj);
+
+	      if (isNull(obj) || obj_type !== 'object' && obj_type !== 'function') {
+	        throw new Error(typeErrorMessage('set-obj!', type(obj), ['object', 'function']));
 	      }
 
 	      obj[key] = value;
@@ -4026,6 +4028,10 @@
 	        var name = code.car;
 	        var i = 0;
 	        var value;
+
+	        if (typeof this !== 'undefined') {
+	          env.set('this', this);
+	        }
 
 	        if (name instanceof _Symbol || !isEmptyList(name)) {
 	          for (var _len15 = arguments.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
@@ -4246,6 +4252,8 @@
 	            return unpromise(eval_pair, function (eval_pair) {
 	              if (!(eval_pair instanceof Pair)) {
 	                if (pair.cdr !== nil) {
+	                  console.log(eval_pair);
+	                  console.log(pair.cdr);
 	                  var msg = "You can't splice atom inside list";
 	                  throw new Error(msg);
 	                }
@@ -4529,6 +4537,8 @@
 
 	        if (typeof constructor.__className === 'string') {
 	          name = constructor.__className;
+	        } else if (type(obj) === 'instance') {
+	          name = 'instance';
 	        } else {
 	          name = constructor.name;
 	        }
@@ -4569,7 +4579,17 @@
 	        args[_key18 - 1] = arguments[_key18];
 	      }
 
-	      return construct(obj, args);
+	      var instance = construct(unbind(obj), args);
+
+	      Object.defineProperty(instance, '__instance__', {
+	        enumerable: false,
+	        get: function get() {
+	          return true;
+	        },
+	        set: function set() {},
+	        configurable: false
+	      });
+	      return instance;
 	    }, "(new obj . args)\n\n            Function create new JavaScript instance of an object."),
 	    // ------------------------------------------------------------------
 	    'unset!': doc(function (symbol) {
@@ -5326,6 +5346,14 @@
 	    }
 
 	    if (_typeof_1(obj) === 'object') {
+	      if (obj.__instance__) {
+	        obj.__instance__ = false;
+
+	        if (obj.__instance__) {
+	          return 'instance';
+	        }
+	      }
+
 	      return obj.constructor.name;
 	    }
 
@@ -5807,7 +5835,7 @@
 	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: '0.15.4',
+	    version: 'DEV',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

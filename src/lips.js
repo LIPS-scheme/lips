@@ -2511,8 +2511,9 @@
              code \`(define function (lambda args body))\``),
         // ------------------------------------------------------------------
         'set-obj!': doc(function(obj, key, value) {
-            if (typeof obj !== 'object' || isNull(obj)) {
-                throw new Error(typeErrorMessage('set-obj!', type(obj), 'object'));
+            var obj_type = typeof obj;
+            if (isNull(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
+                throw new Error(typeErrorMessage('set-obj!', type(obj), ['object', 'function']));
             }
             obj[key] = value;
         }, `(set-obj! obj key value)
@@ -2568,6 +2569,9 @@
                 var name = code.car;
                 var i = 0;
                 var value;
+                if (typeof this !== 'undefined') {
+                    env.set('this', this);
+                }
                 if (name instanceof Symbol || !isEmptyList(name)) {
                     while (true) {
                         if (name.car !== nil) {
@@ -2769,6 +2773,8 @@
                         return unpromise(eval_pair, function(eval_pair) {
                             if (!(eval_pair instanceof Pair)) {
                                 if (pair.cdr !== nil) {
+                                    console.log(eval_pair);
+                                    console.log(pair.cdr);
                                     const msg = "You can't splice atom inside list";
                                     throw new Error(msg);
                                 }
@@ -3054,6 +3060,8 @@
                 var name;
                 if (typeof constructor.__className === 'string') {
                     name = constructor.__className;
+                } else if (type(obj) === 'instance') {
+                    name = 'instance';
                 } else {
                     name = constructor.name;
                 }
@@ -3087,7 +3095,14 @@
 
             Function return list values (functions and variables) inside environment.`),
         'new': doc(function(obj, ...args) {
-            return new obj(...args);
+            var instance = new (unbind(obj))(...args);
+            Object.defineProperty(instance, '__instance__', {
+                enumerable: false,
+                get: () => true,
+                set: () => {},
+                configurable: false
+            });
+            return instance;
         }, `(new obj . args)
 
             Function create new JavaScript instance of an object.`),
@@ -3922,6 +3937,12 @@
             return "regex";
         }
         if (typeof obj === 'object') {
+            if (obj.__instance__) {
+                obj.__instance__ = false;
+                if (obj.__instance__) {
+                    return 'instance';
+                }
+            }
             return obj.constructor.name;
         }
         return typeof obj;

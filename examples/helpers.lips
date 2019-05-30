@@ -416,3 +416,44 @@
 ;; formatter rules for cond to break after each S-Expression
 ;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro use RegExp constructor
 (define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+")) 1 (Ahead "[^)]"))))
+
+
+;; ---------------------------------------------------------------------------------------
+;; LIPS Object System
+;; ---------------------------------------------------------------------------------------
+
+(define (class-lambda expr)
+  "(class-lambda expr)
+
+   Return lambda expression where input expression lambda have `this` as first argument."
+  (let ((args (cdadadr expr)))
+    `(lambda (,@args)
+       (,(cadr expr) this ,@args))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (define-class name parent . body)
+  "(define-class name parent . body)
+
+   Define class - JavaScript function constructor with prototype."
+  (let iter ((functions '()) (constructor nil) (lst body))
+    (if (not (null? list))
+        (if (not (eq? (caar lst) 'constructor))
+            (iter (cons (car lst) functions) nil (cdr lst))
+            (let* ((functions (append functions (cdr lst)))
+                   (constructor (car lst)))
+              `(begin
+                 (define ,name ,(class-lambda constructor))
+                 ,(if (not (null? parent))
+                      `(set-obj! ,name 'prototype (--> Object (create ,parent))))
+                 ,@(map (lambda (fn)
+                          `(set-obj! (. ,name 'prototype) ',(car fn) ,(class-lambda fn)))
+                        functions)))))))
+
+;; ---------------------------------------------------------------------------------------
+ (define-class Person nil
+   (constructor (lambda (self name)
+                  (set-obj! self 'name name)))
+   (get-name (lambda (self)
+               (. self 'name)))
+   (set-name (lambda (self name)
+               (set-obj self 'name name))))
