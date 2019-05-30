@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 30 May 2019 19:39:55 +0000
+ * build: Thu, 30 May 2019 20:06:21 +0000
  */
 (function () {
 	'use strict';
@@ -3964,7 +3964,8 @@
 	      var obj_type = _typeof_1(obj);
 
 	      if (isNull(obj) || obj_type !== 'object' && obj_type !== 'function') {
-	        throw new Error(typeErrorMessage('set-obj!', type(obj), ['object', 'function']));
+	        var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
+	        throw new Error(msg);
 	      }
 
 	      obj[key] = value;
@@ -4520,7 +4521,7 @@
 	      }
 
 	      if (obj instanceof Pair) {
-	        return new lips.Formatter(obj.toString())["break"]().format();
+	        return obj.toString();
 	      }
 
 	      if (obj instanceof _Symbol) {
@@ -4685,6 +4686,15 @@
 	      });
 	    }, "(read [string])\n\n            Function if used with string will parse the string and return\n            list structure of LIPS code. If called without an argument it\n            will read string from standard input (using browser prompt or\n            user defined way) and call itself with that string (parse is)\n            function can be used together with eval to evaluate code from\n            string"),
 	    // ------------------------------------------------------------------
+	    pprint: doc(function (arg) {
+	      if (arg instanceof Pair) {
+	        arg = new lips.Formatter(arg.toString())["break"]().format();
+	        this.get('stdout').write(arg);
+	      } else {
+	        this.get('print').call(this, arg);
+	      }
+	    }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
+	    // ------------------------------------------------------------------
 	    print: doc(function () {
 	      var _this$get,
 	          _this3 = this;
@@ -4694,7 +4704,7 @@
 	      }
 
 	      (_this$get = this.get('stdout')).write.apply(_this$get, toConsumableArray(args.map(function (arg) {
-	        return _this3.get('string')(arg);
+	        return _this3.get('string')(arg, typeof arg === 'string');
 	      })));
 	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
 	    // ------------------------------------------------------------------

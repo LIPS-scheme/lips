@@ -2513,7 +2513,8 @@
         'set-obj!': doc(function(obj, key, value) {
             var obj_type = typeof obj;
             if (isNull(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
-                throw new Error(typeErrorMessage('set-obj!', type(obj), ['object', 'function']));
+                var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
+                throw new Error(msg);
             }
             obj[key] = value;
         }, `(set-obj! obj key value)
@@ -3047,7 +3048,7 @@
                 return JSON.stringify(obj).replace(/\\n/g, '\n');
             }
             if (obj instanceof Pair) {
-                return new lips.Formatter(obj.toString()).break().format();
+                return obj.toString();
             }
             if (obj instanceof Symbol) {
                 return obj.toString();
@@ -3249,9 +3250,21 @@
             function can be used together with eval to evaluate code from
             string`),
         // ------------------------------------------------------------------
+        pprint: doc(function(arg) {
+            if (arg instanceof Pair) {
+                arg = new lips.Formatter(arg.toString()).break().format();
+                this.get('stdout').write(arg);
+            } else {
+                this.get('print').call(this, arg);
+            }
+        }, `(pprint expression)
+
+           Pretty print list expression, if called with non-pair it just call
+           print function with passed argument.`),
+        // ------------------------------------------------------------------
         print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
-                return this.get('string')(arg);
+                return this.get('string')(arg, typeof arg === 'string');
             }));
         }, `(print . args)
 
