@@ -450,10 +450,10 @@
                         functions)))))))
 
 ;; ---------------------------------------------------------------------------------------
- (define-class Person nil
-   (constructor (lambda (self name)
-                  (set-obj! self 'name name)))
-   (get-name (lambda (self)
-               (. self 'name)))
-   (set-name (lambda (self name)
-               (set-obj self 'name name))))
+;; (define-class Person nil
+;;   (constructor (lambda (self name)
+;;                  (set-obj! self 'name name)))
+;;   (get-name (lambda (self)
+;;               (. self 'name)))
+;;   (set-name (lambda (self name)
+;;               (set-obj self 'name name))))
