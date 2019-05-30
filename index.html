@@ -2,8 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title>LIPS Is Pretty Simple</title>
-    <meta name="Description" content=""/>
+    <title>LIPS - Simple LISP in JavaScript with macros</title>
+    <meta name="Description" content="LISP with regexes, that hide use of promises, full access to JavaScript and fully working real LISP macro system."/>
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
     <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
     <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
@@ -44,7 +44,7 @@
     <a href="/lips/">
       <img src="logo.svg"/>
       <h1>
-        LIPS Is Pretty Simple
+        Simple LISP in JavaScript
       </h1>
     </a>
     <nav>
@@ -60,21 +60,25 @@
   </header>
   <section id="summary">
     <header><h2>Summary</h2></header>
-    <p>LIPS is Simple Lisp in JavaScript</p>
+    <p>LIPS is Simple Lisp in JavaScript. The name is recursive acronym which stands for LIPS is Pretty Simple</p>
     <p>Key features:</p>
     <ul>
       <li>Lisp Macros, backquote and macroexpand,</li>
-      <li>Functions in lips are normal javascript functions,</li>
-      <li>You can invoke native JavaScript functions and methods from Lips,</li>
+      <li>Familiar Scheme like Syntax,</li>
+      <li>Functions in LIPS are normal javascript functions,</li>
+      <li>Library agnosting with almost no dependencies,</li>
+      <li>You can invoke native JavaScript functions and methods from LIPS,</li>
       <li>Promises are treated as values they resolve to (so async code look like sync - like auto <code><strong>async/await</strong></code>),</li>
       <li>Easy extension using JavaScript using Macros or functions,</li>
       <li>Regexes are first class objects,</li>
       <li>BigInt support (for browsers that don't have native support you will need <a href="https://github.com/indutny/bn.js/">bn.js</a>),</li>
-      <li>Optional dynamic scope,</li>
+      <li>Optional dynamic scope (like in Emacs LISP),</li>
     </ul>
   </section>
   <section id="demo">
     <header><h2>Demo</h2></header>
+    <p>Check <a href="https://github.com/jcubic/lips/wiki/Getting-Started">Getting Started Guide</a> and
+      try the interpreter while you will read the document.</p>
     <div class="tabs">
       <ul>
         <li><a href="#">lexical</a></li>
@@ -90,7 +94,7 @@
   </section>
   <section id="installation">
     <header><h2>Installation</h2></header>
-    <h3>Node</h3>
+    <h3>Node/Webpack</h3>
     <pre>
 npm install @jcubic/lips
     </pre>
@@ -101,7 +105,8 @@ var {exec} = require('@jcubic/lips');
 import {exec} from '@jcubic/lips';
     </code></pre>
     <h3>Browser</h3>
-    <p>When using in browser you need to include the file</p>
+    <p>When using LISP in browser you need to include the file</p>
+    <p>If you want to use Webpack see <a href="https://github.com/jcubic/lips/wiki/Webpack">wiki page</a> for details</p>
     <pre><code class="language-markup">
 &lt;script src="https://unpkg.com/@jcubic/lips"&gt;&lt;/script&gt;
     </code></pre>
@@ -117,6 +122,7 @@ import {exec} from '@jcubic/lips';
     <pre><code class="language-html">
   &lt;script type="text/x-lips" src="example.lips"&gt;&lt;script&gt;
     </code></pre>
+    <p>You can also run the code programatically see <a href="https://github.com/jcubic/lips/wiki/Getting-Started#programming-api">last section of Getting Started Guide</a> for details.</p>
   </section>
   <footer>
     <p>Copyright (c) 2018-2019 <a href="https://jcubic.pl/me">Jakub T. Jankiewicz</a></p>

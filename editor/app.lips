@@ -11,6 +11,8 @@
                                              "\"/>"))))
                        (--> link (on "load" resolve) (appendTo "head")))))))
 
+(define-macro (global symbol)
+  `(set-obj! (try window (catch (e) global)) ,(symbol->string symbol) ,symbol))
 
 (define $ jQuery)
 ;; (require "https://unpkg.com/alasql@0.4.11/dist/alasql.min.js")
