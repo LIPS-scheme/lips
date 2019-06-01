@@ -1401,6 +1401,9 @@
             const args = [...binded.__bind.args, ...moreArgs];
             return binded.__bind.fn.apply(context, args);
         };
+        hiddenProp(binded, 'name', fn.name);
+        console.log(binded.name);
+        hiddenProp(binded, '__bound__', true);
         if (fn.__doc__) {
             binded.__doc__ = fn.__doc__;
         }
@@ -1441,21 +1444,33 @@
         return !exludedNames.includes(name);
     }
     // ----------------------------------------------------------------------
+    function hiddenProp(obj, name, value) {
+        Object.defineProperty(obj, root.Symbol.for(name), {
+            get: () => value,
+            set: () => {},
+            configurable: false,
+            enumerable: false
+        });
+    }
+    // ----------------------------------------------------------------------
     function bindWithProps(fn, context) {
         const bound = fn.bind(context);
         const props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
         props.forEach(prop => {
             bound[prop] = fn[prop];
         });
+        hiddenProp(bound, '__bound__', true);
         if (isNativeFunction(fn)) {
-            Object.defineProperty(bound, root.Symbol.for('__native__'), {
-                value: true,
-                writable: false,
-                configurable: false,
-                enumerable: false
-            });
+            hiddenProp(bound, '__native__', true);
         }
         return bound;
+    }
+    // ----------------------------------------------------------------------
+    function isBoundFunction(obj) {
+        if (typeof obj === 'fuction') {
+            obj.__bound__ = false;
+            return obj.__bound__ === true;
+        }
     }
     // ----------------------------------------------------------------------
     function setFnLength(fn, length) {
@@ -1994,7 +2009,7 @@
                 // bind only functions that are not binded for case:
                 // (let ((x Object)) (. x 'keys))
                 // second x access is already bound when accessing Object
-                if (!value.name.match(/^bound /)) {
+                if (isBoundFunction(value)) {
                     if (weak) {
                         return weakBind(value, context);
                     }

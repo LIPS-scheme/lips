@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.16.0
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.16.1
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 01 Jun 2019 08:07:16 +0000
+ * build: Sat, 01 Jun 2019 16:35:15 +0000
  */
 (function () {
 	'use strict';
@@ -2667,6 +2667,10 @@
 	      return binded.__bind.fn.apply(context, args);
 	    };
 
+	    hiddenProp(binded, 'name', fn.name);
+	    console.log(binded.name);
+	    hiddenProp(binded, '__bound__', true);
+
 	    if (fn.__doc__) {
 	      binded.__doc__ = fn.__doc__;
 	    }
@@ -2733,23 +2737,39 @@
 	  } // ----------------------------------------------------------------------
 
 
+	  function hiddenProp(obj, name, value) {
+	    Object.defineProperty(obj, root.Symbol["for"](name), {
+	      get: function get() {
+	        return value;
+	      },
+	      set: function set() {},
+	      configurable: false,
+	      enumerable: false
+	    });
+	  } // ----------------------------------------------------------------------
+
+
 	  function bindWithProps(fn, context) {
 	    var bound = fn.bind(context);
 	    var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
 	    props.forEach(function (prop) {
 	      bound[prop] = fn[prop];
 	    });
+	    hiddenProp(bound, '__bound__', true);
 
 	    if (isNativeFunction(fn)) {
-	      Object.defineProperty(bound, root.Symbol["for"]('__native__'), {
-	        value: true,
-	        writable: false,
-	        configurable: false,
-	        enumerable: false
-	      });
+	      hiddenProp(bound, '__native__', true);
 	    }
 
 	    return bound;
+	  } // ----------------------------------------------------------------------
+
+
+	  function isBoundFunction(obj) {
+	    if (typeof obj === 'fuction') {
+	      obj.__bound__ = false;
+	      return obj.__bound__ === true;
+	    }
 	  } // ----------------------------------------------------------------------
 
 
@@ -3410,7 +3430,7 @@
 	        // bind only functions that are not binded for case:
 	        // (let ((x Object)) (. x 'keys))
 	        // second x access is already bound when accessing Object
-	        if (!value.name.match(/^bound /)) {
+	        if (isBoundFunction(value)) {
 	          if (weak) {
 	            return weakBind(value, context);
 	          }
@@ -5845,7 +5865,7 @@
 	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: '0.16.0',
+	    version: '0.16.1',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

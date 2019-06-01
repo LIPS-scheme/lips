@@ -442,7 +442,9 @@
             (let* ((functions (append functions (cdr lst)))
                    (constructor (car lst)))
               `(begin
-                 (define ,name ,(class-lambda constructor))
+                 (define ,name (unbind ,(class-lambda constructor)))
+                 (--> Object (defineProperty ,name "name" (make-object :value
+                                                                       ,(symbol->string name))))
                  ,(if (not (null? parent))
                       `(set-obj! ,name 'prototype (--> Object (create ,parent))))
                  ,@(map (lambda (fn)
@@ -457,3 +459,28 @@
 ;;               (. self 'name)))
 ;;   (set-name (lambda (self name)
 ;;               (set-obj self 'name name))))
+
+
+;; ---------------------------------------------------------------------------------------
+(define (make-tags expr)
+  "(make-tags expression)
+
+   Function that return list structure of code with better syntax then raw LIPS"
+  `(h ,(let ((val (car expr))) (if (key? val) (key->string val) val))
+      (alist->object (quasiquote ,@(pair-map (lambda (car cdr)
+                                               (cons (cons (key->string car)
+                                                           (list 'unquote cdr))))
+                                             (cadr expr))))
+      ,(if (not (null? (cddr expr)))
+           (if (and (pair? (caddr expr)) (let ((s (caaddr expr)))
+                                           (and (symbol? s) (eq? s 'list))))
+               `(list->array (list ,@(map make-tags (cdaddr expr))))
+               (caddr expr)))))
+
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (with-tags expr)
+  "(with-tags expression)
+
+   Macro that evalute LIPS shorter code for S-Expression equivalent of JSX"
+  (make-tags expr))

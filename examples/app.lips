@@ -6,7 +6,8 @@
 ;; Released under MIT license
 ;;
 
-(load "hyper.lips")
+(define h (.. hyperapp.h))
+(define app (.. hyperapp.app))
 
 ;; helper for this specific app - hyperapp action generator that create new state
 
@@ -20,8 +21,6 @@
       (let* ((alist (. state "counter"))
              (old (cdr (assoc 'count alist))))
         (make-object :counter (alist->assign '() alist `((count . ,(fn old value)))))))))
-
-
 
 
 ;; -----------------------------------------------------------------------------
