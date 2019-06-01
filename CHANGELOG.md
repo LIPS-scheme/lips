@@ -1,3 +1,7 @@
+## 0.16.1
+### Bug fixes
+* fix setting property Descriptor on functions (to change name for preact components)
+
 ## 0.16.0
 ### Features
 * `this` inside lambdas that are object created with new (same as in JS) [#19](https://github.com/jcubic/lips/issues/19)
