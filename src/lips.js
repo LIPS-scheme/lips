@@ -2511,8 +2511,10 @@
              code \`(define function (lambda args body))\``),
         // ------------------------------------------------------------------
         'set-obj!': doc(function(obj, key, value) {
-            if (typeof obj !== 'object' || isNull(obj)) {
-                throw new Error(typeErrorMessage('set-obj!', type(obj), 'object'));
+            var obj_type = typeof obj;
+            if (isNull(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
+                var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
+                throw new Error(msg);
             }
             obj[key] = value;
         }, `(set-obj! obj key value)
@@ -2568,6 +2570,9 @@
                 var name = code.car;
                 var i = 0;
                 var value;
+                if (typeof this !== 'undefined') {
+                    env.set('this', this);
+                }
                 if (name instanceof Symbol || !isEmptyList(name)) {
                     while (true) {
                         if (name.car !== nil) {
@@ -2769,6 +2774,8 @@
                         return unpromise(eval_pair, function(eval_pair) {
                             if (!(eval_pair instanceof Pair)) {
                                 if (pair.cdr !== nil) {
+                                    console.log(eval_pair);
+                                    console.log(pair.cdr);
                                     const msg = "You can't splice atom inside list";
                                     throw new Error(msg);
                                 }
@@ -3041,7 +3048,7 @@
                 return JSON.stringify(obj).replace(/\\n/g, '\n');
             }
             if (obj instanceof Pair) {
-                return new lips.Formatter(obj.toString()).break().format();
+                return obj.toString();
             }
             if (obj instanceof Symbol) {
                 return obj.toString();
@@ -3054,6 +3061,8 @@
                 var name;
                 if (typeof constructor.__className === 'string') {
                     name = constructor.__className;
+                } else if (type(obj) === 'instance') {
+                    name = 'instance';
                 } else {
                     name = constructor.name;
                 }
@@ -3087,7 +3096,14 @@
 
             Function return list values (functions and variables) inside environment.`),
         'new': doc(function(obj, ...args) {
-            return new obj(...args);
+            var instance = new (unbind(obj))(...args);
+            Object.defineProperty(instance, '__instance__', {
+                enumerable: false,
+                get: () => true,
+                set: () => {},
+                configurable: false
+            });
+            return instance;
         }, `(new obj . args)
 
             Function create new JavaScript instance of an object.`),
@@ -3234,9 +3250,21 @@
             function can be used together with eval to evaluate code from
             string`),
         // ------------------------------------------------------------------
+        pprint: doc(function(arg) {
+            if (arg instanceof Pair) {
+                arg = new lips.Formatter(arg.toString()).break().format();
+                this.get('stdout').write(arg);
+            } else {
+                this.get('print').call(this, arg);
+            }
+        }, `(pprint expression)
+
+           Pretty print list expression, if called with non-pair it just call
+           print function with passed argument.`),
+        // ------------------------------------------------------------------
         print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
-                return this.get('string')(arg);
+                return this.get('string')(arg, typeof arg === 'string');
             }));
         }, `(print . args)
 
@@ -3922,6 +3950,12 @@
             return "regex";
         }
         if (typeof obj === 'object') {
+            if (obj.__instance__) {
+                obj.__instance__ = false;
+                if (obj.__instance__) {
+                    return 'instance';
+                }
+            }
             return obj.constructor.name;
         }
         return typeof obj;

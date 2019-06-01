@@ -106,6 +106,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                 position = false;
             }
         },
+        mobileIngoreAutoSpace: [',', '.', ')'],
         completionEscape: false,
         wordAutocomplete: false,
         doubleTab: function(string, maches, echo_command) {
