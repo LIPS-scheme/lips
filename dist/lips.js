@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.16.1
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 01 Jun 2019 16:35:15 +0000
+ * build: Sun, 02 Jun 2019 08:39:07 +0000
  */
 (function () {
 	'use strict';
@@ -3563,11 +3563,11 @@
 
 	      // use ES6 symbol as name for lips symbol (they are unique)
 	      if (name !== null) {
-	        return new _Symbol(root.Symbol("#".concat(name)));
+	        return new _Symbol(root.Symbol("#g_".concat(name)));
 	      }
 
 	      count++;
-	      return new _Symbol(root.Symbol("#gensym_".concat(count, "#")));
+	      return new _Symbol(root.Symbol("#g_".concat(count, "#")));
 	    };
 	  }(); // -------------------------------------------------------------------------
 
@@ -3988,7 +3988,7 @@
 	        throw new Error(msg);
 	      }
 
-	      obj[key] = value;
+	      unbind(obj)[key] = value;
 	    }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
 	    'current-environment': doc(function () {
 	      return this;
@@ -5865,7 +5865,7 @@
 	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: '0.16.1',
+	    version: 'DEV',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

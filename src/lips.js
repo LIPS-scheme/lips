@@ -2111,10 +2111,10 @@
         return function(name = null) {
             // use ES6 symbol as name for lips symbol (they are unique)
             if (name !== null) {
-                return new Symbol(root.Symbol(`#${name}`));
+                return new Symbol(root.Symbol(`#g_${name}`));
             }
             count++;
-            return new Symbol(root.Symbol(`#gensym_${count}#`));
+            return new Symbol(root.Symbol(`#g_${count}#`));
         };
     })();
     // -------------------------------------------------------------------------
@@ -2531,7 +2531,7 @@
                 var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
                 throw new Error(msg);
             }
-            obj[key] = value;
+            unbind(obj)[key] = value;
         }, `(set-obj! obj key value)
 
             Function set property of JavaScript object`),

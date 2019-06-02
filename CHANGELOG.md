@@ -1,3 +1,7 @@
+## 0.16.2
+### Bug fixes
+* unbind functions before setting property with `set-obj!`
+
 ## 0.16.1
 ### Bug fixes
 * fix setting property Descriptor on functions (to change name for preact components)
