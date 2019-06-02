@@ -1,6 +1,7 @@
 ## 0.16.2
 ### Bug fixes
 * unbind functions before setting property with `set-obj!`
+* make gensyms names shorter (like in CLISP)
 
 ## 0.16.1
 ### Bug fixes

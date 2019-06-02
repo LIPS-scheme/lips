@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 02 Jun 2019 08:39:07 +0000
+ * build: Sun, 02 Jun 2019 08:42:38 +0000
  */
 (function () {
 	'use strict';
@@ -3563,11 +3563,11 @@
 
 	      // use ES6 symbol as name for lips symbol (they are unique)
 	      if (name !== null) {
-	        return new _Symbol(root.Symbol("#g_".concat(name)));
+	        return new _Symbol(root.Symbol("#:".concat(name)));
 	      }
 
 	      count++;
-	      return new _Symbol(root.Symbol("#g_".concat(count, "#")));
+	      return new _Symbol(root.Symbol("#:g".concat(count)));
 	    };
 	  }(); // -------------------------------------------------------------------------
 

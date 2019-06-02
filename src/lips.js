@@ -2111,10 +2111,10 @@
         return function(name = null) {
             // use ES6 symbol as name for lips symbol (they are unique)
             if (name !== null) {
-                return new Symbol(root.Symbol(`#g_${name}`));
+                return new Symbol(root.Symbol(`#:${name}`));
             }
             count++;
-            return new Symbol(root.Symbol(`#g_${count}#`));
+            return new Symbol(root.Symbol(`#:g${count}`));
         };
     })();
     // -------------------------------------------------------------------------
