@@ -51,9 +51,6 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         lips.exec(code, env, dynamic).then(function(ret) {
             ret.forEach(function(ret) {
                 if (ret !== undefined) {
-                    if (ret instanceof lips.Symbol) {
-                        ret = ret.name;
-                    }
                     env.get('print').call(env, ret);
                 }
             });
