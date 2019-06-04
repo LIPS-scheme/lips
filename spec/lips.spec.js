@@ -406,6 +406,24 @@ describe('evaluate', function() {
                 ].join(' '));
             });
         });
+        it('should evaluate unquote inside unquote-splice and double quasiquote', function() {
+            var code = `(define-macro (bar)
+                          (let ((x 10) (y '(1 2 3)) (z 'foo))
+                            \`(list ,x \`(,@(list ',y)))))
+                        (bar)`;
+            return exec(code).then(result => {
+                expect(result[1].toString()).toEqual('(10 ((1 2 3)))');
+            });
+        });
+        it('should evaluate unquote quote unquote inside double quasiquote', function() {
+            var code = `(define-macro (bar)
+                           (let ((x 10) (y '(1 2 3)) (z 'foo))
+                             \`(list ,x \`(,',z ,,@y))))
+                        (bar)`;
+            return exec(code).then(result => {
+                expect(result[1].toString()).toEqual('(10 (foo 1 2 3))');
+            });
+        });
     });
     describe('quote', function() {
         it('should return literal list', function() {

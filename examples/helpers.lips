@@ -153,7 +153,6 @@
                                  (apply (. ,name ,key) ,args)))))
                         (array->list (--> Object (keys obj))))))))
 
-
 ;; ---------------------------------------------------------------------------------------
 (define (alist->object alist)
   "(alist->object alist)
