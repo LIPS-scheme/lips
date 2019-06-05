@@ -2832,6 +2832,13 @@
                                 new Symbol('unquote'),
                                 unquote_splice(pair.car.cdr, unquote_cnt + 1, max_unq)
                             );
+                        } else if (pair.car.cdr instanceof Pair &&
+                                   pair.car.cdr.cdr !== nil &&
+                                   !(pair.car.cdr.car instanceof Pair)) {
+                            // same as in guile if (unquote 1 2 3) it should be
+                            // spliced - scheme spec say it's unspecify but it
+                            // work like in CL
+                            return pair.car.cdr;
                         }
                     }
                     if (Symbol.is(pair.car, 'quote')) {
@@ -2854,17 +2861,21 @@
                         }
                         if (pair.cdr instanceof Pair) {
                             if (pair.cdr.cdr !== nil) {
-                                return unpromise(
-                                    recur(pair.cdr.cdr, unquote_cnt, max_unq),
-                                    function(value) {
-                                        var unquoted = evaluate(pair.cdr.car, {
-                                            env: self,
-                                            dynamic_scope,
-                                            error
-                                        });
-                                        return new Pair(unquoted, value);
-                                    }
-                                );
+                                if (pair.cdr.car instanceof Pair) {
+                                    return unpromise(
+                                        recur(pair.cdr.cdr, unquote_cnt, max_unq),
+                                        function(value) {
+                                            var unquoted = evaluate(pair.cdr.car, {
+                                                env: self,
+                                                dynamic_scope,
+                                                error
+                                            });
+                                            return new Pair(unquoted, value);
+                                        }
+                                    );
+                                } else {
+                                    return pair.cdr;
+                                }
                             } else {
                                 return evaluate(pair.cdr.car, {
                                     env: self,

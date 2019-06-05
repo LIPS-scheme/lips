@@ -424,6 +424,16 @@ describe('evaluate', function() {
                 expect(result[1].toString()).toEqual('(10 (foo 1 2 3))');
             });
         });
+        it('should evaluate nested quasiquote and unquote with bare list', function() {
+            var code = `(define-macro (bar)
+                          (let ((x 10) (y '(1 2 3)) (z 'foo))
+                             \`(list ,x \`(,',z \`(list ,,,@y)))))
+                        (define (foo x) x)
+                        (eval (cadr (bar)))`;
+            return exec(code).then(result => {
+                expect(result[2].toString()).toEqual('(list 1 2 3)');
+            });
+        });
     });
     describe('quote', function() {
         it('should return literal list', function() {

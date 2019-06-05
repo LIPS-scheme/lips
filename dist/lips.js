@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 05 Jun 2019 05:32:26 +0000
+ * build: Wed, 05 Jun 2019 08:30:20 +0000
  */
 (function () {
 	'use strict';
@@ -4302,6 +4302,11 @@
 	          if (_Symbol.is(pair.car.car, 'unquote')) {
 	            if (unquote_cnt + 2 === max_unq && pair.car.cdr instanceof Pair && pair.car.cdr.car instanceof Pair && _Symbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
 	              return new Pair(new _Symbol('unquote'), unquote_splice(pair.car.cdr, unquote_cnt + 1, max_unq));
+	            } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== nil && !(pair.car.cdr.car instanceof Pair)) {
+	              // same as in guile if (unquote 1 2 3) it should be
+	              // spliced - scheme spec say it's unspecify but it
+	              // work like in CL
+	              return pair.car.cdr;
 	            }
 	          }
 
@@ -4322,14 +4327,18 @@
 
 	            if (pair.cdr instanceof Pair) {
 	              if (pair.cdr.cdr !== nil) {
-	                return unpromise(recur(pair.cdr.cdr, unquote_cnt, max_unq), function (value) {
-	                  var unquoted = evaluate(pair.cdr.car, {
-	                    env: self,
-	                    dynamic_scope: dynamic_scope,
-	                    error: error
+	                if (pair.cdr.car instanceof Pair) {
+	                  return unpromise(recur(pair.cdr.cdr, unquote_cnt, max_unq), function (value) {
+	                    var unquoted = evaluate(pair.cdr.car, {
+	                      env: self,
+	                      dynamic_scope: dynamic_scope,
+	                      error: error
+	                    });
+	                    return new Pair(unquoted, value);
 	                  });
-	                  return new Pair(unquoted, value);
-	                });
+	                } else {
+	                  return pair.cdr;
+	                }
 	              } else {
 	                return evaluate(pair.cdr.car, {
 	                  env: self,
