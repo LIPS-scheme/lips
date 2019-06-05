@@ -2777,7 +2777,6 @@
                 return eval_pair;
             }
             function unquote_splice(pair, unquote_cnt, max_unq) {
-                unquote_cnt++;
                 if (unquote_cnt < max_unq) {
                     return new Pair(
                         new Pair(
@@ -2817,20 +2816,21 @@
             function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
                     if (Symbol.is(pair.car.car, 'unquote-splicing')) {
-                        return unquote_splice(pair, unquote_cnt, max_unq);
+                        return unquote_splice(pair, unquote_cnt + 1, max_unq);
                     }
                     if (Symbol.is(pair.car, 'quasiquote')) {
                         var cdr = recur(pair.cdr, unquote_cnt, max_unq + 1);
                         return new Pair(pair.car, cdr);
                     }
                     if (Symbol.is(pair.car.car, 'unquote')) {
+                        // + 2 - one for unquote and one for unquote splicing
                         if (unquote_cnt + 2 === max_unq &&
                             pair.car.cdr instanceof Pair &&
                             pair.car.cdr.car instanceof Pair &&
                             Symbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
                             return new Pair(
                                 new Symbol('unquote'),
-                                unquote_splice(pair.car.cdr, unquote_cnt + 1, max_unq)
+                                unquote_splice(pair.car.cdr, unquote_cnt + 2, max_unq)
                             );
                         } else if (pair.car.cdr instanceof Pair &&
                                    pair.car.cdr.cdr !== nil &&

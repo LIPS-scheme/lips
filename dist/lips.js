@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 05 Jun 2019 08:30:20 +0000
+ * build: Wed, 05 Jun 2019 08:36:22 +0000
  */
 (function () {
 	'use strict';
@@ -4246,8 +4246,6 @@
 	      }
 
 	      function unquote_splice(pair, unquote_cnt, max_unq) {
-	        unquote_cnt++;
-
 	        if (unquote_cnt < max_unq) {
 	          return new Pair(new Pair(pair.car.car, recur(pair.car.cdr, unquote_cnt, max_unq)), nil);
 	        }
@@ -4291,7 +4289,7 @@
 	      function recur(pair, unquote_cnt, max_unq) {
 	        if (pair instanceof Pair && !isEmptyList(pair)) {
 	          if (_Symbol.is(pair.car.car, 'unquote-splicing')) {
-	            return unquote_splice(pair, unquote_cnt, max_unq);
+	            return unquote_splice(pair, unquote_cnt + 1, max_unq);
 	          }
 
 	          if (_Symbol.is(pair.car, 'quasiquote')) {
@@ -4300,8 +4298,9 @@
 	          }
 
 	          if (_Symbol.is(pair.car.car, 'unquote')) {
+	            // + 2 - one for unquote and one for unquote splicing
 	            if (unquote_cnt + 2 === max_unq && pair.car.cdr instanceof Pair && pair.car.cdr.car instanceof Pair && _Symbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
-	              return new Pair(new _Symbol('unquote'), unquote_splice(pair.car.cdr, unquote_cnt + 1, max_unq));
+	              return new Pair(new _Symbol('unquote'), unquote_splice(pair.car.cdr, unquote_cnt + 2, max_unq));
 	            } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== nil && !(pair.car.cdr.car instanceof Pair)) {
 	              // same as in guile if (unquote 1 2 3) it should be
 	              // spliced - scheme spec say it's unspecify but it
