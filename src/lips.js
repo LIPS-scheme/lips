@@ -2111,10 +2111,10 @@
         return function(name = null) {
             // use ES6 symbol as name for lips symbol (they are unique)
             if (name !== null) {
-                return new Symbol(root.Symbol(`#${name}`));
+                return new Symbol(root.Symbol(`#:${name}`));
             }
             count++;
-            return new Symbol(root.Symbol(`#gensym_${count}#`));
+            return new Symbol(root.Symbol(`#:g${count}`));
         };
     })();
     // -------------------------------------------------------------------------
@@ -2531,7 +2531,7 @@
                 var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
                 throw new Error(msg);
             }
-            obj[key] = value;
+            unbind(obj)[key] = value;
         }, `(set-obj! obj key value)
 
             Function set property of JavaScript object`),
@@ -2776,87 +2776,116 @@
                 }
                 return eval_pair;
             }
+            function unquote_splice(pair, unquote_cnt, max_unq) {
+                if (unquote_cnt < max_unq) {
+                    return new Pair(
+                        new Pair(
+                            pair.car.car,
+                            recur(pair.car.cdr, unquote_cnt, max_unq)
+                        ),
+                        nil
+                    );
+                }
+                var eval_pair = evaluate(pair.car.cdr.car, {
+                    env: self,
+                    dynamic_scope,
+                    error
+                });
+                return unpromise(eval_pair, function(eval_pair) {
+                    if (!(eval_pair instanceof Pair)) {
+                        if (pair.cdr !== nil) {
+                            const msg = "You can't splice atom inside list";
+                            throw new Error(msg);
+                        }
+                        return eval_pair;
+                    }
+                    // don't create Cycles
+                    if (splices.has(eval_pair)) {
+                        eval_pair = eval_pair.clone();
+                    } else {
+                        splices.add(eval_pair);
+                    }
+                    const value = recur(pair.cdr, 0, 1);
+                    if (value === nil && eval_pair === nil) {
+                        return undefined;
+                    }
+                    return unpromise(value, value => join(eval_pair, value));
+                });
+            }
             var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
-                    var eval_pair;
                     if (Symbol.is(pair.car.car, 'unquote-splicing')) {
-                        eval_pair = evaluate(pair.car.cdr.car, {
-                            env: self,
-                            dynamic_scope,
-                            error
-                        });
-                        return unpromise(eval_pair, function(eval_pair) {
-                            if (!(eval_pair instanceof Pair)) {
-                                if (pair.cdr !== nil) {
-                                    console.log(eval_pair);
-                                    console.log(pair.cdr);
-                                    const msg = "You can't splice atom inside list";
-                                    throw new Error(msg);
-                                }
-                                return eval_pair;
-                            }
-                            // don't create Cycles
-                            if (splices.has(eval_pair)) {
-                                eval_pair = eval_pair.clone();
-                            } else {
-                                splices.add(eval_pair);
-                            }
-                            const value = recur(pair.cdr, 0, 1);
-                            if (value === nil && eval_pair === nil) {
-                                return undefined;
-                            }
-                            return unpromise(value, value => join(eval_pair, value));
-                        });
+                        return unquote_splice(pair, unquote_cnt + 1, max_unq);
                     }
                     if (Symbol.is(pair.car, 'quasiquote')) {
                         var cdr = recur(pair.cdr, unquote_cnt, max_unq + 1);
                         return new Pair(pair.car, cdr);
                     }
+                    if (Symbol.is(pair.car.car, 'unquote')) {
+                        // + 2 - one for unquote and one for unquote splicing
+                        if (unquote_cnt + 2 === max_unq &&
+                            pair.car.cdr instanceof Pair &&
+                            pair.car.cdr.car instanceof Pair &&
+                            Symbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
+                            return new Pair(
+                                new Symbol('unquote'),
+                                unquote_splice(pair.car.cdr, unquote_cnt + 2, max_unq)
+                            );
+                        } else if (pair.car.cdr instanceof Pair &&
+                                   pair.car.cdr.cdr !== nil &&
+                                   !(pair.car.cdr.car instanceof Pair)) {
+                            // same as in guile if (unquote 1 2 3) it should be
+                            // spliced - scheme spec say it's unspecify but it
+                            // work like in CL
+                            return pair.car.cdr;
+                        }
+                    }
+                    if (Symbol.is(pair.car, 'quote')) {
+                        return new Pair(
+                            pair.car,
+                            recur(pair.cdr, unquote_cnt, max_unq)
+                        );
+                    }
                     if (Symbol.is(pair.car, 'unquote')) {
-                        var head = pair.cdr;
-                        var node = head;
-                        var parent = node;
                         unquote_cnt++;
-                        while (node instanceof Pair &&
-                               node.car instanceof Pair &&
-                               Symbol.is(node.car.car, 'unquote')) {
-                            parent = node;
-                            unquote_cnt++;
-                            node = node.car.cdr.car;
+                        if (unquote_cnt < max_unq) {
+                            return new Pair(
+                                new Symbol('unquote'),
+                                recur(pair.cdr, unquote_cnt, max_unq)
+                            );
                         }
                         if (unquote_cnt > max_unq) {
                             throw new Error("You can't call `unquote` outside " +
                                             "of quasiquote");
                         }
-                        // we use Unquote to proccess inner most unquote first
-                        // in unquote function afer processing whole s-expression
-                        if (parent === node) {
+                        if (pair.cdr instanceof Pair) {
                             if (pair.cdr.cdr !== nil) {
-                                return unpromise(recur(pair.cdr.cdr), function(value) {
-                                    var unquoted = new Unquote(
-                                        pair.cdr.car,
-                                        unquote_cnt,
-                                        max_unq
+                                if (pair.cdr.car instanceof Pair) {
+                                    return unpromise(
+                                        recur(pair.cdr.cdr, unquote_cnt, max_unq),
+                                        function(value) {
+                                            var unquoted = evaluate(pair.cdr.car, {
+                                                env: self,
+                                                dynamic_scope,
+                                                error
+                                            });
+                                            return new Pair(unquoted, value);
+                                        }
                                     );
-                                    return new Pair(unquoted, value);
-                                });
+                                } else {
+                                    return pair.cdr;
+                                }
                             } else {
-                                return new Unquote(pair.cdr.car, unquote_cnt, max_unq);
+                                return evaluate(pair.cdr.car, {
+                                    env: self,
+                                    dynamic_scope,
+                                    error
+                                });
                             }
-                        } else if (parent.cdr.cdr !== nil) {
-                            var value = recur(parent.cdr.cdr, unquote_cnt, max_unq);
-                            return unpromise(value, function(value) {
-                                parent.car.cdr = new Pair(
-                                    new Unquote(node, unquote_cnt, max_unq),
-                                    parent.cdr === nil ? nil : value
-                                );
-                                return head.car;
-                            });
                         } else {
-                            parent.car.cdr = new Unquote(node, unquote_cnt, max_unq);
+                            return pair.cdr;
                         }
-                        return head.car;
                     }
                     return resolve_pair(pair, (pair) => {
                         return recur(pair, unquote_cnt, max_unq);
@@ -2864,36 +2893,22 @@
                 }
                 return pair;
             }
-            const unquoteTest = v => isPair(v) || v instanceof Unquote;
-            function unquoting(node) {
-                if (node instanceof Unquote) {
-                    if (node.max === node.count) {
-                        var ret = evaluate(node.value, {
-                            env: self,
-                            dynamic_scope,
-                            error
-                        });
-                        return ret;
-                    } else {
-                        return unpromise(unquoting(node.value), function(value) {
-                            return new Pair(
-                                new Symbol('unquote'),
-                                new Pair(
-                                    value,
-                                    nil
-                                )
-                            );
-                        });
+            function clear(node) {
+                if (node instanceof Pair) {
+                    delete node.data;
+                    if (!node.haveCycles('car')) {
+                        clear(node.car);
+                    }
+                    if (!node.haveCycles('cdr')) {
+                        clear(node.cdr);
                     }
                 }
-                return resolve_pair(node, unquoting, unquoteTest);
             }
             var x = recur(arg.car, 0, 1);
             return unpromise(x, value => {
-                value = unquoting(value);
-                return unpromise(value, (value) => {
-                    return quote(value);
-                });
+                // clear nested data for tests
+                clear(value);
+                return quote(value);
             });
         }, `(quasiquote list ,value ,@value)
 

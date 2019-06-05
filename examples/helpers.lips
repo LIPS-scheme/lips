@@ -29,6 +29,7 @@
               code)
        ,obj)))
 
+;; ---------------------------------------------------------------------------------------
 (define (single list)
   "(single list)
 
@@ -101,21 +102,6 @@
           ((. obj "valueOf"))
           obj)))
 
-;;defined in JS, you can easily create them in LIPS
-;;(define (substring string start end)
-;;  "(substring string start [end])
-;;
-;;   Function return part of the string that start with start index
-;;   and end in end index, if end is undfined it return to the end."
-;;  (--> string (substring (value start) (value end))))
-;;
-;;
-;;(define (concat . args)
-;;  "(concat . strings)
-;;
-;;   Function create new string by joining its arguments"
-;;  (--> (list->array args) (join "")))
-
 ;; ---------------------------------------------------------------------------------------
 
 (define-macro (define-global first . rest)
@@ -152,7 +138,6 @@
                               `(define-global (,(make-name key) . ,args)
                                  (apply (. ,name ,key) ,args)))))
                         (array->list (--> Object (keys obj))))))))
-
 
 ;; ---------------------------------------------------------------------------------------
 (define (alist->object alist)
@@ -442,7 +427,7 @@
             (let* ((functions (append functions (cdr lst)))
                    (constructor (car lst)))
               `(begin
-                 (define ,name (unbind ,(class-lambda constructor)))
+                 (define ,name ,(class-lambda constructor))
                  (--> Object (defineProperty ,name "name" (make-object :value
                                                                        ,(symbol->string name))))
                  ,(if (not (null? parent))
@@ -452,31 +437,19 @@
                         functions)))))))
 
 ;; ---------------------------------------------------------------------------------------
-;; (define-class Person nil
-;;   (constructor (lambda (self name)
-;;                  (set-obj! self 'name name)))
-;;   (get-name (lambda (self)
-;;               (. self 'name)))
-;;   (set-name (lambda (self name)
-;;               (set-obj self 'name name))))
-
-
-;; ---------------------------------------------------------------------------------------
 (define (make-tags expr)
   "(make-tags expression)
 
    Function that return list structure of code with better syntax then raw LIPS"
   `(h ,(let ((val (car expr))) (if (key? val) (key->string val) val))
-      (alist->object (quasiquote ,@(pair-map (lambda (car cdr)
-                                               (cons (cons (key->string car)
-                                                           (list 'unquote cdr))))
-                                             (cadr expr))))
+      (alist->object (,'quasiquote ,(pair-map (lambda (car cdr)
+                                                `(,(key->string car) . (,'unquote ,cdr)))
+                                              (cadr expr))))
       ,(if (not (null? (cddr expr)))
            (if (and (pair? (caddr expr)) (let ((s (caaddr expr)))
                                            (and (symbol? s) (eq? s 'list))))
                `(list->array (list ,@(map make-tags (cdaddr expr))))
                (caddr expr)))))
-
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (with-tags expr)
