@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&67043e433c7f4efff8db09bcb0498d64d8c98ec1)](https://travis-ci.org/jcubic/jquery.terminal)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&6914dab62e8c17c967c37311e5c6c21e)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/jquery.terminal.svg?branch=devel&e030235a5af95ee40eec54064311263dd8d8f874)](https://travis-ci.org/jcubic/jquery.terminal)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&8710db161df0ca3500520bda08815b5e)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
