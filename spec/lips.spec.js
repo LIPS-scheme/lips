@@ -406,7 +406,7 @@ describe('evaluate', function() {
                 ].join(' '));
             });
         });
-        it('should evaluate unquote inside unquote-splice and double quasiquote', function() {
+        it('should evaluate unquote inside unquote-splice and double quasiquote', () => {
             var code = `(define-macro (bar)
                           (let ((x 10) (y '(1 2 3)) (z 'foo))
                             \`(list ,x \`(,@(list ',y)))))
