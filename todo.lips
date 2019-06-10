@@ -11,27 +11,22 @@
 ;; Helper macros
 ;; ----------------------------------------------------------------------------------
 
+;; temporary fix breaking change in read function that return array of Expressions
+
+(define (read arg)
+  (if (eq? (type arg) "string")
+    (let* ((tokens (--> lips (tokenize arg)))
+           (array (--> lips (parse tokens))))
+      (if (> (.. array.length) 0)
+        (--> array (pop))
+        '()))
+      (let ((text (--> lips (get "stdin") (read))))
+         (read text))))
+
 (define-macro (-> expr method . args)
     "Helper macro that invoke method on object"
   `(apply (. ,expr (. ',method "name")) (list ,@args)))
 
-
-(define-macro (--> expr . code)
-    "Helper macro similar to -> that works well with jQuery chaining
-     where method call look function invocation.
-
-    usage: (--> ($ \"body\")
-                (css \"color\" \"red\")
-                (on \"click\" (lambda () (print \"click\"))))"
-    (let ((obj (gensym)))
-      `(let ((,obj ,expr))
-         ,@(let ((result '()))
-             (while code
-               (let ((lst `(set! ,obj (apply (. ,obj ,(. (caar code) "name")) (list ,@(cdar code))))))
-                 (append! result lst))
-               (set! code (cdr code)))
-             (append! result obj)
-             result))))
 
 ;; ----------------------------------------------------------------------------------
 ;; Helper functions

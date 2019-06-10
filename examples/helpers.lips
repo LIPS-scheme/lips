@@ -467,8 +467,8 @@
 
    Function that return list structure of code with better syntax then raw LIPS"
   `(h ,(let ((val (car expr))) (if (key? val) (key->string val) val))
-      (alist->object (quasiquote ,@(pair-map (lambda (car cdr)
-                                               (cons (cons (key->string car)
+      (alist->object (,'quasiquote ,@(pair-map (lambda (car cdr)
+                                                    (cons (cons (key->string car)
                                                            (list 'unquote cdr))))
                                              (cadr expr))))
       ,(if (not (null? (cddr expr)))
