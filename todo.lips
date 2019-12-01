@@ -8,27 +8,6 @@
 ;; https://github.com/tastejs/todomvc/blob/gh-pages/examples/jquery/js/app.js
 ;;
 ;; ----------------------------------------------------------------------------------
-;; Helper macros
-;; ----------------------------------------------------------------------------------
-
-;; temporary fix breaking change in read function that return array of Expressions
-
-(define (read arg)
-  (if (eq? (type arg) "string")
-    (let* ((tokens (--> lips (tokenize arg)))
-           (array (--> lips (parse tokens))))
-      (if (> (.. array.length) 0)
-        (--> array (pop))
-        '()))
-      (let ((text (--> lips (get "stdin") (read))))
-         (read text))))
-
-(define-macro (-> expr method . args)
-    "Helper macro that invoke method on object"
-  `(apply (. ,expr (. ',method "name")) (list ,@args)))
-
-
-;; ----------------------------------------------------------------------------------
 ;; Helper functions
 ;; ----------------------------------------------------------------------------------
 
@@ -69,7 +48,7 @@
   "Generatates unique ID (comments are because of scheme highligting in emacs (| |) is commnent)"
   (let ((i 0) (rnd) (uuid ""))
     (while (< i 32)
-      (set! rnd (| (* (-> Math random) 16) 0))                       ;;|)
+      (set! rnd (| (* (--> Math (random)) 16) 0))                       ;;|)
             (if (or (== i 8) (== i 12) (== i 16) (== i 20))
               (set! uuid (concat uuid "-")))
             (let ((value (if (== i 1)
@@ -77,7 +56,7 @@
                            (if (== i 16)
                              (| (& rnd 3) 8)                     ;;|)
                              rnd))))
-              (set! uuid (concat uuid (->  value toString 16))))
+              (set! uuid (concat uuid (-->  value (toString 16)))))
             (++ i))
       uuid))
 
@@ -89,11 +68,11 @@
 (define (store namespace . data)
   "set or get value from localStorage"
   (if (not (null? data))
-      (--> localStorage (setItem namespace (-> (car data) toString)))
+      (--> localStorage (setItem namespace (--> (car data) (toString))))
       (let ((store (--> localStorage (getItem namespace))))
         (if (null? store)
             '()
-            (read store)))))
+            (. (read store) 0)))))
 
 ;; ref: https://www.programming-idioms.org/idiom/12/check-if-list-contains-a-value/154/scheme
 (define (contains x list)
@@ -119,7 +98,8 @@
 ;; Templates
 ;; ----------------------------------------------------------------------------------
 (define (template selector)
-  (-> Handlebars compile (-> ($ selector) html)))
+  (let ((html (--> ($ selector) (html))))
+    (--> Handlebars (compile html))))
 
 
 (define todo-template (template "#todo-template"))
@@ -149,9 +129,9 @@
          (val (--> (. input "value") (trim))))
     (if (and (not (eq? val "")) (eq? which ENTER_KEY))
       (begin
-        (append! todos `((id . ,(uuid))
-                         (title . ,val)
-                         (completed . false)))
+        (append! todos (list `((id . ,(uuid))
+                               (title . ,val)
+                               (completed . false))))
         (set! (. input "value") "")
         (render)))))
 
@@ -184,17 +164,17 @@
                      (closest "li")
                      (addClass "editing")
                      (find ".edit")))
-         (tmp-str (-> $input val)))
-    (-> $input val "")
-    (-> $input val tmp-str)
-    (-> $input focus)))
+         (tmp-str (--> $input (val))))
+    (--> $input (val ""))
+    (--> $input (val tmp-str))
+    (--> $input (focus))))
 
 
 (define (edit-keyup event)
   (let ((key (. event "which"))
         (element (. event "target")))
     (if (eq? key ENTER_KEY)
-      (-> element blur))
+      (--> element (blur)))
     (if (eq? key ESCAPE_KEY)
       (--> ($ element) (data "abort" true) (blur)))))
 
@@ -212,7 +192,6 @@
         (detroy event)
         (begin
           (on-todo (lambda (todo)
-                     (print todo)
                      (set-cdr! (assoc 'title todo) val))
                    element)
           (render))))))
@@ -228,7 +207,7 @@
          (data `((activeTodoCount . ,active-count)
                  (activeTodoWord . ,(pluralize active-count "item"))
                  (completedTodos . ,(- todo-count active-count))))
-         (template (footer-template (-> data toObject))))
+         (template (footer-template (--> data (toObject)))))
     (--> ($ ".footer")
          (toggle (> todo-count 0))
          (html template))))
@@ -237,7 +216,7 @@
 (define (render)
   "render the app"
   (let* ((todos (get-todos))
-         (data (-> (map (lambda (e) (-> e toObject)) todos) toArray)))
+         (data (--> (map (lambda (e) (--> e (toObject))) todos) (toArray))))
     (--> ($ ".todo-list")
          (html (todo-template data)))
     (--> ($ ".main") (toggle (> (length data) 0)))
@@ -261,14 +240,15 @@
        (on "click" ".destroy" destroy)))
 
 
+
+
 (define (init)
   "initialization function"
   (bind)
   (let* ((routes `(("/:filter" . ,(lambda (filter)
                                     (set! selected-filter filter)
                                     (render)))))
-         (router (new Router (-> routes toObject))))
-    (-> router init "/all")))
-
+         (router (new Router (--> routes (toObject)))))
+    (--> router (init "/all"))))
 
 (init)

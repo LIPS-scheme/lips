@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.16.3
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 30 May 2019 20:06:21 +0000
+ * build: Sun, 01 Dec 2019 16:59:45 +0000
  */
 (function () {
 	'use strict';
@@ -783,7 +783,7 @@
 	  // as the regeneratorRuntime namespace. Otherwise create a new empty
 	  // object. Either way, the resulting object will be used to initialize
 	  // the regeneratorRuntime variable at the top of this file.
-	  module.exports
+	   module.exports 
 	));
 
 	try {
@@ -879,6 +879,10 @@
 	var arrayWithHoles = _arrayWithHoles;
 
 	function _iterableToArrayLimit(arr, i) {
+	  if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
+	    return;
+	  }
+
 	  var _arr = [];
 	  var _n = true;
 	  var _d = false;
@@ -2667,6 +2671,10 @@
 	      return binded.__bind.fn.apply(context, args);
 	    };
 
+	    hiddenProp(binded, 'name', fn.name);
+	    console.log(binded.name);
+	    hiddenProp(binded, '__bound__', true);
+
 	    if (fn.__doc__) {
 	      binded.__doc__ = fn.__doc__;
 	    }
@@ -2733,23 +2741,39 @@
 	  } // ----------------------------------------------------------------------
 
 
+	  function hiddenProp(obj, name, value) {
+	    Object.defineProperty(obj, root.Symbol["for"](name), {
+	      get: function get() {
+	        return value;
+	      },
+	      set: function set() {},
+	      configurable: false,
+	      enumerable: false
+	    });
+	  } // ----------------------------------------------------------------------
+
+
 	  function bindWithProps(fn, context) {
 	    var bound = fn.bind(context);
 	    var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
 	    props.forEach(function (prop) {
 	      bound[prop] = fn[prop];
 	    });
+	    hiddenProp(bound, '__bound__', true);
 
 	    if (isNativeFunction(fn)) {
-	      Object.defineProperty(bound, root.Symbol["for"]('__native__'), {
-	        value: true,
-	        writable: false,
-	        configurable: false,
-	        enumerable: false
-	      });
+	      hiddenProp(bound, '__native__', true);
 	    }
 
 	    return bound;
+	  } // ----------------------------------------------------------------------
+
+
+	  function isBoundFunction(obj) {
+	    if (typeof obj === 'fuction') {
+	      obj.__bound__ = false;
+	      return obj.__bound__ === true;
+	    }
 	  } // ----------------------------------------------------------------------
 
 
@@ -3410,7 +3434,7 @@
 	        // bind only functions that are not binded for case:
 	        // (let ((x Object)) (. x 'keys))
 	        // second x access is already bound when accessing Object
-	        if (!value.name.match(/^bound /)) {
+	        if (isBoundFunction(value)) {
 	          if (weak) {
 	            return weakBind(value, context);
 	          }
@@ -3521,19 +3545,6 @@
 
 	    return value;
 	  } // -------------------------------------------------------------------------
-	  // :: Unquote is used for multiple backticks and unquote
-	  // -------------------------------------------------------------------------
-
-
-	  function Unquote(value, count, max) {
-	    this.value = value;
-	    this.count = count;
-	    this.max = max;
-	  }
-
-	  Unquote.prototype.toString = function () {
-	    return '<#unquote[' + this.count + '] ' + this.value + '>';
-	  }; // -------------------------------------------------------------------------
 
 
 	  var gensym = function () {
@@ -3543,11 +3554,11 @@
 
 	      // use ES6 symbol as name for lips symbol (they are unique)
 	      if (name !== null) {
-	        return new _Symbol(root.Symbol("#".concat(name)));
+	        return new _Symbol(root.Symbol("#:".concat(name)));
 	      }
 
 	      count++;
-	      return new _Symbol(root.Symbol("#gensym_".concat(count, "#")));
+	      return new _Symbol(root.Symbol("#:g".concat(count)));
 	    };
 	  }(); // -------------------------------------------------------------------------
 
@@ -3968,7 +3979,7 @@
 	        throw new Error(msg);
 	      }
 
-	      obj[key] = value;
+	      unbind(obj)[key] = value;
 	    }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
 	    'current-environment': doc(function () {
 	      return this;
@@ -4238,47 +4249,51 @@
 	        return eval_pair;
 	      }
 
+	      function unquote_splice(pair, unquote_cnt, max_unq) {
+	        if (unquote_cnt < max_unq) {
+	          return new Pair(new Pair(pair.car.car, recur(pair.car.cdr, unquote_cnt, max_unq)), nil);
+	        }
+
+	        var eval_pair = evaluate(pair.car.cdr.car, {
+	          env: self,
+	          dynamic_scope: dynamic_scope,
+	          error: error
+	        });
+	        return unpromise(eval_pair, function (eval_pair) {
+	          if (!(eval_pair instanceof Pair)) {
+	            if (pair.cdr !== nil) {
+	              var msg = "You can't splice atom inside list";
+	              throw new Error(msg);
+	            }
+
+	            return eval_pair;
+	          } // don't create Cycles
+
+
+	          if (splices.has(eval_pair)) {
+	            eval_pair = eval_pair.clone();
+	          } else {
+	            splices.add(eval_pair);
+	          }
+
+	          var value = recur(pair.cdr, 0, 1);
+
+	          if (value === nil && eval_pair === nil) {
+	            return undefined$1;
+	          }
+
+	          return unpromise(value, function (value) {
+	            return join(eval_pair, value);
+	          });
+	        });
+	      }
+
 	      var splices = new Set();
 
 	      function recur(pair, unquote_cnt, max_unq) {
 	        if (pair instanceof Pair && !isEmptyList(pair)) {
-	          var eval_pair;
-
 	          if (_Symbol.is(pair.car.car, 'unquote-splicing')) {
-	            eval_pair = evaluate(pair.car.cdr.car, {
-	              env: self,
-	              dynamic_scope: dynamic_scope,
-	              error: error
-	            });
-	            return unpromise(eval_pair, function (eval_pair) {
-	              if (!(eval_pair instanceof Pair)) {
-	                if (pair.cdr !== nil) {
-	                  console.log(eval_pair);
-	                  console.log(pair.cdr);
-	                  var msg = "You can't splice atom inside list";
-	                  throw new Error(msg);
-	                }
-
-	                return eval_pair;
-	              } // don't create Cycles
-
-
-	              if (splices.has(eval_pair)) {
-	                eval_pair = eval_pair.clone();
-	              } else {
-	                splices.add(eval_pair);
-	              }
-
-	              var value = recur(pair.cdr, 0, 1);
-
-	              if (value === nil && eval_pair === nil) {
-	                return undefined$1;
-	              }
-
-	              return unpromise(value, function (value) {
-	                return join(eval_pair, value);
-	              });
-	            });
+	            return unquote_splice(pair, unquote_cnt + 1, max_unq);
 	          }
 
 	          if (_Symbol.is(pair.car, 'quasiquote')) {
@@ -4286,44 +4301,57 @@
 	            return new Pair(pair.car, cdr);
 	          }
 
+	          if (_Symbol.is(pair.car.car, 'unquote')) {
+	            // + 2 - one for unquote and one for unquote splicing
+	            if (unquote_cnt + 2 === max_unq && pair.car.cdr instanceof Pair && pair.car.cdr.car instanceof Pair && _Symbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
+	              return new Pair(new _Symbol('unquote'), unquote_splice(pair.car.cdr, unquote_cnt + 2, max_unq));
+	            } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== nil && !(pair.car.cdr.car instanceof Pair)) {
+	              // same as in guile if (unquote 1 2 3) it should be
+	              // spliced - scheme spec say it's unspecify but it
+	              // work like in CL
+	              return pair.car.cdr;
+	            }
+	          }
+
+	          if (_Symbol.is(pair.car, 'quote')) {
+	            return new Pair(pair.car, recur(pair.cdr, unquote_cnt, max_unq));
+	          }
+
 	          if (_Symbol.is(pair.car, 'unquote')) {
-	            var head = pair.cdr;
-	            var node = head;
-	            var parent = node;
 	            unquote_cnt++;
 
-	            while (node instanceof Pair && node.car instanceof Pair && _Symbol.is(node.car.car, 'unquote')) {
-	              parent = node;
-	              unquote_cnt++;
-	              node = node.car.cdr.car;
+	            if (unquote_cnt < max_unq) {
+	              return new Pair(new _Symbol('unquote'), recur(pair.cdr, unquote_cnt, max_unq));
 	            }
 
 	            if (unquote_cnt > max_unq) {
 	              throw new Error("You can't call `unquote` outside " + "of quasiquote");
-	            } // we use Unquote to proccess inner most unquote first
-	            // in unquote function afer processing whole s-expression
-
-
-	            if (parent === node) {
-	              if (pair.cdr.cdr !== nil) {
-	                return unpromise(recur(pair.cdr.cdr), function (value) {
-	                  var unquoted = new Unquote(pair.cdr.car, unquote_cnt, max_unq);
-	                  return new Pair(unquoted, value);
-	                });
-	              } else {
-	                return new Unquote(pair.cdr.car, unquote_cnt, max_unq);
-	              }
-	            } else if (parent.cdr.cdr !== nil) {
-	              var value = recur(parent.cdr.cdr, unquote_cnt, max_unq);
-	              return unpromise(value, function (value) {
-	                parent.car.cdr = new Pair(new Unquote(node, unquote_cnt, max_unq), parent.cdr === nil ? nil : value);
-	                return head.car;
-	              });
-	            } else {
-	              parent.car.cdr = new Unquote(node, unquote_cnt, max_unq);
 	            }
 
-	            return head.car;
+	            if (pair.cdr instanceof Pair) {
+	              if (pair.cdr.cdr !== nil) {
+	                if (pair.cdr.car instanceof Pair) {
+	                  return unpromise(recur(pair.cdr.cdr, unquote_cnt, max_unq), function (value) {
+	                    var unquoted = evaluate(pair.cdr.car, {
+	                      env: self,
+	                      dynamic_scope: dynamic_scope,
+	                      error: error
+	                    });
+	                    return new Pair(unquoted, value);
+	                  });
+	                } else {
+	                  return pair.cdr;
+	                }
+	              } else {
+	                return evaluate(pair.cdr.car, {
+	                  env: self,
+	                  dynamic_scope: dynamic_scope,
+	                  error: error
+	                });
+	              }
+	            } else {
+	              return pair.cdr;
+	            }
 	          }
 
 	          return resolve_pair(pair, function (pair) {
@@ -4334,35 +4362,25 @@
 	        return pair;
 	      }
 
-	      var unquoteTest = function unquoteTest(v) {
-	        return isPair(v) || v instanceof Unquote;
-	      };
+	      function clear(node) {
+	        if (node instanceof Pair) {
+	          delete node.data;
 
-	      function unquoting(node) {
-	        if (node instanceof Unquote) {
-	          if (node.max === node.count) {
-	            var ret = evaluate(node.value, {
-	              env: self,
-	              dynamic_scope: dynamic_scope,
-	              error: error
-	            });
-	            return ret;
-	          } else {
-	            return unpromise(unquoting(node.value), function (value) {
-	              return new Pair(new _Symbol('unquote'), new Pair(value, nil));
-	            });
+	          if (!node.haveCycles('car')) {
+	            clear(node.car);
+	          }
+
+	          if (!node.haveCycles('cdr')) {
+	            clear(node.cdr);
 	          }
 	        }
-
-	        return resolve_pair(node, unquoting, unquoteTest);
 	      }
 
 	      var x = recur(arg.car, 0, 1);
 	      return unpromise(x, function (value) {
-	        value = unquoting(value);
-	        return unpromise(value, function (value) {
-	          return quote(value);
-	        });
+	        // clear nested data for tests
+	        clear(value);
+	        return quote(value);
 	      });
 	    }, "(quasiquote list ,value ,@value)\n\n            Similar macro to `quote` but inside it you can use special\n            expressions unquote abbreviated to , that will evaluate expresion inside\n            and return its value or unquote-splicing abbreviated to ,@ that will\n            evaluate expression but return value without parenthesis (it will join)\n            the list with its value. Best used with macros but it can be used outside"),
 	    // ------------------------------------------------------------------
@@ -4709,7 +4727,11 @@
 	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
 	    // ------------------------------------------------------------------
 	    error: doc(function () {
-	      this.get('print').apply(void 0, arguments);
+	      for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
+	        args[_key20] = arguments[_key20];
+	      }
+
+	      this.get('print').apply(this, args);
 	    }, "(error . args)\n\n            Display error message."),
 	    // ------------------------------------------------------------------
 	    flatten: doc(function (list) {
@@ -4807,8 +4829,8 @@
 	    'for-each': doc(function (fn) {
 	      typecheck('for-each', fn, 'function');
 
-	      for (var _len20 = arguments.length, lists = new Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
-	        lists[_key20 - 1] = arguments[_key20];
+	      for (var _len21 = arguments.length, lists = new Array(_len21 > 1 ? _len21 - 1 : 0), _key21 = 1; _key21 < _len21; _key21++) {
+	        lists[_key21 - 1] = arguments[_key21];
 	      }
 
 	      lists.forEach(function (arg, i) {
@@ -4827,8 +4849,8 @@
 	    map: doc(function map(fn) {
 	      var _this5 = this;
 
-	      for (var _len21 = arguments.length, lists = new Array(_len21 > 1 ? _len21 - 1 : 0), _key21 = 1; _key21 < _len21; _key21++) {
-	        lists[_key21 - 1] = arguments[_key21];
+	      for (var _len22 = arguments.length, lists = new Array(_len22 > 1 ? _len22 - 1 : 0), _key22 = 1; _key22 < _len22; _key22++) {
+	        lists[_key22 - 1] = arguments[_key22];
 	      }
 
 	      typecheck('map', fn, 'function');
@@ -4839,7 +4861,7 @@
 	      if (lists.some(function (x) {
 	        return isEmptyList(x);
 	      })) {
-	        return nil;
+	        return emptyList();
 	      }
 
 	      return unpromise(fn.call.apply(fn, [this].concat(toConsumableArray(lists.map(function (l) {
@@ -4867,8 +4889,8 @@
 	    }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If it don't find the value it will return false"),
 	    // ------------------------------------------------------------------
 	    fold: doc(fold('fold', function (fold, fn, init) {
-	      for (var _len22 = arguments.length, lists = new Array(_len22 > 3 ? _len22 - 3 : 0), _key22 = 3; _key22 < _len22; _key22++) {
-	        lists[_key22 - 3] = arguments[_key22];
+	      for (var _len23 = arguments.length, lists = new Array(_len23 > 3 ? _len23 - 3 : 0), _key23 = 3; _key23 < _len23; _key23++) {
+	        lists[_key23 - 3] = arguments[_key23];
 	      }
 
 	      typecheck('fold', fn, 'function');
@@ -4891,8 +4913,8 @@
 	    }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
 	    // ------------------------------------------------------------------
 	    pluck: doc(function () {
-	      for (var _len23 = arguments.length, keys = new Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
-	        keys[_key23] = arguments[_key23];
+	      for (var _len24 = arguments.length, keys = new Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
+	        keys[_key24] = arguments[_key24];
 	      }
 
 	      return function (obj) {
@@ -4921,8 +4943,8 @@
 	    reduce: doc(fold('reduce', function (reduce, fn, init) {
 	      var _this6 = this;
 
-	      for (var _len24 = arguments.length, lists = new Array(_len24 > 3 ? _len24 - 3 : 0), _key24 = 3; _key24 < _len24; _key24++) {
-	        lists[_key24 - 3] = arguments[_key24];
+	      for (var _len25 = arguments.length, lists = new Array(_len25 > 3 ? _len25 - 3 : 0), _key25 = 3; _key25 < _len25; _key25++) {
+	        lists[_key25 - 3] = arguments[_key25];
 	      }
 
 	      typecheck('reduce', fn, 'function');
@@ -5001,8 +5023,8 @@
 	    }), "(+ . numbers)\n\n             Sum all numbers passed as arguments. If single value is passed it will\n             return that value."),
 	    // ------------------------------------------------------------------
 	    '-': doc(function () {
-	      for (var _len25 = arguments.length, args = new Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
-	        args[_key25] = arguments[_key25];
+	      for (var _len26 = arguments.length, args = new Array(_len26), _key26 = 0; _key26 < _len26; _key26++) {
+	        args[_key26] = arguments[_key26];
 	      }
 
 	      if (args.length === 1) {
@@ -5194,8 +5216,8 @@
 	      return !value;
 	    }, "(not object)\n\n            Function return negation of the argument."),
 	    '->': doc(function (obj, name) {
-	      for (var _len26 = arguments.length, args = new Array(_len26 > 2 ? _len26 - 2 : 0), _key26 = 2; _key26 < _len26; _key26++) {
-	        args[_key26 - 2] = arguments[_key26];
+	      for (var _len27 = arguments.length, args = new Array(_len27 > 2 ? _len27 - 2 : 0), _key27 = 2; _key27 < _len27; _key27++) {
+	        args[_key27 - 2] = arguments[_key27];
 	      }
 
 	      return obj[name].apply(obj, args);
@@ -5845,7 +5867,7 @@
 	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: 'DEV',
+	    version: '0.16.3',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

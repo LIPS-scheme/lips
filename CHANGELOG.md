@@ -1,3 +1,18 @@
+## 0.16.3
+### Bug fixes
+* fix map on empty list
+* fix exception when calling error
+
+## 0.16.2
+### Bug fixes
+* unbind functions before setting property with `set-obj!`
+* make gensyms names shorter (like in CLISP)
+* fix double quasiquote + unquote unquote splice (and other quirks)
+
+## 0.16.1
+### Bug fixes
+* fix setting property Descriptor on functions (to change name for preact components)
+
 ## 0.16.0
 ### Features
 * `this` inside lambdas that are object created with new (same as in JS) [#19](https://github.com/jcubic/lips/issues/19)
