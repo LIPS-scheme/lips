@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {exec, indent, balanced_parenthesis, tokenize, env} = require('../src/lips');
+const {exec, Formatter, balanced_parenthesis, tokenize, env} = require('../src/lips');
 const fs = require('fs');
 const readline = require('readline');
 
@@ -71,7 +71,7 @@ function run(code, env) {
 function print(result) {
     if (result.length) {
         var last = result.pop();
-        if (last) {
+        if (last !== undefined) {
             console.log(last.toString());
         }
     }
@@ -79,6 +79,14 @@ function print(result) {
 // -----------------------------------------------------------------------------
 
 const options = parse_options(process.argv);
+
+function indent(code, indent, offset) {
+    var formatter = new Formatter(code);
+    return formatter.indent({
+        indent,
+        offset
+    });
+}
 
 if (options.c) {
     run(options.c).then(print);
