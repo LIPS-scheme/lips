@@ -87,6 +87,9 @@ footer p {
   margin: 0;
   text-align: center;
 }
+body .token.string, body .token.char {
+    color: #df3189;
+}
 @media (max-width: 720px) {
     header.main h1 {
         margin: 0;
