@@ -1,3 +1,8 @@
+## 0.17.0
+### Features
+* revert breaking change of read to return Array
+* use proper read function in executable REPL
+
 ## 0.16.3
 ### Bug fixes
 * fix map on empty list

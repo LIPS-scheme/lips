@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {exec, indent, balanced_parenthesis, tokenize} = require('../src/lips');
+const {exec, indent, balanced_parenthesis, tokenize, env} = require('../src/lips');
 const fs = require('fs');
 const readline = require('readline');
 
@@ -55,11 +55,11 @@ function parse_options(arg, options) {
 }
 
 // -----------------------------------------------------------------------------
-function run(code) {
+function run(code, env) {
     if (typeof code !== 'string') {
         code = code.toString();
     }
-    return exec(code).catch(function(e) {
+    return exec(code, env).catch(function(e) {
         console.error(e.message);
         if (e.code) {
             console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`).join('\n'));
@@ -87,7 +87,7 @@ if (options.c) {
         if (err) {
             console.error(err);
         } else {
-            run(data)
+            run(data);
         }
     });
 } else {
@@ -104,29 +104,53 @@ if (options.c) {
     }
     var code = '';
     var multiline = false;
+    var resolve;
+    var e = env.inherit('name', {
+        stdin: {
+            read: function() {
+                return new Promise(function(done) {
+                    rl.resume();
+                    code = '';
+                    if (process.stdin.isTTY) {
+                        rl.setPrompt('');
+                    }
+                    resolve = function() {
+                        done(code);
+                        code = '';
+                        rl.setPrompt(prompt);
+                        resolve = null;
+                    };
+                });
+            }
+        }
+    });
     rl.on('line', function(line) {
         code += line;
         if (balanced_parenthesis(code)) {
             rl.pause();
-            run(code).then(function(result) {
-                if (process.stdin.isTTY) {
-                    print(result);
-                    if (multiline) {
-                        rl.setPrompt(prompt);
+            if (resolve) {
+                resolve();
+            } else {
+                run(code, e).then(function(result) {
+                    if (process.stdin.isTTY) {
+                        print(result);
+                        if (multiline) {
+                            rl.setPrompt(prompt);
+                        }
+                        code = '';
+                        rl.prompt();
+                    }
+                    rl.resume();
+                }).catch(function() {
+                    if (process.stdin.isTTY) {
+                        if (multiline) {
+                            rl.setPrompt(prompt);
+                        }
+                        rl.prompt();
                     }
                     code = '';
-                    rl.prompt();
-                }
-                rl.resume();
-            }).catch(function() {
-                if (process.stdin.isTTY) {
-                    if (multiline) {
-                        rl.setPrompt(prompt);
-                    }
-                    rl.prompt();
-                }
-                code = '';
-            });
+                });
+            }
         } else {
             multiline = true;
             var i = indent(code, 2, prompt.length - continuePrompt.length);

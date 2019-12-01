@@ -3266,7 +3266,7 @@
         // ------------------------------------------------------------------
         read: doc(function read(arg) {
             if (typeof arg === 'string') {
-                return parse(tokenize(arg));
+                return parse(tokenize(arg))[0];
             }
             return this.get('stdin').read().then((text) => {
                 return read.call(this, text);
