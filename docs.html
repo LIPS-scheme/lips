@@ -230,7 +230,7 @@
    (set! (. x 1) 10)
    (print (array->list arr)))
 
-(let* ((div ((. document "querySelectorAll") ".terminal-output > div"))
+(let* ((div ((. document "querySelectorAll") ".terminal .cmd-prompt"))
        (len (. div "length"))
        (i 0))
     (while (< i len)
@@ -241,7 +241,7 @@
     <p>this equivalent of JavaScript code:</p>
 
     <pre><code class="language-javascript">
-var div = document.querySelectorAll(".terminal div");
+var div = document.querySelectorAll(".terminal .cmd-prompt");
 var len = div.length;
 var i = 0;
 while (i < len) {
