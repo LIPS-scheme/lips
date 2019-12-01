@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.16.2
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.16.3
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 01 Dec 2019 16:53:44 +0000
+ * build: Sun, 01 Dec 2019 16:59:45 +0000
  */
 (function () {
 	'use strict';
@@ -783,7 +783,7 @@
 	  // as the regeneratorRuntime namespace. Otherwise create a new empty
 	  // object. Either way, the resulting object will be used to initialize
 	  // the regeneratorRuntime variable at the top of this file.
-	  module.exports
+	   module.exports 
 	));
 
 	try {
@@ -879,6 +879,10 @@
 	var arrayWithHoles = _arrayWithHoles;
 
 	function _iterableToArrayLimit(arr, i) {
+	  if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
+	    return;
+	  }
+
 	  var _arr = [];
 	  var _n = true;
 	  var _d = false;
@@ -5863,7 +5867,7 @@
 	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: '0.16.2',
+	    version: '0.16.3',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
