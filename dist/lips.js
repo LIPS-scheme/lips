@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 09 Aug 2019 17:11:10 +0000
+ * build: Sun, 01 Dec 2019 16:53:44 +0000
  */
 (function () {
 	'use strict';
@@ -4723,7 +4723,11 @@
 	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
 	    // ------------------------------------------------------------------
 	    error: doc(function () {
-	      this.get('print').apply(void 0, arguments);
+	      for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
+	        args[_key20] = arguments[_key20];
+	      }
+
+	      this.get('print').apply(this, args);
 	    }, "(error . args)\n\n            Display error message."),
 	    // ------------------------------------------------------------------
 	    flatten: doc(function (list) {
@@ -4821,8 +4825,8 @@
 	    'for-each': doc(function (fn) {
 	      typecheck('for-each', fn, 'function');
 
-	      for (var _len20 = arguments.length, lists = new Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
-	        lists[_key20 - 1] = arguments[_key20];
+	      for (var _len21 = arguments.length, lists = new Array(_len21 > 1 ? _len21 - 1 : 0), _key21 = 1; _key21 < _len21; _key21++) {
+	        lists[_key21 - 1] = arguments[_key21];
 	      }
 
 	      lists.forEach(function (arg, i) {
@@ -4841,8 +4845,8 @@
 	    map: doc(function map(fn) {
 	      var _this5 = this;
 
-	      for (var _len21 = arguments.length, lists = new Array(_len21 > 1 ? _len21 - 1 : 0), _key21 = 1; _key21 < _len21; _key21++) {
-	        lists[_key21 - 1] = arguments[_key21];
+	      for (var _len22 = arguments.length, lists = new Array(_len22 > 1 ? _len22 - 1 : 0), _key22 = 1; _key22 < _len22; _key22++) {
+	        lists[_key22 - 1] = arguments[_key22];
 	      }
 
 	      typecheck('map', fn, 'function');
@@ -4853,7 +4857,7 @@
 	      if (lists.some(function (x) {
 	        return isEmptyList(x);
 	      })) {
-	        return nil;
+	        return emptyList();
 	      }
 
 	      return unpromise(fn.call.apply(fn, [this].concat(toConsumableArray(lists.map(function (l) {
@@ -4881,8 +4885,8 @@
 	    }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If it don't find the value it will return false"),
 	    // ------------------------------------------------------------------
 	    fold: doc(fold('fold', function (fold, fn, init) {
-	      for (var _len22 = arguments.length, lists = new Array(_len22 > 3 ? _len22 - 3 : 0), _key22 = 3; _key22 < _len22; _key22++) {
-	        lists[_key22 - 3] = arguments[_key22];
+	      for (var _len23 = arguments.length, lists = new Array(_len23 > 3 ? _len23 - 3 : 0), _key23 = 3; _key23 < _len23; _key23++) {
+	        lists[_key23 - 3] = arguments[_key23];
 	      }
 
 	      typecheck('fold', fn, 'function');
@@ -4905,8 +4909,8 @@
 	    }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
 	    // ------------------------------------------------------------------
 	    pluck: doc(function () {
-	      for (var _len23 = arguments.length, keys = new Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
-	        keys[_key23] = arguments[_key23];
+	      for (var _len24 = arguments.length, keys = new Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
+	        keys[_key24] = arguments[_key24];
 	      }
 
 	      return function (obj) {
@@ -4935,8 +4939,8 @@
 	    reduce: doc(fold('reduce', function (reduce, fn, init) {
 	      var _this6 = this;
 
-	      for (var _len24 = arguments.length, lists = new Array(_len24 > 3 ? _len24 - 3 : 0), _key24 = 3; _key24 < _len24; _key24++) {
-	        lists[_key24 - 3] = arguments[_key24];
+	      for (var _len25 = arguments.length, lists = new Array(_len25 > 3 ? _len25 - 3 : 0), _key25 = 3; _key25 < _len25; _key25++) {
+	        lists[_key25 - 3] = arguments[_key25];
 	      }
 
 	      typecheck('reduce', fn, 'function');
@@ -5015,8 +5019,8 @@
 	    }), "(+ . numbers)\n\n             Sum all numbers passed as arguments. If single value is passed it will\n             return that value."),
 	    // ------------------------------------------------------------------
 	    '-': doc(function () {
-	      for (var _len25 = arguments.length, args = new Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
-	        args[_key25] = arguments[_key25];
+	      for (var _len26 = arguments.length, args = new Array(_len26), _key26 = 0; _key26 < _len26; _key26++) {
+	        args[_key26] = arguments[_key26];
 	      }
 
 	      if (args.length === 1) {
@@ -5208,8 +5212,8 @@
 	      return !value;
 	    }, "(not object)\n\n            Function return negation of the argument."),
 	    '->': doc(function (obj, name) {
-	      for (var _len26 = arguments.length, args = new Array(_len26 > 2 ? _len26 - 2 : 0), _key26 = 2; _key26 < _len26; _key26++) {
-	        args[_key26 - 2] = arguments[_key26];
+	      for (var _len27 = arguments.length, args = new Array(_len27 > 2 ? _len27 - 2 : 0), _key27 = 2; _key27 < _len27; _key27++) {
+	        args[_key27 - 2] = arguments[_key27];
 	      }
 
 	      return obj[name].apply(obj, args);

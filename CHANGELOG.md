@@ -1,3 +1,8 @@
+## 0.16.3
+### Bug fixes
+* fix map on empty list
+* fix exception when calling error
+
 ## 0.16.2
 ### Bug fixes
 * unbind functions before setting property with `set-obj!`

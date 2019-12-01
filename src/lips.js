@@ -3303,7 +3303,7 @@
             it user code)`),
         // ------------------------------------------------------------------
         error: doc(function(...args) {
-            this.get('print')(...args);
+            this.get('print').apply(this, args);
         }, `(error . args)
 
             Display error message.`),
@@ -3434,7 +3434,7 @@
                 typecheck('map', arg, ['pair', 'nil'], i + 1);
             });
             if (lists.some((x) => isEmptyList(x))) {
-                return nil;
+                return emptyList();
             }
             return unpromise(fn.call(this, ...lists.map(l => l.car)), (head) => {
                 return unpromise(map.call(this, fn, ...lists.map(l => l.cdr)), (rest) => {
