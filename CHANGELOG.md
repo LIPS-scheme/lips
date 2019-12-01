@@ -1,3 +1,7 @@
+## 0.17.2
+### Bug fixes
+* fix list of false values [#22](https://github.com/jcubic/lips/issues/22)
+
 ## 0.17.1
 ### Bug fixes
 * fix map last value [#21](https://github.com/jcubic/lips/issues/21)

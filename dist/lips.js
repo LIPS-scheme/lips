@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 01 Dec 2019 20:22:35 +0000
+ * build: Sun, 01 Dec 2019 21:29:48 +0000
  */
 (function () {
 	'use strict';
@@ -2354,7 +2354,7 @@
 	        value = toString(this.car);
 	      }
 
-	      if (value) {
+	      if (value !== undefined$1) {
 	        arr.push(value);
 	      }
 

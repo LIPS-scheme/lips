@@ -1223,7 +1223,7 @@
             } else {
                 value = toString(this.car);
             }
-            if (value) {
+            if (value !== undefined) {
                 arr.push(value);
             }
             if (this.cdr instanceof Pair) {
