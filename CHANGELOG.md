@@ -1,3 +1,7 @@
+## 0.17.1
+### Bug fixes
+* fix map last value [#21](https://github.com/jcubic/lips/issues/21)
+
 ## 0.17.0
 ### Features
 * revert breaking change of read to return Array

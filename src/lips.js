@@ -3433,7 +3433,10 @@
             lists.forEach((arg, i) => {
                 typecheck('map', arg, ['pair', 'nil'], i + 1);
             });
-            if (lists.some((x) => isEmptyList(x))) {
+            if (lists.some(x => x === nil)) {
+                return nil;
+            }
+            if (lists.some(isEmptyList)) {
                 return emptyList();
             }
             return unpromise(fn.call(this, ...lists.map(l => l.car)), (head) => {

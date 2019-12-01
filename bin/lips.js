@@ -108,18 +108,8 @@ if (options.c) {
     var e = env.inherit('name', {
         stdin: {
             read: function() {
-                return new Promise(function(done) {
-                    rl.resume();
-                    code = '';
-                    if (process.stdin.isTTY) {
-                        rl.setPrompt('');
-                    }
-                    resolve = function() {
-                        done(code);
-                        code = '';
-                        rl.setPrompt(prompt);
-                        resolve = null;
-                    };
+                return new Promise(function(resolve) {
+                    rl.question('', resolve);
                 });
             }
         }
@@ -128,29 +118,25 @@ if (options.c) {
         code += line;
         if (balanced_parenthesis(code)) {
             rl.pause();
-            if (resolve) {
-                resolve();
-            } else {
-                run(code, e).then(function(result) {
-                    if (process.stdin.isTTY) {
-                        print(result);
-                        if (multiline) {
-                            rl.setPrompt(prompt);
-                        }
-                        code = '';
-                        rl.prompt();
-                    }
-                    rl.resume();
-                }).catch(function() {
-                    if (process.stdin.isTTY) {
-                        if (multiline) {
-                            rl.setPrompt(prompt);
-                        }
-                        rl.prompt();
+            run(code, e).then(function(result) {
+                if (process.stdin.isTTY) {
+                    print(result);
+                    if (multiline) {
+                        rl.setPrompt(prompt);
                     }
                     code = '';
-                });
-            }
+                    rl.prompt();
+                }
+                rl.resume();
+            }).catch(function() {
+                if (process.stdin.isTTY) {
+                    if (multiline) {
+                        rl.setPrompt(prompt);
+                    }
+                    rl.prompt();
+                }
+                code = '';
+            });
         } else {
             multiline = true;
             var i = indent(code, 2, prompt.length - continuePrompt.length);
