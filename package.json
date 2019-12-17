@@ -1,6 +1,6 @@
 {
   "name": "@jcubic/lips",
-  "version": "0.17.2",
+  "version": "0.18.0",
   "description": "Simple Scheme Like Lisp in JavaScript",
   "main": "src/lips.js",
   "unpkg": "dist/lips.min.js",
