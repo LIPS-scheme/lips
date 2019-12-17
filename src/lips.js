@@ -2578,7 +2578,7 @@
             if (code.cdr instanceof Pair &&
                 typeof code.cdr.car === 'string' &&
                 code.cdr.cdr !== nil) {
-                __doc__ = code.cdr.car;
+                __doc__ = trimLines(code.cdr.car);
             }
             function lambda(...args) {
                 var env = (dynamic_scope ? this : self).inherit('lambda');

@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
-[![npm](https://img.shields.io/badge/npm-0.17.2-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&638b81ec880b172548cb384a240ea09e361091ef)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&8710db161df0ca3500520bda08815b5e)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&4e9bef72bd66e8c23771078440631c2ab4300a3c)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&8710db161df0ca3500520bda08815b5e)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
@@ -76,6 +76,68 @@ exec(string).then(function(results) {
 
 More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
 in [docs page](https://jcubic.github.io/lips/docs.html).
+
+## Standalone executable
+
+if you install lips globally with:
+
+```
+npm install -g @jcubic/lips
+```
+
+you can run interpreter from terminal:
+
+```
+$ lips
+LIPS Interpreter (Simple Scheme like Lisp)
+Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
+
+lips> (define (square x)
+...     (* x x))
+lips> (square 10)
+100
+lips>
+```
+
+One feature of LIPS REPL is that it auto indent the lines when you press enter and didn't finish the code.
+
+You can also run code as string with:
+
+```
+lips -c '(let ((what "World")) (print (concat "Hello " what)))'
+```
+
+and you can run a file using:
+
+```
+cat > foo.lips <<EOF
+(let ((what "World"))
+  (print (concat "Hello " what)))
+EOF
+
+lips foo.lips
+```
+
+You can also write executable files that use lips shebang
+
+```
+cat > foo.lips <<EOF
+#!/usr/bin/env lips
+(let ((what "World"))
+  (print (concat "Hello " what)))
+EOF
+chmod a+x foo.lips
+foo.lips
+```
+
+```
+cat <<EOF
+something
+EOF
+```
+
+> if just example of using cat to create multiline file from bash, you should use proper editor for
+> writing files.
 
 ## License
 

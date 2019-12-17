@@ -1,3 +1,10 @@
+## 0.18.0
+### Features
+* add copyright notes to binary and improve the calling it
+* allow to call lips from shebang
+### Bug fixes
+* trim lines in functions doc strings [#23](https://github.com/jcubic/lips/issues/23)
+
 ## 0.17.2
 ### Bug fixes
 * fix list of false values [#22](https://github.com/jcubic/lips/issues/22)
