@@ -2,6 +2,7 @@
 
 const {exec, Formatter, balanced_parenthesis, tokenize, env} = require('../src/lips');
 const fs = require('fs');
+const {format} = require('util');
 const readline = require('readline');
 
 // -----------------------------------------------------------------------------
@@ -78,7 +79,7 @@ function print(result) {
 }
 // -----------------------------------------------------------------------------
 
-const options = parse_options(process.argv);
+const options = parse_options(process.argv.slice(2));
 
 function indent(code, indent, offset) {
     var formatter = new Formatter(code);
@@ -88,17 +89,26 @@ function indent(code, indent, offset) {
     });
 }
 
+var intro = 'LIPS Interpreter (Simple Scheme like Lisp)\n' +
+    'Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>\n';
+
 if (options.c) {
     run(options.c).then(print);
-} else if (options.f) {
-   fs.readFile(options.f, function(err, data) {
+} else if (options._.length === 1) {
+   fs.readFile(options._[0], function(err, data) {
         if (err) {
             console.error(err);
         } else {
-            run(data);
+            run(data.toString().replace(/^#!.*\n/, ''));
         }
     });
+} else if (options.h) {
+    var name = process.argv[1];
+    console.log(format('%s\nusage:\n%s [-h]|[-c <code>]|<filename>\n\n\t-h this help message\n\t-c execute' +
+                       ' code\n\nif called without arguments it will run REPL and if called with one argument' +
+                       '\nit will treat it as filename and execute it.', intro, name));
 } else {
+    console.log(intro);
     var prompt = 'lips> ';
     var continuePrompt = '... ';
     const rl = readline.createInterface({
