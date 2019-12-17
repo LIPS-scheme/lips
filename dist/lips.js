@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 17 Dec 2019 17:25:23 +0000
+ * build: Tue, 17 Dec 2019 17:48:44 +0000
  */
 (function () {
 	'use strict';
@@ -4032,7 +4032,7 @@
 	      var __doc__;
 
 	      if (code.cdr instanceof Pair && typeof code.cdr.car === 'string' && code.cdr.cdr !== nil) {
-	        __doc__ = code.cdr.car;
+	        __doc__ = trimLines(code.cdr.car);
 	      }
 
 	      function lambda() {
