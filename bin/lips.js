@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {exec, Formatter, balanced_parenthesis, tokenize, env} = require('../src/lips');
+const {exec, Formatter, balanced_parenthesis, tokenize, env, version} = require('../dist/lips');
 const fs = require('fs');
 const {format} = require('util');
 const readline = require('readline');
@@ -89,7 +89,7 @@ function indent(code, indent, offset) {
     });
 }
 
-var intro = 'LIPS Interpreter (Simple Scheme like Lisp)\n' +
+var intro = 'LIPS Interpreter (ver. ' + version + ')\n' +
     'Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>\n';
 
 if (options.c) {
@@ -133,7 +133,7 @@ if (options.c) {
         }
     });
     rl.on('line', function(line) {
-        code += line;
+        code += line + '\n';
         if (balanced_parenthesis(code)) {
             rl.pause();
             run(code, e).then(function(result) {

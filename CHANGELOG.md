@@ -1,3 +1,7 @@
+## 0.18.1
+### Bug fixes
+* fix auto indent and add version number to executable
+
 ## 0.18.0
 ### Features
 * add copyright notes to binary and improve the calling it
