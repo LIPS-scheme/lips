@@ -113,24 +113,39 @@ exec("(let ((a 10) (b 20)) (* a b))").then(result => {
    console.log(value);
 });
     </code></pre>
-    <p>There is also executable script, where you can run LIPS code from file or as REPL.</p>
-    <pre><code class="language-bash">
-## for repl
-./node_modules/.bin/lips
-## run file
-./node_modules/.bin/lips -f foo.lips
-## if installed as global just use
-lips
-lips -f foo.lips
-    </code></pre>
     <h3>Browser</h3>
     <p>When using LISP in browser you need to include the file</p>
     <p>If you want to use Webpack see <a href="https://github.com/jcubic/lips/wiki/Webpack">wiki page</a> for details</p>
     <pre><code class="language-markup">
 &lt;script src="https://unpkg.com/@jcubic/lips"&gt;&lt;/script&gt;
     </code></pre>
-    <header><h2>Usage</h2></header>
-    <p>Or just use inline code with proper type attribute</p>
+    <header><h2>Executable</h2></header>
+    <p>There is also executable script, where you can run LIPS code from file or as REPL.</p>
+    <pre><code class="language-bash">
+## for repl
+./node_modules/.bin/lips
+## run file
+./node_modules/.bin/lips foo.lips
+## if installed as global just use
+lips
+lips foo.lips
+## you can also run code as string
+lips -c '(print "hello world")'
+    </code></pre>
+    <p>You can also write scripts using LIPS with <a href="https://en.wikipedia.org/wiki/Shebang_(Unix)">shebang</a></p>
+    <p>Crete file foo.lips</p>
+    <pre><code class="language-scheme">
+#!/usr/bin/env lips
+(let ((what "World"))
+  (print (concat "Hello " what)))
+    </code></pre>
+    <p>Then run</p>
+    <pre><code class="language-bash">
+chmod a+x foo.lips
+./foo.lips # or just foo.lips depend on your $PATH
+    </code></pre>
+    <header><h2>Usage in HTML</h2></header>
+    <p>In HTML you can just use inline code with proper type attribute (after including the lips js file)</p>
     <pre><code class="language-html">
   &lt;script type="text/x-lips"&gt;
     (print "hello")
@@ -142,7 +157,7 @@ lips -f foo.lips
     <pre><code class="language-html">
   &lt;script type="text/x-lips" src="example.lips"&gt;&lt;script&gt;
     </code></pre>
-    <p>You can run lisp code progamatically the same as in Node. More info at <a href="https://github.com/jcubic/lips/wiki/Getting-Started#programming-api">last section of Getting Started Guide</a>.</p>
+    <p>You can also run LIPS code progamatically the same as in Node.</p>
   </section>
   <footer>
     <p>Copyright (c) 2018-2019 <a href="https://jcubic.pl/me">Jakub T. Jankiewicz</a></p>
