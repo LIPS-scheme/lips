@@ -77,6 +77,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                         indent: 2,
                         offset: prompt.length
                     });
+                    console.log({i, x: prompt.length});
                     this.insert('\n' + (new Array(i + 1).join(' ')));
                 }
             }
