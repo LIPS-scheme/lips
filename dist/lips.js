@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 29 Feb 2020 17:35:19 +0000
+ * build: Sat, 29 Feb 2020 17:44:05 +0000
  */
 (function () {
 	'use strict';
@@ -3761,16 +3761,7 @@
 	    gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
 	    // ------------------------------------------------------------------
 	    'require.resolve': doc(function (path) {
-	      console.log({
-	        path: path
-	      });
-
-	      var ret = require.resolve(path);
-
-	      console.log({
-	        ret: ret
-	      });
-	      return ret;
+	      return require.resolve(path);
 	    }, "(require.resolve path)\n\n           Return path relative the current module."),
 	    'require': doc(function (module) {
 	      return require(module);
