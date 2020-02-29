@@ -2290,17 +2290,6 @@
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
-        'require.resolve': doc(function(path) {
-            return require.resolve(path);
-        }, `(require.resolve path)
-
-           Return path relative the current module.`),
-        'require': doc(function(module) {
-            return require(module);
-        }, `(require module)
-
-            Function to be used inside Node.js to import the module.`),
-        // ------------------------------------------------------------------
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
@@ -3928,6 +3917,19 @@
     // -------------------------------------------------------------------------
     if (typeof global !== 'undefined') {
         global_env.set('global', global);
+        // ---------------------------------------------------------------------
+        global_env.set('require.resolve', doc(function(path) {
+            return require.resolve(path);
+        }, `(require.resolve path)
+
+           Return path relative the current module.`));
+        // ---------------------------------------------------------------------
+        global_env.set('require', doc(function(module) {
+            return require(module);
+        }, `(require module)
+
+            Function to be used inside Node.js to import the module.`));
+        // ---------------------------------------------------------------------
     } else if (typeof window !== 'undefined') {
         global_env.set('window', window);
     }
@@ -4331,5 +4333,4 @@
     // so it work when used with webpack where it will be not global
     global_env.set('lips', lips);
     return lips;
-
 });

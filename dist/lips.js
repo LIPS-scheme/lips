@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 29 Feb 2020 17:44:05 +0000
+ * build: Sat, 29 Feb 2020 18:05:24 +0000
  */
 (function () {
 	'use strict';
@@ -3760,13 +3760,6 @@
 	    // ------------------------------------------------------------------
 	    gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
 	    // ------------------------------------------------------------------
-	    'require.resolve': doc(function (path) {
-	      return require.resolve(path);
-	    }, "(require.resolve path)\n\n           Return path relative the current module."),
-	    'require': doc(function (module) {
-	      return require(module);
-	    }, "(require module)\n\n            Function to be used inside Node.js to import the module."),
-	    // ------------------------------------------------------------------
 	    load: doc(function (file) {
 	      typecheck('load', file, 'string');
 	      var env = this;
@@ -5304,7 +5297,15 @@
 	  }); // -------------------------------------------------------------------------
 
 	  if (typeof global !== 'undefined') {
-	    global_env.set('global', global);
+	    global_env.set('global', global); // ---------------------------------------------------------------------
+
+	    global_env.set('require.resolve', doc(function (path) {
+	      return require.resolve(path);
+	    }, "(require.resolve path)\n\n           Return path relative the current module.")); // ---------------------------------------------------------------------
+
+	    global_env.set('require', doc(function (module) {
+	      return require(module);
+	    }, "(require module)\n\n            Function to be used inside Node.js to import the module.")); // ---------------------------------------------------------------------
 	  } else if (typeof window !== 'undefined') {
 	    global_env.set('window', window);
 	  } // -------------------------------------------------------------------------

@@ -4,6 +4,7 @@
 ### Bug fixes
 * fix stack trace on Node.js errors
 * fix display of functions as values in executable
+* require is defined only in Node.js
 
 ## 0.18.2
 ### Bug fixes
