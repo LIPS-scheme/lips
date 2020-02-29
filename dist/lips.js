@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.18.2
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 29 Feb 2020 15:01:38 +0000
+ * build: Sat, 29 Feb 2020 17:11:55 +0000
  */
 (function () {
 	'use strict';
@@ -3760,6 +3760,18 @@
 	    // ------------------------------------------------------------------
 	    gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
 	    // ------------------------------------------------------------------
+	    'require.resolve': doc(function (path) {
+	      console.log({
+	        path: path
+	      });
+
+	      var ret = require.resolve(path);
+
+	      console.log({
+	        ret: ret
+	      });
+	      return ret;
+	    }, "(require.resolve path)\n\n           Return path relative the current module."),
 	    'require': doc(function (module) {
 	      return require(module);
 	    }, "(require module)\n\n            Function to be used inside Node.js to import the module."),
@@ -5721,7 +5733,10 @@
 	                error: function error(e, code) {
 	                  if (code) {
 	                    // LIPS stack trace
-	                    e.code = e.code || [];
+	                    if (!(e.code instanceof Array)) {
+	                      e.code = [];
+	                    }
+
 	                    e.code.push(code.toString());
 	                  }
 
@@ -5871,7 +5886,7 @@
 	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: '0.18.2',
+	    version: 'DEV',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -2290,6 +2290,14 @@
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
+        'require.resolve': doc(function(path) {
+            console.log({path});
+            var ret = require.resolve(path);
+            console.log({ret});
+            return ret;
+        }, `(require.resolve path)
+
+           Return path relative the current module.`),
         'require': doc(function(module) {
             return require(module);
         }, `(require module)
@@ -4186,7 +4194,9 @@
                     error: (e, code) => {
                         if (code) {
                             // LIPS stack trace
-                            e.code = e.code || [];
+                            if (!(e.code instanceof Array)) {
+                                e.code = [];
+                            }
                             e.code.push(code.toString());
                         }
                         throw e;
