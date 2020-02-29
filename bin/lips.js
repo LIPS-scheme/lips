@@ -78,9 +78,18 @@ function print(result) {
     }
 }
 // -----------------------------------------------------------------------------
+function boostrap() {
+    var path;
+    try {
+        path = require.resolve('./examples/helpers.lips');
+    } catch (e) {
+        path = require.resolve('@jcubic/lips/examples/helpers.lips');
+    }
+    var data = fs.readFileSync(path);
+    return run(data, env);
+}
 
-const options = parse_options(process.argv.slice(2));
-
+// -----------------------------------------------------------------------------
 function indent(code, indent, offset) {
     var formatter = new Formatter(code);
     return formatter.indent({
@@ -89,17 +98,23 @@ function indent(code, indent, offset) {
     });
 }
 
-var intro = 'LIPS Interpreter (ver. ' + version + ')\n' +
-    'Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>\n';
+// -----------------------------------------------------------------------------
+const options = parse_options(process.argv.slice(2));
+const intro = 'LIPS Interpreter (ver. ' + version + ')\n' +
+      'Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>\n';
 
 if (options.c) {
-    run(options.c).then(print);
+    boostrap().then(function() {
+        run(options.c, env).then(print);
+    });
 } else if (options._.length === 1) {
    fs.readFile(options._[0], function(err, data) {
         if (err) {
             console.error(err);
         } else {
-            run(data.toString().replace(/^#!.*\n/, ''));
+            boostrap().then(function() {
+                return run(data.toString().replace(/^#!.*\n/, ''), env);
+            });
         }
     });
 } else if (options.h) {
@@ -132,35 +147,37 @@ if (options.c) {
             }
         }
     });
-    rl.on('line', function(line) {
-        code += line + '\n';
-        if (balanced_parenthesis(code)) {
-            rl.pause();
-            run(code, e).then(function(result) {
-                if (process.stdin.isTTY) {
-                    print(result);
-                    if (multiline) {
-                        rl.setPrompt(prompt);
+    boostrap().then(function() {
+        rl.on('line', function(line) {
+            code += line + '\n';
+            if (balanced_parenthesis(code)) {
+                rl.pause();
+                run(code, e).then(function(result) {
+                    if (process.stdin.isTTY) {
+                        print(result);
+                        if (multiline) {
+                            rl.setPrompt(prompt);
+                        }
+                        code = '';
+                        rl.prompt();
+                    }
+                    rl.resume();
+                }).catch(function() {
+                    if (process.stdin.isTTY) {
+                        if (multiline) {
+                            rl.setPrompt(prompt);
+                        }
+                        rl.prompt();
                     }
                     code = '';
-                    rl.prompt();
-                }
-                rl.resume();
-            }).catch(function() {
-                if (process.stdin.isTTY) {
-                    if (multiline) {
-                        rl.setPrompt(prompt);
-                    }
-                    rl.prompt();
-                }
-                code = '';
-            });
-        } else {
-            multiline = true;
-            var i = indent(code, 2, prompt.length - continuePrompt.length);
-            rl.setPrompt(continuePrompt);
-            rl.prompt();
-            rl.write(new Array(i + 1).join(' '));
-        }
+                });
+            } else {
+                multiline = true;
+                var i = indent(code, 2, prompt.length - continuePrompt.length);
+                rl.setPrompt(continuePrompt);
+                rl.prompt();
+                rl.write(new Array(i + 1).join(' '));
+            }
+        });
     });
 }

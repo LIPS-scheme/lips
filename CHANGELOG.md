@@ -1,3 +1,7 @@
+## 0.18.2
+### Bug fixes
+* boostrap helpers.lips in executable
+
 ## 0.18.1
 ### Bug fixes
 * fix auto indent and add version number to executable
