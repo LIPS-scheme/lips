@@ -73,7 +73,7 @@ function print(result) {
     if (result.length) {
         var last = result.pop();
         if (last !== undefined) {
-            console.log(last.toString());
+            console.log(env.get('string')(last));
         }
     }
 }

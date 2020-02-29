@@ -1,6 +1,13 @@
+## 0.19.0
+### Features
+* add require.resolve function
+### Bug fixes
+* fix stack trace on Node.js errors
+* fix display of functions as values in executable
+
 ## 0.18.2
 ### Bug fixes
-* boostrap helpers.lips in executable
+* bootstrap helpers.lips in executable
 
 ## 0.18.1
 ### Bug fixes
