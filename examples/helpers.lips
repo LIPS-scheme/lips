@@ -13,27 +13,49 @@
                (css \"color\" \"red\")
                (on \"click\" (lambda () (print \"click\"))))
 
-          (--> document (querySelectorAll \"div\"))"
+          (--> document (querySelectorAll \"div\"))
+          
+          (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\/title>/) 1)
+          
+          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")"
   (let ((obj (gensym)))
     `(let* ((,obj ,(if (and (symbol? expr) (not (null? (match /\./ (symbol->string expr)))))
                        `(.. ,expr)
                        `,expr)))
        ,@(map (lambda (code)
                 (let ((name (gensym))
-                      (fn (gensym)))
-                  `(let* ((,name ,(symbol->string (car code)))
-                          (,fn (. ,obj ,name)))
-                     (if (not (function? ,fn))
-                         (error (concat ,name " is not a function"))
-                         (set! ,obj (,fn ,@(cdr code)))))))
+                      (value (gensym)))
+                  `(let* ((,name ,(if (pair? code)
+                                      (if ((== (car code) 'quote)
+                                      (symbol->string (car code))
+                                      code))
+                          (,value (. ,obj ,name)))
+                     ,(if (pair? code)
+                         `(set! ,obj (,value ,@(cdr code)))
+                         `(set! ,obj ,value)))))
               code)
        ,obj)))
 
 ;; ---------------------------------------------------------------------------------------
+(define (quoted-symbol? x)
+   "Helper function that test if value is quoted symbol
+   
+   To be used in macros that pass literal code that is transformed by parser
+   
+   usage:
+   
+      (define-macro (test x)
+         (if (quoted-symbol? x)
+             `(print ',(cadr x))))
+      
+      (test 'hello)"
+   (and (pair? x) (eq? (car x) 'quote) (symbol? (cadr x)) (null? (caddr x))))
+        
+;; ---------------------------------------------------------------------------------------
 (define (single list)
   "(single list)
 
-   Function check if argument is list with single element."
+   Function check if argument is list with single element"
   (and (pair? list) (not (cdr list))))
 
 ;; ---------------------------------------------------------------------------------------
