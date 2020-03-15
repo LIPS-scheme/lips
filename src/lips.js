@@ -2291,9 +2291,7 @@
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
         'require.resolve': doc(function(path) {
-            console.log({path});
             var ret = require.resolve(path);
-            console.log({ret});
             return ret;
         }, `(require.resolve path)
 
