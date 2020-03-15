@@ -17,7 +17,8 @@
           
           (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\/title>/) 1)
           
-          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")"
+          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")
+          (--> document (querySelectorAll \".cmd-prompt\") 0 innerText)"
   (let ((obj (gensym)))
     `(let* ((,obj ,(if (and (symbol? expr) (not (null? (match /\./ (symbol->string expr)))))
                        `(.. ,expr)
@@ -25,12 +26,12 @@
        ,@(map (lambda (code)
                 (let ((name (gensym))
                       (value (gensym)))
-                  `(let* ((,name ,(if (pair? code)
-                                      (if ((== (car code) 'quote)
-                                      (symbol->string (car code))
-                                      code))
+                  `(let* ((,name ,(cond ((symbol? code) (symbol->string code))
+                                        ((quoted-symbol? code) (symbol->string (cadr code)))
+                                        ((pair? code) (symbol->string (car code)))
+                                        (true code)))
                           (,value (. ,obj ,name)))
-                     ,(if (pair? code)
+                     ,(if (and (pair? code) (not (quoted-symbol? code)))
                          `(set! ,obj (,value ,@(cdr code)))
                          `(set! ,obj ,value)))))
               code)

@@ -1,3 +1,8 @@
+## 0.20.0
+### Features
+* improve `-->` macro to handle numbers and strings and symbols (quoted or not)
+* new function `quoted-symbol?`
+
 ## 0.19.0
 ### Features
 * add require.resolve function
