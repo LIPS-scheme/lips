@@ -2,6 +2,8 @@
 ### Features
 * improve `-->` macro to handle numbers and strings and symbols (quoted or not)
 * new function `quoted-symbol?`
+### Bug fixes
+* fix for-each with function that use this (like print)
 
 ## 0.19.0
 ### Features

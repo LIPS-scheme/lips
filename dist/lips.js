@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 15 Mar 2020 12:20:30 +0000
+ * build: Mon, 16 Mar 2020 19:54:10 +0000
  */
 (function () {
 	'use strict';
@@ -4832,6 +4832,8 @@
 	    }, "(find fn list)\n            (find regex list)\n\n            Higher order Function find first value for which function return true.\n            If called with regex it will create matcher function."),
 	    // ------------------------------------------------------------------
 	    'for-each': doc(function (fn) {
+	      var _this$get2;
+
 	      typecheck('for-each', fn, 'function');
 
 	      for (var _len21 = arguments.length, lists = new Array(_len21 > 1 ? _len21 - 1 : 0), _key21 = 1; _key21 < _len21; _key21++) {
@@ -4844,7 +4846,7 @@
 	      // var ret = map.apply(void 0, [fn].concat(lists));
 	      // it don't work with weakBind
 
-	      var ret = this.get('map').apply(void 0, [fn].concat(lists));
+	      var ret = (_this$get2 = this.get('map')).call.apply(_this$get2, [this, fn].concat(lists));
 
 	      if (isPromise(ret)) {
 	        return ret.then(function () {});

@@ -3423,7 +3423,7 @@
             // we need to use call(this because babel transpile this code into:
             // var ret = map.apply(void 0, [fn].concat(lists));
             // it don't work with weakBind
-            var ret = this.get('map')(fn, ...lists);
+            var ret = this.get('map').call(this, fn, ...lists);
             if (isPromise(ret)) {
                 return ret.then(() => {});
             }
