@@ -3278,7 +3278,7 @@
            print function with passed argument.`),
         // ------------------------------------------------------------------
         print: doc(function() {
-            throw new Error('Function was removed in version 0.20.0 use ' +
+            throw new Error('Function print was removed in version 0.20.0 use ' +
                             'display insided');
         }, `(print . args)
 

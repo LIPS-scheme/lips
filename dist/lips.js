@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 17 Mar 2020 08:09:34 +0000
+ * build: Tue, 17 Mar 2020 16:01:57 +0000
  */
 (function () {
 	'use strict';
@@ -4696,7 +4696,7 @@
 	    }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
 	    // ------------------------------------------------------------------
 	    print: doc(function () {
-	      throw new Error('Function was removed in version 0.20.0 use ' + 'display insided');
+	      throw new Error('Function print was removed in version 0.20.0 use ' + 'display insided');
 	    }, "(print . args)\n\n            defunct function, we keep it to show proper error when used."),
 	    // ------------------------------------------------------------------
 	    display: doc(function () {
