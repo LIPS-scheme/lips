@@ -7,6 +7,7 @@
 * improve `-->` macro to handle numbers and strings and symbols (quoted or not)
 * new function `quoted-symbol?`
 * allow to use else in cond (same as true)
+* new macros: `timer` and `promise`
 ### Bug fixes
 * fix for-each with function that use this (like print)
 

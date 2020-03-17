@@ -169,12 +169,28 @@
   (if (pair? alist)
       ((. alist "toObject"))))
 
+;; ---------------------------------------------------------------------------------------
+(define-macro (promise . body)
+  "(promise . body)
 
+   Anaphoric macro that expose resolve and reject functions from JS promise"
+  `(new Promise (lambda (resolve reject)
+                  ,@body)))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (timer time . body)
+  "(timer time . body)
+
+   Macro evaluate expression after delay, it return timer. To clear the timer you can use
+   native JS clearTimeout function."
+  `(setTimeout (lambda () ,@body) ,time))
+
+;; ---------------------------------------------------------------------------------------
 (define-macro (wait time . expr)
-  `(new Promise (lambda (resolve)
-                  (setTimeout (lambda ()
-                                (resolve (begin ,@expr)))
-                              ,time))))
+  "(wait time . expr)
+
+   Function return promise that will resolve with evaluating the expression after delay."
+  `(promise (timer ,time (resolve ,@expr))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (pair-map fn seq-list)
