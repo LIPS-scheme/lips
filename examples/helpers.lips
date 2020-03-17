@@ -111,7 +111,7 @@
   "(string->symbol string)
 
    Function convert string to LIPS symbol."
-  (and (string? string) (as.data (new (. lips "Symbol") string))))
+  (and (string? string) (as.data (new (. lips "LSymbol") string))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (value obj)
@@ -178,7 +178,7 @@
 
 ;; ---------------------------------------------------------------------------------------
 (define (pair-map fn seq-list)
-  "(seq-map fn list)
+  "(pair-map fn list)
 
    Function call fn argument for pairs in a list and return combined list with
    values returned from function fn. It work like the map but take two items from list"

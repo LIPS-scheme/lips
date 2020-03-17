@@ -7,7 +7,7 @@ var {
     tokenize,
     evaluate,
     Pair,
-    Symbol,
+    LSymbol,
     nil,
     Environment,
     global_environment,
@@ -139,11 +139,11 @@ describe('parser', function() {
         expect(array.length).toBe(1);
         expect(array[0]).toEqual(
             new Pair(
-                new Symbol('foo'),
+                new LSymbol('foo'),
                 new Pair(
-                    new Symbol('bar'),
+                    new LSymbol('bar'),
                     new Pair(
-                        new Symbol('baz'),
+                        new LSymbol('baz'),
                         nil
                     )
                 )
@@ -155,7 +155,7 @@ describe('parser', function() {
         var array = parse(tokens);
         expect(array[0]).toEqual(
             new Pair(
-                new Symbol('foo'),
+                new LSymbol('foo'),
                 new Pair(
                     /( \/)/g,
                     new Pair(
@@ -178,11 +178,11 @@ describe('parser', function() {
     function testQuasituote(input, literal) {
         var tokens = tokenize(input);
         var array = parse(tokens);
-        var q = new Symbol('quasiquote');
+        var q = new LSymbol('quasiquote');
         if (literal) {
             q.literal = true;
         }
-        var u = new Symbol('unquote-splicing');
+        var u = new LSymbol('unquote-splicing');
         if (literal) {
             u.literal = true;
         }
@@ -191,13 +191,13 @@ describe('parser', function() {
                 q,
                 new Pair(
                     new Pair(
-                        new Symbol('list'),
+                        new LSymbol('list'),
                         new Pair(
                             new Pair(
                                 u,
                                 new Pair(
                                     new Pair(
-                                        new Symbol('list'),
+                                        new LSymbol('list'),
                                         nil
                                     ),
                                     nil)
@@ -220,18 +220,18 @@ describe('parser', function() {
         var output = parse(tokenize(input))[0];
         expect(output).toEqual(Pair.fromArray(
             [
-                Symbol('quasiquote'),
+                LSymbol('quasiquote'),
                 [
-                    Symbol('+'),
+                    LSymbol('+'),
                     [
-                        Symbol('unquote'),
+                        LSymbol('unquote'),
                         [
-                            Symbol('unquote'),
+                            LSymbol('unquote'),
                             [
-                                Symbol('list'),
+                                LSymbol('list'),
                                 [
-                                    Symbol('quote'),
-                                    Symbol('foo')]]]]]]));
+                                    LSymbol('quote'),
+                                    LSymbol('foo')]]]]]]));
     });
     it('should create AList', function() {
         var tokens = tokenize('((foo . 10) (bar . 20) (baz . 30))');
@@ -239,17 +239,17 @@ describe('parser', function() {
         expect(array[0]).toEqual(
             new Pair(
                 new Pair(
-                    new Symbol('foo'),
+                    new LSymbol('foo'),
                     LNumber(10)
                 ),
                 new Pair(
                     new Pair(
-                        new Symbol('bar'),
+                        new LSymbol('bar'),
                         LNumber(20)
                     ),
                     new Pair(
                         new Pair(
-                            new Symbol('baz'),
+                            new LSymbol('baz'),
                             LNumber(30)
                         ),
                         nil
@@ -368,17 +368,17 @@ describe('evaluate', function() {
             return exec(code).then(result => {
                 delete result[0].data;
                 expect(result[0]).toEqual(Pair.fromArray([
-                    new Symbol('let'), [[new Symbol('x'), new LNumber(10)]],
+                    new LSymbol('let'), [[new LSymbol('x'), new LNumber(10)]],
                     [
-                        new Symbol('quasiquote'),
+                        new LSymbol('quasiquote'),
                         [
-                            new Symbol('list'),
+                            new LSymbol('list'),
                             [
-                                new Symbol('unquote'),
-                                new Symbol('x')
+                                new LSymbol('unquote'),
+                                new LSymbol('x')
                             ],
                             [
-                                new Symbol('unquote'),
+                                new LSymbol('unquote'),
                                 new LNumber(20)
                             ]
                         ]
@@ -453,22 +453,22 @@ describe('evaluate', function() {
                            (quux . /foo./g))`)).toEqual(
                 quote(new Pair(
                     new Pair(
-                        new Symbol('foo'),
+                        new LSymbol('foo'),
                         LNumber(1)
                     ),
                     new Pair(
                         new Pair(
-                            new Symbol('bar'),
+                            new LSymbol('bar'),
                             LNumber(2.1)
                         ),
                         new Pair(
                             new Pair(
-                                new Symbol('baz'),
+                                new LSymbol('baz'),
                                 "string"
                             ),
                             new Pair(
                                 new Pair(
-                                    new Symbol('quux'),
+                                    new LSymbol('quux'),
                                     /foo./g
                                 ),
                                 nil
@@ -543,17 +543,17 @@ describe('evaluate', function() {
         it('should process multiple backquote/unquote', async function() {
             expect(await exec('``(a ,,(+ 1 2) ,(+ 3 4))')).toEqual(
                 quote(Pair.fromArray([
-                    new Symbol('quasiquote'),
+                    new LSymbol('quasiquote'),
                     [
-                        new Symbol('a'),
+                        new LSymbol('a'),
                         [
-                            new Symbol('unquote'),
+                            new LSymbol('unquote'),
                             LNumber(3)
                         ],
                         [
-                            new Symbol('unquote'),
+                            new LSymbol('unquote'),
                             [
-                                new Symbol('+'),
+                                new LSymbol('+'),
                                 LNumber(3),
                                 LNumber(4)
                             ]
