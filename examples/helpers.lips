@@ -81,7 +81,11 @@
 
 
 ;; ---------------------------------------------------------------------------------------
-(define log (. console "log"))
+(define (log . args)
+  "(log . args)
+
+   Wrapper over console.log"
+  (apply (.. console.log) args))
 
 
 ;; ---------------------------------------------------------------------------------------
@@ -190,7 +194,7 @@
   "(wait time . expr)
 
    Function return promise that will resolve with evaluating the expression after delay."
-  `(promise (timer ,time (resolve ,@expr))))
+  `(promise (timer ,time (resolve (begin ,@expr)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (pair-map fn seq-list)
@@ -435,6 +439,9 @@
 
 
 (define (assocv key alist)
+  "(assocv key alist)
+
+   Return value of alist if found or undefined of not."
   (let ((pair (assoc key alist)))
     (if (pair? pair) (cdr pair) undefined)))
 

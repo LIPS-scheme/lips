@@ -15,6 +15,8 @@ var {
     quote
 } = lips;
 
+var deps = lips.exec('(load "./examples/helpers.lips")');
+
 describe('tokenizer', function() {
     it('should create tokens for simple list', function() {
         expect(tokenize('(foo bar baz)')).toEqual(['(', 'foo', 'bar', 'baz', ')']);
@@ -649,9 +651,9 @@ describe('evaluate', function() {
     });
     describe('parallel invocation', function() {
         it('should run async code sequentially', function() {
-            var start = Date.now();
             var output = LNumber(30);
             function test(code, range) {
+                var start = Date.now();
                 return lips.exec(code).then(result => {
                     var time = Date.now() - start;
                     expect(result[0]).toEqual(output);
@@ -659,10 +661,16 @@ describe('evaluate', function() {
                     expect(time).not.toBeGreaterThan(range[1]);
                 });
             }
-            return Promise.all([
-                test('(begin (timer 300 10) (timer 300 20) (timer 300 30))', [800, 1000]),
-                test('(begin* (timer 300 10) (timer 300 20) (timer 300 30))', [300, 350])
-            ]);
+            return deps.then(function() {
+                return Promise.all([
+                    test('(begin (wait 300 10) (wait 300 20) (wait 300 30))', [
+                        800, 1000
+                    ]),
+                    test('(begin* (wait 300 10) (wait 300 20) (wait 300 30))', [
+                        300, 350
+                    ])
+                ]);
+            });
         });
     });
 });
@@ -880,8 +888,8 @@ describe('env', function() {
         it('should create and reduce async list', function() {
             const code = `(reduce +
                                   0
-                                  (list (timer 1000 10) (timer 2000 30)))`;
-            return testValue([code, LNumber(40)]);
+                                  (list (wait 1000 10) (wait 2000 30)))`;
+            return deps.then(() => testValue([code, LNumber(40)]));
         });
         it('should reverse list', function() {
             const code = `(reduce cons '() '(1 2 3))`;
