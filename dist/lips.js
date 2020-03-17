@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 17 Mar 2020 01:39:56 +0000
+ * build: Tue, 17 Mar 2020 08:09:34 +0000
  */
 (function () {
 	'use strict';
@@ -3922,29 +3922,6 @@
 	      evaluate(new Pair(new LSymbol('begin'), code), args);
 	    }, "(ignore expression)\n\n            Macro that will evaluate expression and swallow any promises that may\n            be created. It wil run and ignore any value that may be returned by\n            expression. The code should have side effects and/or when it's promise\n            it should resolve to undefined."),
 	    // ------------------------------------------------------------------
-	    timer: doc(new Macro('timer', function (code) {
-	      var _ref11 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref11.dynamic_scope,
-	          error = _ref11.error;
-
-	      typecheck('timer', code.car, 'number');
-	      var env = this;
-
-	      if (dynamic_scope) {
-	        dynamic_scope = this;
-	      }
-
-	      return new Promise(function (resolve) {
-	        setTimeout(function () {
-	          resolve(evaluate(code.cdr.car, {
-	            env: env,
-	            dynamic_scope: dynamic_scope,
-	            error: error
-	          }));
-	        }, code.car);
-	      }).then(quote);
-	    }), "(timer time expression)\n\n             Function return a promise, and it will be automatically evaluated\n             after specific time passes. The return value of the function\n             will be value of the timer exprssion. If you want to do side effect\n             only expression you can wrap your expression in nol call."),
-	    // ------------------------------------------------------------------
 	    define: doc(Macro.defmacro('define', function (code, eval_args) {
 	      var env = this;
 
@@ -4028,9 +4005,9 @@
 	    }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
 	    // ------------------------------------------------------------------
 	    lambda: new Macro('lambda', function (code) {
-	      var _ref12 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref12.dynamic_scope,
-	          error = _ref12.error;
+	      var _ref11 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref11.dynamic_scope,
+	          error = _ref11.error;
 
 	      var self = this;
 
@@ -4108,9 +4085,9 @@
 	    'macroexpand': new Macro('macroexpand', macroExpand()),
 	    'macroexpand-1': new Macro('macroexpand-1', macroExpand(true)),
 	    // ------------------------------------------------------------------
-	    'define-macro': doc(new Macro(macro, function (macro, _ref13) {
-	      var dynamic_scope = _ref13.dynamic_scope,
-	          error = _ref13.error;
+	    'define-macro': doc(new Macro(macro, function (macro, _ref12) {
+	      var dynamic_scope = _ref12.dynamic_scope,
+	          error = _ref12.error;
 
 	      if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
 	        var name = macro.car.car.name;
@@ -4225,10 +4202,10 @@
 	          }
 
 	          if (isPromise(car) || isPromise(cdr)) {
-	            return Promise.all([car, cdr]).then(function (_ref14) {
-	              var _ref15 = slicedToArray(_ref14, 2),
-	                  car = _ref15[0],
-	                  cdr = _ref15[1];
+	            return Promise.all([car, cdr]).then(function (_ref13) {
+	              var _ref14 = slicedToArray(_ref13, 2),
+	                  car = _ref14[0],
+	                  cdr = _ref14[1];
 
 	              return new Pair(car, cdr);
 	            });
@@ -4776,11 +4753,11 @@
 	        return LNumber(obj.length);
 	      }
 	    }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
-	    'try': doc(new Macro('try', function (code, _ref16) {
+	    'try': doc(new Macro('try', function (code, _ref15) {
 	      var _this4 = this;
 
-	      var dynamic_scope = _ref16.dynamic_scope,
-	          _error = _ref16.error;
+	      var dynamic_scope = _ref15.dynamic_scope,
+	          _error = _ref15.error;
 	      return new Promise(function (resolve) {
 	        var args = {
 	          env: _this4,
@@ -5120,9 +5097,9 @@
 	    // ------------------------------------------------------------------
 	    'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
 	    // ------------------------------------------------------------------
-	    or: doc(new Macro('or', function (code, _ref17) {
-	      var dynamic_scope = _ref17.dynamic_scope,
-	          error = _ref17.error;
+	    or: doc(new Macro('or', function (code, _ref16) {
+	      var dynamic_scope = _ref16.dynamic_scope,
+	          error = _ref16.error;
 	      var args = this.get('list->array')(code);
 	      var self = this;
 
@@ -5162,9 +5139,9 @@
 	    }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
 	    // ------------------------------------------------------------------
 	    and: doc(new Macro('and', function (code) {
-	      var _ref18 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref18.dynamic_scope,
-	          error = _ref18.error;
+	      var _ref17 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref17.dynamic_scope,
+	          error = _ref17.error;
 
 	      var args = this.get('list->array')(code);
 	      var self = this;
@@ -5520,10 +5497,10 @@
 	    }
 	  }
 
-	  function getFunctionArgs(rest, _ref19) {
-	    var env = _ref19.env,
-	        dynamic_scope = _ref19.dynamic_scope,
-	        error = _ref19.error;
+	  function getFunctionArgs(rest, _ref18) {
+	    var env = _ref18.env,
+	        dynamic_scope = _ref18.dynamic_scope,
+	        error = _ref18.error;
 	    var args = [];
 	    var node = rest;
 	    markCycles(node);
@@ -5576,11 +5553,11 @@
 
 
 	  function evaluate(code) {
-	    var _ref20 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	        env = _ref20.env,
-	        dynamic_scope = _ref20.dynamic_scope,
-	        _ref20$error = _ref20.error,
-	        error = _ref20$error === void 0 ? function () {} : _ref20$error;
+	    var _ref19 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	        env = _ref19.env,
+	        dynamic_scope = _ref19.dynamic_scope,
+	        _ref19$error = _ref19.error,
+	        error = _ref19$error === void 0 ? function () {} : _ref19$error;
 
 	    try {
 	      if (dynamic_scope === true) {

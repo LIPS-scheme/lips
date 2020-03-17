@@ -1,13 +1,14 @@
 ## 0.20.0
 ### Breaking
-* replace print with display (more like scheme)
-* replace lips.Symbol with LSymbol
-* replace delay with wait (to allow using scheme delay/force)
+* replace `print` with `display` (more like scheme)
+* replace `lips.Symbol` with `LSymbol`
+* replace `delay` with `wait` (to allow using scheme delay/force)
+* change `timer` function to just `setTimeout` with expression (old `timer` is now `wait`)
 ### Features
 * improve `-->` macro to handle numbers and strings and symbols (quoted or not)
 * new function `quoted-symbol?`
 * allow to use else in cond (same as true)
-* new macros: `timer` and `promise`
+* new macro: `promise`
 ### Bug fixes
 * fix for-each with function that use this (like print)
 

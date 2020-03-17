@@ -2463,28 +2463,6 @@
             expression. The code should have side effects and/or when it's promise
             it should resolve to undefined.`),
         // ------------------------------------------------------------------
-        timer: doc(new Macro('timer', function(code, { dynamic_scope, error } = {}) {
-            typecheck('timer', code.car, 'number');
-            var env = this;
-            if (dynamic_scope) {
-                dynamic_scope = this;
-            }
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(evaluate(code.cdr.car, {
-                        env,
-                        dynamic_scope,
-                        error
-                    }));
-                }, code.car);
-            }).then(quote);
-        }), `(timer time expression)
-
-             Function return a promise, and it will be automatically evaluated
-             after specific time passes. The return value of the function
-             will be value of the timer exprssion. If you want to do side effect
-             only expression you can wrap your expression in nol call.`),
-        // ------------------------------------------------------------------
         define: doc(Macro.defmacro('define', function(code, eval_args) {
             var env = this;
             if (code.car instanceof Pair &&
