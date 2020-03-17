@@ -317,6 +317,7 @@
 (define-macro (cond . list)
   "(cond (predicate? . body)
          (predicate? . body))
+
    Macro for condition check. For usage instead of nested ifs."
   (if (pair? list)
       (let* ((item (car list))
@@ -331,7 +332,9 @@
                            (eq? (caar rest) 'else)))
                   `(begin
                      ,@(cdar rest))
-                  `(cond ,@rest))))))
+                  (if (not (null? rest))
+                      `(cond ,@rest)))))
+      nil))
 
 ;; ---------------------------------------------------------------------------------------
 (define (tree-map f tree)
