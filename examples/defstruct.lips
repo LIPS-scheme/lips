@@ -23,12 +23,12 @@
 ;;
 ;; (defstruct user first-name last-name age)
 ;; (let ((user (make-user "John" "Doe" 26)))
-;;   (print (concat "name: " (user-first-name user) " " (user-last-name user)))
-;;   (print (concat "age: " (user-age user)))
+;;   (display (concat "name: " (user-first-name user) " " (user-last-name user)))
+;;   (display (concat "age: " (user-age user)))
 ;;   (set-user-last-name! user "Smith")
-;;   (print (concat "set!: " (set-user-age! user (+ (user-age user) 1))))
-;;   (print (concat "happy birthday you're now " (user-age user) " old"))
-;;   (print user))
+;;   (display (concat "set!: " (set-user-age! user (+ (user-age user) 1))))
+;;   (display (concat "happy birthday you're now " (user-age user) " old"))
+;;   (display user))
 ;;
 
 (define (length list)
@@ -49,7 +49,7 @@
   (nop (let ((msg (concat (symbol->string symbol) ": " message)))
          ((. console "error") msg)
          (let (($ (. window "jQuery")))
-           (print $)
+           (display $)
            (if (not (or (null? $) (null? (. jQuery "terminal"))))
                (let ((term ((.. jQuery.terminal.active))))
                  (--> term (error msg))))))))

@@ -51,7 +51,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         lips.exec(code, env, dynamic).then(function(ret) {
             ret.forEach(function(ret) {
                 if (ret !== undefined) {
-                    env.get('print').call(env, ret);
+                    env.get('display').call(env, ret);
                 }
             });
         }).catch(function(e) {

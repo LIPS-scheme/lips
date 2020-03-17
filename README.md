@@ -1,7 +1,7 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&93488f77dfe6190d21f8cdbd81bc3896002285ec)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&30df95678c1304ef37fa966b8f8b188156550f75)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&8710db161df0ca3500520bda08815b5e)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -19,6 +19,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
+* Almost everything is first class object including macros and functions,
 * Optional dynamic scope.
 
 ## Installation
@@ -50,7 +51,7 @@ Simplest way is to include the lips code in script tag:
 <script type="text/x-lips">
 (let ((what "world")
       (greet "hello"))
-   (print (concat "hello" " " what)))
+   (display (concat "hello" " " what)))
 </script>
 ```
 
@@ -104,7 +105,7 @@ One feature of LIPS REPL is that it auto indent the lines when you press enter a
 You can also run code as string with:
 
 ```
-lips -c '(let ((what "World")) (print (concat "Hello " what)))'
+lips -c '(let ((what "World")) (display (concat "Hello " what)))'
 ```
 
 and you can run a file using:
@@ -112,7 +113,7 @@ and you can run a file using:
 ```
 cat > foo.lips <<EOF
 (let ((what "World"))
-  (print (concat "Hello " what)))
+  (display (concat "Hello " what)))
 EOF
 
 lips foo.lips
@@ -124,7 +125,7 @@ You can also write executable files that use lips shebang
 cat > foo.lips <<EOF
 #!/usr/bin/env lips
 (let ((what "World"))
-  (print (concat "Hello " what)))
+  (display (concat "Hello " what)))
 EOF
 chmod a+x foo.lips
 foo.lips

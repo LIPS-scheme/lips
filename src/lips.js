@@ -3291,25 +3291,32 @@
                 arg = new lips.Formatter(arg.toString()).break().format();
                 this.get('stdout').write(arg);
             } else {
-                this.get('print').call(this, arg);
+                this.get('display').call(this, arg);
             }
         }, `(pprint expression)
 
            Pretty print list expression, if called with non-pair it just call
            print function with passed argument.`),
         // ------------------------------------------------------------------
-        print: doc(function(...args) {
+        print: doc(function() {
+            throw new Error('Function was removed in version 0.20.0 use ' +
+                            'display insided');
+        }, `(print . args)
+
+            defunct function, we keep it to show proper error when used.`),
+        // ------------------------------------------------------------------
+        display: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
                 return this.get('string')(arg, typeof arg === 'string');
             }));
-        }, `(print . args)
+        }, `(display . args)
 
             Function convert each argument to string and print the result to
             standard output (by default it's console but it can be defined
             it user code)`),
         // ------------------------------------------------------------------
         error: doc(function(...args) {
-            this.get('print').apply(this, args);
+            this.get('display').apply(this, args);
         }, `(error . args)
 
             Display error message.`),
@@ -3602,7 +3609,7 @@
              (define (add a b c d) (+ a b c d))
              (define add1 (curry add 1))
              (define add12 (add 2))
-             (print (add12 3 4))`),
+             (display (add12 3 4))`),
         // ------------------------------------------------------------------
         odd: doc(singleMathOp(function(num) {
             return LNumber(num).isOdd();

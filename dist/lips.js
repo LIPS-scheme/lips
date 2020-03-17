@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 16 Mar 2020 19:54:10 +0000
+ * build: Tue, 17 Mar 2020 00:22:13 +0000
  */
 (function () {
 	'use strict';
@@ -4714,11 +4714,15 @@
 	        arg = new lips.Formatter(arg.toString())["break"]().format();
 	        this.get('stdout').write(arg);
 	      } else {
-	        this.get('print').call(this, arg);
+	        this.get('display').call(this, arg);
 	      }
 	    }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
 	    // ------------------------------------------------------------------
 	    print: doc(function () {
+	      throw new Error('Function was removed in version 0.20.0 use ' + 'display insided');
+	    }, "(print . args)\n\n            defunct function, we keep it to show proper error when used."),
+	    // ------------------------------------------------------------------
+	    display: doc(function () {
 	      var _this$get,
 	          _this3 = this;
 
@@ -4729,14 +4733,14 @@
 	      (_this$get = this.get('stdout')).write.apply(_this$get, toConsumableArray(args.map(function (arg) {
 	        return _this3.get('string')(arg, typeof arg === 'string');
 	      })));
-	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
+	    }, "(display . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
 	    // ------------------------------------------------------------------
 	    error: doc(function () {
 	      for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
 	        args[_key20] = arguments[_key20];
 	      }
 
-	      this.get('print').apply(this, args);
+	      this.get('display').apply(this, args);
 	    }, "(error . args)\n\n            Display error message."),
 	    // ------------------------------------------------------------------
 	    flatten: doc(function (list) {
@@ -5014,7 +5018,7 @@
 	    // ------------------------------------------------------------------
 	    compose: doc(compose, "(compose . fns)\n\n             Higher order function and create new function that apply all functions\n             From right to left and return it's value. Reverse of compose.\n             e.g.:\n             ((compose (curry + 2) (curry * 3)) 3)\n             11\n            "),
 	    pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
-	    curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (print (add12 3 4))"),
+	    curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (display (add12 3 4))"),
 	    // ------------------------------------------------------------------
 	    odd: doc(singleMathOp(function (num) {
 	      return LNumber(num).isOdd();

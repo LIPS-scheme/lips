@@ -11,7 +11,7 @@
 
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
-               (on \"click\" (lambda () (print \"click\"))))
+               (on \"click\" (lambda () (display \"click\"))))
 
           (--> document (querySelectorAll \"div\"))
           
@@ -301,7 +301,6 @@
 (define-macro (cond . list)
   "(cond (predicate? . body)
          (predicate? . body))
-
    Macro for condition check. For usage instead of nested ifs."
   (if (pair? list)
       (let* ((item (car list))
@@ -312,7 +311,8 @@
              (begin
                ,@forms)
              ,(if (and (pair? rest)
-                       (eq? (caar rest) true))
+                       (or (eq? (caar rest) true)
+                           (eq? (caar rest) 'else)))
                   `(begin
                      ,@(cdar rest))
                   `(cond ,@rest))))))
@@ -393,10 +393,10 @@
   "(match-patternpattern ((pattern . body) ...))
 
    Pattern matching macro. examples:
-   (match-pattern (1 (pair? pair?) 2) ((1 (() ()) 2) (print \"match\")))
+   (match-pattern (1 (pair? pair?) 2) ((1 (() ()) 2) (display \"match\")))
    ;; match
-   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")))
-   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")) (true \"rest\"))
+   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (display \"match\")))
+   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (display \"match\")) (true \"rest\"))
    ;; rest"
  (if (pair? list)
      (let ((ex-name (gensym)))

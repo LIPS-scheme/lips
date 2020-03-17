@@ -1,7 +1,10 @@
 ## 0.20.0
+### Breaking
+* replace print with display (more like scheme)
 ### Features
 * improve `-->` macro to handle numbers and strings and symbols (quoted or not)
 * new function `quoted-symbol?`
+* allow to use else in cond (same as true)
 ### Bug fixes
 * fix for-each with function that use this (like print)
 
