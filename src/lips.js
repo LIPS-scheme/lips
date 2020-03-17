@@ -25,7 +25,8 @@
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
 "use strict";
-/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map, Set */
+/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map,
+          Set, Symbol */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
