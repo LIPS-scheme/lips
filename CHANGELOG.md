@@ -2,6 +2,7 @@
 ### Breaking
 * replace print with display (more like scheme)
 * replace lips.Symbol with LSymbol
+* replace delay with wait (to allow using scheme delay/force)
 ### Features
 * improve `-->` macro to handle numbers and strings and symbols (quoted or not)
 * new function `quoted-symbol?`

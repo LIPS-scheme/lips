@@ -170,7 +170,7 @@
       ((. alist "toObject"))))
 
 
-(define-macro (delay time . expr)
+(define-macro (wait time . expr)
   `(new Promise (lambda (resolve)
                   (setTimeout (lambda ()
                                 (resolve (begin ,@expr)))
