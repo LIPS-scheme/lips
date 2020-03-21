@@ -1,3 +1,7 @@
+## 0.20.1
+### Bug fixes
+* fix formatter indent
+
 ## 0.20.0
 ### Breaking
 * replace `print` with `display` (more like scheme)

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Mar 2020 18:53:47 +0000
+ * build: Sat, 21 Mar 2020 19:14:55 +0000
  */
 (function () {
 	'use strict';
@@ -1727,7 +1727,7 @@
 	        settings.offset = 0;
 	      }
 
-	      if (sexp.length === tokens.length) {
+	      if (sexp.toString() === tokens.toString() && balanced(sexp)) {
 	        return settings.offset + sexp[0].col;
 	      } else if (sexp.length === 1) {
 	        return settings.offset + sexp[0].col + 1;
