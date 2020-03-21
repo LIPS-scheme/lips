@@ -2337,7 +2337,7 @@
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
-            if (env.name == '__frame__') {
+            if (env.name === '__frame__') {
                 env = env.parent;
             }
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
@@ -2622,11 +2622,11 @@
                     env.set('arguments', this.get('arguments'));
                     env.set('parent.frame', this.get('parent.frame'));
                 } else {
-                    // this case is for lambda as callback function in JS (e.g. setTimeout)
+                    // this case is for lambda as callback function in JS; e.g. setTimeout
                     var _args = args.slice();
                     _args.callee = lambda;
                     _args.env = env;
-                    env.set('parent.frame', function(n = 0) {
+                    env.set('parent.frame', function() {
                         return nil;
                     });
                     env.set('arguments', _args);
@@ -4172,7 +4172,7 @@
             if (first instanceof LSymbol) {
                 value = env.get(first, { weak: true });
                 if (value instanceof Macro) {
-                    var scope = env.inherit('__frame__');
+                    //var scope = env.inherit('__frame__');
                     var ret = evaluateMacro(value, rest, eval_args);
                     return unpromise(ret, result => {
                         if (result instanceof Pair) {
