@@ -2151,9 +2151,11 @@
     var global_env = new Environment({
         nil: nil,
         'undefined': undefined,
+        '#t': true,
+        '#f': false,
         'true': true,
-        'NaN': NaN,
         'false': false,
+        'NaN': NaN,
         // ------------------------------------------------------------------
         stdout: {
             write: function(...args) {

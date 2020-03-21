@@ -11,6 +11,7 @@
 * new macro: `promise`
 * experimental parent.frame (inspired by R)
 * add `arguments.callee` to lambdas
+* scheme compatibility (#t and #f default symbols)
 ### Bug fixes
 * fix for-each with function that use this (like print)
 * fix pretty print of lisp code

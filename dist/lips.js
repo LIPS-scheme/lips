@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Mar 2020 18:11:04 +0000
+ * build: Sat, 21 Mar 2020 18:23:08 +0000
  */
 (function () {
 	'use strict';
@@ -3594,9 +3594,11 @@
 	  var global_env = new Environment({
 	    nil: nil,
 	    'undefined': undefined$1,
+	    '#t': true,
+	    '#f': false,
 	    'true': true,
-	    'NaN': NaN,
 	    'false': false,
+	    'NaN': NaN,
 	    // ------------------------------------------------------------------
 	    stdout: {
 	      write: function write() {
