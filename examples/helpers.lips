@@ -14,9 +14,9 @@
                (on \"click\" (lambda () (display \"click\"))))
 
           (--> document (querySelectorAll \"div\"))
-          
+
           (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\/title>/) 1)
-          
+
           (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")"
   (let ((obj (gensym)))
     `(let* ((,obj ,(if (and (symbol? expr) (not (null? (match /\./ (symbol->string expr)))))
@@ -38,16 +38,16 @@
 ;; ---------------------------------------------------------------------------------------
 (define (quoted-symbol? x)
    "(quoted-symbol? code)
-   
+
    Helper function that test if value is quoted symbol. To be used in macros
    that pass literal code that is transformed by parser.
-   
+
    usage:
-   
+
       (define-macro (test x)
          (if (quoted-symbol? x)
              `',(cadr x)))
-      
+
       (list 'hello (test 'world))"
    (and (pair? x) (eq? (car x) 'quote) (symbol? (cadr x)) (null? (cddr x))))
 
@@ -182,6 +182,19 @@
                   (try (begin ,@body)
                        (catch (e)
                               (error (.. e.message)))))))
+
+;; ---------------------------------------------------------------------------------------
+(define (parent.frames)
+  "(parent.frames)
+
+   Funcion return list of environments from parent frames (lambda function calls)"
+  (let iter ((result '()) (frame (parent.frame 2)))
+     (if (null? frame)
+         result
+         (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
+            (if (function? parent.frame)
+                (iter (cons frame result) (parent.frame))
+                result)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (timer time . body)

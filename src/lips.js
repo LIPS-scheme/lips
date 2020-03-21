@@ -187,6 +187,12 @@
         }
     }
     // ----------------------------------------------------------------------
+    function is_symbol_string(str) {
+        return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/['"]/) ||
+                 str.match(int_re) || str.match(float_re) ||
+                 ['nil', 'true', 'false'].includes(str));
+    }
+    // ----------------------------------------------------------------------
     /* eslint-disable */
     var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"/g;
@@ -541,9 +547,16 @@
     function match(pattern, input) {
         return inner_match(pattern, input) === input.length;
         function inner_match(pattern, input) {
+            function empty_match() {
+                return p > 0 && i > 0 && pattern[p - 1] === input[i - 1] &&
+                    pattern[p + 1] === input[i];
+            }
+            function not_symbol_match() {
+                return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
+            }
             var p = 0;
             var glob = {};
-            for (let i = 0; i < input.length; ++i) {
+            for (var i = 0; i < input.length; ++i) {
                 if (typeof pattern[p] === 'undefined') {
                     return i;
                 }
@@ -560,11 +573,19 @@
                             }
                             i += m;
                         }
-                        if (m === -1) {
-                            return false;
+                        if (m === -1 && (input[i] && !pattern[p + 1])) {
+                            return -1;
                         }
                         p++;
                         i -= 1;
+                        continue;
+                    } else if (pattern[p].flag === '?') {
+                        m = inner_match(pattern[p].pattern, input.slice(i));
+                        if (m === -1) {
+                            i -= 2; // if not found use same test same input again
+                        } else {
+                            p++;
+                        }
                         continue;
                     }
                 }
@@ -585,10 +606,15 @@
                         } else if (input[i] === ')') {
                             glob[p]--;
                         }
-                        if ((typeof pattern[p + 1] !== 'undefined' && glob[p] === 0 &&
-                             pattern[p + 1] !== input[i + 1]) || glob[p] > 0) {
+                        if (empty_match()) {
+                            i -= 1;
+                        } else if ((typeof pattern[p + 1] !== 'undefined' &&
+                                    glob[p] === 0 && pattern[p + 1] !== input[i + 1]) ||
+                                   glob[p] > 0) {
                             continue;
                         }
+                    } else if (not_symbol_match()) {
+                        return -1;
                     }
                 } else if (pattern[p] instanceof Array) {
                     var inc = inner_match(pattern[p], input.slice(i));
@@ -715,17 +741,21 @@
     const notParen = new Ahead(/[^)]/);
     const glob = Symbol.for('*');
     const sexp = new Pattern(['(', glob, ')'], '+');
+    const symbol = new Pattern([Symbol.for('symbol')], '?');
+    const let_value = new Pattern(['(', Symbol.for('symbol'), glob, ')'], '+');
     // rules for breaking S-Expressions into lines
     Formatter.rules = [
         [['(', 'begin'], 1],
         [['(', 'begin', sexp], 1, notParen],
-        [['(', /^let\*?$/, '(', glob, ')'], 1],
-        [['(', /^let\*?$/, '(', sexp], 2, notParen],
-        [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen],
+        [['(', /^let\*?$/, symbol, '(', let_value, ')'], 1],
+        [['(', /^let\*?$/, symbol, '(', let_value], 2, notParen],
+        [['(', /^let\*?$/, symbol, ['(', let_value, ')'], sexp], 1, notParen],
+        [[/(?!lambda)/, '(', glob, ')'], 1, notParen],
         [['(', 'if', /[^()]/], 1],
+        [['(', 'if', /[^()]/, glob], 1],
         [['(', 'if', ['(', glob, ')']], 1],
+        [['(', 'if', ['(', glob, ')'], /[^()]/], 1],
         [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen],
-        [['(', glob, ')'], 1],
         [['(', /^(define|lambda)/, ['(', glob, ')'], string_re], 1],
         [['(', /^(define|lambda)/, '(', glob, ')'], 1],
         [['(', /^(define|lambda)/, ['(', glob, ')'], string_re, sexp], 1, notParen],
@@ -883,7 +913,7 @@
     // ----------------------------------------------------------------------
     function Nil() {}
     Nil.prototype.toString = function() {
-        return 'nil';
+        return '()';
     };
     var nil = new Nil();
     // ----------------------------------------------------------------------
@@ -1403,7 +1433,6 @@
             return binded.__bind.fn.apply(context, args);
         };
         hiddenProp(binded, 'name', fn.name);
-        console.log(binded.name);
         hiddenProp(binded, '__bound__', true);
         if (fn.__doc__) {
             binded.__doc__ = fn.__doc__;
@@ -2306,6 +2335,9 @@
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
+            if (env.name == '__frame__') {
+                env = env.parent;
+            }
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file, function(err, data) {
@@ -2566,12 +2598,36 @@
                 __doc__ = trimLines(code.cdr.car);
             }
             function lambda(...args) {
-                var env = (dynamic_scope ? this : self).inherit('lambda');
+                var env;
+                if (dynamic_scope) {
+                    if (!(this instanceof Environment)) {
+                        env = self;
+                    } else {
+                        env = this;
+                    }
+                } else {
+                    env = self;
+                }
+                env = env.inherit('lambda');
                 var name = code.car;
                 var i = 0;
                 var value;
                 if (typeof this !== 'undefined') {
                     env.set('this', this);
+                }
+                // arguments and arguments.callee inside lambda function
+                if (this instanceof Environment) {
+                    env.set('arguments', this.get('arguments'));
+                    env.set('parent.frame', this.get('parent.frame'));
+                } else {
+                    // this case is for lambda as callback function in JS (e.g. setTimeout)
+                    var _args = args.slice();
+                    _args.callee = lambda;
+                    _args.env = env;
+                    env.set('parent.frame', function(n = 0) {
+                        return nil;
+                    });
+                    env.set('arguments', _args);
                 }
                 if (name instanceof LSymbol || !isEmptyList(name)) {
                     while (true) {
@@ -3431,7 +3487,11 @@
             if (lists.some(isEmptyList)) {
                 return emptyList();
             }
-            return unpromise(fn.call(this, ...lists.map(l => l.car)), (head) => {
+            var args = lists.map(l => l.car);
+            var env = this;
+            args.callee = fn;
+            env.set('arguments', args);
+            return unpromise(fn.call(env, ...args), (head) => {
                 return unpromise(map.call(this, fn, ...lists.map(l => l.cdr)), (rest) => {
                     return new Pair(head, rest);
                 });
@@ -4110,6 +4170,7 @@
             if (first instanceof LSymbol) {
                 value = env.get(first, { weak: true });
                 if (value instanceof Macro) {
+                    var scope = env.inherit('__frame__');
                     var ret = evaluateMacro(value, rest, eval_args);
                     return unpromise(ret, result => {
                         if (result instanceof Pair) {
@@ -4130,7 +4191,25 @@
             if (typeof value === 'function') {
                 var args = getFunctionArgs(rest, eval_args);
                 return unpromise(args, function(args) {
-                    var scope = dynamic_scope || env;
+                    var scope = (dynamic_scope || env).inherit('__frame__');
+                    scope.set('parent.frame', function(n = 1) {
+                        if (n === 0) {
+                            return scope;
+                        }
+                        if (!(scope.parent instanceof Environment)) {
+                            return nil;
+                        }
+                        var parent_frame = scope.parent.get('parent.frame', {
+                            throwError: false
+                        });
+                        if (typeof parent_frame === 'function') {
+                            return parent_frame(n - 1);
+                        }
+                        return nil;
+                    });
+                    var _args = args.slice();
+                    _args.callee = value;
+                    scope.set('arguments', _args);
                     var result = resolvePromises(value.apply(scope, args));
                     return unpromise(result, (result) => {
                         if (result instanceof Pair) {

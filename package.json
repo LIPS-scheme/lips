@@ -168,7 +168,7 @@
       "complexity": [
         "error",
         {
-          "max": 26
+          "max": 35
         }
       ],
       "indent": [

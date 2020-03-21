@@ -678,6 +678,9 @@ describe('environment', function() {
     const env = global_environment;
     var functions = {
         scope_name: function() {
+            if (this.name === '__frame__') {
+                return this.parent.name;
+            }
             return this.name;
         }
     };

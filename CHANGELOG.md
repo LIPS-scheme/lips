@@ -7,10 +7,13 @@
 ### Features
 * improve `-->` macro to handle numbers and strings and symbols (quoted or not)
 * new function `quoted-symbol?`
-* allow to use else in cond (same as true)
+* allow to use else in cond (same as true - similar to scheme)
 * new macro: `promise`
+* experimental parent.frame (inspired by R)
+* add `arguments.callee` to lambdas
 ### Bug fixes
 * fix for-each with function that use this (like print)
+* fix pretty print of lisp code
 
 ## 0.19.0
 ### Features
