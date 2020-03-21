@@ -25,7 +25,8 @@
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
 "use strict";
-/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map, Set */
+/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map,
+          Set, Symbol */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -182,8 +183,14 @@
         } else if (arg === 'false') {
             return false;
         } else {
-            return new Symbol(arg);
+            return new LSymbol(arg);
         }
+    }
+    // ----------------------------------------------------------------------
+    function is_symbol_string(str) {
+        return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/['"]/) ||
+                 str.match(int_re) || str.match(float_re) ||
+                 ['nil', 'true', 'false'].includes(str));
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
@@ -276,10 +283,10 @@
     }
     // ----------------------------------------------------------------------
     var specials = {
-        "'": new Symbol('quote'),
-        '`': new Symbol('quasiquote'),
-        ',@': new Symbol('unquote-splicing'),
-        ',': new Symbol('unquote')
+        "'": new LSymbol('quote'),
+        '`': new LSymbol('quasiquote'),
+        ',@': new LSymbol('unquote-splicing'),
+        ',': new LSymbol('unquote')
     };
     // ----------------------------------------------------------------------
     // :: tokens are the array of strings from tokenizer
@@ -301,12 +308,12 @@
         var special_count = 0;
         function pop_join() {
             var top = stack[stack.length - 1];
-            if (top instanceof Array && top[0] instanceof Symbol &&
+            if (top instanceof Array && top[0] instanceof LSymbol &&
                 special_forms.includes(top[0].name) &&
                 stack.length > 1 && !top[0].literal) {
                 stack.pop();
                 if (stack[stack.length - 1].length === 1 &&
-                    stack[stack.length - 1][0] instanceof Symbol) {
+                    stack[stack.length - 1][0] instanceof LSymbol) {
                     stack[stack.length - 1].push(top);
                 } else if (false && stack[stack.length - 1].length === 0) {
                     stack[stack.length - 1] = top;
@@ -387,7 +394,7 @@
                         specials_stack.pop();
                         special_count = 0;
                         special = false;
-                    } else if (value instanceof Symbol &&
+                    } else if (value instanceof LSymbol &&
                                special_forms.includes(value.name)) {
                         // handle parsing os special forms as literal symbols
                         // (values they expand into)
@@ -540,9 +547,16 @@
     function match(pattern, input) {
         return inner_match(pattern, input) === input.length;
         function inner_match(pattern, input) {
+            function empty_match() {
+                return p > 0 && i > 0 && pattern[p - 1] === input[i - 1] &&
+                    pattern[p + 1] === input[i];
+            }
+            function not_symbol_match() {
+                return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
+            }
             var p = 0;
             var glob = {};
-            for (let i = 0; i < input.length; ++i) {
+            for (var i = 0; i < input.length; ++i) {
                 if (typeof pattern[p] === 'undefined') {
                     return i;
                 }
@@ -559,11 +573,19 @@
                             }
                             i += m;
                         }
-                        if (m === -1) {
-                            return false;
+                        if (m === -1 && (input[i] && !pattern[p + 1])) {
+                            return -1;
                         }
                         p++;
                         i -= 1;
+                        continue;
+                    } else if (pattern[p].flag === '?') {
+                        m = inner_match(pattern[p].pattern, input.slice(i));
+                        if (m === -1) {
+                            i -= 2; // if not found use same test same input again
+                        } else {
+                            p++;
+                        }
                         continue;
                     }
                 }
@@ -576,7 +598,7 @@
                         return -1;
                     }
                 } else if (typeof pattern[p] === 'symbol') {
-                    if (pattern[p] === root.Symbol.for('*')) {
+                    if (pattern[p] === Symbol.for('*')) {
                         // ignore S-expressions inside for case when next pattern is ')'
                         glob[p] = glob[p] || 0;
                         if (input[i] === '(') {
@@ -584,10 +606,15 @@
                         } else if (input[i] === ')') {
                             glob[p]--;
                         }
-                        if ((typeof pattern[p + 1] !== 'undefined' && glob[p] === 0 &&
-                             pattern[p + 1] !== input[i + 1]) || glob[p] > 0) {
+                        if (empty_match()) {
+                            i -= 1;
+                        } else if ((typeof pattern[p + 1] !== 'undefined' &&
+                                    glob[p] === 0 && pattern[p + 1] !== input[i + 1]) ||
+                                   glob[p] > 0) {
                             continue;
                         }
+                    } else if (not_symbol_match()) {
+                        return -1;
                     }
                 } else if (pattern[p] instanceof Array) {
                     var inc = inner_match(pattern[p], input.slice(i));
@@ -668,7 +695,9 @@
             if (sexp[0].line > 0) {
                 settings.offset = 0;
             }
-            if (sexp.length === 1) {
+            if (sexp.length === tokens.length) {
+                return settings.offset + sexp[0].col;
+            } else if (sexp.length === 1) {
                 return settings.offset + sexp[0].col + 1;
             } else if (Formatter.matchSpecial(sexp[1].token, settings)) {
                 return settings.offset + sexp[0].col + settings.indent;
@@ -712,19 +741,23 @@
     Formatter.Pattern = Pattern;
     Formatter.Ahead = Ahead;
     const notParen = new Ahead(/[^)]/);
-    const glob = root.Symbol.for('*');
+    const glob = Symbol.for('*');
     const sexp = new Pattern(['(', glob, ')'], '+');
+    const symbol = new Pattern([Symbol.for('symbol')], '?');
+    const let_value = new Pattern(['(', Symbol.for('symbol'), glob, ')'], '+');
     // rules for breaking S-Expressions into lines
     Formatter.rules = [
         [['(', 'begin'], 1],
         [['(', 'begin', sexp], 1, notParen],
-        [['(', /^let\*?$/, '(', glob, ')'], 1],
-        [['(', /^let\*?$/, '(', sexp], 2, notParen],
-        [['(', /^let\*?$/, ['(', glob, ')'], sexp], 1, notParen],
+        [['(', /^let\*?$/, symbol, '(', let_value, ')'], 1],
+        [['(', /^let\*?$/, symbol, '(', let_value], 2, notParen],
+        [['(', /^let\*?$/, symbol, ['(', let_value, ')'], sexp], 1, notParen],
+        [[/(?!lambda)/, '(', glob, ')'], 1, notParen],
         [['(', 'if', /[^()]/], 1],
+        [['(', 'if', /[^()]/, glob], 1],
         [['(', 'if', ['(', glob, ')']], 1],
+        [['(', 'if', ['(', glob, ')'], /[^()]/], 1],
         [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen],
-        [['(', glob, ')'], 1],
         [['(', /^(define|lambda)/, ['(', glob, ')'], string_re], 1],
         [['(', /^(define|lambda)/, '(', glob, ')'], 1],
         [['(', /^(define|lambda)/, ['(', glob, ')'], string_re, sexp], 1, notParen],
@@ -854,23 +887,23 @@
             Object.prototype.toString.call(x) === '[object Symbol]';
     }
     // ----------------------------------------------------------------------
-    // :: Symbol constructor
+    // :: LSymbol constructor
     // ----------------------------------------------------------------------
-    function Symbol(name) {
-        if (typeof this !== 'undefined' && this.constructor !== Symbol ||
+    function LSymbol(name) {
+        if (typeof this !== 'undefined' && this.constructor !== LSymbol ||
             typeof this === 'undefined') {
-            return new Symbol(name);
+            return new LSymbol(name);
         }
         this.name = name;
     }
     // ----------------------------------------------------------------------
-    Symbol.is = function(symbol, name) {
-        return symbol instanceof Symbol &&
+    LSymbol.is = function(symbol, name) {
+        return symbol instanceof LSymbol &&
             ((typeof name === 'string' && symbol.name === name) ||
              (name instanceof RegExp && name.test(symbol.name)));
     };
     // ----------------------------------------------------------------------
-    Symbol.prototype.toJSON = Symbol.prototype.toString = function() {
+    LSymbol.prototype.toJSON = LSymbol.prototype.toString = function() {
         //return '<#symbol \'' + this.name + '\'>';
         if (isSymbol(this.name)) {
             return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
@@ -882,7 +915,7 @@
     // ----------------------------------------------------------------------
     function Nil() {}
     Nil.prototype.toString = function() {
-        return 'nil';
+        return '()';
     };
     var nil = new Nil();
     // ----------------------------------------------------------------------
@@ -1025,7 +1058,7 @@
             if (node instanceof Pair && node.car instanceof Pair) {
                 var pair = node.car;
                 var name = pair.car;
-                if (name instanceof Symbol) {
+                if (name instanceof LSymbol) {
                     name = name.name;
                 }
                 var cdr = pair.cdr;
@@ -1049,7 +1082,7 @@
         return array.reduce((list, pair) => {
             return new Pair(
                 new Pair(
-                    new Symbol(pair[0]),
+                    new LSymbol(pair[0]),
                     pair[1]
                 ),
                 list
@@ -1137,7 +1170,7 @@
             return JSON.stringify(value).replace(/\\n/g, '\n');
         } else if (isPromise(value)) {
             return '<#Promise>';
-        } else if (value instanceof Symbol ||
+        } else if (value instanceof LSymbol ||
                    value instanceof LNumber ||
                    value instanceof RegExp ||
                    value instanceof Pair ||
@@ -1223,7 +1256,7 @@
             } else {
                 value = toString(this.car);
             }
-            if (value) {
+            if (value !== undefined) {
                 arr.push(value);
             }
             if (this.cdr instanceof Pair) {
@@ -1287,7 +1320,7 @@
             return x.cmp(y) === 0;
         } else if (typeof x === 'number' || typeof y === 'number') {
             return LNumber(x).cmp(LNumber(y));
-        } else if (x instanceof Symbol && y instanceof Symbol) {
+        } else if (x instanceof LSymbol && y instanceof LSymbol) {
             return x.name === y.name;
         } else {
             return x === y;
@@ -1340,7 +1373,7 @@
         return async function(code, args) {
             var env = args['env'] = this;
             async function traverse(node) {
-                if (node instanceof Pair && node.car instanceof Symbol) {
+                if (node instanceof Pair && node.car instanceof LSymbol) {
                     try {
                         var value = env.get(node.car);
                         if (value instanceof Macro && value.defmacro) {
@@ -1402,7 +1435,6 @@
             return binded.__bind.fn.apply(context, args);
         };
         hiddenProp(binded, 'name', fn.name);
-        console.log(binded.name);
         hiddenProp(binded, '__bound__', true);
         if (fn.__doc__) {
             binded.__doc__ = fn.__doc__;
@@ -1445,7 +1477,7 @@
     }
     // ----------------------------------------------------------------------
     function hiddenProp(obj, name, value) {
-        Object.defineProperty(obj, root.Symbol.for(name), {
+        Object.defineProperty(obj, Symbol.for(name), {
             get: () => value,
             set: () => {},
             configurable: false,
@@ -1493,7 +1525,7 @@
     }
     // ----------------------------------------------------------------------
     function isNativeFunction(fn) {
-        var native = root.Symbol.for('__native__');
+        var native = Symbol.for('__native__');
         return typeof fn === 'function' &&
             fn.toString().match(/\{\s*\[native code\]\s*\}/) &&
             ((fn.name.match(/^bound /) && fn[native] === true) ||
@@ -1509,16 +1541,16 @@
             var args;
             // named let:
             // (let iter ((x 10)) (iter (- x 1))) -> (let* ((iter (lambda (x) ...
-            if (code.car instanceof Symbol) {
+            if (code.car instanceof LSymbol) {
                 if (!(code.cdr.car instanceof Pair)) {
                     throw new Error('let require list of pairs');
                 }
                 var params = code.cdr.car.map(pair => pair.car);
                 args = code.cdr.car.map(pair => pair.cdr.car);
                 return Pair.fromArray([
-                    Symbol('let*'),
+                    LSymbol('let*'),
                     [[code.car, Pair(
-                        Symbol('lambda'),
+                        LSymbol('lambda'),
                         Pair(params, code.cdr.cdr))]],
                     Pair(code.car, args)
                 ]);
@@ -1547,7 +1579,7 @@
                     dynamic_scope = asterisk ? env : self;
                 }
                 if (!pair) {
-                    var output = new Pair(new Symbol('begin'), code.cdr);
+                    var output = new Pair(new LSymbol('begin'), code.cdr);
                     return evaluate(output, {
                         env,
                         dynamic_scope,
@@ -1672,7 +1704,7 @@
             obj = obj.__bind.fn;
         }
         for (let arg of args) {
-            var name = arg instanceof Symbol ? arg.name : arg;
+            var name = arg instanceof LSymbol ? arg.name : arg;
             var value = obj[name];
             if (typeof value === 'function') {
                 value = bindWithProps(value, obj);
@@ -1987,7 +2019,7 @@
         const { weak, context = this, throwError = true } = options;
         var value;
         var defined = false;
-        if (symbol instanceof Symbol) {
+        if (symbol instanceof LSymbol) {
             if (symbol.name in this.env) {
                 value = this.env[symbol.name];
                 defined = true;
@@ -2022,7 +2054,7 @@
             return this.parent.get(symbol, { weak, context, throwError });
         } else {
             var name;
-            if (symbol instanceof Symbol) {
+            if (symbol instanceof LSymbol) {
                 name = symbol.name;
             } else if (typeof symbol === 'string') {
                 name = symbol;
@@ -2051,7 +2083,7 @@
         if (LNumber.isNumber(value)) {
             value = LNumber(value);
         }
-        if (name instanceof Symbol) {
+        if (name instanceof LSymbol) {
             name = name.name;
         }
         this.env[name] = value;
@@ -2089,7 +2121,7 @@
         if (isPromise(value)) {
             return value.then(quote);
         }
-        if (value instanceof Pair || value instanceof Symbol) {
+        if (value instanceof Pair || value instanceof LSymbol) {
             value.data = true;
         }
         return value;
@@ -2111,10 +2143,10 @@
         return function(name = null) {
             // use ES6 symbol as name for lips symbol (they are unique)
             if (name !== null) {
-                return new Symbol(root.Symbol(`#:${name}`));
+                return new LSymbol(Symbol(`#:${name}`));
             }
             count++;
-            return new Symbol(root.Symbol(`#:g${count}`));
+            return new LSymbol(Symbol(`#:g${count}`));
         };
     })();
     // -------------------------------------------------------------------------
@@ -2122,8 +2154,8 @@
         nil: nil,
         'undefined': undefined,
         'true': true,
-        'NaN': NaN,
         'false': false,
+        'NaN': NaN,
         // ------------------------------------------------------------------
         stdout: {
             write: function(...args) {
@@ -2141,9 +2173,9 @@
         // ------------------------------------------------------------------
         help: doc(new Macro('help', function(code, { dynamic_scope, error }) {
             var symbol;
-            if (code.car instanceof Symbol) {
+            if (code.car instanceof LSymbol) {
                 symbol = code.car;
-            } else if (code.car instanceof Pair && code.car.car instanceof Symbol) {
+            } else if (code.car instanceof Pair && code.car.car instanceof LSymbol) {
                 symbol = code.car.car;
             } else {
                 var env = this;
@@ -2214,14 +2246,14 @@
                 object[key] = value;
                 return value;
             }
-            if (code.car instanceof Pair && Symbol.is(code.car.car, '.')) {
+            if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
                 var second = code.car.cdr.car;
                 var thrid = code.car.cdr.cdr.car;
                 var object = evaluate(second, { env: this, dynamic_scope, error });
                 var key = evaluate(thrid, { env: this, dynamic_scope, error });
                 return set(key, value);
             }
-            if (!(code.car instanceof Symbol)) {
+            if (!(code.car instanceof LSymbol)) {
                 throw new Error('set! first argument need to be a symbol or ' +
                                 'dot accessor that evaluate to object.');
             }
@@ -2290,6 +2322,13 @@
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
+        'require.resolve': doc(function(path) {
+            var ret = require.resolve(path);
+            return ret;
+        }, `(require.resolve path)
+
+           Return path relative the current module.`),
+        // ------------------------------------------------------------------
         'require': doc(function(module) {
             return require(module);
         }, `(require module)
@@ -2299,6 +2338,9 @@
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
+            if (env.name === '__frame__') {
+                env = env.parent;
+            }
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file, function(err, data) {
@@ -2323,7 +2365,7 @@
         'while': doc(new Macro('while', function(code, { dynamic_scope, error }) {
             var self = this;
             var begin = new Pair(
-                new Symbol('begin'),
+                new LSymbol('begin'),
                 code.cdr
             );
             var result;
@@ -2448,7 +2490,7 @@
             if (dynamic_scope) {
                 args.dynamic_scope = this;
             }
-            evaluate(new Pair(new Symbol('begin'), code), args);
+            evaluate(new Pair(new LSymbol('begin'), code), args);
         }, `(ignore expression)
 
             Macro that will evaluate expression and swallow any promises that may
@@ -2456,39 +2498,17 @@
             expression. The code should have side effects and/or when it's promise
             it should resolve to undefined.`),
         // ------------------------------------------------------------------
-        timer: doc(new Macro('timer', function(code, { dynamic_scope, error } = {}) {
-            typecheck('timer', code.car, 'number');
-            var env = this;
-            if (dynamic_scope) {
-                dynamic_scope = this;
-            }
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(evaluate(code.cdr.car, {
-                        env,
-                        dynamic_scope,
-                        error
-                    }));
-                }, code.car);
-            }).then(quote);
-        }), `(timer time expression)
-
-             Function return a promise, and it will be automatically evaluated
-             after specific time passes. The return value of the function
-             will be value of the timer exprssion. If you want to do side effect
-             only expression you can wrap your expression in nol call.`),
-        // ------------------------------------------------------------------
         define: doc(Macro.defmacro('define', function(code, eval_args) {
             var env = this;
             if (code.car instanceof Pair &&
-                code.car.car instanceof Symbol) {
+                code.car.car instanceof LSymbol) {
                 var new_code = new Pair(
-                    new Symbol("define"),
+                    new LSymbol("define"),
                     new Pair(
                         code.car.car,
                         new Pair(
                             new Pair(
-                                new Symbol("lambda"),
+                                new LSymbol("lambda"),
                                 new Pair(
                                     code.car.cdr,
                                     code.cdr
@@ -2509,10 +2529,10 @@
             var value = code.cdr.car;
             if (value instanceof Pair) {
                 value = evaluate(value, eval_args);
-            } else if (value instanceof Symbol) {
+            } else if (value instanceof LSymbol) {
                 value = env.get(value);
             }
-            if (code.car instanceof Symbol) {
+            if (code.car instanceof LSymbol) {
                 unpromise(value, value => {
                     env.set(code.car, value);
                 });
@@ -2544,7 +2564,7 @@
         'eval': doc(function(code, env) {
             typecheck('eval', code, ['symbol', 'pair', 'array']);
             env = env || this;
-            if (code instanceof Symbol) {
+            if (code instanceof LSymbol) {
                 return env.get(code);
             }
             if (code instanceof Pair) {
@@ -2578,20 +2598,44 @@
             if (code.cdr instanceof Pair &&
                 typeof code.cdr.car === 'string' &&
                 code.cdr.cdr !== nil) {
-                __doc__ = code.cdr.car;
+                __doc__ = trimLines(code.cdr.car);
             }
             function lambda(...args) {
-                var env = (dynamic_scope ? this : self).inherit('lambda');
+                var env;
+                if (dynamic_scope) {
+                    if (!(this instanceof Environment)) {
+                        env = self;
+                    } else {
+                        env = this;
+                    }
+                } else {
+                    env = self;
+                }
+                env = env.inherit('lambda');
                 var name = code.car;
                 var i = 0;
                 var value;
                 if (typeof this !== 'undefined') {
                     env.set('this', this);
                 }
-                if (name instanceof Symbol || !isEmptyList(name)) {
+                // arguments and arguments.callee inside lambda function
+                if (this instanceof Environment) {
+                    env.set('arguments', this.get('arguments'));
+                    env.set('parent.frame', this.get('parent.frame'));
+                } else {
+                    // this case is for lambda as callback function in JS; e.g. setTimeout
+                    var _args = args.slice();
+                    _args.callee = lambda;
+                    _args.env = env;
+                    env.set('parent.frame', function() {
+                        return nil;
+                    });
+                    env.set('arguments', _args);
+                }
+                if (name instanceof LSymbol || !isEmptyList(name)) {
                     while (true) {
                         if (name.car !== nil) {
-                            if (name instanceof Symbol) {
+                            if (name instanceof LSymbol) {
                                 // rest argument,  can also be first argument
                                 value = Pair.fromArray(args.slice(i));
                                 env.env[name.name] = value;
@@ -2616,11 +2660,11 @@
                     dynamic_scope = env;
                 }
                 var rest = __doc__ ? code.cdr.cdr : code.cdr;
-                var output = new Pair(new Symbol('begin'), rest);
+                var output = new Pair(new LSymbol('begin'), rest);
                 return evaluate(output, { env, dynamic_scope, error });
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
-            lambda.__code__ = new Pair(new Symbol('lambda'), code);
+            lambda.__code__ = new Pair(new LSymbol('lambda'), code);
             if (!(code.car instanceof Pair)) {
                 return doc(lambda, __doc__, true); // variable arguments
             }
@@ -2637,7 +2681,7 @@
         'macroexpand-1': new Macro('macroexpand-1', macroExpand(true)),
         // ------------------------------------------------------------------
         'define-macro': doc(new Macro(macro, function(macro, { dynamic_scope, error }) {
-            if (macro.car instanceof Pair && macro.car.car instanceof Symbol) {
+            if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
                 var name = macro.car.car.name;
                 var __doc__;
                 if (typeof macro.cdr.car === 'string' &&
@@ -2652,7 +2696,7 @@
                         if (name === nil) {
                             break;
                         }
-                        if (name instanceof Symbol) {
+                        if (name instanceof LSymbol) {
                             env.env[name.name] = arg;
                             break;
                         } else if (name.car !== nil) {
@@ -2696,7 +2740,7 @@
                         });
                     }
                 }, __doc__);
-                this.env[name].__code__ = new Pair(new Symbol('define-macro'), macro);
+                this.env[name].__code__ = new Pair(new LSymbol('define-macro'), macro);
             }
         }), `(define-macro (name . args) body)
 
@@ -2815,21 +2859,21 @@
             var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair && !isEmptyList(pair)) {
-                    if (Symbol.is(pair.car.car, 'unquote-splicing')) {
+                    if (LSymbol.is(pair.car.car, 'unquote-splicing')) {
                         return unquote_splice(pair, unquote_cnt + 1, max_unq);
                     }
-                    if (Symbol.is(pair.car, 'quasiquote')) {
+                    if (LSymbol.is(pair.car, 'quasiquote')) {
                         var cdr = recur(pair.cdr, unquote_cnt, max_unq + 1);
                         return new Pair(pair.car, cdr);
                     }
-                    if (Symbol.is(pair.car.car, 'unquote')) {
+                    if (LSymbol.is(pair.car.car, 'unquote')) {
                         // + 2 - one for unquote and one for unquote splicing
                         if (unquote_cnt + 2 === max_unq &&
                             pair.car.cdr instanceof Pair &&
                             pair.car.cdr.car instanceof Pair &&
-                            Symbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
+                            LSymbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
                             return new Pair(
-                                new Symbol('unquote'),
+                                new LSymbol('unquote'),
                                 unquote_splice(pair.car.cdr, unquote_cnt + 2, max_unq)
                             );
                         } else if (pair.car.cdr instanceof Pair &&
@@ -2841,17 +2885,17 @@
                             return pair.car.cdr;
                         }
                     }
-                    if (Symbol.is(pair.car, 'quote')) {
+                    if (LSymbol.is(pair.car, 'quote')) {
                         return new Pair(
                             pair.car,
                             recur(pair.cdr, unquote_cnt, max_unq)
                         );
                     }
-                    if (Symbol.is(pair.car, 'unquote')) {
+                    if (LSymbol.is(pair.car, 'unquote')) {
                         unquote_cnt++;
                         if (unquote_cnt < max_unq) {
                             return new Pair(
-                                new Symbol('unquote'),
+                                new LSymbol('unquote'),
                                 recur(pair.cdr, unquote_cnt, max_unq)
                             );
                         }
@@ -3080,7 +3124,7 @@
             if (obj instanceof Pair) {
                 return obj.toString();
             }
-            if (obj instanceof Symbol) {
+            if (obj instanceof LSymbol) {
                 return obj.toString();
             }
             if (root.HTMLElement && obj instanceof root.HTMLElement) {
@@ -3245,7 +3289,7 @@
             Function check if value is boolean.`),
         // ------------------------------------------------------------------
         'symbol?': doc(function(obj) {
-            return obj instanceof Symbol;
+            return obj instanceof LSymbol;
         }, `(symbol? expression)
 
             Function check if value is LIPS symbol`),
@@ -3266,7 +3310,7 @@
         // ------------------------------------------------------------------
         read: doc(function read(arg) {
             if (typeof arg === 'string') {
-                return parse(tokenize(arg));
+                return parse(tokenize(arg))[0];
             }
             return this.get('stdin').read().then((text) => {
                 return read.call(this, text);
@@ -3285,25 +3329,32 @@
                 arg = new lips.Formatter(arg.toString()).break().format();
                 this.get('stdout').write(arg);
             } else {
-                this.get('print').call(this, arg);
+                this.get('display').call(this, arg);
             }
         }, `(pprint expression)
 
            Pretty print list expression, if called with non-pair it just call
            print function with passed argument.`),
         // ------------------------------------------------------------------
-        print: doc(function(...args) {
+        print: doc(function() {
+            throw new Error('Function print was removed in version 0.20.0 use ' +
+                            'display insided');
+        }, `(print . args)
+
+            defunct function, we keep it to show proper error when used.`),
+        // ------------------------------------------------------------------
+        display: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
                 return this.get('string')(arg, typeof arg === 'string');
             }));
-        }, `(print . args)
+        }, `(display . args)
 
             Function convert each argument to string and print the result to
             standard output (by default it's console but it can be defined
             it user code)`),
         // ------------------------------------------------------------------
         error: doc(function(...args) {
-            this.get('print').apply(this, args);
+            this.get('display').apply(this, args);
         }, `(error . args)
 
             Display error message.`),
@@ -3371,7 +3422,7 @@
                             args.dynamic_scope = this;
                         }
                         unpromise(evaluate(new Pair(
-                            new Symbol('begin'),
+                            new LSymbol('begin'),
                             code.cdr.car.cdr.cdr
                         ), args), function(result) {
                             resolve(result);
@@ -3417,7 +3468,7 @@
             // we need to use call(this because babel transpile this code into:
             // var ret = map.apply(void 0, [fn].concat(lists));
             // it don't work with weakBind
-            var ret = this.get('map')(fn, ...lists);
+            var ret = this.get('map').call(this, fn, ...lists);
             if (isPromise(ret)) {
                 return ret.then(() => {});
             }
@@ -3433,10 +3484,17 @@
             lists.forEach((arg, i) => {
                 typecheck('map', arg, ['pair', 'nil'], i + 1);
             });
-            if (lists.some((x) => isEmptyList(x))) {
+            if (lists.some(x => x === nil)) {
+                return nil;
+            }
+            if (lists.some(isEmptyList)) {
                 return emptyList();
             }
-            return unpromise(fn.call(this, ...lists.map(l => l.car)), (head) => {
+            var args = lists.map(l => l.car);
+            var env = this;
+            args.callee = fn;
+            env.set('arguments', args);
+            return unpromise(fn.call(env, ...args), (head) => {
                 return unpromise(map.call(this, fn, ...lists.map(l => l.cdr)), (rest) => {
                     return new Pair(head, rest);
                 });
@@ -3487,7 +3545,7 @@
         // ------------------------------------------------------------------
         pluck: doc(function(...keys) {
             return function(obj) {
-                keys = keys.map(x => x instanceof Symbol ? x.name : x);
+                keys = keys.map(x => x instanceof LSymbol ? x.name : x);
                 if (keys.length === 0) {
                     return nil;
                 } else if (keys.length === 1) {
@@ -3593,7 +3651,7 @@
              (define (add a b c d) (+ a b c d))
              (define add1 (curry add 1))
              (define add12 (add 2))
-             (print (add12 3 4))`),
+             (display (add12 3 4))`),
         // ------------------------------------------------------------------
         odd: doc(singleMathOp(function(num) {
             return LNumber(num).isOdd();
@@ -3920,6 +3978,19 @@
     // -------------------------------------------------------------------------
     if (typeof global !== 'undefined') {
         global_env.set('global', global);
+        // ---------------------------------------------------------------------
+        global_env.set('require.resolve', doc(function(path) {
+            return require.resolve(path);
+        }, `(require.resolve path)
+
+           Return path relative the current module.`));
+        // ---------------------------------------------------------------------
+        global_env.set('require', doc(function(module) {
+            return require(module);
+        }, `(require module)
+
+            Function to be used inside Node.js to import the module.`));
+        // ---------------------------------------------------------------------
     } else if (typeof window !== 'undefined') {
         global_env.set('window', window);
     }
@@ -3957,10 +4028,10 @@
     function type(obj) {
         var mapping = {
             'pair': Pair,
-            'symbol': Symbol,
+            'symbol': LSymbol,
             'macro': Macro,
             'array': Array,
-            'native_symbol': root.Symbol
+            'native_symbol': Symbol
         };
         if (obj === nil) {
             return 'nil';
@@ -4093,7 +4164,7 @@
             if (isEmptyList(code)) {
                 return emptyList();
             }
-            if (code instanceof Symbol) {
+            if (code instanceof LSymbol) {
                 return env.get(code, { weak: true });
             }
             var first = code.car;
@@ -4112,9 +4183,10 @@
                     );
                 }
             }
-            if (first instanceof Symbol) {
+            if (first instanceof LSymbol) {
                 value = env.get(first, { weak: true });
                 if (value instanceof Macro) {
+                    //var scope = env.inherit('__frame__');
                     var ret = evaluateMacro(value, rest, eval_args);
                     return unpromise(ret, result => {
                         if (result instanceof Pair) {
@@ -4135,7 +4207,25 @@
             if (typeof value === 'function') {
                 var args = getFunctionArgs(rest, eval_args);
                 return unpromise(args, function(args) {
-                    var scope = dynamic_scope || env;
+                    var scope = (dynamic_scope || env).inherit('__frame__');
+                    scope.set('parent.frame', function(n = 1) {
+                        if (n === 0) {
+                            return scope;
+                        }
+                        if (!(scope.parent instanceof Environment)) {
+                            return nil;
+                        }
+                        var parent_frame = scope.parent.get('parent.frame', {
+                            throwError: false
+                        });
+                        if (typeof parent_frame === 'function') {
+                            return parent_frame(n - 1);
+                        }
+                        return nil;
+                    });
+                    var _args = args.slice();
+                    _args.callee = value;
+                    scope.set('arguments', _args);
                     var result = resolvePromises(value.apply(scope, args));
                     return unpromise(result, (result) => {
                         if (result instanceof Pair) {
@@ -4144,7 +4234,7 @@
                         return result;
                     }, error);
                 });
-            } else if (code instanceof Symbol) {
+            } else if (code instanceof LSymbol) {
                 value = env.get(code);
                 if (value === 'undefined') {
                     throw new Error('Unbound variable `' + code.name + '\'');
@@ -4183,7 +4273,9 @@
                     error: (e, code) => {
                         if (code) {
                             // LIPS stack trace
-                            e.code = e.code || [];
+                            if (!(e.code instanceof Array)) {
+                                e.code = [];
+                            }
                             e.code.push(code.toString());
                         }
                         throw e;
@@ -4235,15 +4327,15 @@
     Nil.unDry = function() {
         return nil;
     };
-    Symbol.prototype.toDry = function() {
+    LSymbol.prototype.toDry = function() {
         return {
             value: {
                 name: this.name
             }
         };
     };
-    Symbol.unDry = function(value) {
-        return new Symbol(value.name);
+    LSymbol.unDry = function(value) {
+        return new LSymbol(value.name);
     };
     // -------------------------------------------------------------------------
     function execError(e) {
@@ -4315,11 +4407,10 @@
         specials,
         nil,
         resolvePromises,
-        Symbol,
+        LSymbol,
         LNumber
     };
     // so it work when used with webpack where it will be not global
     global_env.set('lips', lips);
     return lips;
-
 });

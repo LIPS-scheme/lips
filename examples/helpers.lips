@@ -11,29 +11,49 @@
 
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
-               (on \"click\" (lambda () (print \"click\"))))
+               (on \"click\" (lambda () (display \"click\"))))
 
-          (--> document (querySelectorAll \"div\"))"
+          (--> document (querySelectorAll \"div\"))
+          (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\/title>/) 1)
+          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")"
   (let ((obj (gensym)))
     `(let* ((,obj ,(if (and (symbol? expr) (not (null? (match /\./ (symbol->string expr)))))
                        `(.. ,expr)
                        `,expr)))
        ,@(map (lambda (code)
                 (let ((name (gensym))
-                      (fn (gensym)))
-                  `(let* ((,name ,(symbol->string (car code)))
-                          (,fn (. ,obj ,name)))
-                     (if (not (function? ,fn))
-                         (error (concat ,name " is not a function"))
-                         (set! ,obj (,fn ,@(cdr code)))))))
+                      (value (gensym)))
+                  `(let* ((,name ,(cond ((quoted-symbol? code) (symbol->string (cadr code)))
+                                        ((pair? code) (symbol->string (car code)))
+                                        (true code)))
+                          (,value (. ,obj ,name)))
+                     ,(if (and (pair? code) (not (quoted-symbol? code)))
+                         `(set! ,obj (,value ,@(cdr code)))
+                         `(set! ,obj ,value)))))
               code)
        ,obj)))
+
+;; ---------------------------------------------------------------------------------------
+(define (quoted-symbol? x)
+   "(quoted-symbol? code)
+
+   Helper function that test if value is quoted symbol. To be used in macros
+   that pass literal code that is transformed by parser.
+
+   usage:
+
+      (define-macro (test x)
+         (if (quoted-symbol? x)
+             `',(cadr x)))
+
+      (list 'hello (test 'world))"
+   (and (pair? x) (eq? (car x) 'quote) (symbol? (cadr x)) (null? (cddr x))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (single list)
   "(single list)
 
-   Function check if argument is list with single element."
+   Function check if argument is list with single element"
   (and (pair? list) (not (cdr list))))
 
 ;; ---------------------------------------------------------------------------------------
@@ -59,7 +79,11 @@
 
 
 ;; ---------------------------------------------------------------------------------------
-(define log (. console "log"))
+(define (log . args)
+  "(log . args)
+
+   Wrapper over console.log"
+  (apply (.. console.log) args))
 
 
 ;; ---------------------------------------------------------------------------------------
@@ -89,7 +113,7 @@
   "(string->symbol string)
 
    Function convert string to LIPS symbol."
-  (and (string? string) (as.data (new (. lips "Symbol") string))))
+  (and (string? string) (as.data (new (. lips "LSymbol") string))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (value obj)
@@ -147,16 +171,47 @@
   (if (pair? alist)
       ((. alist "toObject"))))
 
+;; ---------------------------------------------------------------------------------------
+(define-macro (promise . body)
+  "(promise . body)
 
-(define-macro (delay time . expr)
-  `(new Promise (lambda (resolve)
-                  (setTimeout (lambda ()
-                                (resolve (begin ,@expr)))
-                              ,time))))
+   Anaphoric macro that expose resolve and reject functions from JS promise"
+  `(new Promise (lambda (resolve reject)
+                  (try (begin ,@body)
+                       (catch (e)
+                              (error (.. e.message)))))))
+
+;; ---------------------------------------------------------------------------------------
+(define (parent.frames)
+  "(parent.frames)
+
+   Funcion return list of environments from parent frames (lambda function calls)"
+  (let iter ((result '()) (frame (parent.frame 2)))
+     (if (null? frame)
+         result
+         (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
+            (if (function? parent.frame)
+                (iter (cons frame result) (parent.frame))
+                result)))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (timer time . body)
+  "(timer time . body)
+
+   Macro evaluate expression after delay, it return timer. To clear the timer you can use
+   native JS clearTimeout function."
+  `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (wait time . expr)
+  "(wait time . expr)
+
+   Function return promise that will resolve with evaluating the expression after delay."
+  `(promise (timer ,time (resolve (begin ,@expr)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (pair-map fn seq-list)
-  "(seq-map fn list)
+  "(pair-map fn list)
 
    Function call fn argument for pairs in a list and return combined list with
    values returned from function fn. It work like the map but take two items from list"
@@ -290,10 +345,13 @@
              (begin
                ,@forms)
              ,(if (and (pair? rest)
-                       (eq? (caar rest) true))
+                       (or (eq? (caar rest) true)
+                           (eq? (caar rest) 'else)))
                   `(begin
                      ,@(cdar rest))
-                  `(cond ,@rest))))))
+                  (if (not (null? rest))
+                      `(cond ,@rest)))))
+      nil))
 
 ;; ---------------------------------------------------------------------------------------
 (define (tree-map f tree)
@@ -371,10 +429,10 @@
   "(match-patternpattern ((pattern . body) ...))
 
    Pattern matching macro. examples:
-   (match-pattern (1 (pair? pair?) 2) ((1 (() ()) 2) (print \"match\")))
+   (match-pattern (1 (pair? pair?) 2) ((1 (() ()) 2) (display \"match\")))
    ;; match
-   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")))
-   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (print \"match\")) (true \"rest\"))
+   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (display \"match\")))
+   (match-pattern (1 (pair? pair?) 2) ((1 (()) 2) (display \"match\")) (true \"rest\"))
    ;; rest"
  (if (pair? list)
      (let ((ex-name (gensym)))
@@ -394,6 +452,9 @@
 
 
 (define (assocv key alist)
+  "(assocv key alist)
+
+   Return value of alist if found or undefined of not."
   (let ((pair (assoc key alist)))
     (if (pair? pair) (cdr pair) undefined)))
 

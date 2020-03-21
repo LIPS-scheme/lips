@@ -19,6 +19,8 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
+* Almost everything is first class object including macros and functions,
+* Functions code introspection/manipulation at runtime give more power to the programmer,
 * Optional dynamic scope.
 
 ## Installation
@@ -50,7 +52,7 @@ Simplest way is to include the lips code in script tag:
 <script type="text/x-lips">
 (let ((what "world")
       (greet "hello"))
-   (print (concat "hello" " " what)))
+   (display (concat "hello" " " what)))
 </script>
 ```
 
@@ -76,6 +78,68 @@ exec(string).then(function(results) {
 
 More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
 in [docs page](https://jcubic.github.io/lips/docs.html).
+
+## Standalone executable
+
+if you install lips globally with:
+
+```
+npm install -g @jcubic/lips
+```
+
+you can run interpreter from terminal:
+
+```
+$ lips
+LIPS Interpreter (Simple Scheme like Lisp)
+Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
+
+lips> (define (square x)
+...     (* x x))
+lips> (square 10)
+100
+lips>
+```
+
+One feature of LIPS REPL is that it auto indent the lines when you press enter and didn't finish the code.
+
+You can also run code as string with:
+
+```
+lips -c '(let ((what "World")) (display (concat "Hello " what)))'
+```
+
+and you can run a file using:
+
+```
+cat > foo.lips <<EOF
+(let ((what "World"))
+  (display (concat "Hello " what)))
+EOF
+
+lips foo.lips
+```
+
+You can also write executable files that use lips shebang
+
+```
+cat > foo.lips <<EOF
+#!/usr/bin/env lips
+(let ((what "World"))
+  (display (concat "Hello " what)))
+EOF
+chmod a+x foo.lips
+foo.lips
+```
+
+```
+cat <<EOF
+something
+EOF
+```
+
+> if just example of using cat to create multiline file from bash, you should use proper editor for
+> writing files.
 
 ## License
 

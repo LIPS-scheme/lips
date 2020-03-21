@@ -72,7 +72,7 @@
       (let ((store (--> localStorage (getItem namespace))))
         (if (null? store)
             '()
-            (. (read store) 0)))))
+            (read store)))))
 
 ;; ref: https://www.programming-idioms.org/idiom/12/check-if-list-contains-a-value/154/scheme
 (define (contains x list)

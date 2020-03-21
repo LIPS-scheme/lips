@@ -1,3 +1,57 @@
+## 0.20.0
+### Breaking
+* replace `print` with `display` (more like scheme)
+* replace `lips.Symbol` with `LSymbol`
+* replace `delay` with `wait` (to allow using scheme delay/force)
+* change `timer` function to just `setTimeout` with expression (old `timer` is now `wait`)
+### Features
+* improve `-->` macro to handle numbers and strings and symbols (quoted or not)
+* new function `quoted-symbol?`
+* allow to use else in cond (same as true - similar to scheme)
+* new macro: `promise`
+* experimental parent.frame (inspired by R)
+* add `arguments.callee` to lambdas
+### Bug fixes
+* fix for-each with function that use this (like print)
+* fix pretty print of lisp code
+* fix formatting/indent of list of full S-Expressions
+
+## 0.19.0
+### Features
+* add require.resolve function
+### Bug fixes
+* fix stack trace on Node.js errors
+* fix display of functions as values in executable
+* require is defined only in Node.js
+
+## 0.18.2
+### Bug fixes
+* bootstrap helpers.lips in executable
+
+## 0.18.1
+### Bug fixes
+* fix auto indent and add version number to executable
+
+## 0.18.0
+### Features
+* add copyright notes to binary and improve the calling it
+* allow to call lips from shebang
+### Bug fixes
+* trim lines in functions doc strings [#23](https://github.com/jcubic/lips/issues/23)
+
+## 0.17.2
+### Bug fixes
+* fix list of false values [#22](https://github.com/jcubic/lips/issues/22)
+
+## 0.17.1
+### Bug fixes
+* fix map last value [#21](https://github.com/jcubic/lips/issues/21)
+
+## 0.17.0
+### Features
+* revert breaking change of read to return Array
+* use proper read function in executable REPL
+
 ## 0.16.3
 ### Bug fixes
 * fix map on empty list

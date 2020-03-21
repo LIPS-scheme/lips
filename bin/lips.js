@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-const {exec, indent, balanced_parenthesis, tokenize} = require('../src/lips');
+const {exec, Formatter, balanced_parenthesis, tokenize, env, version} = require('../dist/lips');
 const fs = require('fs');
+const {format} = require('util');
 const readline = require('readline');
 
 // -----------------------------------------------------------------------------
@@ -55,11 +56,11 @@ function parse_options(arg, options) {
 }
 
 // -----------------------------------------------------------------------------
-function run(code) {
+function run(code, env) {
     if (typeof code !== 'string') {
         code = code.toString();
     }
-    return exec(code).catch(function(e) {
+    return exec(code, env).catch(function(e) {
         console.error(e.message);
         if (e.code) {
             console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`).join('\n'));
@@ -71,26 +72,58 @@ function run(code) {
 function print(result) {
     if (result.length) {
         var last = result.pop();
-        if (last) {
-            console.log(last.toString());
+        if (last !== undefined) {
+            console.log(env.get('string')(last));
         }
     }
 }
 // -----------------------------------------------------------------------------
+function boostrap() {
+    var path;
+    try {
+        path = require.resolve('./examples/helpers.lips');
+    } catch (e) {
+        path = require.resolve('@jcubic/lips/examples/helpers.lips');
+    }
+    var data = fs.readFileSync(path);
+    return run(data, env);
+}
 
-const options = parse_options(process.argv);
+// -----------------------------------------------------------------------------
+function indent(code, indent, offset) {
+    var formatter = new Formatter(code);
+    return formatter.indent({
+        indent,
+        offset
+    });
+}
+
+// -----------------------------------------------------------------------------
+const options = parse_options(process.argv.slice(2));
+const intro = 'LIPS Interpreter (ver. ' + version + ')\n' +
+      'Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>\n';
 
 if (options.c) {
-    run(options.c).then(print);
-} else if (options.f) {
-   fs.readFile(options.f, function(err, data) {
+    boostrap().then(function() {
+        run(options.c, env).then(print);
+    });
+} else if (options._.length === 1) {
+   fs.readFile(options._[0], function(err, data) {
         if (err) {
             console.error(err);
         } else {
-            run(data)
+            boostrap().then(function() {
+                return run(data.toString().replace(/^#!.*\n/, ''), env);
+            });
         }
     });
+} else if (options.h) {
+    var name = process.argv[1];
+    console.log(format('%s\nusage:\n%s [-h]|[-c <code>]|<filename>\n\n\t-h this help message\n\t-c execute' +
+                       ' code\n\nif called without arguments it will run REPL and if called with one argument' +
+                       '\nit will treat it as filename and execute it.', intro, name));
 } else {
+    console.log(intro);
     var prompt = 'lips> ';
     var continuePrompt = '... ';
     const rl = readline.createInterface({
@@ -104,35 +137,47 @@ if (options.c) {
     }
     var code = '';
     var multiline = false;
-    rl.on('line', function(line) {
-        code += line;
-        if (balanced_parenthesis(code)) {
-            rl.pause();
-            run(code).then(function(result) {
-                if (process.stdin.isTTY) {
-                    print(result);
-                    if (multiline) {
-                        rl.setPrompt(prompt);
+    var resolve;
+    var e = env.inherit('name', {
+        stdin: {
+            read: function() {
+                return new Promise(function(resolve) {
+                    rl.question('', resolve);
+                });
+            }
+        }
+    });
+    boostrap().then(function() {
+        rl.on('line', function(line) {
+            code += line + '\n';
+            if (balanced_parenthesis(code)) {
+                rl.pause();
+                run(code, e).then(function(result) {
+                    if (process.stdin.isTTY) {
+                        print(result);
+                        if (multiline) {
+                            rl.setPrompt(prompt);
+                        }
+                        code = '';
+                        rl.prompt();
+                    }
+                    rl.resume();
+                }).catch(function() {
+                    if (process.stdin.isTTY) {
+                        if (multiline) {
+                            rl.setPrompt(prompt);
+                        }
+                        rl.prompt();
                     }
                     code = '';
-                    rl.prompt();
-                }
-                rl.resume();
-            }).catch(function() {
-                if (process.stdin.isTTY) {
-                    if (multiline) {
-                        rl.setPrompt(prompt);
-                    }
-                    rl.prompt();
-                }
-                code = '';
-            });
-        } else {
-            multiline = true;
-            var i = indent(code, 2, prompt.length - continuePrompt.length);
-            rl.setPrompt(continuePrompt);
-            rl.prompt();
-            rl.write(new Array(i + 1).join(' '));
-        }
+                });
+            } else {
+                multiline = true;
+                var i = indent(code, 2, prompt.length - continuePrompt.length);
+                rl.setPrompt(continuePrompt);
+                rl.prompt();
+                rl.write(new Array(i + 1).join(' '));
+            }
+        });
     });
 }
