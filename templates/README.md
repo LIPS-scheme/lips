@@ -20,6 +20,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 * RegExp-es are first class objects,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
+* Functions code introspection/manipulation at runtime give more power to the programmer,
 * Optional dynamic scope.
 
 ## Installation

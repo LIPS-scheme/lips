@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&30df95678c1304ef37fa966b8f8b188156550f75)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&8710db161df0ca3500520bda08815b5e)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&21bfcd5789dfae21232d178e385e3afb253095aa)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&52aba06ba0a695568564177bab7ef6e8)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 LIPS is very simple Lisp, similar to Scheme written in JavaScript.
@@ -20,6 +20,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 * RegExp-es are first class objects,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
+* Functions code introspection/manipulation at runtime give more power to the programmer,
 * Optional dynamic scope.
 
 ## Installation
