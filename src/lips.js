@@ -2153,8 +2153,6 @@
     var global_env = new Environment({
         nil: nil,
         'undefined': undefined,
-        '#t': true,
-        '#f': false,
         'true': true,
         'false': false,
         'NaN': NaN,
