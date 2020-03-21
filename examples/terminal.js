@@ -32,8 +32,8 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         },
         // ---------------------------------------------------------------------
         help: doc(new lips.Macro('help', function(code, { error }) {
-            const { evaluate, Pair, Symbol, nil } = lips;
-            var new_code = new Pair(new Symbol('__help'), code);
+            const { evaluate, Pair, LSymbol, nil } = lips;
+            var new_code = new Pair(new LSymbol('__help'), code);
             var doc = evaluate(new_code, { env: this, error });
             term.echo(doc, { formatters: false });
         }), lips.env.env.help.__doc__),
@@ -51,7 +51,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         lips.exec(code, env, dynamic).then(function(ret) {
             ret.forEach(function(ret) {
                 if (ret !== undefined) {
-                    env.get('print').call(env, ret);
+                    env.get('display').call(env, ret);
                 }
             });
         }).catch(function(e) {

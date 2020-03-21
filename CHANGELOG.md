@@ -1,3 +1,22 @@
+## 0.20.0
+### Breaking
+* replace `print` with `display` (more like scheme)
+* replace `lips.Symbol` with `LSymbol`
+* replace `delay` with `wait` (to allow using scheme delay/force)
+* change `timer` function to just `setTimeout` with expression (old `timer` is now `wait`)
+### Features
+* improve `-->` macro to handle numbers and strings and symbols (quoted or not)
+* new function `quoted-symbol?`
+* allow to use else in cond (same as true - similar to scheme)
+* new macro: `promise`
+* experimental parent.frame (inspired by R)
+* add `arguments.callee` to lambdas
+* scheme compatibility (#t and #f default symbols)
+### Bug fixes
+* fix for-each with function that use this (like print)
+* fix pretty print of lisp code
+* fix formatting/indent of list of full S-Expressions
+
 ## 0.19.0
 ### Features
 * add require.resolve function
