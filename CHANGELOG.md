@@ -15,6 +15,7 @@
 ### Bug fixes
 * fix for-each with function that use this (like print)
 * fix pretty print of lisp code
+* fix formatting/indent of list of full S-Expressions
 
 ## 0.19.0
 ### Features

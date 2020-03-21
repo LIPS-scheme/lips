@@ -695,7 +695,9 @@
             if (sexp[0].line > 0) {
                 settings.offset = 0;
             }
-            if (sexp.length === 1) {
+            if (sexp.length === tokens.length) {
+                return settings.offset + sexp[0].col;
+            } else if (sexp.length === 1) {
                 return settings.offset + sexp[0].col + 1;
             } else if (Formatter.matchSpecial(sexp[1].token, settings)) {
                 return settings.offset + sexp[0].col + settings.indent;

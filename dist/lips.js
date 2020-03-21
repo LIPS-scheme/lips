@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Mar 2020 18:23:08 +0000
+ * build: Sat, 21 Mar 2020 18:40:55 +0000
  */
 (function () {
 	'use strict';
@@ -1727,7 +1727,9 @@
 	        settings.offset = 0;
 	      }
 
-	      if (sexp.length === 1) {
+	      if (sexp.length === tokens.length) {
+	        return settings.offset + sexp[0].col;
+	      } else if (sexp.length === 1) {
 	        return settings.offset + sexp[0].col + 1;
 	      } else if (Formatter.matchSpecial(sexp[1].token, settings)) {
 	        return settings.offset + sexp[0].col + settings.indent;
@@ -3803,7 +3805,7 @@
 	      typecheck('load', file, 'string');
 	      var env = this;
 
-	      if (env.name == '__frame__') {
+	      if (env.name === '__frame__') {
 	        env = env.parent;
 	      }
 
@@ -4082,7 +4084,7 @@
 	          env.set('arguments', this.get('arguments'));
 	          env.set('parent.frame', this.get('parent.frame'));
 	        } else {
-	          // this case is for lambda as callback function in JS (e.g. setTimeout)
+	          // this case is for lambda as callback function in JS; e.g. setTimeout
 	          var _args = args.slice();
 
 	          _args.callee = lambda;
@@ -5676,7 +5678,7 @@
 	        });
 
 	        if (value instanceof Macro) {
-	          var scope = env.inherit('__frame__');
+	          //var scope = env.inherit('__frame__');
 	          var ret = evaluateMacro(value, rest, eval_args);
 	          return unpromise(ret, function (result) {
 	            if (result instanceof Pair) {
