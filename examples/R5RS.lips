@@ -72,3 +72,21 @@
 
    Function force the promise and evaluate delayed expression."
   (promise))
+
+(define (positive? x)
+  "(positive? x)
+
+   Function check if number is larger then 0"
+  (> x 0))
+
+(define (negative? x)
+  "(negative? x)
+
+   Function check if number is smaller then 0"
+  (< x 0))
+
+(define (zero? x)
+  "(zero? x)
+
+   Function check if number is equal to 0"
+  (= x 0))
