@@ -20,9 +20,11 @@
    Function compare the values. It return true if they are the same, they
    need to have same type"
   (if (eq? (type a) (type b))
-      (if (and (pair? a) (null? a) (null? b))
-          true
-          (eq? a b))))
+      (if (number? a)
+          (= a b) ;; eq? in JS also works on numbers
+          (if (and (pair? a) (null? a) (null? b))
+              true
+              (eq? a b)))))
 
 (define = ==)
 
@@ -36,7 +38,7 @@
               (equal? (cdr a) (cdr b))))
         ((and (array? a) (array? b) (eq? (length a) (length b)))
          (= (--> a (filter (lambda (item i) (equal? item (. b i)))) 'length) (length a)))
-        (else (eq? a b))))
+        (else (eqv? a b))))
 
 (define (every . args)
   "(every . args)

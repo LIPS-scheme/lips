@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Mar 2020 14:05:09 +0000
+ * build: Sun, 22 Mar 2020 15:30:14 +0000
  */
 (function () {
 	'use strict';
@@ -4890,6 +4890,10 @@
 	        }
 	      });
 	    }), "(try expr (catch (e) code)"),
+	    // ------------------------------------------------------------------
+	    'throw': doc(function (message) {
+	      throw new Error(message);
+	    }, "(throw string)\n\n            Throw new expection."),
 	    // ------------------------------------------------------------------
 	    find: doc(function find(arg, list) {
 	      typecheck('find', arg, ['regex', 'function']);

@@ -3454,6 +3454,12 @@
             });
         }), `(try expr (catch (e) code)`),
         // ------------------------------------------------------------------
+        'throw': doc(function(message) {
+            throw new Error(message);
+        }, `(throw string)
+
+            Throw new expection.`),
+        // ------------------------------------------------------------------
         find: doc(function find(arg, list) {
             typecheck('find', arg, ['regex', 'function']);
             typecheck('find', list, 'pair');
