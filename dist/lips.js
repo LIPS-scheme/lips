@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Mar 2020 15:41:17 +0000
+ * build: Sun, 22 Mar 2020 16:52:57 +0000
  */
 (function () {
 	'use strict';
@@ -2457,6 +2457,13 @@
 
 	    return this;
 	  }; // ----------------------------------------------------------------------
+	  // :: abs that work on BigInt
+	  // ----------------------------------------------------------------------
+
+
+	  function abs(x) {
+	    return x < 0 ? -x : x;
+	  } // ----------------------------------------------------------------------
 
 
 	  function seq_compare(fn, args) {
@@ -3260,6 +3267,22 @@
 	      '/': function _(a, b) {
 	        return a / b;
 	      },
+	      'mod': function mod(a, b) {
+	        if (b === 0 || Number.isNaN(a) || Number.isNaN(b)) {
+	          return NaN;
+	        }
+
+	        var isPositive = a >= 0;
+	        a = a < 0 ? -a : a; // Math.abs that work with BigInt
+
+	        b = b < 0 ? -b : b;
+
+	        while (a >= b) {
+	          a = a - b;
+	        }
+
+	        return isPositive ? a : -a;
+	      },
 	      '%': function _(a, b) {
 	        return a % b;
 	      },
@@ -3292,6 +3315,10 @@
 	    }
 
 	    if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
+	      if (op === 'mod') {
+	        throw new Error('Not yet implemented');
+	      }
+
 	      var bn_op = {
 	        '+': 'iadd',
 	        '-': 'isub',
@@ -3315,7 +3342,8 @@
 	    '-': 'sub',
 	    '*': 'mul',
 	    '/': 'div',
-	    '%': 'mod',
+	    '%': 'rem',
+	    'mod': 'mod',
 	    '|': 'or',
 	    '&': 'and',
 	    '~': 'neg',
@@ -4694,6 +4722,7 @@
 	      typecheck('unset!', symbol, 'symbol');
 	      delete this.env[symbol.name];
 	    }, "(unset! name)\n\n            Function delete specified name from environment."),
+	    // ------------------------------------------------------------------
 	    'typecheck': doc(function (label, arg, expected, position) {
 	      if (expected instanceof Pair) {
 	        expected = expected.toArray();
@@ -5108,6 +5137,50 @@
 	    compose: doc(compose, "(compose . fns)\n\n             Higher order function and create new function that apply all functions\n             From right to left and return it's value. Reverse of compose.\n             e.g.:\n             ((compose (curry + 2) (curry * 3)) 3)\n             11\n            "),
 	    pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
 	    curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (display (add12 3 4))"),
+	    'gdc': doc(function GCD() {
+	      for (var _len26 = arguments.length, args = new Array(_len26), _key26 = 0; _key26 < _len26; _key26++) {
+	        args[_key26] = arguments[_key26];
+	      }
+
+	      // implementation based on
+	      // https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
+	      var i,
+	          y,
+	          n = args.length,
+	          x = abs(args[0]);
+
+	      for (i = 1; i < n; i++) {
+	        y = abs(args[i]);
+
+	        while (x && y) {
+	          x > y ? x %= y : y %= x;
+	        }
+
+	        x += y;
+	      }
+
+	      return x;
+	    }, "(gdc n1 n2 ...)\n\n            Function return the greatest common divisor of their arguments."),
+	    // ------------------------------------------------------------------
+	    'lcm': doc(function () {
+	      // implementation based on
+	      // https://rosettacode.org/wiki/Least_common_multiple#JavaScript
+	      var n = arguments.length,
+	          a = abs(arguments.length <= 0 ? undefined$1 : arguments[0]);
+
+	      for (var i = 1; i < n; i++) {
+	        var b = abs(i < 0 || arguments.length <= i ? undefined$1 : arguments[i]),
+	            c = a;
+
+	        while (a && b) {
+	          a > b ? a %= b : b %= a;
+	        }
+
+	        a = abs(c * (i < 0 || arguments.length <= i ? undefined$1 : arguments[i])) / (a + b);
+	      }
+
+	      return a;
+	    }, "(lcm n1 n2 ...)\n\n            Function return the least common multiple of their arguments."),
 	    // ------------------------------------------------------------------
 	    odd: doc(singleMathOp(function (num) {
 	      return LNumber(num).isOdd();
@@ -5127,8 +5200,8 @@
 	    }), "(+ . numbers)\n\n             Sum all numbers passed as arguments. If single value is passed it will\n             return that value."),
 	    // ------------------------------------------------------------------
 	    '-': doc(function () {
-	      for (var _len26 = arguments.length, args = new Array(_len26), _key26 = 0; _key26 < _len26; _key26++) {
-	        args[_key26] = arguments[_key26];
+	      for (var _len27 = arguments.length, args = new Array(_len27), _key27 = 0; _key27 < _len27; _key27++) {
+	        args[_key27] = arguments[_key27];
 	      }
 
 	      if (args.length === 1) {
@@ -5182,14 +5255,18 @@
 	      return value;
 	    }), "(-- variable)\n\n             Macro that decrement the value it work only on symbols"),
 	    // ------------------------------------------------------------------
-	    '%': doc(reduceMathOp(function (a, b) {
+	    'modulo': doc(function (a, b) {
+	      return LNumber(a).rem(b);
+	    }, "(modulo n1 n2)\n\n             Function get modulo of it's arguments."),
+	    // ------------------------------------------------------------------
+	    '%': doc(function (a, b) {
 	      return LNumber(a).mod(b);
-	    }), "(% . numbers)\n\n             Function use modulo operation on each of the numbers. It return\n             single number."),
+	    }, "(% n1 n2)\n\n             Function get reminder of it's arguments."),
 	    // ------------------------------------------------------------------
 	    // Booleans
 	    '==': doc(function () {
-	      for (var _len27 = arguments.length, args = new Array(_len27), _key27 = 0; _key27 < _len27; _key27++) {
-	        args[_key27] = arguments[_key27];
+	      for (var _len28 = arguments.length, args = new Array(_len28), _key28 = 0; _key28 < _len28; _key28++) {
+	        args[_key28] = arguments[_key28];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -5198,8 +5275,8 @@
 	    }, "(== x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are equal"),
 	    // ------------------------------------------------------------------
 	    '>': doc(function () {
-	      for (var _len28 = arguments.length, args = new Array(_len28), _key28 = 0; _key28 < _len28; _key28++) {
-	        args[_key28] = arguments[_key28];
+	      for (var _len29 = arguments.length, args = new Array(_len29), _key29 = 0; _key29 < _len29; _key29++) {
+	        args[_key29] = arguments[_key29];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -5208,8 +5285,8 @@
 	    }, "(> x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically increasing"),
 	    // ------------------------------------------------------------------
 	    '<': doc(function () {
-	      for (var _len29 = arguments.length, args = new Array(_len29), _key29 = 0; _key29 < _len29; _key29++) {
-	        args[_key29] = arguments[_key29];
+	      for (var _len30 = arguments.length, args = new Array(_len30), _key30 = 0; _key30 < _len30; _key30++) {
+	        args[_key30] = arguments[_key30];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -5218,8 +5295,8 @@
 	    }, "(< x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically decreasing"),
 	    // ------------------------------------------------------------------
 	    '<=': doc(function () {
-	      for (var _len30 = arguments.length, args = new Array(_len30), _key30 = 0; _key30 < _len30; _key30++) {
-	        args[_key30] = arguments[_key30];
+	      for (var _len31 = arguments.length, args = new Array(_len31), _key31 = 0; _key31 < _len31; _key31++) {
+	        args[_key31] = arguments[_key31];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -5228,8 +5305,8 @@
 	    }, "(<= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nonincreasing"),
 	    // ------------------------------------------------------------------
 	    '>=': doc(function () {
-	      for (var _len31 = arguments.length, args = new Array(_len31), _key31 = 0; _key31 < _len31; _key31++) {
-	        args[_key31] = arguments[_key31];
+	      for (var _len32 = arguments.length, args = new Array(_len32), _key32 = 0; _key32 < _len32; _key32++) {
+	        args[_key32] = arguments[_key32];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -5350,8 +5427,8 @@
 	      return !value;
 	    }, "(not object)\n\n            Function return negation of the argument."),
 	    '->': doc(function (obj, name) {
-	      for (var _len32 = arguments.length, args = new Array(_len32 > 2 ? _len32 - 2 : 0), _key32 = 2; _key32 < _len32; _key32++) {
-	        args[_key32 - 2] = arguments[_key32];
+	      for (var _len33 = arguments.length, args = new Array(_len33 > 2 ? _len33 - 2 : 0), _key33 = 2; _key33 < _len33; _key33++) {
+	        args[_key33 - 2] = arguments[_key33];
 	      }
 
 	      return obj[name].apply(obj, args);

@@ -1315,6 +1315,12 @@
     };
 
     // ----------------------------------------------------------------------
+    // :: abs that work on BigInt
+    // ----------------------------------------------------------------------
+    function abs(x) {
+        return x < 0 ? -x : x;
+    }
+    // ----------------------------------------------------------------------
     function seq_compare(fn, args) {
         var [a, ...rest] = args;
         while (rest.length > 0) {
@@ -1855,6 +1861,18 @@
             '/': function(a, b) {
                 return a / b;
             },
+            'mod': function(a, b) {
+                if (b === 0 || Number.isNaN(a) || Number.isNaN(b)) {
+                    return NaN;
+                }
+                var isPositive = a >= 0;
+                a = a < 0 ? -a : a; // Math.abs that work with BigInt
+                b = b < 0 ? -b : b;
+                while (a >= b) {
+                    a = a - b;
+                }
+                return isPositive ? a : -a;
+            },
             '%': function(a, b) {
                 return a % b;
             },
@@ -1884,6 +1902,9 @@
             return LNumber(ops[op](this.value, n.value));
         }
         if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
+            if (op === 'mod') {
+                throw new Error('Not yet implemented');
+            }
             var bn_op = {
                 '+': 'iadd',
                 '-': 'isub',
@@ -1906,7 +1927,8 @@
         '-': 'sub',
         '*': 'mul',
         '/': 'div',
-        '%': 'mod',
+        '%': 'rem',
+        'mod': 'mod',
         '|': 'or',
         '&': 'and',
         '~': 'neg',
@@ -3201,6 +3223,7 @@
         }, `(unset! name)
 
             Function delete specified name from environment.`),
+        // ------------------------------------------------------------------
         'typecheck': doc(function(label, arg, expected, position) {
             if (expected instanceof Pair) {
                 expected = expected.toArray();
@@ -3681,6 +3704,40 @@
              (define add1 (curry add 1))
              (define add12 (add 2))
              (display (add12 3 4))`),
+        'gdc': doc(function GCD(...args) {
+            // implementation based on
+            // https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
+            var i, y,
+                n = args.length,
+                x = abs(args[0]);
+            for (i = 1; i < n; i++) {
+                y = abs(args[i]);
+
+                while (x && y) {
+                    (x > y) ? x %= y : y %= x;
+                }
+                x += y;
+            }
+            return x;
+        }, `(gdc n1 n2 ...)
+
+            Function return the greatest common divisor of their arguments.`),
+        // ------------------------------------------------------------------
+        'lcm': doc(function(...args) {
+            // implementation based on
+            // https://rosettacode.org/wiki/Least_common_multiple#JavaScript
+            var n = args.length, a = abs(args[0]);
+            for (var i = 1; i < n; i++) {
+                var b = abs(args[i]), c = a;
+                while (a && b) {
+                    a > b ? a %= b : b %= a;
+                }
+                a = abs(c * args[i]) / ( a + b);
+            }
+            return a;
+        }, `(lcm n1 n2 ...)
+
+            Function return the least common multiple of their arguments.`),
         // ------------------------------------------------------------------
         odd: doc(singleMathOp(function(num) {
             return LNumber(num).isOdd();
@@ -3781,12 +3838,17 @@
 
              Macro that decrement the value it work only on symbols`),
         // ------------------------------------------------------------------
-        '%': doc(reduceMathOp(function(a, b) {
-            return LNumber(a).mod(b);
-        }), `(% . numbers)
+        'modulo': doc(function(a, b) {
+            return LNumber(a).rem(b);
+        }, `(modulo n1 n2)
 
-             Function use modulo operation on each of the numbers. It return
-             single number.`),
+             Function get modulo of it's arguments.`),
+        // ------------------------------------------------------------------
+        '%': doc(function(a, b) {
+            return LNumber(a).mod(b);
+        }, `(% n1 n2)
+
+             Function get reminder of it's arguments.`),
         // ------------------------------------------------------------------
         // Booleans
         '==': doc(function(...args) {

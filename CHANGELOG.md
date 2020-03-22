@@ -5,6 +5,7 @@
 * `<`, `>`, `==`, `<=` and `>=` now have variable number of arguments
 * new `throw` function that throw JS exception
 * expose `typecheck` function that test type of the arguments and throw exception if don't match
+* new `gdc` and `lcm` functions
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
