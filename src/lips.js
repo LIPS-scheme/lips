@@ -3453,6 +3453,19 @@
 
             Function return length of the object, the object can be list
             or any object that have length property.`),
+        // ------------------------------------------------------------------
+        'string->number': doc(function(arg, radix = 10) {
+            typecheck('string->number', arg, 'string', 1);
+            typecheck('string->number', radix, 'number', 2);
+            if (arg.match(int_re)) {
+                return LNumber(parseFloat(arg));
+            } else if (arg.match(float_re)) {
+                return LNumber(parseFloat(arg), true);
+            }
+        }, `(string->number number [radix])
+
+           Function convert string to number.`),
+        // ------------------------------------------------------------------
         'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
             return new Promise((resolve) => {
                 var args = {

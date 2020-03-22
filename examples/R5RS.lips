@@ -102,3 +102,12 @@
   (/ a b))
 
 (define remainder %)
+
+(define (number->string x . rest)
+  "(number->string x [radix])
+
+   Function convert number to string with optional radix (number base)."
+  (typecheck "number->string" x "number" 1)
+  (let ((radix (if (null? rest) 10 (car rest))))
+    (typecheck "number->string" radix "number" 2)
+    (--> x (toString radix))))
