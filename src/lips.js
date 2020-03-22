@@ -3745,7 +3745,7 @@
                 while (a && b) {
                     a > b ? a %= b : b %= a;
                 }
-                a = abs(c * args[i]) / ( a + b);
+                a = abs(c * args[i]) / (a + b);
             }
             return a;
         }, `(lcm n1 n2 ...)
@@ -3865,34 +3865,34 @@
         // ------------------------------------------------------------------
         // Booleans
         '==': doc(function(...args) {
-            return seq_compare((a,b) => LNumber(a).cmp(b) === 0, args);
+            return seq_compare((a, b) => LNumber(a).cmp(b) === 0, args);
         }, `(== x1 x2 x3 ...)
 
             Function compare its numerical arguments and check if they are equal`),
         // ------------------------------------------------------------------
         '>': doc(function(...args) {
-            return seq_compare((a,b) => LNumber(a).cmp(b) === 1, args);
+            return seq_compare((a, b) => LNumber(a).cmp(b) === 1, args);
         }, `(> x1 x2 x3 ...)
 
             Function compare its numerical arguments and check if they are
             monotonically increasing`),
         // ------------------------------------------------------------------
         '<': doc(function(...args) {
-            return seq_compare((a,b) => LNumber(a).cmp(b) === -1, args);
+            return seq_compare((a, b) => LNumber(a).cmp(b) === -1, args);
         }, `(< x1 x2 x3 ...)
 
             Function compare its numerical arguments and check if they are
             monotonically decreasing`),
         // ------------------------------------------------------------------
         '<=': doc(function(...args) {
-            return seq_compare((a,b) => [0, -1].includes(LNumber(a).cmp(b)), args);
+            return seq_compare((a, b) => [0, -1].includes(LNumber(a).cmp(b)), args);
         }, `(<= x1 x2 x3 ...)
 
             Function compare its numerical arguments and check if they are
             monotonically nonincreasing`),
         // ------------------------------------------------------------------
         '>=': doc(function(...args) {
-            return seq_compare((a,b) => [0, 1].includes(LNumber(a).cmp(b)), args);
+            return seq_compare((a, b) => [0, 1].includes(LNumber(a).cmp(b)), args);
         }, `(>= x1 x2 x3 ...)
 
             Function compare its numerical arguments and check if they are
