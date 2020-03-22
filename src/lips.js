@@ -1718,13 +1718,23 @@
         };
     }
     // -------------------------------------------------------------------------------
+    var native_lambda = parse(tokenize(`(lambda ()
+                                          "[native code]"
+                                          (throw "Invalid Invocation"))`))[0];
+    // -------------------------------------------------------------------------------
     var get = doc(function get(obj, ...args) {
         if (typeof obj === 'function' && obj.__bind) {
             obj = obj.__bind.fn;
         }
         for (let arg of args) {
             var name = arg instanceof LSymbol ? arg.name : arg;
-            var value = obj[name];
+            var value;
+            if (name === '__code__' && typeof obj === 'function' &&
+                typeof obj.__code__ === 'undefined') {
+                value = native_lambda.clone();
+            } else {
+                value = obj[name];
+            }
             if (typeof value === 'function') {
                 value = bindWithProps(value, obj);
             }

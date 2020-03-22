@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Mar 2020 16:52:57 +0000
+ * build: Sun, 22 Mar 2020 17:13:05 +0000
  */
 (function () {
 	'use strict';
@@ -3113,6 +3113,8 @@
 	  } // -------------------------------------------------------------------------------
 
 
+	  var native_lambda = parse(tokenize("(lambda ()\n                                          \"[native code]\"\n                                          (throw \"Invalid Invocation\"))"))[0]; // -------------------------------------------------------------------------------
+
 	  var get = doc(function get(obj) {
 	    if (typeof obj === 'function' && obj.__bind) {
 	      obj = obj.__bind.fn;
@@ -3125,7 +3127,13 @@
 	    for (var _i = 0, _args5 = args; _i < _args5.length; _i++) {
 	      var arg = _args5[_i];
 	      var name = arg instanceof LSymbol ? arg.name : arg;
-	      var value = obj[name];
+	      var value;
+
+	      if (name === '__code__' && typeof obj === 'function' && typeof obj.__code__ === 'undefined') {
+	        value = native_lambda.clone();
+	      } else {
+	        value = obj[name];
+	      }
 
 	      if (typeof value === 'function') {
 	        value = bindWithProps(value, obj);
@@ -4886,6 +4894,19 @@
 	        return LNumber(obj.length);
 	      }
 	    }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
+	    // ------------------------------------------------------------------
+	    'string->number': doc(function (arg) {
+	      var radix = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 10;
+	      typecheck('string->number', arg, 'string', 1);
+	      typecheck('string->number', radix, 'number', 2);
+
+	      if (arg.match(int_re)) {
+	        return LNumber(parseFloat(arg));
+	      } else if (arg.match(float_re)) {
+	        return LNumber(parseFloat(arg), true);
+	      }
+	    }, "(string->number number [radix])\n\n           Function convert string to number."),
+	    // ------------------------------------------------------------------
 	    'try': doc(new Macro('try', function (code, _ref15) {
 	      var _this4 = this;
 
