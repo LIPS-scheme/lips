@@ -1,0 +1,74 @@
+;; -*- scheme -*-
+;; Attempt to implement R5RS standard
+;;
+;; Reference:
+;; https://schemers.org/Documents/Standards/R5RS/HTML/
+;;
+;; This file is part of the LIPS - Simple lisp in JavaScript
+;; Copyriht (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Released under MIT license
+;;
+
+;; TODO: add special macro lists and special macro symbols
+;;       #\x as character object
+;; (define #f false)
+;; (define #t true)
+
+(define (eqv? a b)
+  "(eqv? a b)
+
+   Function compare the values. It return true if they are the same, they
+   need to have same type"
+  (if (eq? (type a) (type b))
+      (if (and (pair? a) (null? a) (null? b))
+          true
+          (eq? a b))))
+
+(define = ==)
+
+(define (equal? a b)
+  "(equal? a b)
+
+   Function check if values are equal if both are pair or array
+   it compares the their elements recursivly."
+  (cond ((and (pair? a) (pair? b))
+         (and (equal? (car a) (car b))
+              (equal? (cdr a) (cdr b))))
+        ((and (array? a) (array? b) (eq? (length a) (length b)))
+         (= (--> a (filter (lambda (item i) (equal? item (. b i)))) 'length) (length a)))
+        (else (eq? a b))))
+
+(define (every . args)
+  "(every . args)
+
+   Function return true if every argument is true otherwise it return false."
+  (= (length args) (length (filter (lambda (x) x) args))))
+
+(define make-promise
+  (lambda (proc)
+    "(make-promise fn)
+
+     Function create promise from a function."
+    (let ((result-ready? #f)
+          (result #f))
+      (lambda ()
+        (if result-ready?
+            result
+            (let ((x (proc)))
+              (if result-ready?
+                  result
+                  (begin (set! result-ready? #t)
+                         (set! result x)
+                         result))))))))
+
+(define-macro (delay expression)
+  "(delay expression)
+
+   Macro will create a promise from expression that can be forced with force."
+  `(make-promise (lambda () ,expression)))
+
+(define (force promise)
+  "(force promise)
+
+   Function force the promise and evaluate delayed expression."
+  (promise))
