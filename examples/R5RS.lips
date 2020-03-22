@@ -1,5 +1,5 @@
 ;; -*- scheme -*-
-;; Attempt to implement R5RS standard
+;; Attempt to implement R5RS standard on top of LIPS
 ;;
 ;; Reference:
 ;; https://schemers.org/Documents/Standards/R5RS/HTML/
@@ -111,3 +111,16 @@
   (let ((radix (if (null? rest) 10 (car rest))))
     (typecheck "number->string" radix "number" 2)
     (--> x (toString radix))))
+
+(define (boolean? x)
+  "(boolean? x)
+
+   Function return true if value is boolean."
+   (eq? (type x) "boolean"))
+
+(define (list? x)
+  "(list? x)
+
+   Function test if value is propert linked list structure.
+   The car of each pair can be any value."
+  (and (pair? x) (or (null? (cdr x)) (list? (cdr x)))))
