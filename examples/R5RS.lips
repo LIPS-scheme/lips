@@ -51,6 +51,7 @@
     "(make-promise fn)
 
      Function create promise from a function."
+    (typecheck 'make-promise' proc "function")
     (let ((result-ready? #f)
           (result #f))
       (lambda ()
@@ -79,16 +80,23 @@
   "(positive? x)
 
    Function check if number is larger then 0"
+  (typecheck 'positive?' x "number")
   (> x 0))
 
 (define (negative? x)
   "(negative? x)
 
    Function check if number is smaller then 0"
+  (typecheck 'negative?' x "number")
   (< x 0))
 
 (define (zero? x)
   "(zero? x)
 
    Function check if number is equal to 0"
+  (typecheck 'zero?' x "number")
   (= x 0))
+
+(define (quotient a b)
+  (typecheck 'quotient' x "number")
+  (/ a b))

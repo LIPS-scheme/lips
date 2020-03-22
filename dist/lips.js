@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Mar 2020 15:30:14 +0000
+ * build: Sun, 22 Mar 2020 15:41:17 +0000
  */
 (function () {
 	'use strict';
@@ -4694,6 +4694,13 @@
 	      typecheck('unset!', symbol, 'symbol');
 	      delete this.env[symbol.name];
 	    }, "(unset! name)\n\n            Function delete specified name from environment."),
+	    'typecheck': doc(function (label, arg, expected, position) {
+	      if (expected instanceof Pair) {
+	        expected = expected.toArray();
+	      }
+
+	      typecheck(label, arg, expected, position);
+	    }, "(typecheck label value type [position])\n\n           Function check type and throw exception if type don't match.\n           Type can be string or list of strings. Position optional argument\n           is used to created proper error message."),
 	    // ------------------------------------------------------------------
 	    'remove-special!': doc(function (symbol) {
 	      typecheck('remove-special!', symbol, 'string');

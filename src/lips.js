@@ -3201,6 +3201,16 @@
         }, `(unset! name)
 
             Function delete specified name from environment.`),
+        'typecheck': doc(function(label, arg, expected, position) {
+            if (expected instanceof Pair) {
+                expected = expected.toArray();
+            }
+            typecheck(label, arg, expected, position);
+        }, `(typecheck label value type [position])
+
+           Function check type and throw exception if type don't match.
+           Type can be string or list of strings. Position optional argument
+           is used to created proper error message.`),
         // ------------------------------------------------------------------
         'remove-special!': doc(function(symbol) {
             typecheck('remove-special!', symbol, 'string');
