@@ -1,3 +1,9 @@
+## 0.20.2
+### Bug fixes
+* fix list function [#27](https://github.com/jcubic/lips/issues/27)
+* fix `(begin (gensym))` macro that evaluate to symbol
+* update destruct to export only needed functions
+
 ## 0.20.1
 ### Bug fixes
 * fix formatter indent

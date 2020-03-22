@@ -3027,7 +3027,7 @@
             value it will throw exception`),
         // ------------------------------------------------------------------
         list: doc(function(...args) {
-            return Pair.fromArray(args);
+            return args.reverse().reduce((list, item) => new Pair(item, list), nil);
         }, `(list . args)
 
             Function create new list out of its arguments.`),
@@ -4021,6 +4021,7 @@
     function selfEvaluated(obj) {
         var type = typeof obj;
         return ['string', 'function'].includes(type) ||
+            obj instanceof LSymbol ||
             obj instanceof LNumber ||
             obj instanceof RegExp;
     }

@@ -1,5 +1,5 @@
 /**@license
- * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. 0.20.1
+ * LIPS is Pretty Simple - simple scheme like lisp in JavaScript - v. DEV
  *
  * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Mar 2020 19:15:24 +0000
+ * build: Sun, 22 Mar 2020 12:47:19 +0000
  */
 (function () {
 	'use strict';
@@ -4491,7 +4491,9 @@
 	        args[_key16] = arguments[_key16];
 	      }
 
-	      return Pair.fromArray(args);
+	      return args.reverse().reduce(function (list, item) {
+	        return new Pair(item, list);
+	      }, nil);
 	    }, "(list . args)\n\n            Function create new list out of its arguments."),
 	    // ------------------------------------------------------------------
 	    substring: doc(function (string, start, end) {
@@ -5405,7 +5407,7 @@
 	  function selfEvaluated(obj) {
 	    var type = _typeof_1(obj);
 
-	    return ['string', 'function'].includes(type) || obj instanceof LNumber || obj instanceof RegExp;
+	    return ['string', 'function'].includes(type) || obj instanceof LSymbol || obj instanceof LNumber || obj instanceof RegExp;
 	  } // -------------------------------------------------------------------------
 
 
@@ -5964,7 +5966,7 @@
 	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: '0.20.1',
+	    version: 'DEV',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
