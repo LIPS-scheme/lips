@@ -1315,6 +1315,19 @@
     };
 
     // ----------------------------------------------------------------------
+    function seq_compare(fn, args) {
+        var [a, ...rest] = args;
+        while (rest.length > 0) {
+            var [b] = rest;
+            if (!fn(a, b)) {
+                return false;
+            }
+            [a, ...rest] = rest;
+        }
+        return true;
+    }
+
+    // ----------------------------------------------------------------------
     function equal(x, y) {
         if (x instanceof LNumber && y instanceof LNumber) {
             return x.cmp(y) === 0;
@@ -3760,39 +3773,39 @@
              single number.`),
         // ------------------------------------------------------------------
         // Booleans
-        '==': doc(function(a, b) {
-            return LNumber(a).cmp(b) === 0;
-        }, `(== a b)
+        '==': doc(function(...args) {
+            return seq_compare((a,b) => LNumber(a).cmp(b) === 0, args);
+        }, `(== x1 x2 x3 ...)
 
-            Function compare two numbers and check if they are equal.`),
+            Function compare its numerical arguments and check if they are equal`),
         // ------------------------------------------------------------------
-        '>': doc(function(a, b) {
-            return LNumber(a).cmp(b) === 1;
-        }, `(> a b)
+        '>': doc(function(...args) {
+            return seq_compare((a,b) => LNumber(a).cmp(b) === 1, args);
+        }, `(> x1 x2 x3 ...)
 
-            Function compare two numbers and check if first argument is greater
-            than the second one`),
+            Function compare its numerical arguments and check if they are
+            monotonically increasing`),
         // ------------------------------------------------------------------
-        '<': doc(function(a, b) {
-            return LNumber(a).cmp(b) === -1;
-        }, `(< a b)
+        '<': doc(function(...args) {
+            return seq_compare((a,b) => LNumber(a).cmp(b) === -1, args);
+        }, `(< x1 x2 x3 ...)
 
-            Function compare two numbers and check if first argument is less
-            than the second one`),
+            Function compare its numerical arguments and check if they are
+            monotonically decreasing`),
         // ------------------------------------------------------------------
-        '<=': doc(function(a, b) {
-            return [0, -1].includes(LNumber(a).cmp(b));
-        }, `(<= a b)
+        '<=': doc(function(...args) {
+            return seq_compare((a,b) => [0, -1].includes(LNumber(a).cmp(b)), args);
+        }, `(<= x1 x2 x3 ...)
 
-            Function compare two numbers and check if first argument is less or
-            equal to the second one`),
+            Function compare its numerical arguments and check if they are
+            monotonically nonincreasing`),
         // ------------------------------------------------------------------
-        '>=': doc(function(a, b) {
-            return [0, 1].includes(LNumber(a).cmp(b));
-        }, `(>= a b)
+        '>=': doc(function(...args) {
+            return seq_compare((a,b) => [0, 1].includes(LNumber(a).cmp(b)), args);
+        }, `(>= x1 x2 x3 ...)
 
-            Function compare two numbers and check if first argument is less or
-            equal to the second one`),
+            Function compare its numerical arguments and check if they are
+            monotonically nondecreasing`),
         // ------------------------------------------------------------------
         'eq?': doc(
             equal,

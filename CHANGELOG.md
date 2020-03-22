@@ -2,6 +2,7 @@
 ### Features
 * start implementing R5RS spec
 * streams example
+* `<`, `>`, `==`, `<=` and `>=` now have variable number of arguments
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

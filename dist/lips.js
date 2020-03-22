@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Mar 2020 12:47:19 +0000
+ * build: Sun, 22 Mar 2020 14:05:09 +0000
  */
 (function () {
 	'use strict';
@@ -842,6 +842,30 @@
 
 	var asyncToGenerator = _asyncToGenerator;
 
+	function _arrayWithHoles(arr) {
+	  if (Array.isArray(arr)) return arr;
+	}
+
+	var arrayWithHoles = _arrayWithHoles;
+
+	function _iterableToArray(iter) {
+	  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+	}
+
+	var iterableToArray = _iterableToArray;
+
+	function _nonIterableRest() {
+	  throw new TypeError("Invalid attempt to destructure non-iterable instance");
+	}
+
+	var nonIterableRest = _nonIterableRest;
+
+	function _toArray(arr) {
+	  return arrayWithHoles(arr) || iterableToArray(arr) || nonIterableRest();
+	}
+
+	var toArray = _toArray;
+
 	function _arrayWithoutHoles(arr) {
 	  if (Array.isArray(arr)) {
 	    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) {
@@ -854,12 +878,6 @@
 
 	var arrayWithoutHoles = _arrayWithoutHoles;
 
-	function _iterableToArray(iter) {
-	  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-	}
-
-	var iterableToArray = _iterableToArray;
-
 	function _nonIterableSpread() {
 	  throw new TypeError("Invalid attempt to spread non-iterable instance");
 	}
@@ -871,12 +889,6 @@
 	}
 
 	var toConsumableArray = _toConsumableArray;
-
-	function _arrayWithHoles(arr) {
-	  if (Array.isArray(arr)) return arr;
-	}
-
-	var arrayWithHoles = _arrayWithHoles;
 
 	function _iterableToArrayLimit(arr, i) {
 	  if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
@@ -909,12 +921,6 @@
 	}
 
 	var iterableToArrayLimit = _iterableToArrayLimit;
-
-	function _nonIterableRest() {
-	  throw new TypeError("Invalid attempt to destructure non-iterable instance");
-	}
-
-	var nonIterableRest = _nonIterableRest;
 
 	function _slicedToArray(arr, i) {
 	  return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || nonIterableRest();
@@ -2015,7 +2021,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function toArray(name, deep) {
+	  function toArray$1(name, deep) {
 	    return function recur(list) {
 	      typecheck(name, list, ['pair', 'nil']);
 
@@ -2451,6 +2457,32 @@
 
 	    return this;
 	  }; // ----------------------------------------------------------------------
+
+
+	  function seq_compare(fn, args) {
+	    var _args2 = toArray(args),
+	        a = _args2[0],
+	        rest = _args2.slice(1);
+
+	    while (rest.length > 0) {
+	      var _rest = rest,
+	          _rest2 = slicedToArray(_rest, 1),
+	          b = _rest2[0];
+
+	      if (!fn(a, b)) {
+	        return false;
+	      }
+
+	      var _rest3 = rest;
+
+	      var _rest4 = toArray(_rest3);
+
+	      a = _rest4[0];
+	      rest = _rest4.slice(1);
+	    }
+
+	    return true;
+	  } // ----------------------------------------------------------------------
 
 
 	  function equal(x, y) {
@@ -3083,8 +3115,8 @@
 	      args[_key14 - 1] = arguments[_key14];
 	    }
 
-	    for (var _i = 0, _args4 = args; _i < _args4.length; _i++) {
-	      var arg = _args4[_i];
+	    for (var _i = 0, _args5 = args; _i < _args5.length; _i++) {
+	      var arg = _args5[_i];
 	      var name = arg instanceof LSymbol ? arg.name : arg;
 	      var value = obj[name];
 
@@ -4795,9 +4827,9 @@
 	      return Pair.fromArray(array);
 	    }, "(array->list array)\n\n            Function convert JavaScript array to LIPS list."),
 	    // ------------------------------------------------------------------
-	    'tree->array': doc(toArray('tree->array', true), "(tree->array list)\n\n             Function convert LIPS list structure into JavaScript array."),
+	    'tree->array': doc(toArray$1('tree->array', true), "(tree->array list)\n\n             Function convert LIPS list structure into JavaScript array."),
 	    // ------------------------------------------------------------------
-	    'list->array': doc(toArray('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
+	    'list->array': doc(toArray$1('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
 	    // ------------------------------------------------------------------
 	    apply: doc(function (fn, list) {
 	      typecheck('call', fn, 'function', 1);
@@ -5144,25 +5176,55 @@
 	    }), "(% . numbers)\n\n             Function use modulo operation on each of the numbers. It return\n             single number."),
 	    // ------------------------------------------------------------------
 	    // Booleans
-	    '==': doc(function (a, b) {
-	      return LNumber(a).cmp(b) === 0;
-	    }, "(== a b)\n\n            Function compare two numbers and check if they are equal."),
+	    '==': doc(function () {
+	      for (var _len27 = arguments.length, args = new Array(_len27), _key27 = 0; _key27 < _len27; _key27++) {
+	        args[_key27] = arguments[_key27];
+	      }
+
+	      return seq_compare(function (a, b) {
+	        return LNumber(a).cmp(b) === 0;
+	      }, args);
+	    }, "(== x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are equal"),
 	    // ------------------------------------------------------------------
-	    '>': doc(function (a, b) {
-	      return LNumber(a).cmp(b) === 1;
-	    }, "(> a b)\n\n            Function compare two numbers and check if first argument is greater\n            than the second one"),
+	    '>': doc(function () {
+	      for (var _len28 = arguments.length, args = new Array(_len28), _key28 = 0; _key28 < _len28; _key28++) {
+	        args[_key28] = arguments[_key28];
+	      }
+
+	      return seq_compare(function (a, b) {
+	        return LNumber(a).cmp(b) === 1;
+	      }, args);
+	    }, "(> x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically increasing"),
 	    // ------------------------------------------------------------------
-	    '<': doc(function (a, b) {
-	      return LNumber(a).cmp(b) === -1;
-	    }, "(< a b)\n\n            Function compare two numbers and check if first argument is less\n            than the second one"),
+	    '<': doc(function () {
+	      for (var _len29 = arguments.length, args = new Array(_len29), _key29 = 0; _key29 < _len29; _key29++) {
+	        args[_key29] = arguments[_key29];
+	      }
+
+	      return seq_compare(function (a, b) {
+	        return LNumber(a).cmp(b) === -1;
+	      }, args);
+	    }, "(< x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically decreasing"),
 	    // ------------------------------------------------------------------
-	    '<=': doc(function (a, b) {
-	      return [0, -1].includes(LNumber(a).cmp(b));
-	    }, "(<= a b)\n\n            Function compare two numbers and check if first argument is less or\n            equal to the second one"),
+	    '<=': doc(function () {
+	      for (var _len30 = arguments.length, args = new Array(_len30), _key30 = 0; _key30 < _len30; _key30++) {
+	        args[_key30] = arguments[_key30];
+	      }
+
+	      return seq_compare(function (a, b) {
+	        return [0, -1].includes(LNumber(a).cmp(b));
+	      }, args);
+	    }, "(<= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nonincreasing"),
 	    // ------------------------------------------------------------------
-	    '>=': doc(function (a, b) {
-	      return [0, 1].includes(LNumber(a).cmp(b));
-	    }, "(>= a b)\n\n            Function compare two numbers and check if first argument is less or\n            equal to the second one"),
+	    '>=': doc(function () {
+	      for (var _len31 = arguments.length, args = new Array(_len31), _key31 = 0; _key31 < _len31; _key31++) {
+	        args[_key31] = arguments[_key31];
+	      }
+
+	      return seq_compare(function (a, b) {
+	        return [0, 1].includes(LNumber(a).cmp(b));
+	      }, args);
+	    }, "(>= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nondecreasing"),
 	    // ------------------------------------------------------------------
 	    'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
 	    // ------------------------------------------------------------------
@@ -5277,8 +5339,8 @@
 	      return !value;
 	    }, "(not object)\n\n            Function return negation of the argument."),
 	    '->': doc(function (obj, name) {
-	      for (var _len27 = arguments.length, args = new Array(_len27 > 2 ? _len27 - 2 : 0), _key27 = 2; _key27 < _len27; _key27++) {
-	        args[_key27 - 2] = arguments[_key27];
+	      for (var _len32 = arguments.length, args = new Array(_len32 > 2 ? _len32 - 2 : 0), _key32 = 2; _key32 < _len32; _key32++) {
+	        args[_key32 - 2] = arguments[_key32];
 	      }
 
 	      return obj[name].apply(obj, args);
