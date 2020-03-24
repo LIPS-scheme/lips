@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Mar 2020 17:13:05 +0000
+ * build: Tue, 24 Mar 2020 15:33:35 +0000
  */
 (function () {
 	'use strict';
@@ -5456,16 +5456,23 @@
 	    }, "(-> obj name . args)\n\n            Function get function from object and call it with arguments.")
 	  }, undefined$1, 'global'); // -------------------------------------------------------------------------
 
-	  ['floor', 'round', 'ceil'].forEach(function (fn) {
-	    global_env.set(fn, doc(function (value) {
-	      typecheck(fn, value, 'number');
+	  (function () {
+	    var map = {
+	      ceil: 'ceiling'
+	    };
+	    ['floor', 'round', 'ceil'].forEach(function (fn) {
+	      var name = map[fn] ? map[fn] : fn;
+	      global_env.set(name, doc(function (value) {
+	        typecheck(name, value, 'number');
 
-	      if (value instanceof LNumber) {
-	        return value[fn]();
-	      }
-	    }, "(".concat(fn, " number)\n\n            Function calculate ").concat(fn, " of a number.")));
-	  }); // -------------------------------------------------------------------------
+	        if (value instanceof LNumber) {
+	          return value[fn]();
+	        }
+	      }, "(".concat(name, " number)\n\n                Function calculate ").concat(name, " of a number.")));
+	    });
+	  })(); // -------------------------------------------------------------------------
 	  // source: https://stackoverflow.com/a/4331218/387194
+
 
 	  function allPossibleCases(arr) {
 	    if (arr.length === 1) {
@@ -6019,7 +6026,7 @@
 	        return false;
 	      }
 
-	      return (token.token || token).match(re);
+	      return (typeof token === 'string' ? token : token.token).match(re);
 	    };
 	  }
 

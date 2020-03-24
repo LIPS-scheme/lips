@@ -13,6 +13,7 @@
 ;;       #\x as character object
 ;; (define #f false)
 ;; (define #t true)
+;; '#(1 2 3)
 
 (define (eqv? a b)
   "(eqv? a b)
@@ -118,9 +119,63 @@
    Function return true if value is boolean."
    (eq? (type x) "boolean"))
 
+(define (vector-ref vector i)
+  "(vector-ref vector i)
+
+   Return i element from vector."
+  (typecheck "number->string" vector "array" 1)
+  (typecheck "number->string" i "number" 2)
+  (. vector i))
+
+(define -inf.0 (.. Number.NEGATIVE_INFINITY))
+(define +inf.0 (.. Number.POSITIVE_INFINITY))
+
+;; TODO:
+;; lips> (define x '(1 2 3))
+;; lips> (set-cdr (cdr x) x)
+;; lips> (list? x)
+
 (define (list? x)
   "(list? x)
 
    Function test if value is propert linked list structure.
    The car of each pair can be any value."
   (and (pair? x) (or (null? (cdr x)) (list? (cdr x)))))
+
+(define (integer? x)
+  (throw "Not Yet implemented"))
+
+(define (typecheck-args _type name _list)
+  "(typecheck-args args type)
+
+   Function check if all items in array are of same type."
+  (let iter ((n 1) (_list _list))
+    (if (pair? _list)
+        (begin
+          (typecheck name (car _list) _type n)
+          (iter (+ n 1) (cdr _list))))))
+
+(define numbers? (curry typecheck-args "number"))
+
+(define (max . args)
+  "(max n1 n2 ...)
+
+   Return maximum of it's arguments."
+  (numbers? "max" args)
+  (apply (.. Math.max) args))
+
+
+(define (min . args)
+  "(min n1 n2 ...)
+
+   Return minimum of it's arguments."
+  (numbers? "min" args)
+  (apply (.. Math.min) args))
+
+(define (truncate x)
+  "(truncate x)
+
+   Function return number without floating point part."
+  (if (< x 0)
+      (ceiling x)
+      (floor x)))

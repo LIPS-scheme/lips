@@ -1,4 +1,6 @@
 ## 0.21.0
+### Breaking
+* rename `ceil` to `ceiling` (like in R5RS spec)
 ### Features
 * start implementing R5RS spec
 * streams example
@@ -8,6 +10,9 @@
 * new `gdc` and `lcm` functions
 * new `string->number` and `number->string` functions
 * new `list?` function
+* new `vector-ref` (same as `(. v n)` but with typecheck)
+* new `+inf.0` and `-inf.0`
+* new `max`, `min` and `truncate`
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

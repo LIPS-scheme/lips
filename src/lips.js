@@ -4024,16 +4024,20 @@
             Function get function from object and call it with arguments.`)
     }, undefined, 'global');
     // -------------------------------------------------------------------------
-    ['floor', 'round', 'ceil'].forEach(fn => {
-        global_env.set(fn, doc(function(value) {
-            typecheck(fn, value, 'number');
-            if (value instanceof LNumber) {
-                return value[fn]();
-            }
-        }, `(${fn} number)
+    (function() {
+        var map = { ceil: 'ceiling' };
+        ['floor', 'round', 'ceil'].forEach(fn => {
+            var name = map[fn] ? map[fn] : fn;
+            global_env.set(name, doc(function(value) {
+                typecheck(name, value, 'number');
+                if (value instanceof LNumber) {
+                    return value[fn]();
+                }
+            }, `(${name} number)
 
-            Function calculate ${fn} of a number.`));
-    });
+                Function calculate ${name} of a number.`));
+        });
+    })();
     // -------------------------------------------------------------------------
     // source: https://stackoverflow.com/a/4331218/387194
     function allPossibleCases(arr) {
@@ -4409,7 +4413,7 @@
             if (!token) {
                 return false;
             }
-            return (token.token || token).match(re);
+            return (typeof token === 'string' ? token : token.token).match(re);
         };
     }
     var isParen = matchToken(/[()]/);
