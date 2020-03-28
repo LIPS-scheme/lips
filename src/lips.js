@@ -17,6 +17,13 @@
  * License: MIT
  * Version: 1.2
  *
+ * Part of Mathjs - Copyright (C) 2013-2020 Jos de Jong wjosdejong@gmail.com
+ *
+ * Summary: Modified toExponential function from /src/utils/number.js
+ * Updated: last commit on file d8a4f3a on 20 Jul 2019
+ * License: Apache 2.0
+ * Version: 6.6.1
+ *
  * URL:
  * http://javascript.nwbox.com/ContentLoaded/
  * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
@@ -42,6 +49,158 @@
 })(typeof global !== 'undefined' ? global : window, function(root, BN, undefined) {
     /* eslint-disable */
     /* istanbul ignore next */
+
+    /*
+     * Part of Mathjs - Copyright (C) 2013-2020 Jos de Jong wjosdejong@gmail.com
+     *
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     *
+     * https://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+     * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+     * License for the specific language governing permissions and limitations
+     * under the License.
+     */
+    const toExponential = (function() {
+        /**
+         * Format a number in exponential notation. Like '1.23e+5', '2.3e+0', '3.500e-3'
+         * @param {number | string} value
+         * @param {number} [precision]  Number of digits in formatted output.
+         *                              If not provided, the maximum available digits
+         *                              is used.
+         */
+        function toExponential (value, precision) {
+            if (isNaN(value) || !isFinite(value)) {
+                return String(value)
+            }
+
+            // round if needed, else create a clone
+            const split = splitNumber(value)
+            const rounded = precision ? roundDigits(split, precision) : split
+            let c = rounded.coefficients
+            const e = rounded.exponent
+
+            // append zeros if needed
+            if (c.length < precision && c.length === 1) {
+                c.push(0)
+            }
+
+            // format as `C.CCCe+EEE` or `C.CCCe-EEE`
+            const first = c.shift()
+            return rounded.sign + first + (c.length > 0 ? ('.' + c.join('')) : '') +
+                    (e > 0 ? 'e' + (e >= 0 ? '+' : '') + e : '');
+        }
+
+        /**
+         * Create an array filled with zeros.
+         * @param {number} length
+         * @return {Array}
+         */
+        function zeros (length) {
+            const arr = []
+            for (let i = 0; i < length; i++) {
+                arr.push(0)
+            }
+            return arr
+        }
+
+
+        /**
+         * Split a number into sign, coefficients, and exponent
+         * @param {number | string} value
+         * @return {SplitValue}
+         *              Returns an object containing sign, coefficients, and exponent
+         */
+        function splitNumber (value) {
+            // parse the input value
+            const match = String(value).toLowerCase().match(/^0*?(-?)(\d+\.?\d*)(e([+-]?\d+))?$/)
+            if (!match) {
+                throw new SyntaxError('Invalid number ' + value)
+            }
+
+            const sign = match[1]
+            const digits = match[2]
+            let exponent = parseFloat(match[4] || '0')
+
+            const dot = digits.indexOf('.')
+            exponent += (dot !== -1) ? (dot - 1) : (digits.length - 1)
+
+            const coefficients = digits
+                  .replace('.', '') // remove the dot (must be removed before removing leading zeros)
+                  .replace(/^0*/, function (zeros) {
+                      // remove leading zeros, add their count to the exponent
+                      exponent -= zeros.length
+                      return ''
+                  })
+                  .replace(/0*$/, '') // remove trailing zeros
+                  .split('')
+                  .map(function (d) {
+                      return parseInt(d)
+                  })
+
+            if (coefficients.length === 0) {
+                coefficients.push(0)
+                exponent++
+            }
+
+            return {
+                sign: sign,
+                coefficients: coefficients,
+                exponent: exponent
+            }
+        }
+
+        /**
+         * Round the number of digits of a number *
+         * @param {SplitValue} split       A value split with .splitNumber(value)
+         * @param {number} precision  A positive integer
+         * @return {SplitValue}
+         *              Returns an object containing sign, coefficients, and exponent
+         *              with rounded digits
+         */
+        function roundDigits (split, precision) {
+            // create a clone
+            const rounded = {
+                sign: split.sign,
+                coefficients: split.coefficients,
+                exponent: split.exponent
+            }
+            const c = rounded.coefficients
+
+            // prepend zeros if needed
+            while (precision <= 0) {
+                c.unshift(0)
+                rounded.exponent++
+                precision++
+            }
+
+            if (c.length > precision) {
+                const removed = c.splice(precision, c.length - precision)
+
+                if (removed[0] >= 5) {
+                    let i = precision - 1
+                    c[i]++
+                    while (c[i] === 10) {
+                        c.pop()
+                        if (i === 0) {
+                            c.unshift(0)
+                            rounded.exponent++
+                            i++
+                        }
+                        i--
+                        c[i]++
+                    }
+                }
+            }
+
+            return rounded
+        }
+        return toExponential;
+    })();
     function contentLoaded(win, fn) {
         var done = false, top = true,
 
@@ -147,10 +306,10 @@
     }
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-    var int_re = /^[-+]?[0-9]+([eE][-+]?[0-9]+)?$/;
-    var float_re = /^([-+]?((\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
+    var int_re = /^[-+]?[0-9]+$/;
+    var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
     // (int | flat) ? ([-+]
-    var complex_re = /^(?:(?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i$/;
+    var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
     var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -160,14 +319,17 @@
     }
     // ----------------------------------------------------------------------
     function parseComplex(arg) {
+        if (arg === '-i') {
+            return { im: -1, re: 0 };
+        }
         var parts = arg.match(complex_re);
         var re, im;
         if (parts.length === 2) {
-            re = 0;
-            im = parseFloat(parts[1]);
+            re = LFloat(0);
+            im = LFloat(parseFloat(parts[1]));
         } else {
-            re = parts[1] ? parseFloat(parts[1]) : 0;
-            im = parseFloat(parts[2]);
+            re = LFloat(parts[1] ? parseFloat(parts[1]) : 0);
+            im = LFloat(parseFloat(parts[2]));
         }
         return { im, re };
     }
@@ -219,13 +381,14 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
+    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"/g;
     //var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|#|`|[^(\s)]+)/gim;
     // ----------------------------------------------------------------------
     function makeTokenRe() {
         var tokens = Object.keys(specials).map(escapeRegex).join('|');
-        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|\\/(?! )[^\\/\\\\]*(?:\\\\[\\S\\s][^\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]|\\.{2,}|${tokens}|[^(\\s)]+)`, 'gim');
+        var complex = '';
+        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|${tokens}|[^(\\s)]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -1857,10 +2020,10 @@
             return new LComplex(n);
         }
         if (n instanceof LComplex) {
-            return LComplex({im: n.im, re: n.re});
+            return LComplex({ im: n.im, re: n.re });
         }
         if (LNumber.isNumber(n)) {
-            n = {im: 0, re: n.valueOf()};
+            n = { im: 0, re: n.valueOf() };
         } else if (!LNumber.isComplex(n)) {
             throw new Error('Invalid constructor call for LComplex');
         }
@@ -1882,14 +2045,14 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.div = function(n) {
         if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
-            n = LComplex({im: 0, re: n});
+            n = LComplex({ im: 0, re: n });
         } else if (!LNumber.isComplex(n)) {
             throw new Error('[LComplex::add] Invalid value');
         }
-        const conj = LComplex({re: n.re, im: n.im.sub()});
+        const conj = LComplex({ re: n.re, im: n.im.sub() });
         var denom = n.re.mul(n.re).add(n.im.mul(n.im)).valueOf();
         var num = this.mul(conj);
-        return LComplex({re: num.re.div(denom), im: num.im.div(denom)});
+        return LComplex({ re: num.re.div(denom), im: num.im.div(denom) });
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.sub = function(n) {
@@ -1916,7 +2079,7 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.op = function(n, fn) {
         if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
-            n = {im: 0, re: n};
+            n = { im: 0, re: n };
         } else if (!LNumber.isComplex(n)) {
             throw new Error('[LComplex::add] Invalid value');
         }
@@ -1968,10 +2131,7 @@
     }
     LFloat.prototype = Object.create(LNumber.prototype);
     LFloat.prototype.toString = function() {
-        if (!LNumber.isFloat(this.value)) {
-            return this.value + '.0';
-        }
-        return this.value.toString();
+        return toExponential(this.value, 16);
     };
     // same aproximation as in guile scheme
     LFloat.prototype.toRational = function() {
@@ -1981,13 +2141,13 @@
     function approxRatio(eps) {
         return function(n) {
             const gcde = (e, x, y) => {
-                const _gcd = (a, b) => (b < e ? a : _gcd(b, a % b));
-                return _gcd(Math.abs(x), Math.abs(y));
-            },
-            c = gcde(Boolean(eps) ? eps : (1 / 10000), 1, n);
-            return LRational({num: Math.floor(n / c), denom: Math.floor(1 / c) });
+                    const _gcd = (a, b) => (b < e ? a : _gcd(b, a % b));
+                    return _gcd(Math.abs(x), Math.abs(y));
+                },
+                c = gcde(eps ? eps : (1 / 10000), 1, n);
+            return LRational({ num: Math.floor(n / c), denom: Math.floor(1 / c) });
         };
-    };
+    }
     // -------------------------------------------------------------------------
     // TODO:
     // scheme@(guile-user)> (/ 1 2)
@@ -2059,7 +2219,7 @@
     };
     LRational.prototype.add = function(n) {
         if (LNumber.isRational(n)) {
-            console.log({n});
+            console.log({ n });
             var a_denom = this.denom.valueOf();
             var b_denom = n.denom.valueOf();
             var a_num = this.num;
@@ -2068,7 +2228,7 @@
             if (a_denom !== b_denom) {
                 denom = global_env.get('lcm')(a_denom, b_denom);
                 var gdc;
-                console.log({denom});
+                console.log({ denom });
                 if (denom > a_denom) {
                     gdc = global_env.get('gdc')(denom, a_denom);
                     a_num = a_num.mul(gdc);
@@ -2083,7 +2243,6 @@
             var num = a_num.add(b_num);
             return LRational({ num, denom });
         }
-        debugger;
         if (LNumber.isFloat(n)) {
             return LFloat(this.valueOf()).add(n);
         }
@@ -2136,7 +2295,7 @@
             value = minus ? this.value.neg().sqrt() : this.value.sqrt();
         }
         if (minus) {
-            return LComplex({re: 0, im: value});
+            return LComplex({ re: 0, im: value });
         }
         return value;
     };
@@ -2220,11 +2379,20 @@
         } else {
             value = n;
         }
+        if (this instanceof LFloat) {
+            return LFloat(value);
+        }
+        if (this instanceof LComplex) {
+            return LComplex({ re: value, im: 0 });
+        }
+        if (this instanceof LRational && !LNumber.isRational(n)) {
+            return LNumber(value);
+        }
         if (LNumber.isComplex(n)) {
             return LComplex(n);
         } else if (LNumber.isRational(n)) {
             return LRational(n);
-        } else if (LNumber.isFloat(value)) {
+        } else if (LNumber.isFloat(value) || this instanceof LFloat) {
             return LFloat(value);
         } else if (typeof this.value === 'bigint' && typeof value !== 'bigint') {
             return LBigInteger(BigInt(value));
@@ -2313,7 +2481,7 @@
     LNumber.prototype.shr = function(n) {
         return this.op(n);
     };
-    
+
     var mapping = {
         'add': '+',
         'sub': '-',
@@ -2372,7 +2540,7 @@
     LNumber.prototype.sqrt = function() {
         var value = this.valueOf();
         if (this.cmp(0) < 0) {
-            return LComplex({re: 0, im: Math.sqrt(-value)});
+            return LComplex({ re: 0, im: Math.sqrt(-value) });
         }
         return new LNumber(Math.sqrt(value));
     };
@@ -2423,6 +2591,7 @@
     // -------------------------------------------------------------------------
     LNumber.prototype.cmp = function(n) {
         n = this.coerce(n);
+        console.log({ n });
         if (LNumber.isNative(this.value)) {
             if (this.value < n.value) {
                 return -1;
@@ -2517,7 +2686,8 @@
                 if (typeof value !== 'undefined') {
                     if (value === undef) {
                         if (throwError) {
-                            throw new Error("Can't get " + parts[0] + " it was undefined");
+                            throw new Error("Can't get " + parts[0] +
+                                            " it was undefined");
                         }
                         return undef;
                     }
@@ -2542,6 +2712,8 @@
             }
             if (throwError) {
                 throw new Error("Unbound variable `" + key + "'");
+            } else {
+                return undefined;
             }
         }, object);
     }
@@ -2560,13 +2732,13 @@
             return this.parent.lookup(symbol);
         }
     };
-    function Undefined() {};
+    function Undefined() {}
     var undef = new Undefined();
     // -------------------------------------------------------------------------
     Environment.prototype.get = function(symbol, options = {}) {
         // we keep original environment as context for bind
         // so print will get user stdout
-        const { weak, context = this, throwError = true } = options;
+        const { weak, throwError = true } = options;
         var value;
         var defined = false;
         if (symbol instanceof LSymbol) {
@@ -2707,8 +2879,8 @@
             if (typeof b !== 'function') {
                 return false;
             }
-            console.log({a: a[Symbol.for('__fn__')], b: b[Symbol.for('__fn__')]});
-            return a[Symbol.for('__fn__')] == b[Symbol.for('__fn__')];
+            console.log({ a: a[Symbol.for('__fn__')], b: b[Symbol.for('__fn__')] });
+            return a[Symbol.for('__fn__')] === b[Symbol.for('__fn__')];
         }, `(%same-functions a b)
 
             Helper function that check if two bound functions are the same`),
@@ -5026,6 +5198,7 @@
         Macro,
         quote,
         Pair,
+        complex_re,
         Formatter,
         specials,
         nil,

@@ -22,6 +22,7 @@
 * update defstruct to export only needed functions (local functions are namespaced)
 * prevent of evaluation of `(define (x . a) a)) (x 1 2 3)`
 * fix `LNumber::String` with radix
+* fix formatting of float numbers
 
 ## 0.20.1
 ### Bug fixes

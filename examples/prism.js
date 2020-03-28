@@ -9,7 +9,7 @@
 // extend scheme syntax in PrismJS to inlcude regular expressions
 Prism.languages.insertBefore('scheme', 'character', {
    regex: {
-       pattern: /\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)/g,
+       pattern: /\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)/g,
        greedy: true
    }
 });

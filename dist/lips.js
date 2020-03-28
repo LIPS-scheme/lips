@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 28 Mar 2020 09:10:18 +0000
+ * build: Sat, 28 Mar 2020 12:21:05 +0000
  */
 (function () {
 	'use strict';
@@ -965,6 +965,123 @@
 	  /* eslint-disable */
 
 	  /* istanbul ignore next */
+
+	  /*
+	   * Part of Mathjs - Copyright (C) 2013-2020 Jos de Jong wjosdejong@gmail.com
+	   *
+	   * Licensed under the Apache License, Version 2.0 (the "License");
+	   * you may not use this file except in compliance with the License.
+	   * You may obtain a copy of the License at
+	   *
+	   * https://www.apache.org/licenses/LICENSE-2.0
+	   *
+	   * Unless required by applicable law or agreed to in writing, software
+	   * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+	   * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+	   * License for the specific language governing permissions and limitations
+	   * under the License.
+	   */
+	  var toExponential = function () {
+	    function toExponential(value, precision) {
+	      if (isNaN(value) || !isFinite(value)) {
+	        return String(value);
+	      } // round if needed, else create a clone
+
+
+	      var split = splitNumber(value);
+	      var rounded = precision ? roundDigits(split, precision) : split;
+	      var c = rounded.coefficients;
+	      var e = rounded.exponent; // append zeros if needed
+
+	      if (c.length < precision && c.length === 1) {
+	        c.push(0);
+	      } // format as `C.CCCe+EEE` or `C.CCCe-EEE`
+
+
+	      var first = c.shift();
+	      return rounded.sign + first + (c.length > 0 ? '.' + c.join('') : '') + (e > 0 ? 'e' + (e >= 0 ? '+' : '') + e : '');
+	    }
+
+
+	    function splitNumber(value) {
+	      // parse the input value
+	      var match = String(value).toLowerCase().match(/^0*?(-?)(\d+\.?\d*)(e([+-]?\d+))?$/);
+
+	      if (!match) {
+	        throw new SyntaxError('Invalid number ' + value);
+	      }
+
+	      var sign = match[1];
+	      var digits = match[2];
+	      var exponent = parseFloat(match[4] || '0');
+	      var dot = digits.indexOf('.');
+	      exponent += dot !== -1 ? dot - 1 : digits.length - 1;
+	      var coefficients = digits.replace('.', '') // remove the dot (must be removed before removing leading zeros)
+	      .replace(/^0*/, function (zeros) {
+	        // remove leading zeros, add their count to the exponent
+	        exponent -= zeros.length;
+	        return '';
+	      }).replace(/0*$/, '') // remove trailing zeros
+	      .split('').map(function (d) {
+	        return parseInt(d);
+	      });
+
+	      if (coefficients.length === 0) {
+	        coefficients.push(0);
+	        exponent++;
+	      }
+
+	      return {
+	        sign: sign,
+	        coefficients: coefficients,
+	        exponent: exponent
+	      };
+	    }
+
+
+	    function roundDigits(split, precision) {
+	      // create a clone
+	      var rounded = {
+	        sign: split.sign,
+	        coefficients: split.coefficients,
+	        exponent: split.exponent
+	      };
+	      var c = rounded.coefficients; // prepend zeros if needed
+
+	      while (precision <= 0) {
+	        c.unshift(0);
+	        rounded.exponent++;
+	        precision++;
+	      }
+
+	      if (c.length > precision) {
+	        var removed = c.splice(precision, c.length - precision);
+
+	        if (removed[0] >= 5) {
+	          var i = precision - 1;
+	          c[i]++;
+
+	          while (c[i] === 10) {
+	            c.pop();
+
+	            if (i === 0) {
+	              c.unshift(0);
+	              rounded.exponent++;
+	              i++;
+	            }
+
+	            i--;
+	            c[i]++;
+	          }
+	        }
+	      }
+
+	      return rounded;
+	    }
+
+	    return toExponential;
+	  }();
+
 	  function contentLoaded(win, fn) {
 	    var done = false,
 	        top = true,
@@ -1075,10 +1192,10 @@
 
 
 	  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-	  var int_re = /^[-+]?[0-9]+([eE][-+]?[0-9]+)?$/;
-	  var float_re = /^([-+]?((\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/; // (int | flat) ? ([-+]
+	  var int_re = /^[-+]?[0-9]+$/;
+	  var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/; // (int | flat) ? ([-+]
 
-	  var complex_re = /^(?:(?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i$/;
+	  var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
 	  var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -1093,15 +1210,22 @@
 
 
 	  function parseComplex(arg) {
+	    if (arg === '-i') {
+	      return {
+	        im: -1,
+	        re: 0
+	      };
+	    }
+
 	    var parts = arg.match(complex_re);
 	    var re, im;
 
 	    if (parts.length === 2) {
-	      re = 0;
-	      im = parseFloat(parts[1]);
+	      re = LFloat(0);
+	      im = LFloat(parseFloat(parts[1]));
 	    } else {
-	      re = parts[1] ? parseFloat(parts[1]) : 0;
-	      im = parseFloat(parts[2]);
+	      re = LFloat(parts[1] ? parseFloat(parts[1]) : 0);
+	      im = LFloat(parseFloat(parts[2]));
 	    }
 
 	    return {
@@ -1163,13 +1287,13 @@
 	  /* eslint-disable */
 
 
-	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
+	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
 	  var string_re = /"(?:\\[\S\s]|[^"])*"/g; //var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|#|`|[^(\s)]+)/gim;
 	  // ----------------------------------------------------------------------
 
 	  function makeTokenRe() {
 	    var tokens = Object.keys(specials).map(escapeRegex).join('|');
-	    return new RegExp("(\"(?:\\\\[\\S\\s]|[^\"])*\"|\\/(?! )[^\\/\\\\]*(?:\\\\[\\S\\s][^\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|\"(?:\\\\[\\S\\s]|[^\"])+|\\n|(?:\\\\[\\S\\s]|[^\"])*\"|;.*|(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]|\\.{2,}|".concat(tokens, "|[^(\\s)]+)"), 'gim');
+	    return new RegExp("(\"(?:\\\\[\\S\\s]|[^\"])*\"|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|\"(?:\\\\[\\S\\s]|[^\"])+|\\n|(?:\\\\[\\S\\s]|[^\"])*\"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|".concat(tokens, "|[^(\\s)]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -3419,11 +3543,7 @@
 	  LFloat.prototype = Object.create(LNumber.prototype);
 
 	  LFloat.prototype.toString = function () {
-	    if (!LNumber.isFloat(this.value)) {
-	      return this.value + '.0';
-	    }
-
-	    return this.value.toString();
+	    return toExponential(this.value, 16);
 	  }; // same aproximation as in guile scheme
 
 
@@ -3442,14 +3562,14 @@
 
 	        return _gcd(Math.abs(x), Math.abs(y));
 	      },
-	          c = gcde(Boolean(eps) ? eps : 1 / 10000, 1, n);
+	          c = gcde(eps ? eps : 1 / 10000, 1, n);
 
 	      return LRational({
 	        num: Math.floor(n / c),
 	        denom: Math.floor(1 / c)
 	      });
 	    };
-	  }
+	  } // -------------------------------------------------------------------------
 	  // TODO:
 	  // scheme@(guile-user)> (/ 1 2)
 	  // $1 = 1/2
@@ -3466,6 +3586,7 @@
 	  // $12 = #f
 	  // scheme@(guile-user)> (inexact->exact 0.2)
 	  // $13 = 3602879701896397/18014398509481984
+
 
 	  function LRational(n) {
 	    if (typeof this !== 'undefined' && !(this instanceof LRational) || typeof this === 'undefined') {
@@ -3577,8 +3698,6 @@
 	        denom: denom
 	      });
 	    }
-
-	    debugger;
 
 	    if (LNumber.isFloat(n)) {
 	      return LFloat(this.valueOf()).add(n);
@@ -3741,11 +3860,26 @@
 	      value = n;
 	    }
 
+	    if (this instanceof LFloat) {
+	      return LFloat(value);
+	    }
+
+	    if (this instanceof LComplex) {
+	      return LComplex({
+	        re: value,
+	        im: 0
+	      });
+	    }
+
+	    if (this instanceof LRational && !LNumber.isRational(n)) {
+	      return LNumber(value);
+	    }
+
 	    if (LNumber.isComplex(n)) {
 	      return LComplex(n);
 	    } else if (LNumber.isRational(n)) {
 	      return LRational(n);
-	    } else if (LNumber.isFloat(value)) {
+	    } else if (LNumber.isFloat(value) || this instanceof LFloat) {
 	      return LFloat(value);
 	    } else if (typeof this.value === 'bigint' && typeof value !== 'bigint') {
 	      return LBigInteger(BigInt(value));
@@ -3982,6 +4116,9 @@
 
 	  LNumber.prototype.cmp = function (n) {
 	    n = this.coerce(n);
+	    console.log({
+	      n: n
+	    });
 
 	    if (LNumber.isNative(this.value)) {
 	      if (this.value < n.value) {
@@ -4135,6 +4272,8 @@
 
 	      if (throwError) {
 	        throw new Error("Unbound variable `" + key + "'");
+	      } else {
+	        return undefined$1;
 	      }
 	    }, object);
 	  } // -------------------------------------------------------------------------
@@ -4159,6 +4298,7 @@
 	  };
 
 	  function Undefined() {}
+
 	  var undef = new Undefined(); // -------------------------------------------------------------------------
 
 	  Environment.prototype.get = function (symbol) {
@@ -4166,7 +4306,6 @@
 	    // we keep original environment as context for bind
 	    // so print will get user stdout
 	    var weak = options.weak,
-	        _options$context = options.context,
 	        _options$throwError2 = options.throwError,
 	        throwError = _options$throwError2 === void 0 ? true : _options$throwError2;
 	    var value;
@@ -4339,7 +4478,7 @@
 	        a: a[Symbol["for"]('__fn__')],
 	        b: b[Symbol["for"]('__fn__')]
 	      });
-	      return a[Symbol["for"]('__fn__')] == b[Symbol["for"]('__fn__')];
+	      return a[Symbol["for"]('__fn__')] === b[Symbol["for"]('__fn__')];
 	    }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
 	    // ------------------------------------------------------------------
 	    help: doc(new Macro('help', function (code, _ref6) {
@@ -6827,6 +6966,7 @@
 	    Macro: Macro,
 	    quote: quote,
 	    Pair: Pair,
+	    complex_re: complex_re,
 	    Formatter: Formatter,
 	    specials: specials,
 	    nil: nil,
