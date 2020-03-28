@@ -1,11 +1,12 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&f90be5c1e9c3d3d547ac96379e3c096a6103f917)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&52aba06ba0a695568564177bab7ef6e8)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&64b96686c2707b257c46b7a3c0e11ea016fcbe7a)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&6c59f27b0d4963b090592eba807b6f56)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
-LIPS is very simple Lisp, similar to Scheme written in JavaScript.
+LIPS Scheme (lisp dialect) implementation written in JavaScript,
+it have few extensions that make working with JavaScript easier in Scheme.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
@@ -18,6 +19,7 @@ LIPS is very simple Lisp, similar to Scheme written in JavaScript.
 * Library agnostic - you can use it with any library,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
+* Built in help system like in Emacs Lisp,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
 * Functions code introspection/manipulation at runtime give more power to the programmer,

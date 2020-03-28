@@ -2,6 +2,7 @@
 ### Breaking
 * rename `ceil` to `ceiling` (like in R5RS spec)
 * break `let*` to work the same as in scheme (it was working like `letrec`)
+* `if` no longer require boolean as cond
 ### Features
 * start implementing R5RS spec
 * streams example

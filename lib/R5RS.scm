@@ -257,10 +257,22 @@
    Function create new list out of its arguments."
   args)
 
+(define (list-tail x k)
+  "(list-tail x k)
 
-(define (! n)
-  (if (<= n 1)
-      1
-      (* n (! (- n 1)))))
+   Function return tail of k element of a list."
+  (if (zero? k)
+      x
+      (list-tail (cdr x) (- k 1))))
 
-(define write display)
+;;library procedure:  (assq obj alist)
+;;library procedure:  (assv obj alist)
+;;library procedure:  (assoc obj alist)
+
+(define (not x)
+  "(not x)
+
+   Function return true if value is false and false otherwise."
+  (if x false true))
+
+(define print display)

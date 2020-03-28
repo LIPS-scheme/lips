@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 28 Mar 2020 18:19:54 +0000
+ * build: Sat, 28 Mar 2020 18:43:41 +0000
  */
 (function () {
 	'use strict';
@@ -5014,8 +5014,6 @@
 	      var env = this;
 
 	      var resolve = function resolve(cond) {
-	        typecheck('if', cond, 'boolean');
-
 	        if (cond) {
 	          return evaluate(code.cdr.car, {
 	            env: env,

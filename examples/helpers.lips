@@ -456,7 +456,7 @@
 
    Return value of alist if found or undefined of not."
   (let ((pair (assoc key alist)))
-    (if (pair? pair) (cdr pair) undefined)))
+    (if (pair? pair) (cdr pair) false)))
 
 ;; ---------------------------------------------------------------------------------------
 ;; formatter rules for cond to break after each S-Expression

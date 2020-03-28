@@ -3369,7 +3369,6 @@
             }
             var env = this;
             var resolve = (cond) => {
-                typecheck('if', cond, 'boolean');
                 if (cond) {
                     return evaluate(code.cdr.car, {
                         env,
