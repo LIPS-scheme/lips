@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 28 Mar 2020 15:31:43 +0000
+ * build: Sat, 28 Mar 2020 16:44:07 +0000
  */
 (function () {
 	'use strict';
@@ -3059,8 +3059,26 @@
 	  // ----------------------------------------------------------------------
 
 
-	  function let_macro(asterisk) {
-	    var name = 'let' + (asterisk ? '*' : '');
+	  function let_macro(symbol) {
+	    var name;
+
+	    switch (symbol) {
+	      case Symbol["for"]('letrec'):
+	        name = 'letrec';
+	        break;
+
+	      case Symbol["for"]('let'):
+	        name = 'let';
+	        break;
+
+	      case Symbol["for"]('let*'):
+	        name = 'let*';
+	        break;
+
+	      default:
+	        throw new Error('Invlild let_macro value');
+	    }
+
 	    return Macro.defmacro(name, function (code, options) {
 	      var dynamic_scope = options.dynamic_scope,
 	          error = options.error,
@@ -3079,7 +3097,7 @@
 	        args = code.cdr.car.map(function (pair) {
 	          return pair.cdr.car;
 	        });
-	        return Pair.fromArray([LSymbol('let*'), [[code.car, Pair(LSymbol('lambda'), Pair(params, code.cdr.cdr))]], Pair(code.car, args)]);
+	        return Pair.fromArray([LSymbol('letrec'), [[code.car, Pair(LSymbol('lambda'), Pair(params, code.cdr.cdr))]], Pair(code.car, args)]);
 	      } else if (macro_expand) {
 	        // Macro.defmacro are special macros that should return lisp code
 	        // here we use evaluate, so we need to check special flag set by
@@ -3090,6 +3108,12 @@
 	      var self = this;
 	      args = this.get('list->array')(code.car);
 	      var env = self.inherit('let');
+	      var var_body_env;
+
+	      if (name === 'let*') {
+	        var_body_env = env;
+	      }
+
 	      var i = 0;
 	      return function loop() {
 	        var pair = args[i++];
@@ -3105,7 +3129,7 @@
 	        }
 
 	        if (dynamic_scope) {
-	          dynamic_scope = asterisk ? env : self;
+	          dynamic_scope = name === 'let*' ? env : self;
 	        }
 
 	        if (!pair) {
@@ -3116,11 +3140,22 @@
 	            error: error
 	          });
 	        } else {
+	          if (name === 'let') {
+	            var_body_env = self;
+	          } else if (name === 'letrec') {
+	            var_body_env = env;
+	          }
+
 	          var value = evaluate(pair.cdr.car, {
-	            env: asterisk ? env : self,
+	            env: var_body_env,
 	            dynamic_scope: dynamic_scope,
 	            error: error
 	          });
+
+	          if (name === 'let*') {
+	            var_body_env = env = var_body_env.inherit('letrect[' + i + ']');
+	          }
+
 	          return unpromise(set(value), loop);
 	        }
 	      }();
@@ -3663,9 +3698,6 @@
 
 	  LRational.prototype.add = function (n) {
 	    if (LNumber.isRational(n)) {
-	      console.log({
-	        n: n
-	      });
 	      var a_denom = this.denom.valueOf();
 	      var b_denom = n.denom.valueOf();
 	      var a_num = this.num;
@@ -4262,9 +4294,15 @@
 	  EOF.prototype.toString = function () {
 	    return '<#eof>';
 	  }; // -------------------------------------------------------------------------
+
+
+	  function SilentError(message) {
+	    this.message = message;
+	  }
+
+	  SilentError.prototype = Object.create(Error.prototype); // -------------------------------------------------------------------------
 	  // :: Environment constructor (parent and name arguments are optional)
 	  // -------------------------------------------------------------------------
-
 
 	  function Environment(obj, parent, name) {
 	    if (arguments.length === 1) {
@@ -5010,9 +5048,11 @@
 	      return unpromise(cond, resolve);
 	    }), "(if cond true-expr false-expr)\n\n            Macro evaluate condition expression and if the value is true, it\n            evaluate and return true expression if not it evaluate and return\n            false expression"),
 	    // ------------------------------------------------------------------
-	    'let*': doc(let_macro(true), "(let* ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy and next value can access to\n             previous values/names."),
-	    // ------------------------------------------------------------------
-	    'let': doc(let_macro(false), "(let ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy but you can't access\n             previous values/names when next are evaluated. You can only get them\n             from body of let expression."),
+	    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy and next value can access to\n             previous values/names."),
+	    // ---------------------------------------------------------------------
+	    'let*': doc(let_macro(Symbol["for"]('let*')), "(let* ((a value-a) (b value-b)) body)\n\n             Macro similar to `let` but next argument get environment\n             from previous let variable, so they you can define one variable,\n             and use in next argument."),
+	    // ---------------------------------------------------------------------
+	    'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy but you can't access\n             previous values/names when next are evaluated. You can only get them\n             from body of let expression."),
 	    // ------------------------------------------------------------------
 	    'begin*': doc(pararel('begin*', function (values) {
 	      return values.pop();
@@ -5910,6 +5950,10 @@
 	        var args = {
 	          env: _this6,
 	          error: function error(e) {
+	            if (e instanceof SilentError) {
+	              throw new SilentError(e.message);
+	            }
+
 	            var env = _this6.inherit('try');
 
 	            env.set(code.cdr.car.cdr.car.car, e);
@@ -5925,6 +5969,7 @@
 	            unpromise(evaluate(new Pair(new LSymbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
 	              resolve(result);
 	            });
+	            throw new SilentError(e.message);
 	          }
 	        };
 

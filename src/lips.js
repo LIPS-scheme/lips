@@ -1763,8 +1763,21 @@
     // ----------------------------------------------------------------------
     // :: function that return macro for let and let*
     // ----------------------------------------------------------------------
-    function let_macro(asterisk) {
-        var name = 'let' + (asterisk ? '*' : '');
+    function let_macro(symbol) {
+        var name;
+        switch (symbol) {
+            case Symbol.for('letrec'):
+                name = 'letrec';
+                break;
+            case Symbol.for('let'):
+                name = 'let';
+                break;
+            case Symbol.for('let*'):
+                name = 'let*';
+                break;
+            default:
+                throw new Error('Invlild let_macro value');
+        }
         return Macro.defmacro(name, function(code, options) {
             var { dynamic_scope, error, macro_expand } = options;
             var args;
@@ -1777,7 +1790,7 @@
                 var params = code.cdr.car.map(pair => pair.car);
                 args = code.cdr.car.map(pair => pair.cdr.car);
                 return Pair.fromArray([
-                    LSymbol('let*'),
+                    LSymbol('letrec'),
                     [[code.car, Pair(
                         LSymbol('lambda'),
                         Pair(params, code.cdr.cdr))]],
@@ -1792,6 +1805,10 @@
             var self = this;
             args = this.get('list->array')(code.car);
             var env = self.inherit('let');
+            var var_body_env;
+            if (name === 'let*') {
+                var_body_env = env;
+            }
             var i = 0;
             return (function loop() {
                 var pair = args[i++];
@@ -1805,7 +1822,7 @@
                     }
                 }
                 if (dynamic_scope) {
-                    dynamic_scope = asterisk ? env : self;
+                    dynamic_scope = name === 'let*' ? env : self;
                 }
                 if (!pair) {
                     var output = new Pair(new LSymbol('begin'), code.cdr);
@@ -1815,11 +1832,19 @@
                         error
                     });
                 } else {
+                    if (name === 'let') {
+                        var_body_env = self;
+                    } else if (name === 'letrec') {
+                        var_body_env = env;
+                    }
                     var value = evaluate(pair.cdr.car, {
-                        env: asterisk ? env : self,
+                        env: var_body_env,
                         dynamic_scope,
                         error
                     });
+                    if (name === 'let*') {
+                        var_body_env = env = var_body_env.inherit('letrect[' + i + ']');
+                    }
                     return unpromise(set(value), loop);
                 }
             })();
@@ -2219,7 +2244,6 @@
     };
     LRational.prototype.add = function(n) {
         if (LNumber.isRational(n)) {
-            console.log({ n });
             var a_denom = this.denom.valueOf();
             var b_denom = n.denom.valueOf();
             var a_num = this.num;
@@ -2705,6 +2729,11 @@
     EOF.prototype.toString = function() {
         return '<#eof>';
     };
+    // -------------------------------------------------------------------------
+    function SilentError(message) {
+        this.message = message;
+    }
+    SilentError.prototype = Object.create(Error.prototype);
     // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
     // -------------------------------------------------------------------------
@@ -3371,17 +3400,25 @@
             evaluate and return true expression if not it evaluate and return
             false expression`),
         // ------------------------------------------------------------------
-        'let*': doc(
-            let_macro(true),
-            `(let* ((a value-a) (b value-b)) body)
+        'letrec': doc(
+            let_macro(Symbol.for('letrec')),
+            `(letrec ((a value-a) (b value-b)) body)
 
              Macro that creates new environment, then evaluate and assign values to
              names and then evaluate the body in context of that environment.
              Values are evaluated sequentialy and next value can access to
              previous values/names.`),
-        // ------------------------------------------------------------------
+        // ---------------------------------------------------------------------
+        'let*': doc(
+            let_macro(Symbol.for('let*')),
+            `(let* ((a value-a) (b value-b)) body)
+
+             Macro similar to \`let\` but next argument get environment
+             from previous let variable, so they you can define one variable,
+             and use in next argument.`),
+        // ---------------------------------------------------------------------
         'let': doc(
-            let_macro(false),
+            let_macro(Symbol.for('let')),
             `(let ((a value-a) (b value-b)) body)
 
              Macro that creates new environment, then evaluate and assign values to
@@ -4328,6 +4365,9 @@
                 var args = {
                     env: this,
                     error: (e) => {
+                        if (e instanceof SilentError) {
+                            throw new SilentError(e.message);
+                        }
                         var env = this.inherit('try');
                         env.set(code.cdr.car.cdr.car.car, e);
                         var args = {
@@ -4343,6 +4383,7 @@
                         ), args), function(result) {
                             resolve(result);
                         });
+                        throw new SilentError(e.message);
                     }
                 };
                 if (dynamic_scope) {

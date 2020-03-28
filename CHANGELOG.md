@@ -1,6 +1,7 @@
 ## 0.21.0
 ### Breaking
 * rename `ceil` to `ceiling` (like in R5RS spec)
+* break `let*` to work the same as in scheme (it was working like `letrec`)
 ### Features
 * start implementing R5RS spec
 * streams example
@@ -17,6 +18,7 @@
 * you can now access nested objects as symbols (e.g `(lips.LNumber 10)`)
 * new Number types (complex and rational)
 * input/output ports + string ports
+* add `letrec` macro
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
@@ -24,6 +26,7 @@
 * prevent of evaluation of `(define (x . a) a)) (x 1 2 3)`
 * fix `LNumber::String` with radix
 * fix formatting of float numbers
+* fix try..catch
 
 ## 0.20.1
 ### Bug fixes
