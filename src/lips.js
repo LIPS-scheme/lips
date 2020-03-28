@@ -1728,7 +1728,7 @@
     }
     // ----------------------------------------------------------------------
     function isBoundFunction(obj) {
-        if (typeof obj === 'fuction') {
+        if (typeof obj === 'function') {
             obj.__bound__ = false;
             return obj.__bound__ === true;
         }
@@ -2776,25 +2776,17 @@
                 return LNumber(value);
             }
             if (value instanceof Pair) {
-                return value.markCycles();
+                value.markCycles();
+                return quote(value);
             }
             if (typeof value === 'function') {
                 // bind only functions that are not binded for case:
                 // (let ((x Object)) (. x 'keys))
                 // second x access is already bound when accessing Object
-                if (isBoundFunction(value)) {
-                    if (weak) {
-                        return weakBind(value, context);
-                    }
-                    return bindWithProps(value, context);
+                if (isBoundFunction(value) || weak) {
+                    return weakBind(value, context);
                 }
-                if (isNativeFunction(value)) {
-                    // TODO: check if this is not neeed for user objects
-                    //       and methods that use this
-                    // hard bind of native functions with props for Object
-                    // hard because of console.log
-                    return bindWithProps(value, context);
-                }
+                return bindWithProps(value, context);
             }
             return value;
         }
@@ -5214,7 +5206,8 @@
                     var ret = evaluateMacro(value, rest, eval_args);
                     return unpromise(ret, result => {
                         if (result instanceof Pair) {
-                            return result.markCycles();
+                            result.markCycles();
+                            return result;
                         }
                         return result;
                     });
@@ -5253,7 +5246,8 @@
                     var result = resolvePromises(value.apply(scope, args));
                     return unpromise(result, (result) => {
                         if (result instanceof Pair) {
-                            return quote(result.markCycles());
+                            result.markCycles();
+                            return quote(result);
                         }
                         return result;
                     }, error);

@@ -205,7 +205,7 @@
 
 (define (inexact->exact n)
   (typecheck "inexact->exact" n "number")
-  (if (eq? (. n 'type) "float")
+  (if (real? n)
       (--> n (toRational))
       n))
 
