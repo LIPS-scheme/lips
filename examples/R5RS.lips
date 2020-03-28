@@ -37,6 +37,8 @@
   (cond ((and (pair? a) (pair? b))
          (and (equal? (car a) (car b))
               (equal? (cdr a) (cdr b))))
+        ((and (function? a) (function? b))
+         (%same-functions a b))
         ((and (array? a) (array? b) (eq? (length a) (length b)))
          (= (--> a (filter (lambda (item i) (equal? item (. b i)))) 'length) (length a)))
         (else (eqv? a b))))
@@ -111,7 +113,7 @@
   (typecheck "number->string" x "number" 1)
   (let ((radix (if (null? rest) 10 (car rest))))
     (typecheck "number->string" radix "number" 2)
-    (--> x (toString radix))))
+    (--> x (toString (--> radix (valueOf))))))
 
 (define (boolean? x)
   "(boolean? x)
@@ -126,6 +128,14 @@
   (typecheck "number->string" vector "array" 1)
   (typecheck "number->string" i "number" 2)
   (. vector i))
+
+(define (vector-set! vector i obj)
+  "(vector-set! vector i obj)
+
+   Set obj as value in vector at position 1."
+  (typecheck "vector-set!" vector "array" 1)
+  (typecheck "vector-set!" i "number" 2)
+  (set-obj! vector i obj))
 
 (define -inf.0 (.. Number.NEGATIVE_INFINITY))
 (define +inf.0 (.. Number.POSITIVE_INFINITY))
@@ -172,10 +182,82 @@
   (numbers? "min" args)
   (apply (.. Math.min) args))
 
-(define (truncate x)
-  "(truncate x)
+(define (make-rectangular re im)
+  "(make-rectangular im re)
 
-   Function return number without floating point part."
-  (if (< x 0)
-      (ceiling x)
-      (floor x)))
+   Create complex number from imaginary and real part."
+  ((.. lips.LNumber) (make-object :im im :re re)))
+
+(define (real? n)
+  "(real? n)"
+  (and (number? n) (eq? (. n 'type) "float")))
+
+(define (exact? n)
+  "(exact? n)"
+  (typecheck "exact?" n "number")
+  (let ((type (. n 'type)))
+    (or (eq? type "bigint") (eq? type "rational"))))
+
+(define (exact->inexact n)
+  (typecheck "exact->inexact" n "number")
+  (--> n (valueOf)))
+
+(define (inexact->exact n)
+  (typecheck "inexact->exact" n "number")
+  (if (eq? (. n 'type) "float")
+      (--> n (toRational))
+      n))
+
+(define procedure? function?)
+
+;; generate Math functions with documentation
+(define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+
+(define _this_env (current-environment))
+(let iter ((fns _maths))
+  (if (not (null? fns))
+      (let* ((name (car fns))
+             (LNumber (.. lips.LNumber))
+             (op (. Math name))
+             (fn (lambda (n) (LNumber (op n)))))
+        (--> _this_env (set name fn))
+        (set-obj! fn '__doc__ (concat "(" name " n)\n\nFunction calculate " name
+                                  " math operation (it call JavaScript Math)." name
+                                  " function."))
+        (iter (cdr fns)))))
+
+(define (modulo a b)
+  "(modulo a b)
+
+   Function return modulo operation on it's argumennts."
+  (typecheck "modulo" a "number" 1)
+  (typecheck "modulo" b "number" 2)
+  (- a (* b (floor (/ a b)))))
+
+(define (remainder__ a b)
+  "(modulo a b)
+
+   Function return reminder from division operation."
+  (typecheck "remainder" a "number" 1)
+  (typecheck "remainder" b "number" 2)
+  (- a (* b (truncate (/ a b)))))
+
+(define (quotient a b)
+  "(quotient a b)
+
+   Function return integer part from division operation."
+  (typecheck "quotient" a "number" 1)
+  (typecheck "quotient" b "number" 2)
+  (truncate (/ a b)))
+
+(define (list . args)
+  "(list . args)
+
+   Function create new list out of its arguments."
+  args)
+
+
+(define (! n)
+  (if (<= n 1)
+      1
+      (* n (! (- n 1)))))

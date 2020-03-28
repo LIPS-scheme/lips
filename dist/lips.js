@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 24 Mar 2020 15:33:35 +0000
+ * build: Sat, 28 Mar 2020 09:10:18 +0000
  */
 (function () {
 	'use strict';
@@ -1071,14 +1071,45 @@
 	        }
 	      });
 	    };
-	  }
-	  /* eslint-enable */
-	  // parse_argument based on function from jQuery Terminal
+	  } // parse_argument based on function from jQuery Terminal
 
 
 	  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
 	  var int_re = /^[-+]?[0-9]+([eE][-+]?[0-9]+)?$/;
-	  var float_re = /^([-+]?((\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/; // ----------------------------------------------------------------------
+	  var float_re = /^([-+]?((\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/; // (int | flat) ? ([-+]
+
+	  var complex_re = /^(?:(?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i$/;
+	  var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
+	  /* eslint-enable */
+	  // ----------------------------------------------------------------------
+
+	  function parseRational(arg) {
+	    var parts = arg.split('/');
+	    return {
+	      num: parseInt(parts[0], 10),
+	      denom: parseInt(parts[1], 10)
+	    };
+	  } // ----------------------------------------------------------------------
+
+
+	  function parseComplex(arg) {
+	    var parts = arg.match(complex_re);
+	    var re, im;
+
+	    if (parts.length === 2) {
+	      re = 0;
+	      im = parseFloat(parts[1]);
+	    } else {
+	      re = parts[1] ? parseFloat(parts[1]) : 0;
+	      im = parseFloat(parts[2]);
+	    }
+
+	    return {
+	      im: im,
+	      re: re
+	    };
+	  } // ----------------------------------------------------------------------
+
 
 	  function parse_argument(arg) {
 	    function parse_string(string) {
@@ -1105,10 +1136,14 @@
 	      return new RegExp(regex[1], regex[2]);
 	    } else if (arg.match(/['"]/)) {
 	      return parse_string(arg);
+	    } else if (arg.match(rational_re)) {
+	      return LRational(parseRational(arg));
+	    } else if (arg.match(complex_re)) {
+	      return LComplex(parseComplex(arg));
 	    } else if (arg.match(int_re)) {
 	      return LNumber(parseFloat(arg));
 	    } else if (arg.match(float_re)) {
-	      return LNumber(parseFloat(arg), true);
+	      return LFloat(parseFloat(arg));
 	    } else if (arg === 'nil') {
 	      return nil;
 	    } else if (arg === 'true') {
@@ -2496,13 +2531,28 @@
 	    if (x instanceof LNumber && y instanceof LNumber) {
 	      return x.cmp(y) === 0;
 	    } else if (typeof x === 'number' || typeof y === 'number') {
-	      return LNumber(x).cmp(LNumber(y));
+	      return LNumber(x).cmp(LNumber(y)) === 0;
 	    } else if (x instanceof LSymbol && y instanceof LSymbol) {
 	      return x.name === y.name;
 	    } else {
 	      return x === y;
 	    }
 	  } // ----------------------------------------------------------------------
+
+
+	  var truncate = function () {
+	    if (Math.trunc) {
+	      return Math.trunc;
+	    } else {
+	      return function (x) {
+	        if (x < 0) {
+	          return Math.ceil(x);
+	        } else {
+	          return Math.floor(x);
+	        }
+	      };
+	    }
+	  }(); // ----------------------------------------------------------------------
 
 
 	  function isEmptyList(x) {
@@ -2732,6 +2782,10 @@
 
 
 	  function weakBind(fn, context) {
+	    if (fn[Symbol["for"]('__bound__')]) {
+	      return fn;
+	    }
+
 	    var binded = function binded() {
 	      for (var _len2 = arguments.length, moreArgs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
 	        moreArgs[_key2] = arguments[_key2];
@@ -2743,6 +2797,7 @@
 
 	    hiddenProp(binded, 'name', fn.name);
 	    hiddenProp(binded, '__bound__', true);
+	    hiddenProp(binded, '__fn__', fn);
 
 	    if (fn.__doc__) {
 	      binded.__doc__ = fn.__doc__;
@@ -2823,11 +2878,16 @@
 
 
 	  function bindWithProps(fn, context) {
+	    if (fn[Symbol["for"]('__bound__')]) {
+	      return fn;
+	    }
+
 	    var bound = fn.bind(context);
 	    var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
 	    props.forEach(function (prop) {
 	      bound[prop] = fn[prop];
 	    });
+	    hiddenProp(bound, '__fn__', fn);
 	    hiddenProp(bound, '__bound__', true);
 
 	    if (isNativeFunction(fn)) {
@@ -3147,17 +3207,24 @@
 	  // :: Number wrapper that handle BigNumbers
 	  // -------------------------------------------------------------------------
 
-	  function LNumber(n, _float) {
-	    if (typeof this !== 'undefined' && this.constructor !== LNumber || typeof this === 'undefined') {
-	      return new LNumber(n, _float === true ? true : undefined$1);
+	  function LNumber(n) {
+	    if (typeof this !== 'undefined' && !(this instanceof LNumber) || typeof this === 'undefined') {
+	      return new LNumber(n);
+	    }
+
+	    var _type = LNumber.getType(n);
+
+	    if (LNumber.types[_type]) {
+	      return LNumber.types[_type](n);
 	    }
 
 	    if (n instanceof LNumber) {
-	      return LNumber(n.value, n["float"]);
+	      return LNumber(n.value);
 	    }
 
 	    if (!LNumber.isNumber(n)) {
-	      throw new Error("You can't create LNumber from ".concat(type(n)));
+	      _type = Number.isNaN(n) ? 'NaN' : type(n);
+	      throw new Error("You can't create LNumber from ".concat(_type));
 	    } // prevent infite loop https://github.com/indutny/bn.js/issues/186
 
 
@@ -3165,27 +3232,427 @@
 	      n = 0;
 	    }
 
-	    if (LNumber.isFloat(n)) {
-	      this.value = n;
-	    } else if (_float) {
-	      this.value = n;
-	      this["float"] = true;
-	    } else if (typeof BigInt !== 'undefined') {
+	    var value;
+
+	    if (typeof BigInt !== 'undefined') {
 	      if (typeof n !== 'bigint') {
-	        this.value = BigInt(n);
+	        value = BigInt(n);
 	      } else {
-	        this.value = n;
+	        value = n;
 	      }
+
+	      return LBigInteger(value, true);
 	    } else if (typeof BN !== 'undefined' && !(n instanceof BN)) {
-	      this.value = new BN(n);
+	      return LBigInteger(new BN(n));
 	    } else {
 	      this.value = n;
 	    }
 	  } // -------------------------------------------------------------------------
 
 
+	  LNumber.types = {
+	    "float": function float(n) {
+	      return new LFloat(n);
+	    },
+	    complex: function complex(n) {
+	      return new LComplex(n);
+	    },
+	    rational: function rational(n) {
+	      return new LRational(n);
+	    }
+	  }; // -------------------------------------------------------------------------
+	  // :: COMPLEX TYPE
+	  // -------------------------------------------------------------------------
+
+	  function LComplex(n) {
+	    if (typeof this !== 'undefined' && !(this instanceof LComplex) || typeof this === 'undefined') {
+	      return new LComplex(n);
+	    }
+
+	    if (n instanceof LComplex) {
+	      return LComplex({
+	        im: n.im,
+	        re: n.re
+	      });
+	    }
+
+	    if (LNumber.isNumber(n)) {
+	      n = {
+	        im: 0,
+	        re: n.valueOf()
+	      };
+	    } else if (!LNumber.isComplex(n)) {
+	      throw new Error('Invalid constructor call for LComplex');
+	    }
+
+	    this.im = LNumber(n.im);
+	    this.re = LNumber(n.re);
+	    this.type = 'complex';
+	  } // -------------------------------------------------------------------------
+
+
+	  LComplex.prototype = Object.create(LNumber.prototype); // -------------------------------------------------------------------------
+
+	  LComplex.prototype.add = function (n) {
+	    return this.op(n, function (a_re, b_re, a_im, b_im) {
+	      return {
+	        re: a_re.add(b_re),
+	        im: a_im.add(b_im)
+	      };
+	    });
+	  }; // -------------------------------------------------------------------------
+
+
+	  LComplex.prototype.div = function (n) {
+	    if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
+	      n = LComplex({
+	        im: 0,
+	        re: n
+	      });
+	    } else if (!LNumber.isComplex(n)) {
+	      throw new Error('[LComplex::add] Invalid value');
+	    }
+
+	    var conj = LComplex({
+	      re: n.re,
+	      im: n.im.sub()
+	    });
+	    var denom = n.re.mul(n.re).add(n.im.mul(n.im)).valueOf();
+	    var num = this.mul(conj);
+	    return LComplex({
+	      re: num.re.div(denom),
+	      im: num.im.div(denom)
+	    });
+	  }; // -------------------------------------------------------------------------
+
+
+	  LComplex.prototype.sub = function (n) {
+	    return this.op(n, function (a_re, b_re, a_im, b_im) {
+	      return {
+	        re: a_re.sub(b_re),
+	        im: a_im.sum(b_im)
+	      };
+	    });
+	  }; // -------------------------------------------------------------------------
+
+
+	  LComplex.prototype.mul = function (n) {
+	    return this.op(n, function (a_re, b_re, a_im, b_im) {
+	      var ret = {
+	        re: a_re.mul(b_re).sub(a_im.mul(b_im)),
+	        im: a_re.mul(b_im).add(b_re.mul(a_im))
+	      };
+	      console.log(a_re.mul(b_re));
+	      console.log(a_im.mul(b_im));
+	      console.log(ret);
+	      return ret;
+	    });
+	  }; // -------------------------------------------------------------------------
+
+
+	  LComplex.prototype.op = function (n, fn) {
+	    if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
+	      n = {
+	        im: 0,
+	        re: n
+	      };
+	    } else if (!LNumber.isComplex(n)) {
+	      throw new Error('[LComplex::add] Invalid value');
+	    }
+
+	    var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
+	    var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
+	    var ret = fn(this.re, re, this.im, im);
+
+	    if ('im' in ret && 're' in ret) {
+	      if (ret.im.cmp(0) === 0) {
+	        return LNumber(ret.re);
+	      }
+
+	      return LComplex(ret);
+	    }
+
+	    return ret;
+	  }; // -------------------------------------------------------------------------
+
+
+	  LComplex.prototype.valueOf = function () {}; // -------------------------------------------------------------------------
+
+
+	  LComplex.prototype.toString = function () {
+	    var result;
+
+	    if (this.re.cmp(0) !== 0) {
+	      result = [this.re.toString()];
+	    } else {
+	      result = [];
+	    }
+
+	    result.push(this.im.cmp(0) < 0 ? '-' : '+');
+	    result.push(this.im.toString().replace(/^-/, ''));
+	    result.push('i');
+	    return result.join('');
+	  }; // -------------------------------------------------------------------------
+	  // :: FLOAT TYPE
+	  // -------------------------------------------------------------------------
+
+
+	  function LFloat(n) {
+	    if (typeof this !== 'undefined' && !(this instanceof LFloat) || typeof this === 'undefined') {
+	      return new LFloat(n);
+	    }
+
+	    if (!LNumber.isNumber(n)) {
+	      throw new Error('Invalid constructor call for LFloat');
+	    }
+
+	    if (n instanceof LNumber) {
+	      return LFloat(n.valueOf());
+	    }
+
+	    if (typeof n === 'number') {
+	      this.value = n;
+	      this.type = 'float';
+	    }
+	  }
+
+	  LFloat.prototype = Object.create(LNumber.prototype);
+
+	  LFloat.prototype.toString = function () {
+	    if (!LNumber.isFloat(this.value)) {
+	      return this.value + '.0';
+	    }
+
+	    return this.value.toString();
+	  }; // same aproximation as in guile scheme
+
+
+	  LFloat.prototype.toRational = function () {
+	    return toRational(this.value.valueOf());
+	  };
+
+	  var toRational = approxRatio(1e-10);
+
+	  function approxRatio(eps) {
+	    return function (n) {
+	      var gcde = function gcde(e, x, y) {
+	        var _gcd = function _gcd(a, b) {
+	          return b < e ? a : _gcd(b, a % b);
+	        };
+
+	        return _gcd(Math.abs(x), Math.abs(y));
+	      },
+	          c = gcde(Boolean(eps) ? eps : 1 / 10000, 1, n);
+
+	      return LRational({
+	        num: Math.floor(n / c),
+	        denom: Math.floor(1 / c)
+	      });
+	    };
+	  }
+	  // TODO:
+	  // scheme@(guile-user)> (/ 1 2)
+	  // $1 = 1/2
+	  // scheme@(guile-user)> (exact->inexact (/ 1 2))
+	  // $2 = 0.5
+	  // scheme@(guile-user)>
+	  // scheme@(guile-user)> (inexact->exact 0.5)
+	  // $3 = 1/2
+	  // scheme@(guile-user)> (= 0.5 1/2)
+	  // $7 = #t
+	  // scheme@(guile-user)> (exact->inexact 1/5)
+	  // $11 = 0.2
+	  // scheme@(guile-user)> (= 0.2 1/5)
+	  // $12 = #f
+	  // scheme@(guile-user)> (inexact->exact 0.2)
+	  // $13 = 3602879701896397/18014398509481984
+
+	  function LRational(n) {
+	    if (typeof this !== 'undefined' && !(this instanceof LRational) || typeof this === 'undefined') {
+	      return new LRational(n);
+	    }
+
+	    if (!LNumber.isRational(n)) {
+	      throw new Error('Invalid constructor call for LBigInteger');
+	    }
+
+	    if (n.num % n.denom === 0) {
+	      return LNumber(n.num / n.denom);
+	    }
+
+	    this.num = LNumber(n.num);
+	    this.denom = LNumber(n.denom);
+	    this.type = 'rational';
+	  }
+
+	  LRational.prototype = Object.create(LNumber.prototype);
+
+	  LRational.prototype.cmp = function (n) {
+	    if (n instanceof LBigInteger) {
+	      return LBigInteger(Math.floor(this.valueOf())).cmp(n);
+	    }
+
+	    if (n instanceof LFloat) {
+	      return LFloat(this.valueOf()).cmp(n);
+	    }
+
+	    return LNumber(this.valueOf()).cmp(LNumber(n.valueOf()));
+	  };
+
+	  LRational.prototype.toString = function () {
+	    var gdc = global_env.get('gdc')(this.num, this.denom);
+
+	    if (gdc !== 1) {
+	      gdc = LNumber(gdc);
+	      return this.num.div(gdc) + '/' + this.denom.div(gdc);
+	    }
+
+	    return this.num + '/' + this.denom;
+	  };
+
+	  LRational.prototype.valueOf = function () {
+	    return this.num.div(this.denom);
+	  };
+
+	  LRational.prototype.mul = function (n) {
+	    if (LNumber.isRational(n)) {
+	      var num = this.num.mul(n.num);
+	      var denom = this.denom.mul(n.denom);
+	      return LRational({
+	        num: num,
+	        denom: denom
+	      });
+	    }
+
+	    return LNumber(this.valueOf()).mul(n);
+	  };
+
+	  LRational.prototype.div = function (n) {
+	    if (LNumber.isRational(n)) {
+	      var num = n.denom;
+	      var denom = n.num;
+	      return this.mul({
+	        num: num,
+	        denom: denom
+	      });
+	    }
+
+	    return LNumber(this.valueOf()).mul(n);
+	  };
+
+	  LRational.prototype.add = function (n) {
+	    if (LNumber.isRational(n)) {
+	      console.log({
+	        n: n
+	      });
+	      var a_denom = this.denom.valueOf();
+	      var b_denom = n.denom.valueOf();
+	      var a_num = this.num;
+	      var b_num = n.num;
+	      var denom;
+
+	      if (a_denom !== b_denom) {
+	        denom = global_env.get('lcm')(a_denom, b_denom);
+	        var gdc;
+	        console.log({
+	          denom: denom
+	        });
+
+	        if (denom > a_denom) {
+	          gdc = global_env.get('gdc')(denom, a_denom);
+	          a_num = a_num.mul(gdc);
+	        }
+
+	        if (denom > b_denom) {
+	          gdc = global_env.get('gdc')(denom, b_denom);
+	          b_num = b_num.mul(gdc);
+	        }
+	      } else {
+	        denom = a_denom;
+	      }
+
+	      var num = a_num.add(b_num);
+	      return LRational({
+	        num: num,
+	        denom: denom
+	      });
+	    }
+
+	    debugger;
+
+	    if (LNumber.isFloat(n)) {
+	      return LFloat(this.valueOf()).add(n);
+	    }
+
+	    return LNumber(this.valueOf()).add(n);
+	  }; // -------------------------------------------------------------------------
+
+
+	  function LBigInteger(n, _native2) {
+	    if (typeof this !== 'undefined' && !(this instanceof LBigInteger) || typeof this === 'undefined') {
+	      return new LBigInteger(n, _native2);
+	    }
+
+	    if (n instanceof LBigInteger) {
+	      return LBigInteger(n.value, n._native);
+	    }
+
+	    if (!LNumber.isBigInteger(n)) {
+	      throw new Error('Invalid constructor call for LBigInteger');
+	    }
+
+	    this.value = n;
+	    this._native = _native2;
+	    this.type = 'bigint';
+	  } // -------------------------------------------------------------------------
+
+
+	  LBigInteger.prototype = Object.create(LNumber.prototype); // -------------------------------------------------------------------------
+
+	  LBigInteger.prototype.op = function (op, n) {
+	    if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
+	      var bn_op = {
+	        '+': 'iadd',
+	        '-': 'isub',
+	        '*': 'imul',
+	        '/': 'idiv',
+	        '%': 'imod',
+	        '|': 'ior',
+	        '&': 'iand',
+	        '~': 'inot',
+	        '<<': 'ishrn',
+	        '>>': 'ishln'
+	      };
+	      op = bn_op[op];
+	      return LBigInteger(this.value.clone()[op](n), false);
+	    }
+
+	    return LBigInteger(LNumber._ops[op](this.value, n.value), true);
+	  };
+
+	  LBigInteger.prototype.sqrt = function () {
+	    var value;
+	    var minus = this.cmp(0) < 0;
+
+	    if (LNumber.isNative(this.value)) {
+	      value = Math.sqrt(minus ? -this.valueOf() : this.valueOf());
+	    } else if (LNumber.isBN(this.value)) {
+	      value = minus ? this.value.neg().sqrt() : this.value.sqrt();
+	    }
+
+	    if (minus) {
+	      return LComplex({
+	        re: 0,
+	        im: value
+	      });
+	    }
+
+	    return value;
+	  }; // -------------------------------------------------------------------------
+
+
 	  LNumber.isFloat = function isFloat(n) {
-	    return Number(n) === n && n % 1 !== 0;
+	    return n instanceof LFloat || Number(n) === n && n % 1 !== 0;
 	  }; // -------------------------------------------------------------------------
 
 
@@ -3194,8 +3661,23 @@
 	  }; // -------------------------------------------------------------------------
 
 
+	  LNumber.isComplex = function (n) {
+	    return n instanceof LComplex || LNumber.isNumber(n.im) && LNumber.isNumber(n.re);
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.isRational = function (n) {
+	    return n instanceof LRational || LNumber.isNumber(n.num) && LNumber.isNumber(n.denom);
+	  }; // -------------------------------------------------------------------------
+
+
 	  LNumber.isNative = function (n) {
 	    return typeof n === 'bigint' || typeof n === 'number';
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.isBigInteger = function (n) {
+	    return n instanceof LBigInteger || typeof n === 'bigint' || LNumber.isBN(n);
 	  }; // -------------------------------------------------------------------------
 
 
@@ -3204,8 +3686,21 @@
 	  }; // -------------------------------------------------------------------------
 
 
-	  LNumber.prototype.toString = LNumber.prototype.toJSON = function () {
-	    return this.value.toString();
+	  LNumber.getArgsType = function (a, b) {
+	    if (a instanceof LFloat || b instanceof LFloat) {
+	      return LFloat;
+	    }
+
+	    if (a instanceof LBigInteger || b instanceof LBigInteger) {
+	      return LBigInteger;
+	    }
+
+	    return LNumber;
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.toString = LNumber.prototype.toJSON = function (radix) {
+	    return this.value.toString(radix);
 	  }; // -------------------------------------------------------------------------
 
 
@@ -3246,13 +3741,46 @@
 	      value = n;
 	    }
 
-	    if (LNumber.isFloat(value)) ; else if (typeof this.value === 'bigint' && typeof value !== 'bigint') {
-	      value = BigInt(value);
+	    if (LNumber.isComplex(n)) {
+	      return LComplex(n);
+	    } else if (LNumber.isRational(n)) {
+	      return LRational(n);
+	    } else if (LNumber.isFloat(value)) {
+	      return LFloat(value);
+	    } else if (typeof this.value === 'bigint' && typeof value !== 'bigint') {
+	      return LBigInteger(BigInt(value));
 	    } else if (typeof BN !== 'undefined' && this.value instanceof BN && !value instanceof BN) {
-	      value = new BN(value);
+	      return LBigInteger(new BN(value));
 	    }
 
 	    return LNumber(value);
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.getType = function (n) {
+	    if (n instanceof LNumber) {
+	      return n.type;
+	    }
+
+	    if (LNumber.isFloat(n)) {
+	      return 'float';
+	    }
+
+	    if (LNumber.isComplex(n)) {
+	      return 'complex';
+	    }
+
+	    if (LNumber.isRational(n)) {
+	      return 'rational';
+	    }
+
+	    if (typeof n === 'number') {
+	      return 'integer';
+	    }
+
+	    if (typeof BigInt !== 'undefined' && typeof n !== 'bigint' || typeof BN !== 'undefined' && !(n instanceof BN)) {
+	      return 'bigint';
+	    }
 	  }; // -------------------------------------------------------------------------
 
 
@@ -3261,119 +3789,141 @@
 	  }; // -------------------------------------------------------------------------
 
 
-	  LNumber.prototype.op = function (op, n) {
-	    var ops = {
-	      '*': function _(a, b) {
-	        return a * b;
-	      },
-	      '+': function _(a, b) {
-	        return a + b;
-	      },
-	      '-': function _(a, b) {
-	        return a - b;
-	      },
-	      '/': function _(a, b) {
-	        return a / b;
-	      },
-	      'mod': function mod(a, b) {
-	        if (b === 0 || Number.isNaN(a) || Number.isNaN(b)) {
-	          return NaN;
-	        }
-
-	        var isPositive = a >= 0;
-	        a = a < 0 ? -a : a; // Math.abs that work with BigInt
-
-	        b = b < 0 ? -b : b;
-
-	        while (a >= b) {
-	          a = a - b;
-	        }
-
-	        return isPositive ? a : -a;
-	      },
-	      '%': function _(a, b) {
-	        return a % b;
-	      },
-	      '|': function _(a, b) {
-	        return a | b;
-	      },
-	      '&': function _(a, b) {
-	        return a & b;
-	      },
-	      '~': function _(a) {
-	        return ~a;
-	      },
-	      '>>': function _(a, b) {
-	        return a >> b;
-	      },
-	      '<<': function _(a, b) {
-	        return a << b;
-	      }
-	    };
-
-	    if (LNumber.isFloat(n) || n instanceof LNumber && n.isFloat() || this.isFloat()) {
-	      var value = n instanceof LNumber ? n.valueOf() : n;
-	      return LNumber(ops[op](this.valueOf(), value), true);
-	    }
-
-	    n = this.coerce(n);
-
-	    if (LNumber.isNative(n.value) && LNumber.isNative(this.value)) {
-	      return LNumber(ops[op](this.value, n.value));
-	    }
-
-	    if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
-	      if (op === 'mod') {
-	        throw new Error('Not yet implemented');
-	      }
-
-	      var bn_op = {
-	        '+': 'iadd',
-	        '-': 'isub',
-	        '*': 'imul',
-	        '/': 'idiv',
-	        '%': 'imod',
-	        '|': 'ior',
-	        '&': 'iand',
-	        '~': 'inot',
-	        '<<': 'ishrn',
-	        '>>': 'ishln'
-	      };
-	      op = bn_op[op];
-	      return LNumber(this.value.clone()[op](n, value));
-	    }
+	  LNumber.prototype.add = function (n) {
+	    return LNumber(this.valueOf() + n.valueOf());
 	  }; // -------------------------------------------------------------------------
 
 
-	  var ops = {
-	    '+': 'add',
-	    '-': 'sub',
-	    '*': 'mul',
-	    '/': 'div',
-	    '%': 'rem',
-	    'mod': 'mod',
-	    '|': 'or',
-	    '&': 'and',
-	    '~': 'neg',
-	    '<<': 'shl',
-	    '>>': 'shr'
+	  LNumber.prototype.sub = function () {
+	    var n = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
+
+	    if (n === null) {
+	      return LNumber(-this.valueOf());
+	    }
+
+	    return LNumber(this.valueOf() - n.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.mul = function (n) {
+	    if (n instanceof LComplex) {
+	      return LComplex(this).mul(n);
+	    }
+
+	    return LNumber(this.valueOf() * n.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.div = function (n) {
+	    if (n instanceof LComplex) {
+	      return LComplex(this).mul(n);
+	    }
+
+	    return LNumber(this.valueOf() / n.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.rem = function (n) {
+	    return LNumber(this.valueOf() % n.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.mod = function (n) {
+	    return LNumber(this.valueOf() % n.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.or = function (n) {
+	    return LNumber(this.ValueOf() | n.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.and = function (n) {
+	    return LNumber(this.valueOf() & n.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.neg = function () {
+	    return LNumber(~this.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.shl = function (n) {
+	    return LNumber(this.valueOf() >> n.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.shr = function (n) {
+	    return this.op(n);
 	  };
-	  Object.keys(ops).forEach(function (op) {
-	    LNumber.prototype[ops[op]] = function (n) {
-	      return this.op(op, n);
+
+	  var mapping = {
+	    'add': '+',
+	    'sub': '-',
+	    'mul': '*',
+	    'div': '/',
+	    'rem': '%',
+	    'or': '|',
+	    'and': '&',
+	    'neg': '~',
+	    'shl': '>>',
+	    'shr': '<<'
+	  };
+	  Object.keys(mapping).forEach(function (key) {
+	    LNumber.prototype[key] = function (n) {
+	      return this.op(mapping[key], n);
 	    };
 	  }); // -------------------------------------------------------------------------
 
-	  LNumber.prototype.sqrt = function () {
-	    var value;
+	  LNumber._ops = {
+	    '*': function _(a, b) {
+	      return a * b;
+	    },
+	    '+': function _(a, b) {
+	      return a + b;
+	    },
+	    '-': function _(a, b) {
+	      return a - b;
+	    },
+	    '/': function _(a, b) {
+	      return a / b;
+	    },
+	    '%': function _(a, b) {
+	      return a % b;
+	    },
+	    '|': function _(a, b) {
+	      return a | b;
+	    },
+	    '&': function _(a, b) {
+	      return a & b;
+	    },
+	    '~': function _(a) {
+	      return ~a;
+	    },
+	    '>>': function _(a, b) {
+	      return a >> b;
+	    },
+	    '<<': function _(a, b) {
+	      return a << b;
+	    }
+	  }; // -------------------------------------------------------------------------
 
-	    if (LNumber.isNative(this.value)) {
-	      value = Math.sqrt(this.value);
-	    } else if (LNumber.isBN(this.value)) {
-	      value = this.value.sqrt();
+	  LNumber.prototype.op = function (op, n) {
+	    return LNumber(LNumber._ops[op](this.valueOf(), n.valueOf()));
+	  }; // -------------------------------------------------------------------------
+
+
+	  LNumber.prototype.sqrt = function () {
+	    var value = this.valueOf();
+
+	    if (this.cmp(0) < 0) {
+	      return LComplex({
+	        re: 0,
+	        im: Math.sqrt(-value)
+	      });
 	    }
 
-	    return new LNumber(value);
+	    return new LNumber(Math.sqrt(value));
 	  }; // -------------------------------------------------------------------------
 
 
@@ -3394,19 +3944,6 @@
 	    }
 
 	    return n;
-	  }; // -------------------------------------------------------------------------
-
-
-	  LNumber.prototype.neg = function () {
-	    var value = this.value;
-
-	    if (LNumber.isNative(value)) {
-	      value = -value;
-	    } else if (LNumber.isBN(value)) {
-	      value = value.neg();
-	    }
-
-	    return new LNumber(value);
 	  }; // -------------------------------------------------------------------------
 
 
@@ -3493,33 +4030,22 @@
 
 	    return new Environment(obj || {}, this, name);
 	  }; // -------------------------------------------------------------------------
+	  // :: get nested key from object (key is symbol or string with
+	  // :: coma separated names
+	  // -------------------------------------------------------------------------
 
 
-	  Environment.prototype.get = function (symbol) {
-	    var options = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
-	    // we keep original environment as context for bind
-	    // so print will get user stdout
+	  function objectGet(object, key) {
+	    var options = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {};
 	    var weak = options.weak,
-	        _options$context = options.context,
-	        context = _options$context === void 0 ? this : _options$context,
 	        _options$throwError = options.throwError,
 	        throwError = _options$throwError === void 0 ? true : _options$throwError;
-	    var value;
-	    var defined = false;
 
-	    if (symbol instanceof LSymbol) {
-	      if (symbol.name in this.env) {
-	        value = this.env[symbol.name];
-	        defined = true;
-	      }
-	    } else if (typeof symbol === 'string') {
-	      if (typeof this.env[symbol] !== 'undefined') {
-	        value = this.env[symbol];
-	        defined = true;
-	      }
+	    if (key instanceof LSymbol) {
+	      key = key.name;
 	    }
 
-	    if (defined) {
+	    function patchValue(value, context) {
 	      if (LNumber.isNumber(value)) {
 	        return LNumber(value);
 	      }
@@ -3539,45 +4065,162 @@
 
 	          return bindWithProps(value, context);
 	        }
+
+	        if (isNativeFunction(value)) {
+	          // TODO: check if this is not neeed for user objects
+	          //       and methods that use this
+	          // hard bind of native functions with props for Object
+	          // hard because of console.log
+	          return bindWithProps(value, context);
+	        }
+	      }
+
+	      return value;
+	    } // try to get from env
+
+
+	    if (typeof key === 'string') {
+	      var parts = key.split('.');
+	    }
+
+	    var value;
+
+	    if (object instanceof Environment) {
+	      value = object.lookup(key);
+
+	      if (typeof value !== 'undefined') {
+	        if (value === undef) {
+	          return undef;
+	        }
+
+	        return patchValue(value, object);
+	      }
+
+	      if (parts.length > 1) {
+	        value = object.lookup(parts[0]);
+
+	        if (typeof value !== 'undefined') {
+	          if (value === undef) {
+	            if (throwError) {
+	              throw new Error("Can't get " + parts[0] + " it was undefined");
+	            }
+
+	            return undef;
+	          }
+
+	          parts = parts.slice(1);
+	          object = value;
+	        }
+	      }
+	    }
+
+	    return parts.reduce(function (acc, e, i) {
+	      if (typeof acc === 'undefined') {
+	        return acc;
+	      }
+
+	      if (!e) {
+	        throw new Error('Invalid expression ' + key);
+	      }
+
+	      var value = acc[e];
+
+	      if (typeof value !== 'undefined') {
+	        if (i === parts.length - 1) {
+	          return patchValue(value, acc);
+	        }
+
+	        return value;
+	      }
+
+	      if (throwError) {
+	        throw new Error("Unbound variable `" + key + "'");
+	      }
+	    }, object);
+	  } // -------------------------------------------------------------------------
+
+
+	  Environment.prototype.lookup = function (symbol) {
+	    if (symbol instanceof LSymbol) {
+	      symbol = symbol.name;
+	    }
+
+	    if (symbol in this.env) {
+	      if (typeof this.env[symbol] === 'undefined') {
+	        return undef;
+	      }
+
+	      return this.env[symbol];
+	    }
+
+	    if (this.parent) {
+	      return this.parent.lookup(symbol);
+	    }
+	  };
+
+	  function Undefined() {}
+	  var undef = new Undefined(); // -------------------------------------------------------------------------
+
+	  Environment.prototype.get = function (symbol) {
+	    var options = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
+	    // we keep original environment as context for bind
+	    // so print will get user stdout
+	    var weak = options.weak,
+	        _options$context = options.context,
+	        _options$throwError2 = options.throwError,
+	        throwError = _options$throwError2 === void 0 ? true : _options$throwError2;
+	    var value;
+	    var defined = false;
+
+	    if (symbol instanceof LSymbol) {
+	      {
+	        value = objectGet(this, symbol, {
+	          weak: weak,
+	          throwError: false
+	        });
+
+	        if (typeof value !== 'undefined') {
+	          defined = true;
+	        }
+	      }
+	    } else if (typeof symbol === 'string') {
+	      value = objectGet(this, symbol, {
+	        weak: weak,
+	        throwError: false
+	      });
+
+	      if (typeof value !== 'undefined') {
+	        defined = true;
+	      }
+	    }
+
+	    if (defined) {
+	      if (value === undef) {
+	        return undefined$1;
 	      }
 
 	      return value;
 	    }
 
-	    if (this.parent instanceof Environment) {
-	      return this.parent.get(symbol, {
-	        weak: weak,
-	        context: context,
-	        throwError: throwError
-	      });
-	    } else {
-	      var name;
+	    var name;
 
-	      if (symbol instanceof LSymbol) {
-	        name = symbol.name;
-	      } else if (typeof symbol === 'string') {
-	        name = symbol;
+	    if (symbol instanceof LSymbol) {
+	      name = symbol.name;
+	    } else if (typeof symbol === 'string') {
+	      name = symbol;
+	    }
+
+	    if (name) {
+	      value = objectGet(root, name, options);
+
+	      if (value === undef) {
+	        return undefined$1;
 	      }
 
-	      if (name) {
-	        var type = _typeof_1(root[name]);
-
-	        if (type === 'function') {
-	          if (isNativeFunction(root[name])) {
-	            // hard bind of native functions with props for Object
-	            // hard because of console.log
-	            return bindWithProps(root[name], root);
-	          }
-
-	          return root[name];
-	        } else if (type !== 'undefined') {
-	          return root[name];
-	        }
-	      }
+	      return value;
 	    }
 
 	    if (throwError) {
-	      name = (name.name || name).toString();
 	      throw new Error("Unbound variable `" + name + "'");
 	    }
 	  }; // -------------------------------------------------------------------------
@@ -3683,6 +4326,21 @@
 	        });
 	      }
 	    },
+	    '%same-functions': doc(function (a, b) {
+	      if (typeof a !== 'function') {
+	        return false;
+	      }
+
+	      if (typeof b !== 'function') {
+	        return false;
+	      }
+
+	      console.log({
+	        a: a[Symbol["for"]('__fn__')],
+	        b: b[Symbol["for"]('__fn__')]
+	      });
+	      return a[Symbol["for"]('__fn__')] == b[Symbol["for"]('__fn__')];
+	    }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
 	    // ------------------------------------------------------------------
 	    help: doc(new Macro('help', function (code, _ref6) {
 	      var dynamic_scope = _ref6.dynamic_scope,
@@ -4067,6 +4725,10 @@
 	      unbind(obj)[key] = value;
 	    }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
 	    'current-environment': doc(function () {
+	      if (this.name === '__frame__') {
+	        return this.parent;
+	      }
+
 	      return this;
 	    }, "(current-environment)\n\n            Function return current environement."),
 	    // ------------------------------------------------------------------
@@ -4167,7 +4829,7 @@
 	            if (name.car !== nil) {
 	              if (name instanceof LSymbol) {
 	                // rest argument,  can also be first argument
-	                value = Pair.fromArray(args.slice(i));
+	                value = quote(Pair.fromArray(args.slice(i)));
 	                env.env[name.name] = value;
 	                break;
 	              } else {
@@ -4620,7 +5282,7 @@
 	      }
 
 	      if (obj instanceof LNumber) {
-	        return obj.value.toString();
+	        return obj.toString();
 	      }
 
 	      if (typeof obj === 'undefined') {
@@ -4837,7 +5499,7 @@
 	    }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
 	    // ------------------------------------------------------------------
 	    print: doc(function () {
-	      throw new Error('Function print was removed in version 0.20.0 use ' + 'display insided');
+	      this.get('display').apply(void 0, arguments);
 	    }, "(print . args)\n\n            defunct function, we keep it to show proper error when used."),
 	    // ------------------------------------------------------------------
 	    display: doc(function () {
@@ -4903,7 +5565,7 @@
 	      if (arg.match(int_re)) {
 	        return LNumber(parseFloat(arg));
 	      } else if (arg.match(float_re)) {
-	        return LNumber(parseFloat(arg), true);
+	        return LNumber(parseFloat(arg));
 	      }
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
@@ -5243,9 +5905,20 @@
 	    'abs': doc(singleMathOp(function (n) {
 	      return LNumber(n).abs();
 	    }), "(abs number)\n\n             Function create absolute value from number."),
+	    'truncate': doc(function (n) {
+	      if (LNumber.isFloat(n)) {
+	        if (n instanceof LNumber) {
+	          n = n.valueOf();
+	        }
+
+	        return LFloat(truncate(n));
+	      }
+
+	      return n;
+	    }, "(truncate n)\n\n            Function return integer value from real number."),
 	    // ------------------------------------------------------------------
 	    'sqrt': doc(singleMathOp(function (n) {
-	      return Math.sqrt(n);
+	      return LNumber(n).sqrt();
 	    }), "(sqrt number)\n\n             Function return square root of the number."),
 	    // ------------------------------------------------------------------
 	    '**': doc(binaryMathOp(function (a, b) {
@@ -5275,10 +5948,6 @@
 	      this.set(code.car, value);
 	      return value;
 	    }), "(-- variable)\n\n             Macro that decrement the value it work only on symbols"),
-	    // ------------------------------------------------------------------
-	    'modulo': doc(function (a, b) {
-	      return LNumber(a).rem(b);
-	    }, "(modulo n1 n2)\n\n             Function get modulo of it's arguments."),
 	    // ------------------------------------------------------------------
 	    '%': doc(function (a, b) {
 	      return LNumber(a).mod(b);

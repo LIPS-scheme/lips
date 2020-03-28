@@ -13,10 +13,15 @@
 * new `vector-ref` (same as `(. v n)` but with typecheck)
 * new `+inf.0` and `-inf.0`
 * new `max`, `min` and `truncate`
+* restore `print` it's now alias for display
+* you can now access nested objects as symbols (e.g `(lips.LNumber 10)`)
+* new Number types (complex and rational)
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
-* update destruct to export only needed functions
+* update defstruct to export only needed functions (local functions are namespaced)
+* prevent of evaluation of `(define (x . a) a)) (x 1 2 3)`
+* fix `LNumber::String` with radix
 
 ## 0.20.1
 ### Bug fixes
