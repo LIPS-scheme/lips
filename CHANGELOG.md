@@ -16,6 +16,7 @@
 * restore `print` it's now alias for display
 * you can now access nested objects as symbols (e.g `(lips.LNumber 10)`)
 * new Number types (complex and rational)
+* input/output ports + string ports
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

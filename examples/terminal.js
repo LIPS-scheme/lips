@@ -16,20 +16,16 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
     }
     // -------------------------------------------------------------------------
     var env = lips.env.inherit(name, {
-        stdout: {
-            write: function() {
-                var args = Array.from(arguments);
-                args.forEach(function(arg) {
-                    term.echo(arg, {formatters: false});
-                });
-            }
-        },
+        stdout: lips.OutputPort(function() {
+            var args = Array.from(arguments);
+            args.forEach(function(arg) {
+                term.echo(arg, {formatters: false});
+            });
+        }),
         // ---------------------------------------------------------------------
-        stdin: {
-            read: function() {
-                return term.read('');
-            }
-        },
+        stdin: lips.InputPort(function() {
+            return term.read('');
+        }),
         // ---------------------------------------------------------------------
         help: doc(new lips.Macro('help', function(code, { error }) {
             const { evaluate, Pair, LSymbol, nil } = lips;

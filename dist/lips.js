@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 28 Mar 2020 12:31:49 +0000
+ * build: Sat, 28 Mar 2020 15:31:43 +0000
  */
 (function () {
 	'use strict';
@@ -4132,6 +4132,136 @@
 	      return this.value.cmp(n.value);
 	    }
 	  }; // -------------------------------------------------------------------------
+	  // :: Port abstration (used only for it's type - old code used inline objects)
+	  // -------------------------------------------------------------------------
+
+
+	  function InputPort(read) {
+	    if (typeof this !== 'undefined' && !(this instanceof InputPort) || typeof this === 'undefined') {
+	      return new InputPort(read);
+	    }
+
+	    typecheck('InputPort', read, 'function');
+	    this.read = read;
+	  }
+
+	  InputPort.prototype.toString = function () {
+	    return '<#input-port>';
+	  }; // -------------------------------------------------------------------------
+
+
+	  function OutputPort(write) {
+	    if (typeof this !== 'undefined' && !(this instanceof OutputPort) || typeof this === 'undefined') {
+	      return new OutputPort(write);
+	    }
+
+	    typecheck('OutputPort', write, 'function');
+	    this.write = write;
+	  }
+
+	  OutputPort.prototype.toString = function () {
+	    return '<#output-port>';
+	  }; // -------------------------------------------------------------------------
+
+
+	  function OutputStringPort(toString) {
+	    var _this = this;
+
+	    if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
+	      return new OutputStringPort(toString);
+	    }
+
+	    typecheck('OutputStringPort', toString, 'function');
+	    this._buffer = [];
+
+	    this.write = function (x) {
+	      _this._buffer.push(toString(x));
+	    };
+	  }
+
+	  OutputStringPort.prototype = Object.create(OutputPort.prototype);
+
+	  OutputStringPort.prototype.toString = function () {
+	    return '<#output-string-port>';
+	  };
+
+	  OutputStringPort.prototype.getString = function () {
+	    return this._buffer.join('');
+	  }; // -------------------------------------------------------------------------
+
+
+	  function InputStringPort(string) {
+	    var _this2 = this;
+
+	    if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
+	      return new InputStringPort(string);
+	    }
+
+	    typecheck('InputStringPort', string, 'string');
+	    this._tokens = tokenize(string);
+	    this._index = 0;
+	    this._in_char = 0;
+
+	    this.read = function () {
+	      return _this2.getNextTokens();
+	    };
+	  }
+
+	  InputStringPort.prototype = Object.create(InputPort.prototype);
+
+	  InputStringPort.prototype.getNextTokens = function () {
+	    if (this.peekChar() === eof) {
+	      return eof;
+	    }
+
+	    var ballancer = 0;
+	    var result = [];
+	    var parens = ['(', ')'];
+
+	    if (!parens.includes(this._tokens[this._index])) {
+	      return this._tokens[this._index++];
+	    }
+
+	    do {
+	      var token = this._tokens[this._index];
+	      result.push(this._tokens[this._index]);
+
+	      if (token === ')') {
+	        ballancer--;
+	      } else if (token === '(') {
+	        ballancer++;
+	      }
+
+	      this._index++;
+	    } while (ballancer !== 0);
+
+	    return result;
+	  };
+
+	  InputStringPort.prototype.peekChar = function () {
+	    if (this._index > this._tokens.length - 1) {
+	      return eof;
+	    }
+
+	    if (this._index === this._tokens.length - 1 && this.in_char > this._tokens[this._index].length) {
+	      return eof;
+	    }
+
+	    return this._tokens[this._index][this.in_char];
+	  };
+
+	  InputStringPort.prototype.toString = function () {
+	    return '<#output-string-port>';
+	  }; // -------------------------------------------------------------------------
+
+
+	  var eof = new EOF();
+
+	  function EOF() {}
+
+	  EOF.prototype.toString = function () {
+	    return '<#eof>';
+	  }; // -------------------------------------------------------------------------
 	  // :: Environment constructor (parent and name arguments are optional)
 	  // -------------------------------------------------------------------------
 
@@ -4450,21 +4580,126 @@
 	    'false': false,
 	    'NaN': NaN,
 	    // ------------------------------------------------------------------
-	    stdout: {
-	      write: function write() {
-	        var _console;
+	    stdout: new OutputPort(function () {
+	      var _console;
 
-	        (_console = console).log.apply(_console, arguments);
-	      }
-	    },
+	      (_console = console).log.apply(_console, arguments);
+	    }),
 	    // ------------------------------------------------------------------
-	    stdin: {
-	      read: function read() {
-	        return new Promise(function (resolve) {
-	          resolve(prompt(''));
-	        });
+	    stdin: InputPort(function () {
+	      return new Promise(function (resolve) {
+	        resolve(prompt(''));
+	      });
+	    }),
+	    // ------------------------------------------------------------------
+	    'current-input-port': doc(function () {
+	      return this.get('stdin');
+	    }, "(current-input-port)\n\n           Function return default stdin port."),
+	    // ------------------------------------------------------------------
+	    'current-output-port': doc(function () {
+	      return this.get('stdout');
+	    }, "(current-output-port)\n\n            Function return default stdout port."),
+	    // ------------------------------------------------------------------
+	    'open-input-string': doc(function (string) {
+	      typecheck('open-input-string', string, 'string');
+	      return InputStringPort(string);
+	    }, "(open-input-string string)\n\n            Function create new string port as input that can be used to\n            read S-exressions from this port using `read` function."),
+	    // ------------------------------------------------------------------
+	    'output-port?': doc(function (x) {
+	      return x instanceof OutputPort;
+	    }, "(output-port? arg)\n\n            Function return true if argument is output port."),
+	    // ------------------------------------------------------------------
+	    'input-port?': doc(function (x) {
+	      return x instanceof InputPort;
+	    }, "(input-port? arg)\n\n            Function return true if argument is input port."),
+	    // ------------------------------------------------------------------
+	    'open-output-string': doc(function () {
+	      return OutputStringPort(this.get('string'));
+	    }, "(open-output-string)\n\n            Function create new output port that can used to write string into\n            and after finish get the whole string using `get-output-string`"),
+	    // ------------------------------------------------------------------
+	    'get-output-string': doc(function (port) {
+	      typecheck('get-output-string', port, 'output-string-port');
+	      return port.getString();
+	    }, "(get-output-string port)\n\n            Function get full string from string port. If nothing was wrote\n            to given port it will return empty string."),
+	    // ------------------------------------------------------------------
+	    'eof-object?': doc(function (x) {
+	      return x === eof;
+	    }, "(eof-object? arg)\n\n            Function check if value is eof object, returned from input string\n            port when there are no more data to read."),
+	    // ------------------------------------------------------------------
+	    'peek-char': doc(function (port) {
+	      typecheck('peek-char', port, ['input-port', 'input-string-port']);
+	      return port.peekChar();
+	    }, "(peek-char port)\n\n            Function get character from string port or EOF object if no more\n            data in string port."),
+	    // ------------------------------------------------------------------
+	    read: doc(function read(arg) {
+	      var _this3 = this;
+
+	      if (typeof arg === 'string') {
+	        return parse(tokenize(arg))[0];
 	      }
-	    },
+
+	      if (arg instanceof InputStringPort) {
+	        var tokens = arg.read();
+
+	        if (tokens === eof) {
+	          return eof;
+	        }
+
+	        return parse(tokens)[0];
+	      }
+
+	      var port;
+
+	      if (arg instanceof InputPort) {
+	        port = arg;
+	      } else {
+	        port = this.get('stdin');
+	      }
+
+	      return port.read().then(function (text) {
+	        return read.call(_this3, text);
+	      });
+	    }, "(read [string])\n\n            Function if used with string will parse the string and return\n            list structure of LIPS code. If called without an argument it\n            will read string from standard input (using browser prompt or\n            user defined way) and call itself with that string (parse is)\n            function can be used together with eval to evaluate code from\n            string"),
+	    // ------------------------------------------------------------------
+	    pprint: doc(function (arg) {
+	      if (arg instanceof Pair) {
+	        arg = new lips.Formatter(arg.toString())["break"]().format();
+	        this.get('stdout').write(arg);
+	      } else {
+	        this.get('display').call(this, arg);
+	      }
+	    }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
+	    // ------------------------------------------------------------------
+	    print: doc(function () {
+	      var _this$get,
+	          _this4 = this;
+
+	      for (var _len15 = arguments.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+	        args[_key15] = arguments[_key15];
+	      }
+
+	      (_this$get = this.get('stdout')).write.apply(_this$get, toConsumableArray(args.map(function (arg) {
+	        return _this4.get('string')(arg, typeof arg === 'string');
+	      })));
+	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
+	    // ------------------------------------------------------------------
+	    display: doc(function (arg) {
+	      var port = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
+
+	      if (port === null) {
+	        port = this.get('stdout');
+	      }
+
+	      port.write(this.get('string')(arg, typeof arg === 'string'));
+	    }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
+	    // ------------------------------------------------------------------
+	    error: doc(function () {
+	      for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+	        args[_key16] = arguments[_key16];
+	      }
+
+	      this.get('display').apply(this, args);
+	    }, "(error . args)\n\n            Display error message."),
 	    '%same-functions': doc(function (a, b) {
 	      if (typeof a !== 'function') {
 	        return false;
@@ -4872,7 +5107,7 @@
 	    }, "(current-environment)\n\n            Function return current environement."),
 	    // ------------------------------------------------------------------
 	    'eval': doc(function (code, env) {
-	      var _this = this;
+	      var _this5 = this;
 
 	      typecheck('eval', code, ['symbol', 'pair', 'array']);
 	      env = env || this;
@@ -4886,14 +5121,14 @@
 	          env: env,
 	          //dynamic_scope: this,
 	          error: function error(e) {
-	            _this.get('error')(e.message);
+	            _this5.get('error')(e.message);
 
 	            if (e.code) {
 	              var stack = e.code.map(function (line, i) {
 	                return "[".concat(i + 1, "]: ").concat(line);
 	              }).join('\n');
 
-	              _this.get('error')(stack);
+	              _this5.get('error')(stack);
 	            }
 	          }
 	        });
@@ -4944,8 +5179,8 @@
 	        } // arguments and arguments.callee inside lambda function
 
 
-	        for (var _len15 = arguments.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-	          args[_key15] = arguments[_key15];
+	        for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+	          args[_key17] = arguments[_key17];
 	        }
 
 	        if (this instanceof Environment) {
@@ -5356,8 +5591,8 @@
 	    }, "(nth index obj)\n\n            Function return nth element of the list or array. If used with different\n            value it will throw exception"),
 	    // ------------------------------------------------------------------
 	    list: doc(function () {
-	      for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-	        args[_key16] = arguments[_key16];
+	      for (var _len18 = arguments.length, args = new Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
+	        args[_key18] = arguments[_key18];
 	      }
 
 	      return args.reverse().reduce(function (list, item) {
@@ -5373,8 +5608,8 @@
 	    }, "(substring string start end)\n\n            Function return part of the string starting at start ending with end."),
 	    // ------------------------------------------------------------------
 	    concat: doc(function () {
-	      for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
-	        args[_key17] = arguments[_key17];
+	      for (var _len19 = arguments.length, args = new Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
+	        args[_key19] = arguments[_key19];
 	      }
 
 	      args.forEach(function (arg, i) {
@@ -5428,20 +5663,22 @@
 	        return '<#undefined>';
 	      }
 
+	      var types = [RegExp, Nil, LSymbol, Pair, InputPort, OutputPort];
+
+	      for (var _i2 = 0, _types = types; _i2 < _types.length; _i2++) {
+	        var _type2 = _types[_i2];
+
+	        if (obj instanceof _type2) {
+	          return obj.toString();
+	        }
+	      }
+
 	      if (typeof obj === 'function') {
 	        if (isNativeFunction(obj)) {
 	          return '<#function(native)>';
 	        }
 
 	        return '<#function>';
-	      }
-
-	      if (obj instanceof RegExp) {
-	        return obj.toString();
-	      }
-
-	      if (obj === nil) {
-	        return 'nil';
 	      }
 
 	      if (obj instanceof Array) {
@@ -5510,8 +5747,8 @@
 	      return result;
 	    }, "(env obj)\n\n            Function return list values (functions and variables) inside environment."),
 	    'new': doc(function (obj) {
-	      for (var _len18 = arguments.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
-	        args[_key18 - 1] = arguments[_key18];
+	      for (var _len20 = arguments.length, args = new Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
+	        args[_key20 - 1] = arguments[_key20];
 	      }
 
 	      var instance = construct(unbind(obj), args);
@@ -5616,52 +5853,6 @@
 	      return obj !== nil && obj !== null && !(obj instanceof LNumber) && _typeof_1(obj) === 'object' && !(obj instanceof Array);
 	    }, "(object? expression)\n\n            Function check if value is an object."),
 	    // ------------------------------------------------------------------
-	    read: doc(function read(arg) {
-	      var _this2 = this;
-
-	      if (typeof arg === 'string') {
-	        return parse(tokenize(arg))[0];
-	      }
-
-	      return this.get('stdin').read().then(function (text) {
-	        return read.call(_this2, text);
-	      });
-	    }, "(read [string])\n\n            Function if used with string will parse the string and return\n            list structure of LIPS code. If called without an argument it\n            will read string from standard input (using browser prompt or\n            user defined way) and call itself with that string (parse is)\n            function can be used together with eval to evaluate code from\n            string"),
-	    // ------------------------------------------------------------------
-	    pprint: doc(function (arg) {
-	      if (arg instanceof Pair) {
-	        arg = new lips.Formatter(arg.toString())["break"]().format();
-	        this.get('stdout').write(arg);
-	      } else {
-	        this.get('display').call(this, arg);
-	      }
-	    }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
-	    // ------------------------------------------------------------------
-	    print: doc(function () {
-	      this.get('display').apply(void 0, arguments);
-	    }, "(print . args)\n\n            defunct function, we keep it to show proper error when used."),
-	    // ------------------------------------------------------------------
-	    display: doc(function () {
-	      var _this$get,
-	          _this3 = this;
-
-	      for (var _len19 = arguments.length, args = new Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
-	        args[_key19] = arguments[_key19];
-	      }
-
-	      (_this$get = this.get('stdout')).write.apply(_this$get, toConsumableArray(args.map(function (arg) {
-	        return _this3.get('string')(arg, typeof arg === 'string');
-	      })));
-	    }, "(display . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
-	    // ------------------------------------------------------------------
-	    error: doc(function () {
-	      for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
-	        args[_key20] = arguments[_key20];
-	      }
-
-	      this.get('display').apply(this, args);
-	    }, "(error . args)\n\n            Display error message."),
-	    // ------------------------------------------------------------------
 	    flatten: doc(function (list) {
 	      typecheck('flatten', list, 'pair');
 	      return list.flatten();
@@ -5711,15 +5902,15 @@
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
 	    'try': doc(new Macro('try', function (code, _ref15) {
-	      var _this4 = this;
+	      var _this6 = this;
 
 	      var dynamic_scope = _ref15.dynamic_scope,
 	          _error = _ref15.error;
 	      return new Promise(function (resolve) {
 	        var args = {
-	          env: _this4,
+	          env: _this6,
 	          error: function error(e) {
-	            var env = _this4.inherit('try');
+	            var env = _this6.inherit('try');
 
 	            env.set(code.cdr.car.cdr.car.car, e);
 	            var args = {
@@ -5728,7 +5919,7 @@
 	            };
 
 	            if (dynamic_scope) {
-	              args.dynamic_scope = _this4;
+	              args.dynamic_scope = _this6;
 	            }
 
 	            unpromise(evaluate(new Pair(new LSymbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
@@ -5738,7 +5929,7 @@
 	        };
 
 	        if (dynamic_scope) {
-	          args.dynamic_scope = _this4;
+	          args.dynamic_scope = _this6;
 	        }
 
 	        var ret = evaluate(code.car, args);
@@ -5796,7 +5987,7 @@
 	    }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
 	    // ------------------------------------------------------------------
 	    map: doc(function map(fn) {
-	      var _this5 = this;
+	      var _this7 = this;
 
 	      for (var _len22 = arguments.length, lists = new Array(_len22 > 1 ? _len22 - 1 : 0), _key22 = 1; _key22 < _len22; _key22++) {
 	        lists[_key22 - 1] = arguments[_key22];
@@ -5824,7 +6015,7 @@
 	      args.callee = fn;
 	      env.set('arguments', args);
 	      return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-	        return unpromise(map.call.apply(map, [_this5, fn].concat(toConsumableArray(lists.map(function (l) {
+	        return unpromise(map.call.apply(map, [_this7, fn].concat(toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
 	        })))), function (rest) {
 	          return new Pair(head, rest);
@@ -5898,7 +6089,7 @@
 	    }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
 	    // ------------------------------------------------------------------
 	    reduce: doc(fold('reduce', function (reduce, fn, init) {
-	      var _this6 = this;
+	      var _this8 = this;
 
 	      for (var _len25 = arguments.length, lists = new Array(_len25 > 3 ? _len25 - 3 : 0), _key25 = 3; _key25 < _len25; _key25++) {
 	        lists[_key25 - 3] = arguments[_key25];
@@ -5916,7 +6107,7 @@
 	      return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
 	        return l.car;
 	      })).concat([init])), function (value) {
-	        return reduce.call.apply(reduce, [_this6, fn, value].concat(toConsumableArray(lists.map(function (l) {
+	        return reduce.call.apply(reduce, [_this8, fn, value].concat(toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
 	        }))));
 	      });
@@ -6416,14 +6607,30 @@
 	      return 'null';
 	    }
 
-	    for (var _i2 = 0, _Object$entries = Object.entries(mapping); _i2 < _Object$entries.length; _i2++) {
-	      var _Object$entries$_i = slicedToArray(_Object$entries[_i2], 2),
+	    for (var _i3 = 0, _Object$entries = Object.entries(mapping); _i3 < _Object$entries.length; _i3++) {
+	      var _Object$entries$_i = slicedToArray(_Object$entries[_i3], 2),
 	          key = _Object$entries$_i[0],
 	          value = _Object$entries$_i[1];
 
 	      if (obj instanceof value) {
 	        return key;
 	      }
+	    }
+
+	    if (obj instanceof OutputStringPort) {
+	      return 'output-string-port';
+	    }
+
+	    if (obj instanceof InputStringPort) {
+	      return 'input-string-port';
+	    }
+
+	    if (obj instanceof OutputPort) {
+	      return 'output-port';
+	    }
+
+	    if (obj instanceof InputPort) {
+	      return 'input-port';
 	    }
 
 	    if (obj instanceof LNumber) {
@@ -6968,13 +7175,20 @@
 	    Macro: Macro,
 	    quote: quote,
 	    Pair: Pair,
-	    complex_re: complex_re,
+	    InputPort: InputPort,
+	    OutputPort: OutputPort,
+	    InputStringPort: InputStringPort,
+	    OutputStringPort: OutputStringPort,
 	    Formatter: Formatter,
 	    specials: specials,
 	    nil: nil,
 	    resolvePromises: resolvePromises,
 	    LSymbol: LSymbol,
-	    LNumber: LNumber
+	    LNumber: LNumber,
+	    LFloat: LFloat,
+	    LComplex: LComplex,
+	    LRational: LRational,
+	    LBigInteger: LBigInteger
 	  }; // so it work when used with webpack where it will be not global
 
 	  global_env.set('lips', lips);

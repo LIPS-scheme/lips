@@ -2605,6 +2605,107 @@
         }
     };
     // -------------------------------------------------------------------------
+    // :: Port abstration (used only for it's type - old code used inline objects)
+    // -------------------------------------------------------------------------
+    function InputPort(read) {
+        if (typeof this !== 'undefined' && !(this instanceof InputPort) ||
+            typeof this === 'undefined') {
+            return new InputPort(read);
+        }
+        typecheck('InputPort', read, 'function');
+        this.read = read;
+    }
+    InputPort.prototype.toString = function() {
+        return '<#input-port>';
+    };
+    // -------------------------------------------------------------------------
+    function OutputPort(write) {
+        if (typeof this !== 'undefined' && !(this instanceof OutputPort) ||
+            typeof this === 'undefined') {
+            return new OutputPort(write);
+        }
+        typecheck('OutputPort', write, 'function');
+        this.write = write;
+    }
+    OutputPort.prototype.toString = function() {
+        return '<#output-port>';
+    };
+    // -------------------------------------------------------------------------
+    function OutputStringPort(toString) {
+        if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) ||
+            typeof this === 'undefined') {
+            return new OutputStringPort(toString);
+        }
+        typecheck('OutputStringPort', toString, 'function');
+        this._buffer = [];
+        this.write = (x) => {
+            this._buffer.push(toString(x));
+        };
+    }
+    OutputStringPort.prototype = Object.create(OutputPort.prototype);
+    OutputStringPort.prototype.toString = function() {
+        return '<#output-string-port>';
+    };
+    OutputStringPort.prototype.getString = function() {
+        return this._buffer.join('');
+    };
+    // -------------------------------------------------------------------------
+    function InputStringPort(string) {
+        if (typeof this !== 'undefined' && !(this instanceof InputStringPort) ||
+            typeof this === 'undefined') {
+            return new InputStringPort(string);
+        }
+        typecheck('InputStringPort', string, 'string');
+        this._tokens = tokenize(string);
+        this._index = 0;
+        this._in_char = 0;
+        this.read = () => {
+            return this.getNextTokens();
+        };
+    }
+    InputStringPort.prototype = Object.create(InputPort.prototype);
+    InputStringPort.prototype.getNextTokens = function() {
+        if (this.peekChar() === eof) {
+            return eof;
+        }
+        var ballancer = 0;
+        var result = [];
+        var parens = ['(', ')'];
+        if (!parens.includes(this._tokens[this._index])) {
+            return this._tokens[this._index++];
+        }
+        do {
+            var token = this._tokens[this._index];
+            result.push(this._tokens[this._index]);
+            if (token === ')') {
+                ballancer--;
+            } else if (token === '(') {
+                ballancer++;
+            }
+            this._index++;
+        } while (ballancer !== 0);
+        return result;
+    };
+    InputStringPort.prototype.peekChar = function() {
+        if (this._index > this._tokens.length - 1) {
+            return eof;
+        }
+        if (this._index === this._tokens.length - 1 &&
+            this.in_char > this._tokens[this._index].length) {
+            return eof;
+        }
+        return this._tokens[this._index][this.in_char];
+    };
+    InputStringPort.prototype.toString = function() {
+        return '<#output-string-port>';
+    };
+    // -------------------------------------------------------------------------
+    var eof = new EOF();
+    function EOF() {}
+    EOF.prototype.toString = function() {
+        return '<#eof>';
+    };
+    // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
     // -------------------------------------------------------------------------
     function Environment(obj, parent, name) {
@@ -2859,19 +2960,143 @@
         'false': false,
         'NaN': NaN,
         // ------------------------------------------------------------------
-        stdout: {
-            write: function(...args) {
-                console.log(...args);
-            }
-        },
+        stdout: new OutputPort(function(...args) {
+            console.log(...args);
+        }),
         // ------------------------------------------------------------------
-        stdin: {
-            read: function() {
-                return new Promise((resolve) => {
-                    resolve(prompt(''));
-                });
+        stdin: InputPort(function() {
+            return new Promise((resolve) => {
+                resolve(prompt(''));
+            });
+        }),
+        // ------------------------------------------------------------------
+        'current-input-port': doc(function() {
+            return this.get('stdin');
+        }, `(current-input-port)
+
+           Function return default stdin port.`),
+        // ------------------------------------------------------------------
+        'current-output-port': doc(function() {
+            return this.get('stdout');
+        }, `(current-output-port)
+
+            Function return default stdout port.`),
+        // ------------------------------------------------------------------
+        'open-input-string': doc(function(string) {
+            typecheck('open-input-string', string, 'string');
+            return InputStringPort(string);
+        }, `(open-input-string string)
+
+            Function create new string port as input that can be used to
+            read S-exressions from this port using \`read\` function.`),
+        // ------------------------------------------------------------------
+        'output-port?': doc(function(x) {
+            return x instanceof OutputPort;
+        }, `(output-port? arg)
+
+            Function return true if argument is output port.`),
+        // ------------------------------------------------------------------
+        'input-port?': doc(function(x) {
+            return x instanceof InputPort;
+        }, `(input-port? arg)
+
+            Function return true if argument is input port.`),
+        // ------------------------------------------------------------------
+        'open-output-string': doc(function() {
+            return OutputStringPort(this.get('string'));
+        }, `(open-output-string)
+
+            Function create new output port that can used to write string into
+            and after finish get the whole string using \`get-output-string\``),
+        // ------------------------------------------------------------------
+        'get-output-string': doc(function(port) {
+            typecheck('get-output-string', port, 'output-string-port');
+            return port.getString();
+        }, `(get-output-string port)
+
+            Function get full string from string port. If nothing was wrote
+            to given port it will return empty string.`),
+        // ------------------------------------------------------------------
+        'eof-object?': doc(function(x) {
+            return x === eof;
+        }, `(eof-object? arg)
+
+            Function check if value is eof object, returned from input string
+            port when there are no more data to read.`),
+        // ------------------------------------------------------------------
+        'peek-char': doc(function(port) {
+            typecheck('peek-char', port, ['input-port', 'input-string-port']);
+            return port.peekChar();
+        }, `(peek-char port)
+
+            Function get character from string port or EOF object if no more
+            data in string port.`),
+        // ------------------------------------------------------------------
+        read: doc(function read(arg) {
+            if (typeof arg === 'string') {
+                return parse(tokenize(arg))[0];
             }
-        },
+            if (arg instanceof InputStringPort) {
+                var tokens = arg.read();
+                if (tokens === eof) {
+                    return eof;
+                }
+                return parse(tokens)[0];
+            }
+            var port;
+            if (arg instanceof InputPort) {
+                port = arg;
+            } else {
+                port = this.get('stdin');
+            }
+            return port.read().then((text) => {
+                return read.call(this, text);
+            });
+        }, `(read [string])
+
+            Function if used with string will parse the string and return
+            list structure of LIPS code. If called without an argument it
+            will read string from standard input (using browser prompt or
+            user defined way) and call itself with that string (parse is)
+            function can be used together with eval to evaluate code from
+            string`),
+        // ------------------------------------------------------------------
+        pprint: doc(function(arg) {
+            if (arg instanceof Pair) {
+                arg = new lips.Formatter(arg.toString()).break().format();
+                this.get('stdout').write(arg);
+            } else {
+                this.get('display').call(this, arg);
+            }
+        }, `(pprint expression)
+
+           Pretty print list expression, if called with non-pair it just call
+           print function with passed argument.`),
+        // ------------------------------------------------------------------
+        print: doc(function(...args) {
+            this.get('stdout').write(...args.map((arg) => {
+                return this.get('string')(arg, typeof arg === 'string');
+            }));
+        }, `(print . args)
+
+            Function convert each argument to string and print the result to
+            standard output (by default it's console but it can be defined
+            it user code)`),
+        // ------------------------------------------------------------------
+        display: doc(function(arg, port = null) {
+            if (port === null) {
+                port = this.get('stdout');
+            }
+            port.write(this.get('string')(arg, typeof arg === 'string'));
+        }, `(display arg [port])
+
+            Function send string to standard output or provied port.`),
+        // ------------------------------------------------------------------
+        error: doc(function(...args) {
+            this.get('display').apply(this, args);
+        }, `(error . args)
+
+            Display error message.`),
         '%same-functions': doc(function(a, b) {
             if (typeof a !== 'function') {
                 return false;
@@ -3820,17 +4045,17 @@
             if (typeof obj === 'undefined') {
                 return '<#undefined>';
             }
+            var types = [RegExp, Nil, LSymbol, Pair, InputPort, OutputPort];
+            for (let type of types) {
+                if (obj instanceof type) {
+                    return obj.toString();
+                }
+            }
             if (typeof obj === 'function') {
                 if (isNativeFunction(obj)) {
                     return '<#function(native)>';
                 }
                 return '<#function>';
-            }
-            if (obj instanceof RegExp) {
-                return obj.toString();
-            }
-            if (obj === nil) {
-                return 'nil';
             }
             if (obj instanceof Array) {
                 return '[' + obj.map(x => string(x, true)).join(', ') + ']';
@@ -4035,56 +4260,6 @@
         }, `(object? expression)
 
             Function check if value is an object.`),
-        // ------------------------------------------------------------------
-        read: doc(function read(arg) {
-            if (typeof arg === 'string') {
-                return parse(tokenize(arg))[0];
-            }
-            return this.get('stdin').read().then((text) => {
-                return read.call(this, text);
-            });
-        }, `(read [string])
-
-            Function if used with string will parse the string and return
-            list structure of LIPS code. If called without an argument it
-            will read string from standard input (using browser prompt or
-            user defined way) and call itself with that string (parse is)
-            function can be used together with eval to evaluate code from
-            string`),
-        // ------------------------------------------------------------------
-        pprint: doc(function(arg) {
-            if (arg instanceof Pair) {
-                arg = new lips.Formatter(arg.toString()).break().format();
-                this.get('stdout').write(arg);
-            } else {
-                this.get('display').call(this, arg);
-            }
-        }, `(pprint expression)
-
-           Pretty print list expression, if called with non-pair it just call
-           print function with passed argument.`),
-        // ------------------------------------------------------------------
-        print: doc(function(...args) {
-            this.get('display')(...args);
-        }, `(print . args)
-
-            defunct function, we keep it to show proper error when used.`),
-        // ------------------------------------------------------------------
-        display: doc(function(...args) {
-            this.get('stdout').write(...args.map((arg) => {
-                return this.get('string')(arg, typeof arg === 'string');
-            }));
-        }, `(display . args)
-
-            Function convert each argument to string and print the result to
-            standard output (by default it's console but it can be defined
-            it user code)`),
-        // ------------------------------------------------------------------
-        error: doc(function(...args) {
-            this.get('display').apply(this, args);
-        }, `(error . args)
-
-            Display error message.`),
         // ------------------------------------------------------------------
         flatten: doc(function(list) {
             typecheck('flatten', list, 'pair');
@@ -4840,6 +5015,18 @@
                 return key;
             }
         }
+        if (obj instanceof OutputStringPort) {
+            return 'output-string-port';
+        }
+        if (obj instanceof InputStringPort) {
+            return 'input-string-port';
+        }
+        if (obj instanceof OutputPort) {
+            return 'output-port';
+        }
+        if (obj instanceof InputPort) {
+            return 'input-port';
+        }
         if (obj instanceof LNumber) {
             return 'number';
         }
@@ -5199,13 +5386,20 @@
         Macro,
         quote,
         Pair,
-        complex_re,
+        InputPort,
+        OutputPort,
+        InputStringPort,
+        OutputStringPort,
         Formatter,
         specials,
         nil,
         resolvePromises,
         LSymbol,
-        LNumber
+        LNumber,
+        LFloat,
+        LComplex,
+        LRational,
+        LBigInteger
     };
     // so it work when used with webpack where it will be not global
     global_env.set('lips', lips);

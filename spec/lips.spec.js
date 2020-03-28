@@ -12,6 +12,7 @@ var {
     Environment,
     global_environment,
     LNumber,
+    LFloat,
     quote
 } = lips;
 
@@ -167,7 +168,7 @@ describe('parser', function() {
                             new Pair(
                                 LNumber(1.1),
                                 new Pair(
-                                    LNumber(10e2),
+                                    LFloat(10e2),
                                     nil
                                 )
                             )
