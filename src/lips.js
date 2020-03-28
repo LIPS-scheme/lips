@@ -4139,10 +4139,11 @@
             typecheck('string->number', arg, 'string', 1);
             typecheck('string->number', radix, 'number', 2);
             if (arg.match(int_re)) {
-                return LNumber(parseFloat(arg));
+                return LNumber(parseInt(arg, radix));
             } else if (arg.match(float_re)) {
                 return LNumber(parseFloat(arg), true);
             }
+            return LNumber(parseInt(arg, radix));
         }, `(string->number number [radix])
 
            Function convert string to number.`),

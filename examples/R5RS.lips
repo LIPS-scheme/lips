@@ -25,7 +25,8 @@
           (= a b) ;; eq? in JS also works on numbers
           (if (and (pair? a) (null? a) (null? b))
               true
-              (eq? a b)))))
+              (eq? a b)))
+      false))
 
 (define = ==)
 

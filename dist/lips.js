@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 28 Mar 2020 12:21:05 +0000
+ * build: Sat, 28 Mar 2020 12:31:49 +0000
  */
 (function () {
 	'use strict';
@@ -5702,10 +5702,12 @@
 	      typecheck('string->number', radix, 'number', 2);
 
 	      if (arg.match(int_re)) {
-	        return LNumber(parseFloat(arg));
+	        return LNumber(parseInt(arg, radix));
 	      } else if (arg.match(float_re)) {
 	        return LNumber(parseFloat(arg));
 	      }
+
+	      return LNumber(parseInt(arg, radix));
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
 	    'try': doc(new Macro('try', function (code, _ref15) {
