@@ -9,11 +9,14 @@
 ;; Released under MIT license
 ;;
 
-;; TODO: add special macro lists and special macro symbols
-;;       #\x as character object
-;; (define #f false)
-;; (define #t true)
-;; '#(1 2 3)
+(define (%doc string fn)
+  (typecheck "doc" fn "function")
+  (typecheck "doc" string "string")
+  (set-obj! fn '__doc__ (--> string (replace /^ +/mg "")))
+  fn)
+
+(define #f false)
+(define #t true)
 
 (define (eqv? a b)
   "(eqv? a b)
@@ -292,9 +295,6 @@
   (typecheck "rationalize" tolerance "number" 2)
   (lips.rationalize number tolerance))
 
-(define #f false)
-(define #t true)
-
 
 (define (%mem/search access op obj list)
   "(%member obj list function)
@@ -347,23 +347,23 @@
         (car ret)
         ret)))
 
-(define (assoc obj alist)
-  "(assoc obj alist)
+(define assoc (%doc
+               "(assoc obj alist)
 
-   Function return pair from alist that match given key using equal? check."
-  (%assoc/search equal? obj alist))
+                Function return pair from alist that match given key using equal? check."
+               (curry %assoc/search equal?)))
 
-(define (assq obj alist)
-  "(assq obj alist)
+(define assq (%doc
+              "(assq obj alist)
 
-   Function return pair from alist that match given key using eq? check."
-  (%assoc/search eq? obj alist))
+               Function return pair from alist that match given key using eq? check."
+              (curry %assoc/search eq?)))
 
-(define (assv obj alist)
-  "(assv obj alist)
+(define assv (%doc
+              "(assv obj alist)
 
-   Function return pair from alist that match given key using eqv? check."
-  (%assoc/search eqv? obj alist))
+               Function return pair from alist that match given key using eqv? check."
+              (curry %assoc/search eqv?)))
 
 ;; STRING FUNCTIONS
 
@@ -384,3 +384,9 @@
    Function return list of characters created from list."
   (typecheck "string->list" string "string")
   (array->list (--> string (split "") (map (lambda (x) (lips.Character x))))))
+
+(define char? (%doc
+        "(char? obj)
+
+         Function check if object is character."
+        (curry instanceof lips.Character)))

@@ -1566,11 +1566,16 @@
     }
     // ----------------------------------------------------------------------
     function unbind(obj) {
-        if (typeof obj === 'function' && obj.__bind) {
-            return obj.__bind.fn;
+        if (typeof obj === 'function') {
+            if (obj.__bind) {
+                return obj.__bind.fn;
+            } else if (obj[__fn__]) {
+                return obj[__fn__];
+            }
         }
         return obj;
     }
+    var __fn__ = Symbol.for('__fn__');
     // ----------------------------------------------------------------------
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
@@ -4158,7 +4163,7 @@
              Function return type of an object as string.`),
         // ------------------------------------------------------------------
         'instanceof': doc(function(type, obj) {
-            return obj instanceof type;
+            return obj instanceof unbind(type);
         }, `(instanceof type obj)
 
             Function check of object is instance of object.`),

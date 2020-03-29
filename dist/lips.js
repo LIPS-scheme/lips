@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 10:12:55 +0000
+ * build: Sun, 29 Mar 2020 10:34:47 +0000
  */
 (function () {
 	'use strict';
@@ -2899,12 +2899,18 @@
 
 
 	  function unbind(obj) {
-	    if (typeof obj === 'function' && obj.__bind) {
-	      return obj.__bind.fn;
+	    if (typeof obj === 'function') {
+	      if (obj.__bind) {
+	        return obj.__bind.fn;
+	      } else if (obj[__fn__]) {
+	        return obj[__fn__];
+	      }
 	    }
 
 	    return obj;
-	  } // ----------------------------------------------------------------------
+	  }
+
+	  var __fn__ = Symbol["for"]('__fn__'); // ----------------------------------------------------------------------
 	  // :: function bind fn with context but it also move all props
 	  // :: mostly used for Object function
 	  // ----------------------------------------------------------------------
@@ -5854,7 +5860,7 @@
 	    type: doc(type, "(type object)\n\n             Function return type of an object as string."),
 	    // ------------------------------------------------------------------
 	    'instanceof': doc(function (type, obj) {
-	      return obj instanceof type;
+	      return obj instanceof unbind(type);
 	    }, "(instanceof type obj)\n\n            Function check of object is instance of object."),
 	    // ------------------------------------------------------------------
 	    'macro?': doc(function (obj) {
@@ -7219,7 +7225,7 @@
 
 	  var lips = {
 	    version: 'DEV',
-	    date: 'Sun, 29 Mar 2020 10:12:55 +0000',
+	    date: 'Sun, 29 Mar 2020 10:34:47 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
