@@ -1443,6 +1443,8 @@ You can also use (help name) to display help for specic function or macro.
             return x.cmp(y) === 0;
         } else if (typeof x === 'number' || typeof y === 'number') {
             return LNumber(x).cmp(LNumber(y)) === 0;
+        } else if (x instanceof Character && y instanceof Character) {
+            return x.char === y.char;
         } else if (x instanceof LSymbol && y instanceof LSymbol) {
             return x.name === y.name;
         } else {
@@ -1925,12 +1927,23 @@ You can also use (help name) to display help for specic function or macro.
             this.char = Character.names[chr];
         } else {
             this.char = chr;
+            var name = Character.rev_names[chr];
+            if (name) {
+                this.name = name;
+            }
         }
     }
     Character.names = {
         'space': ' ',
-        'newline': '\n'
+        'newline': '\n',
+        'return': '\r',
+        'tab': '\t'
     };
+    Character.rev_names = {};
+    Object.keys(Character.names).forEach(key => {
+        var value = Character.names[key];
+        Character.rev_names[value] = key;
+    });
     Character.prototype.toString = function() {
         return '#\\' + (this.name || this.char);
     };

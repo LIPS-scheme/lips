@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 16:18:36 +0000
+ * build: Sun, 29 Mar 2020 19:28:21 +0000
  */
 (function () {
 	'use strict';
@@ -2681,6 +2681,8 @@
 	      return x.cmp(y) === 0;
 	    } else if (typeof x === 'number' || typeof y === 'number') {
 	      return LNumber(x).cmp(LNumber(y)) === 0;
+	    } else if (x instanceof Character && y instanceof Character) {
+	      return x["char"] === y["char"];
 	    } else if (x instanceof LSymbol && y instanceof LSymbol) {
 	      return x.name === y.name;
 	    } else {
@@ -3411,13 +3413,25 @@
 	      this["char"] = Character.names[chr];
 	    } else {
 	      this["char"] = chr;
+	      var name = Character.rev_names[chr];
+
+	      if (name) {
+	        this.name = name;
+	      }
 	    }
 	  }
 
 	  Character.names = {
 	    'space': ' ',
-	    'newline': '\n'
+	    'newline': '\n',
+	    'return': '\r',
+	    'tab': '\t'
 	  };
+	  Character.rev_names = {};
+	  Object.keys(Character.names).forEach(function (key) {
+	    var value = Character.names[key];
+	    Character.rev_names[value] = key;
+	  });
 
 	  Character.prototype.toString = function () {
 	    return '#\\' + (this.name || this["char"]);
@@ -7352,7 +7366,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 29 Mar 2020 16:18:36 +0000',
+	    date: 'Sun, 29 Mar 2020 19:28:21 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -27,11 +27,9 @@
    Function compare the values. It return true if they are the same, they
    need to have same type"
   (if (eq? (type a) (type b))
-      (if (number? a)
-          (= a b) ;; eq? in JS also works on numbers
-          (if (and (pair? a) (null? a) (null? b))
-              true
-              (eq? a b)))
+      (cond ((number? a) (= a b))
+            ((pair? a) (and (null? a) (null? b)))
+            (else (eq? a b)))
       false))
 
 (define = ==)
@@ -443,3 +441,68 @@
   (typecheck "string-ref" string "string" 1)
   (typecheck "string-ref" k "number" 2)
   (lips.Character (. string k)))
+
+;; Character functions
+
+;; (display (list->string (list #\A (integer->char 10) #\B)))
+
+(define (char->integer chr)
+  "(char->integer chr)
+
+   Function return codepoint of Unicode character."
+  (typecheck "char->integer" chr "character")
+  (--> chr.char (codePointAt 0)))
+
+(define (integer->char n)
+  "(char->integer chr)
+
+   Function convert number argument to chararacter."
+  (typecheck "integer->char" n "number")
+  (if (integer? n)
+      (string-ref (String.fromCodePoint n) 0)
+      (throw "argument to integer->char need to be integer.")))
+
+
+(define (%char-cmp name chr1 chr2)
+  "(%char-cmp name a b)
+
+   Function compare two characters and return 0 if they are equal,
+   -1 second is smaller and 1 if is larget. The function compare
+   the codepoints of the character."
+  (typecheck name chr1 "character" 1)
+  (typecheck name chr2 "character" 2)
+  (let ((a (char->integer chr1))
+        (b (char->integer chr2)))
+    (cond ((= a b) 0)
+          ((< a b) -1)
+          (else 1))))
+
+(define (char=? chr1 chr2)
+  "(char=? chr1 chr2)
+
+   Function check if two characters are equal."
+  (= (%char-cmp "char=?" chr1 chr2) 0))
+
+(define (char<? chr1 chr2)
+  "(char<? chr1 chr2)
+
+   Function return true if second character is smaller then the first one."
+  (= (%char-cmp "char<?" chr1 chr2) -1))
+
+(define (char>? chr1 chr2)
+  "(char<? chr1 chr2)
+
+   Function return true if second character is larger then the first one."
+  (= (%char-cmp "char>?" chr1 chr2) 1))
+
+(define (char<=? chr1 chr2)
+  "(char<? chr1 chr2)
+
+   Function return true if second character is not larger then the first one."
+  (< (%char-cmp "char<=?" chr1 chr2) 1))
+
+(define (char<=? chr1 chr2)
+  "(char<? chr1 chr2)
+
+   Function return true if second character is not smaller then the first one."
+  (> (%char-cmp "char>=?" chr1 chr2) -1))
