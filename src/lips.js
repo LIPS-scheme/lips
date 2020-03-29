@@ -23,6 +23,8 @@
  *
  * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
  * source: Kawa, C-Gambit
+ *
+ * Build time: {{DATE}}
  */
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code
@@ -5335,6 +5337,7 @@
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',
+        date: '{{DATE}}',
         exec,
         parse,
         tokenize,

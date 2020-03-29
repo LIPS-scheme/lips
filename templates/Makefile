@@ -21,7 +21,6 @@ JEST=./node_modules/.bin/jest
 UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 
-
 ALL: Makefile .$(VERSION) dist/lips.js dist/lips.min.js README.md package.json
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
