@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 20:24:13 +0000
+ * build: Sun, 29 Mar 2020 20:58:05 +0000
  */
 (function () {
 	'use strict';
@@ -3013,6 +3013,12 @@
 
 	    return setFnLength(binded, binded.__bind.fn.length);
 	  } // ----------------------------------------------------------------------
+	  // function get original function that was weak or binded with props
+	  // TODO: consider to use only one type of biding
+	  //       if you can unbind the function you can change the context
+	  //       you don't need weak bind, you can use this:
+	  //       unbind(f).apply(env, ...args)
+	  // ----------------------------------------------------------------------
 
 
 	  function unbind(obj) {
@@ -3446,6 +3452,14 @@
 	    var value = Character.names[key];
 	    Character.rev_names[value] = key;
 	  });
+
+	  Character.prototype.toUpperCase = function () {
+	    return Character(this["char"].toUpperCase());
+	  };
+
+	  Character.prototype.toLowerCase = function () {
+	    return Character(this["char"].toLowerCase());
+	  };
 
 	  Character.prototype.toString = function () {
 	    return '#\\' + (this.name || this["char"]);
@@ -4558,7 +4572,10 @@
 	        // second x access is already bound when accessing Object
 	        if (isBoundFunction(value) || weak && !isNativeFunction(value)) {
 	          return weakBind(value, context);
-	        }
+	        } // real bind to not loose the context on functions
+	        // props (static values) need to be added to binded function
+	        // that is different object
+
 
 	        return bindWithProps(value, context);
 	      }
@@ -4585,6 +4602,7 @@
 	      }
 
 	      if (parts.length > 1) {
+	        // get first item from env next are nested accessors
 	        value = object.lookup(parts[0]);
 
 	        if (typeof value !== 'undefined') {
@@ -4594,8 +4612,11 @@
 	            }
 
 	            return undef;
-	          }
+	          } // weak bind is only for env functions that require
+	          // to change context in evaluate
 
+
+	          weak = false;
 	          parts = parts.slice(1);
 	          object = value;
 	        }
@@ -7376,7 +7397,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 29 Mar 2020 20:24:13 +0000',
+	    date: 'Sun, 29 Mar 2020 20:58:05 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

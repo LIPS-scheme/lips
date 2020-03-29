@@ -1620,6 +1620,12 @@ You can also use (help name) to display help for specic function or macro.
         return setFnLength(binded, binded.__bind.fn.length);
     }
     // ----------------------------------------------------------------------
+    // function get original function that was weak or binded with props
+    // TODO: consider to use only one type of biding
+    //       if you can unbind the function you can change the context
+    //       you don't need weak bind, you can use this:
+    //       unbind(f).apply(env, ...args)
+    // ----------------------------------------------------------------------
     function unbind(obj) {
         if (typeof obj === 'function') {
             if (obj.__bind) {
@@ -1956,6 +1962,12 @@ You can also use (help name) to display help for specic function or macro.
         var value = Character.names[key];
         Character.rev_names[value] = key;
     });
+    Character.prototype.toUpperCase = function() {
+        return Character(this.char.toUpperCase());
+    };
+    Character.prototype.toLowerCase = function() {
+        return Character(this.char.toLowerCase());
+    };
     Character.prototype.toString = function() {
         return '#\\' + (this.name || this.char);
     };
@@ -2810,7 +2822,7 @@ You can also use (help name) to display help for specic function or macro.
     // :: coma separated names
     // -------------------------------------------------------------------------
     function objectGet(object, key, options = {}) {
-        const { weak, throwError = true } = options;
+        var { weak, throwError = true } = options;
         if (key instanceof LSymbol) {
             key = key.name;
         }
@@ -2830,6 +2842,9 @@ You can also use (help name) to display help for specic function or macro.
                     !isNativeFunction(value)) {
                     return weakBind(value, context);
                 }
+                // real bind to not loose the context on functions
+                // props (static values) need to be added to binded function
+                // that is different object
                 return bindWithProps(value, context);
             }
             return value;
@@ -2848,6 +2863,7 @@ You can also use (help name) to display help for specic function or macro.
                 return patchValue(value, object);
             }
             if (parts.length > 1) {
+                // get first item from env next are nested accessors
                 value = object.lookup(parts[0]);
                 if (typeof value !== 'undefined') {
                     if (value === undef) {
@@ -2857,6 +2873,9 @@ You can also use (help name) to display help for specic function or macro.
                         }
                         return undef;
                     }
+                    // weak bind is only for env functions that require
+                    // to change context in evaluate
+                    weak = false;
                     parts = parts.slice(1);
                     object = value;
                 }

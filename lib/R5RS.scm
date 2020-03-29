@@ -203,7 +203,7 @@
   "(make-rectangular im re)
 
    Create complex number from imaginary and real part."
-  ((.. lips.LNumber) (make-object :im im :re re)))
+  (lips.LNumber (make-object :im im :re re)))
 
 (define (real? n)
   "(real? n)"
@@ -506,3 +506,12 @@
 
    Function return true if second character is not smaller then the first one."
   (> (%char-cmp "char>=?" chr1 chr2) -1))
+
+(define (char-upcase char)
+  (typecheck "char-upcase" char "character")
+  (char.toUpperCase))
+
+(define (char-downcase char)
+  (typecheck "char-upcase" char "character")
+  (char.toLowerCase))
+
