@@ -392,3 +392,23 @@
         (curry instanceof lips.Character)))
 
 (define expt **)
+
+(define list->vector list->array)
+(define vector->list array->list)
+
+;; (let ((x "hello")) (string-set! x 0 #\H) x)
+(define-macro (string-set! object index char)
+  "(string-set! object index char)
+
+   Macro that replace character in string in given index, it create new JavaScript
+   string and replace old value. Object need to be symbol that point to variable
+   that hold the string."
+  (typecheck "string-set!" object "symbol")
+  (let ((chars (gensym)))
+    `(begin
+       (typecheck "string-set!" ,object "string")
+       (typecheck "string-set!" ,index "number")
+       (typecheck "string-set!" ,char "character")
+       (let ((,chars (list->vector (string->list ,object))))
+          (set-obj! ,chars ,index ,char)
+          (set! ,object (list->string (vector->list ,chars)))))))
