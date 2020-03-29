@@ -364,3 +364,16 @@
 
    Function return pair from alist that match given key using eqv? check."
   (%assoc/search eqv? obj alist))
+
+;; STRING FUNCTIONS
+
+(define (list->string _list)
+  "(list->string _list)
+
+   Function return string from list of characters."
+  (let ((array (list->array
+                (map (lambda (x)
+                       (typecheck "list->string" x "character")
+                       (. x 'char))
+                     _list))))
+    (--> array (join ""))))

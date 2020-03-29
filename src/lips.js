@@ -155,6 +155,7 @@
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
     var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
+    var char_re = /^#\\(?:newline|space|.)$/i;
     // (int | flat) ? ([-+]
     var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
     var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
@@ -184,6 +185,13 @@
             radix = 10;
         }
         return parseInt(m[2], radix);
+    }
+    // ----------------------------------------------------------------------
+    function parseCharacter(arg) {
+        var m = arg.match(/#\\(.+)$/);
+        if (m) {
+            return Character(m[1]);
+        }
     }
     // ----------------------------------------------------------------------
     function parseComplex(arg) {
@@ -223,6 +231,8 @@
             return new RegExp(regex[1], regex[2]);
         } else if (arg.match(/['"]/)) {
             return parse_string(arg);
+        } else if (arg.match(char_re)) {
+            return parseCharacter(arg);
         } else if (arg.match(rational_re)) {
             return LRational(parseRational(arg));
         } else if (arg.match(complex_re)) {
@@ -256,7 +266,7 @@
     function makeTokenRe() {
         var tokens = Object.keys(specials).map(escapeRegex).join('|');
         var complex = '';
-        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|${tokens}|[^(\\s)]+)`, 'gim');
+        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|${tokens}|[^(\\s)]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -1855,6 +1865,28 @@
        \`var log = console.log\`.
        \`get\` is an alias because . don't work in every place, you can't
         pass it as argument`);
+    // -------------------------------------------------------------------------
+    // :: character object representation
+    // -------------------------------------------------------------------------
+    function Character(chr) {
+        if (typeof this !== 'undefined' && !(this instanceof Character) ||
+            typeof this === 'undefined') {
+            return new Character(chr);
+        }
+        if (Character.names[chr]) {
+            this.name = chr;
+            this.char = Character.names[chr];
+        } else {
+            this.char = chr;
+        }
+    }
+    Character.names = {
+        'space': ' ',
+        'newline': '\n'
+    };
+    Character.prototype.toString = function() {
+        return '#\\' + (this.name || this.char);
+    };
     // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
     // -------------------------------------------------------------------------
@@ -3994,7 +4026,7 @@
             if (typeof obj === 'undefined') {
                 return '<#undefined>';
             }
-            var types = [RegExp, Nil, LSymbol, Pair];
+            var types = [RegExp, Nil, LSymbol, Pair, Character];
             for (let type of types) {
                 if (obj instanceof type) {
                     return obj.toString();
@@ -4931,7 +4963,7 @@
     }
     // -------------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
-        const arg_type = type(arg);
+        const arg_type = type(arg).toLowerCase();
         var match = false;
         if (expected instanceof Array && expected.includes(arg_type)) {
             match = true;
@@ -4951,47 +4983,38 @@
     // -------------------------------------------------------------------------
     function type(obj) {
         var mapping = {
-            'pair': Pair,
-            'symbol': LSymbol,
-            'macro': Macro,
-            'array': Array,
-            'native_symbol': Symbol
+            'Pair': Pair,
+            'Symbol': LSymbol,
+            'Macro': Macro,
+            'Array': Array,
+            'NativeSymbol': Symbol
         };
         if (obj === nil) {
-            return 'nil';
+            return 'Nil';
         }
         if (obj === null) {
-            return 'null';
+            return 'Null';
         }
         for (let [key, value] of Object.entries(mapping)) {
             if (obj instanceof value) {
                 return key;
             }
         }
-        if (obj instanceof OutputStringPort) {
-            return 'output-string-port';
-        }
-        if (obj instanceof InputStringPort) {
-            return 'input-string-port';
-        }
-        if (obj instanceof OutputPort) {
-            return 'output-port';
-        }
-        if (obj instanceof InputPort) {
-            return 'input-port';
-        }
         if (obj instanceof LNumber) {
-            return 'number';
+            return 'Number';
         }
         if (obj instanceof RegExp) {
-            return "regex";
+            return "Regex";
         }
         if (typeof obj === 'object') {
             if (obj.__instance__) {
                 obj.__instance__ = false;
                 if (obj.__instance__) {
-                    return 'instance';
+                    return 'Instance';
                 }
+            }
+            if (obj.constructor.__className) {
+                return obj.constructor.__className;
             }
             return obj.constructor.name;
         }
@@ -5325,10 +5348,10 @@
     Formatter.__className = 'Formatter';
     Macro.__className = 'Macro';
     Environment.__className = 'Environment';
-    InputPort.__className = 'input-port';
-    OutputPort.__className = 'output-port';
-    OutputStringPort.__className = 'output-string-port';
-    InputStringPort.__className = 'output-string-port';
+    InputPort.__className = 'InputPort';
+    OutputPort.__className = 'OutputPort';
+    OutputStringPort.__className = 'OutputStringPort';
+    InputStringPort.__className = 'InputStringPort';
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',

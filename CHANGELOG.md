@@ -4,6 +4,7 @@
 * break `let*` to work the same as in scheme (it was working like `letrec`)
 * `if` no longer require boolean as cond
 * change how arrays are presented, they are look like scheme vector `#(...)`
+* `type` now return camel case strings, `typecheck` didn't changed
 ### Features
 * start implementing R5RS spec
 * streams example
