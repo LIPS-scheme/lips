@@ -377,3 +377,10 @@
                        (. x 'char))
                      _list))))
     (--> array (join ""))))
+
+(define (string->list string)
+  "(string->list string)
+
+   Function return list of characters created from list."
+  (typecheck "string->list" string "string")
+  (array->list (--> string (split "") (map (lambda (x) (lips.Character x))))))

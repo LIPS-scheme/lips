@@ -1240,6 +1240,7 @@
                    value instanceof LNumber ||
                    value instanceof RegExp ||
                    value instanceof Pair ||
+                   value instanceof Character ||
                    value === nil) {
             return value.toString();
         } else if (value instanceof Array) {
@@ -5383,6 +5384,7 @@
         LComplex,
         LRational,
         LBigInteger,
+        Character,
         rationalize
     };
     // so it work when used with webpack where it will be not global

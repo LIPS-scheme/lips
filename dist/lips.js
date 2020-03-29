@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 10:03:43 +0000
+ * build: Sun, 29 Mar 2020 10:12:55 +0000
  */
 (function () {
 	'use strict';
@@ -2380,7 +2380,7 @@
 	      return JSON.stringify(value).replace(/\\n/g, '\n');
 	    } else if (isPromise(value)) {
 	      return '<#Promise>';
-	    } else if (value instanceof LSymbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value === nil) {
+	    } else if (value instanceof LSymbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value instanceof Character || value === nil) {
 	      return value.toString();
 	    } else if (value instanceof Array) {
 	      return value.map(toString);
@@ -7219,7 +7219,7 @@
 
 	  var lips = {
 	    version: 'DEV',
-	    date: 'Sun, 29 Mar 2020 10:03:43 +0000',
+	    date: 'Sun, 29 Mar 2020 10:12:55 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -7247,6 +7247,7 @@
 	    LComplex: LComplex,
 	    LRational: LRational,
 	    LBigInteger: LBigInteger,
+	    Character: Character,
 	    rationalize: rationalize
 	  }; // so it work when used with webpack where it will be not global
 
