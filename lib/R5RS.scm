@@ -294,3 +294,73 @@
 
 (define #f false)
 (define #t true)
+
+
+(define (%mem/search access op obj list)
+  "(%member obj list function)
+
+   Helper method to get first list where car equal to obj
+   using provied functions as comparator."
+  (if (null? list)
+      false
+      (if (op (access list) obj)
+          list
+          (%mem/search access op obj (cdr list)))))
+
+(define (memq obj list)
+  "(memq obj list)
+
+   Function return first object in the list that match using eq? function."
+  (typecheck "memq" list "pair")
+  (%mem/search car eq? obj list ))
+
+(define (memv obj list)
+  "(memv obj list)
+
+   Function return first object in the list that match using eqv? function."
+  (typecheck "memv" list "pair")
+  (%mem/search car eqv? obj list))
+
+(define (member obj list)
+  "(member obj list)
+
+   Function return first object in the list that match using equal? function."
+  (typecheck "member" list "pair")
+  (%mem/search car equal? obj list))
+
+(define (%assoc/acessor name)
+  "(%assoc/acessor name)
+
+   Function return carr with typecheck using give name."
+  (lambda (x)
+    (typecheck name x "pair")
+    (caar x)))
+
+(define (%assoc/search op obj alist)
+  "(%assoc/search op obj alist)
+
+   Generic function that used in assoc functions with defined comparator
+   function."
+  (typecheck "assoc" alist "pair")
+  (let ((ret (%mem/search (%assoc/acessor "assoc") op obj alist)))
+    (if ret
+        (car ret)
+        ret)))
+
+(define (assoc obj alist)
+  "(assoc obj alist)
+
+   Function return pair from alist that match given key using equal? check."
+  (%assoc/search equal? obj alist))
+
+(define (assq obj alist)
+  "(assq obj alist)
+
+   Function return pair from alist that match given key using eq? check."
+  (%assoc/search eq? obj alist))
+
+(define (assv obj alist)
+  "(assv obj alist)
+
+   Function return pair from alist that match given key using eqv? check."
+  (%assoc/search eqv? obj alist))
