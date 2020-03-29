@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 10:34:47 +0000
+ * build: Sun, 29 Mar 2020 10:55:29 +0000
  */
 (function () {
 	'use strict';
@@ -3648,6 +3648,34 @@
 
 	  LRational.prototype = Object.create(LNumber.prototype);
 
+	  LRational.prototype.pow = function (n) {
+	    var cmp = n.cmp(0);
+
+	    if (cmp === 0) {
+	      return LNumber(1);
+	    }
+
+	    if (cmp === -1) {
+	      n = n.sub();
+	      var num = this.denom.pow(n);
+	      var denom = this.num.pow(n);
+	      return LRational({
+	        num: num,
+	        denom: denom
+	      });
+	    }
+
+	    var result = this;
+	    n = n.valueOf();
+
+	    while (n > 1) {
+	      result = result.mul(this);
+	      n--;
+	    }
+
+	    return result;
+	  };
+
 	  LRational.prototype.abs = function () {
 	    var num = this.num;
 	    var denom = this.denom;
@@ -7225,7 +7253,7 @@
 
 	  var lips = {
 	    version: 'DEV',
-	    date: 'Sun, 29 Mar 2020 10:34:47 +0000',
+	    date: 'Sun, 29 Mar 2020 10:55:29 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

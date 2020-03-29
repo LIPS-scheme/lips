@@ -390,3 +390,5 @@
 
          Function check if object is character."
         (curry instanceof lips.Character)))
+
+(define expt **)
