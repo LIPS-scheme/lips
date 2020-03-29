@@ -1972,6 +1972,53 @@ You can also use (help name) to display help for specic function or macro.
         return '#\\' + (this.name || this.char);
     };
     // -------------------------------------------------------------------------
+    // :: String wrapper that handle copy and in place change
+    // -------------------------------------------------------------------------
+    function LString(string) {
+        if (typeof this !== 'undefined' && !(this instanceof LString) ||
+            typeof this === 'undefined') {
+            return new LString(string);
+        }
+        this._string = string;
+    }
+    {
+        const ignore = ['length', 'constructor'];
+        const _keys = Object.getOwnPropertyNames(String.prototype).filter(name => {
+            return !ignore.includes(name);
+        });
+        const wrap = (fn) => function(...args) {
+            return fn.apply(this._string, args);
+        };
+        for (let key of _keys) {
+            LString.prototype[key] = wrap(String.prototype[key]);
+        }
+    }
+    LString.isString = function(x) {
+        return x instanceof LString || typeof x === 'string';
+    };
+    LString.prototype.get = function(n) {
+        return this._string[n];
+    };
+    LString.prototype.set = function(n, char) {
+        if (char instanceof Character) {
+            char = char.char;
+        }
+        var string = [];
+        if (n > 0) {
+            string.push(this._string.substring(0, n));
+        }
+        string.push(char);
+        if (n < this._string.length - 1) {
+            string.push(this._string.substring(n + 1));
+        }
+        this._string = string.join('');
+    };
+    Object.defineProperty(LString.prototype, "length", {
+        get: function() {
+            return this._string.length;
+        }
+    });
+    // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
     // -------------------------------------------------------------------------
     function LNumber(n) {
@@ -3159,7 +3206,7 @@ You can also use (help name) to display help for specic function or macro.
         // ------------------------------------------------------------------
         print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
-                return this.get('repr')(arg, typeof arg === 'string');
+                return this.get('repr')(arg, LString.isString(arg));
             }));
         }, `(print . args)
 
@@ -3171,7 +3218,7 @@ You can also use (help name) to display help for specic function or macro.
             if (port === null) {
                 port = this.get('stdout');
             }
-            port.write(this.get('repr')(arg, typeof arg === 'string'));
+            port.write(this.get('repr')(arg, LString.isString(arg)));
         }, `(display arg [port])
 
             Function send string to standard output or provied port.`),
@@ -4157,14 +4204,11 @@ You can also use (help name) to display help for specic function or macro.
             if (obj instanceof Array) {
                 return '#(' + obj.map(x => string(x, true)).join(' ') + ')';
             }
+            if (obj instanceof LString) {
+                obj = obj.toString();
+            }
             if (obj === null || (typeof obj === 'string' && quote)) {
                 return JSON.stringify(obj).replace(/\\n/g, '\n');
-            }
-            if (obj instanceof Pair) {
-                return obj.toString();
-            }
-            if (obj instanceof LSymbol) {
-                return obj.toString();
             }
             if (root.HTMLElement && obj instanceof root.HTMLElement) {
                 return `<#HTMLElement(${obj.tagName.toLowerCase()})>`;
@@ -5498,6 +5542,7 @@ You can also use (help name) to display help for specic function or macro.
         LRational,
         LBigInteger,
         Character,
+        LString,
         rationalize
     };
     // so it work when used with webpack where it will be not global
