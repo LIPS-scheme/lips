@@ -29,8 +29,7 @@
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
-/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map,
-          Set, Symbol */
+/* global define, jQuery, BigInt, Map, Set, Symbol */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -237,8 +236,8 @@ You can also use (help name) to display help for specic function or macro.
             // remove quotes if before are even number of slashes
             // we don't remove slases becuase they are handled by JSON.parse
             //string = string.replace(/([^\\])['"]$/, '$1');
-            if (string.match(/^['"]/)) {
-                if (string === '""' || string === "''") {
+            if (string.match(/^"/)) {
+                if (string === '""') {
                     return '';
                 }
                 var quote = string[0];
@@ -251,7 +250,7 @@ You can also use (help name) to display help for specic function or macro.
         var regex = arg.match(re_re);
         if (regex) {
             return new RegExp(regex[1], regex[2]);
-        } else if (arg.match(/['"]/)) {
+        } else if (arg.match(/^"/)) {
             return parse_string(arg);
         } else if (arg.match(char_re)) {
             return parseCharacter(arg);
@@ -358,12 +357,28 @@ You can also use (help name) to display help for specic function or macro.
         return tokens;
     }
     // ----------------------------------------------------------------------
-    function tokenize(str, extra) {
+    function multilineFormatter(meta) {
+        var { token, ...rest } = meta;
+        if (token.match(/^"[\s\S]+"$/) && token.match(/\n/)) {
+            var re = new RegExp('^ {1,' + (meta.col + 1) + '}', 'mg');
+            token = token.replace(re, '');
+        }
+        return {
+            token,
+            ...rest
+        };
+    }
+    // ----------------------------------------------------------------------
+    function tokenize(str, extra, formatter = multilineFormatter) {
         if (extra) {
-            return tokens(str);
+            return tokens(str).map(formatter);
         } else {
             return tokens(str).map(function(token) {
-                return token.token.trim();
+                var ret = formatter(token);
+                if (!ret || typeof ret.token !== 'string') {
+                    throw new Error('[tokenize] Invalid formatter wrong return object');
+                }
+                return ret.token.trim();
             }).filter(function(token) {
                 return token && !token.match(/^;/);
             });
@@ -1455,7 +1470,7 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
-    function Macro(name, fn, doc) {
+    function Macro(name, fn, doc, dump) {
         if (typeof this !== 'undefined' && this.constructor !== Macro ||
             typeof this === 'undefined') {
             return new Macro(name, fn);
@@ -1463,14 +1478,18 @@ You can also use (help name) to display help for specic function or macro.
         typecheck('Macro', name, 'string', 1);
         typecheck('Macro', fn, 'function', 2);
         if (doc) {
-            this.__doc__ = trimLines(doc);
+            if (dump) {
+                this.__doc__ = doc;
+            } else {
+                this.__doc__ = trimLines(doc);
+            }
         }
         this.name = name;
         this.fn = fn;
     }
     // ----------------------------------------------------------------------
-    Macro.defmacro = function(name, fn, doc) {
-        var macro = new Macro(name, fn, doc);
+    Macro.defmacro = function(name, fn, doc, dump) {
+        var macro = new Macro(name, fn, doc, dump);
         macro.defmacro = true;
         return macro;
     };
@@ -2995,7 +3014,7 @@ You can also use (help name) to display help for specic function or macro.
             return this.get('stdin');
         }, `(current-input-port)
 
-           Function return default stdin port.`),
+            Function return default stdin port.`),
         // ------------------------------------------------------------------
         'current-output-port': doc(function() {
             return this.get('stdout');
@@ -3118,6 +3137,7 @@ You can also use (help name) to display help for specic function or macro.
         }, `(error . args)
 
             Display error message.`),
+        // ------------------------------------------------------------------
         '%same-functions': doc(function(a, b) {
             if (typeof a !== 'function') {
                 return false;
@@ -3125,8 +3145,7 @@ You can also use (help name) to display help for specic function or macro.
             if (typeof b !== 'function') {
                 return false;
             }
-            console.log({ a: a[Symbol.for('__fn__')], b: b[Symbol.for('__fn__')] });
-            return a[Symbol.for('__fn__')] === b[Symbol.for('__fn__')];
+            return unbind(a) === unbind(b);
         }, `(%same-functions a b)
 
             Helper function that check if two bound functions are the same`),
@@ -3568,7 +3587,7 @@ You can also use (help name) to display help for specic function or macro.
             if (code.cdr instanceof Pair &&
                 typeof code.cdr.car === 'string' &&
                 code.cdr.cdr !== nil) {
-                __doc__ = trimLines(code.cdr.car);
+                __doc__ = code.cdr.car;
             }
             function lambda(...args) {
                 var env;
@@ -3709,7 +3728,7 @@ You can also use (help name) to display help for specic function or macro.
                             return result;
                         });
                     }
-                }, __doc__);
+                }, __doc__, true);
                 this.env[name].__code__ = new Pair(new LSymbol('define-macro'), macro);
             }
         }), `(define-macro (name . args) body)

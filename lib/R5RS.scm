@@ -8,6 +8,9 @@
 ;; Copyriht (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
+;; (+ 1 (call-with-current-continuation
+;;       (lambda (escape)
+;;         (+ 2 (escape 3)))))
 
 (define (%doc string fn)
   (typecheck "doc" fn "function")
@@ -156,8 +159,20 @@
    The car of each pair can be any value."
   (and (pair? x) (or (null? (cdr x)) (list? (cdr x)))))
 
-(define (integer? x)
-  (throw "Not Yet implemented"))
+(define (%number-type type x)
+  (and (number? x) (eq? (. x 'type) type)))
+
+(define integer? (%doc
+                  ""
+                  (curry %number-type "bigint")))
+
+(define complex? (%doc
+                  ""
+                  (curry %number-type "complex")))
+
+(define rational? (%doc
+                  ""
+                  (curry %number-type "rational")))
 
 (define (typecheck-args _type name _list)
   "(typecheck-args args type)

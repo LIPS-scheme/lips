@@ -1,5 +1,3 @@
-/* global require, describe, it, expect */
-
 var lips = require('../dist/lips');
 
 var {

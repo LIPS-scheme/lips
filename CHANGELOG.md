@@ -32,6 +32,7 @@
 * fix `LNumber::String` with radix
 * fix formatting of float numbers
 * fix try..catch
+* fix display of function/macro docs (remove white space in parser)
 
 ## 0.20.1
 ### Bug fixes

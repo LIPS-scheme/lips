@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 13:52:54 +0000
+ * build: Sun, 29 Mar 2020 16:18:36 +0000
  */
 (function () {
 	'use strict';
@@ -928,6 +928,61 @@
 
 	var slicedToArray = _slicedToArray;
 
+	function _defineProperty(obj, key, value) {
+	  if (key in obj) {
+	    Object.defineProperty(obj, key, {
+	      value: value,
+	      enumerable: true,
+	      configurable: true,
+	      writable: true
+	    });
+	  } else {
+	    obj[key] = value;
+	  }
+
+	  return obj;
+	}
+
+	var defineProperty = _defineProperty;
+
+	function _objectWithoutPropertiesLoose(source, excluded) {
+	  if (source == null) return {};
+	  var target = {};
+	  var sourceKeys = Object.keys(source);
+	  var key, i;
+
+	  for (i = 0; i < sourceKeys.length; i++) {
+	    key = sourceKeys[i];
+	    if (excluded.indexOf(key) >= 0) continue;
+	    target[key] = source[key];
+	  }
+
+	  return target;
+	}
+
+	var objectWithoutPropertiesLoose = _objectWithoutPropertiesLoose;
+
+	function _objectWithoutProperties(source, excluded) {
+	  if (source == null) return {};
+	  var target = objectWithoutPropertiesLoose(source, excluded);
+	  var key, i;
+
+	  if (Object.getOwnPropertySymbols) {
+	    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+	    for (i = 0; i < sourceSymbolKeys.length; i++) {
+	      key = sourceSymbolKeys[i];
+	      if (excluded.indexOf(key) >= 0) continue;
+	      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+	      target[key] = source[key];
+	    }
+	  }
+
+	  return target;
+	}
+
+	var objectWithoutProperties = _objectWithoutProperties;
+
 	var _typeof_1 = createCommonjsModule(function (module) {
 	function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
 
@@ -948,13 +1003,16 @@
 	module.exports = _typeof;
 	});
 
+	function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+	function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
 
 	/*
 	 * TODO: consider using exec in env.eval or use different maybe_async code
 	 */
 
-	/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map,
-	          Set, Symbol */
+	/* global define, jQuery, BigInt, Map, Set, Symbol */
 	(function (root, factory) {
 	  if (typeof define === 'function' && define.amd) {
 	    // AMD. Register as an anonymous module.
@@ -1182,8 +1240,8 @@
 	      // remove quotes if before are even number of slashes
 	      // we don't remove slases becuase they are handled by JSON.parse
 	      //string = string.replace(/([^\\])['"]$/, '$1');
-	      if (string.match(/^['"]/)) {
-	        if (string === '""' || string === "''") {
+	      if (string.match(/^"/)) {
+	        if (string === '""') {
 	          return '';
 	        }
 
@@ -1200,7 +1258,7 @@
 
 	    if (regex) {
 	      return new RegExp(regex[1], regex[2]);
-	    } else if (arg.match(/['"]/)) {
+	    } else if (arg.match(/^"/)) {
 	      return parse_string(arg);
 	    } else if (arg.match(char_re)) {
 	      return parseCharacter(arg);
@@ -1319,12 +1377,35 @@
 	  } // ----------------------------------------------------------------------
 
 
+	  function multilineFormatter(meta) {
+	    var token = meta.token,
+	        rest = objectWithoutProperties(meta, ["token"]);
+
+	    if (token.match(/^"[\s\S]+"$/) && token.match(/\n/)) {
+	      var re = new RegExp('^ {1,' + (meta.col + 1) + '}', 'mg');
+	      token = token.replace(re, '');
+	    }
+
+	    return _objectSpread({
+	      token: token
+	    }, rest);
+	  } // ----------------------------------------------------------------------
+
+
 	  function tokenize(str, extra) {
+	    var formatter = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : multilineFormatter;
+
 	    if (extra) {
-	      return tokens(str);
+	      return tokens(str).map(formatter);
 	    } else {
 	      return tokens(str).map(function (token) {
-	        return token.token.trim();
+	        var ret = formatter(token);
+
+	        if (!ret || typeof ret.token !== 'string') {
+	          throw new Error('[tokenize] Invalid formatter wrong return object');
+	        }
+
+	        return ret.token.trim();
 	      }).filter(function (token) {
 	        return token && !token.match(/^;/);
 	      });
@@ -2630,7 +2711,7 @@
 	  // ----------------------------------------------------------------------
 
 
-	  function Macro(name, fn, doc) {
+	  function Macro(name, fn, doc, dump) {
 	    if (typeof this !== 'undefined' && this.constructor !== Macro || typeof this === 'undefined') {
 	      return new Macro(name, fn);
 	    }
@@ -2639,7 +2720,11 @@
 	    typecheck('Macro', fn, 'function', 2);
 
 	    if (doc) {
-	      this.__doc__ = trimLines(doc);
+	      if (dump) {
+	        this.__doc__ = doc;
+	      } else {
+	        this.__doc__ = trimLines(doc);
+	      }
 	    }
 
 	    this.name = name;
@@ -2647,8 +2732,8 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  Macro.defmacro = function (name, fn, doc) {
-	    var macro = new Macro(name, fn, doc);
+	  Macro.defmacro = function (name, fn, doc, dump) {
+	    var macro = new Macro(name, fn, doc, dump);
 	    macro.defmacro = true;
 	    return macro;
 	  }; // ----------------------------------------------------------------------
@@ -4702,7 +4787,7 @@
 	    // ------------------------------------------------------------------
 	    'current-input-port': doc(function () {
 	      return this.get('stdin');
-	    }, "(current-input-port)\n\n           Function return default stdin port."),
+	    }, "(current-input-port)\n\n            Function return default stdin port."),
 	    // ------------------------------------------------------------------
 	    'current-output-port': doc(function () {
 	      return this.get('stdout');
@@ -4808,6 +4893,7 @@
 
 	      this.get('display').apply(this, args);
 	    }, "(error . args)\n\n            Display error message."),
+	    // ------------------------------------------------------------------
 	    '%same-functions': doc(function (a, b) {
 	      if (typeof a !== 'function') {
 	        return false;
@@ -4817,11 +4903,7 @@
 	        return false;
 	      }
 
-	      console.log({
-	        a: a[Symbol["for"]('__fn__')],
-	        b: b[Symbol["for"]('__fn__')]
-	      });
-	      return a[Symbol["for"]('__fn__')] === b[Symbol["for"]('__fn__')];
+	      return unbind(a) === unbind(b);
 	    }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
 	    // ------------------------------------------------------------------
 	    help: doc(new Macro('help', function (code, _ref6) {
@@ -5261,7 +5343,7 @@
 	      var __doc__;
 
 	      if (code.cdr instanceof Pair && typeof code.cdr.car === 'string' && code.cdr.cdr !== nil) {
-	        __doc__ = trimLines(code.cdr.car);
+	        __doc__ = code.cdr.car;
 	      }
 
 	      function lambda() {
@@ -5433,7 +5515,7 @@
 	              return result;
 	            });
 	          }
-	        }, __doc__);
+	        }, __doc__, true);
 	        this.env[name].__code__ = new Pair(new LSymbol('define-macro'), macro);
 	      }
 	    }), "(define-macro (name . args) body)\n\n             Meta macro, macro that create new macros, if return value is list structure\n             it will be evaluated when macro is invoked. You can use quasiquote ` and\n             unquote , and unquote-splicing ,@ inside to create expression that will be\n             evaluated on runtime. Macros works like this: if you pass any expression to\n             macro the arguments will not be evaluated unless macro itself evaluate it.\n             Because of this macro can manipulate expression (arguments) as lists."),
@@ -7270,7 +7352,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 29 Mar 2020 13:52:54 +0000',
+	    date: 'Sun, 29 Mar 2020 16:18:36 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
