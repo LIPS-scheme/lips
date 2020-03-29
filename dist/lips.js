@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 08:57:05 +0000
+ * build: Sun, 29 Mar 2020 09:02:26 +0000
  */
 (function () {
 	'use strict';
@@ -4179,11 +4179,7 @@
 
 	    typecheck('InputPort', read, 'function');
 	    this.read = read;
-	  }
-
-	  InputPort.prototype.toString = function () {
-	    return '<#input-port>';
-	  }; // -------------------------------------------------------------------------
+	  } // -------------------------------------------------------------------------
 
 
 	  function OutputPort(write) {
@@ -4216,10 +4212,6 @@
 	  }
 
 	  OutputStringPort.prototype = Object.create(OutputPort.prototype);
-
-	  OutputStringPort.prototype.toString = function () {
-	    return '<#output-string-port>';
-	  };
 
 	  OutputStringPort.prototype.getString = function () {
 	    return this._buffer.join('');
@@ -4284,10 +4276,6 @@
 	    }
 
 	    return this._tokens[this._index][this.in_char];
-	  };
-
-	  InputStringPort.prototype.toString = function () {
-	    return '<#output-string-port>';
 	  }; // -------------------------------------------------------------------------
 
 
@@ -5696,7 +5684,7 @@
 	        return '<#undefined>';
 	      }
 
-	      var types = [RegExp, Nil, LSymbol, Pair, InputPort, OutputPort];
+	      var types = [RegExp, Nil, LSymbol, Pair];
 
 	      for (var _i2 = 0, _types = types; _i2 < _types.length; _i2++) {
 	        var _type2 = _types[_i2];
@@ -7198,11 +7186,15 @@
 	  Pattern.__className = 'Pattern';
 	  Formatter.__className = 'Formatter';
 	  Macro.__className = 'Macro';
-	  Environment.__className = 'Environment'; // -------------------------------------------------------------------------
+	  Environment.__className = 'Environment';
+	  InputPort.__className = 'input-port';
+	  OutputPort.__className = 'output-port';
+	  OutputStringPort.__className = 'output-string-port';
+	  InputStringPort.__className = 'output-string-port'; // -------------------------------------------------------------------------
 
 	  var lips = {
 	    version: 'DEV',
-	    date: 'Sun, 29 Mar 2020 08:57:05 +0000',
+	    date: 'Sun, 29 Mar 2020 09:02:26 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

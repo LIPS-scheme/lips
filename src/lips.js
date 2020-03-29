@@ -2568,9 +2568,6 @@
         typecheck('InputPort', read, 'function');
         this.read = read;
     }
-    InputPort.prototype.toString = function() {
-        return '<#input-port>';
-    };
     // -------------------------------------------------------------------------
     function OutputPort(write) {
         if (typeof this !== 'undefined' && !(this instanceof OutputPort) ||
@@ -2596,9 +2593,6 @@
         };
     }
     OutputStringPort.prototype = Object.create(OutputPort.prototype);
-    OutputStringPort.prototype.toString = function() {
-        return '<#output-string-port>';
-    };
     OutputStringPort.prototype.getString = function() {
         return this._buffer.join('');
     };
@@ -2648,9 +2642,6 @@
             return eof;
         }
         return this._tokens[this._index][this.in_char];
-    };
-    InputStringPort.prototype.toString = function() {
-        return '<#output-string-port>';
     };
     // -------------------------------------------------------------------------
     var eof = new EOF();
@@ -4003,7 +3994,7 @@
             if (typeof obj === 'undefined') {
                 return '<#undefined>';
             }
-            var types = [RegExp, Nil, LSymbol, Pair, InputPort, OutputPort];
+            var types = [RegExp, Nil, LSymbol, Pair];
             for (let type of types) {
                 if (obj instanceof type) {
                     return obj.toString();
@@ -5334,6 +5325,10 @@
     Formatter.__className = 'Formatter';
     Macro.__className = 'Macro';
     Environment.__className = 'Environment';
+    InputPort.__className = 'input-port';
+    OutputPort.__className = 'output-port';
+    OutputStringPort.__className = 'output-string-port';
+    InputStringPort.__className = 'output-string-port';
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',
