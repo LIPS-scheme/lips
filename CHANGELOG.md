@@ -25,7 +25,7 @@
 * add `letrec` macro
 * `inexact->exact` and `rationalize` (thanks to Kawa/C-Gambit projects)
 * parsing hex, octal, binary, complex, rational numbers
-* characters literals `#\A` and character functions
+* characters literals `#\A` and character and string functions
 * display `#t` and `#f` for boolean values in terminal
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)

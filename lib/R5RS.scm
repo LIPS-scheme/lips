@@ -377,8 +377,58 @@
 
                Function return pair from alist that match given key using eqv? check."
               (curry %assoc/search eqv?)))
+(define expt **)
 
+(define list->vector list->array)
+(define vector->list array->list)
+
+;; -----------------------------------------------------------------------------
 ;; STRING FUNCTIONS
+;; -----------------------------------------------------------------------------
+;; (let ((x (make-string 20)))
+;;   (string-fill! x #\b)
+;;   x)
+(define (make-string k . rest)
+  "(make-string k [char])
+
+   Function return new string with k elements, if char is provied
+   it's filled with that character."
+  (let ((char (if (null? rest) #\space (car rest))))
+    (typecheck "make-string" k "number" 1)
+    (typecheck "make-string" char "character" 2)
+    (let iter ((result '()) (k k))
+      (if (<= k 0)
+          (list->string result)
+          (iter (cons char result) (- k 1))))))
+
+;; (let ((x "xxxxxxxxxx"))
+;;    (string-fill! x #\b)
+;;    x)
+(define-macro (string-fill! string char)
+  "(string-fill! symbol char)
+
+   Macro is used to set all characters in string as char.
+   In LISP strings are JavaScript strings so this need to be macro
+   that overwrite slot in environement with new strings."
+  (typecheck "string-fill!" string "symbol" 1)
+  (let ((len (gensym))
+        (char-name (gensym))
+        (result (gensym)))
+    `(let ((,char-name ,char))
+       (typecheck "string-fill!" ,char-name "character" 2)
+       (let iter ((,len (string-length ,string)) (,result '()))
+         (if (<= ,len 0)
+             (set! ,string (list->string ,result))
+             (iter (- ,len 1) (cons ,char-name ,result)))))))
+
+(define (identity n)
+  "(identity n)
+
+   No op function. it just returns its argument."
+  n)
+
+;; in JavaScript strings are not mutable not need to copy
+(define string-copy identity)
 
 (define (list->string _list)
   "(list->string _list)
@@ -397,17 +447,6 @@
    Function return list of characters created from list."
   (typecheck "string->list" string "string")
   (array->list (--> string (split "") (map (lambda (x) (lips.Character x))))))
-
-(define char? (%doc
-        "(char? obj)
-
-         Function check if object is character."
-        (curry instanceof lips.Character)))
-
-(define expt **)
-
-(define list->vector list->array)
-(define vector->list array->list)
 
 ;; (let ((x "hello")) (string-set! x 0 #\H) x)
 (define-macro (string-set! object index char)
@@ -442,9 +481,17 @@
   (typecheck "string-ref" k "number" 2)
   (lips.Character (. string k)))
 
-;; Character functions
+;; -----------------------------------------------------------------------------
+;; CHARACTER FUNCTIONS
+;; -----------------------------------------------------------------------------
 
 ;; (display (list->string (list #\A (integer->char 10) #\B)))
+
+(define char? (%doc
+        "(char? obj)
+
+         Function check if object is character."
+        (curry instanceof lips.Character)))
 
 (define (char->integer chr)
   "(char->integer chr)

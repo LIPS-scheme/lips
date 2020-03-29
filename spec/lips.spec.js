@@ -585,7 +585,7 @@ describe('evaluate', function() {
                                              (lambda ()
                                                  (f (- n 1) (* n acc)))))))) n 1))
 
-                       (string (! 1000))`;
+                       (repr (! 1000))`;
         var factorial_1000 = [
             "402387260077093773543702433923003985719374864210714632543799910",
             "429938512398629020592044208486969404800479988610197196058631666",
@@ -643,7 +643,7 @@ describe('evaluate', function() {
         it('should throw exception', function() {
             return lips.exec(code, env, env).catch(e => {
                 expect(e.code instanceof Array).toBeTruthy();
-                expect(e.code.pop()).toEqual('(string (! 1000))');
+                expect(e.code.pop()).toEqual('(repr (! 1000))');
                 expect(e).toEqual(new Error("Unbound variable `f'"));
             });
         });
@@ -914,7 +914,7 @@ describe('env', function() {
             return Promise.all([
                 [`(eq? (gensym "foo") (gensym "foo"))`, false],
                 [`(eq? 'foo 'foo)`, true],
-                [`(eq? (string (gensym "foo")) (string (gensym "foo")))`, true]
+                [`(eq? (repr (gensym "foo")) (repr (gensym "foo")))`, true]
             ].map(testValue));
         });
     });
