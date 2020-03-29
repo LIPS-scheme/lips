@@ -5,6 +5,7 @@
 * `if` no longer require boolean as cond
 * change how arrays are presented, they are look like scheme vector `#(...)`
 * `type` now return camel case strings, `typecheck` didn't changed
+* rename `string` to `repr`
 ### Features
 * start implementing R5RS spec
 * streams example
@@ -24,6 +25,8 @@
 * add `letrec` macro
 * `inexact->exact` and `rationalize` (thanks to Kawa/C-Gambit projects)
 * parsing hex, octal, binary, complex, rational numbers
+* characters literals `#\A` and character functions
+* display `#t` and `#f` for boolean values in terminal
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

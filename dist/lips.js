@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 20:58:05 +0000
+ * build: Sun, 29 Mar 2020 21:04:19 +0000
  */
 (function () {
 	'use strict';
@@ -4856,7 +4856,7 @@
 	    }, "(input-port? arg)\n\n            Function return true if argument is input port."),
 	    // ------------------------------------------------------------------
 	    'open-output-string': doc(function () {
-	      return OutputStringPort(this.get('string'));
+	      return OutputStringPort(this.get('repr'));
 	    }, "(open-output-string)\n\n            Function create new output port that can used to write string into\n            and after finish get the whole string using `get-output-string`"),
 	    // ------------------------------------------------------------------
 	    'get-output-string': doc(function (port) {
@@ -4921,7 +4921,7 @@
 	      }
 
 	      (_this$get = this.get('stdout')).write.apply(_this$get, toConsumableArray(args.map(function (arg) {
-	        return _this4.get('string')(arg, typeof arg === 'string');
+	        return _this4.get('repr')(arg, typeof arg === 'string');
 	      })));
 	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
 	    // ------------------------------------------------------------------
@@ -4932,7 +4932,7 @@
 	        port = this.get('stdout');
 	      }
 
-	      port.write(this.get('string')(arg, typeof arg === 'string'));
+	      port.write(this.get('repr')(arg, typeof arg === 'string'));
 	    }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
 	    // ------------------------------------------------------------------
 	    error: doc(function () {
@@ -5889,9 +5889,17 @@
 	      return string.search(pattern);
 	    }, "(search pattern string)\n\n            Function return first found index of the pattern inside a string"),
 	    // ------------------------------------------------------------------
-	    string: doc(function string(obj, quote) {
+	    repr: doc(function string(obj, quote) {
 	      if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
 	        return '<#jQuery(' + obj.length + ')>';
+	      }
+
+	      if (obj === true) {
+	        return '#t';
+	      }
+
+	      if (obj === false) {
+	        return '#f';
 	      }
 
 	      if (obj instanceof LNumber) {
@@ -5966,7 +5974,7 @@
 	      }
 
 	      return obj;
-	    }, "(string obj)\n\n            Function return string LIPS representation of an object as string."),
+	    }, "(repr obj)\n\n            Function return string LIPS representation of an object as string."),
 	    // ------------------------------------------------------------------
 	    env: doc(function (env) {
 	      env = env || this;
@@ -7100,7 +7108,7 @@
 	            return evaluate(new Pair(value, code.cdr), eval_args);
 	          }); // else is later in code
 	        } else if (typeof value !== 'function') {
-	          throw new Error(type(value) + ' ' + env.get('string')(value) + ' is not a function while evaluating ' + code.toString());
+	          throw new Error(type(value) + ' ' + env.get('repr')(value) + ' is not a function while evaluating ' + code.toString());
 	        }
 	      }
 
@@ -7397,7 +7405,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 29 Mar 2020 20:58:05 +0000',
+	    date: 'Sun, 29 Mar 2020 21:04:19 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

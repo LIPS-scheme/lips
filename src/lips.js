@@ -83,7 +83,7 @@
     /* eslint-disable */
     function log(x, regex = null) {
         function msg(x) {
-            var value = global_env.get('string')(x);
+            var value = global_env.get('repr')(x);
             if (regex === null || regex.test(value)) {
                 console.log(global_env.get('type')(x) + ": " + value);
             }
@@ -3087,7 +3087,7 @@ You can also use (help name) to display help for specic function or macro.
             Function return true if argument is input port.`),
         // ------------------------------------------------------------------
         'open-output-string': doc(function() {
-            return OutputStringPort(this.get('string'));
+            return OutputStringPort(this.get('repr'));
         }, `(open-output-string)
 
             Function create new output port that can used to write string into
@@ -3159,7 +3159,7 @@ You can also use (help name) to display help for specic function or macro.
         // ------------------------------------------------------------------
         print: doc(function(...args) {
             this.get('stdout').write(...args.map((arg) => {
-                return this.get('string')(arg, typeof arg === 'string');
+                return this.get('repr')(arg, typeof arg === 'string');
             }));
         }, `(print . args)
 
@@ -3171,7 +3171,7 @@ You can also use (help name) to display help for specic function or macro.
             if (port === null) {
                 port = this.get('stdout');
             }
-            port.write(this.get('string')(arg, typeof arg === 'string'));
+            port.write(this.get('repr')(arg, typeof arg === 'string'));
         }, `(display arg [port])
 
             Function send string to standard output or provied port.`),
@@ -4125,10 +4125,16 @@ You can also use (help name) to display help for specic function or macro.
 
             Function return first found index of the pattern inside a string`),
         // ------------------------------------------------------------------
-        string: doc(function string(obj, quote) {
+        repr: doc(function string(obj, quote) {
             if (typeof jQuery !== 'undefined' &&
                 obj instanceof jQuery.fn.init) {
                 return '<#jQuery(' + obj.length + ')>';
+            }
+            if (obj === true) {
+                return '#t';
+            }
+            if (obj === false) {
+                return '#f';
             }
             if (obj instanceof LNumber) {
                 return obj.toString();
@@ -4182,7 +4188,7 @@ You can also use (help name) to display help for specic function or macro.
                 return obj.toString();
             }
             return obj;
-        }, `(string obj)
+        }, `(repr obj)
 
             Function return string LIPS representation of an object as string.`),
         // ------------------------------------------------------------------
@@ -5244,7 +5250,7 @@ You can also use (help name) to display help for specic function or macro.
                     // else is later in code
                 } else if (typeof value !== 'function') {
                     throw new Error(
-                        type(value) + ' ' + env.get('string')(value) +
+                        type(value) + ' ' + env.get('repr')(value) +
                             ' is not a function while evaluating ' + code.toString()
                     );
                 }
