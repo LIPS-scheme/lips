@@ -151,7 +151,7 @@
     }
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-    var int_re = /^[-+]?[0-9]+$/;
+    var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
     var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
     // (int | flat) ? ([-+]
     var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
@@ -161,6 +161,27 @@
     function parseRational(arg) {
         var parts = arg.split('/');
         return { num: parseInt(parts[0], 10), denom: parseInt(parts[1], 10) };
+    }
+    // ----------------------------------------------------------------------
+    function parseInteger(arg) {
+        var m = arg.match(/^(?:#([xbo]))?([+-]?[0-9a-f]+)$/i);
+        var radix;
+        if (m && m[1]) {
+            switch (m[1]) {
+                case 'x':
+                    radix = 16;
+                    break;
+                case 'o':
+                    radix = 8;
+                    break;
+                case 'b':
+                    radix = 2;
+                    break;
+            }
+        } else {
+            radix = 10;
+        }
+        return parseInt(m[2], radix);
     }
     // ----------------------------------------------------------------------
     function parseComplex(arg) {
@@ -205,7 +226,7 @@
         } else if (arg.match(complex_re)) {
             return LComplex(parseComplex(arg));
         } else if (arg.match(int_re)) {
-            return LNumber(parseFloat(arg));
+            return LNumber(parseInteger(arg));
         } else if (arg.match(float_re)) {
             return LFloat(parseFloat(arg));
         } else if (arg === 'nil') {
@@ -233,7 +254,7 @@
     function makeTokenRe() {
         var tokens = Object.keys(specials).map(escapeRegex).join('|');
         var complex = '';
-        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|${tokens}|[^(\\s)]+)`, 'gim');
+        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|${tokens}|[^(\\s)]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -3993,7 +4014,7 @@
                 return '<#function>';
             }
             if (obj instanceof Array) {
-                return '[' + obj.map(x => string(x, true)).join(', ') + ']';
+                return '#(' + obj.map(x => string(x, true)).join(' ') + ')';
             }
             if (obj === null || (typeof obj === 'string' && quote)) {
                 return JSON.stringify(obj).replace(/\\n/g, '\n');

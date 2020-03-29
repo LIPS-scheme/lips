@@ -3,6 +3,7 @@
 * rename `ceil` to `ceiling` (like in R5RS spec)
 * break `let*` to work the same as in scheme (it was working like `letrec`)
 * `if` no longer require boolean as cond
+* change how arrays are presented, they are look like scheme vector `#(...)`
 ### Features
 * start implementing R5RS spec
 * streams example
@@ -21,6 +22,7 @@
 * input/output ports + string ports
 * add `letrec` macro
 * `inexact->exact` and `rationalize` (thanks to Kawa/C-Gambit projects)
+* parsing hex, octal, binary, complex, rational numbers
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

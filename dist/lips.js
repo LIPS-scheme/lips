@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 02:23:15 +0000
+ * build: Sun, 29 Mar 2020 08:47:49 +0000
  */
 (function () {
 	'use strict';
@@ -1082,7 +1082,7 @@
 
 
 	  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-	  var int_re = /^[-+]?[0-9]+$/;
+	  var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
 	  var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/; // (int | flat) ? ([-+]
 
 	  var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
@@ -1096,6 +1096,32 @@
 	      num: parseInt(parts[0], 10),
 	      denom: parseInt(parts[1], 10)
 	    };
+	  } // ----------------------------------------------------------------------
+
+
+	  function parseInteger(arg) {
+	    var m = arg.match(/^(?:#([xbo]))?([+-]?[0-9a-f]+)$/i);
+	    var radix;
+
+	    if (m && m[1]) {
+	      switch (m[1]) {
+	        case 'x':
+	          radix = 16;
+	          break;
+
+	        case 'o':
+	          radix = 8;
+	          break;
+
+	        case 'b':
+	          radix = 2;
+	          break;
+	      }
+	    } else {
+	      radix = 10;
+	    }
+
+	    return parseInt(m[2], radix);
 	  } // ----------------------------------------------------------------------
 
 
@@ -1155,7 +1181,7 @@
 	    } else if (arg.match(complex_re)) {
 	      return LComplex(parseComplex(arg));
 	    } else if (arg.match(int_re)) {
-	      return LNumber(parseFloat(arg));
+	      return LNumber(parseInteger(arg));
 	    } else if (arg.match(float_re)) {
 	      return LFloat(parseFloat(arg));
 	    } else if (arg === 'nil') {
@@ -1183,7 +1209,7 @@
 
 	  function makeTokenRe() {
 	    var tokens = Object.keys(specials).map(escapeRegex).join('|');
-	    return new RegExp("(\"(?:\\\\[\\S\\s]|[^\"])*\"|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|\"(?:\\\\[\\S\\s]|[^\"])+|\\n|(?:\\\\[\\S\\s]|[^\"])*\"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|".concat(tokens, "|[^(\\s)]+)"), 'gim');
+	    return new RegExp("(\"(?:\\\\[\\S\\s]|[^\"])*\"|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|\"(?:\\\\[\\S\\s]|[^\"])+|\\n|(?:\\\\[\\S\\s]|[^\"])*\"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|".concat(tokens, "|[^(\\s)]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -5689,9 +5715,9 @@
 	      }
 
 	      if (obj instanceof Array) {
-	        return '[' + obj.map(function (x) {
+	        return '#(' + obj.map(function (x) {
 	          return string(x, true);
-	        }).join(', ') + ']';
+	        }).join(' ') + ')';
 	      }
 
 	      if (obj === null || typeof obj === 'string' && quote) {

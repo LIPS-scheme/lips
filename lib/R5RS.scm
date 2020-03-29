@@ -291,3 +291,6 @@
   (typecheck "rationalize" number "number" 1)
   (typecheck "rationalize" tolerance "number" 2)
   (lips.rationalize number tolerance))
+
+(define #f false)
+(define #t true)
