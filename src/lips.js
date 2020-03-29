@@ -151,6 +151,28 @@
             });
         };
     }
+    var banner = (function() {
+        var date = '{{DATE}}';
+        var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
+        var _format = x => x.toString().padStart(2, '0');
+        var _year = _date.getFullYear();
+        var _build = `${_year}-${_format(_date.getMonth() + 1)}-${_format(_date.getDate())}`;
+        var banner = `
+  __                    __
+ / /  _    _  ___  ___  \\ \\
+| |  | |  | || . \\/ __>  | |
+| |  | |_ | ||  _/\\__ \\  | |
+| |  |___||_||_|  <___/  | |
+ \\_\\                    /_/
+
+LIPS Interpreter {{VER}} (${_build})
+Copyright (c) 2018-${_year} Jakub T. Jankiewicz <https://jcubic.pl/me>
+
+Type (env) to see environment with functions macros and variables.
+You can also use (help name) to display help for specic function or macro.
+`.replace(/^.*\n/, '');
+        return banner;
+    })();
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
@@ -5380,6 +5402,7 @@
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',
+        banner,
         date: '{{DATE}}',
         exec,
         parse,

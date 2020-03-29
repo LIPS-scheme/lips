@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {exec, Formatter, balanced_parenthesis, tokenize, env, version} = require('../dist/lips');
+const {exec, Formatter, balanced_parenthesis, tokenize, env, banner} = require('../dist/lips');
 const fs = require('fs');
 const {format} = require('util');
 const readline = require('readline');
@@ -83,7 +83,11 @@ function boostrap() {
     try {
         path = require.resolve('./examples/helpers.lips');
     } catch (e) {
-        path = require.resolve('@jcubic/lips/examples/helpers.lips');
+        try {
+            path = require.resolve('../examples/helpers.lips');
+        } catch (e) {
+            path = require.resolve('@jcubic/lips/examples/helpers.lips');
+        }
     }
     var data = fs.readFileSync(path);
     return run(data, env);
@@ -100,9 +104,6 @@ function indent(code, indent, offset) {
 
 // -----------------------------------------------------------------------------
 const options = parse_options(process.argv.slice(2));
-const intro = 'LIPS Interpreter (ver. ' + version + ')\n' +
-      'Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>\n';
-
 if (options.c) {
     boostrap().then(function() {
         run(options.c, env).then(print);
@@ -123,7 +124,7 @@ if (options.c) {
                        ' code\n\nif called without arguments it will run REPL and if called with one argument' +
                        '\nit will treat it as filename and execute it.', intro, name));
 } else {
-    console.log(intro);
+    console.log(banner);
     var prompt = 'lips> ';
     var continuePrompt = '... ';
     const rl = readline.createInterface({
