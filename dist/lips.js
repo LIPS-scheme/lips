@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 19:28:21 +0000
+ * build: Sun, 29 Mar 2020 20:24:13 +0000
  */
 (function () {
 	'use strict';
@@ -1496,15 +1496,29 @@
 	          }
 
 	          if (stack.length === 1) {
-	            result.push(stack.pop());
+	            var arg = stack.pop();
+
+	            if (arg instanceof Array && arg.length === 0) {
+	              arg = nil;
+	            }
+
+	            result.push(arg);
 	          } else if (stack.length > 1) {
 	            var list = stack.pop();
 	            top = stack[stack.length - 1];
 
 	            if (top instanceof Array) {
-	              top.push(list);
+	              if (list.length === 0) {
+	                top.push(nil);
+	              } else {
+	                top.push(list);
+	              }
 	            } else if (top instanceof Pair) {
-	              top.append(Pair.fromArray(list));
+	              if (list.length === 0) {
+	                top.append(nil);
+	              } else {
+	                top.append(Pair.fromArray(list));
+	              }
 	            }
 
 	            if (specials_stack.length) {
@@ -6730,10 +6744,6 @@
 	    var name = 'c' + spec + 'r';
 	    global_env.set(name, doc(function (arg) {
 	      return chars.reduce(function (list, type) {
-	        if (list === nil) {
-	          return nil;
-	        }
-
 	        typecheck(name, list, 'pair');
 
 	        if (type === 'a') {
@@ -7366,7 +7376,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 29 Mar 2020 19:28:21 +0000',
+	    date: 'Sun, 29 Mar 2020 20:24:13 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

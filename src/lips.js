@@ -463,14 +463,26 @@ You can also use (help name) to display help for specic function or macro.
                         throw new Error('Unbalanced parenthesis');
                     }
                     if (stack.length === 1) {
-                        result.push(stack.pop());
+                        var arg = stack.pop();
+                        if (arg instanceof Array && arg.length === 0) {
+                            arg = nil;
+                        }
+                        result.push(arg);
                     } else if (stack.length > 1) {
                         var list = stack.pop();
                         top = stack[stack.length - 1];
                         if (top instanceof Array) {
-                            top.push(list);
+                            if (list.length === 0) {
+                                top.push(nil);
+                            } else {
+                                top.push(list);
+                            }
                         } else if (top instanceof Pair) {
-                            top.append(Pair.fromArray(list));
+                            if (list.length === 0) {
+                                top.append(nil);
+                            } else {
+                                top.append(Pair.fromArray(list));
+                            }
                         }
                         if (specials_stack.length) {
                             single_list_specials = specials_stack.pop();
@@ -4994,9 +5006,6 @@ You can also use (help name) to display help for specic function or macro.
         const name = 'c' + spec + 'r';
         global_env.set(name, doc(function(arg) {
             return chars.reduce(function(list, type) {
-                if (list === nil) {
-                    return nil;
-                }
                 typecheck(name, list, 'pair');
                 if (type === 'a') {
                     return list.car;
