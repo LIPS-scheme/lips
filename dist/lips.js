@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 28 Mar 2020 18:43:41 +0000
+ * build: Sun, 29 Mar 2020 02:23:15 +0000
  */
 (function () {
 	'use strict';
@@ -949,6 +949,12 @@
 	});
 
 
+	/*
+	 * TODO: consider using exec in env.eval or use different maybe_async code
+	 */
+
+	/* global define, module, setTimeout, jQuery, global, BigInt, require, Blob, Map,
+	          Set, Symbol */
 	(function (root, factory) {
 	  if (typeof define === 'function' && define.amd) {
 	    // AMD. Register as an anonymous module.
@@ -965,122 +971,6 @@
 	  /* eslint-disable */
 
 	  /* istanbul ignore next */
-
-	  /*
-	   * Part of Mathjs - Copyright (C) 2013-2020 Jos de Jong wjosdejong@gmail.com
-	   *
-	   * Licensed under the Apache License, Version 2.0 (the "License");
-	   * you may not use this file except in compliance with the License.
-	   * You may obtain a copy of the License at
-	   *
-	   * https://www.apache.org/licenses/LICENSE-2.0
-	   *
-	   * Unless required by applicable law or agreed to in writing, software
-	   * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-	   * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-	   * License for the specific language governing permissions and limitations
-	   * under the License.
-	   */
-	  var toExponential = function () {
-	    function toExponential(value, precision) {
-	      if (isNaN(value) || !isFinite(value)) {
-	        return String(value);
-	      } // round if needed, else create a clone
-
-
-	      var split = splitNumber(value);
-	      var rounded = precision ? roundDigits(split, precision) : split;
-	      var c = rounded.coefficients;
-	      var e = rounded.exponent; // append zeros if needed
-
-	      if (c.length < precision && c.length === 1) {
-	        c.push(0);
-	      } // format as `C.CCCe+EEE` or `C.CCCe-EEE`
-
-
-	      var first = c.shift();
-	      return rounded.sign + first + (c.length > 0 ? '.' + c.join('') : '') + (e > 0 ? 'e' + (e >= 0 ? '+' : '') + e : '');
-	    }
-
-
-	    function splitNumber(value) {
-	      // parse the input value
-	      var match = String(value).toLowerCase().match(/^0*?(-?)(\d+\.?\d*)(e([+-]?\d+))?$/);
-
-	      if (!match) {
-	        throw new SyntaxError('Invalid number ' + value);
-	      }
-
-	      var sign = match[1];
-	      var digits = match[2];
-	      var exponent = parseFloat(match[4] || '0');
-	      var dot = digits.indexOf('.');
-	      exponent += dot !== -1 ? dot - 1 : digits.length - 1;
-	      var coefficients = digits.replace('.', '') // remove the dot (must be removed before removing leading zeros)
-	      .replace(/^0*/, function (zeros) {
-	        // remove leading zeros, add their count to the exponent
-	        exponent -= zeros.length;
-	        return '';
-	      }).replace(/0*$/, '') // remove trailing zeros
-	      .split('').map(function (d) {
-	        return parseInt(d);
-	      });
-
-	      if (coefficients.length === 0) {
-	        coefficients.push(0);
-	        exponent++;
-	      }
-
-	      return {
-	        sign: sign,
-	        coefficients: coefficients,
-	        exponent: exponent
-	      };
-	    }
-
-
-	    function roundDigits(split, precision) {
-	      // create a clone
-	      var rounded = {
-	        sign: split.sign,
-	        coefficients: split.coefficients,
-	        exponent: split.exponent
-	      };
-	      var c = rounded.coefficients; // prepend zeros if needed
-
-	      while (precision <= 0) {
-	        c.unshift(0);
-	        rounded.exponent++;
-	        precision++;
-	      }
-
-	      if (c.length > precision) {
-	        var removed = c.splice(precision, c.length - precision);
-
-	        if (removed[0] >= 5) {
-	          var i = precision - 1;
-	          c[i]++;
-
-	          while (c[i] === 10) {
-	            c.pop();
-
-	            if (i === 0) {
-	              c.unshift(0);
-	              rounded.exponent++;
-	              i++;
-	            }
-
-	            i--;
-	            c[i]++;
-	          }
-	        }
-	      }
-
-	      return rounded;
-	    }
-
-	    return toExponential;
-	  }();
 
 	  function contentLoaded(win, fn) {
 	    var done = false,
@@ -1120,7 +1010,7 @@
 	      doc[add](pre + 'readystatechange', init, false);
 	      win[add](pre + 'load', init, false);
 	    }
-	  }
+	  } // -------------------------------------------------------------------------
 
 	  if (!root.fetch) {
 	    root.fetch = function (url, options) {
@@ -3371,6 +3261,10 @@
 	      return new LNumber(n);
 	    }
 
+	    if (typeof n === 'undefined') {
+	      throw new Error('Invlaid LNumber constructor call');
+	    }
+
 	    var _type = LNumber.getType(n);
 
 	    if (LNumber.types[_type]) {
@@ -3578,12 +3472,22 @@
 	  LFloat.prototype = Object.create(LNumber.prototype);
 
 	  LFloat.prototype.toString = function () {
-	    return toExponential(this.value, 16);
+	    if (this.value % 2 === 0) {
+	      return this.value + '.0';
+	    }
+
+	    return this.value.toString();
 	  }; // same aproximation as in guile scheme
 
 
 	  LFloat.prototype.toRational = function () {
-	    return toRational(this.value.valueOf());
+	    var n = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
+
+	    if (n === null) {
+	      return toRational(this.value.valueOf());
+	    }
+
+	    return approxRatio(n.valueOf())(this.value.valueOf());
 	  };
 
 	  var toRational = approxRatio(1e-10);
@@ -3605,34 +3509,66 @@
 	      });
 	    };
 	  } // -------------------------------------------------------------------------
-	  // TODO:
-	  // scheme@(guile-user)> (/ 1 2)
-	  // $1 = 1/2
-	  // scheme@(guile-user)> (exact->inexact (/ 1 2))
-	  // $2 = 0.5
-	  // scheme@(guile-user)>
-	  // scheme@(guile-user)> (inexact->exact 0.5)
-	  // $3 = 1/2
-	  // scheme@(guile-user)> (= 0.5 1/2)
-	  // $7 = #t
-	  // scheme@(guile-user)> (exact->inexact 1/5)
-	  // $11 = 0.2
-	  // scheme@(guile-user)> (= 0.2 1/5)
-	  // $12 = #f
-	  // scheme@(guile-user)> (inexact->exact 0.2)
-	  // $13 = 3602879701896397/18014398509481984
+	  // :: source: Kawa gnu.math.RatNum.java
+	  // :: This algorithm is by Alan Bawden. It has been transcribed
+	  // :: with permission from Kawa copyright M.A. Bothner.
+	  // :: which was transcribed from from C-Gambit, copyright Marc Feeley.
+	  // -------------------------------------------------------------------------
+
+
+	  function rationalize(x, y) {
+	    var a = x.sub(y);
+	    var b = x.add(y);
+	    var result;
+
+	    if (a.cmp(b) > 0) {
+	      result = simplest_rational2(b, a);
+	    } else if (b.cmp(a) <= 0) {
+	      result = a;
+	    } else if (a.cmp(0) > 0) {
+	      result = simplest_rational2(a, b);
+	    } else if (y.cmp(0) < 0) {
+	      result = LNumber(simplest_rational2(b.sub(), a.sub())).sub();
+	    } else {
+	      result = LNumber(0);
+	    }
+
+	    if (LNumber.isFloat(y) || LNumber.isFloat(x)) {
+	      return LFloat(result);
+	    }
+
+	    return result;
+	  } // -------------------------------------------------------------------------
+
+
+	  function simplest_rational2(x, y) {
+	    var fx = LNumber(x).floor();
+	    var fy = LNumber(y).floor();
+
+	    if (x.cmp(fx) < 1) {
+	      return fx;
+	    } else if (fx.cmp(fy) === 0) {
+	      var n = LNumber(1).div(y.sub(fy));
+	      var d = LNumber(1).div(x.sub(fx));
+	      return fx.add(LNumber(1).div(simplest_rational2(n, d)));
+	    } else {
+	      return fx.add(LNumber(1));
+	    }
+	  } // -------------------------------------------------------------------------
 
 
 	  function LRational(n) {
+	    var force = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : false;
+
 	    if (typeof this !== 'undefined' && !(this instanceof LRational) || typeof this === 'undefined') {
-	      return new LRational(n);
+	      return new LRational(n, force);
 	    }
 
 	    if (!LNumber.isRational(n)) {
 	      throw new Error('Invalid constructor call for LBigInteger');
 	    }
 
-	    if (n.num % n.denom === 0) {
+	    if (n.num % n.denom === 0 && !force) {
 	      return LNumber(n.num / n.denom);
 	    }
 
@@ -3643,16 +3579,26 @@
 
 	  LRational.prototype = Object.create(LNumber.prototype);
 
+	  LRational.prototype.abs = function () {
+	    var num = this.num;
+	    var denom = this.denom;
+
+	    if (num.cmp(0) === -1) {
+	      num = num.sub();
+	    }
+
+	    if (denom.cmp(0) !== 1) {
+	      denom = denom.sub();
+	    }
+
+	    return LRational({
+	      num: num,
+	      denom: denom
+	    });
+	  };
+
 	  LRational.prototype.cmp = function (n) {
-	    if (n instanceof LBigInteger) {
-	      return LBigInteger(Math.floor(this.valueOf())).cmp(n);
-	    }
-
-	    if (n instanceof LFloat) {
-	      return LFloat(this.valueOf()).cmp(n);
-	    }
-
-	    return LNumber(this.valueOf()).cmp(LNumber(n.valueOf()));
+	    return LNumber(this.valueOf()).cmp(n);
 	  };
 
 	  LRational.prototype.toString = function () {
@@ -3667,7 +3613,7 @@
 	  };
 
 	  LRational.prototype.valueOf = function () {
-	    return this.num.div(this.denom);
+	    return LFloat(this.num.valueOf()).div(this.denom.valueOf());
 	  };
 
 	  LRational.prototype.mul = function (n) {
@@ -3685,46 +3631,60 @@
 
 	  LRational.prototype.div = function (n) {
 	    if (LNumber.isRational(n)) {
-	      var num = n.denom;
-	      var denom = n.num;
-	      return this.mul({
+	      var num = this.num.mul(n.denom);
+	      var denom = this.denom.mul(n.num);
+	      return LRational({
 	        num: num,
 	        denom: denom
 	      });
 	    }
 
-	    return LNumber(this.valueOf()).mul(n);
+	    return LNumber(this.valueOf()).div(n);
+	  };
+
+	  LRational.prototype.op = function (op, n) {
+	    return this[rev_mapping[op]](n);
+	  };
+
+	  LRational.prototype.sub = function (n) {
+	    if (LNumber.isRational(n)) {
+	      var num = n.num.sub();
+	      var denom = n.denom;
+	      return this.add(LRational({
+	        num: num,
+	        denom: denom
+	      }));
+	    }
+
+	    if (!(n instanceof LNumber)) {
+	      n = LNumber(n).sub();
+	    } else {
+	      n = n.sub();
+	    }
+
+	    if (LNumber.isFloat(n)) {
+	      return LFloat(this.valueOf()).add(n);
+	    }
+
+	    return this.add(n);
 	  };
 
 	  LRational.prototype.add = function (n) {
 	    if (LNumber.isRational(n)) {
-	      var a_denom = this.denom.valueOf();
-	      var b_denom = n.denom.valueOf();
+	      var a_denom = this.denom;
+	      var b_denom = n.denom;
 	      var a_num = this.num;
 	      var b_num = n.num;
-	      var denom;
+	      var denom, num;
 
 	      if (a_denom !== b_denom) {
-	        denom = global_env.get('lcm')(a_denom, b_denom);
-	        var gdc;
-	        console.log({
-	          denom: denom
-	        });
-
-	        if (denom > a_denom) {
-	          gdc = global_env.get('gdc')(denom, a_denom);
-	          a_num = a_num.mul(gdc);
-	        }
-
-	        if (denom > b_denom) {
-	          gdc = global_env.get('gdc')(denom, b_denom);
-	          b_num = b_num.mul(gdc);
-	        }
+	        num = b_denom.mul(a_num).add(b_num.mul(a_denom));
+	        denom = a_denom.mul(b_denom);
 	      } else {
+	        num = a_num.add(b_num);
 	        denom = a_denom;
 	      }
 
-	      var num = a_num.add(b_num);
 	      return LRational({
 	        num: num,
 	        denom: denom
@@ -3778,7 +3738,21 @@
 	      return LBigInteger(this.value.clone()[op](n), false);
 	    }
 
-	    return LBigInteger(LNumber._ops[op](this.value, n.value), true);
+	    if (n instanceof LRational) {
+	      return LRational({
+	        num: this,
+	        denom: 1
+	      }, true)[rev_mapping[op]](n);
+	    }
+
+	    if (op === '/') {
+	      return LRational({
+	        num: this,
+	        denom: n
+	      });
+	    }
+
+	    return LBigInteger(LNumber._ops[op](this.value, n && n.value), true);
 	  };
 
 	  LBigInteger.prototype.sqrt = function () {
@@ -3865,7 +3839,7 @@
 	      if (this["float"] || LNumber.isFloat(this.value)) {
 	        return LNumber(Math[fn](this.value));
 	      } else {
-	        return LNumber(this.value);
+	        return LNumber(Math[fn](this.valueOf()));
 	      }
 	    };
 	  }); // -------------------------------------------------------------------------
@@ -3893,7 +3867,7 @@
 	    }
 
 	    if (this instanceof LFloat) {
-	      return LFloat(value);
+	      return LFloat(n.valueOf());
 	    }
 
 	    if (this instanceof LComplex) {
@@ -4035,7 +4009,10 @@
 	    'shl': '>>',
 	    'shr': '<<'
 	  };
+	  var rev_mapping = {};
 	  Object.keys(mapping).forEach(function (key) {
+	    rev_mapping[mapping[key]] = key;
+
 	    LNumber.prototype[key] = function (n) {
 	      return this.op(mapping[key], n);
 	    };
@@ -4049,6 +4026,10 @@
 	      return a + b;
 	    },
 	    '-': function _(a, b) {
+	      if (typeof b === 'undefined') {
+	        return -a;
+	      }
+
 	      return a - b;
 	    },
 	    '/': function _(a, b) {
@@ -4075,7 +4056,7 @@
 	  }; // -------------------------------------------------------------------------
 
 	  LNumber.prototype.op = function (op, n) {
-	    return LNumber(LNumber._ops[op](this.valueOf(), n.valueOf()));
+	    return LNumber(LNumber._ops[op](this.valueOf(), n && n.valueOf()));
 	  }; // -------------------------------------------------------------------------
 
 
@@ -4148,9 +4129,6 @@
 
 	  LNumber.prototype.cmp = function (n) {
 	    n = this.coerce(n);
-	    console.log({
-	      n: n
-	    });
 
 	    if (LNumber.isNative(this.value)) {
 	      if (this.value < n.value) {
@@ -4364,7 +4342,7 @@
 	        // bind only functions that are not binded for case:
 	        // (let ((x Object)) (. x 'keys))
 	        // second x access is already bound when accessing Object
-	        if (isBoundFunction(value) || weak) {
+	        if (isBoundFunction(value) || weak && !isNativeFunction(value)) {
 	          return weakBind(value, context);
 	        }
 
@@ -6208,7 +6186,7 @@
 	        x += y;
 	      }
 
-	      return x;
+	      return LNumber(x);
 	    }, "(gdc n1 n2 ...)\n\n            Function return the greatest common divisor of their arguments."),
 	    // ------------------------------------------------------------------
 	    'lcm': doc(function () {
@@ -6228,7 +6206,7 @@
 	        a = abs(c * (i < 0 || arguments.length <= i ? undefined$1 : arguments[i])) / (a + b);
 	      }
 
-	      return a;
+	      return LNumber(a);
 	    }, "(lcm n1 n2 ...)\n\n            Function return the least common multiple of their arguments."),
 	    // ------------------------------------------------------------------
 	    odd: doc(singleMathOp(function (num) {
@@ -7224,7 +7202,8 @@
 	    LFloat: LFloat,
 	    LComplex: LComplex,
 	    LRational: LRational,
-	    LBigInteger: LBigInteger
+	    LBigInteger: LBigInteger,
+	    rationalize: rationalize
 	  }; // so it work when used with webpack where it will be not global
 
 	  global_env.set('lips', lips);

@@ -276,3 +276,18 @@
   (if x false true))
 
 (define print display)
+
+(define (inexact->exact number)
+  "(inexact->exact number)
+
+   Funcion convert real number to exact ratioanl number."
+  (typecheck "rationalize" number "number")
+  (--> (lips.LFloat number) (toRational 1e-20)))
+
+(define (rationalize number tolerance)
+  "(rationalize number tolerance)
+
+   Function returns simplest rational number differing from number by no more than the tolerance."
+  (typecheck "rationalize" number "number" 1)
+  (typecheck "rationalize" tolerance "number" 2)
+  (lips.rationalize number tolerance))

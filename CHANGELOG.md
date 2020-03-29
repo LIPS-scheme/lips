@@ -20,6 +20,7 @@
 * new Number types (complex and rational)
 * input/output ports + string ports
 * add `letrec` macro
+* `inexact->exact` and `rationalize` (thanks to Kawa/C-Gambit projects)
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
