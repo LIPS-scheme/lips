@@ -412,3 +412,19 @@
        (let ((,chars (list->vector (string->list ,object))))
           (set-obj! ,chars ,index ,char)
           (set! ,object (list->string (vector->list ,chars)))))))
+
+
+(define (string-length string)
+  "(string-length string)
+
+   Function return length of the string."
+  (typecheck "string-ref" string "string")
+  (. string 'length))
+
+(define (string-ref string k)
+  "(string-ref string k)
+
+   Function return character inside string at given zero-based index."
+  (typecheck "string-ref" string "string" 1)
+  (typecheck "string-ref" k "number" 2)
+  (lips.Character (. string k)))
