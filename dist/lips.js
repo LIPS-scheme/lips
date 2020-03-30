@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 30 Mar 2020 16:56:01 +0000
+ * build: Mon, 30 Mar 2020 18:55:41 +0000
  */
 (function () {
 	'use strict';
@@ -4714,7 +4714,7 @@
 	    if (symbol instanceof LSymbol) {
 	      {
 	        value = objectGet(this, symbol, {
-	          hrowError: false
+	          throwError: false
 	        });
 
 	        if (typeof value !== 'undefined') {
@@ -7424,7 +7424,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 30 Mar 2020 16:56:01 +0000',
+	    date: 'Mon, 30 Mar 2020 18:55:41 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -2947,7 +2947,7 @@ You can also use (help name) to display help for specic function or macro.
                 value = this.env[symbol.name];
                 defined = true;
             } else {
-                value = objectGet(this, symbol, { hrowError: false });
+                value = objectGet(this, symbol, { throwError: false });
                 if (typeof value !== 'undefined') {
                     defined = true;
                 }
