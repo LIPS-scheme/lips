@@ -19,7 +19,7 @@ it have few extensions that make working with JavaScript easier in Scheme.
 * Library agnostic - you can use it with any library,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
-* Built in help system like in Emacs Lisp,
+* Builtin help system like in Emacs Lisp,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
 * Functions code introspection/manipulation at runtime give more power to the programmer,

@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&31fafd32048fd153fa3631c86bd6ff0a4c49ee7d)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&236277ebfa805731f80f64fcebeb08eb)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&148311e0b8a6a97d66d25d3870902660da26d5cb)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&08cabde731c6a62d43000a30e3f541f4)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 LIPS Scheme (lisp dialect) implementation written in JavaScript,
@@ -19,7 +19,7 @@ it have few extensions that make working with JavaScript easier in Scheme.
 * Library agnostic - you can use it with any library,
 * Easy extension using JavaScript using Macros or functions,
 * RegExp-es are first class objects,
-* Built in help system like in Emacs Lisp,
+* Builtin help system like in Emacs Lisp,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
 * Functions code introspection/manipulation at runtime give more power to the programmer,
