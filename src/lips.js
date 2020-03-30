@@ -1582,9 +1582,7 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     function unbind(obj) {
         if (typeof obj === 'function') {
-            if (obj.__bind) {
-                return obj.__bind.fn;
-            } else if (obj[__fn__]) {
+            if (obj[__fn__]) {
                 return obj[__fn__];
             }
         }
@@ -1624,13 +1622,6 @@ You can also use (help name) to display help for specic function or macro.
             hiddenProp(bound, '__native__', true);
         }
         return bound;
-    }
-    // ----------------------------------------------------------------------
-    function isBoundFunction(obj) {
-        if (typeof obj === 'function') {
-            obj.__bound__ = false;
-            return obj.__bound__ === true;
-        }
     }
     // ----------------------------------------------------------------------
     function setFnLength(fn, length) {
@@ -1857,8 +1848,8 @@ You can also use (help name) to display help for specic function or macro.
                                           (throw "Invalid Invocation"))`))[0];
     // -------------------------------------------------------------------------------
     var get = doc(function get(obj, ...args) {
-        if (typeof obj === 'function' && obj.__bind) {
-            obj = obj.__bind.fn;
+        if (typeof obj === 'function') {
+            obj = unbind(obj);
         }
         for (let arg of args) {
             var name = arg instanceof LSymbol ? arg.name : arg;
@@ -2858,7 +2849,7 @@ You can also use (help name) to display help for specic function or macro.
     // :: coma separated names
     // -------------------------------------------------------------------------
     function objectGet(object, key, options = {}) {
-        var { weak, throwError = true } = options;
+        const { throwError = true } = options;
         if (key instanceof LSymbol) {
             key = key.name;
         }
@@ -2901,9 +2892,6 @@ You can also use (help name) to display help for specic function or macro.
                         }
                         return undef;
                     }
-                    // weak bind is only for env functions that require
-                    // to change context in evaluate
-                    weak = false;
                     parts = parts.slice(1);
                     object = value;
                 }
@@ -2951,7 +2939,7 @@ You can also use (help name) to display help for specic function or macro.
     Environment.prototype.get = function(symbol, options = {}) {
         // we keep original environment as context for bind
         // so print will get user stdout
-        const { weak, throwError = true } = options;
+        const { throwError = true } = options;
         var value;
         var defined = false;
         if (symbol instanceof LSymbol) {
@@ -2959,13 +2947,13 @@ You can also use (help name) to display help for specic function or macro.
                 value = this.env[symbol.name];
                 defined = true;
             } else {
-                value = objectGet(this, symbol, { weak, throwError: false });
+                value = objectGet(this, symbol, { hrowError: false });
                 if (typeof value !== 'undefined') {
                     defined = true;
                 }
             }
         } else if (typeof symbol === 'string') {
-            value = objectGet(this, symbol, { weak, throwError: false });
+            value = objectGet(this, symbol, { throwError: false });
             if (typeof value !== 'undefined') {
                 defined = true;
             }
@@ -5274,7 +5262,7 @@ You can also use (help name) to display help for specic function or macro.
                 return emptyList();
             }
             if (code instanceof LSymbol) {
-                return env.get(code, { weak: true });
+                return env.get(code);
             }
             var first = code.car;
             var rest = code.cdr;
@@ -5293,7 +5281,7 @@ You can also use (help name) to display help for specic function or macro.
                 }
             }
             if (first instanceof LSymbol) {
-                value = env.get(first, { weak: true });
+                value = env.get(first);
                 if (value instanceof Macro) {
                     //var scope = env.inherit('__frame__');
                     var ret = evaluateMacro(value, rest, eval_args);
@@ -5320,7 +5308,7 @@ You can also use (help name) to display help for specic function or macro.
                     if (value.__lambda__) {
                         // lambda need environment as context
                         // normal functions are bound to their contexts
-                        value = unbind(value);;
+                        value = unbind(value);
                     }
                     var _args = args.slice();
                     var scope = (dynamic_scope || env).newFrame(value, _args);
@@ -5467,7 +5455,8 @@ You can also use (help name) to display help for specic function or macro.
                             });
                         }
                     } else if (type && type.match(/lips|lisp/)) {
-                        console.warn('Expecting ' + lips_mimes.join(' or ') + ' found ' + type);
+                        console.warn('Expecting ' + lips_mimes.join(' or ') +
+                                     ' found ' + type);
                     }
                     return loop();
                 }

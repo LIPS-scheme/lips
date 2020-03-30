@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 30 Mar 2020 16:36:35 +0000
+ * build: Mon, 30 Mar 2020 16:56:01 +0000
  */
 (function () {
 	'use strict';
@@ -2943,9 +2943,7 @@
 
 	  function unbind(obj) {
 	    if (typeof obj === 'function') {
-	      if (obj.__bind) {
-	        return obj.__bind.fn;
-	      } else if (obj[__fn__]) {
+	      if (obj[__fn__]) {
 	        return obj[__fn__];
 	      }
 	    }
@@ -3304,8 +3302,8 @@
 	  var native_lambda = parse(tokenize("(lambda ()\n                                          \"[native code]\"\n                                          (throw \"Invalid Invocation\"))"))[0]; // -------------------------------------------------------------------------------
 
 	  var get = doc(function get(obj) {
-	    if (typeof obj === 'function' && obj.__bind) {
-	      obj = obj.__bind.fn;
+	    if (typeof obj === 'function') {
+	      obj = unbind(obj);
 	    }
 
 	    for (var _len10 = arguments.length, args = new Array(_len10 > 1 ? _len10 - 1 : 0), _key10 = 1; _key10 < _len10; _key10++) {
@@ -4591,8 +4589,7 @@
 
 	  function objectGet(object, key) {
 	    var options = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {};
-	    var weak = options.weak,
-	        _options$throwError = options.throwError,
+	    var _options$throwError = options.throwError,
 	        throwError = _options$throwError === void 0 ? true : _options$throwError;
 
 	    if (key instanceof LSymbol) {
@@ -4647,11 +4644,8 @@
 	            }
 
 	            return undef;
-	          } // weak bind is only for env functions that require
-	          // to change context in evaluate
+	          }
 
-
-	          weak = false;
 	          parts = parts.slice(1);
 	          object = value;
 	        }
@@ -4712,8 +4706,7 @@
 	    var options = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
 	    // we keep original environment as context for bind
 	    // so print will get user stdout
-	    var weak = options.weak,
-	        _options$throwError2 = options.throwError,
+	    var _options$throwError2 = options.throwError,
 	        throwError = _options$throwError2 === void 0 ? true : _options$throwError2;
 	    var value;
 	    var defined = false;
@@ -4721,8 +4714,7 @@
 	    if (symbol instanceof LSymbol) {
 	      {
 	        value = objectGet(this, symbol, {
-	          weak: weak,
-	          throwError: false
+	          hrowError: false
 	        });
 
 	        if (typeof value !== 'undefined') {
@@ -4731,7 +4723,6 @@
 	      }
 	    } else if (typeof symbol === 'string') {
 	      value = objectGet(this, symbol, {
-	        weak: weak,
 	        throwError: false
 	      });
 
@@ -7142,9 +7133,7 @@
 	      }
 
 	      if (code instanceof LSymbol) {
-	        return env.get(code, {
-	          weak: true
-	        });
+	        return env.get(code);
 	      }
 
 	      var first = code.car;
@@ -7163,9 +7152,7 @@
 	      }
 
 	      if (first instanceof LSymbol) {
-	        value = env.get(first, {
-	          weak: true
-	        });
+	        value = env.get(first);
 
 	        if (value instanceof Macro) {
 	          //var scope = env.inherit('__frame__');
@@ -7197,7 +7184,6 @@
 	            // lambda need environment as context
 	            // normal functions are bound to their contexts
 	            value = unbind(value);
-	            ;
 	          }
 
 	          var _args = args.slice();
@@ -7438,7 +7424,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 30 Mar 2020 16:36:35 +0000',
+	    date: 'Mon, 30 Mar 2020 16:56:01 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
