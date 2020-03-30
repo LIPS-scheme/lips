@@ -184,7 +184,10 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     function parseRational(arg) {
         var parts = arg.split('/');
-        return { num: parseInt(parts[0], 10), denom: parseInt(parts[1], 10) };
+        return LRational({
+            num: parseInt(parts[0], 10),
+            denom: parseInt(parts[1], 10)
+        });
     }
     // ----------------------------------------------------------------------
     function parseInteger(arg) {
@@ -205,11 +208,11 @@ You can also use (help name) to display help for specic function or macro.
         } else {
             radix = 10;
         }
-        return parseInt(m[2], radix);
+        return LNumber(parseInt(m[2], radix));
     }
     // ----------------------------------------------------------------------
     function parseCharacter(arg) {
-        var m = arg.match(/#\\(.+)$/);
+        var m = arg.match(/#\\(.*)$/);
         if (m) {
             return Character(m[1]);
         }
@@ -228,37 +231,28 @@ You can also use (help name) to display help for specic function or macro.
             re = LFloat(parts[1] ? parseFloat(parts[1]) : 0);
             im = LFloat(parseFloat(parts[2]));
         }
-        return { im, re };
+        return LComplex({ im, re });
     }
     // ----------------------------------------------------------------------
-    function parse_argument(arg) {
-        function parse_string(string) {
-            return LString(JSON.parse(string.replace(/\n/g, '\\n')));
-            // remove quotes if before are even number of slashes
-            // we don't remove slases becuase they are handled by JSON.parse
-            //string = string.replace(/([^\\])['"]$/, '$1');
-            if (string.match(/^"/)) {
-                if (string === '""') {
-                    return LString('');
-                }
-                var re = new RegExp("((^|[^\\\\])(?:\\\\\\\\)*)" + '"', "g");
-                string = string.replace(re, "$1");
-            }
-            // use build in function to parse rest of escaped characters
-        }
+    function parseString(string) {
+        // in LIPS strings can be multiline
+        return LString(JSON.parse(string.replace(/\n/g, '\\n')));
+    }
+    // ----------------------------------------------------------------------
+    function parseArgument(arg) {
         var regex = arg.match(re_re);
         if (regex) {
             return new RegExp(regex[1], regex[2]);
         } else if (arg.match(/^"/)) {
-            return parse_string(arg);
+            return parseString(arg);
         } else if (arg.match(char_re)) {
             return parseCharacter(arg);
         } else if (arg.match(rational_re)) {
-            return LRational(parseRational(arg));
+            return parseRational(arg);
         } else if (arg.match(complex_re)) {
-            return LComplex(parseComplex(arg));
+            return parseComplex(arg);
         } else if (arg.match(int_re)) {
-            return LNumber(parseInteger(arg));
+            return parseInteger(arg);
         } else if (arg.match(float_re)) {
             return LFloat(parseFloat(arg));
         } else if (arg === 'nil') {
@@ -272,7 +266,7 @@ You can also use (help name) to display help for specic function or macro.
         }
     }
     // ----------------------------------------------------------------------
-    function is_symbol_string(str) {
+    function isSymbolString(str) {
         return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/['"]/) ||
                  str.match(int_re) || str.match(float_re) ||
                  ['nil', 'true', 'false'].includes(str));
@@ -498,7 +492,7 @@ You can also use (help name) to display help for specic function or macro.
                     }
                 } else {
                     first_value = false;
-                    var value = parse_argument(token);
+                    var value = parseArgument(token);
                     if (special) {
                         // special without list like ,foo
                         while (special_count--) {
@@ -666,7 +660,7 @@ You can also use (help name) to display help for specic function or macro.
                     pattern[p + 1] === input[i];
             }
             function not_symbol_match() {
-                return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
+                return pattern[p] === Symbol.for('symbol') && !isSymbolString(input[i]);
             }
             var p = 0;
             var glob = {};
@@ -1579,45 +1573,6 @@ You can also use (help name) to display help for specic function or macro.
     }
     // ----------------------------------------------------------------------
     // :: Function utilities
-    // ----------------------------------------------------------------------
-    // :: weak version fn.bind as function - it can be rebinded and
-    // :: and applied with different context after bind
-    // ----------------------------------------------------------------------
-    function weakBind(fn, context, ...args) {
-        if (fn[Symbol.for('__bound__')]) {
-            return fn;
-        }
-        let binded = function(...moreArgs) {
-            const args = [...binded.__bind.args, ...moreArgs];
-            return binded.__bind.fn.apply(context, args);
-        };
-        hiddenProp(binded, 'name', fn.name);
-        hiddenProp(binded, '__bound__', true);
-        hiddenProp(binded, '__fn__', fn);
-        if (fn.__doc__) {
-            binded.__doc__ = fn.__doc__;
-        }
-        if (fn.__code__) {
-            binded.__code__ = fn.__code__;
-        }
-        binded.__bind = {
-            args: fn.__bind ? fn.__bind.args.concat(args) : args,
-            fn: fn.__bind ? fn.__bind.fn : fn
-        };
-        binded.toString = function() {
-            return binded.__bind.fn.toString();
-        };
-        binded.apply = function(context, args) {
-            return binded.__bind.fn.apply(context, args);
-        };
-        binded.call = function(context, ...args) {
-            return binded.__bind.fn.call(context, ...args);
-        };
-        binded.bind = function(context, ...moreArgs) {
-            return weakBind(binded, context, ...moreArgs);
-        };
-        return setFnLength(binded, binded.__bind.fn.length);
-    }
     // ----------------------------------------------------------------------
     // function get original function that was weak or binded with props
     // TODO: consider to use only one type of biding
@@ -2905,16 +2860,8 @@ You can also use (help name) to display help for specic function or macro.
                 return quote(value);
             }
             if (typeof value === 'function') {
-                // bind only functions that are not binded for case:
-                // (let ((x Object)) (. x 'keys))
-                // second x access is already bound when accessing Object
-                if (isBoundFunction(value) || weak &&
-                    !isNativeFunction(value)) {
-                    //return weakBind(value, context);
-                }
-                // real bind to not loose the context on functions
-                // props (static values) need to be added to binded function
-                // that is different object
+                // original function can be restored using unbind function
+                // only real JS function require to be bound
                 return bindWithProps(value, context);
             }
             return value;
