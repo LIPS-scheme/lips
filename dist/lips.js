@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 29 Mar 2020 22:32:06 +0000
+ * build: Sun, 29 Mar 2020 23:14:46 +0000
  */
 (function () {
 	'use strict';
@@ -1237,21 +1237,8 @@
 
 	  function parse_argument(arg) {
 	    function parse_string(string) {
-	      // remove quotes if before are even number of slashes
-	      // we don't remove slases becuase they are handled by JSON.parse
-	      //string = string.replace(/([^\\])['"]$/, '$1');
-	      if (string.match(/^"/)) {
-	        if (string === '""') {
-	          return '';
-	        }
+	      return LString(JSON.parse(string.replace(/\n/g, '\\n'))); // remove quotes if before are even number of slashes
 
-	        var quote = string[0];
-	        var re = new RegExp("((^|[^\\\\])(?:\\\\\\\\)*)" + quote, "g");
-	        string = string.replace(re, "$1");
-	      } // use build in function to parse rest of escaped characters
-
-
-	      return JSON.parse('"' + string.replace(/\n/g, '\\n') + '"');
 	    }
 
 	    var regex = arg.match(re_re);
@@ -2487,8 +2474,8 @@
 	  function toString(value) {
 	    if (typeof value === 'function') {
 	      return '<#function ' + (value.name || 'anonymous') + '>';
-	    } else if (typeof value === 'string') {
-	      return JSON.stringify(value).replace(/\\n/g, '\n');
+	    } else if (typeof value === 'string' || value instanceof LString) {
+	      return JSON.stringify(value.valueOf()).replace(/\\n/g, '\n');
 	    } else if (isPromise(value)) {
 	      return '<#Promise>';
 	    } else if (value instanceof LSymbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value instanceof Character || value === nil) {
@@ -6903,11 +6890,17 @@
 	    var arg_type = type(arg).toLowerCase();
 	    var match = false;
 
-	    if (expected instanceof Array && expected.includes(arg_type)) {
-	      match = true;
+	    if (expected instanceof Array) {
+	      expected = expected.map(function (x) {
+	        return x.valueOf();
+	      });
+
+	      if (expected.includes(arg_type)) {
+	        match = true;
+	      }
 	    }
 
-	    if (!match && arg_type !== expected) {
+	    if (!match && arg_type !== expected.valueOf()) {
 	      throw new Error(typeErrorMessage(fn, arg_type, expected, position));
 	    }
 	  } // -------------------------------------------------------------------------
@@ -6925,6 +6918,7 @@
 	      'Pair': Pair,
 	      'Symbol': LSymbol,
 	      'Macro': Macro,
+	      'String': LString,
 	      'Array': Array,
 	      'NativeSymbol': Symbol
 	    };
@@ -7487,7 +7481,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 29 Mar 2020 22:32:06 +0000',
+	    date: 'Sun, 29 Mar 2020 23:14:46 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

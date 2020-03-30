@@ -233,19 +233,18 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     function parse_argument(arg) {
         function parse_string(string) {
+            return LString(JSON.parse(string.replace(/\n/g, '\\n')));
             // remove quotes if before are even number of slashes
             // we don't remove slases becuase they are handled by JSON.parse
             //string = string.replace(/([^\\])['"]$/, '$1');
             if (string.match(/^"/)) {
                 if (string === '""') {
-                    return '';
+                    return LString('');
                 }
-                var quote = string[0];
-                var re = new RegExp("((^|[^\\\\])(?:\\\\\\\\)*)" + quote, "g");
+                var re = new RegExp("((^|[^\\\\])(?:\\\\\\\\)*)" + '"', "g");
                 string = string.replace(re, "$1");
             }
             // use build in function to parse rest of escaped characters
-            return JSON.parse('"' + string.replace(/\n/g, '\\n') + '"');
         }
         var regex = arg.match(re_re);
         if (regex) {
@@ -1281,8 +1280,8 @@ You can also use (help name) to display help for specic function or macro.
     function toString(value) {
         if (typeof value === 'function') {
             return '<#function ' + (value.name || 'anonymous') + '>';
-        } else if (typeof value === 'string') {
-            return JSON.stringify(value).replace(/\\n/g, '\n');
+        } else if (typeof value === 'string' || value instanceof LString) {
+            return JSON.stringify(value.valueOf()).replace(/\\n/g, '\n');
         } else if (isPromise(value)) {
             return '<#Promise>';
         } else if (value instanceof LSymbol ||
@@ -2865,6 +2864,30 @@ You can also use (help name) to display help for specic function or macro.
         return new Environment(obj || {}, this, name);
     };
     // -------------------------------------------------------------------------
+    // :: function create frame environment for usage in functions
+    // -------------------------------------------------------------------------
+    Environment.prototype.newFrame = function(fn, args) {
+        var scope = this.inherit('__frame__');
+        scope.set('parent.frame', function(n = 1) {
+            if (n === 0) {
+                return scope;
+            }
+            if (!(scope.parent instanceof Environment)) {
+                return nil;
+            }
+            var parent_frame = scope.parent.get('parent.frame', {
+                throwError: false
+            });
+            if (typeof parent_frame === 'function') {
+                return parent_frame(n - 1);
+            }
+            return nil;
+        });
+        args.callee = fn;
+        scope.set('arguments', args);
+        return scope;
+    };
+    // -------------------------------------------------------------------------
     // :: get nested key from object (key is symbol or string with
     // :: coma separated names
     // -------------------------------------------------------------------------
@@ -2887,7 +2910,7 @@ You can also use (help name) to display help for specic function or macro.
                 // second x access is already bound when accessing Object
                 if (isBoundFunction(value) || weak &&
                     !isNativeFunction(value)) {
-                    return weakBind(value, context);
+                    //return weakBind(value, context);
                 }
                 // real bind to not loose the context on functions
                 // props (static values) need to be added to binded function
@@ -3745,6 +3768,7 @@ You can also use (help name) to display help for specic function or macro.
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
             lambda.__code__ = new Pair(new LSymbol('lambda'), code);
+            lambda.__lambda__ = true;
             if (!(code.car instanceof Pair)) {
                 return doc(lambda, __doc__, true); // variable arguments
             }
@@ -4429,8 +4453,8 @@ You can also use (help name) to display help for specic function or macro.
              Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
         apply: doc(function(fn, list) {
-            typecheck('call', fn, 'function', 1);
-            typecheck('call', list, 'pair', 2);
+            typecheck('apply', fn, 'function', 1);
+            typecheck('apply', list, 'pair', 2);
             return fn(...this.get('list->array')(list));
         }, `(apply fn list)
 
@@ -4558,9 +4582,14 @@ You can also use (help name) to display help for specic function or macro.
                 return emptyList();
             }
             var args = lists.map(l => l.car);
-            var env = this;
-            args.callee = fn;
-            env.set('arguments', args);
+            var env = this.newFrame(fn, args);
+            var parentFrame = env.get('parent.frame', { throwError: false });
+            if (typeof parentFrame === 'undefined') {
+                parentFrame = function() {
+                    return nil;
+                };
+            }
+            env.set('parent.frame', parentFrame);
             return unpromise(fn.call(env, ...args), (head) => {
                 return unpromise(map.call(this, fn, ...lists.map(l => l.cdr)), (rest) => {
                     return new Pair(head, rest);
@@ -5122,10 +5151,13 @@ You can also use (help name) to display help for specic function or macro.
     function typecheck(fn, arg, expected, position = null) {
         const arg_type = type(arg).toLowerCase();
         var match = false;
-        if (expected instanceof Array && expected.includes(arg_type)) {
-            match = true;
+        if (expected instanceof Array) {
+            expected = expected.map(x => x.valueOf());
+            if (expected.includes(arg_type)) {
+                match = true;
+            }
         }
-        if (!match && arg_type !== expected) {
+        if (!match && arg_type !== expected.valueOf()) {
             throw new Error(typeErrorMessage(fn, arg_type, expected, position));
         }
     }
@@ -5143,6 +5175,7 @@ You can also use (help name) to display help for specic function or macro.
             'Pair': Pair,
             'Symbol': LSymbol,
             'Macro': Macro,
+            'String': LString,
             'Array': Array,
             'NativeSymbol': Symbol
         };
@@ -5324,25 +5357,13 @@ You can also use (help name) to display help for specic function or macro.
             if (typeof value === 'function') {
                 var args = getFunctionArgs(rest, eval_args);
                 return unpromise(args, function(args) {
-                    var scope = (dynamic_scope || env).inherit('__frame__');
-                    scope.set('parent.frame', function(n = 1) {
-                        if (n === 0) {
-                            return scope;
-                        }
-                        if (!(scope.parent instanceof Environment)) {
-                            return nil;
-                        }
-                        var parent_frame = scope.parent.get('parent.frame', {
-                            throwError: false
-                        });
-                        if (typeof parent_frame === 'function') {
-                            return parent_frame(n - 1);
-                        }
-                        return nil;
-                    });
+                    if (value.__lambda__) {
+                        // lambda need environment as context
+                        // normal functions are bound to their contexts
+                        value = unbind(value);;
+                    }
                     var _args = args.slice();
-                    _args.callee = value;
-                    scope.set('arguments', _args);
+                    var scope = (dynamic_scope || env).newFrame(value, _args);
                     var result = resolvePromises(value.apply(scope, args));
                     return unpromise(result, (result) => {
                         if (result instanceof Pair) {
