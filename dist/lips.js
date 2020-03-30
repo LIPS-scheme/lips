@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 30 Mar 2020 10:40:34 +0000
+ * build: Mon, 30 Mar 2020 16:36:35 +0000
  */
 (function () {
 	'use strict';
@@ -3554,7 +3554,8 @@
 	  } // -------------------------------------------------------------------------
 
 
-	  LComplex.prototype = Object.create(LNumber.prototype); // -------------------------------------------------------------------------
+	  LComplex.prototype = Object.create(LNumber.prototype);
+	  LComplex.prototype.constructor = LComplex; // -------------------------------------------------------------------------
 
 	  LComplex.prototype.add = function (n) {
 	    return this.op(n, function (a_re, b_re, a_im, b_im) {
@@ -3680,6 +3681,7 @@
 	  }
 
 	  LFloat.prototype = Object.create(LNumber.prototype);
+	  LFloat.prototype.constructor = LFloat;
 
 	  LFloat.prototype.toString = function () {
 	    if (this.value % 2 === 0) {
@@ -3788,6 +3790,7 @@
 	  }
 
 	  LRational.prototype = Object.create(LNumber.prototype);
+	  LRational.prototype.constructor = LRational;
 
 	  LRational.prototype.pow = function (n) {
 	    var cmp = n.cmp(0);
@@ -3956,7 +3959,8 @@
 	  } // -------------------------------------------------------------------------
 
 
-	  LBigInteger.prototype = Object.create(LNumber.prototype); // -------------------------------------------------------------------------
+	  LBigInteger.prototype = Object.create(LNumber.prototype);
+	  LBigInteger.prototype.constructor = LBigInteger; // -------------------------------------------------------------------------
 
 	  LBigInteger.prototype.op = function (op, n) {
 	    if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
@@ -4419,16 +4423,25 @@
 	    this._buffer = [];
 
 	    this.write = function (x) {
-	      _this._buffer.push(toString(x));
+	      if (!LString.isString(x)) {
+	        x = toString(x);
+	      } else {
+	        x = x.valueOf();
+	      }
+
+	      _this._buffer.push(x);
 	    };
 	  }
 
 	  OutputStringPort.prototype = Object.create(OutputPort.prototype);
 
 	  OutputStringPort.prototype.getString = function () {
-	    return this._buffer.join('');
-	  }; // -------------------------------------------------------------------------
+	    return this._buffer.map(function (x) {
+	      return x.valueOf();
+	    }).join('');
+	  };
 
+	  OutputStringPort.prototype.constructor = OutputStringPort; // -------------------------------------------------------------------------
 
 	  function InputStringPort(string) {
 	    var _this2 = this;
@@ -4448,6 +4461,7 @@
 	  }
 
 	  InputStringPort.prototype = Object.create(InputPort.prototype);
+	  InputStringPort.prototype.constructor = InputStringPort;
 
 	  InputStringPort.prototype.getNextTokens = function () {
 	    if (this.peekChar() === eof) {
@@ -4953,7 +4967,7 @@
 	        port = this.get('stdout');
 	      }
 
-	      port.write(this.get('repr')(arg, LString.isString(arg)));
+	      port.write(this.get('repr')(arg));
 	    }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
 	    // ------------------------------------------------------------------
 	    error: doc(function () {
@@ -6850,15 +6864,17 @@
 
 	    if (expected instanceof Array) {
 	      expected = expected.map(function (x) {
-	        return x.valueOf();
+	        return x.valueOf().toLowerCase();
 	      });
 
 	      if (expected.includes(arg_type)) {
 	        match = true;
 	      }
+	    } else {
+	      expected = expected.valueOf().toLowerCase();
 	    }
 
-	    if (!match && arg_type !== expected.valueOf()) {
+	    if (!match && arg_type !== expected) {
 	      throw new Error(typeErrorMessage(fn, arg_type, expected, position));
 	    }
 	  } // -------------------------------------------------------------------------
@@ -6873,20 +6889,20 @@
 
 	  function type(obj) {
 	    var mapping = {
-	      'Pair': Pair,
-	      'Symbol': LSymbol,
-	      'Macro': Macro,
-	      'String': LString,
-	      'Array': Array,
-	      'NativeSymbol': Symbol
+	      'pair': Pair,
+	      'symbol': LSymbol,
+	      'macro': Macro,
+	      'string': LString,
+	      'array': Array,
+	      'native-symbol': Symbol
 	    };
 
 	    if (obj === nil) {
-	      return 'Nil';
+	      return 'nil';
 	    }
 
 	    if (obj === null) {
-	      return 'Null';
+	      return 'null';
 	    }
 
 	    for (var _i3 = 0, _Object$entries = Object.entries(mapping); _i3 < _Object$entries.length; _i3++) {
@@ -6900,11 +6916,11 @@
 	    }
 
 	    if (obj instanceof LNumber) {
-	      return 'Number';
+	      return 'number';
 	    }
 
 	    if (obj instanceof RegExp) {
-	      return "Regex";
+	      return "regex";
 	    }
 
 	    if (_typeof_1(obj) === 'object') {
@@ -6912,7 +6928,7 @@
 	        obj.__instance__ = false;
 
 	        if (obj.__instance__) {
-	          return 'Instance';
+	          return 'instance';
 	        }
 	      }
 
@@ -7365,7 +7381,7 @@
 
 
 	  function init() {
-	    var lips_mime = 'text/x-lips';
+	    var lips_mimes = ['text/x-lips', 'text/x-scheme'];
 
 	    if (window.document) {
 	      var scripts = Array.from(document.querySelectorAll('script'));
@@ -7375,7 +7391,7 @@
 	        if (script) {
 	          var type = script.getAttribute('type');
 
-	          if (type === lips_mime) {
+	          if (lips_mimes.includes(type)) {
 	            var src = script.getAttribute('src');
 
 	            if (src) {
@@ -7392,7 +7408,7 @@
 	              });
 	            }
 	          } else if (type && type.match(/lips|lisp/)) {
-	            console.warn('Expecting ' + lips_mime + ' found ' + type);
+	            console.warn('Expecting ' + lips_mimes.join(' or ') + ' found ' + type);
 	          }
 
 	          return loop();
@@ -7409,20 +7425,20 @@
 	  // -------------------------------------------------------------------------
 
 
-	  Ahead.__className = 'Ahead';
-	  Pattern.__className = 'Pattern';
-	  Formatter.__className = 'Formatter';
-	  Macro.__className = 'Macro';
-	  Environment.__className = 'Environment';
-	  InputPort.__className = 'InputPort';
-	  OutputPort.__className = 'OutputPort';
-	  OutputStringPort.__className = 'OutputStringPort';
-	  InputStringPort.__className = 'InputStringPort'; // -------------------------------------------------------------------------
+	  Ahead.__className = 'ahead';
+	  Pattern.__className = 'pattern';
+	  Formatter.__className = 'formatter';
+	  Macro.__className = 'macro';
+	  Environment.__className = 'environment';
+	  InputPort.__className = 'input-port';
+	  OutputPort.__className = 'output-port';
+	  OutputStringPort.__className = 'output-string-port';
+	  InputStringPort.__className = 'input-string-port'; // -------------------------------------------------------------------------
 
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 30 Mar 2020 10:40:34 +0000',
+	    date: 'Mon, 30 Mar 2020 16:36:35 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

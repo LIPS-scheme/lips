@@ -2046,6 +2046,7 @@ You can also use (help name) to display help for specic function or macro.
     }
     // -------------------------------------------------------------------------
     LComplex.prototype = Object.create(LNumber.prototype);
+    LComplex.prototype.constructor = LComplex;
     // -------------------------------------------------------------------------
     LComplex.prototype.add = function(n) {
         return this.op(n, function(a_re, b_re, a_im, b_im) {
@@ -2143,6 +2144,7 @@ You can also use (help name) to display help for specic function or macro.
         }
     }
     LFloat.prototype = Object.create(LNumber.prototype);
+    LFloat.prototype.constructor = LFloat;
     LFloat.prototype.toString = function() {
         if (this.value % 2 === 0) {
             return this.value + '.0';
@@ -2224,6 +2226,7 @@ You can also use (help name) to display help for specic function or macro.
         this.type = 'rational';
     }
     LRational.prototype = Object.create(LNumber.prototype);
+    LRational.prototype.constructor = LRational;
     LRational.prototype.pow = function(n) {
         var cmp = n.cmp(0);
         if (cmp === 0) {
@@ -2342,6 +2345,7 @@ You can also use (help name) to display help for specic function or macro.
     }
     // -------------------------------------------------------------------------
     LBigInteger.prototype = Object.create(LNumber.prototype);
+    LBigInteger.prototype.constructor = LBigInteger;
     // -------------------------------------------------------------------------
     LBigInteger.prototype.op = function(op, n) {
         if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
@@ -2725,13 +2729,19 @@ You can also use (help name) to display help for specic function or macro.
         typecheck('OutputStringPort', toString, 'function');
         this._buffer = [];
         this.write = (x) => {
-            this._buffer.push(toString(x));
+            if (!LString.isString(x)) {
+                x = toString(x);
+            } else {
+                x = x.valueOf();
+            }
+            this._buffer.push(x);
         };
     }
     OutputStringPort.prototype = Object.create(OutputPort.prototype);
     OutputStringPort.prototype.getString = function() {
-        return this._buffer.join('');
+        return this._buffer.map(x => x.valueOf()).join('');
     };
+    OutputStringPort.prototype.constructor = OutputStringPort;
     // -------------------------------------------------------------------------
     function InputStringPort(string) {
         if (typeof this !== 'undefined' && !(this instanceof InputStringPort) ||
@@ -2747,6 +2757,7 @@ You can also use (help name) to display help for specic function or macro.
         };
     }
     InputStringPort.prototype = Object.create(InputPort.prototype);
+    InputStringPort.prototype.constructor = InputStringPort;
     InputStringPort.prototype.getNextTokens = function() {
         if (this.peekChar() === eof) {
             return eof;
@@ -3188,7 +3199,7 @@ You can also use (help name) to display help for specic function or macro.
             if (port === null) {
                 port = this.get('stdout');
             }
-            port.write(this.get('repr')(arg, LString.isString(arg)));
+            port.write(this.get('repr')(arg));
         }, `(display arg [port])
 
             Function send string to standard output or provied port.`),
@@ -5099,12 +5110,14 @@ You can also use (help name) to display help for specic function or macro.
         const arg_type = type(arg).toLowerCase();
         var match = false;
         if (expected instanceof Array) {
-            expected = expected.map(x => x.valueOf());
+            expected = expected.map(x => x.valueOf().toLowerCase());
             if (expected.includes(arg_type)) {
                 match = true;
             }
+        } else {
+            expected = expected.valueOf().toLowerCase();
         }
-        if (!match && arg_type !== expected.valueOf()) {
+        if (!match && arg_type !== expected) {
             throw new Error(typeErrorMessage(fn, arg_type, expected, position));
         }
     }
@@ -5119,18 +5132,18 @@ You can also use (help name) to display help for specic function or macro.
     // -------------------------------------------------------------------------
     function type(obj) {
         var mapping = {
-            'Pair': Pair,
-            'Symbol': LSymbol,
-            'Macro': Macro,
-            'String': LString,
-            'Array': Array,
-            'NativeSymbol': Symbol
+            'pair': Pair,
+            'symbol': LSymbol,
+            'macro': Macro,
+            'string': LString,
+            'array': Array,
+            'native-symbol': Symbol
         };
         if (obj === nil) {
-            return 'Nil';
+            return 'nil';
         }
         if (obj === null) {
-            return 'Null';
+            return 'null';
         }
         for (let [key, value] of Object.entries(mapping)) {
             if (obj instanceof value) {
@@ -5138,16 +5151,16 @@ You can also use (help name) to display help for specic function or macro.
             }
         }
         if (obj instanceof LNumber) {
-            return 'Number';
+            return 'number';
         }
         if (obj instanceof RegExp) {
-            return "Regex";
+            return "regex";
         }
         if (typeof obj === 'object') {
             if (obj.__instance__) {
                 obj.__instance__ = false;
                 if (obj.__instance__) {
-                    return 'Instance';
+                    return 'instance';
                 }
             }
             if (obj.constructor.__className) {
@@ -5432,14 +5445,14 @@ You can also use (help name) to display help for specic function or macro.
     }
     // -------------------------------------------------------------------------
     function init() {
-        var lips_mime = 'text/x-lips';
+        var lips_mimes = ['text/x-lips', 'text/x-scheme'];
         if (window.document) {
             var scripts = Array.from(document.querySelectorAll('script'));
             return (function loop() {
                 var script = scripts.shift();
                 if (script) {
                     var type = script.getAttribute('type');
-                    if (type === lips_mime) {
+                    if (lips_mimes.includes(type)) {
                         var src = script.getAttribute('src');
                         if (src) {
                             return root.fetch(src).then(res => res.text())
@@ -5454,7 +5467,7 @@ You can also use (help name) to display help for specic function or macro.
                             });
                         }
                     } else if (type && type.match(/lips|lisp/)) {
-                        console.warn('Expecting ' + lips_mime + ' found ' + type);
+                        console.warn('Expecting ' + lips_mimes.join(' or ') + ' found ' + type);
                     }
                     return loop();
                 }
@@ -5468,15 +5481,15 @@ You can also use (help name) to display help for specic function or macro.
     // -------------------------------------------------------------------------
     // to be used with string function when code is minified
     // -------------------------------------------------------------------------
-    Ahead.__className = 'Ahead';
-    Pattern.__className = 'Pattern';
-    Formatter.__className = 'Formatter';
-    Macro.__className = 'Macro';
-    Environment.__className = 'Environment';
-    InputPort.__className = 'InputPort';
-    OutputPort.__className = 'OutputPort';
-    OutputStringPort.__className = 'OutputStringPort';
-    InputStringPort.__className = 'InputStringPort';
+    Ahead.__className = 'ahead';
+    Pattern.__className = 'pattern';
+    Formatter.__className = 'formatter';
+    Macro.__className = 'macro';
+    Environment.__className = 'environment';
+    InputPort.__className = 'input-port';
+    OutputPort.__className = 'output-port';
+    OutputStringPort.__className = 'output-string-port';
+    InputStringPort.__className = 'input-string-port';
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',
