@@ -10,6 +10,7 @@ var {
     Environment,
     global_environment,
     LNumber,
+    LString,
     LFloat,
     quote
 } = lips;
@@ -160,7 +161,7 @@ describe('parser', function() {
                 new Pair(
                     /( \/)/g,
                     new Pair(
-                        'bar baz',
+                        LString('bar baz'),
                         new Pair(
                             LNumber(10),
                             new Pair(
@@ -319,7 +320,7 @@ describe('evaluate', function() {
         fun: function(a, b) {
             if (LNumber.isNumber(a)) {
                 return LNumber(a).add(b);
-            } else if (typeof a === 'string') {
+            } else if (LString.isString(a)) {
                 return a + b;
             }
         },
@@ -330,11 +331,11 @@ describe('evaluate', function() {
     });
     it('should call function', function() {
         expect(exec('(fun 1 2)', env)).toEqual(LNumber(3));
-        expect(exec('(fun "foo" "bar")', env)).toEqual("foobar");
+        expect(exec('(fun "foo" "bar")', env)).toEqual(LString("foobar"));
     });
     it('should set environment', function() {
         exec('(define x "foobar")', env);
-        expect(exec('x', env)).toEqual("foobar");
+        expect(exec('x', env)).toEqual(LString("foobar"));
         expect(exec('x')).toEqual(undefined);
     });
     it('should create list', function() {
@@ -465,7 +466,7 @@ describe('evaluate', function() {
                         new Pair(
                             new Pair(
                                 new LSymbol('baz'),
-                                "string"
+                                LString("string")
                             ),
                             new Pair(
                                 new Pair(
@@ -523,21 +524,21 @@ describe('evaluate', function() {
                 .toEqual(
                     quote(new Pair(
                         new Pair(LNumber(1), LNumber(1)),
-                        new Pair(new Pair(LNumber(2), "foo"), nil)))
+                        new Pair(new Pair(LNumber(2), LString("foo")), nil)))
                 );
             expect(await exec(`\`((,(car (list "foo")) . ,(car (list 1 2)))
                             (2 . ,(cadr (list 1 "foo"))))`))
                 .toEqual(quote(new Pair(
-                    new Pair("foo", LNumber(1)),
+                    new Pair(LString("foo"), LNumber(1)),
                     new Pair(
-                        new Pair(LNumber(2), "foo"),
+                        new Pair(LNumber(2), LString("foo")),
                         nil
                     ))));
         });
         it('should process nested backquote', async function() {
             expect(await exec('`(1 2 3 ,(cadr `(1 ,(concat "foo" "bar") 3)) 4)')).toEqual(
                 quote(Pair.fromArray([
-                    LNumber(1), LNumber(2), LNumber(3), "foobar", LNumber(4)
+                    LNumber(1), LNumber(2), LNumber(3), LString("foobar"), LNumber(4)
                 ]))
             );
         });
@@ -636,7 +637,7 @@ describe('evaluate', function() {
                     undefined,
                     undefined,
                     undefined,
-                    factorial_1000
+                    LString(factorial_1000)
                 ]);
             });
         });
@@ -683,23 +684,26 @@ describe('environment', function() {
             return this.name;
         }
     };
+    function scope(e) {
+        return lips.exec('(scope_name)', e).then(result => result[0].valueOf());
+    }
     it('should return name of the enviroment', function() {
         var e = env.inherit('foo', functions);
-        return lips.exec('(scope_name)', e).then(result => {
-            return expect(result).toEqual(['foo']);
+        return scope(e).then(result => {
+            return expect(result).toEqual('foo');
         });
     });
     it('should create default scope name', function() {
         var e = env.inherit(functions);
-        return lips.exec('(scope_name)', e).then(result => {
-            return expect(result).toEqual(['child of global']);
+        return scope(e).then(result => {
+            return expect(result).toEqual('child of global');
         });
     });
     it('should create default scope name for child scope', function() {
         var e = env.inherit('foo', functions);
         var child = e.inherit();
-        return lips.exec('(scope_name)', child).then(result => {
-            return expect(result).toEqual(['child of foo']);
+        return scope(child).then(result => {
+            return expect(result).toEqual('child of foo');
         });
     });
 });
@@ -883,7 +887,7 @@ describe('env', function() {
     }
     function testValue([code, expected]) {
         return lips.exec(code).then(([result]) => {
-            expect(result).toEqual(expected);
+            expect([code, result]).toEqual([code, expected]);
         });
     }
     describe('reduce', function() {

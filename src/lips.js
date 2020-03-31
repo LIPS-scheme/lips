@@ -1016,7 +1016,7 @@ You can also use (help name) to display help for specic function or macro.
         if (isSymbol(this.name)) {
             return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
         }
-        return this.name;
+        return this.name.valueOf();
     };
     // ----------------------------------------------------------------------
     // :: Nil constructor with only once instance
@@ -1120,7 +1120,7 @@ You can also use (help name) to display help for specic function or macro.
         if (this.car instanceof Pair) {
             result.push(this.car.toArray());
         } else {
-            result.push(this.car);
+            result.push(this.car.valueOf());
         }
         if (this.cdr instanceof Pair) {
             result = result.concat(this.cdr.toArray());
@@ -1150,6 +1150,9 @@ You can also use (help name) to display help for specic function or macro.
             } else {
                 car = array[0];
             }
+            if (typeof car === 'string') {
+                car = LString(car);
+            }
             if (array.length === 1) {
                 return new Pair(car, nil);
             } else {
@@ -1173,7 +1176,7 @@ You can also use (help name) to display help for specic function or macro.
                 if (cdr instanceof Pair) {
                     cdr = cdr.toObject();
                 }
-                if (cdr instanceof LNumber) {
+                if (cdr instanceof LNumber || cdr instanceof LString) {
                     cdr = cdr.valueOf();
                 }
                 result[name] = cdr;
@@ -1450,6 +1453,8 @@ You can also use (help name) to display help for specic function or macro.
             return LNumber(x).cmp(LNumber(y)) === 0;
         } else if (x instanceof Character && y instanceof Character) {
             return x.char === y.char;
+        } else if (x instanceof LString && y instanceof LString) {
+            return x.valueOf() === y.valueOf();
         } else if (x instanceof LSymbol && y instanceof LSymbol) {
             return x.name === y.name;
         } else {
@@ -1621,6 +1626,9 @@ You can also use (help name) to display help for specic function or macro.
         if (isNativeFunction(fn)) {
             hiddenProp(bound, '__native__', true);
         }
+        bound.valueOf = function() {
+            return fn;
+        };
         return bound;
     }
     // ----------------------------------------------------------------------
@@ -1853,6 +1861,9 @@ You can also use (help name) to display help for specic function or macro.
         }
         for (let arg of args) {
             var name = arg instanceof LSymbol ? arg.name : arg;
+            if (LString.isString(name)) {
+                name = name.valueOf();
+            }
             var value;
             if (name === '__code__' && typeof obj === 'function' &&
                 typeof obj.__code__ === 'undefined') {
@@ -2853,6 +2864,9 @@ You can also use (help name) to display help for specic function or macro.
         if (key instanceof LSymbol) {
             key = key.name;
         }
+        if (key instanceof LString) {
+            key = key.valueOf();
+        }
         function patchValue(value, context) {
             if (LNumber.isNumber(value)) {
                 return LNumber(value);
@@ -2896,6 +2910,8 @@ You can also use (help name) to display help for specic function or macro.
                     object = value;
                 }
             }
+        } else if (!parts) {
+            return undef;
         }
         return parts.reduce(function(acc, e, i) {
             if (typeof acc === 'undefined') {
@@ -2910,6 +2926,8 @@ You can also use (help name) to display help for specic function or macro.
                     return patchValue(value, acc);
                 }
                 return value;
+            } else if (e === '__code__' && typeof acc === 'function') {
+                return native_lambda.clone();
             }
             if (throwError) {
                 throw new Error("Unbound variable `" + key + "'");
@@ -2933,6 +2951,9 @@ You can also use (help name) to display help for specic function or macro.
             return this.parent.lookup(symbol);
         }
     };
+    Environment.prototype.toString = function() {
+        return '<#env:' + this.name + '>';
+    };
     function Undefined() {}
     var undef = new Undefined();
     // -------------------------------------------------------------------------
@@ -2952,7 +2973,8 @@ You can also use (help name) to display help for specic function or macro.
                     defined = true;
                 }
             }
-        } else if (typeof symbol === 'string') {
+        } else if (typeof symbol === 'string' || symbol instanceof LString) {
+            symbol = symbol.valueOf();
             value = objectGet(this, symbol, { throwError: false });
             if (typeof value !== 'undefined') {
                 defined = true;
@@ -2988,6 +3010,8 @@ You can also use (help name) to display help for specic function or macro.
         }
         if (name instanceof LSymbol) {
             name = name.name;
+        } else if (name instanceof LString) {
+            name = name.valueOf();
         }
         this.env[name] = value;
     };
@@ -3382,7 +3406,7 @@ You can also use (help name) to display help for specic function or macro.
             }
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
-                    require('fs').readFile(file, function(err, data) {
+                    require('fs').readFile(file.valueOf(), function(err, data) {
                         if (err) {
                             reject(err);
                         } else {
@@ -3645,9 +3669,8 @@ You can also use (help name) to display help for specic function or macro.
             var self = this;
             var __doc__;
             if (code.cdr instanceof Pair &&
-                typeof code.cdr.car === 'string' &&
-                code.cdr.cdr !== nil) {
-                __doc__ = code.cdr.car;
+                LString.isString(code.cdr.car)) {
+                __doc__ = code.cdr.car.valueOf();
             }
             function lambda(...args) {
                 var env;
@@ -3734,11 +3757,10 @@ You can also use (help name) to display help for specic function or macro.
             if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
                 var name = macro.car.car.name;
                 var __doc__;
-                if (typeof macro.cdr.car === 'string' &&
-                    macro.cdr.cdr !== nil) {
-                    __doc__ = macro.cdr.car;
+                if (LString.isString(macro.cdr.car)) {
+                    __doc__ = macro.cdr.car.valueOf();
                 }
-                this.env[name] = Macro.defmacro(name, function(code) {
+                var makro_instance = Macro.defmacro(name, function(code) {
                     var env = new Environment({}, this, 'defmacro');
                     var name = macro.car.cdr;
                     var arg = code;
@@ -3790,7 +3812,8 @@ You can also use (help name) to display help for specic function or macro.
                         });
                     }
                 }, __doc__, true);
-                this.env[name].__code__ = new Pair(new LSymbol('define-macro'), macro);
+                makro_instance.__code__ = new Pair(new LSymbol('define-macro'), macro);
+                this.set(name, makro_instance);
             }
         }), `(define-macro (name . args) body)
 
@@ -4323,7 +4346,7 @@ You can also use (help name) to display help for specic function or macro.
              Function check if value is a number`),
         // ------------------------------------------------------------------
         'string?': doc(function(obj) {
-            return typeof obj === 'string';
+            return LString.isString(obj);
         }, `(string? expression)
 
             Function check if value is a string.`),
@@ -5317,6 +5340,12 @@ You can also use (help name) to display help for specic function or macro.
                         if (result instanceof Pair) {
                             result.markCycles();
                             return quote(result);
+                        }
+                        if (typeof result === 'number') {
+                            return LNumber(result);
+                        }
+                        if (typeof result === 'string') {
+                            return LString(result);
                         }
                         return result;
                     }, error);

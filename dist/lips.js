@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 30 Mar 2020 18:55:41 +0000
+ * build: Tue, 31 Mar 2020 12:24:23 +0000
  */
 (function () {
 	'use strict';
@@ -2176,7 +2176,7 @@
 	      return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
 	    }
 
-	    return this.name;
+	    return this.name.valueOf();
 	  }; // ----------------------------------------------------------------------
 	  // :: Nil constructor with only once instance
 	  // ----------------------------------------------------------------------
@@ -2302,7 +2302,7 @@
 	    if (this.car instanceof Pair) {
 	      result.push(this.car.toArray());
 	    } else {
-	      result.push(this.car);
+	      result.push(this.car.valueOf());
 	    }
 
 	    if (this.cdr instanceof Pair) {
@@ -2338,6 +2338,10 @@
 	        car = array[0];
 	      }
 
+	      if (typeof car === 'string') {
+	        car = LString(car);
+	      }
+
 	      if (array.length === 1) {
 	        return new Pair(car, nil);
 	      } else {
@@ -2366,7 +2370,7 @@
 	          cdr = cdr.toObject();
 	        }
 
-	        if (cdr instanceof LNumber) {
+	        if (cdr instanceof LNumber || cdr instanceof LString) {
 	          cdr = cdr.valueOf();
 	        }
 
@@ -2685,6 +2689,8 @@
 	      return LNumber(x).cmp(LNumber(y)) === 0;
 	    } else if (x instanceof Character && y instanceof Character) {
 	      return x["char"] === y["char"];
+	    } else if (x instanceof LString && y instanceof LString) {
+	      return x.valueOf() === y.valueOf();
 	    } else if (x instanceof LSymbol && y instanceof LSymbol) {
 	      return x.name === y.name;
 	    } else {
@@ -2992,6 +2998,10 @@
 	    if (isNativeFunction(fn)) {
 	      hiddenProp(bound, '__native__', true);
 	    }
+
+	    bound.valueOf = function () {
+	      return fn;
+	    };
 
 	    return bound;
 	  } // ----------------------------------------------------------------------
@@ -3313,6 +3323,11 @@
 	    for (var _i = 0, _args5 = args; _i < _args5.length; _i++) {
 	      var arg = _args5[_i];
 	      var name = arg instanceof LSymbol ? arg.name : arg;
+
+	      if (LString.isString(name)) {
+	        name = name.valueOf();
+	      }
+
 	      var value;
 
 	      if (name === '__code__' && typeof obj === 'function' && typeof obj.__code__ === 'undefined') {
@@ -4596,6 +4611,10 @@
 	      key = key.name;
 	    }
 
+	    if (key instanceof LString) {
+	      key = key.valueOf();
+	    }
+
 	    function patchValue(value, context) {
 	      if (LNumber.isNumber(value)) {
 	        return LNumber(value);
@@ -4650,6 +4669,8 @@
 	          object = value;
 	        }
 	      }
+	    } else if (!parts) {
+	      return undef;
 	    }
 
 	    return parts.reduce(function (acc, e, i) {
@@ -4669,6 +4690,8 @@
 	        }
 
 	        return value;
+	      } else if (e === '__code__' && typeof acc === 'function') {
+	        return native_lambda.clone();
 	      }
 
 	      if (throwError) {
@@ -4698,6 +4721,10 @@
 	    }
 	  };
 
+	  Environment.prototype.toString = function () {
+	    return '<#env:' + this.name + '>';
+	  };
+
 	  function Undefined() {}
 
 	  var undef = new Undefined(); // -------------------------------------------------------------------------
@@ -4721,7 +4748,8 @@
 	          defined = true;
 	        }
 	      }
-	    } else if (typeof symbol === 'string') {
+	    } else if (typeof symbol === 'string' || symbol instanceof LString) {
+	      symbol = symbol.valueOf();
 	      value = objectGet(this, symbol, {
 	        throwError: false
 	      });
@@ -4770,6 +4798,8 @@
 
 	    if (name instanceof LSymbol) {
 	      name = name.name;
+	    } else if (name instanceof LString) {
+	      name = name.valueOf();
 	    }
 
 	    this.env[name] = value;
@@ -5177,7 +5207,7 @@
 	        throwError: false
 	      }) !== 'undefined') {
 	        return new Promise(function (resolve, reject) {
-	          require('fs').readFile(file, function (err, data) {
+	          require('fs').readFile(file.valueOf(), function (err, data) {
 	            if (err) {
 	              reject(err);
 	            } else {
@@ -5417,8 +5447,8 @@
 
 	      var __doc__;
 
-	      if (code.cdr instanceof Pair && typeof code.cdr.car === 'string' && code.cdr.cdr !== nil) {
-	        __doc__ = code.cdr.car;
+	      if (code.cdr instanceof Pair && LString.isString(code.cdr.car)) {
+	        __doc__ = code.cdr.car.valueOf();
 	      }
 
 	      function lambda() {
@@ -5527,11 +5557,11 @@
 
 	        var __doc__;
 
-	        if (typeof macro.cdr.car === 'string' && macro.cdr.cdr !== nil) {
-	          __doc__ = macro.cdr.car;
+	        if (LString.isString(macro.cdr.car)) {
+	          __doc__ = macro.cdr.car.valueOf();
 	        }
 
-	        this.env[name] = Macro.defmacro(name, function (code) {
+	        var makro_instance = Macro.defmacro(name, function (code) {
 	          var env = new Environment({}, this, 'defmacro');
 	          var name = macro.car.cdr;
 	          var arg = code;
@@ -5592,7 +5622,8 @@
 	            });
 	          }
 	        }, __doc__, true);
-	        this.env[name].__code__ = new Pair(new LSymbol('define-macro'), macro);
+	        makro_instance.__code__ = new Pair(new LSymbol('define-macro'), macro);
+	        this.set(name, makro_instance);
 	      }
 	    }), "(define-macro (name . args) body)\n\n             Meta macro, macro that create new macros, if return value is list structure\n             it will be evaluated when macro is invoked. You can use quasiquote ` and\n             unquote , and unquote-splicing ,@ inside to create expression that will be\n             evaluated on runtime. Macros works like this: if you pass any expression to\n             macro the arguments will not be evaluated unless macro itself evaluate it.\n             Because of this macro can manipulate expression (arguments) as lists."),
 	    // ------------------------------------------------------------------
@@ -6092,7 +6123,7 @@
 	    'number?': doc(LNumber.isNumber, "(number? expression)\n\n             Function check if value is a number"),
 	    // ------------------------------------------------------------------
 	    'string?': doc(function (obj) {
-	      return typeof obj === 'string';
+	      return LString.isString(obj);
 	    }, "(string? expression)\n\n            Function check if value is a string."),
 	    // ------------------------------------------------------------------
 	    'pair?': doc(function (obj) {
@@ -7196,6 +7227,14 @@
 	              return quote(result);
 	            }
 
+	            if (typeof result === 'number') {
+	              return LNumber(result);
+	            }
+
+	            if (typeof result === 'string') {
+	              return LString(result);
+	            }
+
 	            return result;
 	          }, error);
 	        });
@@ -7424,7 +7463,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 30 Mar 2020 18:55:41 +0000',
+	    date: 'Tue, 31 Mar 2020 12:24:23 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
