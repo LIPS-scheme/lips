@@ -3883,6 +3883,12 @@ You can also use (help name) to display help for specic function or macro.
                 });
                 return unpromise(eval_pair, function(eval_pair) {
                     if (!(eval_pair instanceof Pair)) {
+                        if (pair.cdr instanceof Pair &&
+                            LSymbol.is(pair.cdr.car, '.') &&
+                            pair.cdr.cdr instanceof Pair &&
+                            pair.cdr.cdr.cdr === nil) {
+                            return pair.cdr.cdr.car;
+                        }
                         if (pair.cdr !== nil) {
                             const msg = "You can't splice atom inside list";
                             throw new Error(msg);

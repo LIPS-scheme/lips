@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 01 Apr 2020 21:23:13 +0000
+ * build: Wed, 01 Apr 2020 23:12:19 +0000
  */
 (function () {
 	'use strict';
@@ -5684,6 +5684,10 @@
 	        });
 	        return unpromise(eval_pair, function (eval_pair) {
 	          if (!(eval_pair instanceof Pair)) {
+	            if (pair.cdr instanceof Pair && LSymbol.is(pair.cdr.car, '.') && pair.cdr.cdr instanceof Pair && pair.cdr.cdr.cdr === nil) {
+	              return pair.cdr.cdr.car;
+	            }
+
 	            if (pair.cdr !== nil) {
 	              var msg = "You can't splice atom inside list";
 	              throw new Error(msg);
@@ -7459,7 +7463,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 01 Apr 2020 21:23:13 +0000',
+	    date: 'Wed, 01 Apr 2020 23:12:19 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
