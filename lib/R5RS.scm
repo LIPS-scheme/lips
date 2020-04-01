@@ -155,7 +155,7 @@
 
    Function test if value is propert linked list structure.
    The car of each pair can be any value."
-  (and (pair? x) (or (null? (cdr x)) (list? (cdr x)))))
+  (and (pair? x) (or (null? (cdr x)) (and (not (x.haveCycles "cdr")) (list? (cdr x))))))
 
 (define (%number-type type x)
   (and (number? x) (eq? (. x 'type) type)))

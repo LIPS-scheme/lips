@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 01 Apr 2020 18:53:36 +0000
+ * build: Wed, 01 Apr 2020 19:27:37 +0000
  */
 (function () {
 	'use strict';
@@ -2337,8 +2337,20 @@
 
 
 	  Pair.fromArray = function (array) {
+	    var deep = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : true;
+
 	    if (array instanceof Pair) {
 	      return array;
+	    }
+
+	    if (deep === false) {
+	      var list = nil;
+
+	      for (var i = array.length; i--;) {
+	        list = new Pair(array[i], list);
+	      }
+
+	      return list;
 	    }
 
 	    if (array.length && !(array instanceof Array)) {
@@ -5469,7 +5481,7 @@
 	            if (name.car !== nil) {
 	              if (name instanceof LSymbol) {
 	                // rest argument,  can also be first argument
-	                value = quote(Pair.fromArray(args.slice(i)));
+	                value = quote(Pair.fromArray(args.slice(i), false));
 	                env.env[name.name] = value;
 	                break;
 	              } else {
@@ -7444,7 +7456,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 01 Apr 2020 18:53:36 +0000',
+	    date: 'Wed, 01 Apr 2020 19:27:37 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

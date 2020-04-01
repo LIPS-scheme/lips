@@ -1147,9 +1147,16 @@ You can also use (help name) to display help for specic function or macro.
     };
 
     // ----------------------------------------------------------------------
-    Pair.fromArray = function(array) {
+    Pair.fromArray = function(array, deep = true) {
         if (array instanceof Pair) {
             return array;
+        }
+        if (deep === false) {
+            var list = nil;
+            for (let i = array.length; i--;) {
+                list = new Pair(array[i], list);
+            }
+            return list;
         }
         if (array.length && !(array instanceof Array)) {
             array = [...array];
@@ -3685,7 +3692,7 @@ You can also use (help name) to display help for specic function or macro.
                         if (name.car !== nil) {
                             if (name instanceof LSymbol) {
                                 // rest argument,  can also be first argument
-                                value = quote(Pair.fromArray(args.slice(i)));
+                                value = quote(Pair.fromArray(args.slice(i), false));
                                 env.env[name.name] = value;
                                 break;
                             } else {
