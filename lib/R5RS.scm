@@ -562,3 +562,5 @@
   (typecheck "char-upcase" char "character")
   (char.toLowerCase))
 
+
+(define (newline) (display "\n"))

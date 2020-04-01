@@ -1,8 +1,16 @@
 #!/usr/bin/env node
 
-const {exec, Formatter, balanced_parenthesis, tokenize, env, banner} = require('../dist/lips');
+const {
+    exec,
+    Formatter,
+    balanced_parenthesis,
+    tokenize,
+    env,
+    banner,
+    InputPort,
+    OutputPort } = require('../dist/lips');
 const fs = require('fs');
-const {format} = require('util');
+const { format } = require('util');
 const readline = require('readline');
 
 // -----------------------------------------------------------------------------
@@ -140,13 +148,15 @@ if (options.c) {
     var multiline = false;
     var resolve;
     var e = env.inherit('name', {
-        stdin: {
-            read: function() {
-                return new Promise(function(resolve) {
-                    rl.question('', resolve);
-                });
-            }
-        }
+        stdin: InputPort(function() {
+            return new Promise(function(resolve) {
+                rl.question('', resolve);
+            });
+        }),
+        stdout: OutputPort(function(x) {
+            //rl.write(this.get('repr')(x));
+            console.log(this.get('repr')(x));
+        })
     });
     boostrap().then(function() {
         rl.on('line', function(line) {

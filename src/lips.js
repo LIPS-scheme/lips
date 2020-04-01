@@ -549,6 +549,13 @@ You can also use (help name) to display help for specic function or macro.
     }
     // ----------------------------------------------------------------------
     function unpromise(value, fn = x => x, error = null) {
+        if (value instanceof Array) {
+            var anyPromise = value.filter(isPromise);
+            if (anyPromise.length) {
+                return unpromise(Promise.all(anyPromise), fn, error);
+            }
+            return fn(value);
+        }
         if (isPromise(value)) {
             var ret = value.then(fn);
             if (error === null) {
@@ -1016,6 +1023,9 @@ You can also use (help name) to display help for specic function or macro.
         if (isSymbol(this.name)) {
             return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
         }
+        return this.valueOf();
+    };
+    LSymbol.prototype.valueOf = function() {
         return this.name.valueOf();
     };
     // ----------------------------------------------------------------------
@@ -1024,6 +1034,9 @@ You can also use (help name) to display help for specic function or macro.
     function Nil() {}
     Nil.prototype.toString = function() {
         return '()';
+    };
+    Nil.prototype.valueOf = function() {
+        return undefined;
     };
     var nil = new Nil();
     // ----------------------------------------------------------------------
@@ -1579,19 +1592,69 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     // :: Function utilities
     // ----------------------------------------------------------------------
-    // function get original function that was weak or binded with props
-    // TODO: consider to use only one type of biding
-    //       if you can unbind the function you can change the context
-    //       you don't need weak bind, you can use this:
-    //       unbind(f).apply(env, ...args)
+    function box(object) {
+        switch (typeof object) {
+            case 'string':
+                return LString(object);
+            case 'number':
+                return LNumber(object);
+        }
+        return object;
+    }
     // ----------------------------------------------------------------------
-    function unbind(obj) {
-        if (typeof obj === 'function') {
-            if (obj[__fn__]) {
-                return obj[__fn__];
+    function unbox(obj) {
+        return obj.valueOf();
+    }
+    // ----------------------------------------------------------------------
+    function patchValue(value, context) {
+        if (value instanceof Pair) {
+            value.markCycles();
+            return quote(value);
+        }
+        if (typeof value === 'function') {
+            // original function can be restored using unbind function
+            // only real JS function require to be bound
+            if (context) {
+                return bind(value, context);
             }
         }
+        return box(value);
+    }
+    // ----------------------------------------------------------------------
+    // :: function get original function that was binded with props
+    // ----------------------------------------------------------------------
+    function unbind(obj) {
+        if (isBound(obj)) {
+            return obj[__fn__];
+        }
         return obj;
+    }
+    // ----------------------------------------------------------------------
+    // :: function bind with contex that can be optionaly unbind
+    // :: get original function with unbind
+    // ----------------------------------------------------------------------
+    function bind(fn, context) {
+        if (fn[Symbol.for('__bound__')]) {
+            return fn;
+        }
+        const bound = fn.bind(context);
+        const props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
+        props.forEach(prop => {
+            bound[prop] = fn[prop];
+        });
+        hiddenProp(bound, '__fn__', fn);
+        hiddenProp(bound, '__bound__', true);
+        if (isNativeFunction(fn)) {
+            hiddenProp(bound, '__native__', true);
+        }
+        bound.valueOf = function() {
+            return fn;
+        };
+        return bound;
+    }
+    // ----------------------------------------------------------------------
+    function isBound(obj) {
+        return typeof obj === 'function' && obj[__fn__];
     }
     var __fn__ = Symbol.for('__fn__');
     // ----------------------------------------------------------------------
@@ -1610,26 +1673,6 @@ You can also use (help name) to display help for specic function or macro.
             configurable: false,
             enumerable: false
         });
-    }
-    // ----------------------------------------------------------------------
-    function bindWithProps(fn, context) {
-        if (fn[Symbol.for('__bound__')]) {
-            return fn;
-        }
-        const bound = fn.bind(context);
-        const props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
-        props.forEach(prop => {
-            bound[prop] = fn[prop];
-        });
-        hiddenProp(bound, '__fn__', fn);
-        hiddenProp(bound, '__bound__', true);
-        if (isNativeFunction(fn)) {
-            hiddenProp(bound, '__native__', true);
-        }
-        bound.valueOf = function() {
-            return fn;
-        };
-        return bound;
     }
     // ----------------------------------------------------------------------
     function setFnLength(fn, length) {
@@ -1855,26 +1898,34 @@ You can also use (help name) to display help for specic function or macro.
                                           "[native code]"
                                           (throw "Invalid Invocation"))`))[0];
     // -------------------------------------------------------------------------------
-    var get = doc(function get(obj, ...args) {
-        if (typeof obj === 'function') {
-            obj = unbind(obj);
+    var get = doc(function get(object, ...args) {
+        if (typeof object === 'function') {
+            object = unbind(object);
         }
-        for (let arg of args) {
-            var name = arg instanceof LSymbol ? arg.name : arg;
-            if (LString.isString(name)) {
-                name = name.valueOf();
-            }
-            var value;
-            if (name === '__code__' && typeof obj === 'function' &&
-                typeof obj.__code__ === 'undefined') {
+        var value;
+        var len = args.length;
+        while (args.length) {
+            var arg = args.shift();
+            var name = unbox(arg);
+            if (name === '__code__' && typeof object === 'function' &&
+                        typeof object.__code__ === 'undefined') {
                 value = native_lambda.clone();
             } else {
-                value = obj[name];
+                value = object[name];
             }
-            if (typeof value === 'function') {
-                value = bindWithProps(value, obj);
+            if (typeof value === 'undefined') {
+                if (args.length) {
+                    throw new Error(`Try to get ${args[0]} from undefined`);
+                }
+                return value;
+            } else {
+                var context;
+                if (args.length - 1 < len) {
+                    context = object;
+                }
+                value = patchValue(value, context);
             }
-            obj = value;
+            object = value;
         }
         return value;
     }, `(. obj . args)
@@ -2856,147 +2907,72 @@ You can also use (help name) to display help for specic function or macro.
         return scope;
     };
     // -------------------------------------------------------------------------
-    // :: get nested key from object (key is symbol or string with
-    // :: coma separated names
-    // -------------------------------------------------------------------------
-    function objectGet(object, key, options = {}) {
-        const { throwError = true } = options;
-        if (key instanceof LSymbol) {
-            key = key.name;
-        }
-        if (key instanceof LString) {
-            key = key.valueOf();
-        }
-        function patchValue(value, context) {
-            if (LNumber.isNumber(value)) {
-                return LNumber(value);
-            }
-            if (value instanceof Pair) {
-                value.markCycles();
-                return quote(value);
-            }
-            if (typeof value === 'function') {
-                // original function can be restored using unbind function
-                // only real JS function require to be bound
-                return bindWithProps(value, context);
-            }
-            return value;
-        }
-        // try to get from env
-        if (typeof key === 'string') {
-            var parts = key.split('.');
-        }
-        var value;
-        if (object instanceof Environment) {
-            value = object.lookup(key);
-            if (typeof value !== 'undefined') {
-                if (value === undef) {
-                    return undef;
-                }
-                return patchValue(value, object);
-            }
-            if (parts.length > 1) {
-                // get first item from env next are nested accessors
-                value = object.lookup(parts[0]);
-                if (typeof value !== 'undefined') {
-                    if (value === undef) {
-                        if (throwError) {
-                            throw new Error("Can't get " + parts[0] +
-                                            " it was undefined");
-                        }
-                        return undef;
-                    }
-                    parts = parts.slice(1);
-                    object = value;
-                }
-            }
-        } else if (!parts) {
-            return undef;
-        }
-        return parts.reduce(function(acc, e, i) {
-            if (typeof acc === 'undefined') {
-                return acc;
-            }
-            if (!e) {
-                throw new Error('Invalid expression ' + key);
-            }
-            var value = acc[e];
-            if (typeof value !== 'undefined') {
-                if (i === parts.length - 1) {
-                    return patchValue(value, acc);
-                }
-                return value;
-            } else if (e === '__code__' && typeof acc === 'function') {
-                return native_lambda.clone();
-            }
-            if (throwError) {
-                throw new Error("Unbound variable `" + key + "'");
-            } else {
-                return undefined;
-            }
-        }, object);
-    }
-    // -------------------------------------------------------------------------
-    Environment.prototype.lookup = function(symbol) {
+    Environment.prototype._lookup = function(symbol) {
         if (symbol instanceof LSymbol) {
             symbol = symbol.name;
         }
+        if (symbol instanceof LString) {
+            symbol = symbol.valueOf();
+        }
         if (symbol in this.env) {
-            if (typeof this.env[symbol] === 'undefined') {
-                return undef;
-            }
-            return this.env[symbol];
+            return Value(this.env[symbol]);
         }
         if (this.parent) {
-            return this.parent.lookup(symbol);
+            return this.parent._lookup(symbol);
         }
     };
     Environment.prototype.toString = function() {
         return '<#env:' + this.name + '>';
     };
-    function Undefined() {}
-    var undef = new Undefined();
+    // -------------------------------------------------------------------------
+    // value returned in lookup if found value in env
+    // -------------------------------------------------------------------------
+    function Value(value) {
+        if (typeof this !== 'undefined' && !(this instanceof Value) ||
+            typeof this === 'undefined') {
+            return new Value(value);
+        }
+        this.value = value;
+    }
+    Value.isUndefined = function(x) {
+        return x instanceof Value && typeof x.value === 'undefined';
+    };
+    Value.prototype.valueOf = function() {
+        return this.value;
+    };
     // -------------------------------------------------------------------------
     Environment.prototype.get = function(symbol, options = {}) {
         // we keep original environment as context for bind
         // so print will get user stdout
         const { throwError = true } = options;
-        var value;
-        var defined = false;
-        if (symbol instanceof LSymbol) {
-            if (false && (symbol.name in this.env)) {
-                value = this.env[symbol.name];
-                defined = true;
-            } else {
-                value = objectGet(this, symbol, { throwError: false });
-                if (typeof value !== 'undefined') {
-                    defined = true;
+        var name = symbol;
+        if (name instanceof LSymbol || name instanceof LString) {
+            name = name.valueOf();
+        }
+        var value = this._lookup(name);
+        if (value instanceof Value) {
+            if (Value.isUndefined(value)) {
+                return undefined;
+            }
+            return patchValue(value.valueOf());
+        }
+        var parts = name.split('.').filter(Boolean);
+        if (parts.length > 0) {
+            var [first, ...rest] = parts;
+            value = this._lookup(first);
+            if (rest.length) {
+                if (value instanceof Value) {
+                    value = value.valueOf();
+                    return get(value, ...rest);
+                } else {
+                    return get(root, ...parts);
                 }
-            }
-        } else if (typeof symbol === 'string' || symbol instanceof LString) {
-            symbol = symbol.valueOf();
-            value = objectGet(this, symbol, { throwError: false });
-            if (typeof value !== 'undefined') {
-                defined = true;
+            } else if (value instanceof Value) {
+                return patchValue(value.valueOf());
             }
         }
-        if (defined) {
-            if (value === undef) {
-                return undefined;
-            }
-            return value;
-        }
-        var name;
-        if (symbol instanceof LSymbol) {
-            name = symbol.name;
-        } else if (typeof symbol === 'string') {
-            name = symbol;
-        }
-        if (name) {
-            value = objectGet(root, name, options);
-            if (value === undef) {
-                return undefined;
-            }
+        value = get(root, name);
+        if (typeof value !== 'undefined') {
             return value;
         }
         if (throwError) {
@@ -3188,7 +3164,7 @@ You can also use (help name) to display help for specic function or macro.
         pprint: doc(function(arg) {
             if (arg instanceof Pair) {
                 arg = new lips.Formatter(arg.toString()).break().format();
-                this.get('stdout').write(arg);
+                this.get('stdout').write.call(this, arg);
             } else {
                 this.get('display').call(this, arg);
             }
@@ -3198,7 +3174,7 @@ You can also use (help name) to display help for specic function or macro.
            print function with passed argument.`),
         // ------------------------------------------------------------------
         print: doc(function(...args) {
-            this.get('stdout').write(...args.map((arg) => {
+            this.get('stdout').write.apply(this, ...args.map((arg) => {
                 return this.get('repr')(arg, LString.isString(arg));
             }));
         }, `(print . args)
@@ -3211,7 +3187,7 @@ You can also use (help name) to display help for specic function or macro.
             if (port === null) {
                 port = this.get('stdout');
             }
-            port.write(this.get('repr')(arg));
+            port.write.call(this, this.get('repr')(arg));
         }, `(display arg [port])
 
             Function send string to standard output or provied port.`),
@@ -4309,6 +4285,14 @@ You can also use (help name) to display help for specic function or macro.
 
              Function return type of an object as string.`),
         // ------------------------------------------------------------------
+        'debugger': doc(function() {
+            /* eslint-disable */
+            debugger;
+            /* eslint-enable */
+        }, `(debugger)
+
+            Function stop JavaScript code in debugger.`),
+        // ------------------------------------------------------------------
         'instanceof': doc(function(type, obj) {
             return obj instanceof unbind(type);
         }, `(instanceof type obj)
@@ -5328,6 +5312,9 @@ You can also use (help name) to display help for specic function or macro.
             if (typeof value === 'function') {
                 var args = getFunctionArgs(rest, eval_args);
                 return unpromise(args, function(args) {
+                    if (isBound(value)) {
+                        args = args.map(unbox);
+                    }
                     if (value.__lambda__) {
                         // lambda need environment as context
                         // normal functions are bound to their contexts

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 31 Mar 2020 12:24:23 +0000
+ * build: Wed, 01 Apr 2020 18:53:36 +0000
  */
 (function () {
 	'use strict';
@@ -1599,6 +1599,16 @@
 	    };
 	    var error = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
 
+	    if (value instanceof Array) {
+	      var anyPromise = value.filter(isPromise);
+
+	      if (anyPromise.length) {
+	        return unpromise(Promise.all(anyPromise), fn, error);
+	      }
+
+	      return fn(value);
+	    }
+
 	    if (isPromise(value)) {
 	      var ret = value.then(fn);
 
@@ -2176,6 +2186,10 @@
 	      return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
 	    }
 
+	    return this.valueOf();
+	  };
+
+	  LSymbol.prototype.valueOf = function () {
 	    return this.name.valueOf();
 	  }; // ----------------------------------------------------------------------
 	  // :: Nil constructor with only once instance
@@ -2186,6 +2200,10 @@
 
 	  Nil.prototype.toString = function () {
 	    return '()';
+	  };
+
+	  Nil.prototype.valueOf = function () {
+	    return undefined$1;
 	  };
 
 	  var nil = new Nil(); // ----------------------------------------------------------------------
@@ -2939,22 +2957,85 @@
 	  } // ----------------------------------------------------------------------
 	  // :: Function utilities
 	  // ----------------------------------------------------------------------
-	  // function get original function that was weak or binded with props
-	  // TODO: consider to use only one type of biding
-	  //       if you can unbind the function you can change the context
-	  //       you don't need weak bind, you can use this:
-	  //       unbind(f).apply(env, ...args)
+
+
+	  function box(object) {
+	    switch (_typeof_1(object)) {
+	      case 'string':
+	        return LString(object);
+
+	      case 'number':
+	        return LNumber(object);
+	    }
+
+	    return object;
+	  } // ----------------------------------------------------------------------
+
+
+	  function unbox(obj) {
+	    return obj.valueOf();
+	  } // ----------------------------------------------------------------------
+
+
+	  function patchValue(value, context) {
+	    if (value instanceof Pair) {
+	      value.markCycles();
+	      return quote(value);
+	    }
+
+	    if (typeof value === 'function') {
+	      // original function can be restored using unbind function
+	      // only real JS function require to be bound
+	      if (context) {
+	        return bind(value, context);
+	      }
+	    }
+
+	    return box(value);
+	  } // ----------------------------------------------------------------------
+	  // :: function get original function that was binded with props
 	  // ----------------------------------------------------------------------
 
 
 	  function unbind(obj) {
-	    if (typeof obj === 'function') {
-	      if (obj[__fn__]) {
-	        return obj[__fn__];
-	      }
+	    if (isBound(obj)) {
+	      return obj[__fn__];
 	    }
 
 	    return obj;
+	  } // ----------------------------------------------------------------------
+	  // :: function bind with contex that can be optionaly unbind
+	  // :: get original function with unbind
+	  // ----------------------------------------------------------------------
+
+
+	  function bind(fn, context) {
+	    if (fn[Symbol["for"]('__bound__')]) {
+	      return fn;
+	    }
+
+	    var bound = fn.bind(context);
+	    var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
+	    props.forEach(function (prop) {
+	      bound[prop] = fn[prop];
+	    });
+	    hiddenProp(bound, '__fn__', fn);
+	    hiddenProp(bound, '__bound__', true);
+
+	    if (isNativeFunction(fn)) {
+	      hiddenProp(bound, '__native__', true);
+	    }
+
+	    bound.valueOf = function () {
+	      return fn;
+	    };
+
+	    return bound;
+	  } // ----------------------------------------------------------------------
+
+
+	  function isBound(obj) {
+	    return typeof obj === 'function' && obj[__fn__];
 	  }
 
 	  var __fn__ = Symbol["for"]('__fn__'); // ----------------------------------------------------------------------
@@ -2979,31 +3060,6 @@
 	      configurable: false,
 	      enumerable: false
 	    });
-	  } // ----------------------------------------------------------------------
-
-
-	  function bindWithProps(fn, context) {
-	    if (fn[Symbol["for"]('__bound__')]) {
-	      return fn;
-	    }
-
-	    var bound = fn.bind(context);
-	    var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
-	    props.forEach(function (prop) {
-	      bound[prop] = fn[prop];
-	    });
-	    hiddenProp(bound, '__fn__', fn);
-	    hiddenProp(bound, '__bound__', true);
-
-	    if (isNativeFunction(fn)) {
-	      hiddenProp(bound, '__native__', true);
-	    }
-
-	    bound.valueOf = function () {
-	      return fn;
-	    };
-
-	    return bound;
 	  } // ----------------------------------------------------------------------
 
 
@@ -3311,36 +3367,46 @@
 
 	  var native_lambda = parse(tokenize("(lambda ()\n                                          \"[native code]\"\n                                          (throw \"Invalid Invocation\"))"))[0]; // -------------------------------------------------------------------------------
 
-	  var get = doc(function get(obj) {
-	    if (typeof obj === 'function') {
-	      obj = unbind(obj);
+	  var get = doc(function get(object) {
+	    if (typeof object === 'function') {
+	      object = unbind(object);
 	    }
+
+	    var value;
 
 	    for (var _len10 = arguments.length, args = new Array(_len10 > 1 ? _len10 - 1 : 0), _key10 = 1; _key10 < _len10; _key10++) {
 	      args[_key10 - 1] = arguments[_key10];
 	    }
 
-	    for (var _i = 0, _args5 = args; _i < _args5.length; _i++) {
-	      var arg = _args5[_i];
-	      var name = arg instanceof LSymbol ? arg.name : arg;
+	    var len = args.length;
 
-	      if (LString.isString(name)) {
-	        name = name.valueOf();
-	      }
+	    while (args.length) {
+	      var arg = args.shift();
+	      var name = unbox(arg);
 
-	      var value;
-
-	      if (name === '__code__' && typeof obj === 'function' && typeof obj.__code__ === 'undefined') {
+	      if (name === '__code__' && typeof object === 'function' && typeof object.__code__ === 'undefined') {
 	        value = native_lambda.clone();
 	      } else {
-	        value = obj[name];
+	        value = object[name];
 	      }
 
-	      if (typeof value === 'function') {
-	        value = bindWithProps(value, obj);
+	      if (typeof value === 'undefined') {
+	        if (args.length) {
+	          throw new Error("Try to get ".concat(args[0], " from undefined"));
+	        }
+
+	        return value;
+	      } else {
+	        var context;
+
+	        if (args.length - 1 < len) {
+	          context = object;
+	        }
+
+	        value = patchValue(value, context);
 	      }
 
-	      obj = value;
+	      object = value;
 	    }
 
 	    return value;
@@ -4597,191 +4663,96 @@
 	    scope.set('arguments', args);
 	    return scope;
 	  }; // -------------------------------------------------------------------------
-	  // :: get nested key from object (key is symbol or string with
-	  // :: coma separated names
-	  // -------------------------------------------------------------------------
 
 
-	  function objectGet(object, key) {
-	    var options = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {};
-	    var _options$throwError = options.throwError,
-	        throwError = _options$throwError === void 0 ? true : _options$throwError;
-
-	    if (key instanceof LSymbol) {
-	      key = key.name;
-	    }
-
-	    if (key instanceof LString) {
-	      key = key.valueOf();
-	    }
-
-	    function patchValue(value, context) {
-	      if (LNumber.isNumber(value)) {
-	        return LNumber(value);
-	      }
-
-	      if (value instanceof Pair) {
-	        value.markCycles();
-	        return quote(value);
-	      }
-
-	      if (typeof value === 'function') {
-	        // original function can be restored using unbind function
-	        // only real JS function require to be bound
-	        return bindWithProps(value, context);
-	      }
-
-	      return value;
-	    } // try to get from env
-
-
-	    if (typeof key === 'string') {
-	      var parts = key.split('.');
-	    }
-
-	    var value;
-
-	    if (object instanceof Environment) {
-	      value = object.lookup(key);
-
-	      if (typeof value !== 'undefined') {
-	        if (value === undef) {
-	          return undef;
-	        }
-
-	        return patchValue(value, object);
-	      }
-
-	      if (parts.length > 1) {
-	        // get first item from env next are nested accessors
-	        value = object.lookup(parts[0]);
-
-	        if (typeof value !== 'undefined') {
-	          if (value === undef) {
-	            if (throwError) {
-	              throw new Error("Can't get " + parts[0] + " it was undefined");
-	            }
-
-	            return undef;
-	          }
-
-	          parts = parts.slice(1);
-	          object = value;
-	        }
-	      }
-	    } else if (!parts) {
-	      return undef;
-	    }
-
-	    return parts.reduce(function (acc, e, i) {
-	      if (typeof acc === 'undefined') {
-	        return acc;
-	      }
-
-	      if (!e) {
-	        throw new Error('Invalid expression ' + key);
-	      }
-
-	      var value = acc[e];
-
-	      if (typeof value !== 'undefined') {
-	        if (i === parts.length - 1) {
-	          return patchValue(value, acc);
-	        }
-
-	        return value;
-	      } else if (e === '__code__' && typeof acc === 'function') {
-	        return native_lambda.clone();
-	      }
-
-	      if (throwError) {
-	        throw new Error("Unbound variable `" + key + "'");
-	      } else {
-	        return undefined$1;
-	      }
-	    }, object);
-	  } // -------------------------------------------------------------------------
-
-
-	  Environment.prototype.lookup = function (symbol) {
+	  Environment.prototype._lookup = function (symbol) {
 	    if (symbol instanceof LSymbol) {
 	      symbol = symbol.name;
 	    }
 
-	    if (symbol in this.env) {
-	      if (typeof this.env[symbol] === 'undefined') {
-	        return undef;
-	      }
+	    if (symbol instanceof LString) {
+	      symbol = symbol.valueOf();
+	    }
 
-	      return this.env[symbol];
+	    if (symbol in this.env) {
+	      return Value(this.env[symbol]);
 	    }
 
 	    if (this.parent) {
-	      return this.parent.lookup(symbol);
+	      return this.parent._lookup(symbol);
 	    }
 	  };
 
 	  Environment.prototype.toString = function () {
 	    return '<#env:' + this.name + '>';
+	  }; // -------------------------------------------------------------------------
+	  // value returned in lookup if found value in env
+	  // -------------------------------------------------------------------------
+
+
+	  function Value(value) {
+	    if (typeof this !== 'undefined' && !(this instanceof Value) || typeof this === 'undefined') {
+	      return new Value(value);
+	    }
+
+	    this.value = value;
+	  }
+
+	  Value.isUndefined = function (x) {
+	    return x instanceof Value && typeof x.value === 'undefined';
 	  };
 
-	  function Undefined() {}
+	  Value.prototype.valueOf = function () {
+	    return this.value;
+	  }; // -------------------------------------------------------------------------
 
-	  var undef = new Undefined(); // -------------------------------------------------------------------------
 
 	  Environment.prototype.get = function (symbol) {
 	    var options = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
 	    // we keep original environment as context for bind
 	    // so print will get user stdout
-	    var _options$throwError2 = options.throwError,
-	        throwError = _options$throwError2 === void 0 ? true : _options$throwError2;
-	    var value;
-	    var defined = false;
+	    var _options$throwError = options.throwError,
+	        throwError = _options$throwError === void 0 ? true : _options$throwError;
+	    var name = symbol;
 
-	    if (symbol instanceof LSymbol) {
-	      {
-	        value = objectGet(this, symbol, {
-	          throwError: false
-	        });
+	    if (name instanceof LSymbol || name instanceof LString) {
+	      name = name.valueOf();
+	    }
 
-	        if (typeof value !== 'undefined') {
-	          defined = true;
+	    var value = this._lookup(name);
+
+	    if (value instanceof Value) {
+	      if (Value.isUndefined(value)) {
+	        return undefined$1;
+	      }
+
+	      return patchValue(value.valueOf());
+	    }
+
+	    var parts = name.split('.').filter(Boolean);
+
+	    if (parts.length > 0) {
+	      var _parts = toArray(parts),
+	          first = _parts[0],
+	          rest = _parts.slice(1);
+
+	      value = this._lookup(first);
+
+	      if (rest.length) {
+	        if (value instanceof Value) {
+	          value = value.valueOf();
+	          return get.apply(void 0, [value].concat(toConsumableArray(rest)));
+	        } else {
+	          return get.apply(void 0, [root].concat(toConsumableArray(parts)));
 	        }
-	      }
-	    } else if (typeof symbol === 'string' || symbol instanceof LString) {
-	      symbol = symbol.valueOf();
-	      value = objectGet(this, symbol, {
-	        throwError: false
-	      });
-
-	      if (typeof value !== 'undefined') {
-	        defined = true;
+	      } else if (value instanceof Value) {
+	        return patchValue(value.valueOf());
 	      }
 	    }
 
-	    if (defined) {
-	      if (value === undef) {
-	        return undefined$1;
-	      }
+	    value = get(root, name);
 
-	      return value;
-	    }
-
-	    var name;
-
-	    if (symbol instanceof LSymbol) {
-	      name = symbol.name;
-	    } else if (typeof symbol === 'string') {
-	      name = symbol;
-	    }
-
-	    if (name) {
-	      value = objectGet(root, name, options);
-
-	      if (value === undef) {
-	        return undefined$1;
-	      }
-
+	    if (typeof value !== 'undefined') {
 	      return value;
 	    }
 
@@ -4962,23 +4933,23 @@
 	    pprint: doc(function (arg) {
 	      if (arg instanceof Pair) {
 	        arg = new lips.Formatter(arg.toString())["break"]().format();
-	        this.get('stdout').write(arg);
+	        this.get('stdout').write.call(this, arg);
 	      } else {
 	        this.get('display').call(this, arg);
 	      }
 	    }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
 	    // ------------------------------------------------------------------
 	    print: doc(function () {
-	      var _this$get,
+	      var _this$get$write,
 	          _this4 = this;
 
 	      for (var _len12 = arguments.length, args = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
 	        args[_key12] = arguments[_key12];
 	      }
 
-	      (_this$get = this.get('stdout')).write.apply(_this$get, toConsumableArray(args.map(function (arg) {
+	      (_this$get$write = this.get('stdout').write).apply.apply(_this$get$write, [this].concat(toConsumableArray(args.map(function (arg) {
 	        return _this4.get('repr')(arg, LString.isString(arg));
-	      })));
+	      }))));
 	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
 	    // ------------------------------------------------------------------
 	    display: doc(function (arg) {
@@ -4988,7 +4959,7 @@
 	        port = this.get('stdout');
 	      }
 
-	      port.write(this.get('repr')(arg));
+	      port.write.call(this, this.get('repr')(arg));
 	    }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
 	    // ------------------------------------------------------------------
 	    error: doc(function () {
@@ -5970,8 +5941,8 @@
 
 	      var types = [RegExp, Nil, LSymbol, Pair, Character];
 
-	      for (var _i2 = 0, _types = types; _i2 < _types.length; _i2++) {
-	        var _type2 = _types[_i2];
+	      for (var _i = 0, _types = types; _i < _types.length; _i++) {
+	        var _type2 = _types[_i];
 
 	        if (obj instanceof _type2) {
 	          return obj.toString();
@@ -6095,6 +6066,12 @@
 	    'unbind': doc(unbind, "(unbind fn)\n\n             Function remove bidning from function so you can get props from it."),
 	    // ------------------------------------------------------------------
 	    type: doc(type, "(type object)\n\n             Function return type of an object as string."),
+	    // ------------------------------------------------------------------
+	    'debugger': doc(function () {
+	      /* eslint-disable */
+	      debugger;
+	      /* eslint-enable */
+	    }, "(debugger)\n\n            Function stop JavaScript code in debugger."),
 	    // ------------------------------------------------------------------
 	    'instanceof': doc(function (type, obj) {
 	      return obj instanceof unbind(type);
@@ -6271,7 +6248,7 @@
 	    }, "(find fn list)\n            (find regex list)\n\n            Higher order Function find first value for which function return true.\n            If called with regex it will create matcher function."),
 	    // ------------------------------------------------------------------
 	    'for-each': doc(function (fn) {
-	      var _this$get2;
+	      var _this$get;
 
 	      typecheck('for-each', fn, 'function');
 
@@ -6285,7 +6262,7 @@
 	      // var ret = map.apply(void 0, [fn].concat(lists));
 	      // it don't work with weakBind
 
-	      var ret = (_this$get2 = this.get('map')).call.apply(_this$get2, [this, fn].concat(lists));
+	      var ret = (_this$get = this.get('map')).call.apply(_this$get, [this, fn].concat(lists));
 
 	      if (isPromise(ret)) {
 	        return ret.then(function () {});
@@ -6927,8 +6904,8 @@
 	      return 'null';
 	    }
 
-	    for (var _i3 = 0, _Object$entries = Object.entries(mapping); _i3 < _Object$entries.length; _i3++) {
-	      var _Object$entries$_i = slicedToArray(_Object$entries[_i3], 2),
+	    for (var _i2 = 0, _Object$entries = Object.entries(mapping); _i2 < _Object$entries.length; _i2++) {
+	      var _Object$entries$_i = slicedToArray(_Object$entries[_i2], 2),
 	          _key32 = _Object$entries$_i[0],
 	          value = _Object$entries$_i[1];
 
@@ -7211,6 +7188,10 @@
 	      if (typeof value === 'function') {
 	        var args = getFunctionArgs(rest, eval_args);
 	        return unpromise(args, function (args) {
+	          if (isBound(value)) {
+	            args = args.map(unbox);
+	          }
+
 	          if (value.__lambda__) {
 	            // lambda need environment as context
 	            // normal functions are bound to their contexts
@@ -7463,7 +7444,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 31 Mar 2020 12:24:23 +0000',
+	    date: 'Wed, 01 Apr 2020 18:53:36 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
