@@ -45,7 +45,6 @@
   (nop (let ((msg (concat (symbol->string symbol) ": " message)))
          ((. console "error") msg)
          (let (($ (. window "jQuery")))
-           (display $)
            (if (not (or (null? $) (null? (. jQuery "terminal"))))
                (let ((term ((.. jQuery.terminal.active))))
                  (--> term (error msg))))))))
@@ -81,7 +80,6 @@
   (let ((names (map gensym fields))
         (struct (gensym))
         (field-arg (gensym)))
-    (display names)
     `(if (not (defstruct:every-unique ',fields))
          (error 'defstruct "Fields must be unique")
          (begin
