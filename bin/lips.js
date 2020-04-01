@@ -81,7 +81,7 @@ function print(result) {
     if (result.length) {
         var last = result.pop();
         if (last !== undefined) {
-            console.log(env.get('string')(last));
+            console.log(env.get('repr')(last));
         }
     }
 }
