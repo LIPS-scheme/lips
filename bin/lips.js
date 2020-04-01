@@ -86,19 +86,23 @@ function print(result) {
     }
 }
 // -----------------------------------------------------------------------------
+
 function boostrap() {
-    var path;
-    try {
-        path = require.resolve('./examples/helpers.lips');
-    } catch (e) {
+    //, 'lib/R5RS.scm'
+    return Promise.all(['examples/helpers.lips'].map((name) => {
+        var path;
         try {
-            path = require.resolve('../examples/helpers.lips');
+            path = require.resolve(`./${name}`);
         } catch (e) {
-            path = require.resolve('@jcubic/lips/examples/helpers.lips');
+            try {
+                path = require.resolve(`../${name}`);
+            } catch (e) {
+                path = require.resolve(`@jcubic/lips/../${name}`);
+            }
         }
-    }
-    var data = fs.readFileSync(path);
-    return run(data, env);
+        var data = fs.readFileSync(path);
+        return run(data, env);
+    }));
 }
 
 // -----------------------------------------------------------------------------

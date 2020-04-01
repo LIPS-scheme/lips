@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 01 Apr 2020 19:27:37 +0000
+ * build: Wed, 01 Apr 2020 20:20:07 +0000
  */
 (function () {
 	'use strict';
@@ -2392,6 +2392,10 @@
 
 	        if (name instanceof LSymbol) {
 	          name = name.name;
+	        }
+
+	        if (name instanceof String) {
+	          name = name.valueOf();
 	        }
 
 	        var cdr = pair.cdr;
@@ -5168,16 +5172,6 @@
 	    // ------------------------------------------------------------------
 	    gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
 	    // ------------------------------------------------------------------
-	    'require.resolve': doc(function (path) {
-	      var ret = require.resolve(path);
-
-	      return ret;
-	    }, "(require.resolve path)\n\n           Return path relative the current module."),
-	    // ------------------------------------------------------------------
-	    'require': doc(function (module) {
-	      return require(module);
-	    }, "(require module)\n\n            Function to be used inside Node.js to import the module."),
-	    // ------------------------------------------------------------------
 	    load: doc(function (file) {
 	      typecheck('load', file, 'string');
 	      var env = this;
@@ -5374,7 +5368,7 @@
 	        throw new Error(msg);
 	      }
 
-	      unbind(obj)[key] = value;
+	      unbind(obj)[key] = value.valueOf();
 	    }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
 	    'current-environment': doc(function () {
 	      if (this.name === '__frame__') {
@@ -6840,11 +6834,20 @@
 	    global_env.set('global', global); // ---------------------------------------------------------------------
 
 	    global_env.set('require.resolve', doc(function (path) {
-	      return require.resolve(path);
+	      typecheck('require.resolve', path, 'string');
+	      return require.resolve(path.valueOf());
 	    }, "(require.resolve path)\n\n           Return path relative the current module.")); // ---------------------------------------------------------------------
 
 	    global_env.set('require', doc(function (module) {
-	      return require(module);
+	      typecheck('require.resolve', module, 'string');
+	      module = module.valueOf();
+	      var root = process.cwd() + '/';
+
+	      if (!module.match(/^\s*\./)) {
+	        root += "node_modules/";
+	      }
+
+	      return require(root + module);
 	    }, "(require module)\n\n            Function to be used inside Node.js to import the module.")); // ---------------------------------------------------------------------
 	  } else if (typeof window !== 'undefined') {
 	    global_env.set('window', window);
@@ -7456,7 +7459,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 01 Apr 2020 19:27:37 +0000',
+	    date: 'Wed, 01 Apr 2020 20:20:07 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

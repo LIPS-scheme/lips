@@ -169,7 +169,8 @@
 
    Function convert alist pairs to JavaScript object."
   (if (pair? alist)
-      ((. alist "toObject"))))
+      (alist.toObject)
+      (alist->object (new lips.Pair undefined nil))))
 
 ;; ---------------------------------------------------------------------------------------
     (define-macro (promise . body)

@@ -1192,6 +1192,9 @@ You can also use (help name) to display help for specic function or macro.
                 if (name instanceof LSymbol) {
                     name = name.name;
                 }
+                if (name instanceof String) {
+                    name = name.valueOf();
+                }
                 var cdr = pair.cdr;
                 if (cdr instanceof Pair) {
                     cdr = cdr.toObject();
@@ -3368,19 +3371,6 @@ You can also use (help name) to display help for specic function or macro.
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
-        'require.resolve': doc(function(path) {
-            var ret = require.resolve(path);
-            return ret;
-        }, `(require.resolve path)
-
-           Return path relative the current module.`),
-        // ------------------------------------------------------------------
-        'require': doc(function(module) {
-            return require(module);
-        }, `(require module)
-
-            Function to be used inside Node.js to import the module.`),
-        // ------------------------------------------------------------------
         load: doc(function(file) {
             typecheck('load', file, 'string');
             var env = this;
@@ -3604,7 +3594,7 @@ You can also use (help name) to display help for specic function or macro.
                 var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
                 throw new Error(msg);
             }
-            unbind(obj)[key] = value;
+            unbind(obj)[key] = value.valueOf();
         }, `(set-obj! obj key value)
 
             Function set property of JavaScript object`),
@@ -5081,13 +5071,20 @@ You can also use (help name) to display help for specic function or macro.
         global_env.set('global', global);
         // ---------------------------------------------------------------------
         global_env.set('require.resolve', doc(function(path) {
-            return require.resolve(path);
+            typecheck('require.resolve', path, 'string');
+            return require.resolve(path.valueOf());
         }, `(require.resolve path)
 
            Return path relative the current module.`));
         // ---------------------------------------------------------------------
         global_env.set('require', doc(function(module) {
-            return require(module);
+            typecheck('require.resolve', module, 'string');
+            module = module.valueOf();
+            var root = process.cwd() + '/';
+            if (!module.match(/^\s*\./)) {
+                root += "node_modules/";
+            }
+            return require(root + module);
         }, `(require module)
 
             Function to be used inside Node.js to import the module.`));
