@@ -139,7 +139,9 @@ if (options.c) {
                        ' code\n\nif called without arguments it will run REPL and if called with one argument' +
                        '\nit will treat it as filename and execute it.', intro, name));
 } else {
-    console.log(banner);
+    if (process.stdin.isTTY) {
+        console.log(banner);
+    }
     var prompt = 'lips> ';
     var continuePrompt = '... ';
     const rl = readline.createInterface({
@@ -176,7 +178,6 @@ if (options.c) {
                         if (multiline) {
                             rl.setPrompt(prompt);
                         }
-                        code = '';
                         rl.prompt();
                     }
                     rl.resume();
@@ -187,8 +188,8 @@ if (options.c) {
                         }
                         rl.prompt();
                     }
-                    code = '';
                 });
+                code = '';
             } else {
                 multiline = true;
                 var i = indent(code, 2, prompt.length - continuePrompt.length);
