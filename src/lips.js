@@ -3371,9 +3371,11 @@ You can also use (help name) to display help for specic function or macro.
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
-        load: doc(function(file) {
+        load: doc(function(file, env = null) {
             typecheck('load', file, 'string');
-            var env = this;
+            if (env === null) {
+                env = this;
+            }
             if (env.name === '__frame__') {
                 env = env.parent;
             }

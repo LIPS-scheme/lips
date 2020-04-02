@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 01 Apr 2020 23:12:19 +0000
+ * build: Thu, 02 Apr 2020 12:31:58 +0000
  */
 (function () {
 	'use strict';
@@ -5173,8 +5173,12 @@
 	    gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
 	    // ------------------------------------------------------------------
 	    load: doc(function (file) {
+	      var env = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
 	      typecheck('load', file, 'string');
-	      var env = this;
+
+	      if (env === null) {
+	        env = this;
+	      }
 
 	      if (env.name === '__frame__') {
 	        env = env.parent;
@@ -7463,7 +7467,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 01 Apr 2020 23:12:19 +0000',
+	    date: 'Thu, 02 Apr 2020 12:31:58 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

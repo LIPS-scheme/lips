@@ -564,3 +564,9 @@
 
 
 (define (newline) (display "\n"))
+
+(define *interaction-environment* (current-environment))
+(define (interaction-environment) *interaction-environment*)
+
+(define load (let ((__load load))
+               (lambda (file) (__load file (interaction-environment)))))

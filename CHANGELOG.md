@@ -26,6 +26,7 @@
 * parsing hex, octal, binary, complex, rational numbers
 * characters literals `#\A` and character and string functions
 * display `#t` and `#f` for boolean values in terminal
+* new `interaction-environment` function + `load` use that env by default
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

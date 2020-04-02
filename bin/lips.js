@@ -88,21 +88,24 @@ function print(result) {
 // -----------------------------------------------------------------------------
 
 function boostrap() {
-    //, 'lib/R5RS.scm'
-    return Promise.all(['examples/helpers.lips'].map((name) => {
-        var path;
-        try {
-            path = require.resolve(`./${name}`);
-        } catch (e) {
+    var list = ['examples/helpers.lips', 'lib/R5RS.scm'];
+    return (function next() {
+        var name = list.shift();
+        if (name) {
+            var path;
             try {
-                path = require.resolve(`../${name}`);
+                path = require.resolve(`./${name}`);
             } catch (e) {
-                path = require.resolve(`@jcubic/lips/../${name}`);
+                try {
+                    path = require.resolve(`../${name}`);
+                } catch (e) {
+                    path = require.resolve(`@jcubic/lips/../${name}`);
+                }
             }
+            var data = fs.readFileSync(path);
+            return run(data, env).then(next);
         }
-        var data = fs.readFileSync(path);
-        return run(data, env);
-    }));
+    })();
 }
 
 // -----------------------------------------------------------------------------
