@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 02 Apr 2020 12:31:58 +0000
+ * build: Thu, 02 Apr 2020 15:15:46 +0000
  */
 (function () {
 	'use strict';
@@ -3779,7 +3779,7 @@
 	  LFloat.prototype.constructor = LFloat;
 
 	  LFloat.prototype.toString = function () {
-	    if (this.value % 2 === 0) {
+	    if (!LNumber.isFloat(this.value)) {
 	      return this.value + '.0';
 	    }
 
@@ -7467,7 +7467,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 02 Apr 2020 12:31:58 +0000',
+	    date: 'Thu, 02 Apr 2020 15:15:46 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

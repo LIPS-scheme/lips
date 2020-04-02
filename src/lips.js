@@ -2209,7 +2209,7 @@ You can also use (help name) to display help for specic function or macro.
     LFloat.prototype = Object.create(LNumber.prototype);
     LFloat.prototype.constructor = LFloat;
     LFloat.prototype.toString = function() {
-        if (this.value % 2 === 0) {
+        if (!LNumber.isFloat(this.value)) {
             return this.value + '.0';
         }
         return this.value.toString();
