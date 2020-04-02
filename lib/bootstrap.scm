@@ -1,0 +1,339 @@
+;; this file contain essential functions and macros for LISP
+;;
+;; This file is part of the LIPS - Scheme implementation in JavaScript
+;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Released under MIT license
+
+;; -----------------------------------------------------------------------------
+(define (quoted-symbol? x)
+   "(quoted-symbol? code)
+
+   Helper function that test if value is quoted symbol. To be used in macros
+   that pass literal code that is transformed by parser.
+
+   usage:
+
+      (define-macro (test x)
+         (if (quoted-symbol? x)
+             `',(cadr x)))
+
+      (list 'hello (test 'world))"
+   (and (pair? x) (eq? (car x) 'quote) (symbol? (cadr x)) (null? (cddr x))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (--> expr . code)
+  "Helper macro that simplify calling methods on objects. It work with chaining
+
+   usage: (--> ($ \"body\")
+               (css \"color\" \"red\")
+               (on \"click\" (lambda () (display \"click\"))))
+
+          (--> document (querySelectorAll \"div\"))
+          (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\/title>/) 1)
+          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")"
+  (let ((obj (gensym)))
+    `(let* ((,obj ,(if (and (symbol? expr) (not (null? (match /\./ (symbol->string expr)))))
+                       `(.. ,expr)
+                       `,expr)))
+       ,@(map (lambda (code)
+                (let ((name (gensym))
+                      (value (gensym)))
+                  `(let* ((,name ,(cond ((quoted-symbol? code) (symbol->string (cadr code)))
+                                        ((pair? code) (symbol->string (car code)))
+                                        (true code)))
+                          (,value (. ,obj ,name)))
+                     ,(if (and (pair? code) (not (quoted-symbol? code)))
+                         `(set! ,obj (,value ,@(cdr code)))
+                         `(set! ,obj ,value)))))
+              code)
+       ,obj)))
+
+;; -----------------------------------------------------------------------------
+(define-macro (define-global first . rest)
+  "(define-global var value)
+   (define-global (name . args) body)
+
+   Macro that define functions or variables in global context, so they can be used
+   inside let and get let variables in closure, Useful for universal macros."
+  (if (pair? first)
+      (let ((name (car first)))
+        `(--> (. lips 'env)
+              (set ,(symbol->string name) (lambda ,(cdr first) ,@rest))))
+      `(--> (. lips 'env) (set ,(symbol->string first) ,(car rest)))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (globalize expr . rest)
+  "(globalize expr)
+
+    Macro will get the value of the expression and add each method as function to global
+    scope."
+  (let* ((env (current-environment))
+         (obj (eval expr env))
+         (name (gensym))
+         (env-name (gensym))
+         (make-name (if (pair? rest)
+                        (let ((pre (symbol->string (car rest))))
+                          (lambda (name) (string->symbol (concat pre name))))
+                        string->symbol)))
+    `(let ((,name ,expr))
+       ,@(filter pair?
+                 (map (lambda (key)
+                        (if (and (not (match /^_/ key)) (function? (. obj key)))
+                            (let* ((args (gensym)))
+                              `(define-global (,(make-name key) . ,args)
+                                 (apply (. ,name ,key) ,args)))))
+                        (array->list (--> Object (keys obj))))))))
+
+;; -----------------------------------------------------------------------------
+(define (single list)
+  "(single list)
+
+   Function check if argument is list with single element"
+  (and (pair? list) (not (cdr list))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (.. expr)
+  "(.. foo.bar.baz)
+
+   Macro that gets value from nested object where argument is comma separated symbol"
+  (if (not (symbol? expr))
+      expr
+      (let ((parts (split "." (symbol->string expr))))
+        (if (single parts)
+            expr
+            `(. ,(string->symbol (car parts)) ,@(cdr parts))))))
+
+;; -----------------------------------------------------------------------------
+(define (symbol->string s)
+  "(symbol->string symbol)
+
+   Function convert LIPS symbol to string."
+  (if (symbol? s)
+      (let ((name (. s "name")))
+        (if (string? name)
+            name
+            (--> name (toString))))))
+
+;; -----------------------------------------------------------------------------
+(define (string->symbol string)
+  "(string->symbol string)
+
+   Function convert string to LIPS symbol."
+  (and (string? string) (%as.data (new (. lips "LSymbol") string))))
+
+;; -----------------------------------------------------------------------------
+(define (alist->object alist)
+  "(alist->object alist)
+
+   Function convert alist pairs to JavaScript object."
+  (if (pair? alist)
+      (alist.toObject)
+      (alist->object (new lips.Pair undefined nil))))
+
+;; -----------------------------------------------------------------------------
+(define (parent.frames)
+  "(parent.frames)
+
+   Funcion return list of environments from parent frames (lambda function calls)"
+  (let iter ((result '()) (frame (parent.frame 2)))
+     (if (null? frame)
+         result
+         (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
+            (if (function? parent.frame)
+                (iter (cons frame result) (parent.frame))
+                result)))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (wait time . expr)
+  "(wait time . expr)
+
+   Function return promise that will resolve with evaluating the expression after delay."
+  `(promise (timer ,time (resolve (begin ,@expr)))))
+
+;; -----------------------------------------------------------------------------
+(define (pair-map fn seq-list)
+  "(pair-map fn list)
+
+   Function call fn argument for pairs in a list and return combined list with
+   values returned from function fn. It work like the map but take two items from list"
+  (let iter ((seq-list seq-list) (result '()))
+    (if (null? seq-list)
+        result
+        (if (and (pair? seq-list) (pair? (cdr seq-list)))
+            (let* ((first (car seq-list))
+                   (second (cadr seq-list))
+                   (value (fn first second)))
+              (if (null? value)
+                  (iter (cddr seq-list) result)
+                  (iter (cddr seq-list) (cons value result))))))))
+
+
+;; -----------------------------------------------------------------------------
+(define (object-expander expr)
+  "(object-expander '(:foo (:bar 10) (:baz (1 2 3))))
+
+   Recursive function helper for defining LIPS code for create objects using key like syntax."
+  (let ((name (gensym)))
+    `(let ((,name (alist->object '())))
+       ,@(pair-map (lambda (key value)
+                     (if (not (key? key))
+                         (error (concat (type key) " " (string key) " is not a string"))
+                         (let ((prop (key->string key)))
+                           (if (and (pair? value) (key? (car value)))
+                             `(set-obj! ,name ,prop ,(object-expander value))
+                             `(set-obj! ,name ,prop ,value)))))
+                   expr)
+       ,name)))
+
+;; -----------------------------------------------------------------------------
+(define-macro (make-object . expr)
+  "(make-object :name value)
+
+   Macro that create JavaScript object using key like syntax."
+  (object-expander expr))
+
+;; -----------------------------------------------------------------------------
+(define (alist->assign desc . sources)
+  "(alist->assign alist . list-of-alists)
+
+   Function that work like Object.assign but for LIPS alist."
+  (for-each (lambda (source)
+              (for-each (lambda (pair)
+                          (let* ((key (car pair))
+                                 (value (cdr pair))
+                                 (d-pair (assoc key desc)))
+                            (if (pair? d-pair)
+                                (set-cdr! d-pair value)
+                                (append! desc (list pair)))))
+                        source))
+            sources)
+  desc)
+
+;; -----------------------------------------------------------------------------
+(define (key? symbol)
+  "(key? symbol)
+
+   Function check if symbol is key symbol, have colon as first character."
+  (and (symbol? symbol) (eq? ":" (substring (symbol->string symbol) 0 1))))
+
+;; -----------------------------------------------------------------------------
+(define (key->string symbol)
+  "(key->string symbol)
+
+   If symbol is key it convert that to string - remove colon."
+  (if (key? symbol)
+      (substring (symbol->string symbol) 1)))
+
+;; -----------------------------------------------------------------------------
+(define (%as.data obj)
+  "(%as.data obj)
+
+   Mark object as data to stop evaluation."
+  (if (object? obj)
+      (begin
+        (set-obj! obj 'data true)
+        obj)))
+
+;; -----------------------------------------------------------------------------
+(define (dir obj)
+  "(dir obj)
+
+   Function return all props on the object including those in prototype chain."
+  (if (null? obj) nil
+      (append (array->list (Object.getOwnPropertyNames obj))
+              (dir (Object.getPrototypeOf obj)))))
+
+
+;; ---------------------------------------------------------------------------------------
+(define (tree-map f tree)
+  "(tree-map fn tree)
+
+   Tree version of map. Function is invoked on every leaf."
+  (if (pair? tree)
+      (cons (tree-map f (car tree)) (tree-map f (cdr tree)))
+      (f tree)))
+
+;; -----------------------------------------------------------------------------
+(define (native.number x)
+  "(native.number obj)
+
+   If argument is number it will convert to native number."
+  (if (number? x)
+      (value x)
+      x))
+
+;; -----------------------------------------------------------------------------
+(define (value obj)
+  "(value obj)
+
+   Function unwrap LNumbers and convert nil value to undefined."
+  (if (eq? obj nil)
+      undefined
+      (if (number? obj)
+          ((. obj "valueOf"))
+          obj)))
+
+;; -----------------------------------------------------------------------------
+(define-macro (define-formatter-rule . patterns)
+  "(rule-pattern pattern)
+
+   Anaphoric Macro for defining patterns for formatter. With Ahead, Pattern and * defined values."
+  (let ((rules (gensym)))
+    `(let ((,rules (.. lips.Formatter.rules))
+           (Ahead (lambda (pattern)
+                    (let ((Ahead (.. lips.Formatter.Ahead)))
+                      (new Ahead (if (string? pattern) (new RegExp pattern) pattern)))))
+           (* ((.. Symbol.for) "*"))
+           (Pattern (lambda (pattern flag)
+                      (new (.. lips.Formatter.Pattern) (list->array pattern)
+                           (if (null? flag) undefined flag)))))
+       ,@(map (lambda (pattern)
+                `(--> ,rules (push (tree->array (tree-map native.number ,@pattern)))))
+              patterns))))
+
+
+;; -----------------------------------------------------------------------------
+(define-macro (cond . list)
+  "(cond (predicate? . body)
+         (predicate? . body))
+
+   Macro for condition check. For usage instead of nested ifs."
+  (if (pair? list)
+      (let* ((item (car list))
+             (first (car item))
+             (forms (cdr item))
+             (rest (cdr list)))
+        `(if ,first
+             (begin
+               ,@forms)
+             ,(if (and (pair? rest)
+                       (or (eq? (caar rest) true)
+                           (eq? (caar rest) 'else)))
+                  `(begin
+                     ,@(cdar rest))
+                  (if (not (null? rest))
+                      `(cond ,@rest)))))
+      nil))
+
+;; -----------------------------------------------------------------------------
+;; formatter rules for cond to break after each S-Expression
+;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro use RegExp constructor
+(define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+")) 1 (Ahead "[^)]"))))
+
+
+;; -----------------------------------------------------------------------------
+(define *interaction-environment* (current-environment))
+(define (interaction-environment)
+  "(interaction-environment)
+
+   Function return environment used to load this file. It can be global,
+   if file loaded with script tag."
+  *interaction-environment*)
+
+;; -----------------------------------------------------------------------------
+(define load (let ((__load load))
+               (lambda (file)
+                 "(load file)
+
+                  Function load LISP Scheme code and evaluate the content."
+                 (__load file (interaction-environment)))))

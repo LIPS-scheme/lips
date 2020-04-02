@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 02 Apr 2020 15:15:46 +0000
+ * build: Thu, 02 Apr 2020 18:09:16 +0000
  */
 (function () {
 	'use strict';
@@ -1204,7 +1204,7 @@
 	    var m = arg.match(/#\\(.*)$/);
 
 	    if (m) {
-	      return Character(m[1]);
+	      return LCharacter(m[1]);
 	    }
 	  } // ----------------------------------------------------------------------
 
@@ -2517,7 +2517,7 @@
 	      return JSON.stringify(value.valueOf()).replace(/\\n/g, '\n');
 	    } else if (isPromise(value)) {
 	      return '<#Promise>';
-	    } else if (value instanceof LSymbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value instanceof Character || value === nil) {
+	    } else if (value instanceof LSymbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value instanceof LCharacter || value === nil) {
 	      return value.toString();
 	    } else if (value instanceof Array) {
 	      return value.map(toString);
@@ -2721,7 +2721,7 @@
 	      return x.cmp(y) === 0;
 	    } else if (typeof x === 'number' || typeof y === 'number') {
 	      return LNumber(x).cmp(LNumber(y)) === 0;
-	    } else if (x instanceof Character && y instanceof Character) {
+	    } else if (x instanceof LCharacter && y instanceof LCharacter) {
 	      return x["char"] === y["char"];
 	    } else if (x instanceof LString && y instanceof LString) {
 	      return x.valueOf() === y.valueOf();
@@ -3430,17 +3430,17 @@
 	  // :: character object representation
 	  // -------------------------------------------------------------------------
 
-	  function Character(chr) {
-	    if (typeof this !== 'undefined' && !(this instanceof Character) || typeof this === 'undefined') {
-	      return new Character(chr);
+	  function LCharacter(chr) {
+	    if (typeof this !== 'undefined' && !(this instanceof LCharacter) || typeof this === 'undefined') {
+	      return new LCharacter(chr);
 	    }
 
-	    if (Character.names[chr]) {
+	    if (LCharacter.names[chr]) {
 	      this.name = chr;
-	      this["char"] = Character.names[chr];
+	      this["char"] = LCharacter.names[chr];
 	    } else {
 	      this["char"] = chr;
-	      var name = Character.rev_names[chr];
+	      var name = LCharacter.rev_names[chr];
 
 	      if (name) {
 	        this.name = name;
@@ -3448,28 +3448,32 @@
 	    }
 	  }
 
-	  Character.names = {
+	  LCharacter.names = {
 	    'space': ' ',
 	    'newline': '\n',
 	    'return': '\r',
 	    'tab': '\t'
 	  };
-	  Character.rev_names = {};
-	  Object.keys(Character.names).forEach(function (key) {
-	    var value = Character.names[key];
-	    Character.rev_names[value] = key;
+	  LCharacter.rev_names = {};
+	  Object.keys(LCharacter.names).forEach(function (key) {
+	    var value = LCharacter.names[key];
+	    LCharacter.rev_names[value] = key;
 	  });
 
-	  Character.prototype.toUpperCase = function () {
-	    return Character(this["char"].toUpperCase());
+	  LCharacter.prototype.toUpperCase = function () {
+	    return LCharacter(this["char"].toUpperCase());
 	  };
 
-	  Character.prototype.toLowerCase = function () {
-	    return Character(this["char"].toLowerCase());
+	  LCharacter.prototype.toLowerCase = function () {
+	    return LCharacter(this["char"].toLowerCase());
 	  };
 
-	  Character.prototype.toString = function () {
+	  LCharacter.prototype.toString = function () {
 	    return '#\\' + (this.name || this["char"]);
+	  };
+
+	  LCharacter.prototype.valueOf = function () {
+	    return this["char"];
 	  }; // -------------------------------------------------------------------------
 	  // :: String wrapper that handle copy and in place change
 	  // -------------------------------------------------------------------------
@@ -3534,7 +3538,7 @@
 	  };
 
 	  LString.prototype.set = function (n, _char) {
-	    if (_char instanceof Character) {
+	    if (_char instanceof LCharacter) {
 	      _char = _char["char"];
 	    }
 
@@ -5953,7 +5957,7 @@
 	        return '<#undefined>';
 	      }
 
-	      var types = [RegExp, Nil, LSymbol, Pair, Character];
+	      var types = [RegExp, Nil, LSymbol, Pair, LCharacter];
 
 	      for (var _i = 0, _types = types; _i < _types.length; _i++) {
 	        var _type2 = _types[_i];
@@ -6913,6 +6917,7 @@
 	    var mapping = {
 	      'pair': Pair,
 	      'symbol': LSymbol,
+	      'character': LCharacter,
 	      'macro': Macro,
 	      'string': LString,
 	      'array': Array,
@@ -7467,7 +7472,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 02 Apr 2020 15:15:46 +0000',
+	    date: 'Thu, 02 Apr 2020 18:09:16 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -7495,7 +7500,7 @@
 	    LComplex: LComplex,
 	    LRational: LRational,
 	    LBigInteger: LBigInteger,
-	    Character: Character,
+	    LCharacter: LCharacter,
 	    LString: LString,
 	    rationalize: rationalize
 	  }; // so it work when used with webpack where it will be not global

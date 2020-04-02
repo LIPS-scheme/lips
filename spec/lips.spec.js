@@ -15,7 +15,7 @@ var {
     quote
 } = lips;
 
-var deps = lips.exec('(load "./examples/helpers.lips")');
+var deps = lips.exec('(load "./lib/bootstrap.scm") (load "./examples/helpers.scm")');
 
 describe('tokenizer', function() {
     it('should create tokens for simple list', function() {

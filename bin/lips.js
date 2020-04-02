@@ -88,7 +88,7 @@ function print(result) {
 // -----------------------------------------------------------------------------
 
 function boostrap() {
-    var list = ['examples/helpers.lips', 'lib/R5RS.scm'];
+    var list = ['./lib/bootstrap.scm', './examples/helpers.scm', './lib/R5RS.scm'];
     return (function next() {
         var name = list.shift();
         if (name) {

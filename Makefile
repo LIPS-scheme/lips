@@ -18,6 +18,7 @@ NPM=npm
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
+AVA=./node_modules/.bin/ava
 UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 
@@ -59,6 +60,9 @@ publish:
 
 test: dist/lips.js
 	$(JEST) --coverage spec/*.spec.js
+
+test-ava:
+	$(AVA) test.js
 
 coveralls:
 	$(CAT) ./coverage/lcov.info | $(COVERALLS)

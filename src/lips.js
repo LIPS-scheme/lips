@@ -214,7 +214,7 @@ You can also use (help name) to display help for specic function or macro.
     function parseCharacter(arg) {
         var m = arg.match(/#\\(.*)$/);
         if (m) {
-            return Character(m[1]);
+            return LCharacter(m[1]);
         }
     }
     // ----------------------------------------------------------------------
@@ -1308,7 +1308,7 @@ You can also use (help name) to display help for specic function or macro.
                    value instanceof LNumber ||
                    value instanceof RegExp ||
                    value instanceof Pair ||
-                   value instanceof Character ||
+                   value instanceof LCharacter ||
                    value === nil) {
             return value.toString();
         } else if (value instanceof Array) {
@@ -1474,7 +1474,7 @@ You can also use (help name) to display help for specic function or macro.
             return x.cmp(y) === 0;
         } else if (typeof x === 'number' || typeof y === 'number') {
             return LNumber(x).cmp(LNumber(y)) === 0;
-        } else if (x instanceof Character && y instanceof Character) {
+        } else if (x instanceof LCharacter && y instanceof LCharacter) {
             return x.char === y.char;
         } else if (x instanceof LString && y instanceof LString) {
             return x.valueOf() === y.valueOf();
@@ -1952,41 +1952,44 @@ You can also use (help name) to display help for specic function or macro.
     // -------------------------------------------------------------------------
     // :: character object representation
     // -------------------------------------------------------------------------
-    function Character(chr) {
-        if (typeof this !== 'undefined' && !(this instanceof Character) ||
+    function LCharacter(chr) {
+        if (typeof this !== 'undefined' && !(this instanceof LCharacter) ||
             typeof this === 'undefined') {
-            return new Character(chr);
+            return new LCharacter(chr);
         }
-        if (Character.names[chr]) {
+        if (LCharacter.names[chr]) {
             this.name = chr;
-            this.char = Character.names[chr];
+            this.char = LCharacter.names[chr];
         } else {
             this.char = chr;
-            var name = Character.rev_names[chr];
+            var name = LCharacter.rev_names[chr];
             if (name) {
                 this.name = name;
             }
         }
     }
-    Character.names = {
+    LCharacter.names = {
         'space': ' ',
         'newline': '\n',
         'return': '\r',
         'tab': '\t'
     };
-    Character.rev_names = {};
-    Object.keys(Character.names).forEach(key => {
-        var value = Character.names[key];
-        Character.rev_names[value] = key;
+    LCharacter.rev_names = {};
+    Object.keys(LCharacter.names).forEach(key => {
+        var value = LCharacter.names[key];
+        LCharacter.rev_names[value] = key;
     });
-    Character.prototype.toUpperCase = function() {
-        return Character(this.char.toUpperCase());
+    LCharacter.prototype.toUpperCase = function() {
+        return LCharacter(this.char.toUpperCase());
     };
-    Character.prototype.toLowerCase = function() {
-        return Character(this.char.toLowerCase());
+    LCharacter.prototype.toLowerCase = function() {
+        return LCharacter(this.char.toLowerCase());
     };
-    Character.prototype.toString = function() {
+    LCharacter.prototype.toString = function() {
         return '#\\' + (this.name || this.char);
+    };
+    LCharacter.prototype.valueOf = function() {
+        return this.char;
     };
     // -------------------------------------------------------------------------
     // :: String wrapper that handle copy and in place change
@@ -2017,7 +2020,7 @@ You can also use (help name) to display help for specic function or macro.
         return this._string[n];
     };
     LString.prototype.set = function(n, char) {
-        if (char instanceof Character) {
+        if (char instanceof LCharacter) {
             char = char.char;
         }
         var string = [];
@@ -4163,7 +4166,7 @@ You can also use (help name) to display help for specic function or macro.
             if (typeof obj === 'undefined') {
                 return '<#undefined>';
             }
-            var types = [RegExp, Nil, LSymbol, Pair, Character];
+            var types = [RegExp, Nil, LSymbol, Pair, LCharacter];
             for (let type of types) {
                 if (obj instanceof type) {
                     return obj.toString();
@@ -5141,6 +5144,7 @@ You can also use (help name) to display help for specic function or macro.
         var mapping = {
             'pair': Pair,
             'symbol': LSymbol,
+            'character': LCharacter,
             'macro': Macro,
             'string': LString,
             'array': Array,
@@ -5539,7 +5543,7 @@ You can also use (help name) to display help for specic function or macro.
         LComplex,
         LRational,
         LBigInteger,
-        Character,
+        LCharacter,
         LString,
         rationalize
     };
