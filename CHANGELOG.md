@@ -32,11 +32,12 @@
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
 * update defstruct to export only needed functions (local functions are namespaced)
-* prevent of evaluation of `(define (x . a) a)) (x 1 2 3)`
+* prevent of evaluation of `(define (x . a) a)) (x 1 2 3)` (`list` in scheme)
 * fix `LNumber::String` with radix
 * fix formatting of float numbers
 * fix try..catch
 * fix display of function/macro docs (remove white space in parser)
+* fix loading modules with `require`
 
 ## 0.20.1
 ### Bug fixes

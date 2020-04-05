@@ -5076,9 +5076,28 @@ You can also use (help name) to display help for specic function or macro.
 
             Function calculate ${code}`));
     });
+    // -----------------------------------------------------------------------------
+    function reversseFind(dir, fn) {
+        var parts = dir.split(path.sep).filter(Boolean);
+        for (var i=parts.length; i--;) {
+            var p = path.join('/', ...parts.slice(0, i));
+            if (fn(p)) {
+                return p;
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------------
+    function nodeModuleFind(dir) {
+        return reversseFind(dir, function(dir) {
+            return fs.existsSync(path.join(dir, 'node_modules'));
+        });
+    }
 
     // -------------------------------------------------------------------------
     if (typeof global !== 'undefined') {
+        var fs = require('fs');
+        var path = require('path');
         global_env.set('global', global);
         // ---------------------------------------------------------------------
         global_env.set('require.resolve', doc(function(path) {
@@ -5091,11 +5110,17 @@ You can also use (help name) to display help for specic function or macro.
         global_env.set('require', doc(function(module) {
             typecheck('require.resolve', module, 'string');
             module = module.valueOf();
-            var root = process.cwd() + '/';
-            if (!module.match(/^\s*\./)) {
-                root += "node_modules/";
+            var root = process.cwd();
+            if (module.match(/^\s*\./)) {
+                return require(path.join(root, module));
+            } else {
+                var dir = nodeModuleFind(root);
+                if (dir) {
+                    return require(path.join(dir, "node_modules", module));
+                } else {
+                    return require(module);
+                }
             }
-            return require(root + module);
         }, `(require module)
 
             Function to be used inside Node.js to import the module.`));

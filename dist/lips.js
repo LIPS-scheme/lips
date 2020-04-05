@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 02 Apr 2020 18:09:16 +0000
+ * build: Sun, 05 Apr 2020 09:35:53 +0000
  */
 (function () {
 	'use strict';
@@ -6840,9 +6840,33 @@
 	        }
 	      }, arg);
 	    }, "(".concat(name, " arg)\n\n            Function calculate ").concat(code)));
-	  }); // -------------------------------------------------------------------------
+	  }); // -----------------------------------------------------------------------------
+
+	  function reversseFind(dir, fn) {
+	    var parts = dir.split(path.sep).filter(Boolean);
+
+	    for (var i = parts.length; i--;) {
+	      var p = path.join.apply(path, ['/'].concat(toConsumableArray(parts.slice(0, i))));
+
+	      if (fn(p)) {
+	        return p;
+	      }
+	    }
+	  } // -----------------------------------------------------------------------------
+
+
+	  function nodeModuleFind(dir) {
+	    return reversseFind(dir, function (dir) {
+	      return fs.existsSync(path.join(dir, 'node_modules'));
+	    });
+	  } // -------------------------------------------------------------------------
+
 
 	  if (typeof global !== 'undefined') {
+	    var fs = require('fs');
+
+	    var path = require('path');
+
 	    global_env.set('global', global); // ---------------------------------------------------------------------
 
 	    global_env.set('require.resolve', doc(function (path) {
@@ -6853,13 +6877,19 @@
 	    global_env.set('require', doc(function (module) {
 	      typecheck('require.resolve', module, 'string');
 	      module = module.valueOf();
-	      var root = process.cwd() + '/';
+	      var root = process.cwd();
 
-	      if (!module.match(/^\s*\./)) {
-	        root += "node_modules/";
+	      if (module.match(/^\s*\./)) {
+	        return require(path.join(root, module));
+	      } else {
+	        var dir = nodeModuleFind(root);
+
+	        if (dir) {
+	          return require(path.join(dir, "node_modules", module));
+	        } else {
+	          return require(module);
+	        }
 	      }
-
-	      return require(root + module);
 	    }, "(require module)\n\n            Function to be used inside Node.js to import the module.")); // ---------------------------------------------------------------------
 	  } else if (typeof window !== 'undefined') {
 	    global_env.set('window', window);
@@ -7472,7 +7502,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 02 Apr 2020 18:09:16 +0000',
+	    date: 'Sun, 05 Apr 2020 09:35:53 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

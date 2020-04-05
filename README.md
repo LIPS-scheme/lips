@@ -1,8 +1,8 @@
 ## LIPS is Pretty Simple
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&950fbf8a80f5ee1a4fa95aea0c6f1b9ca74c689a)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&4f3f1d5381c49bc32b49aaaaafd87da5)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&4ff55fe106564ac52832f2a4585616c3f3e3bca3)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&598700d2cd4fb8144a93b5adfde11285)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
 LIPS Scheme (lisp dialect) implementation written in JavaScript,

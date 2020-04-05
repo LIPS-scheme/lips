@@ -87,7 +87,7 @@ function print(result) {
 }
 // -----------------------------------------------------------------------------
 
-function boostrap() {
+function boostrap(env) {
     var list = ['./lib/bootstrap.scm', './examples/helpers.scm', './lib/R5RS.scm'];
     return (function next() {
         var name = list.shift();
@@ -124,14 +124,20 @@ if (options.c) {
         run(options.c, env).then(print);
     });
 } else if (options._.length === 1) {
-   fs.readFile(options._[0], function(err, data) {
-        if (err) {
-            console.error(err);
-        } else {
-            boostrap().then(function() {
-                return run(data.toString().replace(/^#!.*\n/, ''), env);
-            });
-        }
+    var e = env.inherit('name');
+    // hack for node-gtk
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    fs.promises.readFile(options._[0]).then(function(data) {
+        return boostrap(e).then(function() {
+            return run(data.toString().replace(/^#!.*\n/, ''), e);
+        });
+    }).catch(err => {
+        console.error(err);
+    }).finally(function() {
+        rl.close();
     });
 } else if (options.h) {
     var name = process.argv[1];
@@ -167,7 +173,7 @@ if (options.c) {
             console.log(this.get('repr')(x));
         })
     });
-    boostrap().then(function() {
+    boostrap(e).then(function() {
         rl.on('line', function(line) {
             code += line + '\n';
             if (balanced_parenthesis(code)) {
