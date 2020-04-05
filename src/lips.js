@@ -164,7 +164,7 @@
 | |  |___||_||_|  <___/  | |
  \\_\\                    /_/
 
-LIPS Interpreter {{VER}} (${_build})
+LIPS Scheme Interpreter {{VER}} (${_build})
 Copyright (c) 2018-${_year} Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.

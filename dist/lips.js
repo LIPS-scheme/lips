@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 05 Apr 2020 10:25:51 +0000
+ * build: Sun, 05 Apr 2020 17:24:15 +0000
  */
 (function () {
 	'use strict';
@@ -1150,7 +1150,7 @@
 
 	    var _build = "".concat(_year, "-").concat(_format(_date.getMonth() + 1), "-").concat(_format(_date.getDate()));
 
-	    var banner = "\n  __                    __\n / /  _    _  ___  ___  \\ \\\n| |  | |  | || . \\/ __>  | |\n| |  | |_ | ||  _/\\__ \\  | |\n| |  |___||_||_|  <___/  | |\n \\_\\                    /_/\n\nLIPS Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+	    var banner = "\n  __                    __\n / /  _    _  ___  ___  \\ \\\n| |  | |  | || . \\/ __>  | |\n| |  | |_ | ||  _/\\__ \\  | |\n| |  |___||_||_|  <___/  | |\n \\_\\                    /_/\n\nLIPS Scheme Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
 	    return banner;
 	  }(); // parse_argument based on function from jQuery Terminal
 
@@ -7502,7 +7502,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 05 Apr 2020 10:25:51 +0000',
+	    date: 'Sun, 05 Apr 2020 17:24:15 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
