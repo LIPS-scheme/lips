@@ -5079,7 +5079,7 @@ You can also use (help name) to display help for specic function or macro.
     // -----------------------------------------------------------------------------
     function reversseFind(dir, fn) {
         var parts = dir.split(path.sep).filter(Boolean);
-        for (var i=parts.length; i--;) {
+        for (var i = parts.length; i--;) {
             var p = path.join('/', ...parts.slice(0, i));
             if (fn(p)) {
                 return p;
