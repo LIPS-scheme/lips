@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 05 Apr 2020 17:24:15 +0000
+ * build: Mon, 06 Apr 2020 16:31:15 +0000
  */
 (function () {
 	'use strict';
@@ -5432,7 +5432,7 @@
 
 	      var __doc__;
 
-	      if (code.cdr instanceof Pair && LString.isString(code.cdr.car)) {
+	      if (code.cdr instanceof Pair && LString.isString(code.cdr.car) && code.cdr.cdr !== nil) {
 	        __doc__ = code.cdr.car.valueOf();
 	      }
 
@@ -5994,6 +5994,11 @@
 	      }
 
 	      if (_typeof_1(obj) === 'object') {
+	        // user defined representation
+	        if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
+	          return obj.toString().valueOf();
+	        }
+
 	        var constructor = obj.constructor;
 	        var name;
 
@@ -7502,7 +7507,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 05 Apr 2020 17:24:15 +0000',
+	    date: 'Mon, 06 Apr 2020 16:31:15 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

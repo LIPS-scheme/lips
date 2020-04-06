@@ -3647,7 +3647,8 @@ You can also use (help name) to display help for specic function or macro.
             var self = this;
             var __doc__;
             if (code.cdr instanceof Pair &&
-                LString.isString(code.cdr.car)) {
+                LString.isString(code.cdr.car) &&
+                code.cdr.cdr !== nil) {
                 __doc__ = code.cdr.car.valueOf();
             }
             function lambda(...args) {
@@ -4191,6 +4192,10 @@ You can also use (help name) to display help for specic function or macro.
                 return `<#HTMLElement(${obj.tagName.toLowerCase()})>`;
             }
             if (typeof obj === 'object') {
+                // user defined representation
+                if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
+                    return obj.toString().valueOf();
+                }
                 var constructor = obj.constructor;
                 var name;
                 if (typeof constructor.__className === 'string') {
