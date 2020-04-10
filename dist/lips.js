@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 10 Apr 2020 21:21:37 +0000
+ * build: Fri, 10 Apr 2020 21:55:43 +0000
  */
 (function () {
 	'use strict';
@@ -4839,35 +4839,37 @@
 	      return patchValue(value.valueOf());
 	    }
 
-	    var parts = name.split('.').filter(Boolean);
+	    if (typeof name === 'string') {
+	      var parts = name.split('.').filter(Boolean);
 
-	    if (parts.length > 0) {
-	      var _parts = toArray(parts),
-	          first = _parts[0],
-	          rest = _parts.slice(1);
+	      if (parts.length > 0) {
+	        var _parts = toArray(parts),
+	            first = _parts[0],
+	            rest = _parts.slice(1);
 
-	      value = this._lookup(first);
+	        value = this._lookup(first);
 
-	      if (rest.length) {
-	        if (value instanceof Value) {
-	          value = value.valueOf();
-	          return get.apply(void 0, [value].concat(toConsumableArray(rest)));
-	        } else {
-	          return get.apply(void 0, [root].concat(toConsumableArray(parts)));
+	        if (rest.length) {
+	          if (value instanceof Value) {
+	            value = value.valueOf();
+	            return get.apply(void 0, [value].concat(toConsumableArray(rest)));
+	          } else {
+	            return get.apply(void 0, [root].concat(toConsumableArray(parts)));
+	          }
+	        } else if (value instanceof Value) {
+	          return patchValue(value.valueOf());
 	        }
-	      } else if (value instanceof Value) {
-	        return patchValue(value.valueOf());
 	      }
-	    }
 
-	    value = get(root, name);
+	      value = get(root, name);
+	    }
 
 	    if (typeof value !== 'undefined') {
 	      return value;
 	    }
 
 	    if (throwError) {
-	      throw new Error("Unbound variable `" + name + "'");
+	      throw new Error("Unbound variable `" + name.toString() + "'");
 	    }
 	  }; // -------------------------------------------------------------------------
 
@@ -5365,18 +5367,15 @@
 	    // ------------------------------------------------------------------
 	    '%let-env': new Macro('%let-env', function (code) {
 	      var options = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
-	      var env = options.env,
-	          dynamic_scope = options.dynamic_scope,
+	      var dynamic_scope = options.dynamic_scope,
 	          error = options.error;
 	      typecheck('%let-env', code, 'pair');
-	      console.log(code.car.toString());
 	      var ret = evaluate(code.car, {
-	        env: env,
+	        env: this,
 	        dynamic_scope: dynamic_scope,
 	        error: error
 	      });
 	      return unpromise(ret, function (value) {
-	        console.log(value);
 	        return evaluate(Pair(LSymbol('begin'), code.cdr), {
 	          env: value,
 	          dynamic_scope: dynamic_scope,
@@ -7614,7 +7613,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 10 Apr 2020 21:21:37 +0000',
+	    date: 'Fri, 10 Apr 2020 21:55:43 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

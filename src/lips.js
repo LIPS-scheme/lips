@@ -3023,27 +3023,29 @@ You can also use (help name) to display help for specic function or macro.
             }
             return patchValue(value.valueOf());
         }
-        var parts = name.split('.').filter(Boolean);
-        if (parts.length > 0) {
-            var [first, ...rest] = parts;
-            value = this._lookup(first);
-            if (rest.length) {
-                if (value instanceof Value) {
-                    value = value.valueOf();
-                    return get(value, ...rest);
-                } else {
-                    return get(root, ...parts);
+        if (typeof name === 'string') {
+            var parts = name.split('.').filter(Boolean);
+            if (parts.length > 0) {
+                var [first, ...rest] = parts;
+                value = this._lookup(first);
+                if (rest.length) {
+                    if (value instanceof Value) {
+                        value = value.valueOf();
+                        return get(value, ...rest);
+                    } else {
+                        return get(root, ...parts);
+                    }
+                } else if (value instanceof Value) {
+                    return patchValue(value.valueOf());
                 }
-            } else if (value instanceof Value) {
-                return patchValue(value.valueOf());
             }
+            value = get(root, name);
         }
-        value = get(root, name);
         if (typeof value !== 'undefined') {
             return value;
         }
         if (throwError) {
-            throw new Error("Unbound variable `" + name + "'");
+            throw new Error("Unbound variable `" + name.toString() + "'");
         }
     };
     // -------------------------------------------------------------------------
@@ -3511,12 +3513,10 @@ You can also use (help name) to display help for specic function or macro.
             false expression`),
         // ------------------------------------------------------------------
         '%let-env': new Macro('%let-env', function(code, options = {}) {
-            const { env, dynamic_scope, error } = options;
+            const { dynamic_scope, error } = options;
             typecheck('%let-env', code, 'pair');
-            console.log(code.car.toString());
-            var ret = evaluate(code.car, { env, dynamic_scope, error });
+            var ret = evaluate(code.car, { env: this, dynamic_scope, error });
             return unpromise(ret, function(value) {
-                console.log(value);
                 return evaluate(Pair(LSymbol('begin'), code.cdr), {
                     env: value, dynamic_scope, error
                 });
