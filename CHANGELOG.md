@@ -5,6 +5,7 @@
 * `if` no longer require boolean as cond
 * change how arrays are presented, they are look like scheme vector `#(...)`
 * rename `string` to `repr`
+* new API `lips.Intepreter` - for using interpreter that have different stdout/stdin
 ### Features
 * start implementing R5RS spec
 * streams example

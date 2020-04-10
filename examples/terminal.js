@@ -15,7 +15,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         return fn;
     }
     // -------------------------------------------------------------------------
-    var env = lips.env.inherit(name, {
+    var interpreter = lips.Interpreter('demo', {
         stdout: lips.OutputPort(function() {
             var args = Array.from(arguments);
             args.forEach(function(arg) {
@@ -32,22 +32,24 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             var new_code = new Pair(new LSymbol('__help'), code);
             var doc = evaluate(new_code, { env: this, error });
             term.echo(doc, { formatters: false });
-        }), lips.env.env.help.__doc__),
+        }), lips.env.get('help').__doc__),
         // ---------------------------------------------------------------------
         error: doc(function(message) {
             term.error(message);
-        }, lips.env.env.error.__doc__)
+        }, lips.env.get('error').__doc__),
+        // ---------------------------------------------------------------------
+        // hack so (let ((x lambda)) (help x))
+        '__help': lips.env.get('help')
     });
-    // hack so (let ((x lambda)) (help x))
-    env.env.__help = lips.env.env.help;
     // -------------------------------------------------------------------------
+    var display = interpreter.get('display');
     var term = jQuery(selector).terminal(function(code, term) {
         // format before executing mainly for strings in function docs
         code = new lips.Formatter(code).format();
-        lips.exec(code, env, dynamic).then(function(ret) {
+        return interpreter.exec(code, dynamic).then(function(ret) {
             ret.forEach(function(ret) {
                 if (ret !== undefined) {
-                    env.get('display').call(env, ret);
+                    display(ret);
                 }
             });
         }).catch(function(e) {
@@ -115,15 +117,16 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             // Array.from is need to for jQuery terminal version <2.5.0
             // when terminal is outside iframe and lips is inside
             // jQuery Terminal was using instanceof that don't work between iframes
+            var env = Array.from(interpreter.get('env')().toArray());
             if (!tokens.length) {
-                return Array.from(env.get('env').apply(env).toArray());
+                return env;
             }
             const last = tokens.pop();
             if (last.trim().length) {
                 const globals = Object.getOwnPropertyNames(window);
                 const prefix = tokens.join('');
                 const re = new RegExp('^' + jQuery.terminal.escape_regex(last));
-                var commands = env.get('env').apply(env).toArray().concat(globals).filter(name => {
+                var commands = env.concat(globals).filter(name => {
                     return re.test(name);
                 }).map(name => prefix + name);
                 return Array.from(commands);
@@ -168,7 +171,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             }
         }
     });
-    term.env = env;
-    env.set('term', term);
+    term.interpreter = interpreter;
+    interpreter.set('term', term);
     return term;
 }

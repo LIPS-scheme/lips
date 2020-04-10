@@ -320,20 +320,26 @@
 ;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro use RegExp constructor
 (define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+")) 1 (Ahead "[^)]"))))
 
-
 ;; -----------------------------------------------------------------------------
-(define *interaction-environment* (current-environment))
 (define (interaction-environment)
   "(interaction-environment)
 
-   Function return environment used to load this file. It can be global,
-   if file loaded with script tag."
-  *interaction-environment*)
+   Function return interaction environement equal to lips.env can be overwritten,
+   when creating new interpreter with lips.Interpreter."
+  **interaction-environment**)
 
 ;; -----------------------------------------------------------------------------
-(define load (let ((__load load))
-               (lambda (file)
-                 "(load file)
+(define (current-output-port)
+  "(current-output-port)
 
-                  Function load LISP Scheme code and evaluate the content."
-                 (__load file (interaction-environment)))))
+   Function return default stdout port."
+  (%let-env (interaction-environment)
+     stdout))
+
+;; -----------------------------------------------------------------------------
+(define (current-input-port)
+  "current-input-port)
+
+   Function return default stdin port."
+  (%let-env (interaction-environment)
+     stdin))

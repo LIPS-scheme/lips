@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 10 Apr 2020 06:53:59 +0000
+ * build: Fri, 10 Apr 2020 21:21:37 +0000
  */
 (function () {
 	'use strict';
@@ -3139,7 +3139,7 @@
 	        break;
 
 	      default:
-	        throw new Error('Invlild let_macro value');
+	        throw new Error('Invalid let_macro value');
 	    }
 
 	    return Macro.defmacro(name, function (code, options) {
@@ -4632,8 +4632,69 @@
 	  }
 
 	  SilentError.prototype = Object.create(Error.prototype); // -------------------------------------------------------------------------
+	  // simpler way to create interpreter with interaction-environment
+	  // -------------------------------------------------------------------------
+
+	  function Interpreter(name) {
+	    var obj = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
+
+	    if (typeof this !== 'undefined' && !(this instanceof Interpreter) || typeof this === 'undefined') {
+	      return new Interpreter(name, obj);
+	    }
+
+	    if (typeof name === 'undefined') {
+	      name = 'anonymous';
+	    }
+
+	    this.env = user_env.inherit(name, obj);
+	  } // -------------------------------------------------------------------------
+
+
+	  Interpreter.prototype.exec =
+	  /*#__PURE__*/
+	  function () {
+	    var _ref6 = asyncToGenerator(
+	    /*#__PURE__*/
+	    regenerator.mark(function _callee3(code) {
+	      var dynamic,
+	          _args5 = arguments;
+	      return regenerator.wrap(function _callee3$(_context3) {
+	        while (1) {
+	          switch (_context3.prev = _context3.next) {
+	            case 0:
+	              dynamic = _args5.length > 1 && _args5[1] !== undefined$1 ? _args5[1] : false;
+	              typecheck('Intepreter::exec', code, 'string', 1);
+	              typecheck('Intepreter::exec', dynamic, 'boolean', 2); // simple solution to overwrite this variable in each interpreter
+	              // before evaluation of user code
+
+	              global_env.set('**interaction-environment**', this.env);
+	              return _context3.abrupt("return", exec(code, this.env, dynamic ? this.env : false));
+
+	            case 5:
+	            case "end":
+	              return _context3.stop();
+	          }
+	        }
+	      }, _callee3, this);
+	    }));
+
+	    return function (_x4) {
+	      return _ref6.apply(this, arguments);
+	    };
+	  }(); // -------------------------------------------------------------------------
+
+
+	  Interpreter.prototype.get = function (value) {
+	    return this.env.get(value).bind(this.env);
+	  }; // -------------------------------------------------------------------------
+
+
+	  Interpreter.prototype.set = function (name, value) {
+	    return this.env.set(name, value);
+	  }; // -------------------------------------------------------------------------
 	  // :: Environment constructor (parent and name arguments are optional)
 	  // -------------------------------------------------------------------------
+
 
 	  function Environment(obj, parent, name) {
 	    if (arguments.length === 1) {
@@ -4715,10 +4776,23 @@
 	    if (this.parent) {
 	      return this.parent._lookup(symbol);
 	    }
-	  };
+	  }; // -------------------------------------------------------------------------
+
 
 	  Environment.prototype.toString = function () {
 	    return '<#env:' + this.name + '>';
+	  }; // -------------------------------------------------------------------------
+
+
+	  Environment.prototype.clone = function () {
+	    var _this3 = this;
+
+	    // duplicate refs
+	    var env = {};
+	    Object.keys(this.env).forEach(function (key) {
+	      env[key] = _this3.env[key];
+	    });
+	    return new Environment(env, this.parent, this.name);
 	  }; // -------------------------------------------------------------------------
 	  // value returned in lookup if found value in env
 	  // -------------------------------------------------------------------------
@@ -4730,11 +4804,13 @@
 	    }
 
 	    this.value = value;
-	  }
+	  } // -------------------------------------------------------------------------
+
 
 	  Value.isUndefined = function (x) {
 	    return x instanceof Value && typeof x.value === 'undefined';
-	  };
+	  }; // -------------------------------------------------------------------------
+
 
 	  Value.prototype.valueOf = function () {
 	    return this.value;
@@ -4830,7 +4906,8 @@
 
 	      env = env.parent;
 	    }
-	  };
+	  }; // -------------------------------------------------------------------------
+
 
 	  Environment.prototype.parents = function () {
 	    var env = this;
@@ -4895,14 +4972,6 @@
 	      });
 	    }),
 	    // ------------------------------------------------------------------
-	    'current-input-port': doc(function () {
-	      return this.get('stdin');
-	    }, "(current-input-port)\n\n            Function return default stdin port."),
-	    // ------------------------------------------------------------------
-	    'current-output-port': doc(function () {
-	      return this.get('stdout');
-	    }, "(current-output-port)\n\n            Function return default stdout port."),
-	    // ------------------------------------------------------------------
 	    'open-input-string': doc(function (string) {
 	      typecheck('open-input-string', string, 'string');
 	      return InputStringPort(string);
@@ -4935,7 +5004,7 @@
 	    }, "(peek-char port)\n\n            Function get character from string port or EOF object if no more\n            data in string port."),
 	    // ------------------------------------------------------------------
 	    read: doc(function read(arg) {
-	      var _this3 = this;
+	      var _this4 = this;
 
 	      if (typeof arg === 'string') {
 	        return parse(tokenize(arg))[0];
@@ -4960,7 +5029,7 @@
 	      }
 
 	      return port.read().then(function (text) {
-	        return read.call(_this3, text);
+	        return read.call(_this4, text);
 	      });
 	    }, "(read [string])\n\n            Function if used with string will parse the string and return\n            list structure of LIPS code. If called without an argument it\n            will read string from standard input (using browser prompt or\n            user defined way) and call itself with that string (parse is)\n            function can be used together with eval to evaluate code from\n            string"),
 	    // ------------------------------------------------------------------
@@ -4975,14 +5044,14 @@
 	    // ------------------------------------------------------------------
 	    print: doc(function () {
 	      var _this$get$write,
-	          _this4 = this;
+	          _this5 = this;
 
 	      for (var _len12 = arguments.length, args = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
 	        args[_key12] = arguments[_key12];
 	      }
 
 	      (_this$get$write = this.get('stdout').write).apply.apply(_this$get$write, [this].concat(toConsumableArray(args.map(function (arg) {
-	        return _this4.get('repr')(arg, LString.isString(arg));
+	        return _this5.get('repr')(arg, LString.isString(arg));
 	      }))));
 	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
 	    // ------------------------------------------------------------------
@@ -5016,9 +5085,9 @@
 	      return unbind(a) === unbind(b);
 	    }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
 	    // ------------------------------------------------------------------
-	    help: doc(new Macro('help', function (code, _ref6) {
-	      var dynamic_scope = _ref6.dynamic_scope,
-	          error = _ref6.error;
+	    help: doc(new Macro('help', function (code, _ref7) {
+	      var dynamic_scope = _ref7.dynamic_scope,
+	          error = _ref7.error;
 	      var symbol;
 
 	      if (code.car instanceof LSymbol) {
@@ -5083,9 +5152,9 @@
 	    }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
 	    // ------------------------------------------------------------------
 	    'set!': doc(new Macro('set!', function (code) {
-	      var _ref7 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref7.dynamic_scope,
-	          error = _ref7.error;
+	      var _ref8 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref8.dynamic_scope,
+	          error = _ref8.error;
 
 	      if (dynamic_scope) {
 	        dynamic_scope = this;
@@ -5191,16 +5260,8 @@
 	    gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
 	    // ------------------------------------------------------------------
 	    load: doc(function (file) {
-	      var env = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
 	      typecheck('load', file, 'string');
-
-	      if (env === null) {
-	        env = this;
-	      }
-
-	      if (env.name === '__frame__') {
-	        env = env.parent;
-	      }
+	      var env = this.get('**interaction-environment**');
 
 	      if (typeof this.get('global', {
 	        throwError: false
@@ -5225,9 +5286,9 @@
 	      }).then(function () {});
 	    }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
 	    // ------------------------------------------------------------------
-	    'while': doc(new Macro('while', function (code, _ref8) {
-	      var dynamic_scope = _ref8.dynamic_scope,
-	          error = _ref8.error;
+	    'while': doc(new Macro('while', function (code, _ref9) {
+	      var dynamic_scope = _ref9.dynamic_scope,
+	          error = _ref9.error;
 	      var self = this;
 	      var begin = new Pair(new LSymbol('begin'), code.cdr);
 	      var result;
@@ -5268,9 +5329,9 @@
 	      }();
 	    }), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
 	    // ------------------------------------------------------------------
-	    'if': doc(new Macro('if', function (code, _ref9) {
-	      var dynamic_scope = _ref9.dynamic_scope,
-	          error = _ref9.error;
+	    'if': doc(new Macro('if', function (code, _ref10) {
+	      var dynamic_scope = _ref10.dynamic_scope,
+	          error = _ref10.error;
 
 	      if (dynamic_scope) {
 	        dynamic_scope = this;
@@ -5301,6 +5362,28 @@
 	      });
 	      return unpromise(cond, resolve);
 	    }), "(if cond true-expr false-expr)\n\n            Macro evaluate condition expression and if the value is true, it\n            evaluate and return true expression if not it evaluate and return\n            false expression"),
+	    // ------------------------------------------------------------------
+	    '%let-env': new Macro('%let-env', function (code) {
+	      var options = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
+	      var env = options.env,
+	          dynamic_scope = options.dynamic_scope,
+	          error = options.error;
+	      typecheck('%let-env', code, 'pair');
+	      console.log(code.car.toString());
+	      var ret = evaluate(code.car, {
+	        env: env,
+	        dynamic_scope: dynamic_scope,
+	        error: error
+	      });
+	      return unpromise(ret, function (value) {
+	        console.log(value);
+	        return evaluate(Pair(LSymbol('begin'), code.cdr), {
+	          env: value,
+	          dynamic_scope: dynamic_scope,
+	          error: error
+	        });
+	      });
+	    }, "(%let-env env . body)\n\n            Special macro that evaluate body in context of given environment\n            object."),
 	    // ------------------------------------------------------------------
 	    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy and next value can access to\n             previous values/names."),
 	    // ---------------------------------------------------------------------
@@ -5336,9 +5419,9 @@
 	      }();
 	    }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
 	    // ------------------------------------------------------------------
-	    'ignore': new Macro('ignore', function (code, _ref10) {
-	      var dynamic_scope = _ref10.dynamic_scope,
-	          error = _ref10.error;
+	    'ignore': new Macro('ignore', function (code, _ref11) {
+	      var dynamic_scope = _ref11.dynamic_scope,
+	          error = _ref11.error;
 	      var args = {
 	        env: this,
 	        error: error
@@ -5392,6 +5475,7 @@
 
 	      unbind(obj)[key] = value.valueOf();
 	    }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
+	    // ------------------------------------------------------------------
 	    'current-environment': doc(function () {
 	      if (this.name === '__frame__') {
 	        return this.parent;
@@ -5401,7 +5485,7 @@
 	    }, "(current-environment)\n\n            Function return current environement."),
 	    // ------------------------------------------------------------------
 	    'eval': doc(function (code, env) {
-	      var _this5 = this;
+	      var _this6 = this;
 
 	      typecheck('eval', code, ['symbol', 'pair', 'array']);
 	      env = env || this;
@@ -5415,14 +5499,14 @@
 	          env: env,
 	          //dynamic_scope: this,
 	          error: function error(e) {
-	            _this5.get('error')(e.message);
+	            _this6.get('error')(e.message);
 
 	            if (e.code) {
 	              var stack = e.code.map(function (line, i) {
 	                return "[".concat(i + 1, "]: ").concat(line);
 	              }).join('\n');
 
-	              _this5.get('error')(stack);
+	              _this6.get('error')(stack);
 	            }
 	          }
 	        });
@@ -5438,9 +5522,9 @@
 	    }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
 	    // ------------------------------------------------------------------
 	    lambda: new Macro('lambda', function (code) {
-	      var _ref11 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref11.dynamic_scope,
-	          error = _ref11.error;
+	      var _ref12 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref12.dynamic_scope,
+	          error = _ref12.error;
 
 	      var self = this;
 
@@ -5451,7 +5535,8 @@
 	      }
 
 	      function lambda() {
-	        var env;
+	        var env; // this is function calling env
+	        // self is lexical scope when function was defined
 
 	        if (dynamic_scope) {
 	          if (!(this instanceof Environment)) {
@@ -5547,9 +5632,9 @@
 	    'macroexpand': new Macro('macroexpand', macroExpand()),
 	    'macroexpand-1': new Macro('macroexpand-1', macroExpand(true)),
 	    // ------------------------------------------------------------------
-	    'define-macro': doc(new Macro(macro, function (macro, _ref12) {
-	      var dynamic_scope = _ref12.dynamic_scope,
-	          error = _ref12.error;
+	    'define-macro': doc(new Macro(macro, function (macro, _ref13) {
+	      var dynamic_scope = _ref13.dynamic_scope,
+	          error = _ref13.error;
 
 	      if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
 	        var name = macro.car.car.name;
@@ -5665,10 +5750,10 @@
 	          }
 
 	          if (isPromise(car) || isPromise(cdr)) {
-	            return Promise.all([car, cdr]).then(function (_ref13) {
-	              var _ref14 = slicedToArray(_ref13, 2),
-	                  car = _ref14[0],
-	                  cdr = _ref14[1];
+	            return Promise.all([car, cdr]).then(function (_ref14) {
+	              var _ref15 = slicedToArray(_ref14, 2),
+	                  car = _ref15[0],
+	                  cdr = _ref15[1];
 
 	              return new Pair(car, cdr);
 	            });
@@ -6216,20 +6301,20 @@
 	      return LNumber(parseInt(arg, radix));
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
-	    'try': doc(new Macro('try', function (code, _ref15) {
-	      var _this6 = this;
+	    'try': doc(new Macro('try', function (code, _ref16) {
+	      var _this7 = this;
 
-	      var dynamic_scope = _ref15.dynamic_scope,
-	          _error = _ref15.error;
+	      var dynamic_scope = _ref16.dynamic_scope,
+	          _error = _ref16.error;
 	      return new Promise(function (resolve) {
 	        var args = {
-	          env: _this6,
+	          env: _this7,
 	          error: function error(e) {
 	            if (e instanceof SilentError) {
 	              throw new SilentError(e.message);
 	            }
 
-	            var env = _this6.inherit('try');
+	            var env = _this7.inherit('try');
 
 	            env.set(code.cdr.car.cdr.car.car, e);
 	            var args = {
@@ -6238,7 +6323,7 @@
 	            };
 
 	            if (dynamic_scope) {
-	              args.dynamic_scope = _this6;
+	              args.dynamic_scope = _this7;
 	            }
 
 	            unpromise(evaluate(new Pair(new LSymbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
@@ -6249,7 +6334,7 @@
 	        };
 
 	        if (dynamic_scope) {
-	          args.dynamic_scope = _this6;
+	          args.dynamic_scope = _this7;
 	        }
 
 	        var ret = evaluate(code.car, args);
@@ -6307,7 +6392,7 @@
 	    }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
 	    // ------------------------------------------------------------------
 	    map: doc(function map(fn) {
-	      var _this7 = this;
+	      var _this8 = this;
 
 	      for (var _len19 = arguments.length, lists = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
 	        lists[_key19 - 1] = arguments[_key19];
@@ -6344,7 +6429,7 @@
 
 	      env.set('parent.frame', parentFrame);
 	      return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-	        return unpromise(map.call.apply(map, [_this7, fn].concat(toConsumableArray(lists.map(function (l) {
+	        return unpromise(map.call.apply(map, [_this8, fn].concat(toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
 	        })))), function (rest) {
 	          return new Pair(head, rest);
@@ -6418,7 +6503,7 @@
 	    }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
 	    // ------------------------------------------------------------------
 	    reduce: doc(fold('reduce', function (reduce, fn, init) {
-	      var _this8 = this;
+	      var _this9 = this;
 
 	      for (var _len22 = arguments.length, lists = new Array(_len22 > 3 ? _len22 - 3 : 0), _key23 = 3; _key23 < _len22; _key23++) {
 	        lists[_key23 - 3] = arguments[_key23];
@@ -6436,7 +6521,7 @@
 	      return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
 	        return l.car;
 	      })).concat([init])), function (value) {
-	        return reduce.call.apply(reduce, [_this8, fn, value].concat(toConsumableArray(lists.map(function (l) {
+	        return reduce.call.apply(reduce, [_this9, fn, value].concat(toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
 	        }))));
 	      });
@@ -6667,9 +6752,9 @@
 	    // ------------------------------------------------------------------
 	    'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
 	    // ------------------------------------------------------------------
-	    or: doc(new Macro('or', function (code, _ref16) {
-	      var dynamic_scope = _ref16.dynamic_scope,
-	          error = _ref16.error;
+	    or: doc(new Macro('or', function (code, _ref17) {
+	      var dynamic_scope = _ref17.dynamic_scope,
+	          error = _ref17.error;
 	      var args = this.get('list->array')(code);
 	      var self = this;
 
@@ -6709,9 +6794,9 @@
 	    }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
 	    // ------------------------------------------------------------------
 	    and: doc(new Macro('and', function (code) {
-	      var _ref17 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref17.dynamic_scope,
-	          error = _ref17.error;
+	      var _ref18 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref18.dynamic_scope,
+	          error = _ref18.error;
 
 	      var args = this.get('list->array')(code);
 	      var self = this;
@@ -6784,7 +6869,9 @@
 
 	      return obj[name].apply(obj, args);
 	    }, "(-> obj name . args)\n\n            Function get function from object and call it with arguments.")
-	  }, undefined$1, 'global'); // -------------------------------------------------------------------------
+	  }, undefined$1, 'global');
+	  var user_env = global_env.inherit('user-env');
+	  global_env.set('**interaction-environment**', user_env); // -------------------------------------------------------------------------
 
 	  (function () {
 	    var map = {
@@ -7048,72 +7135,72 @@
 	      }
 	    }
 
-	    function promise(_x4) {
+	    function promise(_x5) {
 	      return _promise.apply(this, arguments);
 	    }
 
 	    function _promise() {
 	      _promise = asyncToGenerator(
 	      /*#__PURE__*/
-	      regenerator.mark(function _callee3(node) {
+	      regenerator.mark(function _callee4(node) {
 	        var pair;
-	        return regenerator.wrap(function _callee3$(_context3) {
+	        return regenerator.wrap(function _callee4$(_context4) {
 	          while (1) {
-	            switch (_context3.prev = _context3.next) {
+	            switch (_context4.prev = _context4.next) {
 	              case 0:
-	                _context3.t0 = Pair;
+	                _context4.t0 = Pair;
 
 	                if (!node.haveCycles('car')) {
-	                  _context3.next = 5;
+	                  _context4.next = 5;
 	                  break;
 	                }
 
-	                _context3.t1 = node.car;
-	                _context3.next = 8;
+	                _context4.t1 = node.car;
+	                _context4.next = 8;
 	                break;
 
 	              case 5:
-	                _context3.next = 7;
+	                _context4.next = 7;
 	                return resolve(node.car);
 
 	              case 7:
-	                _context3.t1 = _context3.sent;
+	                _context4.t1 = _context4.sent;
 
 	              case 8:
-	                _context3.t2 = _context3.t1;
+	                _context4.t2 = _context4.t1;
 
 	                if (!node.haveCycles('cdr')) {
-	                  _context3.next = 13;
+	                  _context4.next = 13;
 	                  break;
 	                }
 
-	                _context3.t3 = node.cdr;
-	                _context3.next = 16;
+	                _context4.t3 = node.cdr;
+	                _context4.next = 16;
 	                break;
 
 	              case 13:
-	                _context3.next = 15;
+	                _context4.next = 15;
 	                return resolve(node.cdr);
 
 	              case 15:
-	                _context3.t3 = _context3.sent;
+	                _context4.t3 = _context4.sent;
 
 	              case 16:
-	                _context3.t4 = _context3.t3;
-	                pair = new _context3.t0(_context3.t2, _context3.t4);
+	                _context4.t4 = _context4.t3;
+	                pair = new _context4.t0(_context4.t2, _context4.t4);
 
 	                if (node.data) {
 	                  pair.data = true;
 	                }
 
-	                return _context3.abrupt("return", pair);
+	                return _context4.abrupt("return", pair);
 
 	              case 20:
 	              case "end":
-	                return _context3.stop();
+	                return _context4.stop();
 	            }
 	          }
-	        }, _callee3);
+	        }, _callee4);
 	      }));
 	      return _promise.apply(this, arguments);
 	    }
@@ -7131,10 +7218,10 @@
 	    }
 	  }
 
-	  function getFunctionArgs(rest, _ref18) {
-	    var env = _ref18.env,
-	        dynamic_scope = _ref18.dynamic_scope,
-	        error = _ref18.error;
+	  function getFunctionArgs(rest, _ref19) {
+	    var env = _ref19.env,
+	        dynamic_scope = _ref19.dynamic_scope,
+	        error = _ref19.error;
 	    var args = [];
 	    var node = rest;
 	    markCycles(node);
@@ -7187,11 +7274,11 @@
 
 
 	  function evaluate(code) {
-	    var _ref19 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	        env = _ref19.env,
-	        dynamic_scope = _ref19.dynamic_scope,
-	        _ref19$error = _ref19.error,
-	        error = _ref19$error === void 0 ? function () {} : _ref19$error;
+	    var _ref20 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	        env = _ref20.env,
+	        dynamic_scope = _ref20.dynamic_scope,
+	        _ref20$error = _ref20.error,
+	        error = _ref20$error === void 0 ? function () {} : _ref20$error;
 
 	    try {
 	      if (dynamic_scope === true) {
@@ -7316,7 +7403,7 @@
 	  } // -------------------------------------------------------------------------
 
 
-	  function exec(_x5, _x6, _x7) {
+	  function exec(_x6, _x7, _x8) {
 	    return _exec.apply(this, arguments);
 	  } // -------------------------------------------------------------------------
 	  // create token matcher that work with string and object token
@@ -7326,18 +7413,18 @@
 	  function _exec() {
 	    _exec = asyncToGenerator(
 	    /*#__PURE__*/
-	    regenerator.mark(function _callee4(string, env, dynamic_scope) {
+	    regenerator.mark(function _callee5(string, env, dynamic_scope) {
 	      var list, results, code, result;
-	      return regenerator.wrap(function _callee4$(_context4) {
+	      return regenerator.wrap(function _callee5$(_context5) {
 	        while (1) {
-	          switch (_context4.prev = _context4.next) {
+	          switch (_context5.prev = _context5.next) {
 	            case 0:
 	              if (dynamic_scope === true) {
-	                env = dynamic_scope = env || global_env;
+	                env = dynamic_scope = env || user_env;
 	              } else if (env === true) {
-	                env = dynamic_scope = global_env;
+	                env = dynamic_scope = user_env;
 	              } else {
-	                env = env || global_env;
+	                env = env || user_env;
 	              }
 
 	              list = parse(string);
@@ -7348,14 +7435,14 @@
 	              code = list.shift();
 
 	              if (code) {
-	                _context4.next = 9;
+	                _context5.next = 9;
 	                break;
 	              }
 
-	              return _context4.abrupt("return", results);
+	              return _context5.abrupt("return", results);
 
 	            case 9:
-	              _context4.next = 11;
+	              _context5.next = 11;
 	              return evaluate(code, {
 	                env: env,
 	                dynamic_scope: dynamic_scope,
@@ -7374,19 +7461,19 @@
 	              });
 
 	            case 11:
-	              result = _context4.sent;
+	              result = _context5.sent;
 	              results.push(result);
 
 	            case 13:
-	              _context4.next = 3;
+	              _context5.next = 3;
 	              break;
 
 	            case 15:
 	            case "end":
-	              return _context4.stop();
+	              return _context5.stop();
 	          }
 	        }
-	      }, _callee4);
+	      }, _callee5);
 	    }));
 	    return _exec.apply(this, arguments);
 	  }
@@ -7466,37 +7553,43 @@
 	  function init() {
 	    var lips_mimes = ['text/x-lips', 'text/x-scheme'];
 
-	    if (window.document) {
-	      var scripts = Array.from(document.querySelectorAll('script'));
-	      return function loop() {
-	        var script = scripts.shift();
+	    if (!window.document) {
+	      return Promise.resolve();
+	    } else {
+	      return new Promise(function (resolve) {
+	        var scripts = Array.from(document.querySelectorAll('script'));
+	        return function loop() {
+	          var script = scripts.shift();
 
-	        if (script) {
-	          var type = script.getAttribute('type');
+	          if (!script) {
+	            resolve();
+	          } else {
+	            var type = script.getAttribute('type');
 
-	          if (lips_mimes.includes(type)) {
-	            var src = script.getAttribute('src');
+	            if (lips_mimes.includes(type)) {
+	              var src = script.getAttribute('src');
 
-	            if (src) {
-	              return root.fetch(src).then(function (res) {
-	                return res.text();
-	              }).then(exec).then(loop)["catch"](function (e) {
-	                execError(e);
-	                loop();
-	              });
-	            } else {
-	              return exec(script.innerHTML).then(loop)["catch"](function (e) {
-	                execError(e);
-	                loop();
-	              });
+	              if (src) {
+	                return root.fetch(src).then(function (res) {
+	                  return res.text();
+	                }).then(exec).then(loop)["catch"](function (e) {
+	                  execError(e);
+	                  loop();
+	                });
+	              } else {
+	                return exec(script.innerHTML).then(loop)["catch"](function (e) {
+	                  execError(e);
+	                  loop();
+	                });
+	              }
+	            } else if (type && type.match(/lips|lisp/)) {
+	              console.warn('Expecting ' + lips_mimes.join(' or ') + ' found ' + type);
 	            }
-	          } else if (type && type.match(/lips|lisp/)) {
-	            console.warn('Expecting ' + lips_mimes.join(' or ') + ' found ' + type);
-	          }
 
-	          return loop();
-	        }
-	      }();
+	            return loop();
+	          }
+	        }();
+	      });
 	    }
 	  } // -------------------------------------------------------------------------
 
@@ -7521,7 +7614,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 10 Apr 2020 06:53:59 +0000',
+	    date: 'Fri, 10 Apr 2020 21:21:37 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -7529,7 +7622,8 @@
 	    Environment: Environment,
 	    global_environment: global_env,
 	    globalEnvironment: global_env,
-	    env: global_env,
+	    env: user_env,
+	    Interpreter: Interpreter,
 	    balanced_parenthesis: balanced,
 	    balancedParenthesis: balanced,
 	    Macro: Macro,

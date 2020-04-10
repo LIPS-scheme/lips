@@ -8,7 +8,7 @@ var {
     LSymbol,
     nil,
     Environment,
-    global_environment,
+    env: global_environment,
     LNumber,
     LString,
     LFloat,
@@ -696,7 +696,7 @@ describe('environment', function() {
     it('should create default scope name', function() {
         var e = env.inherit(functions);
         return scope(e).then(result => {
-            return expect(result).toEqual('child of global');
+            return expect(result).toEqual('child of user-env');
         });
     });
     it('should create default scope name for child scope', function() {

@@ -1739,7 +1739,7 @@ You can also use (help name) to display help for specic function or macro.
                 name = 'let*';
                 break;
             default:
-                throw new Error('Invlild let_macro value');
+                throw new Error('Invalid let_macro value');
         }
         return Macro.defmacro(name, function(code, options) {
             var { dynamic_scope, error, macro_expand } = options;
@@ -2880,6 +2880,36 @@ You can also use (help name) to display help for specic function or macro.
     }
     SilentError.prototype = Object.create(Error.prototype);
     // -------------------------------------------------------------------------
+    // simpler way to create interpreter with interaction-environment
+    // -------------------------------------------------------------------------
+    function Interpreter(name, obj = {}) {
+        if (typeof this !== 'undefined' && !(this instanceof Interpreter) ||
+            typeof this === 'undefined') {
+            return new Interpreter(name, obj);
+        }
+        if (typeof name === 'undefined') {
+            name = 'anonymous';
+        }
+        this.env = user_env.inherit(name, obj);
+    }
+    // -------------------------------------------------------------------------
+    Interpreter.prototype.exec = async function(code, dynamic = false) {
+        typecheck('Intepreter::exec', code, 'string', 1);
+        typecheck('Intepreter::exec', dynamic, 'boolean', 2);
+        // simple solution to overwrite this variable in each interpreter
+        // before evaluation of user code
+        global_env.set('**interaction-environment**', this.env);
+        return exec(code, this.env, dynamic ? this.env : false);
+    };
+    // -------------------------------------------------------------------------
+    Interpreter.prototype.get = function(value) {
+        return this.env.get(value).bind(this.env);
+    };
+    // -------------------------------------------------------------------------
+    Interpreter.prototype.set = function(name, value) {
+        return this.env.set(name, value);
+    };
+    // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
     // -------------------------------------------------------------------------
     function Environment(obj, parent, name) {
@@ -2946,8 +2976,18 @@ You can also use (help name) to display help for specic function or macro.
             return this.parent._lookup(symbol);
         }
     };
+    // -------------------------------------------------------------------------
     Environment.prototype.toString = function() {
         return '<#env:' + this.name + '>';
+    };
+    // -------------------------------------------------------------------------
+    Environment.prototype.clone = function() {
+        // duplicate refs
+        var env = {};
+        Object.keys(this.env).forEach(key => {
+            env[key] = this.env[key];
+        });
+        return new Environment(env, this.parent, this.name);
     };
     // -------------------------------------------------------------------------
     // value returned in lookup if found value in env
@@ -2959,9 +2999,11 @@ You can also use (help name) to display help for specic function or macro.
         }
         this.value = value;
     }
+    // -------------------------------------------------------------------------
     Value.isUndefined = function(x) {
         return x instanceof Value && typeof x.value === 'undefined';
     };
+    // -------------------------------------------------------------------------
     Value.prototype.valueOf = function() {
         return this.value;
     };
@@ -3033,6 +3075,7 @@ You can also use (help name) to display help for specic function or macro.
             env = env.parent;
         }
     };
+    // -------------------------------------------------------------------------
     Environment.prototype.parents = function() {
         var env = this;
         var result = [];
@@ -3094,18 +3137,6 @@ You can also use (help name) to display help for specic function or macro.
                 resolve(prompt(''));
             });
         }),
-        // ------------------------------------------------------------------
-        'current-input-port': doc(function() {
-            return this.get('stdin');
-        }, `(current-input-port)
-
-            Function return default stdin port.`),
-        // ------------------------------------------------------------------
-        'current-output-port': doc(function() {
-            return this.get('stdout');
-        }, `(current-output-port)
-
-            Function return default stdout port.`),
         // ------------------------------------------------------------------
         'open-input-string': doc(function(string) {
             typecheck('open-input-string', string, 'string');
@@ -3386,14 +3417,9 @@ You can also use (help name) to display help for specic function or macro.
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
-        load: doc(function(file, env = null) {
+        load: doc(function(file) {
             typecheck('load', file, 'string');
-            if (env === null) {
-                env = this;
-            }
-            if (env.name === '__frame__') {
-                env = env.parent;
-            }
+            var env = this.get('**interaction-environment**');
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file.valueOf(), function(err, data) {
@@ -3483,6 +3509,22 @@ You can also use (help name) to display help for specic function or macro.
             Macro evaluate condition expression and if the value is true, it
             evaluate and return true expression if not it evaluate and return
             false expression`),
+        // ------------------------------------------------------------------
+        '%let-env': new Macro('%let-env', function(code, options = {}) {
+            const { env, dynamic_scope, error } = options;
+            typecheck('%let-env', code, 'pair');
+            console.log(code.car.toString());
+            var ret = evaluate(code.car, { env, dynamic_scope, error });
+            return unpromise(ret, function(value) {
+                console.log(value);
+                return evaluate(Pair(LSymbol('begin'), code.cdr), {
+                    env: value, dynamic_scope, error
+                });
+            });
+        }, `(%let-env env . body)
+
+            Special macro that evaluate body in context of given environment
+            object.`),
         // ------------------------------------------------------------------
         'letrec': doc(
             let_macro(Symbol.for('letrec')),
@@ -3615,6 +3657,7 @@ You can also use (help name) to display help for specic function or macro.
         }, `(set-obj! obj key value)
 
             Function set property of JavaScript object`),
+        // ------------------------------------------------------------------
         'current-environment': doc(function() {
             if (this.name === '__frame__') {
                 return this.parent;
@@ -3665,6 +3708,8 @@ You can also use (help name) to display help for specic function or macro.
             }
             function lambda(...args) {
                 var env;
+                // this is function calling env
+                // self is lexical scope when function was defined
                 if (dynamic_scope) {
                     if (!(this instanceof Environment)) {
                         env = self;
@@ -5027,6 +5072,8 @@ You can also use (help name) to display help for specic function or macro.
 
             Function get function from object and call it with arguments.`)
     }, undefined, 'global');
+    var user_env = global_env.inherit('user-env');
+    global_env.set('**interaction-environment**', user_env);
     // -------------------------------------------------------------------------
     (function() {
         var map = { ceil: 'ceiling' };
@@ -5411,15 +5458,14 @@ You can also use (help name) to display help for specic function or macro.
             error && error(e, code);
         }
     }
-
     // -------------------------------------------------------------------------
     async function exec(string, env, dynamic_scope) {
         if (dynamic_scope === true) {
-            env = dynamic_scope = env || global_env;
+            env = dynamic_scope = env || user_env;
         } else if (env === true) {
-            env = dynamic_scope = global_env;
+            env = dynamic_scope = user_env;
         } else {
-            env = env || global_env;
+            env = env || user_env;
         }
         var list = parse(string);
         var results = [];
@@ -5446,7 +5492,6 @@ You can also use (help name) to display help for specic function or macro.
             }
         }
     }
-
     // -------------------------------------------------------------------------
     // create token matcher that work with string and object token
     // -------------------------------------------------------------------------
@@ -5508,33 +5553,39 @@ You can also use (help name) to display help for specic function or macro.
     // -------------------------------------------------------------------------
     function init() {
         var lips_mimes = ['text/x-lips', 'text/x-scheme'];
-        if (window.document) {
-            var scripts = Array.from(document.querySelectorAll('script'));
-            return (function loop() {
-                var script = scripts.shift();
-                if (script) {
-                    var type = script.getAttribute('type');
-                    if (lips_mimes.includes(type)) {
-                        var src = script.getAttribute('src');
-                        if (src) {
-                            return root.fetch(src).then(res => res.text())
-                                .then(exec).then(loop).catch((e) => {
+        if (!window.document) {
+            return Promise.resolve();
+        } else {
+            return new Promise(function(resolve) {
+                var scripts = Array.from(document.querySelectorAll('script'));
+                return (function loop() {
+                    var script = scripts.shift();
+                    if (!script) {
+                        resolve();
+                    } else {
+                        var type = script.getAttribute('type');
+                        if (lips_mimes.includes(type)) {
+                            var src = script.getAttribute('src');
+                            if (src) {
+                                return root.fetch(src).then(res => res.text())
+                                    .then(exec).then(loop).catch((e) => {
+                                        execError(e);
+                                        loop();
+                                    });
+                            } else {
+                                return exec(script.innerHTML).then(loop).catch((e) => {
                                     execError(e);
                                     loop();
                                 });
-                        } else {
-                            return exec(script.innerHTML).then(loop).catch((e) => {
-                                execError(e);
-                                loop();
-                            });
+                            }
+                        } else if (type && type.match(/lips|lisp/)) {
+                            console.warn('Expecting ' + lips_mimes.join(' or ') +
+                                         ' found ' + type);
                         }
-                    } else if (type && type.match(/lips|lisp/)) {
-                        console.warn('Expecting ' + lips_mimes.join(' or ') +
-                                     ' found ' + type);
+                        return loop();
                     }
-                    return loop();
-                }
-            })();
+                })();
+            });
         }
     }
     // -------------------------------------------------------------------------
@@ -5565,7 +5616,8 @@ You can also use (help name) to display help for specic function or macro.
         Environment,
         global_environment: global_env,
         globalEnvironment: global_env,
-        env: global_env,
+        env: user_env,
+        Interpreter,
         balanced_parenthesis: balanced,
         balancedParenthesis: balanced,
         Macro,
