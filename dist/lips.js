@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 06 Apr 2020 16:31:15 +0000
+ * build: Fri, 10 Apr 2020 06:53:59 +0000
  */
 (function () {
 	'use strict';
@@ -1236,8 +1236,22 @@
 
 
 	  function parseString(string) {
-	    // in LIPS strings can be multiline
-	    return LString(JSON.parse(string.replace(/\n/g, '\\n')));
+	    // handle non JSON escapes and skip unicode escape \u (even partial)
+	    var re = /([^\\\n])(\\(?:\\{2})*)(?!u[0-9AF]{1,4})(.)/gi;
+	    string = string.replace(re, function (_, before, slashes, chr) {
+	      if (!['"', '/', 'b', 'f', 'n', 'r', 't'].includes(chr)) {
+	        slashes = slashes.substring(1).replace(/\\\\/, '\\');
+	        return before + slashes + chr;
+	      }
+
+	      return _;
+	    }).replace(/\n/g, '\\n'); // in LIPS strings can be multiline
+
+	    try {
+	      return LString(JSON.parse(string));
+	    } catch (e) {
+	      throw new Error('Invalid string literal');
+	    }
 	  } // ----------------------------------------------------------------------
 
 
@@ -7507,7 +7521,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 06 Apr 2020 16:31:15 +0000',
+	    date: 'Fri, 10 Apr 2020 06:53:59 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

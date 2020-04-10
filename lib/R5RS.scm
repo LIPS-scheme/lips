@@ -192,9 +192,13 @@
 (define (list? x)
   "(list? x)
 
-   Function test if value is propert linked list structure.
-   The car of each pair can be any value."
-  (and (pair? x) (or (null? (cdr x)) (and (not (x.haveCycles "cdr")) (list? (cdr x))))))
+   Function test if value is proper linked list structure.
+   The car of each pair can be any value. It return false on cycles."
+  (or (eq? x nil) ;; empty list
+      (and (pair? x)
+           (or (null? (cdr x))
+               (and (not (x.haveCycles "cdr"))
+                    (list? (cdr x)))))))
 
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)

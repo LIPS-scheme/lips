@@ -235,8 +235,20 @@ You can also use (help name) to display help for specic function or macro.
     }
     // ----------------------------------------------------------------------
     function parseString(string) {
-        // in LIPS strings can be multiline
-        return LString(JSON.parse(string.replace(/\n/g, '\\n')));
+        // handle non JSON escapes and skip unicode escape \u (even partial)
+        var re = /([^\\\n])(\\(?:\\{2})*)(?!u[0-9AF]{1,4})(.)/gi;
+        string = string.replace(re, function(_, before, slashes, chr) {
+            if (!['"', '/', 'b', 'f', 'n', 'r', 't'].includes(chr)) {
+                slashes = slashes.substring(1).replace(/\\\\/, '\\');
+                return before + slashes + chr;
+            }
+            return _;
+        }).replace(/\n/g, '\\n'); // in LIPS strings can be multiline
+        try {
+            return LString(JSON.parse(string));
+        } catch (e) {
+            throw new Error('Invalid string literal');
+        }
     }
     // ----------------------------------------------------------------------
     function parseArgument(arg) {
