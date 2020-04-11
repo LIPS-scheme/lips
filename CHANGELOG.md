@@ -41,6 +41,7 @@
 * fix try..catch
 * fix display of function/macro docs (remove white space in parser)
 * fix loading modules with `require`
+* fix macro expand when expansion return list with macro that is data
 
 ## 0.20.1
 ### Bug fixes

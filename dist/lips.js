@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 11 Apr 2020 09:12:37 +0000
+ * build: Sat, 11 Apr 2020 09:48:43 +0000
  */
 (function () {
 	'use strict';
@@ -2843,78 +2843,86 @@
 	                          switch (_context.prev = _context.next) {
 	                            case 0:
 	                              if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-	                                _context.next = 13;
+	                                _context.next = 15;
 	                                break;
 	                              }
 
-	                              _context.prev = 1;
+	                              if (!node.data) {
+	                                _context.next = 3;
+	                                break;
+	                              }
+
+	                              return _context.abrupt("return", node);
+
+	                            case 3:
+	                              _context.prev = 3;
 	                              value = env.get(node.car);
 
 	                              if (!(value instanceof Macro && value.defmacro)) {
-	                                _context.next = 9;
+	                                _context.next = 11;
 	                                break;
 	                              }
 
-	                              _context.next = 6;
+	                              _context.next = 8;
 	                              return value.invoke(node.cdr, args, true);
 
-	                            case 6:
+	                            case 8:
 	                              result = _context.sent;
 
 	                              if (!(result instanceof Pair)) {
-	                                _context.next = 9;
+	                                _context.next = 11;
 	                                break;
 	                              }
 
 	                              return _context.abrupt("return", result);
 
-	                            case 9:
-	                              _context.next = 13;
+	                            case 11:
+	                              _context.next = 15;
 	                              break;
 
-	                            case 11:
-	                              _context.prev = 11;
-	                              _context.t0 = _context["catch"](1);
-
 	                            case 13:
+	                              _context.prev = 13;
+	                              _context.t0 = _context["catch"](3);
+
+	                            case 15:
 	                              // CYCLE DETECT
 	                              car = node.car;
 
 	                              if (!(car instanceof Pair)) {
-	                                _context.next = 18;
+	                                _context.next = 20;
 	                                break;
 	                              }
 
-	                              _context.next = 17;
+	                              _context.next = 19;
 	                              return traverse(car);
 
-	                            case 17:
+	                            case 19:
 	                              car = _context.sent;
 
-	                            case 18:
+	                            case 20:
 	                              cdr = node.cdr;
 
 	                              if (!(cdr instanceof Pair)) {
-	                                _context.next = 23;
+	                                _context.next = 25;
 	                                break;
 	                              }
 
-	                              _context.next = 22;
+	                              _context.next = 24;
 	                              return traverse(cdr);
 
-	                            case 22:
+	                            case 24:
 	                              cdr = _context.sent;
 
-	                            case 23:
+	                            case 25:
 	                              pair = new Pair(car, cdr);
 	                              return _context.abrupt("return", pair);
 
-	                            case 25:
+	                            case 27:
 	                            case "end":
 	                              return _context.stop();
 	                          }
 	                        }
-	                      }, _callee, null, [[1, 11]]);
+	                      }, _callee, null, [[3, 13]]);
 	                    }));
 	                    return _traverse.apply(this, arguments);
 	                  };
@@ -7619,7 +7627,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 11 Apr 2020 09:12:37 +0000',
+	    date: 'Sat, 11 Apr 2020 09:48:43 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

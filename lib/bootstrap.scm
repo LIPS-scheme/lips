@@ -17,9 +17,8 @@
     (test-macro (list 1 2 3) (list 4 5 6))
 
     ;; ==> (test-macro (list 1 2 3) (list 4 5 6))
-
-    NOTE: this example macro will break macroexpand becuase it will try to
-          expand the test-macro in recursive loop. Normal macros will work fine."
+    (macroexpand (test-macro (list 1 2 3) (list 4 5 6)))
+    ;; ==> (display (quote (test-macro (list 1 2 3) (list 4 5 6))))"
    (let ((body (gensym)))
      `(define-macro (,symbol . ,body)
           ;; we aviod to use cons here, so the "cons" name can't be overwritten

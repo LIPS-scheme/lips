@@ -1564,6 +1564,9 @@ You can also use (help name) to display help for specic function or macro.
             var env = args['env'] = this;
             async function traverse(node) {
                 if (node instanceof Pair && node.car instanceof LSymbol) {
+                    if (node.data) {
+                        return node;
+                    }
                     try {
                         var value = env.get(node.car);
                         if (value instanceof Macro && value.defmacro) {
