@@ -3658,6 +3658,12 @@ You can also use (help name) to display help for specic function or macro.
 
             Function set property of JavaScript object`),
         // ------------------------------------------------------------------
+        'null-environment': doc(function() {
+            return global_env.inherit('null');
+        }, `(null-environment)
+
+            Function return new base environment with std lib.`),
+        // ------------------------------------------------------------------
         'current-environment': doc(function() {
             if (this.name === '__frame__') {
                 return this.parent;

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 10 Apr 2020 21:55:43 +0000
+ * build: Sat, 11 Apr 2020 07:52:43 +0000
  */
 (function () {
 	'use strict';
@@ -5475,6 +5475,10 @@
 	      unbind(obj)[key] = value.valueOf();
 	    }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
 	    // ------------------------------------------------------------------
+	    'null-environment': doc(function () {
+	      return global_env.inherit('null');
+	    }, "(null-environment)\n\n            Function return new base environment with std lib."),
+	    // ------------------------------------------------------------------
 	    'current-environment': doc(function () {
 	      if (this.name === '__frame__') {
 	        return this.parent;
@@ -7613,7 +7617,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 10 Apr 2020 21:55:43 +0000',
+	    date: 'Sat, 11 Apr 2020 07:52:43 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
