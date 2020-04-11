@@ -1483,9 +1483,11 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     function equal(x, y) {
         if (x instanceof LNumber && y instanceof LNumber) {
-            return x.cmp(y) === 0;
+            return x.type === y.type && x.cmp(y) === 0;
         } else if (typeof x === 'number' || typeof y === 'number') {
-            return LNumber(x).cmp(LNumber(y)) === 0;
+            x = LNumber(x);
+            y = LNumber(y);
+            return x.type === y.type && x.cmp(y) === 0;
         } else if (x instanceof LCharacter && y instanceof LCharacter) {
             return x.char === y.char;
         } else if (x instanceof LString && y instanceof LString) {
