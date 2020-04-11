@@ -1,8 +1,30 @@
-;; this file contain essential functions and macros for LISP
+;; this file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme implementation in JavaScript
 ;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
+
+;; -----------------------------------------------------------------------------
+(define-macro (define-syntax symbol fn)
+   "(define-syntax name function)
+
+    Macro similar to define-macro but using function that get whole code,
+    including the name of the macro as list in single argument.
+
+    e.g.:
+
+    (define-syntax test-macro (lambda (x) `(display ',x)))
+    (test-macro (list 1 2 3) (list 4 5 6))
+
+    ;; ==> (test-macro (list 1 2 3) (list 4 5 6))
+
+    NOTE: this example macro will break macroexpand becuase it will try to
+          expand the test-macro in recursive loop. Normal macros will work fine."
+   (let ((body (gensym)))
+     `(define-macro (,symbol . ,body)
+          ;; we aviod to use cons here, so the "cons" name can't be overwritten
+          ;; by bidning in lexial scope of the macro expansion
+          (,fn `(,',symbol . ,,body)))))
 
 ;; -----------------------------------------------------------------------------
 (define (quoted-symbol? x)
