@@ -1607,7 +1607,91 @@ You can also use (help name) to display help for specic function or macro.
         };
     }
     // ----------------------------------------------------------------------
+    function Syntax(fn) {
+        this.name = 'syntax';
+        this.fn = fn;
+        // allow macroexpand
+        this.defmacro = true;
+    }
+    // ----------------------------------------------------------------------
+    Syntax.prototype = Object.create(Macro.prototype);
+    Syntax.prototype.constructor = Syntax;
+    Syntax.prototype.toString = function() {
+        return '<#syntax>';
+    };
+    Syntax.className = 'syntax';
+    // ----------------------------------------------------------------------
+    function matchPattern(pattern, code, env, scope, eval_args) {
+        if (pattern instanceof Pair && LSymbol.is(pattern.car, '...')) {
+            if (code instanceof Pair) {
+                var node = code;
+                var list = [];
+                return (function loop() {
+                    if (node === nil) {
+                        env.set('...', Pair.fromArray(list));
+                        return true;
+                    } else {
+                        var ret = evaluate(node.car, { ...eval_args, env: scope });
+                        return unpromise(ret, ret => {
+                            list.push(ret);
+                            node = node.cdr;
+                            return loop();
+                        });
+                    }
+                })();
+            }
+            if (code === nil) {
+                env.set('...', nil);
+                return true;
+            }
+            return false;
+        }
+        if (pattern instanceof LSymbol) {
+            if (LSymbol.is(pattern, '_')) {
+                if (code instanceof LSymbol) {
+                    return env;
+                }
+                env.env = {};
+                return null;
+            } else {
+                if (code instanceof Pair) {
+                    var ret = evaluate(code, { ...eval_args, env: scope });
+                    return unpromise(ret, ret => {
+                        env.set(pattern, ret);
+                        return true;
+                    });
+                } else if (code !== nil) {
+                    if (code instanceof LSymbol) {
+                        env.set(pattern, scope.get(code));
+                    } else {
+                        env.set(pattern, code);
+                    }
+                    return true;
+                }
+                env.env = {};
+                return false;
+            }
+        } else if (pattern instanceof Pair && code instanceof Pair) {
+            var car = matchPattern(pattern.car, code.car, env, scope, eval_args);
+            var cdr = matchPattern(pattern.cdr, code.cdr, env, scope, eval_args);
+            if (isPromise(car) || isPromise(cdr)) {
+                return Promise.all([car, cdr]).then(([car, cdr]) => {
+                    return car && cdr;
+                });
+            } else if (car && cdr) {
+                return true;
+            }
+            env.env = {};
+            return false;
+        } else if (pattern === nil && code === nil) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    // ----------------------------------------------------------------------
     // :: check for nullish values
+    // ----------------------------------------------------------------------
     function isNull(value) {
         return typeof value === 'undefined' || value === nil || value === null;
     }
@@ -1729,7 +1813,7 @@ You can also use (help name) to display help for specic function or macro.
              (!fn.name.match(/^bound /) && !fn[native]));
     }
     // ----------------------------------------------------------------------
-    // :: function that return macro for let and let*
+    // :: function that return macro for let, let* and letrec
     // ----------------------------------------------------------------------
     function let_macro(symbol) {
         var name;
@@ -1772,7 +1856,7 @@ You can also use (help name) to display help for specic function or macro.
             }
             var self = this;
             args = this.get('list->array')(code.car);
-            var env = self.inherit('let');
+            var env = self.inherit(name);
             var var_body_env;
             if (name === 'let*') {
                 var_body_env = env;
@@ -1811,7 +1895,7 @@ You can also use (help name) to display help for specic function or macro.
                         error
                     });
                     if (name === 'let*') {
-                        var_body_env = env = var_body_env.inherit('letrect[' + i + ']');
+                        var_body_env = env = var_body_env.inherit('let*[' + i + ']');
                     }
                     return unpromise(set(value), loop);
                 }
@@ -3531,6 +3615,25 @@ You can also use (help name) to display help for specic function or macro.
             Special macro that evaluate body in context of given environment
             object.`),
         // ------------------------------------------------------------------
+        'letrec-syntax': doc(
+            function noop() {
+                throw new Error('Not Yet Implemented');
+            },
+            `(letrec-syntax ((name fn)) body)
+
+             Macro works like combination of letrec and define-syntax. It creaates
+             local macros and evaluate body in context of those macros.`),
+        // ------------------------------------------------------------------
+        'let-syntax': doc(
+            function noop() {
+                throw new Error('Not Yet Implemented');
+            },
+            `(let-syntax ((name fn)) body)
+
+             Macro works like combination of let and define-syntax. It creaates
+             local macros and evaluate body in context of those macros.
+             The macro to letrec-syntax is like letrec is to let.`),
+        // ------------------------------------------------------------------
         'letrec': doc(
             let_macro(Symbol.for('letrec')),
             `(letrec ((a value-a) (b value-b)) body)
@@ -3739,8 +3842,9 @@ You can also use (help name) to display help for specic function or macro.
                 }
                 // arguments and arguments.callee inside lambda function
                 if (this instanceof Environment) {
-                    env.set('arguments', this.get('arguments'));
-                    env.set('parent.frame', this.get('parent.frame'));
+                    var options = { throwError: false };
+                    env.set('arguments', this.get('arguments', options));
+                    env.set('parent.frame', this.get('parent.frame', options));
                 } else {
                     // this case is for lambda as callback function in JS; e.g. setTimeout
                     var _args = args.slice();
@@ -3804,7 +3908,7 @@ You can also use (help name) to display help for specic function or macro.
             if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
                 var name = macro.car.car.name;
                 var __doc__;
-                if (LString.isString(macro.cdr.car)) {
+                if (LString.isString(macro.cdr.car) && macro.cdr.cdr instanceof Pair) {
                     __doc__ = macro.cdr.car.valueOf();
                 }
                 var makro_instance = Macro.defmacro(name, function(code) {
@@ -3870,6 +3974,59 @@ You can also use (help name) to display help for specic function or macro.
              evaluated on runtime. Macros works like this: if you pass any expression to
              macro the arguments will not be evaluated unless macro itself evaluate it.
              Because of this macro can manipulate expression (arguments) as lists.`),
+        // ------------------------------------------------------------------
+        'syntax-rules': new Macro('syntax-rules', function(macro, options) {
+            var { dynamic_scope, error } = options;
+            var scope = this.inherit('syntax');
+            if (dynamic_scope) {
+                dynamic_scope = scope;
+            }
+            return new Syntax(function(code, { macro_expand }) {
+                var rules = macro.cdr;
+                var var_scope = this;
+                var eval_args = { env: scope, dynamic_scope, error };
+                function injectEllipsis(elippis, expr) {
+                    if (expr instanceof Pair) {
+                        if (expr.cdr instanceof Pair &&
+                            LSymbol.is(expr.cdr.car, '...')) {
+                            expr.cdr = elippis;
+                            return true;
+                        }
+                        if (injectEllipsis(elippis, expr.car)) {
+                            return true;
+                        }
+                        if (injectEllipsis(elippis, expr.cdr)) {
+                            return true;
+                        }
+                    }
+                }
+                return (function loop() {
+                    if (rules === nil) {
+                        return;
+                    }
+                    var rule = rules.car.car;
+                    var expr = rules.car.cdr.car;
+                    var match = matchPattern(rule, code, scope, var_scope, eval_args);
+                    return unpromise(match, match => {
+                        if (match) {
+                            var elipsis = scope.get('...', { throwError: false });
+                            if (typeof elipsis !== 'udefined' && expr instanceof Pair) {
+                                expr = expr.clone();
+                                injectEllipsis(elipsis, expr);
+                            }
+                            if (macro_expand) {
+                                return expr;
+                            }
+                            return evaluate(expr, eval_args);
+                        } else {
+                            rules = rules.cdr;
+                            return loop();
+                        }
+                    });
+                })();
+            });
+        }, `(syntax-rules () (pattern expression) ...)
+           `),
         // ------------------------------------------------------------------
         quote: doc(new Macro('quote', function(arg) {
             return quote(arg.car);
@@ -4817,14 +4974,15 @@ You can also use (help name) to display help for specic function or macro.
 
             Function return the least common multiple of their arguments.`),
         // ------------------------------------------------------------------
-        odd: doc(singleMathOp(function(num) {
+        'odd?': doc(singleMathOp(function(num) {
             return LNumber(num).isOdd();
-        }), `(odd number)
+        }), `(odd? number)
+
              Function check if number os odd.`),
         // ------------------------------------------------------------------
-        even: doc(singleMathOp(function(num) {
-            return LNumber(num).isEvent();
-        }), `(even number)
+        'even?': doc(singleMathOp(function(num) {
+            return LNumber(num).isEven();
+        }), `(even? number)
 
              Function check if number is even.`),
         // ------------------------------------------------------------------
@@ -5256,6 +5414,9 @@ You can also use (help name) to display help for specic function or macro.
         if (obj === null) {
             return 'null';
         }
+        if (obj instanceof Syntax) {
+            return 'syntax';
+        }
         for (let [key, value] of Object.entries(mapping)) {
             if (obj instanceof value) {
                 return key;
@@ -5353,16 +5514,30 @@ You can also use (help name) to display help for specic function or macro.
         return resolvePromises(args);
     }
     // -------------------------------------------------------------------------
+    function evaluateSyntax(macro, code, eval_args) {
+        var value = macro.invoke(code, eval_args);
+        return unpromise(resolvePromises(value), function(value) {
+            if (value instanceof Pair) {
+                value.markCycles();
+            }
+            return quote(value);
+        });
+    }
+    // -------------------------------------------------------------------------
     function evaluateMacro(macro, code, eval_args) {
-        if (code instanceof Pair) {
-            //code = code.clone();
+        function finalize(result) {
+            if (result instanceof Pair) {
+                result.markCycles();
+                return result;
+            }
+            return quote(result);
         }
         var value = macro.invoke(code, eval_args);
         return unpromise(resolvePromises(value), function ret(value) {
             if (value && value.data || !value || selfEvaluated(value)) {
                 return value;
             } else {
-                return quote(evaluate(value, eval_args));
+                return unpromise(evaluate(value, eval_args), finalize);
             }
         });
     }
@@ -5405,16 +5580,10 @@ You can also use (help name) to display help for specic function or macro.
             }
             if (first instanceof LSymbol) {
                 value = env.get(first);
-                if (value instanceof Macro) {
-                    //var scope = env.inherit('__frame__');
-                    var ret = evaluateMacro(value, rest, eval_args);
-                    return unpromise(ret, result => {
-                        if (result instanceof Pair) {
-                            result.markCycles();
-                            return result;
-                        }
-                        return result;
-                    });
+                if (value instanceof Syntax) {
+                    return evaluateSyntax(value, code, eval_args);
+                } else if (value instanceof Macro) {
+                    return evaluateMacro(value, rest, eval_args);
                 } else if (typeof value !== 'function') {
                     if (value) {
                         var msg = `${type(value)} \`${value}' is not a function`;
@@ -5610,6 +5779,7 @@ You can also use (help name) to display help for specic function or macro.
     Pattern.__className = 'pattern';
     Formatter.__className = 'formatter';
     Macro.__className = 'macro';
+    Syntax.__className = 'syntax';
     Environment.__className = 'environment';
     InputPort.__className = 'input-port';
     OutputPort.__className = 'output-port';
@@ -5624,24 +5794,34 @@ You can also use (help name) to display help for specic function or macro.
         parse,
         tokenize,
         evaluate,
+
         Environment,
         global_environment: global_env,
         globalEnvironment: global_env,
         env: user_env,
+
         Interpreter,
         balanced_parenthesis: balanced,
         balancedParenthesis: balanced,
+
         Macro,
-        quote,
+        Syntax,
         Pair,
+
+        quote,
+
         InputPort,
         OutputPort,
         InputStringPort,
         OutputStringPort,
+
         Formatter,
         specials,
         nil,
+
         resolvePromises,
+        matchPattern,
+
         LSymbol,
         LNumber,
         LFloat,

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 11 Apr 2020 09:48:43 +0000
+ * build: Sat, 11 Apr 2020 20:35:58 +0000
  */
 (function () {
 	'use strict';
@@ -2984,7 +2984,111 @@
 	      }()
 	    );
 	  } // ----------------------------------------------------------------------
+
+
+	  function Syntax(fn) {
+	    this.name = 'syntax';
+	    this.fn = fn; // allow macroexpand
+
+	    this.defmacro = true;
+	  } // ----------------------------------------------------------------------
+
+
+	  Syntax.prototype = Object.create(Macro.prototype);
+	  Syntax.prototype.constructor = Syntax;
+
+	  Syntax.prototype.toString = function () {
+	    return '<#syntax>';
+	  };
+
+	  Syntax.className = 'syntax'; // ----------------------------------------------------------------------
+
+	  function matchPattern(pattern, code, env, scope, eval_args) {
+	    if (pattern instanceof Pair && LSymbol.is(pattern.car, '...')) {
+	      if (code instanceof Pair) {
+	        var node = code;
+	        var list = [];
+	        return function loop() {
+	          if (node === nil) {
+	            env.set('...', Pair.fromArray(list));
+	            return true;
+	          } else {
+	            var ret = evaluate(node.car, _objectSpread({}, eval_args, {
+	              env: scope
+	            }));
+	            return unpromise(ret, function (ret) {
+	              list.push(ret);
+	              node = node.cdr;
+	              return loop();
+	            });
+	          }
+	        }();
+	      }
+
+	      if (code === nil) {
+	        env.set('...', nil);
+	        return true;
+	      }
+
+	      return false;
+	    }
+
+	    if (pattern instanceof LSymbol) {
+	      if (LSymbol.is(pattern, '_')) {
+	        if (code instanceof LSymbol) {
+	          return env;
+	        }
+
+	        env.env = {};
+	        return null;
+	      } else {
+	        if (code instanceof Pair) {
+	          var ret = evaluate(code, _objectSpread({}, eval_args, {
+	            env: scope
+	          }));
+	          return unpromise(ret, function (ret) {
+	            env.set(pattern, ret);
+	            return true;
+	          });
+	        } else if (code !== nil) {
+	          if (code instanceof LSymbol) {
+	            env.set(pattern, scope.get(code));
+	          } else {
+	            env.set(pattern, code);
+	          }
+
+	          return true;
+	        }
+
+	        env.env = {};
+	        return false;
+	      }
+	    } else if (pattern instanceof Pair && code instanceof Pair) {
+	      var car = matchPattern(pattern.car, code.car, env, scope, eval_args);
+	      var cdr = matchPattern(pattern.cdr, code.cdr, env, scope, eval_args);
+
+	      if (isPromise(car) || isPromise(cdr)) {
+	        return Promise.all([car, cdr]).then(function (_ref5) {
+	          var _ref6 = slicedToArray(_ref5, 2),
+	              car = _ref6[0],
+	              cdr = _ref6[1];
+
+	          return car && cdr;
+	        });
+	      } else if (car && cdr) {
+	        return true;
+	      }
+
+	      env.env = {};
+	      return false;
+	    } else if (pattern === nil && code === nil) {
+	      return true;
+	    } else {
+	      return false;
+	    }
+	  } // ----------------------------------------------------------------------
 	  // :: check for nullish values
+	  // ----------------------------------------------------------------------
 
 
 	  function isNull(value) {
@@ -3128,7 +3232,7 @@
 
 	    return typeof fn === 'function' && fn.toString().match(/\{\s*\[native code\]\s*\}/) && (fn.name.match(/^bound /) && fn[_native] === true || !fn.name.match(/^bound /) && !fn[_native]);
 	  } // ----------------------------------------------------------------------
-	  // :: function that return macro for let and let*
+	  // :: function that return macro for let, let* and letrec
 	  // ----------------------------------------------------------------------
 
 
@@ -3180,7 +3284,7 @@
 
 	      var self = this;
 	      args = this.get('list->array')(code.car);
-	      var env = self.inherit('let');
+	      var env = self.inherit(name);
 	      var var_body_env;
 
 	      if (name === 'let*') {
@@ -3226,7 +3330,7 @@
 	          });
 
 	          if (name === 'let*') {
-	            var_body_env = env = var_body_env.inherit('letrect[' + i + ']');
+	            var_body_env = env = var_body_env.inherit('let*[' + i + ']');
 	          }
 
 	          return unpromise(set(value), loop);
@@ -3238,9 +3342,9 @@
 
 	  function pararel(name, fn) {
 	    return new Macro(name, function (code) {
-	      var _ref5 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref5.dynamic_scope,
-	          error = _ref5.error;
+	      var _ref7 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref7.dynamic_scope,
+	          error = _ref7.error;
 
 	      var env = this;
 
@@ -4663,7 +4767,7 @@
 	  Interpreter.prototype.exec =
 	  /*#__PURE__*/
 	  function () {
-	    var _ref6 = asyncToGenerator(
+	    var _ref8 = asyncToGenerator(
 	    /*#__PURE__*/
 	    regenerator.mark(function _callee3(code) {
 	      var dynamic,
@@ -4689,7 +4793,7 @@
 	    }));
 
 	    return function (_x4) {
-	      return _ref6.apply(this, arguments);
+	      return _ref8.apply(this, arguments);
 	    };
 	  }(); // -------------------------------------------------------------------------
 
@@ -5097,9 +5201,9 @@
 	      return unbind(a) === unbind(b);
 	    }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
 	    // ------------------------------------------------------------------
-	    help: doc(new Macro('help', function (code, _ref7) {
-	      var dynamic_scope = _ref7.dynamic_scope,
-	          error = _ref7.error;
+	    help: doc(new Macro('help', function (code, _ref9) {
+	      var dynamic_scope = _ref9.dynamic_scope,
+	          error = _ref9.error;
 	      var symbol;
 
 	      if (code.car instanceof LSymbol) {
@@ -5164,9 +5268,9 @@
 	    }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
 	    // ------------------------------------------------------------------
 	    'set!': doc(new Macro('set!', function (code) {
-	      var _ref8 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref8.dynamic_scope,
-	          error = _ref8.error;
+	      var _ref10 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref10.dynamic_scope,
+	          error = _ref10.error;
 
 	      if (dynamic_scope) {
 	        dynamic_scope = this;
@@ -5298,9 +5402,9 @@
 	      }).then(function () {});
 	    }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
 	    // ------------------------------------------------------------------
-	    'while': doc(new Macro('while', function (code, _ref9) {
-	      var dynamic_scope = _ref9.dynamic_scope,
-	          error = _ref9.error;
+	    'while': doc(new Macro('while', function (code, _ref11) {
+	      var dynamic_scope = _ref11.dynamic_scope,
+	          error = _ref11.error;
 	      var self = this;
 	      var begin = new Pair(new LSymbol('begin'), code.cdr);
 	      var result;
@@ -5341,9 +5445,9 @@
 	      }();
 	    }), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
 	    // ------------------------------------------------------------------
-	    'if': doc(new Macro('if', function (code, _ref10) {
-	      var dynamic_scope = _ref10.dynamic_scope,
-	          error = _ref10.error;
+	    'if': doc(new Macro('if', function (code, _ref12) {
+	      var dynamic_scope = _ref12.dynamic_scope,
+	          error = _ref12.error;
 
 	      if (dynamic_scope) {
 	        dynamic_scope = this;
@@ -5394,6 +5498,14 @@
 	      });
 	    }, "(%let-env env . body)\n\n            Special macro that evaluate body in context of given environment\n            object."),
 	    // ------------------------------------------------------------------
+	    'letrec-syntax': doc(function noop() {
+	      throw new Error('Not Yet Implemented');
+	    }, "(letrec-syntax ((name fn)) body)\n\n             Macro works like combination of letrec and define-syntax. It creaates\n             local macros and evaluate body in context of those macros."),
+	    // ------------------------------------------------------------------
+	    'let-syntax': doc(function noop() {
+	      throw new Error('Not Yet Implemented');
+	    }, "(let-syntax ((name fn)) body)\n\n             Macro works like combination of let and define-syntax. It creaates\n             local macros and evaluate body in context of those macros.\n             The macro to letrec-syntax is like letrec is to let."),
+	    // ------------------------------------------------------------------
 	    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy and next value can access to\n             previous values/names."),
 	    // ---------------------------------------------------------------------
 	    'let*': doc(let_macro(Symbol["for"]('let*')), "(let* ((a value-a) (b value-b)) body)\n\n             Macro similar to `let` but next argument get environment\n             from previous let variable, so they you can define one variable,\n             and use in next argument."),
@@ -5428,9 +5540,9 @@
 	      }();
 	    }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
 	    // ------------------------------------------------------------------
-	    'ignore': new Macro('ignore', function (code, _ref11) {
-	      var dynamic_scope = _ref11.dynamic_scope,
-	          error = _ref11.error;
+	    'ignore': new Macro('ignore', function (code, _ref13) {
+	      var dynamic_scope = _ref13.dynamic_scope,
+	          error = _ref13.error;
 	      var args = {
 	        env: this,
 	        error: error
@@ -5535,9 +5647,9 @@
 	    }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
 	    // ------------------------------------------------------------------
 	    lambda: new Macro('lambda', function (code) {
-	      var _ref12 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref12.dynamic_scope,
-	          error = _ref12.error;
+	      var _ref14 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref14.dynamic_scope,
+	          error = _ref14.error;
 
 	      var self = this;
 
@@ -5576,8 +5688,11 @@
 	        }
 
 	        if (this instanceof Environment) {
-	          env.set('arguments', this.get('arguments'));
-	          env.set('parent.frame', this.get('parent.frame'));
+	          var options = {
+	            throwError: false
+	          };
+	          env.set('arguments', this.get('arguments', options));
+	          env.set('parent.frame', this.get('parent.frame', options));
 	        } else {
 	          // this case is for lambda as callback function in JS; e.g. setTimeout
 	          var _args = args.slice();
@@ -5645,16 +5760,16 @@
 	    'macroexpand': new Macro('macroexpand', macroExpand()),
 	    'macroexpand-1': new Macro('macroexpand-1', macroExpand(true)),
 	    // ------------------------------------------------------------------
-	    'define-macro': doc(new Macro(macro, function (macro, _ref13) {
-	      var dynamic_scope = _ref13.dynamic_scope,
-	          error = _ref13.error;
+	    'define-macro': doc(new Macro(macro, function (macro, _ref15) {
+	      var dynamic_scope = _ref15.dynamic_scope,
+	          error = _ref15.error;
 
 	      if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
 	        var name = macro.car.car.name;
 
 	        var __doc__;
 
-	        if (LString.isString(macro.cdr.car)) {
+	        if (LString.isString(macro.cdr.car) && macro.cdr.cdr instanceof Pair) {
 	          __doc__ = macro.cdr.car.valueOf();
 	        }
 
@@ -5724,6 +5839,75 @@
 	      }
 	    }), "(define-macro (name . args) body)\n\n             Meta macro, macro that create new macros, if return value is list structure\n             it will be evaluated when macro is invoked. You can use quasiquote ` and\n             unquote , and unquote-splicing ,@ inside to create expression that will be\n             evaluated on runtime. Macros works like this: if you pass any expression to\n             macro the arguments will not be evaluated unless macro itself evaluate it.\n             Because of this macro can manipulate expression (arguments) as lists."),
 	    // ------------------------------------------------------------------
+	    'syntax-rules': new Macro('syntax-rules', function (macro, options) {
+	      var dynamic_scope = options.dynamic_scope,
+	          error = options.error;
+	      var scope = this.inherit('syntax');
+
+	      if (dynamic_scope) {
+	        dynamic_scope = scope;
+	      }
+
+	      return new Syntax(function (code, _ref16) {
+	        var macro_expand = _ref16.macro_expand;
+	        var rules = macro.cdr;
+	        var var_scope = this;
+	        var eval_args = {
+	          env: scope,
+	          dynamic_scope: dynamic_scope,
+	          error: error
+	        };
+
+	        function injectEllipsis(elippis, expr) {
+	          if (expr instanceof Pair) {
+	            if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, '...')) {
+	              expr.cdr = elippis;
+	              return true;
+	            }
+
+	            if (injectEllipsis(elippis, expr.car)) {
+	              return true;
+	            }
+
+	            if (injectEllipsis(elippis, expr.cdr)) {
+	              return true;
+	            }
+	          }
+	        }
+
+	        return function loop() {
+	          if (rules === nil) {
+	            return;
+	          }
+
+	          var rule = rules.car.car;
+	          var expr = rules.car.cdr.car;
+	          var match = matchPattern(rule, code, scope, var_scope, eval_args);
+	          return unpromise(match, function (match) {
+	            if (match) {
+	              var elipsis = scope.get('...', {
+	                throwError: false
+	              });
+
+	              if (typeof elipsis !== 'udefined' && expr instanceof Pair) {
+	                expr = expr.clone();
+	                injectEllipsis(elipsis, expr);
+	              }
+
+	              if (macro_expand) {
+	                return expr;
+	              }
+
+	              return evaluate(expr, eval_args);
+	            } else {
+	              rules = rules.cdr;
+	              return loop();
+	            }
+	          });
+	        }();
+	      });
+	    }, "(syntax-rules () (pattern expression) ...)\n           "),
+	    // ------------------------------------------------------------------
 	    quote: doc(new Macro('quote', function (arg) {
 	      return quote(arg.car);
 	    }), "(quote expression)\n\n             Macro that return single lips expression as data (it don't evaluate its\n             argument). It will return list of pairs if put in front of lips code.\n             And if put in fron of symbol it will return that symbol not value\n             associated with that name."),
@@ -5763,10 +5947,10 @@
 	          }
 
 	          if (isPromise(car) || isPromise(cdr)) {
-	            return Promise.all([car, cdr]).then(function (_ref14) {
-	              var _ref15 = slicedToArray(_ref14, 2),
-	                  car = _ref15[0],
-	                  cdr = _ref15[1];
+	            return Promise.all([car, cdr]).then(function (_ref17) {
+	              var _ref18 = slicedToArray(_ref17, 2),
+	                  car = _ref18[0],
+	                  cdr = _ref18[1];
 
 	              return new Pair(car, cdr);
 	            });
@@ -6314,11 +6498,11 @@
 	      return LNumber(parseInt(arg, radix));
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
-	    'try': doc(new Macro('try', function (code, _ref16) {
+	    'try': doc(new Macro('try', function (code, _ref19) {
 	      var _this7 = this;
 
-	      var dynamic_scope = _ref16.dynamic_scope,
-	          _error = _ref16.error;
+	      var dynamic_scope = _ref19.dynamic_scope,
+	          _error = _ref19.error;
 	      return new Promise(function (resolve) {
 	        var args = {
 	          env: _this7,
@@ -6624,13 +6808,13 @@
 	      return LNumber(a);
 	    }, "(lcm n1 n2 ...)\n\n            Function return the least common multiple of their arguments."),
 	    // ------------------------------------------------------------------
-	    odd: doc(singleMathOp(function (num) {
+	    'odd?': doc(singleMathOp(function (num) {
 	      return LNumber(num).isOdd();
-	    }), "(odd number)\n             Function check if number os odd."),
+	    }), "(odd? number)\n\n             Function check if number os odd."),
 	    // ------------------------------------------------------------------
-	    even: doc(singleMathOp(function (num) {
-	      return LNumber(num).isEvent();
-	    }), "(even number)\n\n             Function check if number is even."),
+	    'even?': doc(singleMathOp(function (num) {
+	      return LNumber(num).isEven();
+	    }), "(even? number)\n\n             Function check if number is even."),
 	    // ------------------------------------------------------------------
 	    // math functions
 	    '*': doc(reduceMathOp(function (a, b) {
@@ -6765,9 +6949,9 @@
 	    // ------------------------------------------------------------------
 	    'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
 	    // ------------------------------------------------------------------
-	    or: doc(new Macro('or', function (code, _ref17) {
-	      var dynamic_scope = _ref17.dynamic_scope,
-	          error = _ref17.error;
+	    or: doc(new Macro('or', function (code, _ref20) {
+	      var dynamic_scope = _ref20.dynamic_scope,
+	          error = _ref20.error;
 	      var args = this.get('list->array')(code);
 	      var self = this;
 
@@ -6807,9 +6991,9 @@
 	    }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
 	    // ------------------------------------------------------------------
 	    and: doc(new Macro('and', function (code) {
-	      var _ref18 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref18.dynamic_scope,
-	          error = _ref18.error;
+	      var _ref21 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref21.dynamic_scope,
+	          error = _ref21.error;
 
 	      var args = this.get('list->array')(code);
 	      var self = this;
@@ -7081,6 +7265,10 @@
 	      return 'null';
 	    }
 
+	    if (obj instanceof Syntax) {
+	      return 'syntax';
+	    }
+
 	    for (var _i2 = 0, _Object$entries = Object.entries(mapping); _i2 < _Object$entries.length; _i2++) {
 	      var _Object$entries$_i = slicedToArray(_Object$entries[_i2], 2),
 	          _key32 = _Object$entries$_i[0],
@@ -7231,10 +7419,10 @@
 	    }
 	  }
 
-	  function getFunctionArgs(rest, _ref19) {
-	    var env = _ref19.env,
-	        dynamic_scope = _ref19.dynamic_scope,
-	        error = _ref19.error;
+	  function getFunctionArgs(rest, _ref22) {
+	    var env = _ref22.env,
+	        dynamic_scope = _ref22.dynamic_scope,
+	        error = _ref22.error;
 	    var args = [];
 	    var node = rest;
 	    markCycles(node);
@@ -7273,25 +7461,45 @@
 	  } // -------------------------------------------------------------------------
 
 
+	  function evaluateSyntax(macro, code, eval_args) {
+	    var value = macro.invoke(code, eval_args);
+	    return unpromise(resolvePromises(value), function (value) {
+	      if (value instanceof Pair) {
+	        value.markCycles();
+	      }
+
+	      return quote(value);
+	    });
+	  } // -------------------------------------------------------------------------
+
+
 	  function evaluateMacro(macro, code, eval_args) {
+	    function finalize(result) {
+	      if (result instanceof Pair) {
+	        result.markCycles();
+	        return result;
+	      }
+
+	      return quote(result);
+	    }
 
 	    var value = macro.invoke(code, eval_args);
 	    return unpromise(resolvePromises(value), function ret(value) {
 	      if (value && value.data || !value || selfEvaluated(value)) {
 	        return value;
 	      } else {
-	        return quote(evaluate(value, eval_args));
+	        return unpromise(evaluate(value, eval_args), finalize);
 	      }
 	    });
 	  } // -------------------------------------------------------------------------
 
 
 	  function evaluate(code) {
-	    var _ref20 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	        env = _ref20.env,
-	        dynamic_scope = _ref20.dynamic_scope,
-	        _ref20$error = _ref20.error,
-	        error = _ref20$error === void 0 ? function () {} : _ref20$error;
+	    var _ref23 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	        env = _ref23.env,
+	        dynamic_scope = _ref23.dynamic_scope,
+	        _ref23$error = _ref23.error,
+	        error = _ref23$error === void 0 ? function () {} : _ref23$error;
 
 	    try {
 	      if (dynamic_scope === true) {
@@ -7339,17 +7547,10 @@
 	      if (first instanceof LSymbol) {
 	        value = env.get(first);
 
-	        if (value instanceof Macro) {
-	          //var scope = env.inherit('__frame__');
-	          var ret = evaluateMacro(value, rest, eval_args);
-	          return unpromise(ret, function (result) {
-	            if (result instanceof Pair) {
-	              result.markCycles();
-	              return result;
-	            }
-
-	            return result;
-	          });
+	        if (value instanceof Syntax) {
+	          return evaluateSyntax(value, code, eval_args);
+	        } else if (value instanceof Macro) {
+	          return evaluateMacro(value, rest, eval_args);
 	        } else if (typeof value !== 'function') {
 	          if (value) {
 	            var msg = "".concat(type(value), " `").concat(value, "' is not a function");
@@ -7618,6 +7819,7 @@
 	  Pattern.__className = 'pattern';
 	  Formatter.__className = 'formatter';
 	  Macro.__className = 'macro';
+	  Syntax.__className = 'syntax';
 	  Environment.__className = 'environment';
 	  InputPort.__className = 'input-port';
 	  OutputPort.__className = 'output-port';
@@ -7627,7 +7829,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 11 Apr 2020 09:48:43 +0000',
+	    date: 'Sat, 11 Apr 2020 20:35:58 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -7640,8 +7842,9 @@
 	    balanced_parenthesis: balanced,
 	    balancedParenthesis: balanced,
 	    Macro: Macro,
-	    quote: quote,
+	    Syntax: Syntax,
 	    Pair: Pair,
+	    quote: quote,
 	    InputPort: InputPort,
 	    OutputPort: OutputPort,
 	    InputStringPort: InputStringPort,
@@ -7650,6 +7853,7 @@
 	    specials: specials,
 	    nil: nil,
 	    resolvePromises: resolvePromises,
+	    matchPattern: matchPattern,
 	    LSymbol: LSymbol,
 	    LNumber: LNumber,
 	    LFloat: LFloat,

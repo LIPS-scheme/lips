@@ -30,7 +30,7 @@
 * new `interaction-environment` function + `load` use that env by default
 * improve executable
 * user can define string representation (with object that have `toString` lambda)
-* `define-syntax` macro
+* Hygienic macros: `syntax-rules` transformer macros
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

@@ -5,27 +5,6 @@
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
-(define-macro (define-syntax symbol fn)
-   "(define-syntax name function)
-
-    Macro similar to define-macro but using function that get whole code,
-    including the name of the macro as list in single argument.
-
-    e.g.:
-
-    (define-syntax test-macro (lambda (x) `(display ',x)))
-    (test-macro (list 1 2 3) (list 4 5 6))
-
-    ;; ==> (test-macro (list 1 2 3) (list 4 5 6))
-    (macroexpand (test-macro (list 1 2 3) (list 4 5 6)))
-    ;; ==> (display (quote (test-macro (list 1 2 3) (list 4 5 6))))"
-   (let ((body (gensym)))
-     `(define-macro (,symbol . ,body)
-          ;; we aviod to use cons here, so the "cons" name can't be overwritten
-          ;; by bidning in lexial scope of the macro expansion
-          (,fn `(,',symbol . ,,body)))))
-
-;; -----------------------------------------------------------------------------
 (define (quoted-symbol? x)
    "(quoted-symbol? code)
 
