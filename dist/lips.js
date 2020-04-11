@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 11 Apr 2020 20:35:58 +0000
+ * build: Sat, 11 Apr 2020 22:27:57 +0000
  */
 (function () {
 	'use strict';
@@ -1735,7 +1735,7 @@
 
 	    return 0;
 	  } // ----------------------------------------------------------------------
-	  // :: token based pattern matching
+	  // :: token based pattern matching (used by formatter)
 	  // ----------------------------------------------------------------------
 
 
@@ -1865,7 +1865,7 @@
 	  Formatter.defaults = {
 	    offset: 0,
 	    indent: 2,
-	    specials: [/^define/, 'lambda', 'let', 'let*']
+	    specials: [/^define/, 'lambda', 'let', 'let*', 'syntax-rules']
 	  };
 	  Formatter.match = match; // ----------------------------------------------------------------------
 	  // :: return indent for next line
@@ -2002,7 +2002,9 @@
 	  var symbol = new Pattern([Symbol["for"]('symbol')], '?');
 	  var let_value = new Pattern(['(', Symbol["for"]('symbol'), glob, ')'], '+'); // rules for breaking S-Expressions into lines
 
-	  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', /^let\*?$/, symbol, '(', let_value, ')'], 1], [['(', /^let\*?$/, symbol, '(', let_value], 2, notParen], [['(', /^let\*?$/, symbol, ['(', let_value, ')'], sexp], 1, notParen], [[/(?!lambda)/, '(', glob, ')'], 1, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', /[^()]/, glob], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], /[^()]/], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen], [['(', /^(define|lambda)/, ['(', glob, ')'], string_re], 1], [['(', /^(define|lambda)/, '(', glob, ')'], 1], [['(', /^(define|lambda)/, ['(', glob, ')'], string_re, sexp], 1, notParen], [['(', /^(define|lambda)/, ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
+	  var def_lambda_re = /^(define|lambda|syntax-rules)/;
+	  var let_re = /^(let|let\*|letrec)(:?-syntax)?$/;
+	  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', let_re, symbol, '(', let_value, ')'], 1], [['(', let_re, symbol, '(', let_value], 2, notParen], [['(', let_re, symbol, ['(', let_value, ')'], sexp], 1, notParen], [[/(?!lambda)/, '(', glob, ')'], 1, notParen], [['(', 'if', /[^()]/], 1], [['(', 'if', /[^()]/, glob], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], /[^()]/], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen], [['(',, ['(', glob, ')'], string_re], 1], [['(', def_lambda_re, '(', glob, ')'], 1], [['(', def_lambda_re, ['(', glob, ')'], string_re, sexp], 1, notParen], [['(', def_lambda_re, ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
 
 	  Formatter.prototype["break"] = function () {
 	    var code = this._code.replace(/\n[ \t]*/g, '\n ');
@@ -3043,21 +3045,36 @@
 	        return null;
 	      } else {
 	        if (code instanceof Pair) {
+	          console.log(code.toString());
+	          env.set(pattern, code);
+	          return true;
+	          /*
+	          console.log('eval1');
+	          var ret = evaluate(code, { ...eval_args, env: scope });
+	          return unpromise(ret, ret => {
+	              return true;
+	          });
+	          */
+	        } else if (code !== nil) {
+	          if (code instanceof LSymbol) {
+	            var value = scope.get(code, {
+	              throwError: false
+	            });
+
+	            if (typeof value !== 'undefined') {
+	              env.set(pattern, value);
+	              return true;
+	            }
+	          }
+
+	          console.log('eval2');
 	          var ret = evaluate(code, _objectSpread({}, eval_args, {
-	            env: scope
+	            env: env
 	          }));
 	          return unpromise(ret, function (ret) {
 	            env.set(pattern, ret);
 	            return true;
 	          });
-	        } else if (code !== nil) {
-	          if (code instanceof LSymbol) {
-	            env.set(pattern, scope.get(code));
-	          } else {
-	            env.set(pattern, code);
-	          }
-
-	          return true;
 	        }
 
 	        env.env = {};
@@ -5842,14 +5859,15 @@
 	    'syntax-rules': new Macro('syntax-rules', function (macro, options) {
 	      var dynamic_scope = options.dynamic_scope,
 	          error = options.error;
-	      var scope = this.inherit('syntax');
-
-	      if (dynamic_scope) {
-	        dynamic_scope = scope;
-	      }
-
+	      var env = this;
 	      return new Syntax(function (code, _ref16) {
 	        var macro_expand = _ref16.macro_expand;
+	        var scope = env.inherit('syntax');
+
+	        if (dynamic_scope) {
+	          dynamic_scope = scope;
+	        }
+
 	        var rules = macro.cdr;
 	        var var_scope = this;
 	        var eval_args = {
@@ -5890,7 +5908,9 @@
 	              });
 
 	              if (typeof elipsis !== 'udefined' && expr instanceof Pair) {
-	                expr = expr.clone();
+	                expr = expr.clone(); // TODO: inject everything from scope.env
+
+	                console.log(scope.env);
 	                injectEllipsis(elipsis, expr);
 	              }
 
@@ -7829,7 +7849,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 11 Apr 2020 20:35:58 +0000',
+	    date: 'Sat, 11 Apr 2020 22:27:57 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

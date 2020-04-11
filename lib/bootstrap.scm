@@ -5,6 +5,30 @@
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
+(define-macro (let-syntax vars . body)
+  `(let ,vars
+     ,@(map (lambda (rule)
+              `(typecheck "let-syntax" ,(car rule) "syntax"))
+            vars)
+     ,@body))
+
+;; -----------------------------------------------------------------------------
+(define-macro (letrec-syntax vars . body)
+  `(letrec ,vars
+     ,@(map (lambda (rule)
+              `(typecheck "letrec-syntax" ,(car rule) "syntax"))
+            vars)
+     ,@body))
+
+;; -----------------------------------------------------------------------------
+(define-macro (define-syntax name expr)
+  (let ((expr-name (gensym)))
+    `(define ,name
+       (let ((,expr-name ,expr))
+         (typecheck "define-syntax" ,expr-name "syntax")
+         ,expr-name))))
+
+;; -----------------------------------------------------------------------------
 (define (quoted-symbol? x)
    "(quoted-symbol? code)
 
