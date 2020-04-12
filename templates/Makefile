@@ -18,7 +18,7 @@ NPM=npm
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
-AVA=./node_modules/.bin/ava
+NPM=npm
 UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 
@@ -58,11 +58,11 @@ publish:
 	$(CD) npm && $(NPM) publish --access=public
 	$(RM) -rf npm
 
-test: dist/lips.js
+test: dist/lips.js scheme-tests
 	$(JEST) --coverage spec/*.spec.js
 
-test-ava:
-	$(AVA) test.js
+scheme-tests:
+	$(NPM) run test
 
 coveralls:
 	$(CAT) ./coverage/lcov.info | $(COVERALLS)
