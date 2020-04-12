@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 11 Apr 2020 22:27:57 +0000
+ * build: Sun, 12 Apr 2020 07:48:23 +0000
  */
 (function () {
 	'use strict';
@@ -2839,13 +2839,13 @@
 	                    _traverse = asyncToGenerator(
 	                    /*#__PURE__*/
 	                    regenerator.mark(function _callee(node) {
-	                      var value, result, car, cdr, pair;
+	                      var value, code, result, car, cdr, pair;
 	                      return regenerator.wrap(function _callee$(_context) {
 	                        while (1) {
 	                          switch (_context.prev = _context.next) {
 	                            case 0:
 	                              if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-	                                _context.next = 15;
+	                                _context.next = 11;
 	                                break;
 	                              }
 
@@ -2857,16 +2857,18 @@
 	                              return _context.abrupt("return", node);
 
 	                            case 3:
-	                              _context.prev = 3;
-	                              value = env.get(node.car);
+	                              value = env.get(node.car, {
+	                                throwError: false
+	                              });
 
 	                              if (!(value instanceof Macro && value.defmacro)) {
 	                                _context.next = 11;
 	                                break;
 	                              }
 
+	                              code = value instanceof Syntax ? node : node.cdr;
 	                              _context.next = 8;
-	                              return value.invoke(node.cdr, args, true);
+	                              return value.invoke(code, args, true);
 
 	                            case 8:
 	                              result = _context.sent;
@@ -2879,52 +2881,44 @@
 	                              return _context.abrupt("return", result);
 
 	                            case 11:
-	                              _context.next = 15;
-	                              break;
-
-	                            case 13:
-	                              _context.prev = 13;
-	                              _context.t0 = _context["catch"](3);
-
-	                            case 15:
 	                              // CYCLE DETECT
 	                              car = node.car;
 
 	                              if (!(car instanceof Pair)) {
-	                                _context.next = 20;
+	                                _context.next = 16;
 	                                break;
 	                              }
 
-	                              _context.next = 19;
+	                              _context.next = 15;
 	                              return traverse(car);
 
-	                            case 19:
+	                            case 15:
 	                              car = _context.sent;
 
-	                            case 20:
+	                            case 16:
 	                              cdr = node.cdr;
 
 	                              if (!(cdr instanceof Pair)) {
-	                                _context.next = 25;
+	                                _context.next = 21;
 	                                break;
 	                              }
 
-	                              _context.next = 24;
+	                              _context.next = 20;
 	                              return traverse(cdr);
 
-	                            case 24:
+	                            case 20:
 	                              cdr = _context.sent;
 
-	                            case 25:
+	                            case 21:
 	                              pair = new Pair(car, cdr);
 	                              return _context.abrupt("return", pair);
 
-	                            case 27:
+	                            case 23:
 	                            case "end":
 	                              return _context.stop();
 	                          }
 	                        }
-	                      }, _callee, null, [[3, 13]]);
+	                      }, _callee);
 	                    }));
 	                    return _traverse.apply(this, arguments);
 	                  };
@@ -3004,6 +2998,9 @@
 	  };
 
 	  Syntax.className = 'syntax'; // ----------------------------------------------------------------------
+	  // :: pattern matching function for Syntax, that also update scope and get
+	  // :: values from env, so this is just one iteration/recursion
+	  // ----------------------------------------------------------------------
 
 	  function matchPattern(pattern, code, env, scope, eval_args) {
 	    if (pattern instanceof Pair && LSymbol.is(pattern.car, '...')) {
@@ -3103,6 +3100,51 @@
 	    } else {
 	      return false;
 	    }
+	  } // ----------------------------------------------------------------------
+	  // :: function traverse epxression and inject values from scope into
+	  // :: that expression and return new expression
+	  // ----------------------------------------------------------------------
+
+
+	  function transformExpr(scope, expr) {
+	    function inject(name, value, expr) {
+	      if (expr instanceof Pair) {
+	        if (name === '...') {
+	          if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, '...')) {
+	            expr.cdr = value;
+	            return true;
+	          }
+	        } else if (LSymbol.is(expr.car, name)) {
+	          expr.car = value;
+	          return true;
+	        } else if (LSymbol.is(expr.cdr, name)) {
+	          expr.cdr = value;
+	          return true;
+	        }
+
+	        if (inject(name, value, expr.car)) {
+	          return true;
+	        }
+
+	        if (inject(name, value, expr.cdr)) {
+	          return true;
+	        }
+	      }
+	    }
+
+	    if (expr instanceof Pair) {
+	      expr = expr.clone();
+
+	      for (var _i = 0, _Object$entries = Object.entries(scope.env); _i < _Object$entries.length; _i++) {
+	        var _Object$entries$_i = slicedToArray(_Object$entries[_i], 2),
+	            name = _Object$entries$_i[0],
+	            value = _Object$entries$_i[1];
+
+	        inject(name, value, expr);
+	      }
+	    }
+
+	    return expr;
 	  } // ----------------------------------------------------------------------
 	  // :: check for nullish values
 	  // ----------------------------------------------------------------------
@@ -5875,24 +5917,6 @@
 	          dynamic_scope: dynamic_scope,
 	          error: error
 	        };
-
-	        function injectEllipsis(elippis, expr) {
-	          if (expr instanceof Pair) {
-	            if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, '...')) {
-	              expr.cdr = elippis;
-	              return true;
-	            }
-
-	            if (injectEllipsis(elippis, expr.car)) {
-	              return true;
-	            }
-
-	            if (injectEllipsis(elippis, expr.cdr)) {
-	              return true;
-	            }
-	          }
-	        }
-
 	        return function loop() {
 	          if (rules === nil) {
 	            return;
@@ -5903,15 +5927,8 @@
 	          var match = matchPattern(rule, code, scope, var_scope, eval_args);
 	          return unpromise(match, function (match) {
 	            if (match) {
-	              var elipsis = scope.get('...', {
-	                throwError: false
-	              });
-
-	              if (typeof elipsis !== 'udefined' && expr instanceof Pair) {
-	                expr = expr.clone(); // TODO: inject everything from scope.env
-
-	                console.log(scope.env);
-	                injectEllipsis(elipsis, expr);
+	              if (expr instanceof Pair) {
+	                expr = transformExpr(scope, expr);
 	              }
 
 	              if (macro_expand) {
@@ -6275,8 +6292,8 @@
 
 	      var types = [RegExp, Nil, LSymbol, Pair, LCharacter];
 
-	      for (var _i = 0, _types = types; _i < _types.length; _i++) {
-	        var _type2 = _types[_i];
+	      for (var _i2 = 0, _types = types; _i2 < _types.length; _i2++) {
+	        var _type2 = _types[_i2];
 
 	        if (obj instanceof _type2) {
 	          return obj.toString();
@@ -7289,10 +7306,10 @@
 	      return 'syntax';
 	    }
 
-	    for (var _i2 = 0, _Object$entries = Object.entries(mapping); _i2 < _Object$entries.length; _i2++) {
-	      var _Object$entries$_i = slicedToArray(_Object$entries[_i2], 2),
-	          _key32 = _Object$entries$_i[0],
-	          value = _Object$entries$_i[1];
+	    for (var _i3 = 0, _Object$entries2 = Object.entries(mapping); _i3 < _Object$entries2.length; _i3++) {
+	      var _Object$entries2$_i = slicedToArray(_Object$entries2[_i3], 2),
+	          _key32 = _Object$entries2$_i[0],
+	          value = _Object$entries2$_i[1];
 
 	      if (obj instanceof value) {
 	        return _key32;
@@ -7849,7 +7866,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 11 Apr 2020 22:27:57 +0000',
+	    date: 'Sun, 12 Apr 2020 07:48:23 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

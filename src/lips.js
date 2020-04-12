@@ -1569,16 +1569,13 @@ You can also use (help name) to display help for specic function or macro.
                     if (node.data) {
                         return node;
                     }
-                    try {
-                        var value = env.get(node.car);
-                        if (value instanceof Macro && value.defmacro) {
-                            var result = await value.invoke(node.cdr, args, true);
-                            if (result instanceof Pair) {
-                                return result;
-                            }
+                    var value = env.get(node.car, { throwError: false });
+                    if (value instanceof Macro && value.defmacro) {
+                        var code = value instanceof Syntax ? node : node.cdr;
+                        var result = await value.invoke(code, args, true);
+                        if (result instanceof Pair) {
+                            return result;
                         }
-                    } catch (e) {
-                        // ignore variables
                     }
                 }
                 // CYCLE DETECT
@@ -1622,6 +1619,9 @@ You can also use (help name) to display help for specic function or macro.
         return '<#syntax>';
     };
     Syntax.className = 'syntax';
+    // ----------------------------------------------------------------------
+    // :: pattern matching function for Syntax, that also update scope and get
+    // :: values from env, so this is just one iteration/recursion
     // ----------------------------------------------------------------------
     function matchPattern(pattern, code, env, scope, eval_args) {
         if (pattern instanceof Pair && LSymbol.is(pattern.car, '...')) {
@@ -1702,6 +1702,42 @@ You can also use (help name) to display help for specic function or macro.
         } else {
             return false;
         }
+    }
+    // ----------------------------------------------------------------------
+    // :: function traverse epxression and inject values from scope into
+    // :: that expression and return new expression
+    // ----------------------------------------------------------------------
+    function transformExpr(scope, expr) {
+        function inject(name, value, expr) {
+            if (expr instanceof Pair) {
+                if (name === '...') {
+                    if (expr.cdr instanceof Pair &&
+                        LSymbol.is(expr.cdr.car, '...')) {
+                        expr.cdr = value;
+                        return true;
+                    }
+                } else if (LSymbol.is(expr.car, name)) {
+                    expr.car = value;
+                    return true;
+                } else if (LSymbol.is(expr.cdr, name)) {
+                    expr.cdr = value;
+                    return true;
+                }
+                if (inject(name, value, expr.car)) {
+                    return true;
+                }
+                if (inject(name, value, expr.cdr)) {
+                    return true;
+                }
+            }
+        }
+        if (expr instanceof Pair) {
+            expr = expr.clone();
+            for (let [name, value] of Object.entries(scope.env)) {
+                inject(name, value, expr);
+            }
+        }
+        return expr;
     }
     // ----------------------------------------------------------------------
     // :: check for nullish values
@@ -4000,21 +4036,6 @@ You can also use (help name) to display help for specic function or macro.
                 var rules = macro.cdr;
                 var var_scope = this;
                 var eval_args = { env: scope, dynamic_scope, error };
-                function injectEllipsis(elippis, expr) {
-                    if (expr instanceof Pair) {
-                        if (expr.cdr instanceof Pair &&
-                            LSymbol.is(expr.cdr.car, '...')) {
-                            expr.cdr = elippis;
-                            return true;
-                        }
-                        if (injectEllipsis(elippis, expr.car)) {
-                            return true;
-                        }
-                        if (injectEllipsis(elippis, expr.cdr)) {
-                            return true;
-                        }
-                    }
-                }
                 return (function loop() {
                     if (rules === nil) {
                         return;
@@ -4024,12 +4045,8 @@ You can also use (help name) to display help for specic function or macro.
                     var match = matchPattern(rule, code, scope, var_scope, eval_args);
                     return unpromise(match, match => {
                         if (match) {
-                            var elipsis = scope.get('...', { throwError: false });
-                            if (typeof elipsis !== 'udefined' && expr instanceof Pair) {
-                                expr = expr.clone();
-                                // TODO: inject everything from scope.env
-                                console.log(scope.env);
-                                injectEllipsis(elipsis, expr);
+                            if (expr instanceof Pair) {
+                                expr = transformExpr(scope, expr);
                             }
                             if (macro_expand) {
                                 return expr;
