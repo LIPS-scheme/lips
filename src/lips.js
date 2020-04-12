@@ -1552,7 +1552,8 @@ You can also use (help name) to display help for specic function or macro.
             macro_expand
         };
         var result = this.fn.call(env, code, args, this.name);
-        return macro_expand ? quote(result) : result;
+        return result;
+        //return macro_expand ? quote(result) : result;
     };
     // ----------------------------------------------------------------------
     Macro.prototype.toString = function() {
@@ -1620,124 +1621,100 @@ You can also use (help name) to display help for specic function or macro.
     };
     Syntax.className = 'syntax';
     // ----------------------------------------------------------------------
-    // :: pattern matching function for Syntax, that also update scope and get
-    // :: values from env, so this is just one iteration/recursion
+    // :: for usage in syntax-rule when pattern match it will return
+    // :: list of bindings from code that match the pattern
     // ----------------------------------------------------------------------
-    function matchPattern(pattern, code, env, scope, eval_args) {
-        if (pattern instanceof Pair && LSymbol.is(pattern.car, '...')) {
-            if (code instanceof Pair) {
-                var node = code;
-                var list = [];
-                return (function loop() {
-                    if (node === nil) {
-                        env.set('...', Pair.fromArray(list));
-                        return true;
-                    } else {
-                        var ret = evaluate(node.car, { ...eval_args, env: scope });
-                        return unpromise(ret, ret => {
-                            list.push(ret);
-                            node = node.cdr;
-                            return loop();
-                        });
-                    }
-                })();
-            }
-            if (code === nil) {
-                env.set('...', nil);
-                return true;
-            }
-            return false;
-        }
-        if (pattern instanceof LSymbol) {
-            if (LSymbol.is(pattern, '_')) {
-                if (code instanceof LSymbol) {
-                    return env;
-                }
-                env.env = {};
-                return null;
-            } else {
+    function extract_patterns(pattern, code) {
+        var bindings = {};
+        function traverse(pattern, code) {
+            if (pattern instanceof Pair && LSymbol.is(pattern.car, '...')) {
                 if (code instanceof Pair) {
-                    console.log(code.toString());
-                    env.set(pattern, code);
+                    bindings['...'] = code;
                     return true;
-                    /*
-                    console.log('eval1');
-                    var ret = evaluate(code, { ...eval_args, env: scope });
-                    return unpromise(ret, ret => {
-                        return true;
-                    });
-                    */
-                } else if (code !== nil) {
-                    if (code instanceof LSymbol) {
-                        var value = scope.get(code, { throwError: false });
-                        if (typeof value !== 'undefined') {
-                            env.set(pattern, value);
-                            return true;
-                        }
-                    }
-                    console.log('eval2');
-                    var ret = evaluate(code, { ...eval_args, env });
-                    return unpromise(ret, ret => {
-                        env.set(pattern, ret);
-                        return true;
-                    });
                 }
-                env.env = {};
+                if (code === nil) {
+                    bindings['...'] = nil;
+                    return true;
+                }
                 return false;
             }
-        } else if (pattern instanceof Pair && code instanceof Pair) {
-            var car = matchPattern(pattern.car, code.car, env, scope, eval_args);
-            var cdr = matchPattern(pattern.cdr, code.cdr, env, scope, eval_args);
-            if (isPromise(car) || isPromise(cdr)) {
-                return Promise.all([car, cdr]).then(([car, cdr]) => {
-                    return car && cdr;
-                });
-            } else if (car && cdr) {
+            if (pattern instanceof LSymbol) {
+                const name = pattern.valueOf();
+                bindings[name] = code;
                 return true;
             }
-            env.env = {};
-            return false;
-        } else if (pattern === nil && code === nil) {
-            return true;
-        } else {
-            return false;
+            if (pattern instanceof Pair && code instanceof Pair) {
+                if (traverse(pattern.car, code.car) &&
+                    traverse(pattern.cdr, code.cdr)) {
+                    return true;
+                }
+            } else if (pattern === nil && code === nil) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if (traverse(pattern, code)) {
+            return bindings;
         }
     }
+    // TODO: handle lambda
     // ----------------------------------------------------------------------
-    // :: function traverse epxression and inject values from scope into
-    // :: that expression and return new expression
-    // ----------------------------------------------------------------------
-    function transformExpr(scope, expr) {
-        function inject(name, value, expr) {
+    function transform_syntax(bindings, expr, scope) {
+        var gensyms = {};
+        function transform(symbol) {
+            const name = symbol.valueOf();
+            if (typeof name === 'string' && name in bindings) {
+                return bindings[name];
+            }
+            return rename(name);
+        }
+        function rename(name) {
+            if (!gensyms[name]) {
+                const value = scope.get(name, { throwError: false });
+                if (typeof value !== 'undefined') {
+                    const gensym_name = gensym(name);
+                    gensyms[name] = gensym_name;
+                    scope.set(gensym_name, value);
+                    return gensym_name;
+                }
+            }
+            return gensyms[name];
+        }
+        function traverse(expr) {
             if (expr instanceof Pair) {
-                if (name === '...') {
-                    if (expr.cdr instanceof Pair &&
-                        LSymbol.is(expr.cdr.car, '...')) {
-                        expr.cdr = value;
-                        return true;
+                if (expr.car instanceof LSymbol) {
+                    const value = transform(expr.car);
+                    if (typeof value !== 'undefined') {
+                        expr.car = value;
                     }
-                } else if (LSymbol.is(expr.car, name)) {
-                    expr.car = value;
-                    return true;
-                } else if (LSymbol.is(expr.cdr, name)) {
-                    expr.cdr = value;
-                    return true;
+                } else {
+                    traverse(expr.car);
                 }
-                if (inject(name, value, expr.car)) {
-                    return true;
-                }
-                if (inject(name, value, expr.cdr)) {
-                    return true;
+                if (expr.cdr instanceof Pair &&
+                    LSymbol.is(expr.cdr.car, '...') &&
+                    bindings['...']) {
+                    expr.cdr = bindings['...'];
+                } else if (expr.cdr instanceof LSymbol) {
+                    const value = transform(expr.cdr);
+                    if (typeof value !== 'undefined') {
+                        expr.cdr = value;
+                    }
+                } else {
+                    traverse(expr.cdr);
                 }
             }
         }
         if (expr instanceof Pair) {
             expr = expr.clone();
-            for (let [name, value] of Object.entries(scope.env)) {
-                inject(name, value, expr);
+            traverse(expr);
+            return expr;
+        } else if (expr instanceof LSymbol) {
+            const name = expr.valueOf();
+            if (bindings[name]) {
+                return bindings[name];
             }
         }
-        return expr;
     }
     // ----------------------------------------------------------------------
     // :: check for nullish values
@@ -2301,9 +2278,6 @@ You can also use (help name) to display help for specic function or macro.
                 re: a_re.mul(b_re).sub(a_im.mul(b_im)),
                 im: a_re.mul(b_im).add(b_re.mul(a_im))
             };
-            console.log(a_re.mul(b_re));
-            console.log(a_im.mul(b_im));
-            console.log(ret);
             return ret;
         });
     };
@@ -3128,6 +3102,10 @@ You can also use (help name) to display help for specic function or macro.
         });
         return new Environment(env, this.parent, this.name);
     };
+    Environment.prototype.merge = function(env) {
+        typecheck('Environment::merge', env, 'environment');
+        return this.inherit('merge', env.env);
+    };
     // -------------------------------------------------------------------------
     // value returned in lookup if found value in env
     // -------------------------------------------------------------------------
@@ -3253,6 +3231,9 @@ You can also use (help name) to display help for specic function or macro.
     var gensym = (function() {
         var count = 0;
         return function(name = null) {
+            if (name instanceof LSymbol) {
+                name = name.valueOf();
+            }
             // use ES6 symbol as name for lips symbol (they are unique)
             if (name !== null) {
                 return new LSymbol(Symbol(`#:${name}`));
@@ -4036,28 +4017,24 @@ You can also use (help name) to display help for specic function or macro.
                 var rules = macro.cdr;
                 var var_scope = this;
                 var eval_args = { env: scope, dynamic_scope, error };
-                return (function loop() {
-                    if (rules === nil) {
-                        return;
-                    }
+                while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-                    var match = matchPattern(rule, code, scope, var_scope, eval_args);
-                    return unpromise(match, match => {
-                        if (match) {
-                            if (expr instanceof Pair) {
-                                expr = transformExpr(scope, expr);
-                            }
-                            if (macro_expand) {
-                                return expr;
-                            }
-                            return evaluate(expr, eval_args);
-                        } else {
-                            rules = rules.cdr;
-                            return loop();
+                    var bindings = extract_patterns(rule, code);
+                    if (bindings) {
+                        const new_expr = transform_syntax(bindings, expr, scope);
+                        if (new_expr) {
+                            expr = new_expr;
                         }
-                    });
-                })();
+                        if (macro_expand) {
+                            return expr;
+                        }
+                        var new_env = var_scope.merge(scope);
+                        return evaluate(expr, { ...eval_args, env: new_env });
+                    }
+                    rules = rules.cdr;
+                }
+                throw new Error(`Invalid Syntax ${code}`);
             });
         }, `(syntax-rules () (pattern expression) ...)
            `),
@@ -5375,19 +5352,21 @@ You can also use (help name) to display help for specic function or macro.
            Return path relative the current module.`));
         // ---------------------------------------------------------------------
         global_env.set('require', doc(function(module) {
-            typecheck('require.resolve', module, 'string');
+            typecheck('require', module, 'string');
             module = module.valueOf();
             var root = process.cwd();
+            var value;
             if (module.match(/^\s*\./)) {
-                return require(path.join(root, module));
+                value = require(path.join(root, module));
             } else {
                 var dir = nodeModuleFind(root);
                 if (dir) {
-                    return require(path.join(dir, "node_modules", module));
+                    value = require(path.join(dir, "node_modules", module));
                 } else {
-                    return require(module);
+                    value = require(module);
                 }
             }
+            return patchValue(value, global);
         }, `(require module)
 
             Function to be used inside Node.js to import the module.`));
@@ -5854,7 +5833,6 @@ You can also use (help name) to display help for specic function or macro.
         nil,
 
         resolvePromises,
-        matchPattern,
 
         LSymbol,
         LNumber,

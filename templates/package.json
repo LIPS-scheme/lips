@@ -4,7 +4,9 @@
   "description": "Simple Scheme Like Lisp in JavaScript",
   "main": "src/lips.js",
   "unpkg": "dist/lips.min.js",
-  "scripts": {},
+  "scripts": {
+    "test": "nyc ava --verbose test.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jcubic/lips.git"
@@ -205,6 +207,7 @@
     "coveralls": "^3.0.3",
     "eslint": "^6.8.0",
     "jest": "^24.8.0",
+    "nyc": "^15.0.1",
     "rollup": "^1.12.3",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^10.0.0",
