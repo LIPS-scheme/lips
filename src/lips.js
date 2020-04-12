@@ -4015,10 +4015,12 @@ You can also use (help name) to display help for specic function or macro.
                     }
                     rules = rules.cdr;
                 }
-                throw new Error(`Invalid Syntax ${code}`);
+                //throw new Error(`Invalid Syntax ${code}`);
             });
         }, `(syntax-rules () (pattern expression) ...)
-           `),
+
+            Base of Hygienic macro, it will return new syntax expander
+            that works like lisp macros.`),
         // ------------------------------------------------------------------
         quote: doc(new Macro('quote', function(arg) {
             return quote(arg.car);

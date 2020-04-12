@@ -58,14 +58,14 @@ publish:
 	$(CD) npm && $(NPM) publish --access=public
 	$(RM) -rf npm
 
-test: dist/lips.js scheme-tests
+jest-test: dist/lips.js scheme-tests
 	@$(JEST) --coverage spec/*.spec.js
 
-scheme-tests:
+test: dist/lips.js
 	@$(NPM) run test
 
 coveralls:
-	$(CAT) ./coverage/lcov.info | $(COVERALLS)
+	$(NPM) run coverage
 
 lint:
 	$(ESLINT) src/lips.js spec/lips.spec.js

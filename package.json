@@ -5,7 +5,8 @@
   "main": "src/lips.js",
   "unpkg": "dist/lips.min.js",
   "scripts": {
-    "test": "nyc ava --verbose test.js"
+    "test": "nyc ava --verbose test.js",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",

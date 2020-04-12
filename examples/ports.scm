@@ -1,0 +1,6 @@
+(let ((buff (open-output-string))
+      (stdout (current-output-port)))
+  (display "hello" buff)
+  (display " " buff)
+  (display "world" buff)
+  (display (get-output-string buff) stdout))

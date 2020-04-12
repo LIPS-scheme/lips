@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 12 Apr 2020 14:10:03 +0000
+ * build: Sun, 12 Apr 2020 15:20:25 +0000
  */
 (function () {
 	'use strict';
@@ -5905,11 +5905,10 @@
 	          }
 
 	          rules = rules.cdr;
-	        }
+	        } //throw new Error(`Invalid Syntax ${code}`);
 
-	        throw new Error("Invalid Syntax ".concat(code));
 	      });
-	    }, "(syntax-rules () (pattern expression) ...)\n           "),
+	    }, "(syntax-rules () (pattern expression) ...)\n\n            Base of Hygienic macro, it will return new syntax expander\n            that works like lisp macros."),
 	    // ------------------------------------------------------------------
 	    quote: doc(new Macro('quote', function (arg) {
 	      return quote(arg.car);
@@ -7835,7 +7834,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 12 Apr 2020 14:10:03 +0000',
+	    date: 'Sun, 12 Apr 2020 15:20:25 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
