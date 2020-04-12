@@ -10,7 +10,7 @@ const lips = require('./src/lips');
 readDir('./tests/').then(function(filenames) {
   
   return Promise.all(filenames.filter(function(file) {
-      return file.match(/.scm$/);
+      return file.match(/.scm$/) && !file.match(/^\.#/);
   }).map(function(file) {
     return readFile(`tests/${file}`).then(d => d.toString());
   })).then(function (files) {

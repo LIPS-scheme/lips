@@ -6,6 +6,11 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (let-syntax vars . body)
+  "(let-syntax ((name fn)) body)
+
+    Macro works like combination of let and define-syntax. It creaates
+    local macros and evaluate body in context of those macros.
+    The macro to letrec-syntax is like letrec is to let."
   `(let ,vars
      ,@(map (lambda (rule)
               `(typecheck "let-syntax" ,(car rule) "syntax"))
@@ -14,6 +19,10 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (letrec-syntax vars . body)
+  "(letrec-syntax ((name fn)) body)
+
+    Macro works like combination of letrec and define-syntax. It creaates
+    local macros and evaluate body in context of those macros."
   `(letrec ,vars
      ,@(map (lambda (rule)
               `(typecheck "letrec-syntax" ,(car rule) "syntax"))

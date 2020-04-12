@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 12 Apr 2020 13:33:44 +0000
+ * build: Sun, 12 Apr 2020 14:10:03 +0000
  */
 (function () {
 	'use strict';
@@ -5529,14 +5529,6 @@
 	      });
 	    }, "(%let-env env . body)\n\n            Special macro that evaluate body in context of given environment\n            object."),
 	    // ------------------------------------------------------------------
-	    'letrec-syntax': doc(function noop() {
-	      throw new Error('Not Yet Implemented');
-	    }, "(letrec-syntax ((name fn)) body)\n\n             Macro works like combination of letrec and define-syntax. It creaates\n             local macros and evaluate body in context of those macros."),
-	    // ------------------------------------------------------------------
-	    'let-syntax': doc(function noop() {
-	      throw new Error('Not Yet Implemented');
-	    }, "(let-syntax ((name fn)) body)\n\n             Macro works like combination of let and define-syntax. It creaates\n             local macros and evaluate body in context of those macros.\n             The macro to letrec-syntax is like letrec is to let."),
-	    // ------------------------------------------------------------------
 	    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy and next value can access to\n             previous values/names."),
 	    // ---------------------------------------------------------------------
 	    'let*': doc(let_macro(Symbol["for"]('let*')), "(let* ((a value-a) (b value-b)) body)\n\n             Macro similar to `let` but next argument get environment\n             from previous let variable, so they you can define one variable,\n             and use in next argument."),
@@ -7843,7 +7835,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 12 Apr 2020 13:33:44 +0000',
+	    date: 'Sun, 12 Apr 2020 14:10:03 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

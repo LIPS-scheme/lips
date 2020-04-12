@@ -59,10 +59,10 @@ publish:
 	$(RM) -rf npm
 
 test: dist/lips.js scheme-tests
-	$(JEST) --coverage spec/*.spec.js
+	@$(JEST) --coverage spec/*.spec.js
 
 scheme-tests:
-	$(NPM) run test
+	@$(NPM) run test
 
 coveralls:
 	$(CAT) ./coverage/lcov.info | $(COVERALLS)

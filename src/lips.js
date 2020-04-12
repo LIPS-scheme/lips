@@ -3646,25 +3646,6 @@ You can also use (help name) to display help for specic function or macro.
             Special macro that evaluate body in context of given environment
             object.`),
         // ------------------------------------------------------------------
-        'letrec-syntax': doc(
-            function noop() {
-                throw new Error('Not Yet Implemented');
-            },
-            `(letrec-syntax ((name fn)) body)
-
-             Macro works like combination of letrec and define-syntax. It creaates
-             local macros and evaluate body in context of those macros.`),
-        // ------------------------------------------------------------------
-        'let-syntax': doc(
-            function noop() {
-                throw new Error('Not Yet Implemented');
-            },
-            `(let-syntax ((name fn)) body)
-
-             Macro works like combination of let and define-syntax. It creaates
-             local macros and evaluate body in context of those macros.
-             The macro to letrec-syntax is like letrec is to let.`),
-        // ------------------------------------------------------------------
         'letrec': doc(
             let_macro(Symbol.for('letrec')),
             `(letrec ((a value-a) (b value-b)) body)

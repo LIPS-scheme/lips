@@ -5,7 +5,7 @@
   "main": "src/lips.js",
   "unpkg": "dist/lips.min.js",
   "scripts": {
-    "test": "nyc ava --verbose test.js"
+    "test": "@nyc ava --verbose test.js"
   },
   "repository": {
     "type": "git",
