@@ -108,3 +108,21 @@
                 (x 10))
             (nil! x)
             (t.is x nil)))))
+
+
+
+(let ((expr 'doc) (code '(foo (toString) (toUpperCase))))
+  (let ((obj (gensym)))
+    `(let* ((,obj ,expr))
+       ,@(map (lambda (code)
+                (let ((name (gensym))
+                      (value (gensym)))
+                  `(let* ((,name ,(cond ((quoted-symbol? code) (symbol->string (cadr code)))
+                                        ((pair? code) (symbol->string (car code)))
+                                        (true code)))
+                          (,value (. ,obj ,name)))
+                     ,(if (and (pair? code) (not (quoted-symbol? code)))
+                         `(set! ,obj (,value ,@(cdr code)))
+                         `(set! ,obj ,value)))))
+              code)
+       ,obj)))

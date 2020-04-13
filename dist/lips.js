@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 12 Apr 2020 15:20:25 +0000
+ * build: Mon, 13 Apr 2020 08:28:25 +0000
  */
 (function () {
 	'use strict';
@@ -2236,16 +2236,11 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function emptyList() {
-	    return new Pair(undefined$1, nil);
-	  } // ----------------------------------------------------------------------
-
-
 	  function toArray$1(name, deep) {
 	    return function recur(list) {
 	      typecheck(name, list, ['pair', 'nil']);
 
-	      if (list instanceof Pair && list.isEmptyList()) {
+	      if (list === nil) {
 	        return [];
 	      }
 
@@ -2282,10 +2277,6 @@
 
 
 	  Pair.prototype.length = function () {
-	    if (isEmptyList(this)) {
-	      return 0;
-	    }
-
 	    var len = 0;
 	    var node = this;
 
@@ -2327,10 +2318,6 @@
 
 
 	  Pair.prototype.toArray = function () {
-	    if (this.isEmptyList()) {
-	      return [];
-	    }
-
 	    var result = [];
 
 	    if (this.car instanceof Pair) {
@@ -2344,11 +2331,6 @@
 	    }
 
 	    return result;
-	  }; // ----------------------------------------------------------------------
-
-
-	  Pair.prototype.isEmptyList = function () {
-	    return typeof this.car === 'undefined' && this.cdr === nil;
 	  }; // ----------------------------------------------------------------------
 
 
@@ -2374,7 +2356,7 @@
 	    }
 
 	    if (array.length === 0) {
-	      return emptyList();
+	      return nil;
 	    } else {
 	      var car;
 
@@ -2519,7 +2501,7 @@
 
 	  Pair.prototype.map = function (fn) {
 	    if (typeof this.car !== 'undefined') {
-	      return new Pair(fn(this.car), isEmptyList(this.cdr) ? nil : this.cdr.map(fn));
+	      return new Pair(fn(this.car), this.cdr === nil ? nil : this.cdr.map(fn));
 	    } else {
 	      return nil;
 	    }
@@ -2764,11 +2746,6 @@
 	      };
 	    }
 	  }(); // ----------------------------------------------------------------------
-
-
-	  function isEmptyList(x) {
-	    return x instanceof Pair && x.isEmptyList() || x === nil;
-	  } // ----------------------------------------------------------------------
 	  // :: Macro constructor
 	  // ----------------------------------------------------------------------
 
@@ -2873,7 +2850,7 @@
 	                            case 8:
 	                              result = _context.sent;
 
-	                              if (!(result instanceof Pair)) {
+	                              if (!(result instanceof LSymbol || result instanceof Pair)) {
 	                                _context.next = 11;
 	                                break;
 	                              }
@@ -3380,7 +3357,7 @@
 	      var node = code;
 	      var results = [];
 
-	      while (node instanceof Pair && !isEmptyList(node)) {
+	      while (node instanceof Pair) {
 	        results.push(evaluate(node.car, {
 	          env: env,
 	          dynamic_scope: dynamic_scope,
@@ -3455,9 +3432,7 @@
 	        lists[_key5 - 2] = arguments[_key5];
 	      }
 
-	      if (lists.some(function (l) {
-	        return isEmptyList(l) || isNull(l);
-	      })) {
+	      if (lists.some(isNull)) {
 	        if (typeof init === 'number') {
 	          return LNumber(init);
 	        }
@@ -5190,16 +5165,15 @@
 	    }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
 	    // ------------------------------------------------------------------
 	    print: doc(function () {
-	      var _this$get$write,
-	          _this5 = this;
+	      var _this5 = this;
 
 	      for (var _len12 = arguments.length, args = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
 	        args[_key12] = arguments[_key12];
 	      }
 
-	      (_this$get$write = this.get('stdout').write).apply.apply(_this$get$write, [this].concat(toConsumableArray(args.map(function (arg) {
+	      this.get('stdout').write.apply(this, args.map(function (arg) {
 	        return _this5.get('repr')(arg, LString.isString(arg));
-	      }))));
+	      }));
 	    }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
 	    // ------------------------------------------------------------------
 	    display: doc(function (arg) {
@@ -5263,38 +5237,16 @@
 	    }), "(help object)\n\n             Macro returns documentation for function or macros including parser\n             macros but only if called with parser macro symbol like (help `).\n             For normal functions and macros you can save the function in variable."),
 	    // ------------------------------------------------------------------
 	    cons: doc(function (car, cdr) {
-	      if (isEmptyList(cdr)) {
-	        cdr = nil;
-	      }
-
 	      return new Pair(car, cdr);
 	    }, "(cons left right)\n\n            Function return new Pair out of two arguments."),
 	    // ------------------------------------------------------------------
 	    car: doc(function (list) {
-	      if (list === nil) {
-	        return nil;
-	      }
-
 	      typecheck('car', list, 'pair');
-
-	      if (isEmptyList(list)) {
-	        return nil;
-	      }
-
 	      return list.car;
 	    }, "(car pair)\n\n            Function returns car (head) of the list/pair."),
 	    // ------------------------------------------------------------------
 	    cdr: doc(function (list) {
-	      if (list === nil) {
-	        return nil;
-	      }
-
 	      typecheck('cdr', list, 'pair');
-
-	      if (isEmptyList(list)) {
-	        return nil;
-	      }
-
 	      return list.cdr;
 	    }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
 	    // ------------------------------------------------------------------
@@ -5376,7 +5328,7 @@
 	    }, "(set-cdr! obj value)\n\n            Function that set cdr (tail) of the list/pair to specified value.\n            It can destroy the list. Old value is lost."),
 	    // ------------------------------------------------------------------
 	    'empty?': doc(function (x) {
-	      return typeof x === 'undefined' || isEmptyList(x);
+	      return typeof x === 'undefined' || x === nil;
 	    }, "(empty? object)\n\n            Function return true if value is undfined empty list."),
 	    // ------------------------------------------------------------------
 	    assoc: doc(function (key, list) {
@@ -5452,7 +5404,7 @@
 	        });
 
 	        function next(cond) {
-	          if (cond && !isNull(cond) && !isEmptyList(cond)) {
+	          if (cond && !isNull(cond)) {
 	            result = evaluate(begin, {
 	              env: self,
 	              dynamic_scope: dynamic_scope,
@@ -5728,7 +5680,7 @@
 	          env.set('arguments', _args);
 	        }
 
-	        if (name instanceof LSymbol || !isEmptyList(name)) {
+	        if (name instanceof LSymbol || name !== nil) {
 	          while (true) {
 	            if (name.car !== nil) {
 	              if (name instanceof LSymbol) {
@@ -5936,7 +5888,7 @@
 	      function resolve_pair(pair, fn) {
 	        var test = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : isPair;
 
-	        if (pair instanceof Pair && !isEmptyList(pair)) {
+	        if (pair instanceof Pair) {
 	          var car = pair.car;
 	          var cdr = pair.cdr;
 
@@ -5965,12 +5917,11 @@
 	      }
 
 	      function join(eval_pair, value) {
-	        if (eval_pair instanceof Pair) {
-	          if (isEmptyList(eval_pair) && value === nil) {
-	            return nil;
-	          }
 
-	          eval_pair.append(value);
+	        if (eval_pair instanceof Pair) {
+	          if (value !== nil) {
+	            eval_pair.append(value);
+	          }
 	        } else {
 	          eval_pair = new Pair(eval_pair, value);
 	        }
@@ -6024,7 +5975,7 @@
 	      var splices = new Set();
 
 	      function recur(pair, unquote_cnt, max_unq) {
-	        if (pair instanceof Pair && !isEmptyList(pair)) {
+	        if (pair instanceof Pair) {
 	          if (LSymbol.is(pair.car.car, 'unquote-splicing')) {
 	            return unquote_splice(pair, unquote_cnt + 1, max_unq);
 	          }
@@ -6129,7 +6080,7 @@
 	    'append!': doc(function (list, item) {
 	      typecheck('append!', list, 'pair');
 
-	      if (isNull(item) || isEmptyList(item)) {
+	      if (isNull(item)) {
 	        return list;
 	      }
 
@@ -6433,7 +6384,7 @@
 	    }, "(regex? expression)\n\n            Function check if value is regular expression."),
 	    // ------------------------------------------------------------------
 	    'null?': doc(function (obj) {
-	      return isNull(obj) || obj instanceof Pair && obj.isEmptyList();
+	      return isNull(obj);
 	    }, "(null? expression)\n\n            Function check if value is nulish."),
 	    // ------------------------------------------------------------------
 	    'boolean?': doc(function (obj) {
@@ -6602,14 +6553,14 @@
 	        typecheck('map', arg, ['pair', 'nil'], i + 1);
 	      });
 
+	      if (lists.length === 0) {
+	        return nil;
+	      }
+
 	      if (lists.some(function (x) {
 	        return x === nil;
 	      })) {
 	        return nil;
-	      }
-
-	      if (lists.some(isEmptyList)) {
-	        return emptyList();
 	      }
 
 	      var args = lists.map(function (l) {
@@ -6659,7 +6610,9 @@
 	        typecheck('fold', arg, ['pair', 'nil'], i + 1);
 	      });
 
-	      if (lists.some(isEmptyList)) {
+	      if (lists.some(function (x) {
+	        return x === nil;
+	      })) {
 	        return init;
 	      }
 
@@ -6713,7 +6666,9 @@
 	        typecheck('reduce', arg, ['pair', 'nil'], i + 1);
 	      });
 
-	      if (lists.some(isEmptyList)) {
+	      if (lists.some(function (x) {
+	        return x === nil;
+	      })) {
 	        return init;
 	      }
 
@@ -7055,7 +7010,7 @@
 	      return LNumber(a).shl(b);
 	    }, "(<< a b)\n\n            Function left shit the value a by value b."),
 	    not: doc(function (value) {
-	      if (isEmptyList(value)) {
+	      if (isNull(value)) {
 	        return true;
 	      }
 
@@ -7433,7 +7388,7 @@
 	    markCycles(node);
 
 	    while (true) {
-	      if (node instanceof Pair && !isEmptyList(node)) {
+	      if (node instanceof Pair) {
 	        var arg = evaluate(node.car, {
 	          env: env,
 	          dynamic_scope: dynamic_scope,
@@ -7524,10 +7479,6 @@
 
 	      if (isNull(code)) {
 	        return code;
-	      }
-
-	      if (isEmptyList(code)) {
-	        return emptyList();
 	      }
 
 	      if (code instanceof LSymbol) {
@@ -7834,7 +7785,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 12 Apr 2020 15:20:25 +0000',
+	    date: 'Mon, 13 Apr 2020 08:28:25 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

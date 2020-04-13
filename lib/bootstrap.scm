@@ -65,9 +65,7 @@
           (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\/title>/) 1)
           (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")"
   (let ((obj (gensym)))
-    `(let* ((,obj ,(if (and (symbol? expr) (not (null? (match /\./ (symbol->string expr)))))
-                       `(.. ,expr)
-                       `,expr)))
+    `(let* ((,obj ,expr))
        ,@(map (lambda (code)
                 (let ((name (gensym))
                       (value (gensym)))
