@@ -292,7 +292,7 @@ You can also use (help name) to display help for specic function or macro.
     function makeTokenRe() {
         var tokens = Object.keys(specials).map(escapeRegex).join('|');
         var complex = '';
-        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|${tokens}|[^(\\s)]+)`, 'gim');
+        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -882,7 +882,7 @@ You can also use (help name) to display help for specic function or macro.
         [['(', let_re, symbol, '(', let_value], 2, notParen],
         [['(', let_re, symbol, ['(', let_value, ')'], sexp], 1, notParen],
         [[/(?!lambda)/, '(', glob, ')'], 1, notParen],
-        [['(', 'if', /[^()]/], 1],
+        [['(', 'if', /[^()]/], 1, notParen],
         [['(', 'if', /[^()]/, glob], 1],
         [['(', 'if', ['(', glob, ')']], 1],
         [['(', 'if', ['(', glob, ')'], /[^()]/], 1],
@@ -1545,7 +1545,7 @@ You can also use (help name) to display help for specic function or macro.
     function macroExpand(single) {
         return async function(code, args) {
             var env = args['env'] = this;
-            async function traverse(node) {
+            async function traverse(node, n) {
                 if (node instanceof Pair && node.car instanceof LSymbol) {
                     if (node.data) {
                         return node;
@@ -1554,9 +1554,17 @@ You can also use (help name) to display help for specic function or macro.
                     if (value instanceof Macro && value.defmacro) {
                         var code = value instanceof Syntax ? node : node.cdr;
                         var result = await value.invoke(code, args, true);
-                        if (result instanceof LSymbol ||
-                            result instanceof Pair) {
-                            return result;
+                        if (result instanceof LSymbol) {
+                            return quote(result);
+                        }
+                        if (result instanceof Pair) {
+                            if (typeof n === 'number') {
+                                if (n <= 1) {
+                                    return result;
+                                }
+                                n = n - 1;
+                            }
+                            return traverse(result, n);
                         }
                     }
                 }
@@ -1572,30 +1580,35 @@ You can also use (help name) to display help for specic function or macro.
                 var pair = new Pair(car, cdr);
                 return pair;
             }
-            var new_code = code;
+            //var new_code = code;
             if (single) {
-                return quote((await traverse(code)).car);
+                return quote((await traverse(code, 1)).car);
             } else {
-                while (true) {
-                    new_code = await traverse(code);
-                    if (code.toString() === new_code.toString()) {
-                        break;
-                    }
-                    code = new_code;
-                }
-                return quote(new_code.car);
+                return quote((await traverse(code, -1)).car);
             }
         };
     }
     // ----------------------------------------------------------------------
-    function Syntax(fn) {
+    // TODO: Don't put Syntax as Macro they are not runtime
+    // ----------------------------------------------------------------------
+    function Syntax(fn, env) {
         this.name = 'syntax';
+        this.env = env;
         this.fn = fn;
         // allow macroexpand
         this.defmacro = true;
     }
     // ----------------------------------------------------------------------
     Syntax.prototype = Object.create(Macro.prototype);
+    Syntax.prototype.invoke = function(code, { error, env }, macro_expand) {
+        var args = {
+            error,
+            env,
+            dynamic_scope: this.env,
+            macro_expand
+        };
+        return this.fn.call(env, code, args, this.name);
+    };
     Syntax.prototype.constructor = Syntax;
     Syntax.prototype.toString = function() {
         return '<#syntax>';
@@ -1631,6 +1644,11 @@ You can also use (help name) to display help for specic function or macro.
                 }
             } else if (pattern === nil && code === nil) {
                 return true;
+            } else if (pattern.car instanceof Pair &&
+                       LSymbol.is(pattern.car.car, '...') &&
+                       code === nil) {
+                bindings['...'] = nil;
+                return true;
             } else {
                 return false;
             }
@@ -1639,9 +1657,91 @@ You can also use (help name) to display help for specic function or macro.
             return bindings;
         }
     }
+    // ----------------------------------------------------------------------
+    /*
+    async function expand(code, args) {
+        async function traverse(node, args) {
+            if (!(node instanceof Pair)) {
+                return { code: node, scope: args.env };
+            }
+            var result;
+            if (node instanceof Pair && node.car instanceof LSymbol) {
+                if (node.data) {
+                    return node;
+                }
+                var value = args.env.get(node.car, { throwError: false });
+                if (value instanceof Syntax && value.defmacro) {
+                    var {
+                        expr: result,
+                        scope
+                    } = await value.invoke(node, args, true);
+                    if (result instanceof LSymbol) {
+                        return { scope, code: result };
+                    }
+                    if (result instanceof Pair) {
+                        return traverse(result, { ...args, env: scope });
+                    }
+                }
+            }
+            var car = node.car;
+            var scopes = [];
+            if (car instanceof Pair) {
+                result = await traverse(car, args);
+                car = result.code;
+                if (args.env !== result.scope) {
+                    scopes.push(result.scope);
+                }
+            }
+            var cdr = node.cdr;
+            if (cdr instanceof Pair) {
+                result = await traverse(cdr, args);
+                cdr = result.code;
+                if (args.env !== result.scope) {
+                    scopes.push(result.scope);
+                }
+            }
+            if (scopes.length) {
+                scope = scopes.reduce((acc, scope) => {
+                    return acc.merge(scope);
+                });
+            } else {
+                scope = args.env;
+            }
+            var pair = new Pair(car, cdr);
+            return { code: pair, scope };
+        }
+        return traverse(code, args);
+    }
+    */
+    // ----------------------------------------------------------------------
     // TODO: handle lambda
     // ----------------------------------------------------------------------
-    function transform_syntax(bindings, expr, scope) {
+    function clear_gensyms(node, gensyms) {
+        function traverse(node) {
+            if (node instanceof Pair) {
+                if (!gensyms.length) {
+                    return node;
+                }
+                const car = traverse(node.car);
+                const cdr = traverse(node.cdr);
+                // TODO: check if it's safe to modify the list
+                //       some funky modify of code can happen in macro
+                return new Pair(car, cdr);
+            } else if (node instanceof LSymbol) {
+                var replacement = gensyms.find((gensym) => {
+                    return gensym.gensym === node;
+                });
+                if (replacement) {
+                    return LSymbol(replacement.name);
+                }
+                return node;
+            } else {
+                return node;
+            }
+        }
+        return traverse(node);
+    }
+    function transform_syntax(bindings, expr, scope, lex_scope, names) {
         var gensyms = {};
         function transform(symbol) {
             const name = symbol.valueOf();
@@ -1652,13 +1752,18 @@ You can also use (help name) to display help for specic function or macro.
         }
         function rename(name) {
             if (!gensyms[name]) {
-                const value = scope.get(name, { throwError: false });
+                var value = scope.get(name, { throwError: false });
+                const gensym_name = gensym(name);
+                // keep names so they can be restored after evaluation
+                // if there are free symbols as output
+                // kind of hack
+                names.push({
+                    name, gensym: gensym_name
+                });
                 if (typeof value !== 'undefined') {
-                    const gensym_name = gensym(name);
-                    gensyms[name] = gensym_name;
                     scope.set(gensym_name, value);
-                    return gensym_name;
                 }
+                gensyms[name] = gensym_name;
             }
             return gensyms[name];
         }
@@ -1691,10 +1796,7 @@ You can also use (help name) to display help for specic function or macro.
             traverse(expr);
             return expr;
         } else if (expr instanceof LSymbol) {
-            const name = expr.valueOf();
-            if (bindings[name]) {
-                return bindings[name];
-            }
+            return transform(expr);
         }
     }
     // ----------------------------------------------------------------------
@@ -3127,11 +3229,16 @@ You can also use (help name) to display help for specic function or macro.
                 var [first, ...rest] = parts;
                 value = this._lookup(first);
                 if (rest.length) {
-                    if (value instanceof Value) {
-                        value = value.valueOf();
-                        return get(value, ...rest);
-                    } else {
-                        return get(root, ...parts);
+                    try {
+                        if (value instanceof Value) {
+                            value = value.valueOf();
+                            return get(value, ...rest);
+                        } else {
+                            return get(root, ...parts);
+                        }
+                    } catch (e) {
+                        // ignore symbols in expansion that look like
+                        // property access e.g. %as.data
                     }
                 } else if (value instanceof Value) {
                     return patchValue(value.valueOf());
@@ -3969,20 +4076,33 @@ You can also use (help name) to display help for specic function or macro.
                     var expr = rules.car.cdr.car;
                     var bindings = extract_patterns(rule, code);
                     if (bindings) {
-                        const new_expr = transform_syntax(bindings, expr, scope);
+                        // name is modified in transform_syntax
+                        var names = [];
+                        const new_expr = transform_syntax(
+                            bindings,
+                            expr,
+                            scope,
+                            var_scope,
+                            names
+                        );
                         if (new_expr) {
                             expr = new_expr;
                         }
+                        var new_env = var_scope.merge(scope);
                         if (macro_expand) {
                             return expr;
+                            //return { expr, scope: new_env };
                         }
-                        var new_env = var_scope.merge(scope);
-                        return evaluate(expr, { ...eval_args, env: new_env });
+                        var result = evaluate(expr, { ...eval_args, env: new_env });
+                        // Hack: update the result if there are generated
+                        //       gensyms that should be literal symbols
+
+                        return clear_gensyms(result, names);
                     }
                     rules = rules.cdr;
                 }
                 //throw new Error(`Invalid Syntax ${code}`);
-            });
+            }, env);
         }, `(syntax-rules () (pattern expression) ...)
 
             Base of Hygienic macro, it will return new syntax expander

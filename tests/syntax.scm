@@ -28,9 +28,9 @@
                 '(6 20)))))
 
 ;; NOT WORKING TESTS
-(define test_ (lambda ()))
+;;(define test_ (lambda ()))
 
-(test_ "syntax-rules: complex hygiene"
+(test "syntax-rules: complex hygiene"
       (lambda (t)
         (let ((result (let-syntax
                         ((or (syntax-rules ()
@@ -51,6 +51,15 @@
                               (if y)
                               y)))))
         (t.is result 7))))
+
+(test "syntax-rules: let + return symbol"
+      (lambda (t)
+        (define result (let ((x 'outer))
+                         (let-syntax ((m (syntax-rules () ((m) x))))
+                           (let ((x 'inner))
+                             (m)))))
+        (t.is result 'outer)))
+
 
 (test "syntax-rules: quote expression"
       (lambda (t)
@@ -110,19 +119,3 @@
             (t.is x nil)))))
 
 
-
-(let ((expr 'doc) (code '(foo (toString) (toUpperCase))))
-  (let ((obj (gensym)))
-    `(let* ((,obj ,expr))
-       ,@(map (lambda (code)
-                (let ((name (gensym))
-                      (value (gensym)))
-                  `(let* ((,name ,(cond ((quoted-symbol? code) (symbol->string (cadr code)))
-                                        ((pair? code) (symbol->string (car code)))
-                                        (true code)))
-                          (,value (. ,obj ,name)))
-                     ,(if (and (pair? code) (not (quoted-symbol? code)))
-                         `(set! ,obj (,value ,@(cdr code)))
-                         `(set! ,obj ,value)))))
-              code)
-       ,obj)))
