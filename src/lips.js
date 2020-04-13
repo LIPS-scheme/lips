@@ -285,14 +285,14 @@ You can also use (help name) to display help for specic function or macro.
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
+    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"/g;
     //var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|#|`|[^(\s)]+)/gim;
     // ----------------------------------------------------------------------
     function makeTokenRe() {
         var tokens = Object.keys(specials).map(escapeRegex).join('|');
         var complex = '';
-        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)]+)`, 'gim');
+        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -454,7 +454,7 @@ You can also use (help name) to display help for specic function or macro.
                     specials_stack.push(single_list_specials);
                     single_list_specials = [];
                 }
-                if (token === '(') {
+                if (token === '(' || token === '[') {
                     first_value = true;
                     parents++;
                     stack.push([]);
@@ -462,7 +462,7 @@ You can also use (help name) to display help for specic function or macro.
                     special_count = 0;
                 } else if (token === '.' && !first_value) {
                     stack[stack.length - 1] = Pair.fromArray(top);
-                } else if (token === ')') {
+                } else if (token === ')' || token === ']') {
                     parents--;
                     if (!stack.length) {
                         throw new Error('Unbalanced parenthesis');
@@ -543,7 +543,7 @@ You can also use (help name) to display help for specic function or macro.
                 }
             }
         });
-        if (!tokens.filter(t => t.match(/^[()]$/)).length && stack.length) {
+        if (!tokens.filter(t => t.match(/^[[\]()]$/)).length && stack.length) {
             // list of parser macros
             result = result.concat(stack);
             stack = [];
@@ -831,7 +831,7 @@ You can also use (help name) to display help for specic function or macro.
             } else if (sexp[0].line < sexp[1].line) {
                 return settings.offset + sexp[0].col + 1;
             } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
-                if (sexp[1].token === '(') {
+                if (sexp[1].token === '(' || sexp[1].token === '[') {
                     return settings.offset + sexp[1].col;
                 }
                 return settings.offset + sexp[3].col;
@@ -867,30 +867,33 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     Formatter.Pattern = Pattern;
     Formatter.Ahead = Ahead;
-    const notParen = new Ahead(/[^)]/);
+    var p_o = /[[(]/;
+    var p_e = /[\])]/;
+    var not_p = /[^()[\]]/;
+    const not_paren = new Ahead(/[^)\]]/);
     const glob = Symbol.for('*');
-    const sexp = new Pattern(['(', glob, ')'], '+');
+    const sexp = new Pattern([p_o, glob, p_e], '+');
     const symbol = new Pattern([Symbol.for('symbol')], '?');
-    const let_value = new Pattern(['(', Symbol.for('symbol'), glob, ')'], '+');
+    const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
     var def_lambda_re = /^(define|lambda|syntax-rules)/;
     var let_re = /^(let|let\*|letrec)(:?-syntax)?$/;
     Formatter.rules = [
-        [['(', 'begin'], 1],
-        [['(', 'begin', sexp], 1, notParen],
-        [['(', let_re, symbol, '(', let_value, ')'], 1],
-        [['(', let_re, symbol, '(', let_value], 2, notParen],
-        [['(', let_re, symbol, ['(', let_value, ')'], sexp], 1, notParen],
-        [[/(?!lambda)/, '(', glob, ')'], 1, notParen],
-        [['(', 'if', /[^()]/], 1, notParen],
-        [['(', 'if', /[^()]/, glob], 1],
-        [['(', 'if', ['(', glob, ')']], 1],
-        [['(', 'if', ['(', glob, ')'], /[^()]/], 1],
-        [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen],
-        [['(', , ['(', glob, ')'], string_re], 1],
-        [['(', def_lambda_re, '(', glob, ')'], 1],
-        [['(', def_lambda_re, ['(', glob, ')'], string_re, sexp], 1, notParen],
-        [['(', def_lambda_re, ['(', glob, ')'], sexp], 1, notParen]
+        [[p_o, 'begin'], 1],
+        [[p_o, 'begin', sexp], 1, not_paren],
+        [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
+        [[p_o, let_re, symbol, p_o, let_value], 2, not_paren],
+        [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_paren],
+        [[/(?!lambda)/, p_o, glob, p_e], 1, not_paren],
+        [[p_o, 'if', not_p], 1, not_paren],
+        [[p_o, 'if', not_p, glob], 1],
+        [[p_o, 'if', [p_o, glob, p_e]], 1],
+        [[p_o, 'if', [p_o, glob, p_e], not_p], 1],
+        [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_paren],
+        [[p_o, [p_o, glob, p_e], string_re], 1],
+        [[p_o, def_lambda_re, p_o, glob, p_e], 1],
+        [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_paren],
+        [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_paren]
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
@@ -5764,14 +5767,19 @@ You can also use (help name) to display help for specic function or macro.
             return (typeof token === 'string' ? token : token.token).match(re);
         };
     }
-    var isParen = matchToken(/[()]/);
+    var isParen = matchToken(/[[\]()]/);
     // -------------------------------------------------------------------------
     function balanced(code) {
         var tokens = typeof code === 'string' ? tokenize(code) : code;
         var parenthesis = tokens.filter(isParen);
-        var open = parenthesis.filter(p => (p.token || p) === ')');
-        var close = parenthesis.filter(p => (p.token || p) === '(');
-        return open.length === close.length;
+        var parens_open = parenthesis.filter(matchToken(/\(/));
+        var parens_close = parenthesis.filter(matchToken(/\)/));
+
+        var brackets_open = parenthesis.filter(matchToken(/\[/));
+        var brackets_close = parenthesis.filter(matchToken(/\]/));
+
+        return parens_open.length === parens_close.length &&
+            brackets_open.length === brackets_close.length;
     }
 
     // -------------------------------------------------------------------------

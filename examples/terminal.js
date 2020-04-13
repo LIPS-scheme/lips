@@ -75,7 +75,6 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                         indent: 2,
                         offset: prompt.length
                     });
-                    console.log({i, x: prompt.length});
                     this.insert('\n' + (new Array(i + 1).join(' ')));
                 }
             }
@@ -134,7 +133,13 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         },
         keypress: function(e) {
             var term = this;
-            if (e.key == ')') {
+            function is_open(token) {
+                return ['(', '['].indexOf(token) !== -1;
+            }
+            function is_close(token) {
+                return [')', ']'].indexOf(token) !== -1;
+            }
+            if (is_close(e.key)) {
                 setTimeout(function() {
                     position = term.get_position();
                     var command = term.get_command().substring(0, position);
@@ -148,13 +153,13 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                         if (!token) {
                             return;
                         }
-                        if (token.token === '(') {
+                        if (is_open(token.token)) {
                             count--;
-                        } else if (token.token == ')') {
+                        } else if (is_close(token.token)) {
                             count++;
                         }
                     }
-                    if (token.token == '(' && count === 0) {
+                    if (is_open(token.token) && count === 0) {
                         clearTimeout(timer);
                         setTimeout(function() {
                             var offset = token.offset;

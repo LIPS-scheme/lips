@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 13 Apr 2020 20:01:57 +0000
+ * build: Mon, 13 Apr 2020 22:27:20 +0000
  */
 (function () {
 	'use strict';
@@ -1291,13 +1291,13 @@
 	  /* eslint-disable */
 
 
-	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|;.*)/g;
+	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
 	  var string_re = /"(?:\\[\S\s]|[^"])*"/g; //var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|#|`|[^(\s)]+)/gim;
 	  // ----------------------------------------------------------------------
 
 	  function makeTokenRe() {
 	    var tokens = Object.keys(specials).map(escapeRegex).join('|');
-	    return new RegExp("(\"(?:\\\\[\\S\\s]|[^\"])*\"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|$)|\\(|\\)|'|\"(?:\\\\[\\S\\s]|[^\"])+|\\n|(?:\\\\[\\S\\s]|[^\"])*\"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:".concat(tokens, ")|[^(\\s)]+)"), 'gim');
+	    return new RegExp("(\"(?:\\\\[\\S\\s]|[^\"])*\"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|'|\"(?:\\\\[\\S\\s]|[^\"])+|\\n|(?:\\\\[\\S\\s]|[^\"])*\"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:".concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -1482,7 +1482,7 @@
 	          single_list_specials = [];
 	        }
 
-	        if (token === '(') {
+	        if (token === '(' || token === '[') {
 	          first_value = true;
 	          parents++;
 	          stack.push([]);
@@ -1490,7 +1490,7 @@
 	          special_count = 0;
 	        } else if (token === '.' && !first_value) {
 	          stack[stack.length - 1] = Pair.fromArray(top);
-	        } else if (token === ')') {
+	        } else if (token === ')' || token === ']') {
 	          parents--;
 
 	          if (!stack.length) {
@@ -1586,7 +1586,7 @@
 	    });
 
 	    if (!tokens.filter(function (t) {
-	      return t.match(/^[()]$/);
+	      return t.match(/^[[\]()]$/);
 	    }).length && stack.length) {
 	      // list of parser macros
 	      result = result.concat(stack);
@@ -1952,7 +1952,7 @@
 	      } else if (sexp[0].line < sexp[1].line) {
 	        return settings.offset + sexp[0].col + 1;
 	      } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
-	        if (sexp[1].token === '(') {
+	        if (sexp[1].token === '(' || sexp[1].token === '[') {
 	          return settings.offset + sexp[1].col;
 	        }
 
@@ -1996,15 +1996,18 @@
 
 	  Formatter.Pattern = Pattern;
 	  Formatter.Ahead = Ahead;
-	  var notParen = new Ahead(/[^)]/);
+	  var p_o = /[[(]/;
+	  var p_e = /[\])]/;
+	  var not_p = /[^()[\]]/;
+	  var not_paren = new Ahead(/[^)\]]/);
 	  var glob = Symbol["for"]('*');
-	  var sexp = new Pattern(['(', glob, ')'], '+');
+	  var sexp = new Pattern([p_o, glob, p_e], '+');
 	  var symbol = new Pattern([Symbol["for"]('symbol')], '?');
-	  var let_value = new Pattern(['(', Symbol["for"]('symbol'), glob, ')'], '+'); // rules for breaking S-Expressions into lines
+	  var let_value = new Pattern([p_o, Symbol["for"]('symbol'), glob, p_e], '+'); // rules for breaking S-Expressions into lines
 
 	  var def_lambda_re = /^(define|lambda|syntax-rules)/;
 	  var let_re = /^(let|let\*|letrec)(:?-syntax)?$/;
-	  Formatter.rules = [[['(', 'begin'], 1], [['(', 'begin', sexp], 1, notParen], [['(', let_re, symbol, '(', let_value, ')'], 1], [['(', let_re, symbol, '(', let_value], 2, notParen], [['(', let_re, symbol, ['(', let_value, ')'], sexp], 1, notParen], [[/(?!lambda)/, '(', glob, ')'], 1, notParen], [['(', 'if', /[^()]/], 1, notParen], [['(', 'if', /[^()]/, glob], 1], [['(', 'if', ['(', glob, ')']], 1], [['(', 'if', ['(', glob, ')'], /[^()]/], 1], [['(', 'if', ['(', glob, ')'], ['(', glob, ')']], 1, notParen], [['(',, ['(', glob, ')'], string_re], 1], [['(', def_lambda_re, '(', glob, ')'], 1], [['(', def_lambda_re, ['(', glob, ')'], string_re, sexp], 1, notParen], [['(', def_lambda_re, ['(', glob, ')'], sexp], 1, notParen]]; // ----------------------------------------------------------------------
+	  Formatter.rules = [[[p_o, 'begin'], 1], [[p_o, 'begin', sexp], 1, not_paren], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, p_o, let_value], 2, not_paren], [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_paren], [[/(?!lambda)/, p_o, glob, p_e], 1, not_paren], [[p_o, 'if', not_p], 1, not_paren], [[p_o, 'if', not_p, glob], 1], [[p_o, 'if', [p_o, glob, p_e]], 1], [[p_o, 'if', [p_o, glob, p_e], not_p], 1], [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_paren], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_paren], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_paren]]; // ----------------------------------------------------------------------
 
 	  Formatter.prototype["break"] = function () {
 	    var code = this._code.replace(/\n[ \t]*/g, '\n ');
@@ -7787,18 +7790,16 @@
 	    };
 	  }
 
-	  var isParen = matchToken(/[()]/); // -------------------------------------------------------------------------
+	  var isParen = matchToken(/[[\]()]/); // -------------------------------------------------------------------------
 
 	  function balanced(code) {
 	    var tokens = typeof code === 'string' ? tokenize(code) : code;
 	    var parenthesis = tokens.filter(isParen);
-	    var open = parenthesis.filter(function (p) {
-	      return (p.token || p) === ')';
-	    });
-	    var close = parenthesis.filter(function (p) {
-	      return (p.token || p) === '(';
-	    });
-	    return open.length === close.length;
+	    var parens_open = parenthesis.filter(matchToken(/\(/));
+	    var parens_close = parenthesis.filter(matchToken(/\)/));
+	    var brackets_open = parenthesis.filter(matchToken(/\[/));
+	    var brackets_close = parenthesis.filter(matchToken(/\]/));
+	    return parens_open.length === parens_close.length && brackets_open.length === brackets_close.length;
 	  } // -------------------------------------------------------------------------
 
 
@@ -7914,7 +7915,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 13 Apr 2020 20:01:57 +0000',
+	    date: 'Mon, 13 Apr 2020 22:27:20 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
