@@ -1927,7 +1927,9 @@ You can also use (help name) to display help for specic function or macro.
         const bound = fn.bind(context);
         const props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
         props.forEach(prop => {
-            bound[prop] = fn[prop];
+            try {
+                bound[prop] = fn[prop];
+            } catch(e) {}
         });
         hiddenProp(bound, '__fn__', fn);
         hiddenProp(bound, '__bound__', true);
@@ -3893,11 +3895,10 @@ You can also use (help name) to display help for specic function or macro.
             } else if (value instanceof LSymbol) {
                 value = env.get(value);
             }
-            if (code.car instanceof LSymbol) {
-                unpromise(value, value => {
-                    env.set(code.car, value);
-                });
-            }
+            typecheck('define', code.car, 'symbol');
+            unpromise(value, value => {
+                env.set(code.car, value);
+            });
         }), `(define name expression)
              (define (function-name . args) body)
 
@@ -3943,12 +3944,12 @@ You can also use (help name) to display help for specic function or macro.
                     env,
                     //dynamic_scope: this,
                     error: e => {
-                        this.get('error')(e.message);
+                        this.get('error').call(this, e.message);
                         if (e.code) {
                             var stack = e.code.map((line, i) => {
                                 return `[${i + 1}]: ${line}`;
                             }).join('\n');
-                            this.get('error')(stack);
+                            this.get('error').call(this, stack);
                         }
                     }
                 });
@@ -5474,7 +5475,7 @@ You can also use (help name) to display help for specic function or macro.
     function reversseFind(dir, fn) {
         var parts = dir.split(path.sep).filter(Boolean);
         for (var i = parts.length; i--;) {
-            var p = path.join('/', ...parts.slice(0, i));
+            var p = path.join('/', ...parts.slice(0, i + 1));
             if (fn(p)) {
                 return p;
             }
@@ -5506,15 +5507,19 @@ You can also use (help name) to display help for specic function or macro.
             module = module.valueOf();
             var root = process.cwd();
             var value;
-            if (module.match(/^\s*\./)) {
-                value = require(path.join(root, module));
-            } else {
-                var dir = nodeModuleFind(root);
-                if (dir) {
-                    value = require(path.join(dir, "node_modules", module));
+            try {
+                if (module.match(/^\s*\./)) {
+                    value = require(path.join(root, module));
                 } else {
-                    value = require(module);
+                    var dir = nodeModuleFind(root);
+                    if (dir) {
+                        value = require(path.join(dir, "node_modules", module));
+                    } else {
+                        value = require(module);
+                    }
                 }
+            } catch(e) {
+                value = require(module);
             }
             return patchValue(value, global);
         }, `(require module)
@@ -5795,7 +5800,7 @@ You can also use (help name) to display help for specic function or macro.
                 return code;
             }
         } catch (e) {
-            error && error(e, code);
+            error && error.call(env, e, code);
         }
     }
     // -------------------------------------------------------------------------

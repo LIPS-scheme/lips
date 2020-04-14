@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 14 Apr 2020 17:08:17 +0000
+ * build: Tue, 14 Apr 2020 21:34:29 +0000
  */
 (function () {
 	'use strict';
@@ -3353,7 +3353,9 @@
 	    var bound = fn.bind(context);
 	    var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
 	    props.forEach(function (prop) {
-	      bound[prop] = fn[prop];
+	      try {
+	        bound[prop] = fn[prop];
+	      } catch (e) {}
 	    });
 	    hiddenProp(bound, '__fn__', fn);
 	    hiddenProp(bound, '__bound__', true);
@@ -5748,11 +5750,10 @@
 	        value = env.get(value);
 	      }
 
-	      if (code.car instanceof LSymbol) {
-	        unpromise(value, function (value) {
-	          env.set(code.car, value);
-	        });
-	      }
+	      typecheck('define', code.car, 'symbol');
+	      unpromise(value, function (value) {
+	        env.set(code.car, value);
+	      });
 	    }), "(define name expression)\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
 	    // ------------------------------------------------------------------
 	    'set-obj!': doc(function (obj, key, value) {
@@ -5793,14 +5794,14 @@
 	          env: env,
 	          //dynamic_scope: this,
 	          error: function error(e) {
-	            _this6.get('error')(e.message);
+	            _this6.get('error').call(_this6, e.message);
 
 	            if (e.code) {
 	              var stack = e.code.map(function (line, i) {
 	                return "[".concat(i + 1, "]: ").concat(line);
 	              }).join('\n');
 
-	              _this6.get('error')(stack);
+	              _this6.get('error').call(_this6, stack);
 	            }
 	          }
 	        });
@@ -7325,7 +7326,7 @@
 	    var parts = dir.split(path.sep).filter(Boolean);
 
 	    for (var i = parts.length; i--;) {
-	      var p = path.join.apply(path, ['/'].concat(toConsumableArray(parts.slice(0, i))));
+	      var p = path.join.apply(path, ['/'].concat(toConsumableArray(parts.slice(0, i + 1))));
 
 	      if (fn(p)) {
 	        return p;
@@ -7359,16 +7360,20 @@
 	      var root = process.cwd();
 	      var value;
 
-	      if (module.match(/^\s*\./)) {
-	        value = require(path.join(root, module));
-	      } else {
-	        var dir = nodeModuleFind(root);
-
-	        if (dir) {
-	          value = require(path.join(dir, "node_modules", module));
+	      try {
+	        if (module.match(/^\s*\./)) {
+	          value = require(path.join(root, module));
 	        } else {
-	          value = require(module);
+	          var dir = nodeModuleFind(root);
+
+	          if (dir) {
+	            value = require(path.join(dir, "node_modules", module));
+	          } else {
+	            value = require(module);
+	          }
 	        }
+	      } catch (e) {
+	        value = require(module);
 	      }
 
 	      return patchValue(value, global);
@@ -7787,7 +7792,7 @@
 	        return code;
 	      }
 	    } catch (e) {
-	      error && error(e, code);
+	      error && error.call(env, e, code);
 	    }
 	  } // -------------------------------------------------------------------------
 
@@ -8002,7 +8007,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 14 Apr 2020 17:08:17 +0000',
+	    date: 'Tue, 14 Apr 2020 21:34:29 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
