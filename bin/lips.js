@@ -5,6 +5,12 @@ const {
     Formatter,
     balanced_parenthesis,
     tokenize,
+    Interpreter,
+    LSymbol,
+    LString,
+    version,
+    date,
+    Pair,
     env,
     banner,
     InputPort,
@@ -119,9 +125,27 @@ function indent(code, indent, offset) {
 
 // -----------------------------------------------------------------------------
 const options = parse_options(process.argv.slice(2));
-if (options.c) {
+if (options.version || options.V) {
+    // SRFI 176
+    var os = require('os');
+    global.output = Pair.fromArray([
+        ["command", process.argv[1]],
+        ["website", "https://jcubic.github.io/lips/"],
+        ['languages', 'scheme', 'r5rs'].map(LSymbol),
+        ['encodings', 'utf-8'].map(LSymbol),
+        ["scheme.srfi", 6, 23, 176],
+        ["release", version],
+        ["os.uname", os.platform(), os.release()],
+        ["os.env.LANG", process.env.LANG],
+        ["os.env.TERM", process.env.TERM],
+        ["build.date", new Date(date).toISOString()]
+    ].map(([key, ...values]) => {
+        return [LSymbol(key), ...values];
+    }));
+    exec('(display (concat "(" (join "\n" (map repr output)) ")"))');
+} else if (options.c || options.code) {
     boostrap().then(function() {
-        run(options.c, env).then(print);
+        run(options.c || options.code, env).then(print);
     });
 } else if (options._.length === 1) {
     var e = env.inherit('name');
@@ -139,11 +163,12 @@ if (options.c) {
     }).finally(function() {
         rl.close();
     });
-} else if (options.h) {
+} else if (options.h || options.help) {
     var name = process.argv[1];
-    console.log(format('%s\nusage:\n%s [-h]|[-c <code>]|<filename>\n\n\t-h this help message\n\t-c execute' +
-                       ' code\n\nif called without arguments it will run REPL and if called with one argument' +
-                       '\nit will treat it as filename and execute it.', intro, name));
+    console.log(format('%s\nusage:\n%s [-h]|[-c <code>]|<filename>\n\n\t[-h --help] this help message' +
+                       '\n\t[-c --code] execute code\n\t[--version -V] Display version information ' +
+                       'according to srfi-176\n\nif called without arguments it will run REPL and if' +
+                       'called with one argument\nit will treat it as filename and execute it.', banner, name));
 } else {
     if (process.stdin.isTTY) {
         console.log(banner);
@@ -162,7 +187,7 @@ if (options.c) {
     var code = '';
     var multiline = false;
     var resolve;
-    var e = env.inherit('name', {
+    var interp = Interpreter('name', {
         stdin: InputPort(function() {
             return new Promise(function(resolve) {
                 rl.question('', resolve);
@@ -173,12 +198,12 @@ if (options.c) {
             console.log(this.get('repr')(x));
         })
     });
-    boostrap(e).then(function() {
+    boostrap(interp.env).then(function() {
         rl.on('line', function(line) {
             code += line + '\n';
             if (balanced_parenthesis(code)) {
                 rl.pause();
-                run(code, e).then(function(result) {
+                run(code, interp.env).then(function(result) {
                     if (process.stdin.isTTY) {
                         print(result);
                         if (multiline) {
@@ -198,10 +223,10 @@ if (options.c) {
                 code = '';
             } else {
                 multiline = true;
-                var i = indent(code, 2, prompt.length - continuePrompt.length);
+                var ind = indent(code, 2, prompt.length - continuePrompt.length);
                 rl.setPrompt(continuePrompt);
                 rl.prompt();
-                rl.write(new Array(i + 1).join(' '));
+                rl.write(new Array(ind + 1).join(' '));
             }
         });
     });
