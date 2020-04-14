@@ -10,3 +10,9 @@
    If code throw exception it will return true, otherwise
    it will return false."
   `(try (begin ,@body #f) (catch (e) #t)))
+
+(define (test_ . rest)
+  "(test_ . rest)
+
+   Helper that disable tests. Function that do nothing"
+  )

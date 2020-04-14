@@ -1300,7 +1300,7 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     function toString(value) {
         if (typeof value === 'function') {
-            return '<#function ' + (value.name || 'anonymous') + '>';
+            return '<#procedure ' + (value.name || 'anonymous') + '>';
         } else if (typeof value === 'string' || value instanceof LString) {
             return JSON.stringify(value.valueOf()).replace(/\\n/g, '\n');
         } else if (isPromise(value)) {
@@ -1620,6 +1620,7 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     // :: for usage in syntax-rule when pattern match it will return
     // :: list of bindings from code that match the pattern
+    // :: TODO detect cycles
     // ----------------------------------------------------------------------
     function extract_patterns(pattern, code) {
         var bindings = {};
@@ -4485,9 +4486,9 @@ You can also use (help name) to display help for specic function or macro.
             }
             if (typeof obj === 'function') {
                 if (isNativeFunction(obj)) {
-                    return '<#function(native)>';
+                    return '<#procedure(native)>';
                 }
-                return '<#function>';
+                return '<#procedure>';
             }
             if (obj instanceof Array) {
                 return '#(' + obj.map(x => string(x, true)).join(' ') + ')';

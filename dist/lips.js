@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 13 Apr 2020 22:27:20 +0000
+ * build: Tue, 14 Apr 2020 07:28:05 +0000
  */
 (function () {
 	'use strict';
@@ -2513,7 +2513,7 @@
 
 	  function toString(value) {
 	    if (typeof value === 'function') {
-	      return '<#function ' + (value.name || 'anonymous') + '>';
+	      return '<#procedure ' + (value.name || 'anonymous') + '>';
 	    } else if (typeof value === 'string' || value instanceof LString) {
 	      return JSON.stringify(value.valueOf()).replace(/\\n/g, '\n');
 	    } else if (isPromise(value)) {
@@ -3005,6 +3005,7 @@
 	  Syntax.className = 'syntax'; // ----------------------------------------------------------------------
 	  // :: for usage in syntax-rule when pattern match it will return
 	  // :: list of bindings from code that match the pattern
+	  // :: TODO detect cycles
 	  // ----------------------------------------------------------------------
 
 	  function extract_patterns(pattern, code) {
@@ -6350,10 +6351,10 @@
 
 	      if (typeof obj === 'function') {
 	        if (isNativeFunction(obj)) {
-	          return '<#function(native)>';
+	          return '<#procedure(native)>';
 	        }
 
-	        return '<#function>';
+	        return '<#procedure>';
 	      }
 
 	      if (obj instanceof Array) {
@@ -7915,7 +7916,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 13 Apr 2020 22:27:20 +0000',
+	    date: 'Tue, 14 Apr 2020 07:28:05 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

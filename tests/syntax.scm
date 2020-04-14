@@ -27,9 +27,6 @@
                     ((test z) 10)))
                 '(6 20)))))
 
-;; NOT WORKING TESTS
-;;(define test_ (lambda ()))
-
 (test "syntax-rules: complex hygiene"
       (lambda (t)
         (let ((result (let-syntax
@@ -93,6 +90,29 @@
          (t.is (or_ #t #f #f) #t)
          (t.is (or_ 10) 10)
          (t.is (or_) #f)))
+
+(test "syntax-rules: rest (dot)"
+      (lambda (t)
+        (define result (let-syntax ((when (syntax-rules ()
+                                            ((when test stmt1 . stmt2)
+                                             (if test
+                                                 (begin stmt1
+                                                        . stmt2))))))
+                         (define if #t)
+                         (when if (set! if 'now) if)))
+        (t.is result 'now)))
+
+(test_ "syntax-rules: ellipsps"
+      (lambda (t)
+        (define result (let-syntax ((when (syntax-rules ()
+                                            ((when test stmt1 stmt2 ...)
+                                             (if test
+                                                 (begin stmt1
+                                                        stmt2 ...))))))
+                         (let ((if #t))
+                           (when if (set! if 'now))
+                           if)))
+        (t.is result 'now)))
 
 (test "syntax-rules: function and macro"
       (lambda (t)
