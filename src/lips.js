@@ -287,12 +287,13 @@ You can also use (help name) to display help for specic function or macro.
     /* eslint-disable */
     var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"/g;
-    //var tokens_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|\(|\)|$)|\(|\)|'|"(?:\\[\S\s]|[^"])+|\n|(?:\\[\S\s]|[^"])*"|;.*|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.)[0-9]|\.{2,}|\.|,@|,|#|`|[^(\s)]+)/gim;
     // ----------------------------------------------------------------------
     function makeTokenRe() {
-        var tokens = Object.keys(specials).map(escapeRegex).join('|');
+        var tokens = Object.keys(specials)
+            .sort((a, b) => b.length - a.length || a.localeCompare(b))
+            .map(escapeRegex).join('|');
         var complex = '';
-        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|'|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -393,6 +394,7 @@ You can also use (help name) to display help for specic function or macro.
     var specials = {
         "'": new LSymbol('quote'),
         '`': new LSymbol('quasiquote'),
+        "'#": new LSymbol('vector-quote'),
         ',@': new LSymbol('unquote-splicing'),
         ',': new LSymbol('unquote')
     };
