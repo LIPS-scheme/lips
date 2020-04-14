@@ -133,7 +133,7 @@ if (options.version || options.V) {
         ["website", "https://jcubic.github.io/lips/"],
         ['languages', 'scheme', 'r5rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
-        ["scheme.srfi", 6, 23, 176],
+        ["scheme.srfi", 6, 22, 23, 176],
         ["release", version],
         ["os.uname", os.platform(), os.release()],
         ["os.env.LANG", process.env.LANG],
