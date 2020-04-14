@@ -10,3 +10,16 @@
         (t.is (append () '(1)) '(1))
         (t.is (append '(1 2 3) '()) '(1 2 3))
         (t.is (append () '(1 2 3)) '(1 2 3))))
+
+(test "list: cycles"
+      (lambda (t)
+        (let ((x '(1 2 3)))
+          (set-cdr! (cddr x) x)
+          (t.is (repr x) "(1 2 3 . #0#)"))
+        (let ((x '(1 2 3)))
+          (set-cdr! (cddr x) (cons x x))
+          (t.is (repr x) "(1 2 3 #0# . #0#)"))
+        (let ((x '(1 (2) 3)))
+          (set-cdr! (cadr x) (cdr x))
+          (set-cdr! (cddr x) x)
+          (t.is (repr x) "(1 (2 . #0#) 3 . #1#)"))))
