@@ -289,7 +289,7 @@ You can also use (help name) to display help for specic function or macro.
     var string_re = /"(?:\\[\S\s]|[^"])*"/g;
     // ----------------------------------------------------------------------
     function makeTokenRe() {
-        var tokens = Object.keys(specials)
+        var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escapeRegex).join('|');
         var complex = '';
@@ -391,13 +391,42 @@ You can also use (help name) to display help for specic function or macro.
         }
     }
     // ----------------------------------------------------------------------
+    // :: Parser macros transformers
+    // ----------------------------------------------------------------------
     var specials = {
-        "'": new LSymbol('quote'),
-        '`': new LSymbol('quasiquote'),
-        "'#": new LSymbol('vector-quote'),
-        ',@': new LSymbol('unquote-splicing'),
-        ',': new LSymbol('unquote')
+        LITERAL: Symbol.for('literal'),
+        SPLICE: Symbol.for('splice'),
+        names: function() {
+            return Object.keys(this._specials);
+        },
+        type: function(name) {
+            return this.get(name).type;
+        },
+        get: function(name) {
+            return this._specials[name];
+        },
+        append: function(name, value, type) {
+            this._specials[name] = {
+                seq: name,
+                symbol: value,
+                type
+            };
+        },
+        _specials: {}
     };
+    function is_literal(special) {
+        return specials.type(special) === specials.LITERAL;
+    }
+    // ----------------------------------------------------------------------
+    var defined_specials = [
+        ["'", new LSymbol('quote'), specials.LITERAL],
+        ['`', new LSymbol('quasiquote'), specials.LITERAL],
+        [',@', new LSymbol('unquote-splicing'), specials.LITERAL],
+        [',', new LSymbol('unquote'), specials.LITERAL]
+    ];
+    defined_specials.forEach(([seq, symbol, type]) => {
+        specials.append(seq, symbol, type);
+    });
     // ----------------------------------------------------------------------
     // :: tokens are the array of strings from tokenizer
     // :: the return value is lisp code created out of Pair class
@@ -409,8 +438,8 @@ You can also use (help name) to display help for specic function or macro.
         var stack = [];
         var result = [];
         var special = null;
-        var special_tokens = Object.keys(specials);
-        var special_forms = special_tokens.map(s => specials[s].name);
+        var special_tokens = specials.names();
+        var special_forms = special_tokens.map(s => specials.get(s).symbol.name);
         var parents = 0;
         var first_value = false;
         var specials_stack = [];
@@ -446,7 +475,7 @@ You can also use (help name) to display help for specic function or macro.
             if (special_tokens.indexOf(token) !== -1) {
                 special_count++;
                 special = token;
-                stack.push([specials[special]]);
+                stack.push([specials.get(special).symbol]);
                 if (!special) {
                     single_list_specials = [];
                 }
@@ -459,7 +488,9 @@ You can also use (help name) to display help for specic function or macro.
                 if (token === '(' || token === '[') {
                     first_value = true;
                     parents++;
-                    stack.push([]);
+                    if (special && is_literal(special) || !special) {
+                        stack.push([]);
+                    }
                     special = null;
                     special_count = 0;
                 } else if (token === '.' && !first_value) {
@@ -1619,6 +1650,35 @@ You can also use (help name) to display help for specic function or macro.
         return '<#syntax>';
     };
     Syntax.className = 'syntax';
+    /*
+    // ----------------------------------------------------------------------
+    // :: list of symbols, with at least one
+    // ----------------------------------------------------------------------
+    function is_symbol_list(list) {
+        return (list instanceof Pair &&
+                list.car instanceof LSymbol &&
+                !list.haveCycles('cdr') &&
+                (list.cdr === nil || is_symbol_list(list.cdr)));
+    }
+    // ----------------------------------------------------------------------
+    // :: test if value is '((name) ...) or (name ...) it throw exception
+    // :: when list don't have symbols or if list is empty
+    // ----------------------------------------------------------------------
+    function is_ellipsis(node) {
+        if (node instanceof Pair &&
+            node.cdr instanceof Pair &&
+            LSymbol.is(node.cdr.car, '...')) {
+            if (node.car instanceof Pair && is_symbol_list(node.car)) {
+                return true;
+            } else if (node.car instanceof LSymbol) {
+                return true;
+            } else {
+                throw new Error('Invalid Syntax');
+            }
+        }
+        return false;
+    }
+    */
     // ----------------------------------------------------------------------
     // :: for usage in syntax-rule when pattern match it will return
     // :: list of bindings from code that match the pattern
@@ -4598,10 +4658,10 @@ You can also use (help name) to display help for specic function or macro.
 
             Function remove special symbol from parser. Added by \`add-special!\``),
         // ------------------------------------------------------------------
-        'add-special!': doc(function(symbol, name) {
-            typecheck('remove-special!', symbol, 'string', 1);
+        'add-special!': doc(function(seq, name, type = specials.LITERAL) {
+            typecheck('remove-special!', seq, 'string', 1);
             typecheck('remove-special!', name, 'symbol', 2);
-            lips.specials[symbol] = name;
+            lips.specials.append(seq, name, type);
         }, `(add-special! symbol name)
 
             Add special symbol to the list of transforming operators by the parser.

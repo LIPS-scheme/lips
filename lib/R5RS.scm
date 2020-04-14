@@ -23,29 +23,37 @@
 (define #t true)
 
 ;; -----------------------------------------------------------------------------
-(define-macro (define-symbol-macro spec . rest)
-  "(define-symbol-macro (name . args) . body)
+(define-macro (define-symbol-macro type spec . rest)
+  "(define-symbol-macro type (name . args) . body)
 
    Macro that creates special symbol macro for evaluator similar to build in , or `.
    It's like alias for real macro. Similar to CL reader macros but it receive already
-   parsed code like normal macros."
-   ;; this is executed in two different ways one when there are no macro and the other
-   ;; if there is macro defined, in second case it will put list as first element
-   ;; of the body even is it's called like this (define-symbol-macro (# code)
+   parsed code like normal macros. Type can be SPLICE or LITERAL symbols.
+   ALL default symbol macros are literal."
   (let* ((name (car spec))
          (symbol (cadr spec))
          (args (cddr spec)))
      `(begin
-        (add-special! ,symbol ',name)
+        (add-special! ,symbol ',name ,(string->symbol
+                                       (concat "lips.specials."
+                                               (symbol->string type))))
         (define-macro (,name ,@args) ,@rest))))
 
 ;; -----------------------------------------------------------------------------
-(define-symbol-macro (make-vector "#" arg)
+(define-symbol-macro SPLICE (vector "#" . arg)
   "(make-vector (1 2 3))
    #(1 2 3)
 
    Macro for defining vectors (arrays)."
   `(list->array (list ,@arg)))
+
+;; -----------------------------------------------------------------------------
+(define-symbol-macro SPLICE (quote-vector "'#" . arg)
+  "(make-vector (1 2 3))
+   #(1 2 3)
+
+   Macro for defining vectors (arrays)."
+  `(list->array (list ,@(map (lambda (object) `(quote ,object)) arg))))
 
 ;; -----------------------------------------------------------------------------
 (define (eqv? a b)
