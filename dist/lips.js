@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 14 Apr 2020 12:59:11 +0000
+ * build: Tue, 14 Apr 2020 13:51:50 +0000
  */
 (function () {
 	'use strict';
@@ -6209,14 +6209,32 @@
 	    }, "(clone list)\n\n            Function return clone of the list."),
 	    // ------------------------------------------------------------------
 	    append: doc(function (list, item) {
-	      typecheck('append', list, 'pair');
-	      return this.get('append!')(list.clone(), item);
+	      typecheck('append', list, ['nil', 'pair']);
+
+	      if (list instanceof Pair) {
+	        list = list.clone();
+	      }
+
+	      return this.get('append!').call(this, list, item);
 	    }, "(append list item)\n\n            Function will create new list with value appended to the end. It return\n            New list."),
+	    // ------------------------------------------------------------------
 	    'append!': doc(function (list, item) {
-	      typecheck('append!', list, 'pair');
+	      typecheck('append!', list, ['pair', 'nil']);
+
+	      if (!this.get('list?')(list)) {
+	        throw new Error('append!: Invalid argument, value is not a list');
+	      }
 
 	      if (isNull(item)) {
 	        return list;
+	      }
+
+	      if (list === nil) {
+	        if (item === nil) {
+	          return nil;
+	        }
+
+	        return item;
 	      }
 
 	      return list.append(item);
@@ -7918,7 +7936,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 14 Apr 2020 12:59:11 +0000',
+	    date: 'Tue, 14 Apr 2020 13:51:50 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

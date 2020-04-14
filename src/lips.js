@@ -4341,16 +4341,29 @@ You can also use (help name) to display help for specic function or macro.
             Function return clone of the list.`),
         // ------------------------------------------------------------------
         append: doc(function(list, item) {
-            typecheck('append', list, 'pair');
-            return this.get('append!')(list.clone(), item);
+            typecheck('append', list, ['nil', 'pair']);
+            if (list instanceof Pair) {
+                list = list.clone();
+            }
+            return this.get('append!').call(this, list, item);
         }, `(append list item)
 
             Function will create new list with value appended to the end. It return
             New list.`),
+        // ------------------------------------------------------------------
         'append!': doc(function(list, item) {
-            typecheck('append!', list, 'pair');
+            typecheck('append!', list, ['pair', 'nil']);
+            if (!this.get('list?')(list)) {
+                throw new Error('append!: Invalid argument, value is not a list');
+            }
             if (isNull(item)) {
                 return list;
+            }
+            if (list === nil) {
+                if (item === nil) {
+                    return nil;
+                }
+                return item;
             }
             return list.append(item);
         }, `(append! name expression)

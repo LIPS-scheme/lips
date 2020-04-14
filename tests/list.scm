@@ -1,0 +1,12 @@
+(test "list: append"
+      (lambda (t)
+        (t.is (append '(1 2 3) 10) '(1 2 3 . 10))
+        (t.is (append '((1 2 3)) 10) '((1 2 3) . 10))
+        (t.is (append '(1 2 (3) 4) 10) '(1 2 (3) 4 . 10))
+        (t.is (append '(1 2 3 (4)) 10) '(1 2 3 (4) . 10))
+        (t.is (to.throw (append '(1 . 2) 10)) #t)
+        (t.is (append () ()) nil)
+        (t.is (append '(1) ()) '(1))
+        (t.is (append () '(1)) '(1))
+        (t.is (append '(1 2 3) '()) '(1 2 3))
+        (t.is (append () '(1 2 3)) '(1 2 3))))
