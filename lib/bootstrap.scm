@@ -221,7 +221,9 @@
   "(make-object :name value)
 
    Macro that create JavaScript object using key like syntax."
-  (object-expander expr))
+  (if (null? expr)
+      (alist->object '())
+      (object-expander expr)))
 
 ;; -----------------------------------------------------------------------------
 ;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
