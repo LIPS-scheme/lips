@@ -1363,6 +1363,12 @@ You can also use (help name) to display help for specic function or macro.
             if (value === null) {
                 return 'null';
             }
+            var constructor = value.constructor;
+            if (typeof value === 'object' && constructor === Object) {
+                return '&(' + Object.keys(value).map(key => {
+                    return `"${key}": ${toString(value[key])}`;
+                }).join(' ') + ')';
+            }
             var name = value.constructor.name;
             if (name === 'Object') {
                 return JSON.stringify(value);
@@ -1516,7 +1522,9 @@ You can also use (help name) to display help for specic function or macro.
 
     // ----------------------------------------------------------------------
     function equal(x, y) {
-        if (x instanceof LNumber && y instanceof LNumber) {
+        if (typeof x === 'function' && typeof y === 'function') {
+            return unbind(x) === unbind(y);
+        } else if (x instanceof LNumber && y instanceof LNumber) {
             return x.type === y.type && x.cmp(y) === 0;
         } else if (typeof x === 'number' || typeof y === 'number') {
             x = LNumber(x);
@@ -4598,6 +4606,10 @@ You can also use (help name) to display help for specic function or macro.
                     return obj.toString().valueOf();
                 }
                 var constructor = obj.constructor;
+                var plain_object = typeof obj === 'object' && constructor === Object;
+                if (plain_object) {
+                    return toString(obj);
+                }
                 var name;
                 if (typeof constructor.__className === 'string') {
                     name = constructor.__className;
@@ -5620,7 +5632,7 @@ You can also use (help name) to display help for specic function or macro.
             if (obj.constructor.__className) {
                 return obj.constructor.__className;
             }
-            return obj.constructor.name;
+            return obj.constructor.name.toLowerCase();
         }
         return typeof obj;
     }

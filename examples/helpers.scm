@@ -66,6 +66,12 @@
   (let ((pair (assoc key alist)))
     (if (pair? pair) (cdr pair) false)))
 
+(define (plain-object? x)
+  "(plain-object? x)
+
+   Function check if value is plain JavaScript object. Created using make-object macro."
+  (and (eq? (type x) "object") (eq? (. x 'constructor) Object)))
+
 ;; ---------------------------------------------------------------------------------------
 ;; LIPS Object System
 ;; ---------------------------------------------------------------------------------------
