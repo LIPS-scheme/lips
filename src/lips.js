@@ -445,6 +445,13 @@ You can also use (help name) to display help for specic function or macro.
         var specials_stack = [];
         var single_list_specials = [];
         var special_count = 0;
+        var __SPLICE__ = LSymbol(Symbol.for('__splice__'));
+        function is_open(token) {
+            return token === '(' || token === '[';
+        }
+        function is_close(token) {
+            return token === ')' || token === ']';
+        }
         function pop_join() {
             var top = stack[stack.length - 1];
             if (top instanceof Array && top[0] instanceof LSymbol &&
@@ -485,17 +492,19 @@ You can also use (help name) to display help for specic function or macro.
                     specials_stack.push(single_list_specials);
                     single_list_specials = [];
                 }
-                if (token === '(' || token === '[') {
+                if (is_open(token)) {
                     first_value = true;
                     parents++;
-                    if (special && is_literal(special) || !special) {
-                        stack.push([]);
+                    const arr = [];
+                    if (special && !is_literal(special)) {
+                        arr.push(__SPLICE__);
                     }
+                    stack.push(arr);
                     special = null;
                     special_count = 0;
                 } else if (token === '.' && !first_value) {
                     stack[stack.length - 1] = Pair.fromArray(top);
-                } else if (token === ')' || token === ']') {
+                } else if (is_close(token)) {
                     parents--;
                     if (!stack.length) {
                         throw new Error('Unbalanced parenthesis');
@@ -512,6 +521,9 @@ You can also use (help name) to display help for specic function or macro.
                         if (top instanceof Array) {
                             if (list.length === 0) {
                                 top.push(nil);
+                            } else if (list instanceof Array &&
+                                       list[0] === __SPLICE__) {
+                                top.push(...list.slice(1));
                             } else {
                                 top.push(list);
                             }
@@ -1346,7 +1358,7 @@ You can also use (help name) to display help for specic function or macro.
                    value === nil) {
             return value.toString();
         } else if (value instanceof Array) {
-            return value.map(toString);
+            return '#(' + value.map(toString).join(' ') + ')';
         } else if (typeof value === 'object') {
             if (value === null) {
                 return 'null';
@@ -1929,7 +1941,9 @@ You can also use (help name) to display help for specic function or macro.
         props.forEach(prop => {
             try {
                 bound[prop] = fn[prop];
-            } catch(e) {}
+            } catch (e) {
+                // ignore error from express.js while accessing bodyParser
+            }
         });
         hiddenProp(bound, '__fn__', fn);
         hiddenProp(bound, '__bound__', true);
@@ -5518,7 +5532,7 @@ You can also use (help name) to display help for specic function or macro.
                         value = require(module);
                     }
                 }
-            } catch(e) {
+            } catch (e) {
                 value = require(module);
             }
             return patchValue(value, global);

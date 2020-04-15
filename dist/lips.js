@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 14 Apr 2020 21:34:29 +0000
+ * build: Wed, 15 Apr 2020 09:59:06 +0000
  */
 (function () {
 	'use strict';
@@ -1476,6 +1476,16 @@
 	    var single_list_specials = [];
 	    var special_count = 0;
 
+	    var __SPLICE__ = LSymbol(Symbol["for"]('__splice__'));
+
+	    function is_open(token) {
+	      return token === '(' || token === '[';
+	    }
+
+	    function is_close(token) {
+	      return token === ')' || token === ']';
+	    }
+
 	    function pop_join() {
 	      var top = stack[stack.length - 1];
 
@@ -1515,19 +1525,21 @@
 	          single_list_specials = [];
 	        }
 
-	        if (token === '(' || token === '[') {
+	        if (is_open(token)) {
 	          first_value = true;
 	          parents++;
+	          var arr = [];
 
-	          if (special && is_literal(special) || !special) {
-	            stack.push([]);
+	          if (special && !is_literal(special)) {
+	            arr.push(__SPLICE__);
 	          }
 
+	          stack.push(arr);
 	          special = null;
 	          special_count = 0;
 	        } else if (token === '.' && !first_value) {
 	          stack[stack.length - 1] = Pair.fromArray(top);
-	        } else if (token === ')' || token === ']') {
+	        } else if (is_close(token)) {
 	          parents--;
 
 	          if (!stack.length) {
@@ -1549,6 +1561,10 @@
 	            if (top instanceof Array) {
 	              if (list.length === 0) {
 	                top.push(nil);
+	              } else if (list instanceof Array && list[0] === __SPLICE__) {
+	                var _top;
+
+	                (_top = top).push.apply(_top, toConsumableArray(list.slice(1)));
 	              } else {
 	                top.push(list);
 	              }
@@ -2558,7 +2574,7 @@
 	    } else if (value instanceof LSymbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value instanceof LCharacter || value === nil) {
 	      return value.toString();
 	    } else if (value instanceof Array) {
-	      return value.map(toString);
+	      return '#(' + value.map(toString).join(' ') + ')';
 	    } else if (_typeof_1(value) === 'object') {
 	      if (value === null) {
 	        return 'null';
@@ -3355,7 +3371,8 @@
 	    props.forEach(function (prop) {
 	      try {
 	        bound[prop] = fn[prop];
-	      } catch (e) {}
+	      } catch (e) {// ignore error from express.js while accessing bodyParser
+	      }
 	    });
 	    hiddenProp(bound, '__fn__', fn);
 	    hiddenProp(bound, '__bound__', true);
@@ -8007,7 +8024,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 14 Apr 2020 21:34:29 +0000',
+	    date: 'Wed, 15 Apr 2020 09:59:06 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
