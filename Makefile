@@ -3,6 +3,7 @@
 VERSION=0.20.1
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
+YEAR=`date +%Y`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
@@ -31,7 +32,7 @@ dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(CP) dist/tmp.js dist/lips.js
 	$(RM) dist/tmp.js
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
-	dist/lips.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" \
+	dist/lips.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" -e "s/{{YEAR}}/${YEAR}/" \
 	dist/lips.js
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
@@ -45,10 +46,10 @@ package.json: templates/package.json .$(VERSION)
 
 README.md: templates/README.md .$(VERSION)
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \
-	"s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" \
+	"s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{YEAR}}/${YEAR}/g" \
 	-e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md || \
-	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e \
-	"s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md
+	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{YEAR}}/${YEAR}/g" \
+	-e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md
 
 .$(VERSION): Makefile
 	touch .$(VERSION)

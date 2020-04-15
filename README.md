@@ -1,24 +1,28 @@
-## LIPS is Pretty Simple
+# [LIPS is Pretty Simple](https://jcubic.github.io/lips/) - Scheme based Powerful LISP
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&7c22c4eb73ee4278f3bce9cb3a8ffdc82fd66634)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&32107650ff9a0a0d97a1caa15bd126d2f6cd0462)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&48190252a660e91d14ffe40eca126409)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
-LIPS Scheme (lisp dialect) implementation written in JavaScript,
-it have few extensions that make working with JavaScript easier in Scheme.
+LISP is Powerful LISP based on Scheme dialect and R5RS specification.
+LIPS is created in JavaScript and work in Browser and Node.js.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
 ## Key features
 
-* Full lisp macros, backquote and macroexpand,
-* Functions in lips are normal JavaScript functions,
+* Full Lisp macros, backquote and macroexpand,
+* Scheme Hygienic Macros with `sytnax-rules`,
+* Functions in LIPS are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Promises are treated as values they resolve to (so async code look like sync - like auto `async/await`),
-* Library agnostic - you can use it with any library,
+* Library agnostic - you can use it with any JavaScript library,
+* Almost no dependencies (only bn.js for big integers),
 * Easy extension using JavaScript using Macros or functions,
+* Parser symbol transformers allow to add new syntax,
 * RegExp-es are first class objects,
+* JavaScript object literals with `&(:foo 10)`,
 * Builtin help system like in Emacs Lisp,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
@@ -54,14 +58,14 @@ Simplest way is to include the lips code in script tag:
 <script type="text/x-lips">
 (let ((what "world")
       (greet "hello"))
-   (display (concat "hello" " " what)))
+   (display (string-append "hello" " " what)))
 </script>
 ```
 
 or use `src` attribute:
 
 ```html
-<script type="text/x-lips" src="example.lips"></script>
+<script type="text/x-scheme" src="example.lips"></script>
 ```
 
 Running programmatically:
@@ -93,8 +97,18 @@ you can run interpreter from terminal:
 
 ```
 $ lips
-LIPS Interpreter (Simple Scheme like Lisp)
-Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
+  __                    __
+ / /  _    _  ___  ___  \ \
+| |  | |  | || . \/ __>  | |
+| |  | |_ | ||  _/\__ \  | |
+| |  |___||_||_|  <___/  | |
+ \_\                    /_/
+
+LIPS Scheme Interpreter DEV (2020-04-15)
+Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
+
+Type (env) to see environment with functions macros and variables.
+You can also use (help name) to display help for specic function or macro.
 
 lips> (define (square x)
 ...     (* x x))
@@ -108,7 +122,7 @@ One feature of LIPS REPL is that it auto indent the lines when you press enter a
 You can also run code as string with:
 
 ```
-lips -c '(let ((what "World")) (display (concat "Hello " what)))'
+lips -c '(let ((what "World")) (display (string-append "Hello " what)))'
 ```
 
 and you can run a file using:
@@ -116,7 +130,7 @@ and you can run a file using:
 ```
 cat > foo.lips <<EOF
 (let ((what "World"))
-  (display (concat "Hello " what)))
+  (display (string-append "Hello " what)))
 EOF
 
 lips foo.lips
@@ -128,7 +142,7 @@ You can also write executable files that use lips shebang
 cat > foo.lips <<EOF
 #!/usr/bin/env lips
 (let ((what "World"))
-  (display (concat "Hello " what)))
+  (display (string-append "Hello " what)))
 EOF
 chmod a+x foo.lips
 foo.lips
@@ -147,4 +161,4 @@ EOF
 
 Released under [MIT](http://opensource.org/licenses/MIT) license
 
-Copyright (c) 2018-2019 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2020 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)

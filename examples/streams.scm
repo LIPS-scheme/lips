@@ -3,8 +3,8 @@
 ;; Reference:
 ;; http://people.cs.aau.dk/~normark/prog3-03/html/notes/eval-order_themes-delay-stream-section.html
 ;;
-;; This file is part of the LIPS - Simple lisp in JavaScript
-;; Copyriht (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
+;; This file is part of the LIPS - Scheme based Powerful LISP in JavaScript
+;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
 
