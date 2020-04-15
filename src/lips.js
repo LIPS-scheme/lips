@@ -3539,6 +3539,47 @@ You can also use (help name) to display help for specic function or macro.
             standard output (by default it's console but it can be defined
             it user code)`),
         // ------------------------------------------------------------------
+        'format': doc(function format(str, ...args) {
+            typecheck('format', str, 'string');
+            const re = /(~[as%~])/g;
+            let m = str.match(/(~[as])/g);
+            if (m && m.length > args.length) {
+                throw new Error('Not enough arguments');
+            }
+            var i = 0;
+            var repr = this.get('repr');
+            str = str.replace(re, (x) => {
+                const chr = x[1];
+                if (chr === '~') {
+                    return '~';
+                } else if (chr === '%') {
+                    return '\n';
+                } else {
+                    const arg = args[i++];
+                    if (chr === 'a') {
+                        return this.get('repr')(arg);
+                    } else {
+                        return this.get('repr')(arg, true);
+                    }
+                }
+            });
+            m = str.match(/~([\S])/);
+            if (m) {
+                throw new Error(`format: Unrecognized escape seqence ${m[1]}`);
+            }
+            return str;
+        }, `(format string n1 n2 ...)
+
+            Function accepts string template and replacing any escape sequences
+            by arguments:
+
+            * ~a value as if printed with display
+            * ~s value as if printed with write
+            * ~% newline character
+            * ~~ literal tilde '~' is inserted
+
+            if there missing arguments or other escape character it throw exception.`),
+        // ------------------------------------------------------------------
         display: doc(function(arg, port = null) {
             if (port === null) {
                 port = this.get('stdout');
