@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 15 Apr 2020 16:01:43 +0000
+ * build: Wed, 15 Apr 2020 16:18:57 +0000
  */
 (function () {
 	'use strict';
@@ -8040,7 +8040,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 15 Apr 2020 16:01:43 +0000',
+	    date: 'Wed, 15 Apr 2020 16:18:57 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

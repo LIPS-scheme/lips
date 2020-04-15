@@ -4,6 +4,7 @@ VERSION={{VERSION}}
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 YEAR=`date +%Y`
+DATE_SHORT=`date +%Y-%M-%d`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
@@ -44,12 +45,13 @@ Makefile: templates/Makefile
 package.json: templates/package.json .$(VERSION)
 	$(SED) -e "s/{{VER}}/"$(VERSION)"/" templates/package.json > package.json || true
 
-README.md: templates/README.md .$(VERSION)
+README.md: templates/README.md dist/lips.js .$(VERSION)
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \
 	"s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{YEAR}}/${YEAR}/g" \
-	-e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md || \
+	-e "s/{{DATE}}/${DATE_SHORT}/" -e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md || \
 	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{YEAR}}/${YEAR}/g" \
-	-e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md
+	-e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" -e "s/{{DATE}}/${DATE_SHORT}/" \
+	< templates/README.md > README.md
 
 .$(VERSION): Makefile
 	touch .$(VERSION)

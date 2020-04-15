@@ -97,8 +97,18 @@ you can run interpreter from terminal:
 
 ```
 $ lips
-LIPS Interpreter (Simple Scheme like Lisp)
-Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
+  __                    __
+ / /  _    _  ___  ___  \ \
+| |  | |  | || . \/ __>  | |
+| |  | |_ | ||  _/\__ \  | |
+| |  |___||_||_|  <___/  | |
+ \_\                    /_/
+
+LIPS Scheme Interpreter {{VER}} ({{DATE}})
+Copyright (c) 2018-{{YEAR}} Jakub T. Jankiewicz <https://jcubic.pl/me>
+
+Type (env) to see environment with functions macros and variables.
+You can also use (help name) to display help for specic function or macro.
 
 lips> (define (square x)
 ...     (* x x))
@@ -107,7 +117,8 @@ lips> (square 10)
 lips>
 ```
 
-One feature of LIPS REPL is that it auto indent the lines when you press enter and didn't finish the code.
+One feature of LIPS REPL is that it auto indent the lines when you press enter
+and didn't finish the code.
 
 You can also run code as string with:
 
@@ -126,26 +137,20 @@ EOF
 lips foo.lips
 ```
 
-You can also write executable files that use lips shebang
+You can also write executable files that use lips using shebang (SRFI-22)
 
 ```
-cat > foo.lips <<EOF
+$ cat foo.scm
 #!/usr/bin/env lips
+
 (let ((what "World"))
   (display (string-append "Hello " what)))
-EOF
-chmod a+x foo.lips
-foo.lips
+
+$ chmod a+x foo.lips
+$ ./foo.scm
 ```
 
-```
-cat <<EOF
-something
-EOF
-```
-
-> if just example of using cat to create multiline file from bash, you should use proper editor for
-> writing files.
+Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
 ## License
 

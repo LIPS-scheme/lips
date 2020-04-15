@@ -1,7 +1,7 @@
 # [LIPS is Pretty Simple](https://jcubic.github.io/lips/) - Scheme based Powerful LISP
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&32107650ff9a0a0d97a1caa15bd126d2f6cd0462)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&2c8404e8ace774a51e44208ef24c9c450107c5bd)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&48190252a660e91d14ffe40eca126409)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -104,7 +104,7 @@ $ lips
 | |  |___||_||_|  <___/  | |
  \_\                    /_/
 
-LIPS Scheme Interpreter DEV (2020-04-15)
+LIPS Scheme Interpreter DEV (2020-18-15)
 Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.
@@ -117,7 +117,8 @@ lips> (square 10)
 lips>
 ```
 
-One feature of LIPS REPL is that it auto indent the lines when you press enter and didn't finish the code.
+One feature of LIPS REPL is that it auto indent the lines when you press enter
+and didn't finish the code.
 
 You can also run code as string with:
 
@@ -136,26 +137,20 @@ EOF
 lips foo.lips
 ```
 
-You can also write executable files that use lips shebang
+You can also write executable files that use lips using shebang (SRFI-22)
 
 ```
-cat > foo.lips <<EOF
+$ cat foo.scm
 #!/usr/bin/env lips
+
 (let ((what "World"))
   (display (string-append "Hello " what)))
-EOF
-chmod a+x foo.lips
-foo.lips
+
+$ chmod a+x foo.lips
+$ ./foo.scm
 ```
 
-```
-cat <<EOF
-something
-EOF
-```
-
-> if just example of using cat to create multiline file from bash, you should use proper editor for
-> writing files.
+Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
 ## License
 
