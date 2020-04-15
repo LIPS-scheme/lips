@@ -224,6 +224,10 @@
   (object-expander expr))
 
 ;; -----------------------------------------------------------------------------
+;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
+;; -----------------------------------------------------------------------------
+(add-special! "&" 'make-object lips.specials.SPLICE)
+;; -----------------------------------------------------------------------------
 (define (alist->assign desc . sources)
   "(alist->assign alist . list-of-alists)
 

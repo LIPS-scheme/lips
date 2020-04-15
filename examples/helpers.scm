@@ -66,6 +66,7 @@
   (let ((pair (assoc key alist)))
     (if (pair? pair) (cdr pair) false)))
 
+;; ---------------------------------------------------------------------------------------
 (define (plain-object? x)
   "(plain-object? x)
 

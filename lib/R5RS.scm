@@ -21,7 +21,17 @@
 
 (define #f false)
 (define #t true)
-
+;; -----------------------------------------------------------------------------
+(define string-append concat)
+(define = ==)
+(define remainder %)
+(define -inf.0 (.. Number.NEGATIVE_INFINITY))
+(define +inf.0 (.. Number.POSITIVE_INFINITY))
+(define procedure? function?)
+(define print display) ;; old function
+(define expt **)
+(define list->vector list->array)
+(define vector->list array->list)
 ;; -----------------------------------------------------------------------------
 (define-macro (define-symbol-macro type spec . rest)
   "(define-symbol-macro type (name . args) . body)
@@ -39,6 +49,8 @@
                                                (symbol->string type))))
         (define-macro (,name ,@args) ,@rest))))
 
+;; -----------------------------------------------------------------------------
+;; Vector literals syntax using parser symbol macros
 ;; -----------------------------------------------------------------------------
 (define-symbol-macro SPLICE (vector "#" . arg)
   "(make-vector (1 2 3))
@@ -66,9 +78,6 @@
             ((pair? a) (and (null? a) (null? b)))
             (else (eq? a b)))
       false))
-
-;; -----------------------------------------------------------------------------
-(define = ==)
 
 ;; -----------------------------------------------------------------------------
 (define (equal? a b)
@@ -155,9 +164,6 @@
   (/ a b))
 
 ;; -----------------------------------------------------------------------------
-(define remainder %)
-
-;; -----------------------------------------------------------------------------
 (define (number->string x . rest)
   "(number->string x [radix])
 
@@ -191,10 +197,6 @@
   (typecheck "vector-set!" vector "array" 1)
   (typecheck "vector-set!" i "number" 2)
   (set-obj! vector i obj))
-
-;; -----------------------------------------------------------------------------
-(define -inf.0 (.. Number.NEGATIVE_INFINITY))
-(define +inf.0 (.. Number.POSITIVE_INFINITY))
 
 ;; -----------------------------------------------------------------------------
 (define (list? x)
@@ -298,9 +300,6 @@
       n))
 
 ;; -----------------------------------------------------------------------------
-(define procedure? function?)
-
-;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
 (define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
 
@@ -368,9 +367,6 @@
 
    Function return true if value is false and false otherwise."
   (if x false true))
-
-;; -----------------------------------------------------------------------------
-(define print display)
 
 ;; -----------------------------------------------------------------------------
 (define (rationalize number tolerance)
@@ -459,15 +455,6 @@
 
                Function return pair from alist that match given key using eqv? check."
               (curry %assoc/search eqv?)))
-
-;; -----------------------------------------------------------------------------
-(define expt **)
-
-;; -----------------------------------------------------------------------------
-(define list->vector list->array)
-
-;; -----------------------------------------------------------------------------
-(define vector->list array->list)
 
 ;; -----------------------------------------------------------------------------
 ;; STRING FUNCTIONS
