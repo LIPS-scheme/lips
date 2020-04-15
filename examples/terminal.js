@@ -42,14 +42,17 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         '__help': lips.env.get('help')
     });
     // -------------------------------------------------------------------------
+    // display+repr(true) is same as write but that defined in external file
+    // -------------------------------------------------------------------------
     var display = interpreter.get('display');
+    var repr = interpreter.get('repr');
     var term = jQuery(selector).terminal(function(code, term) {
         // format before executing mainly for strings in function docs
         code = new lips.Formatter(code).format();
         return interpreter.exec(code, dynamic).then(function(ret) {
             ret.forEach(function(ret) {
                 if (ret !== undefined) {
-                    display(ret);
+                    display(repr(ret, true));
                 }
             });
         }).catch(function(e) {

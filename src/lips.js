@@ -3557,9 +3557,9 @@ You can also use (help name) to display help for specic function or macro.
                 } else {
                     const arg = args[i++];
                     if (chr === 'a') {
-                        return this.get('repr')(arg);
+                        return repr(arg);
                     } else {
-                        return this.get('repr')(arg, true);
+                        return repr(arg, true);
                     }
                 }
             });

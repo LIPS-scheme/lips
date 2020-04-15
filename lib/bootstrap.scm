@@ -1,6 +1,6 @@
 ;; this file contain essential functions and macros for LIPS
 ;;
-;; This file is part of the LIPS - Scheme implementation in JavaScript
+;; This file is part of the LIPS - Scheme based Powerful LISP in JavaScript
 ;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 

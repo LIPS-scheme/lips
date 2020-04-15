@@ -4,7 +4,7 @@
 ;; Reference:
 ;; https://schemers.org/Documents/Standards/R5RS/HTML/
 ;;
-;; This file is part of the LIPS - Simple lisp in JavaScript
+;; This file is part of the LIPS - Scheme based Powerful LISP in JavaScript
 ;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
@@ -25,10 +25,10 @@
 (define string-append concat)
 (define = ==)
 (define remainder %)
-(define -inf.0 (.. Number.NEGATIVE_INFINITY))
-(define +inf.0 (.. Number.POSITIVE_INFINITY))
+(define -inf.0 Number.NEGATIVE_INFINITY)
+(define +inf.0 Number.POSITIVE_INFINITY)
 (define procedure? function?)
-(define print display) ;; old function
+(define print display) ;; old LIPS function
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
@@ -645,23 +645,40 @@
 
 ;; -----------------------------------------------------------------------------
 (define (char-upcase char)
+  "(char-upcase char)
+
+   Create uppercase version of the character."
   (typecheck "char-upcase" char "character")
   (char.toUpperCase))
 
 ;; -----------------------------------------------------------------------------
 (define (char-downcase char)
+  "(char-downcase chr)
+
+   Create lowercase version of the character."
   (typecheck "char-upcase" char "character")
   (char.toLowerCase))
 
 ;; -----------------------------------------------------------------------------
-(define (newline) (display "\n"))
+(define (newline)
+  "(newline)
+
+   Write newline character to standard output."
+  (display "\n"))
 
 ;; -----------------------------------------------------------------------------
 (define (write obj . rest)
+  "(write obj [port])
+
+   Write object to standard output or give port. For strings it will include
+   wrap in quotes."
   (let ((port (if (null? rest) (current-output-port) (car rest))))
-    (port.write (repr obj))))
+    (port.write (repr obj true))))
 
 ;; -----------------------------------------------------------------------------
 (define (write-char char . rest)
+  "(write-char char [port])
+
+   Write single character to given port using write function."
   (typecheck "write-char" char "character")
   (apply write (cons (char.valueOf) rest)))
