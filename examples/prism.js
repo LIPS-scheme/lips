@@ -21,4 +21,7 @@ Prism.languages.insertBefore('scheme', 'string', {
    }
 });
 // and define-macro as keyword (update original regex) don't need most of it
-Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:\*|rec)?(?:-values)?|else|if|cond|begin|delay(?:-force)?|parameterize|define-macro|guard|set!|(?:quasi-)?quote|syntax-rules)(?=[()\s])/;
+//Prism.languages.scheme.keyword.pattern = new RegExp(Prism.languages.scheme.keyword.pattern.source.replace(/\)\(\?\=\[\(\)\\\s\]\)/g, 'let-env|define-macro|try|catch)(?=[()\s])'));
+
+
+Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:(?:\*|rec)?(?:-values)?|-syntax|rec-syntax)|else|if|cond|begin|delay(?:-force)?|parameterize|guard|set!|(?:quasi-)?quote|syntax-(?:case|rules)|let-env|try|catch|define-macro)(?=[()\s]|$)/;
