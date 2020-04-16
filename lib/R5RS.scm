@@ -395,7 +395,7 @@
   "(memq obj list)
 
    Function return first object in the list that match using eq? function."
-  (typecheck "memq" list "pair")
+  (typecheck "memq" list (vector "nil" "pair"))
   (%mem/search car eq? obj list ))
 
 ;; -----------------------------------------------------------------------------
@@ -403,7 +403,7 @@
   "(memv obj list)
 
    Function return first object in the list that match using eqv? function."
-  (typecheck "memv" list "pair")
+  (typecheck "memv" list (vector "nil" "pair"))
   (%mem/search car eqv? obj list))
 
 ;; -----------------------------------------------------------------------------
@@ -411,7 +411,7 @@
   "(member obj list)
 
    Function return first object in the list that match using equal? function."
-  (typecheck "member" list "pair")
+  (typecheck "member" list (vector "nil" "pair"))
   (%mem/search car equal? obj list))
 
 ;; -----------------------------------------------------------------------------
@@ -429,7 +429,7 @@
 
    Generic function that used in assoc functions with defined comparator
    function."
-  (typecheck "assoc" alist "pair")
+  (typecheck "assoc" alist (vector "nil" "pair"))
   (let ((ret (%mem/search (%assoc/acessor "assoc") op obj alist)))
     (if ret
         (car ret)
