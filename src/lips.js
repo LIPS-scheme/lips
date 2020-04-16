@@ -3227,25 +3227,21 @@ You can also use (help name) to display help for specic function or macro.
     // :: function create frame environment for usage in functions
     // -------------------------------------------------------------------------
     Environment.prototype.newFrame = function(fn, args) {
-        var scope = this.inherit('__frame__');
-        scope.set('parent.frame', function(n = 1) {
-            if (n === 0) {
-                return scope;
-            }
-            if (!(scope.parent instanceof Environment)) {
+        var frame = this.inherit('__frame__');
+        frame.set('parent.frame', doc(function(n = 1) {
+            var scope = frame.parent;
+            if (!(scope instanceof Environment)) {
                 return nil;
             }
-            var parent_frame = scope.parent.get('parent.frame', {
-                throwError: false
-            });
-            if (typeof parent_frame === 'function') {
-                return parent_frame(n - 1);
+            if (n <= 0) {
+                return scope;
             }
-            return nil;
-        });
+            var parent_frame = scope.get('parent.frame');
+            return parent_frame(n - 1);
+        }, global_env.env['parent.frame'].__doc__));
         args.callee = fn;
-        scope.set('arguments', args);
-        return scope;
+        frame.set('arguments', args);
+        return frame;
     };
     // -------------------------------------------------------------------------
     Environment.prototype._lookup = function(symbol) {
@@ -3745,7 +3741,16 @@ You can also use (help name) to display help for specic function or macro.
         // ------------------------------------------------------------------
         load: doc(function(file) {
             typecheck('load', file, 'string');
-            var env = this.get('**interaction-environment**');
+            var g_env = this;
+            if (g_env.name === '__frame__') {
+                g_env = g_env.parent;
+            }
+            var env;
+            if (g_env === global_env) {
+                env = g_env;
+            } else {
+                env = this.get('**interaction-environment**');
+            }
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
                     require('fs').readFile(file.valueOf(), function(err, data) {
@@ -3836,16 +3841,20 @@ You can also use (help name) to display help for specic function or macro.
             evaluate and return true expression if not it evaluate and return
             false expression`),
         // ------------------------------------------------------------------
-        '%let-env': new Macro('%let-env', function(code, options = {}) {
+        'let-env': new Macro('let-env', function(code, options = {}) {
             const { dynamic_scope, error } = options;
-            typecheck('%let-env', code, 'pair');
+            typecheck('let-env', code, 'pair');
             var ret = evaluate(code.car, { env: this, dynamic_scope, error });
             return unpromise(ret, function(value) {
+                if (!(value instanceof Environment)) {
+                    throw new Error('let-env: First argument need to be ' +
+                                    'environment');
+                }
                 return evaluate(Pair(LSymbol('begin'), code.cdr), {
                     env: value, dynamic_scope, error
                 });
             });
-        }, `(%let-env env . body)
+        }, `(let-env env . body)
 
             Special macro that evaluate body in context of given environment
             object.`),
@@ -3996,6 +4005,13 @@ You can also use (help name) to display help for specic function or macro.
 
             Function return current environement.`),
         // ------------------------------------------------------------------
+        'parent.frame': doc(function() {
+            return nil;
+        }, `(parent.frame)
+
+            Return parent environment if called from inside function.
+            If no parent frame found it return nil.`),
+        // ------------------------------------------------------------------
         'eval': doc(function(code, env) {
             typecheck('eval', code, ['symbol', 'pair', 'array']);
             env = env || this;
@@ -4065,9 +4081,6 @@ You can also use (help name) to display help for specic function or macro.
                     var _args = args.slice();
                     _args.callee = lambda;
                     _args.env = env;
-                    env.set('parent.frame', function() {
-                        return nil;
-                    });
                     env.set('arguments', _args);
                 }
                 if (name instanceof LSymbol || name !== nil) {
@@ -5002,14 +5015,9 @@ You can also use (help name) to display help for specic function or macro.
                 return nil;
             }
             var args = lists.map(l => l.car);
+            var parent_frame = this.get('parent.frame');
             var env = this.newFrame(fn, args);
-            var parentFrame = env.get('parent.frame', { throwError: false });
-            if (typeof parentFrame === 'undefined') {
-                parentFrame = function() {
-                    return nil;
-                };
-            }
-            env.set('parent.frame', parentFrame);
+            env.set('parent.frame', parent_frame);
             return unpromise(fn.call(env, ...args), (head) => {
                 return unpromise(map.call(this, fn, ...lists.map(l => l.cdr)), (rest) => {
                     return new Pair(head, rest);

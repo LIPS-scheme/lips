@@ -166,13 +166,13 @@
   "(parent.frames)
 
    Funcion return list of environments from parent frames (lambda function calls)"
-  (let iter ((result '()) (frame (parent.frame 2)))
-     (if (null? frame)
-         result
-         (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
-            (if (function? parent.frame)
-                (iter (cons frame result) (parent.frame))
-                result)))))
+  (let iter ((result '()) (frame (parent.frame 1)))
+    (if (or (null? frame) (eq? (interaction-environment) frame))
+        result
+        (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
+          (if (function? parent.frame)
+              (iter (cons frame result) (parent.frame 0))
+              result)))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (wait time . expr)
@@ -370,7 +370,7 @@
   "(current-output-port)
 
    Function return default stdout port."
-  (%let-env (interaction-environment)
+  (let-env (interaction-environment)
      stdout))
 
 ;; -----------------------------------------------------------------------------
@@ -378,5 +378,5 @@
   "current-input-port)
 
    Function return default stdin port."
-  (%let-env (interaction-environment)
+  (let-env (interaction-environment)
      stdin))

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 15 Apr 2020 17:01:40 +0000
+ * build: Thu, 16 Apr 2020 07:17:16 +0000
  */
 (function () {
 	'use strict';
@@ -5062,31 +5062,25 @@
 
 
 	  Environment.prototype.newFrame = function (fn, args) {
-	    var scope = this.inherit('__frame__');
-	    scope.set('parent.frame', function () {
+	    var frame = this.inherit('__frame__');
+	    frame.set('parent.frame', doc(function () {
 	      var n = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : 1;
+	      var scope = frame.parent;
 
-	      if (n === 0) {
-	        return scope;
-	      }
-
-	      if (!(scope.parent instanceof Environment)) {
+	      if (!(scope instanceof Environment)) {
 	        return nil;
 	      }
 
-	      var parent_frame = scope.parent.get('parent.frame', {
-	        throwError: false
-	      });
-
-	      if (typeof parent_frame === 'function') {
-	        return parent_frame(n - 1);
+	      if (n <= 0) {
+	        return scope;
 	      }
 
-	      return nil;
-	    });
+	      var parent_frame = scope.get('parent.frame');
+	      return parent_frame(n - 1);
+	    }, global_env.env['parent.frame'].__doc__));
 	    args.callee = fn;
-	    scope.set('arguments', args);
-	    return scope;
+	    frame.set('arguments', args);
+	    return frame;
 	  }; // -------------------------------------------------------------------------
 
 
@@ -5624,7 +5618,19 @@
 	    // ------------------------------------------------------------------
 	    load: doc(function (file) {
 	      typecheck('load', file, 'string');
-	      var env = this.get('**interaction-environment**');
+	      var g_env = this;
+
+	      if (g_env.name === '__frame__') {
+	        g_env = g_env.parent;
+	      }
+
+	      var env;
+
+	      if (g_env === global_env) {
+	        env = g_env;
+	      } else {
+	        env = this.get('**interaction-environment**');
+	      }
 
 	      if (typeof this.get('global', {
 	        throwError: false
@@ -5726,24 +5732,28 @@
 	      return unpromise(cond, resolve);
 	    }), "(if cond true-expr false-expr)\n\n            Macro evaluate condition expression and if the value is true, it\n            evaluate and return true expression if not it evaluate and return\n            false expression"),
 	    // ------------------------------------------------------------------
-	    '%let-env': new Macro('%let-env', function (code) {
+	    'let-env': new Macro('let-env', function (code) {
 	      var options = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
 	      var dynamic_scope = options.dynamic_scope,
 	          error = options.error;
-	      typecheck('%let-env', code, 'pair');
+	      typecheck('let-env', code, 'pair');
 	      var ret = evaluate(code.car, {
 	        env: this,
 	        dynamic_scope: dynamic_scope,
 	        error: error
 	      });
 	      return unpromise(ret, function (value) {
+	        if (!(value instanceof Environment)) {
+	          throw new Error('let-env: First argument need to be ' + 'environment');
+	        }
+
 	        return evaluate(Pair(LSymbol('begin'), code.cdr), {
 	          env: value,
 	          dynamic_scope: dynamic_scope,
 	          error: error
 	        });
 	      });
-	    }, "(%let-env env . body)\n\n            Special macro that evaluate body in context of given environment\n            object."),
+	    }, "(let-env env . body)\n\n            Special macro that evaluate body in context of given environment\n            object."),
 	    // ------------------------------------------------------------------
 	    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy and next value can access to\n             previous values/names."),
 	    // ---------------------------------------------------------------------
@@ -5847,6 +5857,10 @@
 	      return this;
 	    }, "(current-environment)\n\n            Function return current environement."),
 	    // ------------------------------------------------------------------
+	    'parent.frame': doc(function () {
+	      return nil;
+	    }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
+	    // ------------------------------------------------------------------
 	    'eval': doc(function (code, env) {
 	      var _this6 = this;
 
@@ -5937,9 +5951,6 @@
 
 	          _args.callee = lambda;
 	          _args.env = env;
-	          env.set('parent.frame', function () {
-	            return nil;
-	          });
 	          env.set('arguments', _args);
 	        }
 
@@ -6860,18 +6871,9 @@
 	      var args = lists.map(function (l) {
 	        return l.car;
 	      });
+	      var parent_frame = this.get('parent.frame');
 	      var env = this.newFrame(fn, args);
-	      var parentFrame = env.get('parent.frame', {
-	        throwError: false
-	      });
-
-	      if (typeof parentFrame === 'undefined') {
-	        parentFrame = function parentFrame() {
-	          return nil;
-	        };
-	      }
-
-	      env.set('parent.frame', parentFrame);
+	      env.set('parent.frame', parent_frame);
 	      return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
 	        return unpromise(map.call.apply(map, [_this8, fn].concat(toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
@@ -8081,7 +8083,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 15 Apr 2020 17:01:40 +0000',
+	    date: 'Thu, 16 Apr 2020 07:17:16 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
