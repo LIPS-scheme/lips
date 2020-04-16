@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 16 Apr 2020 11:36:25 +0000
+ * build: Thu, 16 Apr 2020 18:53:01 +0000
  */
 (function () {
 	'use strict';
@@ -1919,7 +1919,7 @@
 	    offset: 0,
 	    indent: 2,
 	    exceptions: {
-	      specials: [/^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/, 'let-env', 'syntax-rules'],
+	      specials: [/^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/, 'let-env', 'syntax-rules', 'try', 'catch'],
 	      shift: {
 	        1: ['&', '#']
 	      }
@@ -2053,7 +2053,9 @@
 	          if (shift !== -1) {
 	            exeption = shift;
 	          }
-	        } else {
+	        }
+
+	        if (exeption === -1) {
 	          exeption = Formatter.exception_shift(sexp[1].token, settings);
 	        }
 
@@ -8112,7 +8114,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 16 Apr 2020 11:36:25 +0000',
+	    date: 'Thu, 16 Apr 2020 18:53:01 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

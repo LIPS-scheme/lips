@@ -825,7 +825,7 @@ You can also use (help name) to display help for specic function or macro.
         exceptions: {
             specials: [
                 /^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/,
-                'let-env', 'syntax-rules'
+                'let-env', 'syntax-rules', 'try', 'catch'
             ],
             shift: {
                 1: ['&', '#']
@@ -916,7 +916,8 @@ You can also use (help name) to display help for specic function or macro.
                     if (shift !== -1) {
                         exeption = shift;
                     }
-                } else {
+                }
+                if (exeption === -1) {
                     exeption = Formatter.exception_shift(sexp[1].token, settings);
                 }
                 if (exeption !== -1) {
