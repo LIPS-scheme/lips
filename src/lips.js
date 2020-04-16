@@ -1536,11 +1536,7 @@ You can also use (help name) to display help for specic function or macro.
                     arr.push(' . ');
                     arr.push(this.cycles.cdr);
                 } else {
-                    var name;
-                    if (this.cycles && this.cycles.cdr) {
-                        name = this.cycles.cdr;
-                    }
-                    var cdr = this.cdr.toString(name, quote).replace(/^\(|\)$/g, '');
+                    var cdr = this.cdr.toString(quote).replace(/^\(|\)$/g, '');
                     arr.push(' ');
                     arr.push(cdr);
                 }
