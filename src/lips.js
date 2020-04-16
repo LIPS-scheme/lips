@@ -1442,7 +1442,7 @@ You can also use (help name) to display help for specic function or macro.
             var plain_object = typeof obj === 'object' && constructor === Object;
             if (plain_object) {
                 return '&(' + Object.keys(obj).map(key => {
-                    return `:${key} => ${toString(obj[key], quote)}`;
+                    return `:${key} ${toString(obj[key], quote)}`;
                 }).join(' ') + ')';
             }
             var name;

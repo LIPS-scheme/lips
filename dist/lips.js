@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 16 Apr 2020 09:35:56 +0000
+ * build: Thu, 16 Apr 2020 09:51:52 +0000
  */
 (function () {
 	'use strict';
@@ -2690,7 +2690,7 @@
 
 	      if (plain_object) {
 	        return '&(' + Object.keys(obj).map(function (key) {
-	          return ":".concat(key, " => ").concat(toString(obj[key], quote));
+	          return ":".concat(key, " ").concat(toString(obj[key], quote));
 	        }).join(' ') + ')';
 	      }
 
@@ -8112,7 +8112,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 16 Apr 2020 09:35:56 +0000',
+	    date: 'Thu, 16 Apr 2020 09:51:52 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
