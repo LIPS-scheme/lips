@@ -1392,40 +1392,76 @@ You can also use (help name) to display help for specic function or macro.
     };
 
     // ----------------------------------------------------------------------
-    function toString(value) {
-        if (typeof value === 'function') {
-            return '<#procedure ' + (value.name || 'anonymous') + '>';
-        } else if (typeof value === 'string' || value instanceof LString) {
-            return JSON.stringify(value.valueOf()).replace(/\\n/g, '\n');
-        } else if (isPromise(value)) {
-            return '<#Promise>';
-        } else if (value instanceof LSymbol ||
-                   value instanceof LNumber ||
-                   value instanceof RegExp ||
-                   value instanceof Pair ||
-                   value instanceof LCharacter ||
-                   value === nil) {
-            return value.toString();
-        } else if (value instanceof Array) {
-            return '#(' + value.map(toString).join(' ') + ')';
-        } else if (typeof value === 'object') {
-            if (value === null) {
-                return 'null';
+    function toString(obj, quote) {
+        if (typeof jQuery !== 'undefined' &&
+            obj instanceof jQuery.fn.init) {
+            return '<#jQuery(' + obj.length + ')>';
+        }
+        if (obj === true) {
+            return '#t';
+        }
+        if (obj === false) {
+            return '#f';
+        }
+        if (typeof obj === 'undefined') {
+            return '<#undefined>';
+        }
+        if (obj instanceof Pair) {
+            return obj.toString(quote);
+        }
+        var types = [RegExp, Nil, LSymbol, LNumber, LCharacter];
+        for (let type of types) {
+            if (obj instanceof type) {
+                return obj.toString();
             }
-            var constructor = value.constructor;
-            if (typeof value === 'object' && constructor === Object) {
-                return '&(' + Object.keys(value).map(key => {
-                    return `"${key}": ${toString(value[key])}`;
+        }
+        if (typeof obj === 'function') {
+            if (isNativeFunction(obj)) {
+                return '<#procedure(native)>';
+            }
+            return '<#procedure>';
+        }
+        if (obj instanceof Array) {
+            return '#(' + obj.map(x => toString(x, true)).join(' ') + ')';
+        }
+        if (obj instanceof LString) {
+            obj = obj.toString();
+        }
+        if (obj === null || (typeof obj === 'string' && quote)) {
+            return JSON.stringify(obj).replace(/\\n/g, '\n');
+        }
+        if (root.HTMLElement && obj instanceof root.HTMLElement) {
+            return `<#HTMLElement(${obj.tagName.toLowerCase()})>`;
+        }
+        if (typeof obj === 'object') {
+            // user defined representation
+            if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
+                return obj.toString().valueOf();
+            }
+            var constructor = obj.constructor;
+            var plain_object = typeof obj === 'object' && constructor === Object;
+            if (plain_object) {
+                return '&(' + Object.keys(obj).map(key => {
+                    return `:${key} => ${toString(obj[key], quote)}`;
                 }).join(' ') + ')';
             }
-            var name = value.constructor.name;
-            if (name === 'Object') {
-                return JSON.stringify(value);
+            var name;
+            if (typeof constructor.__className === 'string') {
+                name = constructor.__className;
+            } else if (type(obj) === 'instance') {
+                name = 'instance';
+            } else {
+                name = constructor.name;
             }
-            return '<#object(' + value.constructor.name + ')>';
-        } else if (typeof value !== 'undefined') {
-            return value;
+            if (name !== '') {
+                return '<#' + name + '>';
+            }
+            return '<#Object>';
         }
+        if (typeof obj !== 'string') {
+            return obj.toString();
+        }
+        return obj;
     }
 
     // ----------------------------------------------------------------------------
@@ -1483,14 +1519,14 @@ You can also use (help name) to display help for specic function or macro.
     }
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toString = function() {
+    Pair.prototype.toString = function(quote) {
         var arr = ['('];
         if (this.car !== undefined) {
             var value;
             if (this.cycles && this.cycles.car) {
                 value = this.cycles.car;
             } else {
-                value = toString(this.car);
+                value = toString(this.car, quote);
             }
             if (value !== undefined) {
                 arr.push(value);
@@ -1504,12 +1540,12 @@ You can also use (help name) to display help for specic function or macro.
                     if (this.cycles && this.cycles.cdr) {
                         name = this.cycles.cdr;
                     }
-                    var cdr = this.cdr.toString(name).replace(/^\(|\)$/g, '');
+                    var cdr = this.cdr.toString(name, quote).replace(/^\(|\)$/g, '');
                     arr.push(' ');
                     arr.push(cdr);
                 }
             } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-                arr = arr.concat([' . ', toString(this.cdr)]);
+                arr = arr.concat([' . ', toString(this.cdr, quote)]);
             }
         }
         arr.push(')');
@@ -4662,74 +4698,8 @@ You can also use (help name) to display help for specic function or macro.
 
             Function return first found index of the pattern inside a string`),
         // ------------------------------------------------------------------
-        repr: doc(function string(obj, quote) {
-            if (typeof jQuery !== 'undefined' &&
-                obj instanceof jQuery.fn.init) {
-                return '<#jQuery(' + obj.length + ')>';
-            }
-            if (obj === true) {
-                return '#t';
-            }
-            if (obj === false) {
-                return '#f';
-            }
-            if (obj instanceof LNumber) {
-                return obj.toString();
-            }
-            if (typeof obj === 'undefined') {
-                return '<#undefined>';
-            }
-            var types = [RegExp, Nil, LSymbol, Pair, LCharacter];
-            for (let type of types) {
-                if (obj instanceof type) {
-                    return obj.toString();
-                }
-            }
-            if (typeof obj === 'function') {
-                if (isNativeFunction(obj)) {
-                    return '<#procedure(native)>';
-                }
-                return '<#procedure>';
-            }
-            if (obj instanceof Array) {
-                return '#(' + obj.map(x => string(x, true)).join(' ') + ')';
-            }
-            if (obj instanceof LString) {
-                obj = obj.toString();
-            }
-            if (obj === null || (typeof obj === 'string' && quote)) {
-                return JSON.stringify(obj).replace(/\\n/g, '\n');
-            }
-            if (root.HTMLElement && obj instanceof root.HTMLElement) {
-                return `<#HTMLElement(${obj.tagName.toLowerCase()})>`;
-            }
-            if (typeof obj === 'object') {
-                // user defined representation
-                if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
-                    return obj.toString().valueOf();
-                }
-                var constructor = obj.constructor;
-                var plain_object = typeof obj === 'object' && constructor === Object;
-                if (plain_object) {
-                    return toString(obj);
-                }
-                var name;
-                if (typeof constructor.__className === 'string') {
-                    name = constructor.__className;
-                } else if (type(obj) === 'instance') {
-                    name = 'instance';
-                } else {
-                    name = constructor.name;
-                }
-                if (name !== '') {
-                    return '<#' + name + '>';
-                }
-                return '<#Object>';
-            }
-            if (typeof obj !== 'string') {
-                return obj.toString();
-            }
-            return obj;
+        repr: doc(function repr(obj, quote) {
+            return toString(obj, quote);
         }, `(repr obj)
 
             Function return string LIPS representation of an object as string.`),
@@ -4750,6 +4720,7 @@ You can also use (help name) to display help for specic function or macro.
         }, `(env obj)
 
             Function return list values (functions and variables) inside environment.`),
+        // ------------------------------------------------------------------
         'new': doc(function(obj, ...args) {
             var instance = new (unbind(obj))(...args);
             Object.defineProperty(instance, '__instance__', {

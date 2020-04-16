@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 16 Apr 2020 09:09:53 +0000
+ * build: Thu, 16 Apr 2020 09:35:56 +0000
  */
 (function () {
 	'use strict';
@@ -2033,7 +2033,6 @@
 	    var sexp = previousSexp(tokens); // one character before S-Expression
 
 	    var before_sexpr = tokens[tokens.length - sexp.length - 1];
-	    console.log(before_sexpr);
 
 	    if (sexp && sexp.length) {
 	      if (sexp[0].line > 0) {
@@ -2623,40 +2622,100 @@
 	  }; // ----------------------------------------------------------------------
 
 
-	  function toString(value) {
-	    if (typeof value === 'function') {
-	      return '<#procedure ' + (value.name || 'anonymous') + '>';
-	    } else if (typeof value === 'string' || value instanceof LString) {
-	      return JSON.stringify(value.valueOf()).replace(/\\n/g, '\n');
-	    } else if (isPromise(value)) {
-	      return '<#Promise>';
-	    } else if (value instanceof LSymbol || value instanceof LNumber || value instanceof RegExp || value instanceof Pair || value instanceof LCharacter || value === nil) {
-	      return value.toString();
-	    } else if (value instanceof Array) {
-	      return '#(' + value.map(toString).join(' ') + ')';
-	    } else if (_typeof_1(value) === 'object') {
-	      if (value === null) {
-	        return 'null';
+	  function toString(obj, quote) {
+	    if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
+	      return '<#jQuery(' + obj.length + ')>';
+	    }
+
+	    if (obj === true) {
+	      return '#t';
+	    }
+
+	    if (obj === false) {
+	      return '#f';
+	    }
+
+	    if (typeof obj === 'undefined') {
+	      return '<#undefined>';
+	    }
+
+	    if (obj instanceof Pair) {
+	      return obj.toString(quote);
+	    }
+
+	    var types = [RegExp, Nil, LSymbol, LNumber, LCharacter];
+
+	    for (var _i2 = 0, _types = types; _i2 < _types.length; _i2++) {
+	      var _type2 = _types[_i2];
+
+	      if (obj instanceof _type2) {
+	        return obj.toString();
+	      }
+	    }
+
+	    if (typeof obj === 'function') {
+	      if (isNativeFunction(obj)) {
+	        return '<#procedure(native)>';
 	      }
 
-	      var constructor = value.constructor;
+	      return '<#procedure>';
+	    }
 
-	      if (_typeof_1(value) === 'object' && constructor === Object) {
-	        return '&(' + Object.keys(value).map(function (key) {
-	          return "\"".concat(key, "\": ").concat(toString(value[key]));
+	    if (obj instanceof Array) {
+	      return '#(' + obj.map(function (x) {
+	        return toString(x, true);
+	      }).join(' ') + ')';
+	    }
+
+	    if (obj instanceof LString) {
+	      obj = obj.toString();
+	    }
+
+	    if (obj === null || typeof obj === 'string' && quote) {
+	      return JSON.stringify(obj).replace(/\\n/g, '\n');
+	    }
+
+	    if (root.HTMLElement && obj instanceof root.HTMLElement) {
+	      return "<#HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
+	    }
+
+	    if (_typeof_1(obj) === 'object') {
+	      // user defined representation
+	      if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
+	        return obj.toString().valueOf();
+	      }
+
+	      var constructor = obj.constructor;
+	      var plain_object = _typeof_1(obj) === 'object' && constructor === Object;
+
+	      if (plain_object) {
+	        return '&(' + Object.keys(obj).map(function (key) {
+	          return ":".concat(key, " => ").concat(toString(obj[key], quote));
 	        }).join(' ') + ')';
 	      }
 
-	      var name = value.constructor.name;
+	      var name;
 
-	      if (name === 'Object') {
-	        return JSON.stringify(value);
+	      if (typeof constructor.__className === 'string') {
+	        name = constructor.__className;
+	      } else if (type(obj) === 'instance') {
+	        name = 'instance';
+	      } else {
+	        name = constructor.name;
 	      }
 
-	      return '<#object(' + value.constructor.name + ')>';
-	    } else if (typeof value !== 'undefined') {
-	      return value;
+	      if (name !== '') {
+	        return '<#' + name + '>';
+	      }
+
+	      return '<#Object>';
 	    }
+
+	    if (typeof obj !== 'string') {
+	      return obj.toString();
+	    }
+
+	    return obj;
 	  } // ----------------------------------------------------------------------------
 
 
@@ -2724,7 +2783,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  Pair.prototype.toString = function () {
+	  Pair.prototype.toString = function (quote) {
 	    var arr = ['('];
 
 	    if (this.car !== undefined$1) {
@@ -2733,7 +2792,7 @@
 	      if (this.cycles && this.cycles.car) {
 	        value = this.cycles.car;
 	      } else {
-	        value = toString(this.car);
+	        value = toString(this.car, quote);
 	      }
 
 	      if (value !== undefined$1) {
@@ -2751,12 +2810,12 @@
 	            name = this.cycles.cdr;
 	          }
 
-	          var cdr = this.cdr.toString(name).replace(/^\(|\)$/g, '');
+	          var cdr = this.cdr.toString(name, quote).replace(/^\(|\)$/g, '');
 	          arr.push(' ');
 	          arr.push(cdr);
 	        }
 	      } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-	        arr = arr.concat([' . ', toString(this.cdr)]);
+	        arr = arr.concat([' . ', toString(this.cdr, quote)]);
 	      }
 	    }
 
@@ -6542,98 +6601,8 @@
 	      return string.search(pattern);
 	    }, "(search pattern string)\n\n            Function return first found index of the pattern inside a string"),
 	    // ------------------------------------------------------------------
-	    repr: doc(function string(obj, quote) {
-	      if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
-	        return '<#jQuery(' + obj.length + ')>';
-	      }
-
-	      if (obj === true) {
-	        return '#t';
-	      }
-
-	      if (obj === false) {
-	        return '#f';
-	      }
-
-	      if (obj instanceof LNumber) {
-	        return obj.toString();
-	      }
-
-	      if (typeof obj === 'undefined') {
-	        return '<#undefined>';
-	      }
-
-	      var types = [RegExp, Nil, LSymbol, Pair, LCharacter];
-
-	      for (var _i2 = 0, _types = types; _i2 < _types.length; _i2++) {
-	        var _type2 = _types[_i2];
-
-	        if (obj instanceof _type2) {
-	          return obj.toString();
-	        }
-	      }
-
-	      if (typeof obj === 'function') {
-	        if (isNativeFunction(obj)) {
-	          return '<#procedure(native)>';
-	        }
-
-	        return '<#procedure>';
-	      }
-
-	      if (obj instanceof Array) {
-	        return '#(' + obj.map(function (x) {
-	          return string(x, true);
-	        }).join(' ') + ')';
-	      }
-
-	      if (obj instanceof LString) {
-	        obj = obj.toString();
-	      }
-
-	      if (obj === null || typeof obj === 'string' && quote) {
-	        return JSON.stringify(obj).replace(/\\n/g, '\n');
-	      }
-
-	      if (root.HTMLElement && obj instanceof root.HTMLElement) {
-	        return "<#HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
-	      }
-
-	      if (_typeof_1(obj) === 'object') {
-	        // user defined representation
-	        if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
-	          return obj.toString().valueOf();
-	        }
-
-	        var constructor = obj.constructor;
-	        var plain_object = _typeof_1(obj) === 'object' && constructor === Object;
-
-	        if (plain_object) {
-	          return toString(obj);
-	        }
-
-	        var name;
-
-	        if (typeof constructor.__className === 'string') {
-	          name = constructor.__className;
-	        } else if (type(obj) === 'instance') {
-	          name = 'instance';
-	        } else {
-	          name = constructor.name;
-	        }
-
-	        if (name !== '') {
-	          return '<#' + name + '>';
-	        }
-
-	        return '<#Object>';
-	      }
-
-	      if (typeof obj !== 'string') {
-	        return obj.toString();
-	      }
-
-	      return obj;
+	    repr: doc(function repr(obj, quote) {
+	      return toString(obj, quote);
 	    }, "(repr obj)\n\n            Function return string LIPS representation of an object as string."),
 	    // ------------------------------------------------------------------
 	    env: doc(function (env) {
@@ -6653,6 +6622,7 @@
 
 	      return result;
 	    }, "(env obj)\n\n            Function return list values (functions and variables) inside environment."),
+	    // ------------------------------------------------------------------
 	    'new': doc(function (obj) {
 	      for (var _len18 = arguments.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
 	        args[_key18 - 1] = arguments[_key18];
@@ -8142,7 +8112,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 16 Apr 2020 09:09:53 +0000',
+	    date: 'Thu, 16 Apr 2020 09:35:56 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
