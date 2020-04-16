@@ -822,10 +822,15 @@ You can also use (help name) to display help for specic function or macro.
     Formatter.defaults = {
         offset: 0,
         indent: 2,
-        specials: [
-            /^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/,
-            'let-env', 'syntax-rules'
-        ]
+        exceptions: {
+            specials: [
+                /^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/,
+                'let-env', 'syntax-rules'
+            ],
+            shift: {
+                1: ['&', '#']
+            }
+        }
     };
     Formatter.match = match;
     // ----------------------------------------------------------------------
@@ -836,10 +841,20 @@ You can also use (help name) to display help for specic function or macro.
         if (typeof options === 'undefined') {
             return Object.assign({}, defaults);
         }
-        var specials = options && options.specials || [];
-        return Object.assign({}, defaults, options, {
-            specials: defaults.specials.concat(specials)
-        });
+        var exeptions = options && options.exceptions || {};
+        var specials = exeptions.specials || [];
+        var shift = exeptions.shift || { 1: [] };
+        return {
+            ...defaults,
+            ...options,
+            exceptions: {
+                specials: [...defaults.exceptions.specials, ...specials],
+                shift: {
+                    ...shift,
+                    1: [...defaults.exceptions.shift[1], ...shift[1]]
+                }
+            }
+        };
     };
     // ----------------------------------------------------------------------
     Formatter.prototype.indent = function indent(options) {
@@ -847,25 +862,44 @@ You can also use (help name) to display help for specic function or macro.
         return this._indent(tokens, options);
     };
     // ----------------------------------------------------------------------
-    Formatter.matchSpecial = function(token, settings) {
-        var specials = settings.specials;
-        if (specials.indexOf(token) !== -1) {
-            return true;
-        } else {
-            var regexes = specials.filter(s => s instanceof RegExp);
-            for (let re of regexes) {
-                if (token.match(re)) {
-                    return true;
+    Formatter.exception_shift = function(token, settings) {
+        function match(list) {
+            if (!list.length) {
+                return false;
+            }
+            if (list.indexOf(token) !== -1) {
+                return true;
+            } else {
+                var regexes = list.filter(s => s instanceof RegExp);
+                if (!regexes.length) {
+                    return false;
+                }
+                for (let re of regexes) {
+                    if (token.match(re)) {
+                        return true;
+                    }
                 }
             }
+            return false;
         }
-        return false;
+        if (match(settings.exceptions.specials)) {
+            return settings.indent;
+        }
+        var shift = settings.exceptions.shift;
+        for (var [indent, tokens] of Object.entries(shift)) {
+            if (match(tokens)) {
+                return +indent;
+            }
+        }
+        return -1;
     };
     // ----------------------------------------------------------------------
     Formatter.prototype._indent = function _indent(tokens, options) {
         var settings = this._options(options);
         var spaces = lineIndent(tokens);
         var sexp = previousSexp(tokens);
+        // one character before S-Expression
+        var before_sexpr = tokens[tokens.length - sexp.length - 1];
         if (sexp && sexp.length) {
             if (sexp[0].line > 0) {
                 settings.offset = 0;
@@ -874,23 +908,35 @@ You can also use (help name) to display help for specic function or macro.
                 return settings.offset + sexp[0].col;
             } else if (sexp.length === 1) {
                 return settings.offset + sexp[0].col + 1;
-            } else if (Formatter.matchSpecial(sexp[1].token, settings)) {
-                return settings.offset + sexp[0].col + settings.indent;
-            } else if (sexp[0].line < sexp[1].line) {
-                return settings.offset + sexp[0].col + 1;
-            } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
-                if (sexp[1].token === '(' || sexp[1].token === '[') {
-                    return settings.offset + sexp[1].col;
-                }
-                return settings.offset + sexp[3].col;
-            } else if (sexp[0].line === sexp[1].line) {
-                return settings.offset + settings.indent + sexp[0].col;
             } else {
-                var next_tokens = sexp.slice(2);
-                for (var i = 0; i < next_tokens.length; ++i) {
-                    var token = next_tokens[i];
-                    if (token.token.trim()) {
-                        return token.col;
+                // search for token before S-Expression for case like #(10 or &(:x
+                var exeption = -1;
+                if (before_sexpr) {
+                    var shift = Formatter.exception_shift(before_sexpr.token, settings);
+                    if (shift !== -1) {
+                        exeption = shift;
+                    }
+                } else {
+                    exeption = Formatter.exception_shift(sexp[1].token, settings);
+                }
+                if (exeption !== -1) {
+                    return settings.offset + sexp[0].col + exeption;
+                } else if (sexp[0].line < sexp[1].line) {
+                    return settings.offset + sexp[0].col + 1;
+                } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
+                    if (sexp[1].token === '(' || sexp[1].token === '[') {
+                        return settings.offset + sexp[1].col;
+                    }
+                    return settings.offset + sexp[3].col;
+                } else if (sexp[0].line === sexp[1].line) {
+                    return settings.offset + settings.indent + sexp[0].col;
+                } else {
+                    var next_tokens = sexp.slice(2);
+                    for (var i = 0; i < next_tokens.length; ++i) {
+                        var token = next_tokens[i];
+                        if (token.token.trim()) {
+                            return token.col;
+                        }
                     }
                 }
             }

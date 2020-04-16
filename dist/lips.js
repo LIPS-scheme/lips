@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 16 Apr 2020 08:08:26 +0000
+ * build: Thu, 16 Apr 2020 09:09:53 +0000
  */
 (function () {
 	'use strict';
@@ -1918,7 +1918,12 @@
 	  Formatter.defaults = {
 	    offset: 0,
 	    indent: 2,
-	    specials: [/^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/, 'let-env', 'syntax-rules']
+	    exceptions: {
+	      specials: [/^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/, 'let-env', 'syntax-rules'],
+	      shift: {
+	        1: ['&', '#']
+	      }
+	    }
 	  };
 	  Formatter.match = match; // ----------------------------------------------------------------------
 	  // :: return indent for next line
@@ -1931,9 +1936,18 @@
 	      return Object.assign({}, defaults);
 	    }
 
-	    var specials = options && options.specials || [];
-	    return Object.assign({}, defaults, options, {
-	      specials: defaults.specials.concat(specials)
+	    var exeptions = options && options.exceptions || {};
+	    var specials = exeptions.specials || [];
+	    var shift = exeptions.shift || {
+	      1: []
+	    };
+	    return _objectSpread({}, defaults, {}, options, {
+	      exceptions: {
+	        specials: [].concat(toConsumableArray(defaults.exceptions.specials), toConsumableArray(specials)),
+	        shift: _objectSpread({}, shift, {
+	          1: [].concat(toConsumableArray(defaults.exceptions.shift[1]), toConsumableArray(shift[1]))
+	        })
+	      }
 	    });
 	  }; // ----------------------------------------------------------------------
 
@@ -1944,44 +1958,71 @@
 	  }; // ----------------------------------------------------------------------
 
 
-	  Formatter.matchSpecial = function (token, settings) {
-	    var specials = settings.specials;
+	  Formatter.exception_shift = function (token, settings) {
+	    function match(list) {
+	      if (!list.length) {
+	        return false;
+	      }
 
-	    if (specials.indexOf(token) !== -1) {
-	      return true;
-	    } else {
-	      var regexes = specials.filter(function (s) {
-	        return s instanceof RegExp;
-	      });
-	      var _iteratorNormalCompletion = true;
-	      var _didIteratorError = false;
-	      var _iteratorError = undefined$1;
+	      if (list.indexOf(token) !== -1) {
+	        return true;
+	      } else {
+	        var regexes = list.filter(function (s) {
+	          return s instanceof RegExp;
+	        });
 
-	      try {
-	        for (var _iterator = regexes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	          var re = _step.value;
-
-	          if (token.match(re)) {
-	            return true;
-	          }
+	        if (!regexes.length) {
+	          return false;
 	        }
-	      } catch (err) {
-	        _didIteratorError = true;
-	        _iteratorError = err;
-	      } finally {
+
+	        var _iteratorNormalCompletion = true;
+	        var _didIteratorError = false;
+	        var _iteratorError = undefined$1;
+
 	        try {
-	          if (!_iteratorNormalCompletion && _iterator["return"] != null) {
-	            _iterator["return"]();
+	          for (var _iterator = regexes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	            var re = _step.value;
+
+	            if (token.match(re)) {
+	              return true;
+	            }
 	          }
+	        } catch (err) {
+	          _didIteratorError = true;
+	          _iteratorError = err;
 	        } finally {
-	          if (_didIteratorError) {
-	            throw _iteratorError;
+	          try {
+	            if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+	              _iterator["return"]();
+	            }
+	          } finally {
+	            if (_didIteratorError) {
+	              throw _iteratorError;
+	            }
 	          }
 	        }
 	      }
+
+	      return false;
 	    }
 
-	    return false;
+	    if (match(settings.exceptions.specials)) {
+	      return settings.indent;
+	    }
+
+	    var shift = settings.exceptions.shift;
+
+	    for (var _i = 0, _Object$entries = Object.entries(shift); _i < _Object$entries.length; _i++) {
+	      var _Object$entries$_i = slicedToArray(_Object$entries[_i], 2),
+	          indent = _Object$entries$_i[0],
+	          tokens = _Object$entries$_i[1];
+
+	      if (match(tokens)) {
+	        return +indent;
+	      }
+	    }
+
+	    return -1;
 	  }; // ----------------------------------------------------------------------
 
 
@@ -1989,7 +2030,10 @@
 	    var settings = this._options(options);
 
 	    var spaces = lineIndent(tokens);
-	    var sexp = previousSexp(tokens);
+	    var sexp = previousSexp(tokens); // one character before S-Expression
+
+	    var before_sexpr = tokens[tokens.length - sexp.length - 1];
+	    console.log(before_sexpr);
 
 	    if (sexp && sexp.length) {
 	      if (sexp[0].line > 0) {
@@ -2000,26 +2044,41 @@
 	        return settings.offset + sexp[0].col;
 	      } else if (sexp.length === 1) {
 	        return settings.offset + sexp[0].col + 1;
-	      } else if (Formatter.matchSpecial(sexp[1].token, settings)) {
-	        return settings.offset + sexp[0].col + settings.indent;
-	      } else if (sexp[0].line < sexp[1].line) {
-	        return settings.offset + sexp[0].col + 1;
-	      } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
-	        if (sexp[1].token === '(' || sexp[1].token === '[') {
-	          return settings.offset + sexp[1].col;
+	      } else {
+	        // search for token before S-Expression for case like #(10 or &(:x
+	        var exeption = -1;
+
+	        if (before_sexpr) {
+	          var shift = Formatter.exception_shift(before_sexpr.token, settings);
+
+	          if (shift !== -1) {
+	            exeption = shift;
+	          }
+	        } else {
+	          exeption = Formatter.exception_shift(sexp[1].token, settings);
 	        }
 
-	        return settings.offset + sexp[3].col;
-	      } else if (sexp[0].line === sexp[1].line) {
-	        return settings.offset + settings.indent + sexp[0].col;
-	      } else {
-	        var next_tokens = sexp.slice(2);
+	        if (exeption !== -1) {
+	          return settings.offset + sexp[0].col + exeption;
+	        } else if (sexp[0].line < sexp[1].line) {
+	          return settings.offset + sexp[0].col + 1;
+	        } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
+	          if (sexp[1].token === '(' || sexp[1].token === '[') {
+	            return settings.offset + sexp[1].col;
+	          }
 
-	        for (var i = 0; i < next_tokens.length; ++i) {
-	          var token = next_tokens[i];
+	          return settings.offset + sexp[3].col;
+	        } else if (sexp[0].line === sexp[1].line) {
+	          return settings.offset + settings.indent + sexp[0].col;
+	        } else {
+	          var next_tokens = sexp.slice(2);
 
-	          if (token.token.trim()) {
-	            return token.col;
+	          for (var i = 0; i < next_tokens.length; ++i) {
+	            var token = next_tokens[i];
+
+	            if (token.token.trim()) {
+	              return token.col;
+	            }
 	          }
 	        }
 	      }
@@ -6506,8 +6565,8 @@
 
 	      var types = [RegExp, Nil, LSymbol, Pair, LCharacter];
 
-	      for (var _i = 0, _types = types; _i < _types.length; _i++) {
-	        var _type2 = _types[_i];
+	      for (var _i2 = 0, _types = types; _i2 < _types.length; _i2++) {
+	        var _type2 = _types[_i2];
 
 	        if (obj instanceof _type2) {
 	          return obj.toString();
@@ -7529,10 +7588,10 @@
 	      return 'syntax';
 	    }
 
-	    for (var _i2 = 0, _Object$entries = Object.entries(mapping); _i2 < _Object$entries.length; _i2++) {
-	      var _Object$entries$_i = slicedToArray(_Object$entries[_i2], 2),
-	          _key33 = _Object$entries$_i[0],
-	          value = _Object$entries$_i[1];
+	    for (var _i3 = 0, _Object$entries2 = Object.entries(mapping); _i3 < _Object$entries2.length; _i3++) {
+	      var _Object$entries2$_i = slicedToArray(_Object$entries2[_i3], 2),
+	          _key33 = _Object$entries2$_i[0],
+	          value = _Object$entries2$_i[1];
 
 	      if (obj instanceof value) {
 	        return _key33;
@@ -8083,7 +8142,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 16 Apr 2020 08:08:26 +0000',
+	    date: 'Thu, 16 Apr 2020 09:09:53 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
