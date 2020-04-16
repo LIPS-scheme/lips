@@ -129,12 +129,12 @@ lips -c '(let ((what "World")) (display (string-append "Hello " what)))'
 and you can run a file using:
 
 ```
-cat > foo.lips <<EOF
+cat > foo.scm <<EOF
 (let ((what "World"))
   (display (string-append "Hello " what)))
 EOF
 
-lips foo.lips
+lips foo.scm
 ```
 
 You can also write executable files that use lips using shebang (SRFI-22)
@@ -146,7 +146,7 @@ $ cat foo.scm
 (let ((what "World"))
   (display (string-append "Hello " what)))
 
-$ chmod a+x foo.lips
+$ chmod a+x foo.scm
 $ ./foo.scm
 ```
 

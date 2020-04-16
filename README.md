@@ -1,7 +1,7 @@
 # [LIPS is Pretty Simple](https://jcubic.github.io/lips/) - Scheme based Powerful LISP
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&1ed95715d05824d1308faefe4e51714d04a6d846)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&7a0f5e95470bf28b4109d2810a351912e40c61ac)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&48190252a660e91d14ffe40eca126409)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -104,7 +104,7 @@ $ lips
 | |  |___||_||_|  <___/  | |
  \_\                    /_/
 
-LIPS Scheme Interpreter DEV (2020-36-16)
+LIPS Scheme Interpreter DEV (2020-50-16)
 Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.
@@ -129,12 +129,12 @@ lips -c '(let ((what "World")) (display (string-append "Hello " what)))'
 and you can run a file using:
 
 ```
-cat > foo.lips <<EOF
+cat > foo.scm <<EOF
 (let ((what "World"))
   (display (string-append "Hello " what)))
 EOF
 
-lips foo.lips
+lips foo.scm
 ```
 
 You can also write executable files that use lips using shebang (SRFI-22)
@@ -146,7 +146,7 @@ $ cat foo.scm
 (let ((what "World"))
   (display (string-append "Hello " what)))
 
-$ chmod a+x foo.lips
+$ chmod a+x foo.scm
 $ ./foo.scm
 ```
 
