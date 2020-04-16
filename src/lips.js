@@ -5922,7 +5922,7 @@ You can also use (help name) to display help for specic function or macro.
                             if (!(e.code instanceof Array)) {
                                 e.code = [];
                             }
-                            e.code.push(code.toString());
+                            e.code.push(code.toString(true));
                         }
                         throw e;
                     }
