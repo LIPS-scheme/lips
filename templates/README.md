@@ -10,10 +10,13 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
-## Key features
+## Features
 
+* Almost fully Compatible with R5RS,
 * Full Lisp macros, backquote and macroexpand,
 * Scheme Hygienic Macros with `sytnax-rules`,
+* Parser Syntax extensions,
+* RegExp-es are first class objects,
 * Functions in LIPS are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Promises are treated as values they resolve to (so async code look like sync - like auto `async/await`),
@@ -21,9 +24,11 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 * Almost no dependencies (only bn.js for big integers),
 * Easy extension using JavaScript using Macros or functions,
 * Parser symbol transformers allow to add new syntax,
-* RegExp-es are first class objects,
-* JavaScript object literals with `&(:foo 10)`,
+* Builtin pretty printer,
+* JavaScript object literals with `&(:foo 10)` (created using parser extensions),
 * Builtin help system like in Emacs Lisp,
+* You can access `__doc__` and `__code__` of any defined functions,
+* You can access and modify function code while function is running,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
 * Functions code introspection/manipulation at runtime give more power to the programmer,

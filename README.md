@@ -1,7 +1,7 @@
 # [LIPS is Pretty Simple](https://jcubic.github.io/lips/) - Scheme based Powerful LISP
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&7a0f5e95470bf28b4109d2810a351912e40c61ac)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&95782e41e0e8fa7a49ba8fa5f6f7aeca2a6e1386)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&48190252a660e91d14ffe40eca126409)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -10,10 +10,13 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
-## Key features
+## Features
 
+* Almost fully Compatible with R5RS,
 * Full Lisp macros, backquote and macroexpand,
 * Scheme Hygienic Macros with `sytnax-rules`,
+* Parser Syntax extensions,
+* RegExp-es are first class objects,
 * Functions in LIPS are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Promises are treated as values they resolve to (so async code look like sync - like auto `async/await`),
@@ -21,9 +24,11 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 * Almost no dependencies (only bn.js for big integers),
 * Easy extension using JavaScript using Macros or functions,
 * Parser symbol transformers allow to add new syntax,
-* RegExp-es are first class objects,
-* JavaScript object literals with `&(:foo 10)`,
+* Builtin pretty printer,
+* JavaScript object literals with `&(:foo 10)` (created using parser extensions),
 * Builtin help system like in Emacs Lisp,
+* You can access `__doc__` and `__code__` of any defined functions,
+* You can access and modify function code while function is running,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
 * Functions code introspection/manipulation at runtime give more power to the programmer,
@@ -104,7 +109,7 @@ $ lips
 | |  |___||_||_|  <___/  | |
  \_\                    /_/
 
-LIPS Scheme Interpreter DEV (2020-50-16)
+LIPS Scheme Interpreter DEV (2020-58-16)
 Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.
