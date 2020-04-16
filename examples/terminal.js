@@ -27,6 +27,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             return term.read('');
         }),
         // ---------------------------------------------------------------------
+        // :: help that don't format the output - right now not needed because
+        // :: stdout don't use formatters
+        // ---------------------------------------------------------------------
         help: doc(new lips.Macro('help', function(code, { error }) {
             const { evaluate, Pair, LSymbol, nil } = lips;
             var new_code = new Pair(new LSymbol('__help'), code);

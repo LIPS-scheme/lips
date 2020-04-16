@@ -7,7 +7,10 @@ const {
     tokenize,
     Interpreter,
     LSymbol,
+    Macro,
     LString,
+    evaluate,
+    nil,
     version,
     date,
     Pair,
@@ -196,8 +199,18 @@ if (options.version || options.V) {
         stdout: OutputPort(function(x) {
             //rl.write(this.get('repr')(x));
             console.log(this.get('repr')(x));
-        })
+        }),
+        help: doc(new Macro('help', function(code, { error }) {
+            var new_code = new Pair(new LSymbol('__help'), code);
+            var doc = evaluate(new_code, { env: this, error });
+            console.log(doc);
+        }), env.get('help').__doc__),
+        '__help': env.get('help')
     });
+    function doc(fn, doc) {
+        fn.__doc__ = doc;
+        return fn;
+    }
     boostrap(interp.env).then(function() {
         rl.on('line', function(line) {
             code += line + '\n';
