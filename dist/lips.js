@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 16 Apr 2020 07:17:16 +0000
+ * build: Thu, 16 Apr 2020 08:08:26 +0000
  */
 (function () {
 	'use strict';
@@ -1918,7 +1918,7 @@
 	  Formatter.defaults = {
 	    offset: 0,
 	    indent: 2,
-	    specials: [/^define/, 'lambda', 'let', 'let*', 'syntax-rules']
+	    specials: [/^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/, 'let-env', 'syntax-rules']
 	  };
 	  Formatter.match = match; // ----------------------------------------------------------------------
 	  // :: return indent for next line
@@ -2059,7 +2059,7 @@
 	  var let_value = new Pattern([p_o, Symbol["for"]('symbol'), glob, p_e], '+'); // rules for breaking S-Expressions into lines
 
 	  var def_lambda_re = /^(define|lambda|syntax-rules)/;
-	  var let_re = /^(let|let\*|letrec)(:?-syntax)?$/;
+	  var let_re = /^(let|let\*|letrec|let-env)(:?-syntax)?$/;
 	  Formatter.rules = [[[p_o, 'begin'], 1], [[p_o, 'begin', sexp], 1, not_paren], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, p_o, let_value], 2, not_paren], [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_paren], [[/(?!lambda)/, p_o, glob, p_e], 1, not_paren], [[p_o, 'if', not_p], 1, not_paren], [[p_o, 'if', not_p, glob], 1], [[p_o, 'if', [p_o, glob, p_e]], 1], [[p_o, 'if', [p_o, glob, p_e], not_p], 1], [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_paren], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_paren], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_paren]]; // ----------------------------------------------------------------------
 
 	  Formatter.prototype["break"] = function () {
@@ -8083,7 +8083,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 16 Apr 2020 07:17:16 +0000',
+	    date: 'Thu, 16 Apr 2020 08:08:26 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -822,7 +822,10 @@ You can also use (help name) to display help for specic function or macro.
     Formatter.defaults = {
         offset: 0,
         indent: 2,
-        specials: [/^define/, 'lambda', 'let', 'let*', 'syntax-rules']
+        specials: [
+            /^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/,
+            'let-env', 'syntax-rules'
+        ]
     };
     Formatter.match = match;
     // ----------------------------------------------------------------------
@@ -922,7 +925,7 @@ You can also use (help name) to display help for specic function or macro.
     const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
     var def_lambda_re = /^(define|lambda|syntax-rules)/;
-    var let_re = /^(let|let\*|letrec)(:?-syntax)?$/;
+    var let_re = /^(let|let\*|letrec|let-env)(:?-syntax)?$/;
     Formatter.rules = [
         [[p_o, 'begin'], 1],
         [[p_o, 'begin', sexp], 1, not_paren],
