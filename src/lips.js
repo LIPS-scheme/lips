@@ -1410,7 +1410,7 @@ You can also use (help name) to display help for specic function or macro.
         if (obj instanceof Pair) {
             return obj.toString(quote);
         }
-        var types = [RegExp, Nil, LSymbol, LNumber, LCharacter];
+        var types = [RegExp, Nil, LSymbol, LNumber, LCharacter, Values];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString();
@@ -2254,11 +2254,12 @@ You can also use (help name) to display help for specic function or macro.
     var singleMathOp = curry(limitMathOp, 1);
     var binaryMathOp = curry(limitMathOp, 2);
     // -------------------------------------------------------------------------
-    function reduceMathOp(fn) {
+    function reduceMathOp(fn, init = null) {
         return function(...args) {
-            if (args.length) {
-                return args.reduce(binaryMathOp(fn));
+            if (init !== null) {
+                args = [init, ...args];
             }
+            return args.reduce(binaryMathOp(fn));
         };
     }
     // -------------------------------------------------------------------------
@@ -3376,6 +3377,27 @@ You can also use (help name) to display help for specic function or macro.
         return this.value;
     };
     // -------------------------------------------------------------------------
+    // :: differnt object than value used as object for (values)
+    // -------------------------------------------------------------------------
+    function Values(values) {
+        if (values.length) {
+            if (values.length === 1) {
+                return values[0];
+            }
+        }
+        if (typeof this !== 'undefined' && !(this instanceof Values) ||
+            typeof this === 'undefined') {
+            return new Values(values);
+        }
+        this.values = values;
+    }
+    Values.prototype.toString = function() {
+        return this.values.map(x => toString(x)).join('\n');
+    };
+    Values.prototype.valueOf = function() {
+        return this.values;
+    };
+    // -------------------------------------------------------------------------
     Environment.prototype.get = function(symbol, options = {}) {
         // we keep original environment as context for bind
         // so print will get user stdout
@@ -4077,6 +4099,27 @@ You can also use (help name) to display help for specic function or macro.
         }, `(null-environment)
 
             Function return new base environment with std lib.`),
+        // ------------------------------------------------------------------
+        'values': doc(function(...args) {
+            return Values(args);
+        }, `(values a1 a2 ...)
+
+            If called with more then one elment it will create special
+            Values object that can be used in call-with-values function`),
+        // ------------------------------------------------------------------
+        'call-with-values': doc(function(producer, consumer) {
+            typecheck('call-with-values', producer, 'function', 1);
+            typecheck('call-with-values', consumer, 'function', 2);
+            var maybe = producer();
+            if (maybe instanceof Values) {
+                return consumer(...maybe.valueOf());
+            }
+            return consumer(maybe);
+        }, `(call-with-values producer consumer)
+
+            Calls its producer argument with no values and a continuation that,
+            when passed some values, calls the consumer procedure with those
+            values as arguments.`),
         // ------------------------------------------------------------------
         'current-environment': doc(function() {
             if (this.name === '__frame__') {
@@ -5245,27 +5288,28 @@ You can also use (help name) to display help for specic function or macro.
         // math functions
         '*': doc(reduceMathOp(function(a, b) {
             return LNumber(a).mul(b);
-        }), `(* . numbers)
+        }, LNumber(1)), `(* . numbers)
 
-             Multiplicate all numbers passed as arguments. If single value is passed
-              it will return that value.`),
+        Multiplicate all numbers passed as arguments. If single value is passed
+        it will return that value.`),
         // ------------------------------------------------------------------
         '+': doc(reduceMathOp(function(a, b) {
             return LNumber(a).add(b);
-        }), `(+ . numbers)
+        }, LNumber(0)), `(+ . numbers)
 
-             Sum all numbers passed as arguments. If single value is passed it will
-             return that value.`),
+        Sum all numbers passed as arguments. If single value is passed it will
+        return that value.`),
         // ------------------------------------------------------------------
         '-': doc(function(...args) {
             if (args.length === 1) {
-                return LNumber(args[0]).neg();
+                return LNumber(args[0]).sub();
             }
             if (args.length) {
                 return args.reduce(binaryMathOp(function(a, b) {
                     return LNumber(a).sub(b);
                 }));
             }
+            return LNumber(-1);
         }, `(- . numbers)
             (- number)
 
@@ -5665,6 +5709,7 @@ You can also use (help name) to display help for specic function or macro.
             'pair': Pair,
             'symbol': LSymbol,
             'character': LCharacter,
+            'values': Values,
             'macro': Macro,
             'string': LString,
             'array': Array,
