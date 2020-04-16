@@ -210,7 +210,8 @@
         `(let ((,name (alist->object '())))
            ,@(pair-map (lambda (key value)
                          (if (not (key? key))
-                             (error (concat (type key) " " (string key) " is not a string"))
+                             (let ((msg (string-append (type key) " " (repr key) " is not a symbol!")))
+                               (throw msg))
                              (let ((prop (key->string key)))
                                (if (and (pair? value) (key? (car value)))
                                    `(set-obj! ,name ,prop ,(object-expander value))
@@ -223,7 +224,10 @@
   "(make-object :name value)
 
    Macro that create JavaScript object using key like syntax."
-  (object-expander expr))
+  (try
+    (object-expander expr)
+    (catch (e)
+      (error e.message))))
 
 ;; -----------------------------------------------------------------------------
 ;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)

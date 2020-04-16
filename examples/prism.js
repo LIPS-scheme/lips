@@ -24,4 +24,4 @@ Prism.languages.insertBefore('scheme', 'string', {
 //Prism.languages.scheme.keyword.pattern = new RegExp(Prism.languages.scheme.keyword.pattern.source.replace(/\)\(\?\=\[\(\)\\\s\]\)/g, 'let-env|define-macro|try|catch)(?=[()\s])'));
 
 
-Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:(?:\*|rec)?(?:-values)?|-syntax|rec-syntax)|else|if|cond|begin|delay(?:-force)?|parameterize|guard|set!|(?:quasi-)?quote|syntax-(?:case|rules)|let-env|try|catch|define-macro)(?=[()\s]|$)/;
+Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:(?:\*|rec)?(?:-values)?|-syntax|rec-syntax)|else|if|cond|begin|delay(?:-force)?|parameterize|guard|set!|(?:quasi-)?quote|syntax-(?:case|rules)|let-env|try|catch|throw|define-macro)(?=[()\s]|$)/;
