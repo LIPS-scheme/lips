@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 16 Apr 2020 10:33:15 +0000
+ * build: Thu, 16 Apr 2020 11:36:25 +0000
  */
 (function () {
 	'use strict';
@@ -6745,10 +6745,16 @@
 	    // ------------------------------------------------------------------
 	    'list->array': doc(toArray$1('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
 	    // ------------------------------------------------------------------
-	    apply: doc(function (fn, list) {
+	    apply: doc(function (fn) {
+	      for (var _len19 = arguments.length, list = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
+	        list[_key19 - 1] = arguments[_key19];
+	      }
+
 	      typecheck('apply', fn, 'function', 1);
-	      typecheck('apply', list, 'pair', 2);
-	      return fn.apply(void 0, toConsumableArray(this.get('list->array')(list)));
+	      var last = list.pop();
+	      typecheck('apply', last, 'pair', list.length + 2);
+	      list = list.concat(this.get('list->array')(last));
+	      return fn.apply(void 0, toConsumableArray(list));
 	    }, "(apply fn list)\n\n            Function that call function with list of arguments."),
 	    // ------------------------------------------------------------------
 	    'length': doc(function (obj) {
@@ -6852,8 +6858,8 @@
 
 	      typecheck('for-each', fn, 'function');
 
-	      for (var _len19 = arguments.length, lists = new Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
-	        lists[_key19 - 1] = arguments[_key19];
+	      for (var _len20 = arguments.length, lists = new Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
+	        lists[_key20 - 1] = arguments[_key20];
 	      }
 
 	      lists.forEach(function (arg, i) {
@@ -6872,8 +6878,8 @@
 	    map: doc(function map(fn) {
 	      var _this8 = this;
 
-	      for (var _len20 = arguments.length, lists = new Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
-	        lists[_key20 - 1] = arguments[_key20];
+	      for (var _len21 = arguments.length, lists = new Array(_len21 > 1 ? _len21 - 1 : 0), _key21 = 1; _key21 < _len21; _key21++) {
+	        lists[_key21 - 1] = arguments[_key21];
 	      }
 
 	      typecheck('map', fn, 'function');
@@ -6920,8 +6926,8 @@
 	    }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If it don't find the value it will return false"),
 	    // ------------------------------------------------------------------
 	    fold: doc(fold('fold', function (fold, fn, init) {
-	      for (var _len21 = arguments.length, lists = new Array(_len21 > 3 ? _len21 - 3 : 0), _key21 = 3; _key21 < _len21; _key21++) {
-	        lists[_key21 - 3] = arguments[_key21];
+	      for (var _len22 = arguments.length, lists = new Array(_len22 > 3 ? _len22 - 3 : 0), _key22 = 3; _key22 < _len22; _key22++) {
+	        lists[_key22 - 3] = arguments[_key22];
 	      }
 
 	      typecheck('fold', fn, 'function');
@@ -6946,8 +6952,8 @@
 	    }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
 	    // ------------------------------------------------------------------
 	    pluck: doc(function () {
-	      for (var _len22 = arguments.length, keys = new Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
-	        keys[_key22] = arguments[_key22];
+	      for (var _len23 = arguments.length, keys = new Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+	        keys[_key23] = arguments[_key23];
 	      }
 
 	      return function (obj) {
@@ -6960,9 +6966,9 @@
 	        } else if (keys.length === 1) {
 	          var _keys3 = keys,
 	              _keys4 = slicedToArray(_keys3, 1),
-	              _key23 = _keys4[0];
+	              _key24 = _keys4[0];
 
-	          return obj[_key23];
+	          return obj[_key24];
 	        }
 
 	        var result = {};
@@ -6976,8 +6982,8 @@
 	    reduce: doc(fold('reduce', function (reduce, fn, init) {
 	      var _this9 = this;
 
-	      for (var _len23 = arguments.length, lists = new Array(_len23 > 3 ? _len23 - 3 : 0), _key24 = 3; _key24 < _len23; _key24++) {
-	        lists[_key24 - 3] = arguments[_key24];
+	      for (var _len24 = arguments.length, lists = new Array(_len24 > 3 ? _len24 - 3 : 0), _key25 = 3; _key25 < _len24; _key25++) {
+	        lists[_key25 - 3] = arguments[_key25];
 	      }
 
 	      typecheck('reduce', fn, 'function');
@@ -7040,8 +7046,8 @@
 	    pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
 	    curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (display (add12 3 4))"),
 	    'gdc': doc(function GCD() {
-	      for (var _len24 = arguments.length, args = new Array(_len24), _key25 = 0; _key25 < _len24; _key25++) {
-	        args[_key25] = arguments[_key25];
+	      for (var _len25 = arguments.length, args = new Array(_len25), _key26 = 0; _key26 < _len25; _key26++) {
+	        args[_key26] = arguments[_key26];
 	      }
 
 	      // implementation based on
@@ -7102,8 +7108,8 @@
 	    }), "(+ . numbers)\n\n             Sum all numbers passed as arguments. If single value is passed it will\n             return that value."),
 	    // ------------------------------------------------------------------
 	    '-': doc(function () {
-	      for (var _len25 = arguments.length, args = new Array(_len25), _key26 = 0; _key26 < _len25; _key26++) {
-	        args[_key26] = arguments[_key26];
+	      for (var _len26 = arguments.length, args = new Array(_len26), _key27 = 0; _key27 < _len26; _key27++) {
+	        args[_key27] = arguments[_key27];
 	      }
 
 	      if (args.length === 1) {
@@ -7174,8 +7180,8 @@
 	    // ------------------------------------------------------------------
 	    // Booleans
 	    '==': doc(function () {
-	      for (var _len26 = arguments.length, args = new Array(_len26), _key27 = 0; _key27 < _len26; _key27++) {
-	        args[_key27] = arguments[_key27];
+	      for (var _len27 = arguments.length, args = new Array(_len27), _key28 = 0; _key28 < _len27; _key28++) {
+	        args[_key28] = arguments[_key28];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -7184,8 +7190,8 @@
 	    }, "(== x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are equal"),
 	    // ------------------------------------------------------------------
 	    '>': doc(function () {
-	      for (var _len27 = arguments.length, args = new Array(_len27), _key28 = 0; _key28 < _len27; _key28++) {
-	        args[_key28] = arguments[_key28];
+	      for (var _len28 = arguments.length, args = new Array(_len28), _key29 = 0; _key29 < _len28; _key29++) {
+	        args[_key29] = arguments[_key29];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -7194,8 +7200,8 @@
 	    }, "(> x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically increasing"),
 	    // ------------------------------------------------------------------
 	    '<': doc(function () {
-	      for (var _len28 = arguments.length, args = new Array(_len28), _key29 = 0; _key29 < _len28; _key29++) {
-	        args[_key29] = arguments[_key29];
+	      for (var _len29 = arguments.length, args = new Array(_len29), _key30 = 0; _key30 < _len29; _key30++) {
+	        args[_key30] = arguments[_key30];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -7204,8 +7210,8 @@
 	    }, "(< x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically decreasing"),
 	    // ------------------------------------------------------------------
 	    '<=': doc(function () {
-	      for (var _len29 = arguments.length, args = new Array(_len29), _key30 = 0; _key30 < _len29; _key30++) {
-	        args[_key30] = arguments[_key30];
+	      for (var _len30 = arguments.length, args = new Array(_len30), _key31 = 0; _key31 < _len30; _key31++) {
+	        args[_key31] = arguments[_key31];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -7214,8 +7220,8 @@
 	    }, "(<= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nonincreasing"),
 	    // ------------------------------------------------------------------
 	    '>=': doc(function () {
-	      for (var _len30 = arguments.length, args = new Array(_len30), _key31 = 0; _key31 < _len30; _key31++) {
-	        args[_key31] = arguments[_key31];
+	      for (var _len31 = arguments.length, args = new Array(_len31), _key32 = 0; _key32 < _len31; _key32++) {
+	        args[_key32] = arguments[_key32];
 	      }
 
 	      return seq_compare(function (a, b) {
@@ -7336,8 +7342,8 @@
 	      return !value;
 	    }, "(not object)\n\n            Function return negation of the argument."),
 	    '->': doc(function (obj, name) {
-	      for (var _len31 = arguments.length, args = new Array(_len31 > 2 ? _len31 - 2 : 0), _key32 = 2; _key32 < _len31; _key32++) {
-	        args[_key32 - 2] = arguments[_key32];
+	      for (var _len32 = arguments.length, args = new Array(_len32 > 2 ? _len32 - 2 : 0), _key33 = 2; _key33 < _len32; _key33++) {
+	        args[_key33 - 2] = arguments[_key33];
 	      }
 
 	      return obj[name].apply(obj, args);
@@ -7554,11 +7560,11 @@
 
 	    for (var _i3 = 0, _Object$entries2 = Object.entries(mapping); _i3 < _Object$entries2.length; _i3++) {
 	      var _Object$entries2$_i = slicedToArray(_Object$entries2[_i3], 2),
-	          _key33 = _Object$entries2$_i[0],
+	          _key34 = _Object$entries2$_i[0],
 	          value = _Object$entries2$_i[1];
 
 	      if (obj instanceof value) {
-	        return _key33;
+	        return _key34;
 	      }
 	    }
 
@@ -8106,7 +8112,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 16 Apr 2020 10:33:15 +0000',
+	    date: 'Thu, 16 Apr 2020 11:36:25 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -4901,10 +4901,12 @@ You can also use (help name) to display help for specic function or macro.
 
              Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
-        apply: doc(function(fn, list) {
+        apply: doc(function(fn, ...list) {
             typecheck('apply', fn, 'function', 1);
-            typecheck('apply', list, 'pair', 2);
-            return fn(...this.get('list->array')(list));
+            var last = list.pop();
+            typecheck('apply', last, 'pair', list.length + 2);
+            list = list.concat(this.get('list->array')(last));
+            return fn(...list);
         }, `(apply fn list)
 
             Function that call function with list of arguments.`),
