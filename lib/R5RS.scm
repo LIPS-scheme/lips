@@ -285,9 +285,11 @@
 
 ;; -----------------------------------------------------------------------------
 (define (exact->inexact n)
-  "(exact->inexact n)"
+  "(exact->inexact n)
+
+   Convert exact number to inexact."
   (typecheck "exact->inexact" n "number")
-  (--> n (valueOf)))
+  (lips.LFloat (--> n (valueOf))))
 
 ;; -----------------------------------------------------------------------------
 (define (inexact->exact n)
@@ -298,6 +300,9 @@
   (if (real? n)
       (--> n (toRational 1e-20))
       n))
+
+(add-special! "#i" 'exact->inexact lips.specials.LITERAL)
+(add-special! "#e" 'inexact->exact lips.specials.LITERAL)
 
 ;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
