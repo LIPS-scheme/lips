@@ -8,10 +8,7 @@
 
 // extend scheme syntax in PrismJS to inlcude regular expressions
 Prism.languages.insertBefore('scheme', 'character', {
-   regex: {
-       pattern: /\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\(|\)|\]|\[|$)/g,
-       greedy: true
-   }
+   regex: Prism.languages.javascript.regex
 });
 // symbols
 Prism.languages.insertBefore('scheme', 'string', {
@@ -21,7 +18,5 @@ Prism.languages.insertBefore('scheme', 'string', {
    }
 });
 // and define-macro as keyword (update original regex) don't need most of it
-//Prism.languages.scheme.keyword.pattern = new RegExp(Prism.languages.scheme.keyword.pattern.source.replace(/\)\(\?\=\[\(\)\\\s\]\)/g, 'let-env|define-macro|try|catch)(?=[()\s])'));
-
-
+//Prism.languages.scheme.keyword.pattern = new RegExp(Prism.languages.scheme.keyword.pattern.source.replace(/\)\(\?\=\[\(\)\\\s\]\)/g, 'let-env|define-macro|try|catch|throw)(?=[()\s])'));
 Prism.languages.scheme.keyword.pattern = /(\()(?:define(?:-syntax|-library|-values)?|(?:case-)?lambda|let(?:(?:\*|rec)?(?:-values)?|-syntax|rec-syntax)|else|if|cond|begin|delay(?:-force)?|parameterize|guard|set!|(?:quasi-)?quote|syntax-(?:case|rules)|let-env|try|catch|throw|define-macro)(?=[()\s]|$)/;
