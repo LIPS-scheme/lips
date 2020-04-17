@@ -2383,7 +2383,14 @@ You can also use (help name) to display help for specic function or macro.
             typeof this === 'undefined') {
             return new LString(string);
         }
-        this._string = string;
+        if (string instanceof Array) {
+            this._string = string.map((x, i) => {
+                typecheck('LString', x, 'character', i + 1);
+                return x.toString();
+            }).join('');
+        } else {
+            this._string = string;
+        }
     }
     {
         const ignore = ['length', 'constructor'];

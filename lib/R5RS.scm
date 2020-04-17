@@ -482,6 +482,17 @@
           (iter (cons char result) (- k 1))))))
 
 ;; -----------------------------------------------------------------------------
+(define (string . args)
+  "(string chr1 chr2 ...)
+
+   Function create new string from it's arguments. Each argument
+   Need to be a character object."
+  (for-each (lambda (x)
+              (typecheck "string" x "character"))
+            args)
+  (list->string args))
+
+;; -----------------------------------------------------------------------------
 ;; (let ((x "xxxxxxxxxx"))
 ;;    (string-fill! x #\b)
 ;;    x)
@@ -521,7 +532,7 @@
   (let ((array (list->array
                 (map (lambda (x)
                        (typecheck "list->string" x "character")
-                       (. x 'char))
+                       (x.valueOf))
                      _list))))
     (--> array (join ""))))
 

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 16 Apr 2020 20:30:40 +0000
+ * build: Fri, 17 Apr 2020 10:58:23 +0000
  */
 (function () {
 	'use strict';
@@ -3948,7 +3948,14 @@
 	      return new LString(string);
 	    }
 
-	    this._string = string;
+	    if (string instanceof Array) {
+	      this._string = string.map(function (x, i) {
+	        typecheck('LString', x, 'character', i + 1);
+	        return x.toString();
+	      }).join('');
+	    } else {
+	      this._string = string;
+	    }
 	  }
 
 	  {
@@ -8167,7 +8174,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 16 Apr 2020 20:30:40 +0000',
+	    date: 'Fri, 17 Apr 2020 10:58:23 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
