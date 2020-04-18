@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 18 Apr 2020 07:59:36 +0000
+ * build: Sat, 18 Apr 2020 08:08:11 +0000
  */
 (function () {
 	'use strict';
@@ -8120,25 +8120,35 @@
 	    return _exec.apply(this, arguments);
 	  }
 
-	  function matchToken(re) {
-	    return function (token) {
-	      if (!token) {
-	        return false;
-	      }
+	  function match_token(arg) {
+	    if (arg instanceof RegExp) {
+	      return function (token) {
+	        if (!token) {
+	          return false;
+	        }
 
-	      return (typeof token === 'string' ? token : token.token).match(re);
-	    };
+	        return (typeof token === 'string' ? token : token.token).match(arg);
+	      };
+	    } else {
+	      return function (token) {
+	        if (!token) {
+	          return false;
+	        }
+
+	        return (typeof token === 'string' ? token : token.token) === arg;
+	      };
+	    }
 	  }
 
-	  var isParen = matchToken(/[[\]()]/); // -------------------------------------------------------------------------
+	  var is_Paren = match_token(/[[\]()]/); // -------------------------------------------------------------------------
 
 	  function balanced(code) {
 	    var tokens = typeof code === 'string' ? tokenize(code) : code;
-	    var parenthesis = tokens.filter(isParen);
-	    var parens_open = parenthesis.filter(matchToken(/\(/));
-	    var parens_close = parenthesis.filter(matchToken(/\)/));
-	    var brackets_open = parenthesis.filter(matchToken(/\[/));
-	    var brackets_close = parenthesis.filter(matchToken(/\]/));
+	    var parenthesis = tokens.filter(is_Paren);
+	    var parens_open = parenthesis.filter(match_token('('));
+	    var parens_close = parenthesis.filter(match_token(')'));
+	    var brackets_open = parenthesis.filter(match_token('['));
+	    var brackets_close = parenthesis.filter(match_token(']'));
 	    return parens_open.length === parens_close.length && brackets_open.length === brackets_close.length;
 	  } // -------------------------------------------------------------------------
 
@@ -8255,7 +8265,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 18 Apr 2020 07:59:36 +0000',
+	    date: 'Sat, 18 Apr 2020 08:08:11 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

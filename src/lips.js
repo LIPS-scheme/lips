@@ -6047,24 +6047,33 @@ You can also use (help name) to display help for specic function or macro.
     // -------------------------------------------------------------------------
     // create token matcher that work with string and object token
     // -------------------------------------------------------------------------
-    function matchToken(re) {
-        return function(token) {
-            if (!token) {
-                return false;
-            }
-            return (typeof token === 'string' ? token : token.token).match(re);
-        };
+    function match_token(arg) {
+        if (arg instanceof RegExp) {
+            return function(token) {
+                if (!token) {
+                    return false;
+                }
+                return (typeof token === 'string' ? token : token.token).match(arg);
+            };
+        } else {
+            return function(token) {
+                if (!token) {
+                    return false;
+                }
+                return (typeof token === 'string' ? token : token.token) === arg;
+            };
+        }
     }
-    var isParen = matchToken(/[[\]()]/);
+    var is_Paren = match_token(/[[\]()]/);
     // -------------------------------------------------------------------------
     function balanced(code) {
         var tokens = typeof code === 'string' ? tokenize(code) : code;
-        var parenthesis = tokens.filter(isParen);
-        var parens_open = parenthesis.filter(matchToken(/\(/));
-        var parens_close = parenthesis.filter(matchToken(/\)/));
+        var parenthesis = tokens.filter(is_Paren);
+        var parens_open = parenthesis.filter(match_token('('));
+        var parens_close = parenthesis.filter(match_token(')'));
 
-        var brackets_open = parenthesis.filter(matchToken(/\[/));
-        var brackets_close = parenthesis.filter(matchToken(/\]/));
+        var brackets_open = parenthesis.filter(match_token('['));
+        var brackets_close = parenthesis.filter(match_token(']'));
 
         return parens_open.length === parens_close.length &&
             brackets_open.length === brackets_close.length;
