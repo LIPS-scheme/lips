@@ -182,7 +182,7 @@ You can also use (help name) to display help for specic function or macro.
     var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function parseRational(arg) {
+    function parse_rational(arg) {
         var parts = arg.split('/');
         return LRational({
             num: parseInt(parts[0], 10),
@@ -190,7 +190,7 @@ You can also use (help name) to display help for specic function or macro.
         });
     }
     // ----------------------------------------------------------------------
-    function parseInteger(arg) {
+    function parse_integer(arg) {
         var m = arg.match(/^(?:#([xbo]))?([+-]?[0-9a-f]+)$/i);
         var radix;
         if (m && m[1]) {
@@ -211,14 +211,14 @@ You can also use (help name) to display help for specic function or macro.
         return LNumber(parseInt(m[2], radix));
     }
     // ----------------------------------------------------------------------
-    function parseCharacter(arg) {
+    function parse_character(arg) {
         var m = arg.match(/#\\(.*)$/);
         if (m) {
             return LCharacter(m[1]);
         }
     }
     // ----------------------------------------------------------------------
-    function parseComplex(arg) {
+    function parse_complex(arg) {
         if (arg === '-i') {
             return { im: -1, re: 0 };
         }
@@ -234,7 +234,7 @@ You can also use (help name) to display help for specic function or macro.
         return LComplex({ im, re });
     }
     // ----------------------------------------------------------------------
-    function parseString(string) {
+    function parse_string(string) {
         // handle non JSON escapes and skip unicode escape \u (even partial)
         var re = /([^\\\n])(\\(?:\\{2})*)(?!u[0-9AF]{1,4})(.)/gi;
         string = string.replace(re, function(_, before, slashes, chr) {
@@ -251,20 +251,20 @@ You can also use (help name) to display help for specic function or macro.
         }
     }
     // ----------------------------------------------------------------------
-    function parseArgument(arg) {
+    function parse_argument(arg) {
         var regex = arg.match(re_re);
         if (regex) {
             return new RegExp(regex[1], regex[2]);
         } else if (arg.match(/^"/)) {
-            return parseString(arg);
+            return parse_string(arg);
         } else if (arg.match(char_re)) {
-            return parseCharacter(arg);
+            return parse_character(arg);
         } else if (arg.match(rational_re)) {
-            return parseRational(arg);
+            return parse_rational(arg);
         } else if (arg.match(complex_re)) {
-            return parseComplex(arg);
+            return parse_complex(arg);
         } else if (arg.match(int_re)) {
-            return parseInteger(arg);
+            return parse_integer(arg);
         } else if (arg.match(float_re)) {
             return LFloat(parseFloat(arg));
         } else if (arg === 'nil') {
@@ -278,7 +278,7 @@ You can also use (help name) to display help for specic function or macro.
         }
     }
     // ----------------------------------------------------------------------
-    function isSymbolString(str) {
+    function is_symbol_string(str) {
         return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/['"]/) ||
                  str.match(int_re) || str.match(float_re) ||
                  ['nil', 'true', 'false'].includes(str));
@@ -288,20 +288,22 @@ You can also use (help name) to display help for specic function or macro.
     var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"/g;
     // ----------------------------------------------------------------------
-    function makeTokenRe() {
+    function make_token_re() {
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
-            .map(escapeRegex).join('|');
+            .map(escape_regex).join('|');
         return new RegExp(`(#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        /*
         return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        */
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
-    function lastItem(array, n = 1) {
+    function last_item(array, n = 1) {
         return array[array.length - n];
     }
     // ----------------------------------------------------------------------
-    function escapeRegex(str) {
+    function escape_regex(str) {
         if (typeof str === 'string') {
             var special = /([-\\^$[\]()+{}?*.|])/g;
             return str.replace(special, '\\$1');
@@ -309,7 +311,7 @@ You can also use (help name) to display help for specic function or macro.
     }
     // ----------------------------------------------------------------------
     function tokens(str) {
-        var tokens_re = makeTokenRe();
+        var tokens_re = make_token_re();
         str = str.replace(/\n\r|\r/g, '\n');
         var count = 0;
         var line = 0;
@@ -320,14 +322,14 @@ You can also use (help name) to display help for specic function or macro.
             if (string.match(pre_parse_re)) {
                 col = 0;
                 if (current_line.length) {
-                    var lastToken = lastItem(current_line);
-                    if (lastToken.token.match(/\n/)) {
-                        var last_line = lastToken.token.split('\n').pop();
+                    var last_token = last_item(current_line);
+                    if (last_token.token.match(/\n/)) {
+                        var last_line = last_token.token.split('\n').pop();
                         col += last_line.length;
                     } else {
-                        col += lastToken.token.length;
+                        col += last_token.token.length;
                     }
-                    col += lastToken.col;
+                    col += last_token.col;
                 }
                 var token = {
                     col,
@@ -363,7 +365,7 @@ You can also use (help name) to display help for specic function or macro.
         return tokens;
     }
     // ----------------------------------------------------------------------
-    function multilineFormatter(meta) {
+    function multiline_formatter(meta) {
         var { token, ...rest } = meta;
         if (token.match(/^"[\s\S]+"$/) && token.match(/\n/)) {
             var re = new RegExp('^ {1,' + (meta.col + 1) + '}', 'mg');
@@ -375,7 +377,7 @@ You can also use (help name) to display help for specic function or macro.
         };
     }
     // ----------------------------------------------------------------------
-    function tokenize(str, extra, formatter = multilineFormatter) {
+    function tokenize(str, extra, formatter = multiline_formatter) {
         if (extra) {
             return tokens(str).map(formatter);
         } else {
@@ -549,7 +551,7 @@ You can also use (help name) to display help for specic function or macro.
                     }
                 } else {
                     first_value = false;
-                    var value = parseArgument(token);
+                    var value = parse_argument(token);
                     if (special) {
                         // special without list like ,foo
                         while (special_count--) {
@@ -643,13 +645,13 @@ You can also use (help name) to display help for specic function or macro.
             if (dump) {
                 fn.__doc__ = doc;
             } else {
-                fn.__doc__ = trimLines(doc);
+                fn.__doc__ = trim_lines(doc);
             }
         }
         return fn;
     }
     // ----------------------------------------------------------------------
-    function trimLines(string) {
+    function trim_lines(string) {
         return string.split('\n').map(line => {
             return line.trim();
         }).join('\n');
@@ -724,7 +726,7 @@ You can also use (help name) to display help for specic function or macro.
                     pattern[p + 1] === input[i];
             }
             function not_symbol_match() {
-                return pattern[p] === Symbol.for('symbol') && !isSymbolString(input[i]);
+                return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
             }
             var p = 0;
             var glob = {};
@@ -1649,7 +1651,7 @@ You can also use (help name) to display help for specic function or macro.
             if (dump) {
                 this.__doc__ = doc;
             } else {
-                this.__doc__ = trimLines(doc);
+                this.__doc__ = trim_lines(doc);
             }
         }
         this.name = name;
@@ -1679,7 +1681,7 @@ You can also use (help name) to display help for specic function or macro.
     // ----------------------------------------------------------------------
     var macro = 'define-macro';
     // ----------------------------------------------------------------------
-    function macroExpand(single) {
+    function macro_expand(single) {
         return async function(code, args) {
             var env = args['env'] = this;
             async function traverse(node, n) {
@@ -4281,8 +4283,8 @@ You can also use (help name) to display help for specic function or macro.
             Macro lambda create new anonymous function, if first element of the body
             is string and there is more elements it will be documentation, that can
             be read using (help fn)`),
-        'macroexpand': new Macro('macroexpand', macroExpand()),
-        'macroexpand-1': new Macro('macroexpand-1', macroExpand(true)),
+        'macroexpand': new Macro('macroexpand', macro_expand()),
+        'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
         // ------------------------------------------------------------------
         'define-macro': doc(new Macro(macro, function(macro, { dynamic_scope, error }) {
             if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {

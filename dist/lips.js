@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 18 Apr 2020 05:11:13 +0000
+ * build: Sat, 18 Apr 2020 06:03:54 +0000
  */
 (function () {
 	'use strict';
@@ -1165,7 +1165,7 @@
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
 
-	  function parseRational(arg) {
+	  function parse_rational(arg) {
 	    var parts = arg.split('/');
 	    return LRational({
 	      num: parseInt(parts[0], 10),
@@ -1174,7 +1174,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function parseInteger(arg) {
+	  function parse_integer(arg) {
 	    var m = arg.match(/^(?:#([xbo]))?([+-]?[0-9a-f]+)$/i);
 	    var radix;
 
@@ -1200,7 +1200,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function parseCharacter(arg) {
+	  function parse_character(arg) {
 	    var m = arg.match(/#\\(.*)$/);
 
 	    if (m) {
@@ -1209,7 +1209,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function parseComplex(arg) {
+	  function parse_complex(arg) {
 	    if (arg === '-i') {
 	      return {
 	        im: -1,
@@ -1235,7 +1235,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function parseString(string) {
+	  function parse_string(string) {
 	    // handle non JSON escapes and skip unicode escape \u (even partial)
 	    var re = /([^\\\n])(\\(?:\\{2})*)(?!u[0-9AF]{1,4})(.)/gi;
 	    string = string.replace(re, function (_, before, slashes, chr) {
@@ -1255,21 +1255,21 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function parseArgument(arg) {
+	  function parse_argument(arg) {
 	    var regex = arg.match(re_re);
 
 	    if (regex) {
 	      return new RegExp(regex[1], regex[2]);
 	    } else if (arg.match(/^"/)) {
-	      return parseString(arg);
+	      return parse_string(arg);
 	    } else if (arg.match(char_re)) {
-	      return parseCharacter(arg);
+	      return parse_character(arg);
 	    } else if (arg.match(rational_re)) {
-	      return parseRational(arg);
+	      return parse_rational(arg);
 	    } else if (arg.match(complex_re)) {
-	      return parseComplex(arg);
+	      return parse_complex(arg);
 	    } else if (arg.match(int_re)) {
-	      return parseInteger(arg);
+	      return parse_integer(arg);
 	    } else if (arg.match(float_re)) {
 	      return LFloat(parseFloat(arg));
 	    } else if (arg === 'nil') {
@@ -1284,7 +1284,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function isSymbolString(str) {
+	  function is_symbol_string(str) {
 	    return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/['"]/) || str.match(int_re) || str.match(float_re) || ['nil', 'true', 'false'].includes(str));
 	  } // ----------------------------------------------------------------------
 
@@ -1294,23 +1294,26 @@
 	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
 	  var string_re = /"(?:\\[\S\s]|[^"])*"/g; // ----------------------------------------------------------------------
 
-	  function makeTokenRe() {
+	  function make_token_re() {
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
-	    }).map(escapeRegex).join('|');
+	    }).map(escape_regex).join('|');
 	    return new RegExp("(#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:".concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    /*
+	    return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+	    */
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
 
 
-	  function lastItem(array) {
+	  function last_item(array) {
 	    var n = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 1;
 	    return array[array.length - n];
 	  } // ----------------------------------------------------------------------
 
 
-	  function escapeRegex(str) {
+	  function escape_regex(str) {
 	    if (typeof str === 'string') {
 	      var special = /([-\\^$[\]()+{}?*.|])/g;
 	      return str.replace(special, '\\$1');
@@ -1319,7 +1322,7 @@
 
 
 	  function tokens(str) {
-	    var tokens_re = makeTokenRe();
+	    var tokens_re = make_token_re();
 	    str = str.replace(/\n\r|\r/g, '\n');
 	    var count = 0;
 	    var line = 0;
@@ -1331,16 +1334,16 @@
 	        col = 0;
 
 	        if (current_line.length) {
-	          var lastToken = lastItem(current_line);
+	          var last_token = last_item(current_line);
 
-	          if (lastToken.token.match(/\n/)) {
-	            var last_line = lastToken.token.split('\n').pop();
+	          if (last_token.token.match(/\n/)) {
+	            var last_line = last_token.token.split('\n').pop();
 	            col += last_line.length;
 	          } else {
-	            col += lastToken.token.length;
+	            col += last_token.token.length;
 	          }
 
-	          col += lastToken.col;
+	          col += last_token.col;
 	        }
 
 	        var token = {
@@ -1380,7 +1383,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function multilineFormatter(meta) {
+	  function multiline_formatter(meta) {
 	    var token = meta.token,
 	        rest = objectWithoutProperties(meta, ["token"]);
 
@@ -1396,7 +1399,7 @@
 
 
 	  function tokenize(str, extra) {
-	    var formatter = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : multilineFormatter;
+	    var formatter = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : multiline_formatter;
 
 	    if (extra) {
 	      return tokens(str).map(formatter);
@@ -1593,7 +1596,7 @@
 	          }
 	        } else {
 	          first_value = false;
-	          var value = parseArgument(token);
+	          var value = parse_argument(token);
 
 	          if (special) {
 	            // special without list like ,foo
@@ -1712,7 +1715,7 @@
 	      if (dump) {
 	        fn.__doc__ = doc;
 	      } else {
-	        fn.__doc__ = trimLines(doc);
+	        fn.__doc__ = trim_lines(doc);
 	      }
 	    }
 
@@ -1720,7 +1723,7 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function trimLines(string) {
+	  function trim_lines(string) {
 	    return string.split('\n').map(function (line) {
 	      return line.trim();
 	    }).join('\n');
@@ -1801,7 +1804,7 @@
 	      }
 
 	      function not_symbol_match() {
-	        return pattern[p] === Symbol["for"]('symbol') && !isSymbolString(input[i]);
+	        return pattern[p] === Symbol["for"]('symbol') && !is_symbol_string(input[i]);
 	      }
 
 	      var p = 0;
@@ -2941,7 +2944,7 @@
 	      if (dump) {
 	        this.__doc__ = doc;
 	      } else {
-	        this.__doc__ = trimLines(doc);
+	        this.__doc__ = trim_lines(doc);
 	      }
 	    }
 
@@ -2978,7 +2981,7 @@
 
 	  var macro = 'define-macro'; // ----------------------------------------------------------------------
 
-	  function macroExpand(single) {
+	  function macro_expand(single) {
 	    return (
 	      /*#__PURE__*/
 	      function () {
@@ -6203,8 +6206,8 @@
 
 	      return doc(setFnLength(lambda, length), __doc__, true);
 	    }, "(lambda (a b) body)\n            (lambda args body)\n            (lambda (a b . rest) body)\n\n            Macro lambda create new anonymous function, if first element of the body\n            is string and there is more elements it will be documentation, that can\n            be read using (help fn)"),
-	    'macroexpand': new Macro('macroexpand', macroExpand()),
-	    'macroexpand-1': new Macro('macroexpand-1', macroExpand(true)),
+	    'macroexpand': new Macro('macroexpand', macro_expand()),
+	    'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
 	    // ------------------------------------------------------------------
 	    'define-macro': doc(new Macro(macro, function (macro, _ref16) {
 	      var dynamic_scope = _ref16.dynamic_scope,
@@ -8200,7 +8203,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 18 Apr 2020 05:11:13 +0000',
+	    date: 'Sat, 18 Apr 2020 06:03:54 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
