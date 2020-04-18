@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 18 Apr 2020 06:03:54 +0000
+ * build: Sat, 18 Apr 2020 07:34:35 +0000
  */
 (function () {
 	'use strict';
@@ -1196,7 +1196,7 @@
 	      radix = 10;
 	    }
 
-	    return LNumber(parseInt(m[2], radix));
+	    return LNumber([m[2], radix]);
 	  } // ----------------------------------------------------------------------
 
 
@@ -4080,11 +4080,13 @@
 	      return LNumber.types[_type](n);
 	    }
 
+	    var parsable = n instanceof Array && LString.isString(n[0]) && LNumber.isNumber(n[1]);
+
 	    if (n instanceof LNumber) {
 	      return LNumber(n.value);
 	    }
 
-	    if (!LNumber.isNumber(n)) {
+	    if (!LNumber.isNumber(n) && !parsable) {
 	      _type = Number.isNaN(n) ? 'NaN' : type(n);
 	      throw new Error("You can't create LNumber from ".concat(_type));
 	    } // prevent infite loop https://github.com/indutny/bn.js/issues/186
@@ -4098,13 +4100,64 @@
 
 	    if (typeof BigInt !== 'undefined') {
 	      if (typeof n !== 'bigint') {
-	        value = BigInt(n);
+	        if (parsable) {
+	          var _n = n,
+	              _n2 = slicedToArray(_n, 2),
+	              str = _n2[0],
+	              radix = _n2[1];
+
+	          if (str instanceof LString) {
+	            str = str.valueOf();
+	          }
+
+	          if (radix instanceof LNumber) {
+	            radix = radix.valueOf();
+	          }
+
+	          var prefix; // default number base (radix) supported by BigInt constructor
+
+	          switch (radix) {
+	            case 8:
+	              prefix = '0o';
+	              break;
+
+	            case 16:
+	              prefix = '0x';
+	              break;
+
+	            case 2:
+	              prefix = '0b';
+	              break;
+
+	            case 10:
+	              prefix = '';
+	              break;
+	          }
+
+	          if (typeof prefix === 'undefined') {
+	            // non standard radix we convert by hand
+	            var n_radix = BigInt(radix);
+	            value = toConsumableArray(str).map(function (x, i) {
+	              return BigInt(parseInt(x, radix)) * Math.pow(n_radix, BigInt(i));
+	            }).reduce(function (a, b) {
+	              return a + b;
+	            });
+	          } else {
+	            value = BigInt(prefix + str);
+	          }
+	        } else {
+	          value = BigInt(n);
+	        }
 	      } else {
 	        value = n;
 	      }
 
 	      return LBigInteger(value, true);
 	    } else if (typeof BN !== 'undefined' && !(n instanceof BN)) {
+	      if (n instanceof Array) {
+	        return LBigInteger(construct(BN, toConsumableArray(n)));
+	      }
+
 	      return LBigInteger(new BN(n));
 	    } else {
 	      this.value = n;
@@ -6865,12 +6918,12 @@
 	      typecheck('string->number', radix, 'number', 2);
 
 	      if (arg.match(int_re)) {
-	        return LNumber(parseInt(arg, radix));
+	        return LNumber([arg, radix]);
 	      } else if (arg.match(float_re)) {
 	        return LNumber(parseFloat(arg));
 	      }
 
-	      return LNumber(parseInt(arg, radix));
+	      return LNumber([arg, radix]);
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
 	    'try': doc(new Macro('try', function (code, _ref20) {
@@ -8203,7 +8256,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 18 Apr 2020 06:03:54 +0000',
+	    date: 'Sat, 18 Apr 2020 07:34:35 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

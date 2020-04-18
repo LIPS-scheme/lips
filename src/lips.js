@@ -208,7 +208,7 @@ You can also use (help name) to display help for specic function or macro.
         } else {
             radix = 10;
         }
-        return LNumber(parseInt(m[2], radix));
+        return LNumber([m[2], radix]);
     }
     // ----------------------------------------------------------------------
     function parse_character(arg) {
@@ -2466,10 +2466,12 @@ You can also use (help name) to display help for specic function or macro.
         if (LNumber.types[_type]) {
             return LNumber.types[_type](n);
         }
+        var parsable = n instanceof Array && LString.isString(n[0]) &&
+            LNumber.isNumber(n[1]);
         if (n instanceof LNumber) {
             return LNumber(n.value);
         }
-        if (!LNumber.isNumber(n)) {
+        if (!LNumber.isNumber(n) && !parsable) {
             _type = Number.isNaN(n) ? 'NaN' : type(n);
             throw new Error(`You can't create LNumber from ${_type}`);
         }
@@ -2480,12 +2482,50 @@ You can also use (help name) to display help for specic function or macro.
         var value;
         if (typeof BigInt !== 'undefined') {
             if (typeof n !== 'bigint') {
-                value = BigInt(n);
+                if (parsable) {
+                    let [str, radix] = n;
+                    if (str instanceof LString) {
+                        str = str.valueOf();
+                    }
+                    if (radix instanceof LNumber) {
+                        radix = radix.valueOf();
+                    }
+                    let prefix;
+                    // default number base (radix) supported by BigInt constructor
+                    switch (radix) {
+                        case 8:
+                            prefix = '0o';
+                            break;
+                        case 16:
+                            prefix = '0x';
+                            break;
+                        case 2:
+                            prefix = '0b';
+                            break;
+                        case 10:
+                            prefix = '';
+                            break;
+                    }
+                    if (typeof prefix === 'undefined') {
+                        // non standard radix we convert by hand
+                        var n_radix = BigInt(radix);
+                        value = [...str].map((x, i) => {
+                            return BigInt(parseInt(x, radix)) * (n_radix ** BigInt(i));
+                        }).reduce((a, b) => a + b);
+                    } else {
+                        value = BigInt(prefix + str);
+                    }
+                } else {
+                    value = BigInt(n);
+                }
             } else {
                 value = n;
             }
             return LBigInteger(value, true);
         } else if (typeof BN !== 'undefined' && !(n instanceof BN)) {
+            if (n instanceof Array) {
+                return LBigInteger(new BN(...n));
+            }
             return LBigInteger(new BN(n));
         } else {
             this.value = n;
@@ -5003,11 +5043,11 @@ You can also use (help name) to display help for specic function or macro.
             typecheck('string->number', arg, 'string', 1);
             typecheck('string->number', radix, 'number', 2);
             if (arg.match(int_re)) {
-                return LNumber(parseInt(arg, radix));
+                return LNumber([arg, radix]);
             } else if (arg.match(float_re)) {
                 return LNumber(parseFloat(arg), true);
             }
-            return LNumber(parseInt(arg, radix));
+            return LNumber([arg, radix]);
         }, `(string->number number [radix])
 
            Function convert string to number.`),
