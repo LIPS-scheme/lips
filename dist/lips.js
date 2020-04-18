@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 18 Apr 2020 08:08:11 +0000
+ * build: Sat, 18 Apr 2020 08:38:56 +0000
  */
 (function () {
 	'use strict';
@@ -1158,7 +1158,8 @@
 	  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
 	  var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
 	  var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
-	  var char_re = /^#\\(?:newline|space|.)$/i; // (int | flat) ? ([-+]
+	  var character_symbols = ['alarm', 'backspace', 'delete', 'escape', 'newline', 'null', 'return', 'space', 'tab'].join('|');
+	  var char_re = new RegExp("^#\\\\(?:".concat(character_symbols, "|[\\s\\S])$"), 'i'); // (int | flat) ? ([-+]
 
 	  var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
 	  var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
@@ -1298,7 +1299,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:".concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	    /*
 	    return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
 	    */
@@ -1360,7 +1361,8 @@
 	        return;
 	      }
 
-	      string.split(tokens_re).filter(Boolean).forEach(function (string) {
+	      var parts = string.split(tokens_re).filter(Boolean);
+	      parts.forEach(function (string) {
 	        var token = {
 	          col: col,
 	          line: line,
@@ -1409,6 +1411,11 @@
 
 	        if (!ret || typeof ret.token !== 'string') {
 	          throw new Error('[tokenize] Invalid formatter wrong return object');
+	        } // we don't want literal space character to be trimmed
+
+
+	        if (ret.token === '#\\ ') {
+	          return ret.token;
 	        }
 
 	        return ret.token.trim();
@@ -3914,9 +3921,14 @@
 	  }
 
 	  LCharacter.names = {
-	    'space': ' ',
+	    'alarm': '\x07',
+	    'backspace': '\x08',
+	    'delete': '\x7F',
+	    'escape': '\x1B',
 	    'newline': '\n',
+	    'null': '\x00',
 	    'return': '\r',
+	    'space': ' ',
 	    'tab': '\t'
 	  };
 	  LCharacter.rev_names = {};
@@ -8265,7 +8277,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 18 Apr 2020 08:08:11 +0000',
+	    date: 'Sat, 18 Apr 2020 08:38:56 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
