@@ -1047,7 +1047,6 @@ You can also use (help name) to display help for specic function or macro.
             var token = tokens[i];
             if (token.token === '\n') {
                 indent = this._indent(tokens.slice(0, i), settings);
-                console.log(indent);
                 offset += indent;
                 if (tokens[i + 1]) {
                     tokens[i + 1].token = this._spaces(indent);

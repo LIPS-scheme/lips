@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 18 Apr 2020 07:34:35 +0000
+ * build: Sat, 18 Apr 2020 07:59:36 +0000
  */
 (function () {
 	'use strict';
@@ -2224,7 +2224,6 @@
 
 	      if (token.token === '\n') {
 	        indent = this._indent(tokens.slice(0, i), settings);
-	        console.log(indent);
 	        offset += indent;
 
 	        if (tokens[i + 1]) {
@@ -8256,7 +8255,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 18 Apr 2020 07:34:35 +0000',
+	    date: 'Sat, 18 Apr 2020 07:59:36 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
