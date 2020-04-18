@@ -95,6 +95,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
                         offset: prompt.length
                     });
                 } catch(e) {
+                    console.log(e);
                     // boken LIPS code
                     output = code;
                 }

@@ -255,7 +255,7 @@
   "(key? symbol)
 
    Function check if symbol is key symbol, have colon as first character."
-  (and (symbol? symbol) (eq? ":" (substring (symbol->string symbol) 0 1))))
+  (and (symbol? symbol) (string=? ":" (substring (symbol->string symbol) 0 1))))
 
 ;; -----------------------------------------------------------------------------
 (define (key->string symbol)

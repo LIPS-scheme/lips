@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 17 Apr 2020 10:58:23 +0000
+ * build: Sat, 18 Apr 2020 05:11:13 +0000
  */
 (function () {
 	'use strict';
@@ -1298,7 +1298,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escapeRegex).join('|');
-	    return new RegExp("(\"(?:\\\\[\\S\\s]|[^\"])*\"|#\\\\(?:newline|space|.)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|\"(?:\\\\[\\S\\s]|[^\"])+|\\n|(?:\\\\[\\S\\s]|[^\"])*\"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:".concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:".concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -2221,6 +2221,7 @@
 
 	      if (token.token === '\n') {
 	        indent = this._indent(tokens.slice(0, i), settings);
+	        console.log(indent);
 	        offset += indent;
 
 	        if (tokens[i + 1]) {
@@ -2903,8 +2904,6 @@
 	      return x.type === y.type && x.cmp(y) === 0;
 	    } else if (x instanceof LCharacter && y instanceof LCharacter) {
 	      return x["char"] === y["char"];
-	    } else if (x instanceof LString && y instanceof LString) {
-	      return x.valueOf() === y.valueOf();
 	    } else if (x instanceof LSymbol && y instanceof LSymbol) {
 	      return x.name === y.name;
 	    } else {
@@ -4008,6 +4007,28 @@
 	    return this._string[n];
 	  };
 
+	  LString.prototype.cmp = function (string) {
+	    typecheck('LStrign::cmp', string, 'string');
+	    var a = this.valueOf();
+	    var b = string.valueOf();
+
+	    if (a < b) {
+	      return -1;
+	    } else if (a === b) {
+	      return 0;
+	    } else {
+	      return 1;
+	    }
+	  };
+
+	  LString.prototype.lower = function () {
+	    return LString(this._string.toLowerCase());
+	  };
+
+	  LString.prototype.upper = function () {
+	    return LString(this._string.toUpperCase());
+	  };
+
 	  LString.prototype.set = function (n, _char) {
 	    if (_char instanceof LCharacter) {
 	      _char = _char["char"];
@@ -4032,9 +4053,14 @@
 	    get: function get() {
 	      return this._string.length;
 	    }
-	  }); // -------------------------------------------------------------------------
+	  });
+
+	  LString.prototype.clone = function () {
+	    return LString(this.valueOf());
+	  }; // -------------------------------------------------------------------------
 	  // :: Number wrapper that handle BigNumbers
 	  // -------------------------------------------------------------------------
+
 
 	  function LNumber(n) {
 	    if (typeof this !== 'undefined' && !(this instanceof LNumber) || typeof this === 'undefined') {
@@ -5525,7 +5551,7 @@
 	    // ------------------------------------------------------------------
 	    pprint: doc(function (arg) {
 	      if (arg instanceof Pair) {
-	        arg = new lips.Formatter(arg.toString())["break"]().format();
+	        arg = new lips.Formatter(arg.toString(true))["break"]().format();
 	        this.get('stdout').write.call(this, arg);
 	      } else {
 	        this.get('display').call(this, arg);
@@ -8174,7 +8200,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 17 Apr 2020 10:58:23 +0000',
+	    date: 'Sat, 18 Apr 2020 05:11:13 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -73,7 +73,7 @@
 
    Function compare the values. It return true if they are the same, they
    need to have same type"
-  (if (eq? (type a) (type b))
+  (if (string=? (type a) (type b))
       (cond ((number? a) (= a b))
             ((pair? a) (and (null? a) (null? b)))
             (else (eq? a b)))
@@ -88,6 +88,10 @@
   (cond ((and (pair? a) (pair? b))
          (and (equal? (car a) (car b))
               (equal? (cdr a) (cdr b))))
+        ((and (symbol? a) (symbol? b))
+         (equal? (. a 'name) (. b 'name)))
+        ((and (string? a) (string? b))
+         (string=? a b))
         ((and (function? a) (function? b))
          (%same-functions a b))
         ((and (array? a) (array? b) (eq? (length a) (length b)))
@@ -212,7 +216,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)
-  (and (number? x) (eq? (. x 'type) type)))
+  (and (number? x) (string?= (. x 'type) type)))
 
 ;; -----------------------------------------------------------------------------
 (define integer? (%doc
@@ -269,14 +273,14 @@
 ;; -----------------------------------------------------------------------------
 (define (real? n)
   "(real? n)"
-  (and (number? n) (eq? (. n 'type) "float")))
+  (and (number? n) (equal? (. n 'type) "float")))
 
 ;; -----------------------------------------------------------------------------
 (define (exact? n)
   "(exact? n)"
   (typecheck "exact?" n "number")
   (let ((type (. n 'type)))
-    (or (eq? type "bigint") (eq? type "rational"))))
+    (or (equal? type "bigint") (equal? type "rational"))))
 
 (define (inexact? n)
   "(inexact? n)"
@@ -493,6 +497,14 @@
   (list->string args))
 
 ;; -----------------------------------------------------------------------------
+(define (string-copy string)
+  "(string-copy string)
+
+   Returns a copy of the given string."
+  (typecheck "string-copy" string "string")
+  (--> string (clone)))
+
+;; -----------------------------------------------------------------------------
 ;; (let ((x "xxxxxxxxxx"))
 ;;    (string-fill! x #\b)
 ;;    x)
@@ -579,6 +591,97 @@
   (typecheck "string-ref" k "number" 2)
   (lips.Character (. string k)))
 
+(define (%string-cmp name string1 string2)
+  "(%string-cmp name a b)
+
+   Function compare two strings and return 0 if they are equal,
+   -1 second is smaller and 1 if is larget. The function compare
+   the codepoints of the character."
+  (typecheck name string1 "string" 1)
+  (typecheck name string2 "string" 2)
+  (--> string1 (cmp string2)))
+
+;; -----------------------------------------------------------------------------
+(define (string=? string1 string2)
+  "(string=? string1 string2)
+
+   Function check if two string s are equal."
+  (= (%string-cmp "string=?" string1 string2) 0))
+
+;; -----------------------------------------------------------------------------
+(define (string<? string1 string2)
+  "(string<? string1 string2)
+
+   Function return true if second string is smaller then the first one."
+  (= (%string-cmp "string<?" string1 string2) -1))
+
+;; -----------------------------------------------------------------------------
+(define (string>? string1 string2)
+  "(string<? string1 string2)
+
+   Function return true if second string is larger then the first one."
+  (= (%string-cmp "string>?" string1 string2) 1))
+
+;; -----------------------------------------------------------------------------
+(define (string<=? string1 string2)
+  "(string<? string1 string2)
+
+   Function return true if second string is not larger then the first one."
+  (< (%string-cmp "string<=?" string1 string2) 1))
+
+;; -----------------------------------------------------------------------------
+(define (string>=? string1 string2)
+  "(string<? string1 string2)
+
+   Function return true if second character is not smaller then the first one."
+  (> (%string-cmp "string>=?" string1 string2) -1))
+
+;; -----------------------------------------------------------------------------
+(define (%string-ci-cmp name string1 string2)
+  "(%string-ci-cmp name a b)
+
+   Function compare two strings ingoring case and return 0 if they are equal,
+   -1 second is smaller and 1 if is larget. The function compare
+   the codepoints of the character."
+  (typecheck name string1 "string" 1)
+  (typecheck name string2 "string" 2)
+  (--> string1 (lower) (cmp (--> string2 (lower)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci=? string1 string2)
+  "(string-ci=? string1 string2)
+
+   Function check if two string s are equal."
+  (= (%string-ci-cmp "string-ci=?" string1 string2) 0))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci<? string1 string2)
+  "(string-ci<? string1 string2)
+
+   Function return true if second string is smaller then the first one."
+  (= (%string-ci-cmp "string-ci<?" string1 string2) -1))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci>? string1 string2)
+  "(string-ci<? string1 string2)
+
+   Function return true if second string is larger then the first one."
+  (= (%string-ci-cmp "string-ci>?" string1 string2) 1))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci<=? string1 string2)
+  "(string-ci<? string1 string2)
+
+   Function return true if second string is not larger then the first one."
+  (< (%string-ci-cmp "string-ci<=?" string1 string2) 1))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci>=? string1 string2)
+  "(string-ci>=? string1 string2)
+
+   Function return true if second character is not smaller then the first one."
+  (> (%string-ci-cmp "string-ci>=?" string1 string2) -1))
+
 ;; -----------------------------------------------------------------------------
 ;; CHARACTER FUNCTIONS
 ;; -----------------------------------------------------------------------------
@@ -653,11 +756,57 @@
   (< (%char-cmp "char<=?" chr1 chr2) 1))
 
 ;; -----------------------------------------------------------------------------
-(define (char<=? chr1 chr2)
+(define (char>=? chr1 chr2)
   "(char<? chr1 chr2)
 
    Function return true if second character is not smaller then the first one."
   (> (%char-cmp "char>=?" chr1 chr2) -1))
+
+;; -----------------------------------------------------------------------------
+(define (%char-ci-cmp name chr1 chr2)
+  "(%char-cmp name a b)
+
+   Function compare two characters and return 0 if they are equal,
+   -1 second is smaller and 1 if is larget. The function compare
+   the codepoints of the character."
+  (typecheck name chr1 "character" 1)
+  (typecheck name chr2 "character" 2)
+  (%char-cmp name (char-downcase chr1) (char-downcase chr2)))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci=? chr1 chr2)
+  "(char-ci=? chr1 chr2)
+
+   Function check if two characters are equal."
+  (= (%char-ci-cmp "char-ci=?" chr1 chr2) 0))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci<? chr1 chr2)
+  "(char-ci<? chr1 chr2)
+
+   Function return true if second character is smaller then the first one."
+  (= (%char-ci-cmp "char-ci<?" chr1 chr2) -1))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci>? chr1 chr2)
+  "(char-ci<? chr1 chr2)
+
+   Function return true if second character is larger then the first one."
+  (= (%char-ci-cmp "char-ci>?" chr1 chr2) 1))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci<=? chr1 chr2)
+  "(char-ci<? chr1 chr2)
+
+   Function return true if second character is not larger then the first one."
+  (< (%char-ci-cmp "char-ci<=?" chr1 chr2) 1))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci>=? chr1 chr2)
+  "(char-ci<? chr1 chr2)
+
+   Function return true if second character is not smaller then the first one."
+  (> (%char-ci-cmp "char-ci>=?" chr1 chr2) -1))
 
 ;; -----------------------------------------------------------------------------
 (define (char-upcase char)

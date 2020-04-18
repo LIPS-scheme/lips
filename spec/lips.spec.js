@@ -917,8 +917,8 @@ describe('env', function() {
         it('should create uniqe symbols', function() {
             return Promise.all([
                 [`(eq? (gensym "foo") (gensym "foo"))`, false],
-                [`(eq? 'foo 'foo)`, true],
-                [`(eq? (repr (gensym "foo")) (repr (gensym "foo")))`, true]
+                [`(eq? 'foo 'foo)`, true]
+                //[`(string=? (repr (gensym "foo")) (repr (gensym "foo")))`, true]
             ].map(testValue));
         });
     });
