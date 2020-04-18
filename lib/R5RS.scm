@@ -825,6 +825,22 @@
   (char.toLowerCase))
 
 ;; -----------------------------------------------------------------------------
+(define (char-upper-case? char)
+  "(char-upper-case? char)
+
+   Function check if character is upper case."
+  (typecheck "char-upper-case?" char "character")
+  (char=? (char-upcase char) char))
+
+;; -----------------------------------------------------------------------------
+(define (char-lower-case? char)
+  "(char-upper-case? char)
+
+   Function check if character is lower case."
+  (typecheck "char-lower-case?" char "character")
+  (char=? (char-downcase char) char))
+
+;; -----------------------------------------------------------------------------
 (define (newline)
   "(newline)
 
