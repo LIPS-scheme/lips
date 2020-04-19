@@ -182,7 +182,7 @@ if (options.version || options.V) {
         input: process.stdin,
         output: process.stdout,
         prompt: prompt,
-        terminal: !!process.stdin.isTTY
+        terminal: !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS)
     });
     if (process.stdin.isTTY) {
         rl.prompt();

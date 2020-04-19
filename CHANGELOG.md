@@ -42,6 +42,7 @@
 * fix display of function/macro docs (remove white space in parser)
 * fix loading modules with `require`
 * fix macro expand when expansion return list with macro that is data
+* fix lips executable in GNU Emacs run-scheme (comint mode)
 
 ## 0.20.1
 ### Bug fixes
