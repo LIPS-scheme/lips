@@ -150,32 +150,6 @@
             });
         };
     }
-    var banner = (function() {
-        // Rollup tree-shaking is removing the variable if it's normal string because
-        // obviously '{{DATE}}' == '{{' + 'DATE}}'; can be removed
-        // but disablig Tree-shaking is adding lot of not used code so we use this
-        // hack instead
-        var date = LString('{{DATE}}');
-        var _date = date.valueOf() === '{{' + 'DATE}}' ? new Date() : new Date(date);
-        var _format = x => x.toString().padStart(2, '0');
-        var _year = _date.getFullYear();
-        var _build = `${_year}-${_format(_date.getMonth() + 1)}-${_format(_date.getDate())}`;
-        var banner = `
-  __                    __
- / /  _    _  ___  ___  \\ \\
-| |  | |  | || . \\/ __>  | |
-| |  | |_ | ||  _/\\__ \\  | |
-| |  |___||_||_|  <___/  | |
- \\_\\                    /_/
-
-LIPS Scheme Interpreter {{VER}} (${_build})
-Copyright (c) 2018-${_year} Jakub T. Jankiewicz <https://jcubic.pl/me>
-
-Type (env) to see environment with functions macros and variables.
-You can also use (help name) to display help for specic function or macro.
-`.replace(/^.*\n/, '');
-        return banner;
-    })();
     // parse_argument based on function from jQuery Terminal
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
@@ -1167,6 +1141,9 @@ You can also use (help name) to display help for specic function or macro.
     Nil.prototype.append = function(x) {
         return new Pair(x, nil);
     };
+    Nil.prototype.toArray = function() {
+        return [];
+    };
     var nil = new Nil();
     // ----------------------------------------------------------------------
     // :: Pair constructor
@@ -1784,7 +1761,7 @@ You can also use (help name) to display help for specic function or macro.
     // :: list of bindings from code that match the pattern
     // :: TODO detect cycles
     // ----------------------------------------------------------------------
-    function extract_patterns(pattern, code) {
+    function extract_patterns(pattern, code, symbols) {
         var bindings = {
             '...': {
                 symbols: { }, // symbols ellipsis (x ...)
@@ -4756,6 +4733,12 @@ You can also use (help name) to display help for specic function or macro.
                 var rules = macro.cdr;
                 var var_scope = this;
                 var eval_args = { env: scope, dynamic_scope, error };
+                var symbols = macro.car.toArray().map(x => {
+                    if (!(x instanceof LSymbol)) {
+                        throw new Error('syntax: wrong identifier');
+                    }
+                    return x.valueOf();
+                });
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
@@ -6511,6 +6494,33 @@ You can also use (help name) to display help for specic function or macro.
         contentLoaded(window, init);
     }
     // -------------------------------------------------------------------------
+    var banner = (function() {
+        // Rollup tree-shaking is removing the variable if it's normal string because
+        // obviously '{{DATE}}' == '{{' + 'DATE}}'; can be removed
+        // but disablig Tree-shaking is adding lot of not used code so we use this
+        // hack instead
+        var date = LString('{{DATE}}');
+        var _date = date.valueOf() === '{{' + 'DATE}}' ? new Date() : new Date(date.valueOf());
+        var _format = x => x.toString().padStart(2, '0');
+        var _year = _date.getFullYear();
+        var _build = `${_year}-${_format(_date.getMonth() + 1)}-${_format(_date.getDate())}`;
+        var banner = `
+  __                    __
+ / /  _    _  ___  ___  \\ \\
+| |  | |  | || . \\/ __>  | |
+| |  | |_ | ||  _/\\__ \\  | |
+| |  |___||_||_|  <___/  | |
+ \\_\\                    /_/
+
+LIPS Scheme Interpreter {{VER}} (${_build})
+Copyright (c) 2018-${_year} Jakub T. Jankiewicz <https://jcubic.pl/me>
+
+Type (env) to see environment with functions macros and variables.
+You can also use (help name) to display help for specic function or macro.
+`.replace(/^.*\n/, '');
+        return banner;
+    })();
+    // -------------------------------------------------------------------------
     // to be used with string function when code is minified
     // -------------------------------------------------------------------------
     Ahead.__className = 'ahead';
@@ -6556,10 +6566,6 @@ You can also use (help name) to display help for specic function or macro.
         Formatter,
         specials,
         nil,
-
-        extract_patterns,
-        transform_syntax,
-        resolvePromises,
 
         LSymbol,
         LNumber,

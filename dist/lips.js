@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 26 Apr 2020 10:18:59 +0000
+ * build: Sun, 26 Apr 2020 12:20:17 +0000
  */
 (function () {
 	'use strict';
@@ -1136,28 +1136,7 @@
 	        }
 	      });
 	    };
-	  }
-
-	  var banner = function () {
-	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 26 Apr 2020 10:18:59 +0000' == '{{' + 'DATE}}'; can be removed
-	    // but disablig Tree-shaking is adding lot of not used code so we use this
-	    // hack instead
-	    var date = LString('Sun, 26 Apr 2020 10:18:59 +0000');
-
-	    var _date = date.valueOf() === '{{' + 'DATE}}' ? new Date() : new Date(date);
-
-	    var _format = function _format(x) {
-	      return x.toString().padStart(2, '0');
-	    };
-
-	    var _year = _date.getFullYear();
-
-	    var _build = "".concat(_year, "-").concat(_format(_date.getMonth() + 1), "-").concat(_format(_date.getDate()));
-
-	    var banner = "\n  __                    __\n / /  _    _  ___  ___  \\ \\\n| |  | |  | || . \\/ __>  | |\n| |  | |_ | ||  _/\\__ \\  | |\n| |  |___||_||_|  <___/  | |\n \\_\\                    /_/\n\nLIPS Scheme Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
-	    return banner;
-	  }(); // parse_argument based on function from jQuery Terminal
+	  } // parse_argument based on function from jQuery Terminal
 
 
 	  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
@@ -2357,6 +2336,10 @@
 	    return new Pair(x, nil);
 	  };
 
+	  Nil.prototype.toArray = function () {
+	    return [];
+	  };
+
 	  var nil = new Nil(); // ----------------------------------------------------------------------
 	  // :: Pair constructor
 	  // ----------------------------------------------------------------------
@@ -3218,7 +3201,7 @@
 	  // :: TODO detect cycles
 	  // ----------------------------------------------------------------------
 
-	  function extract_patterns(pattern, code) {
+	  function extract_patterns(pattern, code, symbols) {
 	    var bindings = {
 	      '...': {
 	        symbols: {},
@@ -6805,6 +6788,13 @@
 	          dynamic_scope: dynamic_scope,
 	          error: error
 	        };
+	        var symbols = macro.car.toArray().map(function (x) {
+	          if (!(x instanceof LSymbol)) {
+	            throw new Error('syntax: wrong identifier');
+	          }
+
+	          return x.valueOf();
+	        });
 
 	        while (rules !== nil) {
 	          var rule = rules.car.car;
@@ -8700,6 +8690,28 @@
 	  if (typeof window !== 'undefined') {
 	    contentLoaded(window, init);
 	  } // -------------------------------------------------------------------------
+
+
+	  var banner = function () {
+	    // Rollup tree-shaking is removing the variable if it's normal string because
+	    // obviously 'Sun, 26 Apr 2020 12:20:17 +0000' == '{{' + 'DATE}}'; can be removed
+	    // but disablig Tree-shaking is adding lot of not used code so we use this
+	    // hack instead
+	    var date = LString('Sun, 26 Apr 2020 12:20:17 +0000');
+
+	    var _date = date.valueOf() === '{{' + 'DATE}}' ? new Date() : new Date(date.valueOf());
+
+	    var _format = function _format(x) {
+	      return x.toString().padStart(2, '0');
+	    };
+
+	    var _year = _date.getFullYear();
+
+	    var _build = "".concat(_year, "-").concat(_format(_date.getMonth() + 1), "-").concat(_format(_date.getDate()));
+
+	    var banner = "\n  __                    __\n / /  _    _  ___  ___  \\ \\\n| |  | |  | || . \\/ __>  | |\n| |  | |_ | ||  _/\\__ \\  | |\n| |  |___||_||_|  <___/  | |\n \\_\\                    /_/\n\nLIPS Scheme Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+	    return banner;
+	  }(); // -------------------------------------------------------------------------
 	  // to be used with string function when code is minified
 	  // -------------------------------------------------------------------------
 
@@ -8718,7 +8730,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 26 Apr 2020 10:18:59 +0000',
+	    date: 'Sun, 26 Apr 2020 12:20:17 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -8741,9 +8753,6 @@
 	    Formatter: Formatter,
 	    specials: specials,
 	    nil: nil,
-	    extract_patterns: extract_patterns,
-	    transform_syntax: transform_syntax,
-	    resolvePromises: resolvePromises,
 	    LSymbol: LSymbol,
 	    LNumber: LNumber,
 	    LFloat: LFloat,
