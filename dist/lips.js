@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 26 Apr 2020 12:20:17 +0000
+ * build: Sun, 26 Apr 2020 12:28:35 +0000
  */
 (function () {
 	'use strict';
@@ -7335,7 +7335,7 @@
 
 	      typecheck('apply', fn, 'function', 1);
 	      var last = list.pop();
-	      typecheck('apply', last, 'pair', list.length + 2);
+	      typecheck('apply', last, ['pair', 'nil'], list.length + 2);
 	      list = list.concat(this.get('list->array')(last));
 	      return fn.apply(void 0, toConsumableArray(list));
 	    }, "(apply fn list)\n\n            Function that call function with list of arguments."),
@@ -8694,10 +8694,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 26 Apr 2020 12:20:17 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 26 Apr 2020 12:28:35 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 26 Apr 2020 12:20:17 +0000');
+	    var date = LString('Sun, 26 Apr 2020 12:28:35 +0000');
 
 	    var _date = date.valueOf() === '{{' + 'DATE}}' ? new Date() : new Date(date.valueOf());
 
@@ -8730,7 +8730,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 26 Apr 2020 12:20:17 +0000',
+	    date: 'Sun, 26 Apr 2020 12:28:35 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

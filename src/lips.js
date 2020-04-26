@@ -5351,7 +5351,7 @@
         apply: doc(function(fn, ...list) {
             typecheck('apply', fn, 'function', 1);
             var last = list.pop();
-            typecheck('apply', last, 'pair', list.length + 2);
+            typecheck('apply', last, ['pair', 'nil'], list.length + 2);
             list = list.concat(this.get('list->array')(last));
             return fn(...list);
         }, `(apply fn list)
