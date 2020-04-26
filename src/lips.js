@@ -4463,9 +4463,7 @@
                 value = env.get(value);
             }
             typecheck('define', code.car, 'symbol');
-            unpromise(value, value => {
-                // TODO: there should be better way to define merge env in syntax-rules
-                // maybe we should use unique symbol as name
+            return unpromise(value, value => {
                 if (env.name === Syntax.merge_env) {
                     env.parent.set(code.car, value);
                 } else {

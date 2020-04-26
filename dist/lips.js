@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 26 Apr 2020 17:03:01 +0000
+ * build: Sun, 26 Apr 2020 17:50:41 +0000
  */
 (function () {
 	'use strict';
@@ -6485,9 +6485,7 @@
 	      }
 
 	      typecheck('define', code.car, 'symbol');
-	      unpromise(value, function (value) {
-	        // TODO: there should be better way to define merge env in syntax-rules
-	        // maybe we should use unique symbol as name
+	      return unpromise(value, function (value) {
 	        if (env.name === Syntax.merge_env) {
 	          env.parent.set(code.car, value);
 	        } else {
@@ -8729,10 +8727,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 26 Apr 2020 17:03:01 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 26 Apr 2020 17:50:41 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 26 Apr 2020 17:03:01 +0000').valueOf();
+	    var date = LString('Sun, 26 Apr 2020 17:50:41 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -8765,7 +8763,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 26 Apr 2020 17:03:01 +0000',
+	    date: 'Sun, 26 Apr 2020 17:50:41 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
