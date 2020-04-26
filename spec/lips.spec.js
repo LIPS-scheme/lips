@@ -574,7 +574,7 @@ describe('evaluate', function() {
                     (define (trampoline f)
                          (lambda args
                             (let ((result (apply f args)))
-                                (while (eq? (type result) "function")
+                                (while (equal? (type result) "function")
                                    (set! result (result)))
                                 result)))
 

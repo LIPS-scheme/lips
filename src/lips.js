@@ -151,8 +151,12 @@
         };
     }
     var banner = (function() {
-        var date = '{{DATE}}';
-        var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
+        // Rollup tree-shaking is removing the variable if it's normal string because
+        // obviously '{{DATE}}' == '{{' + 'DATE}}'; can be removed
+        // but disablig Tree-shaking is adding lot of not used code so we use this
+        // hack instead
+        var date = LString('{{DATE}}');
+        var _date = date.valueOf() === '{{' + 'DATE}}' ? new Date() : new Date(date);
         var _format = x => x.toString().padStart(2, '0');
         var _year = _date.getFullYear();
         var _build = `${_year}-${_format(_date.getMonth() + 1)}-${_format(_date.getDate())}`;
@@ -1154,11 +1158,14 @@ You can also use (help name) to display help for specic function or macro.
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
     function Nil() {}
-    Nil.prototype.toString = function() {
+    Nil.prototype.toString = Nil.prototype.toJSON = function() {
         return '()';
     };
     Nil.prototype.valueOf = function() {
         return undefined;
+    };
+    Nil.prototype.append = function(x) {
+        return new Pair(x, nil);
     };
     var nil = new Nil();
     // ----------------------------------------------------------------------
@@ -1236,6 +1243,17 @@ You can also use (help name) to display help for specic function or macro.
             return node;
         }
         return clone(this);
+    };
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.lastPair = function() {
+        let node = this;
+        while (true) {
+            if (node.cdr === nil) {
+                return node;
+            }
+            node = node.cdr;
+        }
     };
 
     // ----------------------------------------------------------------------
@@ -1710,6 +1728,7 @@ You can also use (help name) to display help for specic function or macro.
                                 }
                                 n = n - 1;
                             }
+                            console.log({ result: result.toString() });
                             return traverse(result, n);
                         }
                     }
@@ -1760,75 +1779,189 @@ You can also use (help name) to display help for specic function or macro.
         return '<#syntax>';
     };
     Syntax.className = 'syntax';
-    /*
-    // ----------------------------------------------------------------------
-    // :: list of symbols, with at least one
-    // ----------------------------------------------------------------------
-    function is_symbol_list(list) {
-        return (list instanceof Pair &&
-                list.car instanceof LSymbol &&
-                !list.haveCycles('cdr') &&
-                (list.cdr === nil || is_symbol_list(list.cdr)));
-    }
-    // ----------------------------------------------------------------------
-    // :: test if value is '((name) ...) or (name ...) it throw exception
-    // :: when list don't have symbols or if list is empty
-    // ----------------------------------------------------------------------
-    function is_ellipsis(node) {
-        if (node instanceof Pair &&
-            node.cdr instanceof Pair &&
-            LSymbol.is(node.cdr.car, '...')) {
-            if (node.car instanceof Pair && is_symbol_list(node.car)) {
-                return true;
-            } else if (node.car instanceof LSymbol) {
-                return true;
-            } else {
-                throw new Error('Invalid Syntax');
-            }
-        }
-        return false;
-    }
-    */
     // ----------------------------------------------------------------------
     // :: for usage in syntax-rule when pattern match it will return
     // :: list of bindings from code that match the pattern
     // :: TODO detect cycles
     // ----------------------------------------------------------------------
     function extract_patterns(pattern, code) {
-        var bindings = {};
-        function traverse(pattern, code) {
-            if (pattern instanceof Pair && LSymbol.is(pattern.car, '...')) {
-                if (code instanceof Pair) {
-                    bindings['...'] = code;
+        var bindings = {
+            '...': {
+                symbols: { }, // symbols ellipsis (x ...)
+                lists: [ ]
+            }
+        };
+        // pattern_names parameter is used to distinguish
+        // multiple matches of ((x ...) ...) agains ((1 2 3) (1 2 3))
+        // in loop we add x to the list so we know that this is not
+        // duplicated ellipsis symbol
+        function log(x) {
+            if (user_env.get('DEBUG', { throwError: false })) {
+                console.log(x);
+            }
+        }
+        /* eslint-disable complexity */
+        function traverse(pattern, code, pattern_names = [], ellipsis = false) {
+            log({ code: code.toString(), pattern: pattern.toString() });
+            // pattern (a b (x ...)) and (x ...) match nil
+            if (pattern instanceof Pair &&
+                pattern.car instanceof Pair &&
+                pattern.car.cdr instanceof Pair &&
+                LSymbol.is(pattern.car.cdr.car, '...')) {
+                log('>> 0');
+                if (code === nil) {
+                    log({ pattern: pattern.toString() });
+                    if (pattern.car.car instanceof LSymbol) {
+                        if (pattern.car.cdr instanceof Pair &&
+                            LSymbol.is(pattern.car.cdr.car, '...')) {
+                            let name = pattern.car.car.valueOf();
+                            const last = pattern.lastPair();
+                            if (LSymbol.is(last.car, '...')) {
+                                bindings['...'].symbols[name] = null;
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                        let name = pattern.car.car.valueOf();
+                        if (bindings['...'].symbols[name]) {
+                            throw new Error('syntax: named ellipsis can only ' +
+                                            'appear onces');
+                        }
+                        bindings['...'].symbols[name] = code;
+                    }
                     return true;
                 }
-                if (code === nil) {
-                    bindings['...'] = nil;
+            }
+            if (pattern instanceof Pair &&
+                pattern.cdr instanceof Pair &&
+                LSymbol.is(pattern.cdr.car, '...')) {
+                // pattern (... ???)
+                if (pattern.cdr.cdr !== nil) {
+                    throw new Error('syntax: invalid usage of ellipsis');
+                }
+                if (pattern.car instanceof LSymbol) {
+                    let name = pattern.car.valueOf();
+                    if (bindings['...'].symbols[name] && !pattern_names.includes(name)) {
+                        throw new Error('syntax: named ellipsis can only appear onces');
+                    }
+                    log('>> 1');
+                    if (code === nil) {
+                        log('>> 2');
+                        if (ellipsis) {
+                            bindings['...'].symbols[name] = nil;
+                        } else {
+                            return false;
+                        }
+                    } else if (code instanceof Pair &&
+                               (code.car instanceof Pair || code.car === nil)) {
+                        log('>> 3 ' + ellipsis);
+                        if (ellipsis) {
+                            bindings['...'].symbols[name] = code.car;
+                        } else {
+                            log('>> 4');
+                            bindings['...'].symbols[name] = new Pair(code, nil);
+                        }
+                    } else {
+                        log('>> 6');
+                        if (code instanceof Pair) {
+                            log('>> 7 ' + ellipsis);
+                            pattern_names.push(name);
+                            if (!bindings['...'].symbols[name]) {
+                                bindings['...'].symbols[name] = new Pair(
+                                    code,
+                                    nil
+                                );
+                            } else {
+                                const node = bindings['...'].symbols[name];
+                                bindings['...'].symbols[name] = node.append(
+                                    new Pair(
+                                        code,
+                                        nil
+                                    )
+                                );
+                            }
+                            log({ IIIIII: bindings['...'].symbols[name].toString() });
+                        } else {
+                            log('>> 8');
+                            return false;
+                            //bindings['...'].symbols[name] = code;
+                        }
+                    }
+                    return true;
+                } else if (pattern.car instanceof Pair) {
+                    var names = [...pattern_names];
+                    if (code === nil) {
+                        log('>> 9');
+                        bindings['...'].lists.push(nil);
+                        return true;
+                    }
+                    log('>> 10');
+                    let node = code;
+                    while (node instanceof Pair) {
+                        if (!traverse(pattern.car, node.car, names, true)) {
+                            return false;
+                        }
+                        node = node.cdr;
+                    }
                     return true;
                 }
                 return false;
             }
             if (pattern instanceof LSymbol) {
+                if (LSymbol.is(pattern, '...')) {
+                    throw new Error('syntax: invalid usage of ellipsis');
+                }
+                log('>> 11');
                 const name = pattern.valueOf();
-                bindings[name] = code;
+                log({ name });
+                //console.log(code.toString());
+                if (ellipsis) {
+                    bindings['...'].symbols[name] = bindings['...'].symbols[name] || [];
+                    bindings['...'].symbols[name].push(code);
+                }
+                if (!bindings[name]) {
+                    bindings[name] = code;
+                }
                 return true;
             }
             if (pattern instanceof Pair && code instanceof Pair) {
-                if (traverse(pattern.car, code.car) &&
-                    traverse(pattern.cdr, code.cdr)) {
+                log('>> 12');
+                log(code.toString());
+                if (code.cdr === nil) {
+                    // last item in in call using in recursive calls on
+                    // last element of the list
+                    // case of pattern (p . rest) and code (0)
+                    var rest_pattern = pattern.car instanceof LSymbol &&
+                        pattern.cdr instanceof LSymbol;
+                    if (rest_pattern) {
+                        log('>> 12 | 1');
+                        let name = pattern.cdr.valueOf();
+                        if (!bindings[name]) {
+                            bindings[name] = nil;
+                        }
+                        name = pattern.car.valueOf();
+                        if (!bindings[name]) {
+                            bindings[name] = code.car;
+                        }
+                        return true;
+                    }
+                }
+                if (traverse(pattern.car, code.car, pattern_names, ellipsis) &&
+                    traverse(pattern.cdr, code.cdr, pattern_names, ellipsis)) {
                     return true;
                 }
             } else if (pattern === nil && code === nil) {
                 return true;
             } else if (pattern.car instanceof Pair &&
-                       LSymbol.is(pattern.car.car, '...') &&
-                       code === nil) {
-                bindings['...'] = nil;
-                return true;
+                       LSymbol.is(pattern.car.car, '...')) {
+                // pattern (...)
+                throw new Error('syntax: invalid usage of ellipsis');
             } else {
                 return false;
             }
         }
+        /* eslint-enable complexity */
         if (traverse(pattern, code)) {
             return bindings;
         }
@@ -1917,14 +2050,26 @@ You can also use (help name) to display help for specic function or macro.
         }
         return traverse(node);
     }
+    // ----------------------------------------------------------------------
     function transform_syntax(bindings, expr, scope, lex_scope, names) {
         var gensyms = {};
         function transform(symbol) {
+            if (!(symbol instanceof LSymbol || typeof symbol === 'string')) {
+                throw new Error('syntax: internal error, rename neeed to be symbol');
+            }
             const name = symbol.valueOf();
+            if (name === '...') {
+                throw new Error('syntax: internal error, ellipis not transformed');
+            }
             if (typeof name === 'string' && name in bindings) {
                 return bindings[name];
             }
             return rename(name);
+        }
+        function log(x) {
+            if (user_env.get('DEBUG', { throwError: false })) {
+                console.log(x);
+            }
         }
         function rename(name) {
             if (!gensyms[name]) {
@@ -1943,37 +2088,220 @@ You can also use (help name) to display help for specic function or macro.
             }
             return gensyms[name];
         }
-        function traverse(expr) {
-            if (expr instanceof Pair) {
-                if (expr.car instanceof LSymbol) {
-                    const value = transform(expr.car);
-                    if (typeof value !== 'undefined') {
-                        expr.car = value;
+        function get_binding(list, nested) {
+            if (!list) {
+                return;
+            }
+            if (list instanceof Pair) {
+                return list.car;
+            }
+            if (list instanceof Array) {
+                const [item] = list;
+                if (item instanceof Array) {
+                    if (nested) {
+                        return Pair.fromArray(item);
                     }
-                } else {
-                    traverse(expr.car);
+                    return item;
                 }
-                if (expr.cdr instanceof Pair &&
-                    LSymbol.is(expr.cdr.car, '...') &&
-                    bindings['...']) {
-                    expr.cdr = bindings['...'];
-                } else if (expr.cdr instanceof LSymbol) {
-                    const value = transform(expr.cdr);
-                    if (typeof value !== 'undefined') {
-                        expr.cdr = value;
-                    }
-                } else {
-                    traverse(expr.cdr);
-                }
+                return item;
             }
         }
-        if (expr instanceof Pair) {
-            expr = expr.clone();
-            traverse(expr);
-            return expr;
-        } else if (expr instanceof LSymbol) {
-            return transform(expr);
+        function transform_ellipsis_expr(expr, bindings, nested, next = () => {}) {
+            log(' ==> ' + expr.toString());
+            if (expr instanceof LSymbol) {
+                const name = expr.valueOf();
+                log('[t 1');
+                const value = get_binding(bindings[name]);
+                if (value) {
+                    //return value;
+                }
+                if (bindings[name]) {
+                    if (bindings[name] instanceof Pair) {
+                        const { car, cdr } = bindings[name];
+                        if (nested) {
+                            const { car: caar, cdr: cadr } = car;
+                            if (cadr !== nil) {
+                                next(name, new Pair(cadr, nil));
+                            }
+                            return caar;
+                        }
+                        if (cdr !== nil) {
+                            next(name, cdr);
+                        }
+                        return car;
+                    } else if (bindings[name] instanceof Array) {
+                        next(name, bindings[name].slice(1));
+                        return bindings[name][0];
+                    }
+                }
+                return transform(name);
+            }
+            if (expr instanceof Pair) {
+                if (expr.car instanceof LSymbol &&
+                    expr.cdr instanceof Pair &&
+                    LSymbol.is(expr.cdr.car, '...')) {
+                    log('[t 2');
+                    const name = expr.car.valueOf();
+                    const item = bindings[name];
+                    if (item) {
+                        log({ b: bindings[name] });
+                        if (item instanceof Pair) {
+                            log('[t 2 Pair ' + nested);
+                            log({ ______: item.toString() });
+                            const { car, cdr } = item;
+                            if (nested) {
+                                if (cdr !== nil) {
+                                    next(name, cdr);
+                                }
+                                return car;
+                            } else {
+                                if (car.cdr !== nil) {
+                                    next(name, new Pair(car.cdr, cdr));
+                                }
+                                return car.car;
+                            }
+                        } else if (item instanceof Array) {
+                            log('[t 2 Array ' + nested);
+                            if (nested) {
+                                next(name, item.slice(1));
+                                return Pair.fromArray(item);
+                            } else {
+                                const rest = item.slice(1);
+                                if (rest.length) {
+                                    next(name, rest);
+                                }
+                                return item[0];
+                            }
+                        } else {
+                            return item;
+                        }
+                    }
+                }
+                log('[t 3 recur ' + expr.toString());
+                return new Pair(
+                    transform_ellipsis_expr(expr.car, bindings, nested, next),
+                    transform_ellipsis_expr(expr.cdr, bindings, nested, next)
+                );
+            }
         }
+        function have_binding(biding) {
+            const values = Object.values(biding);
+            return values.length && values.every(x => {
+                return x instanceof Pair ||
+                    x === nil || (x instanceof Array && x.length);
+            });
+        }
+        function traverse(expr) {
+            if (expr instanceof Pair) {
+                if (expr.cdr instanceof Pair &&
+                    LSymbol.is(expr.cdr.car, '...')) {
+                    log('>> 1');
+                    const symbols = bindings['...'].symbols;
+                    var keys = Object.keys(symbols);
+                    // case of list as first argument ((x . y) ...)
+                    // we need to recursively process the list
+                    // if we have pattern (_ (x y z ...) ...) and code (foo (1 2) (1 2))
+                    // x an y will be arrays of [1 1] and [2 2] and z will be array
+                    // of rest, x will also have it's own mapping to 1 and y to 2
+                    // in case of usage outside of ellipsis list e.g.: (x y)
+                    if (expr.car instanceof Pair) {
+                        // lists is free ellipsis on pairs ((???) ...)
+                        // TODO: will this work in every case? Do we need to handle
+                        // nesting here?
+                        if (bindings['...'].lists[0] === nil) {
+                            return nil;
+                        }
+                        log('>> 2');
+                        let result;
+                        if (keys.length) {
+                            log('>> 2 (a)');
+                            let bind = { ...symbols };
+                            result = nil;
+                            while (true) {
+                                if (!have_binding(bind)) {
+                                    break;
+                                }
+                                const new_bind = {};
+                                const next = (key, value) => {
+                                    // ellipsis decide it what should be the next value
+                                    // there are two cases ((a . b) ...) and (a ...)
+                                    new_bind[key] = value;
+                                };
+                                result = new Pair(
+                                    transform_ellipsis_expr(expr.car, bind, true, next),
+                                    result
+                                );
+                                bind = new_bind;
+                            }
+                            if (result !== nil) {
+                                result = result.reverse();
+                            }
+                            return result;
+                        } else {
+                            log('>> 3');
+                            const car = transform_ellipsis_expr(expr.car, symbols, true);
+                            if (car) {
+                                return new Pair(
+                                    car,
+                                    nil
+                                );
+                            }
+                            return nil;
+                        }
+                    } else if (expr.car instanceof LSymbol) {
+                        log('>> 4');
+                        // case: (x ...)
+                        let name = expr.car.valueOf();
+                        let bind = { [name]: symbols[name] };
+                        let result = nil;
+                        while (true) {
+                            if (!have_binding(bind)) {
+                                log({ bind });
+                                break;
+                            }
+                            const new_bind = {};
+                            const next = (key, value) => {
+                                new_bind[key] = value;
+                            };
+                            log({ EXPR: expr.toString() });
+                            const value = transform_ellipsis_expr(
+                                expr,
+                                bind,
+                                false,
+                                next
+                            );
+                            result = new Pair(
+                                value,
+                                result
+                            );
+                            bind = new_bind;
+                        }
+                        if (result !== nil) {
+                            result = result.reverse();
+                        }
+                        // case if (x ... y ...) second spread is not processed
+                        // by ellipsis transformation
+                        if (expr.cdr instanceof Pair &&
+                            expr.cdr.cdr instanceof Pair) {
+                            result.append(traverse(expr.cdr.cdr));
+                        }
+                        return result;
+                    }
+                }
+                return new Pair(
+                    traverse(expr.car),
+                    traverse(expr.cdr)
+                );
+            }
+            if (expr instanceof LSymbol) {
+                const value = transform(expr);
+                if (typeof value !== 'undefined') {
+                    return value;
+                }
+            }
+            return expr;
+        }
+        return traverse(expr);
     }
     // ----------------------------------------------------------------------
     // :: check for nullish values
@@ -2960,7 +3288,10 @@ You can also use (help name) to display help for specic function or macro.
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.toString = LNumber.prototype.toJSON = function(radix) {
-        return this.value.toString(radix);
+        if (radix > 2 && radix < 36) {
+            return this.value.toString(radix);
+        }
+        return this.value.toString();
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.isBigNumber = function() {
@@ -4170,7 +4501,12 @@ You can also use (help name) to display help for specic function or macro.
                 var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
                 throw new Error(msg);
             }
-            unbind(obj)[key] = value.valueOf();
+            obj = unbind(obj);
+            if (typeof value === 'undefined') {
+                delete obj[key];
+            } else {
+                obj[key] = value.valueOf();
+            }
         }, `(set-obj! obj key value)
 
             Function set property of JavaScript object`),
@@ -4425,6 +4761,9 @@ You can also use (help name) to display help for specic function or macro.
                     var expr = rules.car.cdr.car;
                     var bindings = extract_patterns(rule, code);
                     if (bindings) {
+                        if (user_env.get('DEBUG', { throwError: false })) {
+                            console.log(JSON.stringify(bindings, true, 2));
+                        }
                         // name is modified in transform_syntax
                         var names = [];
                         const new_expr = transform_syntax(
@@ -4450,7 +4789,7 @@ You can also use (help name) to display help for specic function or macro.
                     }
                     rules = rules.cdr;
                 }
-                //throw new Error(`Invalid Syntax ${code}`);
+                throw new Error(`Invalid Syntax ${code}`);
             }, env);
         }, `(syntax-rules () (pattern expression) ...)
 
@@ -6218,6 +6557,8 @@ You can also use (help name) to display help for specic function or macro.
         specials,
         nil,
 
+        extract_patterns,
+        transform_syntax,
         resolvePromises,
 
         LSymbol,

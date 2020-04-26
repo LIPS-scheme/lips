@@ -8,7 +8,6 @@ const readDir = promisify(fs.readdir);
 const lips = require('./src/lips');
 
 readDir('./tests/').then(function(filenames) {
-  
   return Promise.all(filenames.filter(function(file) {
       return file.match(/.scm$/) && !file.match(/^\.#/);
   }).map(function(file) {

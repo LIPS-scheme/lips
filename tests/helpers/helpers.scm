@@ -1,12 +1,18 @@
 (define-macro (t.is a b)
   "(t.is a b)
 
-   Helper comparator for ava. It use equal? so it match two lists and strings."
-  (let ((result (gensym)))
-    `(let ((,result (--> t (is (equal? ,a ,b) #t))))
-       ;;(if (not ,result)
-       ;;    (throw (new Error (concat "failed: " (repr ',a) " is not equal " (repr ',b)))))
-       ,result)))
+   Helper comparator for ava. It use equal? so it match two lists and strings.
+   It use undecumented API that allow to delete StackTrace when assersion fail."
+  (let ((attempt (gensym)))
+    `(let ((,attempt (t.try (lambda (e)
+                              (if (equal? ,a ,b)
+                                  (--> e (pass))
+                                  (--> e (fail (concat "failed: " (repr ',a)
+                                                       " is not equal " (repr ',b)))))))))
+       (if (not (. ,attempt 'passed))
+           (--> (. ,attempt 'errors) (forEach (lambda (e)
+                                                (set-obj! e 'savedError undefined)))))
+       (--> ,attempt (commit)))))
 
 (define-macro (to.throw . body)
   "(to.throw code)
@@ -16,7 +22,7 @@
   (let ((result (gensym)))
     `(let ((,result (try (begin ,@body #f) (catch (e) #t))))
        (if (not ,result)
-           (throw (new Error (concat "failed: " ',body))))
+           (throw (new Error (concat "failed: " ',(repr body true)))))
        ,result)))
 
 (define (test_ . rest)
