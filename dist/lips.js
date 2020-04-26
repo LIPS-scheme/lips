@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 26 Apr 2020 12:28:35 +0000
+ * build: Sun, 26 Apr 2020 12:36:28 +0000
  */
 (function () {
 	'use strict';
@@ -1142,7 +1142,18 @@
 	  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
 	  var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
 	  var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
-	  var character_symbols = ['alarm', 'backspace', 'delete', 'escape', 'newline', 'null', 'return', 'space', 'tab'].join('|');
+	  var characters = {
+	    'alarm': '\x07',
+	    'backspace': '\x08',
+	    'delete': '\x7F',
+	    'escape': '\x1B',
+	    'newline': '\n',
+	    'null': '\x00',
+	    'return': '\r',
+	    'space': ' ',
+	    'tab': '\t'
+	  };
+	  var character_symbols = Object.keys(characters).join('|');
 	  var char_re = new RegExp("^#\\\\(?:".concat(character_symbols, "|[\\s\\S])$"), 'i'); // (int | flat) ? ([-+]
 
 	  var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
@@ -3220,8 +3231,9 @@
 	        console.log(x);
 	      }
 	    }
-	    /* eslint-disable complexity */
 
+	    log(symbols);
+	    /* eslint-disable complexity */
 
 	    function traverse(pattern, code) {
 	      var pattern_names = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : [];
@@ -4327,17 +4339,7 @@
 	    }
 	  }
 
-	  LCharacter.names = {
-	    'alarm': '\x07',
-	    'backspace': '\x08',
-	    'delete': '\x7F',
-	    'escape': '\x1B',
-	    'newline': '\n',
-	    'null': '\x00',
-	    'return': '\r',
-	    'space': ' ',
-	    'tab': '\t'
-	  };
+	  LCharacter.names = characters;
 	  LCharacter.rev_names = {};
 	  Object.keys(LCharacter.names).forEach(function (key) {
 	    var value = LCharacter.names[key];
@@ -6799,7 +6801,7 @@
 	        while (rules !== nil) {
 	          var rule = rules.car.car;
 	          var expr = rules.car.cdr.car;
-	          var bindings = extract_patterns(rule, code);
+	          var bindings = extract_patterns(rule, code, symbols);
 
 	          if (bindings) {
 	            if (user_env.get('DEBUG', {
@@ -8694,12 +8696,12 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 26 Apr 2020 12:28:35 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 26 Apr 2020 12:36:28 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 26 Apr 2020 12:28:35 +0000');
+	    var date = LString('Sun, 26 Apr 2020 12:36:28 +0000').valueOf();
 
-	    var _date = date.valueOf() === '{{' + 'DATE}}' ? new Date() : new Date(date.valueOf());
+	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
 	    var _format = function _format(x) {
 	      return x.toString().padStart(2, '0');
@@ -8707,7 +8709,7 @@
 
 	    var _year = _date.getFullYear();
 
-	    var _build = "".concat(_year, "-").concat(_format(_date.getMonth() + 1), "-").concat(_format(_date.getDate()));
+	    var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
 	    var banner = "\n  __                    __\n / /  _    _  ___  ___  \\ \\\n| |  | |  | || . \\/ __>  | |\n| |  | |_ | ||  _/\\__ \\  | |\n| |  |___||_||_|  <___/  | |\n \\_\\                    /_/\n\nLIPS Scheme Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
 	    return banner;
@@ -8730,7 +8732,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 26 Apr 2020 12:28:35 +0000',
+	    date: 'Sun, 26 Apr 2020 12:36:28 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

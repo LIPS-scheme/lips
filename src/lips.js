@@ -154,9 +154,18 @@
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
     var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
-    var character_symbols = [
-        'alarm', 'backspace', 'delete', 'escape', 'newline', 'null', 'return', 'space', 'tab'
-    ].join('|');
+    var characters = {
+        'alarm': '\x07',
+        'backspace': '\x08',
+        'delete': '\x7F',
+        'escape': '\x1B',
+        'newline': '\n',
+        'null': '\x00',
+        'return': '\r',
+        'space': ' ',
+        'tab': '\t'
+    };
+    var character_symbols = Object.keys(characters).join('|');
     var char_re = new RegExp(`^#\\\\(?:${character_symbols}|[\\s\\S])$`, 'i');
     // (int | flat) ? ([-+]
     var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
@@ -1777,6 +1786,7 @@
                 console.log(x);
             }
         }
+        log(symbols);
         /* eslint-disable complexity */
         function traverse(pattern, code, pattern_names = [], ellipsis = false) {
             log({ code: code.toString(), pattern: pattern.toString() });
@@ -2665,17 +2675,7 @@
             }
         }
     }
-    LCharacter.names = {
-        'alarm': '\x07',
-        'backspace': '\x08',
-        'delete': '\x7F',
-        'escape': '\x1B',
-        'newline': '\n',
-        'null': '\x00',
-        'return': '\r',
-        'space': ' ',
-        'tab': '\t'
-    };
+    LCharacter.names = characters;
     LCharacter.rev_names = {};
     Object.keys(LCharacter.names).forEach(key => {
         var value = LCharacter.names[key];
@@ -4742,7 +4742,7 @@
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-                    var bindings = extract_patterns(rule, code);
+                    var bindings = extract_patterns(rule, code, symbols);
                     if (bindings) {
                         if (user_env.get('DEBUG', { throwError: false })) {
                             console.log(JSON.stringify(bindings, true, 2));
@@ -6499,11 +6499,15 @@
         // obviously '{{DATE}}' == '{{' + 'DATE}}'; can be removed
         // but disablig Tree-shaking is adding lot of not used code so we use this
         // hack instead
-        var date = LString('{{DATE}}');
-        var _date = date.valueOf() === '{{' + 'DATE}}' ? new Date() : new Date(date.valueOf());
+        var date = LString('{{DATE}}').valueOf();
+        var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
         var _format = x => x.toString().padStart(2, '0');
         var _year = _date.getFullYear();
-        var _build = `${_year}-${_format(_date.getMonth() + 1)}-${_format(_date.getDate())}`;
+        var _build = [
+            _year,
+            _format(_date.getMonth() + 1),
+            _format(_date.getDate())
+        ].join('-');
         var banner = `
   __                    __
  / /  _    _  ___  ___  \\ \\
