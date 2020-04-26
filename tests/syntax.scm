@@ -275,3 +275,16 @@
         (t.is (merge (1 2 3)) '(1 2 3))
         (t.is (merge (1 2 3) (4 5 6)) '(1 2 3 4 5 6))
         (t.is (merge (1 2 3) (4 5 6) (7 8 9)) '(1 2 3 4 5 6 7 8 9))))
+
+(test "syntax-rules: identifiers"
+      (lambda (t)
+        (define-syntax let+
+          (syntax-rules (==>)
+            ((_ ((a ==> b) ...) . body)
+             (let ((a b) ...) . body))))
+
+        (t.is (let ((==> (lambda (x) (* x x))))
+                (let+ ((a ==> 1)
+                       (b ==> 2))
+                      (==> (+ a b))))
+              9)))

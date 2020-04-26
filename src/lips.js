@@ -1901,6 +1901,9 @@
                 }
                 log('>> 11');
                 const name = pattern.valueOf();
+                if (symbols.includes(name)) {
+                    return true;
+                }
                 log({ name });
                 //console.log(code.toString());
                 if (ellipsis) {
@@ -4725,6 +4728,18 @@
         'syntax-rules': new Macro('syntax-rules', function(macro, options) {
             var { dynamic_scope, error } = options;
             var env = this;
+            function get_identifiers(node) {
+                let symbols = [];
+                while (node !== nil) {
+                    const x = node.car;
+                    if (!(x instanceof LSymbol)) {
+                        throw new Error('syntax: wrong identifier');
+                    }
+                    symbols.push(x.valueOf());
+                    node = node.cdr;
+                }
+                return symbols;
+            }
             return new Syntax(function(code, { macro_expand }) {
                 var scope = env.inherit('syntax');
                 if (dynamic_scope) {
@@ -4733,12 +4748,7 @@
                 var rules = macro.cdr;
                 var var_scope = this;
                 var eval_args = { env: scope, dynamic_scope, error };
-                var symbols = macro.car.toArray().map(x => {
-                    if (!(x instanceof LSymbol)) {
-                        throw new Error('syntax: wrong identifier');
-                    }
-                    return x.valueOf();
-                });
+                const symbols = get_identifiers(macro.car);
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 26 Apr 2020 12:36:28 +0000
+ * build: Sun, 26 Apr 2020 14:18:40 +0000
  */
 (function () {
 	'use strict';
@@ -3368,6 +3368,10 @@
 	        log('>> 11');
 
 	        var _name3 = pattern.valueOf();
+
+	        if (symbols.includes(_name3)) {
+	          return true;
+	        }
 
 	        log({
 	          name: _name3
@@ -6775,6 +6779,24 @@
 	      var dynamic_scope = options.dynamic_scope,
 	          error = options.error;
 	      var env = this;
+
+	      function get_identifiers(node) {
+	        var symbols = [];
+
+	        while (node !== nil) {
+	          var x = node.car;
+
+	          if (!(x instanceof LSymbol)) {
+	            throw new Error('syntax: wrong identifier');
+	          }
+
+	          symbols.push(x.valueOf());
+	          node = node.cdr;
+	        }
+
+	        return symbols;
+	      }
+
 	      return new Syntax(function (code, _ref17) {
 	        var macro_expand = _ref17.macro_expand;
 	        var scope = env.inherit('syntax');
@@ -6790,13 +6812,7 @@
 	          dynamic_scope: dynamic_scope,
 	          error: error
 	        };
-	        var symbols = macro.car.toArray().map(function (x) {
-	          if (!(x instanceof LSymbol)) {
-	            throw new Error('syntax: wrong identifier');
-	          }
-
-	          return x.valueOf();
-	        });
+	        var symbols = get_identifiers(macro.car);
 
 	        while (rules !== nil) {
 	          var rule = rules.car.car;
@@ -8696,10 +8712,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 26 Apr 2020 12:36:28 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 26 Apr 2020 14:18:40 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 26 Apr 2020 12:36:28 +0000').valueOf();
+	    var date = LString('Sun, 26 Apr 2020 14:18:40 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -8732,7 +8748,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 26 Apr 2020 12:36:28 +0000',
+	    date: 'Sun, 26 Apr 2020 14:18:40 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

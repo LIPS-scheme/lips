@@ -9,6 +9,7 @@ SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
 
+MAKE=make
 GIT=git
 CD=cd
 SED=sed
@@ -66,6 +67,12 @@ jest-test: dist/lips.js
 
 test: dist/lips.js
 	@$(NPM) run test
+
+watch-test:
+	@inotifywait -m -e close_write src/lips.js tests/*.scm | while read even; do $(MAKE) --no-print-directory test; done
+
+watch-lint:
+	@inotifywait -m -e close_write src/lips.js | while read even; do $(MAKE) --no-print-directory lint; done
 
 coveralls:
 	$(NPM) run coverage
