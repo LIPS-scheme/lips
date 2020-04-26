@@ -288,3 +288,58 @@
                        (b ==> 2))
                       (==> (+ a b))))
               9)))
+
+(test "syntax-rules: basic ellipsis (srfi-46)"
+      (lambda (t)
+
+        (define-syntax funcall
+          (syntax-rules ::: ()
+             ((_ name args :::) (name args :::))))
+
+        (t.is (funcall list 1 2 3) '(1 2 3))))
+
+(test "syntax-rules: macro define function"
+      (lambda (t)
+
+        (define-syntax def
+          (syntax-rules (==>)
+            ((_ name ==> body ...)
+             (define name (lambda body ...)))))
+
+        (def square ==> (x) (* x x))
+        (t.is (square 10) 100)))
+
+(test "syntax-rules: macro define list of functions"
+      (lambda (t)
+
+        (define-syntax defn
+          (syntax-rules (==>)
+            ((_ (name ==> body ...) ...)
+             (begin
+               (define name (lambda body ...))
+               ...))))
+
+        (defn (square ==> (x) (* x x))
+              (add ==> (a b) (+ a b))
+              (sum ==> a (apply + a)))
+        (t.is (square (add 6 4)) 100)
+        (t.is (sum 1 2 3) 6)))
+
+(test "syntax-rules: nested syntax-rules (srfi-46)"
+      (lambda (t)
+
+        (define-syntax list+
+          (syntax-rules ::: ()
+             ((_ args :::) '(args :::))))
+
+        (define-syntax alias
+          (syntax-rules ()
+            ((_ name ref)
+             (define-syntax name
+               (syntax-rules ::: ()
+                 ((_ args :::)
+                  (ref args :::)))))))
+
+        (alias list- list+)
+        (t.is (list+ 1 2 3) '(1 2 3))
+        (t.is (list- 4 5 6) '(4 5 6))))

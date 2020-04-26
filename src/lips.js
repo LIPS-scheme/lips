@@ -1123,7 +1123,8 @@
     // ----------------------------------------------------------------------
     LSymbol.is = function(symbol, name) {
         return symbol instanceof LSymbol &&
-            ((typeof name === 'string' && symbol.name === name) ||
+            ((name instanceof LSymbol && symbol.name === name.name) ||
+             (typeof name === 'string' && symbol.name === name) ||
              (name instanceof RegExp && name.test(symbol.name)));
     };
     // ----------------------------------------------------------------------
@@ -1714,7 +1715,6 @@
                                 }
                                 n = n - 1;
                             }
-                            console.log({ result: result.toString() });
                             return traverse(result, n);
                         }
                     }
@@ -1749,6 +1749,7 @@
         // allow macroexpand
         this.defmacro = true;
     }
+    Syntax.merge_env = Symbol.for('merge');
     // ----------------------------------------------------------------------
     Syntax.prototype = Object.create(Macro.prototype);
     Syntax.prototype.invoke = function(code, { error, env }, macro_expand) {
@@ -1770,7 +1771,7 @@
     // :: list of bindings from code that match the pattern
     // :: TODO detect cycles
     // ----------------------------------------------------------------------
-    function extract_patterns(pattern, code, symbols) {
+    function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         var bindings = {
             '...': {
                 symbols: { }, // symbols ellipsis (x ...)
@@ -1794,16 +1795,16 @@
             if (pattern instanceof Pair &&
                 pattern.car instanceof Pair &&
                 pattern.car.cdr instanceof Pair &&
-                LSymbol.is(pattern.car.cdr.car, '...')) {
+                LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
                 log('>> 0');
                 if (code === nil) {
                     log({ pattern: pattern.toString() });
                     if (pattern.car.car instanceof LSymbol) {
                         if (pattern.car.cdr instanceof Pair &&
-                            LSymbol.is(pattern.car.cdr.car, '...')) {
+                            LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
                             let name = pattern.car.car.valueOf();
                             const last = pattern.lastPair();
-                            if (LSymbol.is(last.car, '...')) {
+                            if (LSymbol.is(last.car, ellipsis_symbol)) {
                                 bindings['...'].symbols[name] = null;
                                 return true;
                             } else {
@@ -1822,14 +1823,15 @@
             }
             if (pattern instanceof Pair &&
                 pattern.cdr instanceof Pair &&
-                LSymbol.is(pattern.cdr.car, '...')) {
+                LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
                 // pattern (... ???)
                 if (pattern.cdr.cdr !== nil) {
                     throw new Error('syntax: invalid usage of ellipsis');
                 }
                 if (pattern.car instanceof LSymbol) {
-                    let name = pattern.car.valueOf();
-                    if (bindings['...'].symbols[name] && !pattern_names.includes(name)) {
+                    let name = pattern.car.name;
+                    if (bindings['...'].symbols[name] &&
+                        !pattern_names.includes(name) && !ellipsis) {
                         throw new Error('syntax: named ellipsis can only appear onces');
                     }
                     log('>> 1');
@@ -1844,7 +1846,14 @@
                                (code.car instanceof Pair || code.car === nil)) {
                         log('>> 3 ' + ellipsis);
                         if (ellipsis) {
-                            bindings['...'].symbols[name] = code.car;
+                            if (bindings['...'].symbols[name]) {
+                                const node = bindings['...'].symbols[name];
+                                bindings['...'].symbols[name] = node.append(
+                                    new Pair(code, nil)
+                                );
+                            } else {
+                                bindings['...'].symbols[name] = new Pair(code, nil);
+                            }
                         } else {
                             log('>> 4');
                             bindings['...'].symbols[name] = new Pair(code, nil);
@@ -1896,16 +1905,15 @@
                 return false;
             }
             if (pattern instanceof LSymbol) {
-                if (LSymbol.is(pattern, '...')) {
+                if (LSymbol.is(pattern, ellipsis_symbol)) {
                     throw new Error('syntax: invalid usage of ellipsis');
                 }
                 log('>> 11');
-                const name = pattern.valueOf();
+                const name = pattern.name;
                 if (symbols.includes(name)) {
                     return true;
                 }
                 log({ name });
-                //console.log(code.toString());
                 if (ellipsis) {
                     bindings['...'].symbols[name] = bindings['...'].symbols[name] || [];
                     bindings['...'].symbols[name].push(code);
@@ -1944,7 +1952,7 @@
             } else if (pattern === nil && code === nil) {
                 return true;
             } else if (pattern.car instanceof Pair &&
-                       LSymbol.is(pattern.car.car, '...')) {
+                       LSymbol.is(pattern.car.car, ellipsis_symbol)) {
                 // pattern (...)
                 throw new Error('syntax: invalid usage of ellipsis');
             } else {
@@ -2041,14 +2049,20 @@
         return traverse(node);
     }
     // ----------------------------------------------------------------------
-    function transform_syntax(bindings, expr, scope, lex_scope, names) {
+    function transform_syntax(options = {}) {
+        const {
+            bindings,
+            expr,
+            scope,
+            names,
+            ellipsis: ellipsis_symbol } = options;
         var gensyms = {};
         function transform(symbol) {
             if (!(symbol instanceof LSymbol || typeof symbol === 'string')) {
                 throw new Error('syntax: internal error, rename neeed to be symbol');
             }
             const name = symbol.valueOf();
-            if (name === '...') {
+            if (name === ellipsis_symbol) {
                 throw new Error('syntax: internal error, ellipis not transformed');
             }
             if (typeof name === 'string' && name in bindings) {
@@ -2078,33 +2092,11 @@
             }
             return gensyms[name];
         }
-        function get_binding(list, nested) {
-            if (!list) {
-                return;
-            }
-            if (list instanceof Pair) {
-                return list.car;
-            }
-            if (list instanceof Array) {
-                const [item] = list;
-                if (item instanceof Array) {
-                    if (nested) {
-                        return Pair.fromArray(item);
-                    }
-                    return item;
-                }
-                return item;
-            }
-        }
         function transform_ellipsis_expr(expr, bindings, nested, next = () => {}) {
             log(' ==> ' + expr.toString());
             if (expr instanceof LSymbol) {
                 const name = expr.valueOf();
                 log('[t 1');
-                const value = get_binding(bindings[name]);
-                if (value) {
-                    //return value;
-                }
                 if (bindings[name]) {
                     if (bindings[name] instanceof Pair) {
                         const { car, cdr } = bindings[name];
@@ -2129,7 +2121,7 @@
             if (expr instanceof Pair) {
                 if (expr.car instanceof LSymbol &&
                     expr.cdr instanceof Pair &&
-                    LSymbol.is(expr.cdr.car, '...')) {
+                    LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
                     log('[t 2');
                     const name = expr.car.valueOf();
                     const item = bindings[name];
@@ -2176,18 +2168,25 @@
         }
         function have_binding(biding) {
             const values = Object.values(biding);
+            const symbols = Object.getOwnPropertySymbols(biding);
+            if (symbols.length) {
+                values.push(...symbols.map(x => biding[x]));
+            }
             return values.length && values.every(x => {
                 return x instanceof Pair ||
                     x === nil || (x instanceof Array && x.length);
             });
         }
+        function get_names(object) {
+            return Object.keys(object).concat(Object.getOwnPropertySymbols(object));
+        }
         function traverse(expr) {
             if (expr instanceof Pair) {
                 if (expr.cdr instanceof Pair &&
-                    LSymbol.is(expr.cdr.car, '...')) {
+                    LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
                     log('>> 1');
                     const symbols = bindings['...'].symbols;
-                    var keys = Object.keys(symbols);
+                    var keys = get_names(symbols);
                     // case of list as first argument ((x . y) ...)
                     // we need to recursively process the list
                     // if we have pattern (_ (x y z ...) ...) and code (foo (1 2) (1 2))
@@ -2241,7 +2240,7 @@
                     } else if (expr.car instanceof LSymbol) {
                         log('>> 4');
                         // case: (x ...)
-                        let name = expr.car.valueOf();
+                        let name = expr.car.name;
                         let bind = { [name]: symbols[name] };
                         let result = nil;
                         while (true) {
@@ -3746,9 +3745,9 @@
         });
         return new Environment(env, this.parent, this.name);
     };
-    Environment.prototype.merge = function(env) {
+    Environment.prototype.merge = function(env, name = 'merge') {
         typecheck('Environment::merge', env, 'environment');
-        return this.inherit('merge', env.env);
+        return this.inherit(name, env.env);
     };
     // -------------------------------------------------------------------------
     // value returned in lookup if found value in env
@@ -4465,7 +4464,13 @@
             }
             typecheck('define', code.car, 'symbol');
             unpromise(value, value => {
-                env.set(code.car, value);
+                // TODO: there should be better way to define merge env in syntax-rules
+                // maybe we should use unique symbol as name
+                if (env.name === Syntax.merge_env) {
+                    env.parent.set(code.car, value);
+                } else {
+                    env.set(code.car, value);
+                }
             });
         }), `(define name expression)
              (define (function-name . args) body)
@@ -4745,31 +4750,40 @@
                 if (dynamic_scope) {
                     dynamic_scope = scope;
                 }
-                var rules = macro.cdr;
                 var var_scope = this;
                 var eval_args = { env: scope, dynamic_scope, error };
-                const symbols = get_identifiers(macro.car);
+                let ellipsis, rules, symbols;
+                if (macro.car instanceof LSymbol) {
+                    ellipsis = macro.car;
+                    symbols = get_identifiers(macro.cdr.car);
+                    rules = macro.cdr.cdr;
+                } else {
+                    ellipsis = '...';
+                    symbols = get_identifiers(macro.car);
+                    rules = macro.cdr;
+                }
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-                    var bindings = extract_patterns(rule, code, symbols);
+                    var bindings = extract_patterns(rule, code, symbols, ellipsis);
                     if (bindings) {
                         if (user_env.get('DEBUG', { throwError: false })) {
                             console.log(JSON.stringify(bindings, true, 2));
                         }
                         // name is modified in transform_syntax
                         var names = [];
-                        const new_expr = transform_syntax(
+                        const new_expr = transform_syntax({
                             bindings,
                             expr,
                             scope,
-                            var_scope,
-                            names
-                        );
+                            lex_scope: var_scope,
+                            names,
+                            ellipsis
+                        });
                         if (new_expr) {
                             expr = new_expr;
                         }
-                        var new_env = var_scope.merge(scope);
+                        var new_env = var_scope.merge(scope, Syntax.merge_env);
                         if (macro_expand) {
                             return expr;
                             //return { expr, scope: new_env };
