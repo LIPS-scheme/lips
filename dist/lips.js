@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 26 Apr 2020 17:50:41 +0000
+ * build: Mon, 27 Apr 2020 11:41:15 +0000
  */
 (function () {
 	'use strict';
@@ -1294,7 +1294,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	    /*
 	    return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
 	    */
@@ -8727,10 +8727,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 26 Apr 2020 17:50:41 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 27 Apr 2020 11:41:15 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 26 Apr 2020 17:50:41 +0000').valueOf();
+	    var date = LString('Mon, 27 Apr 2020 11:41:15 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -8763,7 +8763,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 26 Apr 2020 17:50:41 +0000',
+	    date: 'Mon, 27 Apr 2020 11:41:15 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

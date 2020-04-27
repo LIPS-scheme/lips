@@ -343,3 +343,66 @@
         (alias list- list+)
         (t.is (list+ 1 2 3) '(1 2 3))
         (t.is (list- 4 5 6) '(4 5 6))))
+
+;; (test "syntax-rules: method caller (srfi-46)"
+;;       (lambda (t)
+;;
+
+(test "syntax-rules: rec macro (srfi-31)"
+      (lambda (t)
+
+        (define-syntax rec
+          (syntax-rules ()
+            ((rec (NAME . VARIABLES) . BODY)
+             (letrec ( (NAME (lambda VARIABLES . BODY)) ) NAME))
+            ((rec NAME EXPRESSION)
+             (letrec ( (NAME EXPRESSION) ) NAME))))
+
+        (define F (rec (F N)
+                       ((rec (G K L)
+                             (if (zero? K) L
+                                 (G (- K 1) (* K L)))) N 1)))
+
+
+        (t.is (F 10) 3628800)))
+
+
+(test_ "syntax-rules: join macros"
+      (lambda (t)
+
+        (define-syntax join_1
+          (syntax-rules ()
+            ((_ (foo ...) . x)
+             (list foo ... . x))))
+
+        (t.is (join_1 (1 2 3) 4) '(1 2 3 4))
+        (t.is (join_1 (1 2 3) 4 5 6) '(1 2 3 4 5 6))
+
+        (define-syntax join_2
+          (syntax-rules ()
+            ((_ (foo ...) x)
+             (list foo ... x))))
+
+        (t.is (join_2 (1 2 3) 4) '(1 2 3 4))
+        (t.is (to.throw (join_2 (1 2 3) 4 5)) #t)))
+
+(test_ "syntax-rules: double ellipsis"
+      (lambda (t)
+
+        (define result (let-syntax
+                           ((my-append
+                             (syntax-rules ()
+                               ((my-append (a ...) ...) '(a ... ...)))))
+                         (my-append (1 2 3) (4 5 6))))
+
+        (t.is result '(1 2 3 4 5 6))))
+
+(test_ "syntax-rules: lifted ellipsis"
+      (lambda (t)
+        (define result
+          (let-syntax
+              ((foo (syntax-rules ()
+                      ((foo (a b ...) ...) '(((a b) ...) ...)))))
+            (foo (bar 1 2) (baz 3 4))))
+
+        (t.is result '(((bar 1) (bar 2)) ((baz 3) (baz 4))))))
