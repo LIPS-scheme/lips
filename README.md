@@ -1,7 +1,7 @@
 # [LIPS is Pretty Simple](https://jcubic.github.io/lips/) - Scheme based Powerful LISP
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&f35368aefd550e91c8fa8ace1f30e8179d38b0e7)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&628d6e2f780e0e560003d735e78e470ddfbe5ae8)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&cc91fde7195a8236554da603afbfdd15)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -102,14 +102,14 @@ you can run interpreter from terminal:
 
 ```
 $ lips
-  __                    __
- / /  _    _  ___  ___  \ \
-| |  | |  | || . \/ __>  | |
-| |  | |_ | ||  _/\__ \  | |
-| |  |___||_||_|  <___/  | |
- \_\                    /_/
+  __ __                          __
+ / / \ \       _    _  ___  ___  \ \
+| |   \ \     | |  | || . \/ __>  | |
+| |    > \    | |_ | ||  _/\__ \  | |
+| |   / ^ \   |___||_||_|  <___/  | |
+ \_\ /_/ \_\                     /_/
 
-LIPS Scheme Interpreter DEV (2020-04-27)
+LIPS Scheme Interpreter DEV (2020-04-28)
 Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.

@@ -102,12 +102,12 @@ you can run interpreter from terminal:
 
 ```
 $ lips
-  __                    __
- / /  _    _  ___  ___  \ \
-| |  | |  | || . \/ __>  | |
-| |  | |_ | ||  _/\__ \  | |
-| |  |___||_||_|  <___/  | |
- \_\                    /_/
+  __ __                          __
+ / / \ \       _    _  ___  ___  \ \
+| |   \ \     | |  | || . \/ __>  | |
+| |    > \    | |_ | ||  _/\__ \  | |
+| |   / ^ \   |___||_||_|  <___/  | |
+ \_\ /_/ \_\                     /_/
 
 LIPS Scheme Interpreter {{VER}} ({{DATE}})
 Copyright (c) 2018-{{YEAR}} Jakub T. Jankiewicz <https://jcubic.pl/me>
