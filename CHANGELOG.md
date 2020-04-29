@@ -44,6 +44,7 @@
 * fix macro expand when expansion return list with macro that is data
 * fix lips executable in GNU Emacs run-scheme (comint mode)
 * unbox values in new
+* fix named let with nil [#46](https://github.com/jcubic/lips/issues/46)
 
 ## 0.20.1
 ### Bug fixes

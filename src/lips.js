@@ -2443,11 +2443,17 @@
             // named let:
             // (let iter ((x 10)) (iter (- x 1))) -> (let* ((iter (lambda (x) ...
             if (code.car instanceof LSymbol) {
-                if (!(code.cdr.car instanceof Pair)) {
+                if (!(code.cdr.car instanceof Pair || code.cdr.car === nil)) {
                     throw new Error('let require list of pairs');
                 }
-                var params = code.cdr.car.map(pair => pair.car);
-                args = code.cdr.car.map(pair => pair.cdr.car);
+                var params;
+                if (code.cdr.car === nil) {
+                    args = nil;
+                    params = nil;
+                } else {
+                    params = code.cdr.car.map(pair => pair.car);
+                    args = code.cdr.car.map(pair => pair.cdr.car);
+                }
                 return Pair.fromArray([
                     LSymbol('letrec'),
                     [[code.car, Pair(
