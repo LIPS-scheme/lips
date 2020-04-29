@@ -74,6 +74,9 @@ watch-test:
 watch-lint:
 	@inotifywait -m -e close_write src/lips.js | while read even; do $(MAKE) --no-print-directory lint; done
 
+watch-make:
+	@inotifywait -m -e close_write src/lips.js | while read even; do $(MAKE) --no-print-directory; done
+
 coveralls:
 	$(NPM) run coverage
 
