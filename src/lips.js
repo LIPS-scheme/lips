@@ -1411,7 +1411,7 @@
     function toString(obj, quote) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
-            return '<#jQuery(' + obj.length + ')>';
+            return '#<jQuery(' + obj.length + ')>';
         }
         if (obj === true) {
             return '#t';
@@ -1420,7 +1420,7 @@
             return '#f';
         }
         if (typeof obj === 'undefined') {
-            return '<#undefined>';
+            return '#<undefined>';
         }
         if (obj instanceof Pair) {
             return obj.toString(quote);
@@ -1433,12 +1433,20 @@
         }
         if (typeof obj === 'function') {
             if (isNativeFunction(obj)) {
-                return '<#procedure(native)>';
+                return '#<procedure(native)>';
             }
-            return '<#procedure>';
+            return '#<procedure>';
         }
         if (obj instanceof Array) {
-            return '#(' + obj.map(x => toString(x, true)).join(' ') + ')';
+            var result = [];
+            for (var i = 0, n = obj.length; i < n; ++i) {
+                if (!(i in obj)) {
+                    result.push('#<unspecified>');
+                } else {
+                    result.push(toString(obj[i], true));
+                }
+            }
+            return '#(' + result.join(' ') + ')';
         }
         if (obj instanceof LString) {
             obj = obj.toString();
@@ -1447,7 +1455,7 @@
             return JSON.stringify(obj).replace(/\\n/g, '\n');
         }
         if (root.HTMLElement && obj instanceof root.HTMLElement) {
-            return `<#HTMLElement(${obj.tagName.toLowerCase()})>`;
+            return `#<HTMLElement(${obj.tagName.toLowerCase()})>`;
         }
         if (typeof obj === 'object') {
             // user defined representation
@@ -1470,9 +1478,9 @@
                 name = constructor.name;
             }
             if (name !== '') {
-                return '<#' + name + '>';
+                return '#<' + name + '>';
             }
-            return '<#Object>';
+            return '#<Object>';
         }
         if (typeof obj !== 'string') {
             return obj.toString();

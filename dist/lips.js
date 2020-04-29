@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 29 Apr 2020 12:35:32 +0000
+ * build: Wed, 29 Apr 2020 13:15:57 +0000
  */
 (function () {
 	'use strict';
@@ -2652,7 +2652,7 @@
 
 	  function toString(obj, quote) {
 	    if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
-	      return '<#jQuery(' + obj.length + ')>';
+	      return '#<jQuery(' + obj.length + ')>';
 	    }
 
 	    if (obj === true) {
@@ -2664,7 +2664,7 @@
 	    }
 
 	    if (typeof obj === 'undefined') {
-	      return '<#undefined>';
+	      return '#<undefined>';
 	    }
 
 	    if (obj instanceof Pair) {
@@ -2683,16 +2683,24 @@
 
 	    if (typeof obj === 'function') {
 	      if (isNativeFunction(obj)) {
-	        return '<#procedure(native)>';
+	        return '#<procedure(native)>';
 	      }
 
-	      return '<#procedure>';
+	      return '#<procedure>';
 	    }
 
 	    if (obj instanceof Array) {
-	      return '#(' + obj.map(function (x) {
-	        return toString(x, true);
-	      }).join(' ') + ')';
+	      var result = [];
+
+	      for (var i = 0, n = obj.length; i < n; ++i) {
+	        if (!(i in obj)) {
+	          result.push('#<unspecified>');
+	        } else {
+	          result.push(toString(obj[i], true));
+	        }
+	      }
+
+	      return '#(' + result.join(' ') + ')';
 	    }
 
 	    if (obj instanceof LString) {
@@ -2704,7 +2712,7 @@
 	    }
 
 	    if (root.HTMLElement && obj instanceof root.HTMLElement) {
-	      return "<#HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
+	      return "#<HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
 	    }
 
 	    if (_typeof_1(obj) === 'object') {
@@ -2733,10 +2741,10 @@
 	      }
 
 	      if (name !== '') {
-	        return '<#' + name + '>';
+	        return '#<' + name + '>';
 	      }
 
-	      return '<#Object>';
+	      return '#<Object>';
 	    }
 
 	    if (typeof obj !== 'string') {
@@ -8737,10 +8745,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 29 Apr 2020 12:35:32 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 29 Apr 2020 13:15:57 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 29 Apr 2020 12:35:32 +0000').valueOf();
+	    var date = LString('Wed, 29 Apr 2020 13:15:57 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -8773,7 +8781,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 29 Apr 2020 12:35:32 +0000',
+	    date: 'Wed, 29 Apr 2020 13:15:57 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
