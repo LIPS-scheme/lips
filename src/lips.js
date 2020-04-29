@@ -2811,6 +2811,13 @@
     LString.prototype.clone = function() {
         return LString(this.valueOf());
     };
+    LString.prototype.fill = function(chr) {
+        if (chr instanceof LCharacter) {
+            chr = chr.toString();
+        }
+        var len = this._string.length;
+        this._string = new Array(len + 1).join(chr);
+    };
     // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
     // -------------------------------------------------------------------------

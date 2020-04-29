@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 29 Apr 2020 20:23:24 +0000
+ * build: Wed, 29 Apr 2020 20:49:32 +0000
  */
 (function () {
 	'use strict';
@@ -4532,6 +4532,15 @@
 
 	  LString.prototype.clone = function () {
 	    return LString(this.valueOf());
+	  };
+
+	  LString.prototype.fill = function (chr) {
+	    if (chr instanceof LCharacter) {
+	      chr = chr.toString();
+	    }
+
+	    var len = this._string.length;
+	    this._string = new Array(len + 1).join(chr);
 	  }; // -------------------------------------------------------------------------
 	  // :: Number wrapper that handle BigNumbers
 	  // -------------------------------------------------------------------------
@@ -8783,10 +8792,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 29 Apr 2020 20:23:24 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 29 Apr 2020 20:49:32 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 29 Apr 2020 20:23:24 +0000').valueOf();
+	    var date = LString('Wed, 29 Apr 2020 20:49:32 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -8819,7 +8828,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 29 Apr 2020 20:23:24 +0000',
+	    date: 'Wed, 29 Apr 2020 20:49:32 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

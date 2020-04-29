@@ -53,7 +53,7 @@
 ;; Vector literals syntax using parser symbol macros
 ;; -----------------------------------------------------------------------------
 (define-symbol-macro SPLICE (vector "#" . arg)
-  "(make-vector (1 2 3))
+  "(vector 1 2 3)
    #(1 2 3)
 
    Macro for defining vectors (arrays)."
@@ -505,25 +505,17 @@
   (--> string (clone)))
 
 ;; -----------------------------------------------------------------------------
-;; (let ((x "xxxxxxxxxx"))
-;;    (string-fill! x #\b)
+;;(let ((x "xxxxxxxxxx"))
+;;   (string-fill! x #\b)
 ;;    x)
-(define-macro (string-fill! string char)
+;; -----------------------------------------------------------------------------
+(define (string-fill! string char)
   "(string-fill! symbol char)
 
-   Macro is used to set all characters in string as char.
-   In LISP strings are JavaScript strings so this need to be macro
-   that overwrite slot in environement with new strings."
-  (typecheck "string-fill!" string "symbol" 1)
-  (let ((len (gensym))
-        (char-name (gensym))
-        (result (gensym)))
-    `(let ((,char-name ,char))
-       (typecheck "string-fill!" ,char-name "character" 2)
-       (let iter ((,len (string-length ,string)) (,result '()))
-         (if (<= ,len 0)
-             (set! ,string (list->string ,result))
-             (iter (- ,len 1) (cons ,char-name ,result)))))))
+   Function destructively fill the string with given character."
+  (typecheck "string-fill!" string "string" 1)
+  (typecheck "string-fill!" char "character" 2)
+  (--> string (fill char)))
 
 ;; -----------------------------------------------------------------------------
 (define (identity n)
@@ -864,8 +856,10 @@
   (typecheck "write-char" char "character")
   (apply write (cons (char.valueOf) rest)))
 
+;; -----------------------------------------------------------------------------
 (define fold-right reduce)
 
+;; -----------------------------------------------------------------------------
 (define (fold-left fn init . lists)
   "(fold-left fn init . lists)
 
@@ -877,3 +871,44 @@
             lists)
   (let ((lists (map reverse lists)))
     (apply reduce fn init lists)))
+
+;; -----------------------------------------------------------------------------
+(define (make-vector n)
+  "(make-vector n)
+
+   Create new vector with n empty elements."
+  (new Array n))
+
+;; -----------------------------------------------------------------------------
+(define (vector? n)
+  "(vector? n)
+
+   Function return true of value is vector and false if not."
+  (string=? (type n) "vector"))
+
+;; -----------------------------------------------------------------------------
+(define (vector-ref vec n)
+  "(vector-ref vec n)
+
+   Function return nth element of the vector vec."
+  (typecheck "vector-ref" vec "array" 1)
+  (typecheck "vector-ref" n "number" 2)
+  (. vec n))
+
+;; -----------------------------------------------------------------------------
+(define (vector-set! vec n value)
+  "(vector-set! vec n value)
+
+   Function set nth item of the vector to value."
+  (typecheck "vector-ref" vec "array" 1)
+  (typecheck "vector-ref" n "number" 2)
+  (set-obj! vec n value))
+
+;; -----------------------------------------------------------------------------
+(define (vector-fill! vec value)
+  "(vector-fill! vec value)
+
+   Set every element of the vector to given value."
+  (typecheck "vector-ref" vec "array")
+  (--> vec (forEach (lambda (_ i)
+                      (set-obj! vec i value)))))
