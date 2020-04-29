@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 29 Apr 2020 21:16:04 +0000
+ * build: Wed, 29 Apr 2020 21:44:07 +0000
  */
 (function () {
 	'use strict';
@@ -4568,8 +4568,7 @@
 	    }
 
 	    if (!LNumber.isNumber(n) && !parsable) {
-	      _type = Number.isNaN(n) ? 'NaN' : type(n);
-	      throw new Error("You can't create LNumber from ".concat(_type));
+	      throw new Error("You can't create LNumber from ".concat(type(n)));
 	    } // prevent infite loop https://github.com/indutny/bn.js/issues/186
 
 
@@ -4640,6 +4639,21 @@
 	      }
 
 	      return LBigInteger(new BN(n));
+	    } else if (parsable) {
+	      var _n3 = n,
+	          _n4 = slicedToArray(_n3, 2),
+	          _str = _n4[0],
+	          _radix = _n4[1];
+
+	      if (_str instanceof LString) {
+	        _str = _str.valueOf();
+	      }
+
+	      if (_radix instanceof LNumber) {
+	        _radix = _radix.valueOf();
+	      }
+
+	      this.value = parseInt(_str, _radix);
 	    } else {
 	      this.value = n;
 	    }
@@ -8231,6 +8245,10 @@
 	      'native-symbol': Symbol
 	    };
 
+	    if (Number.isNaN(obj)) {
+	      return 'NaN';
+	    }
+
 	    if (obj === nil) {
 	      return 'nil';
 	    }
@@ -8793,10 +8811,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 29 Apr 2020 21:16:04 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 29 Apr 2020 21:44:07 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 29 Apr 2020 21:16:04 +0000').valueOf();
+	    var date = LString('Wed, 29 Apr 2020 21:44:07 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -8829,7 +8847,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 29 Apr 2020 21:16:04 +0000',
+	    date: 'Wed, 29 Apr 2020 21:44:07 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

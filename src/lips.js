@@ -2839,8 +2839,7 @@
             return LNumber(n.value);
         }
         if (!LNumber.isNumber(n) && !parsable) {
-            _type = Number.isNaN(n) ? 'NaN' : type(n);
-            throw new Error(`You can't create LNumber from ${_type}`);
+            throw new Error(`You can't create LNumber from ${type(n)}`);
         }
         // prevent infite loop https://github.com/indutny/bn.js/issues/186
         if (n === null) {
@@ -2894,6 +2893,15 @@
                 return LBigInteger(new BN(...n));
             }
             return LBigInteger(new BN(n));
+        } else if (parsable) {
+            let [str, radix] = n;
+            if (str instanceof LString) {
+                str = str.valueOf();
+            }
+            if (radix instanceof LNumber) {
+                radix = radix.valueOf();
+            }
+            this.value = parseInt(str, radix);
         } else {
             this.value = n;
         }
@@ -6189,6 +6197,9 @@
             'array': Array,
             'native-symbol': Symbol
         };
+        if (Number.isNaN(obj)) {
+            return 'NaN';
+        }
         if (obj === nil) {
             return 'nil';
         }
