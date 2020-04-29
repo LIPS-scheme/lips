@@ -151,7 +151,7 @@ if (options.version || options.V) {
         run(options.c || options.code, env).then(print);
     });
 } else if (options._.length === 1) {
-    var e = env.inherit('name');
+    var e = env.inherit('file');
     // hack for node-gtk
     const rl = readline.createInterface({
         input: process.stdin,
@@ -178,11 +178,12 @@ if (options.version || options.V) {
     }
     var prompt = 'lips> ';
     var continuePrompt = '... ';
+    var terminal = !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS)
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
         prompt: prompt,
-        terminal: !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS)
+        terminal
     });
     if (process.stdin.isTTY) {
         rl.prompt();
@@ -190,7 +191,7 @@ if (options.version || options.V) {
     var code = '';
     var multiline = false;
     var resolve;
-    var interp = Interpreter('name', {
+    var interp = Interpreter('repl', {
         stdin: InputPort(function() {
             return new Promise(function(resolve) {
                 rl.question('', resolve);
@@ -239,7 +240,13 @@ if (options.version || options.V) {
                 var ind = indent(code, 2, prompt.length - continuePrompt.length);
                 rl.setPrompt(continuePrompt);
                 rl.prompt();
-                rl.write(new Array(ind + 1).join(' '));
+                var spaces = new Array(ind + 1).join(' ');
+                if (terminal) {
+                    rl.write(spaces);
+                } else {
+                    process.stdout.write(spaces);
+                    code += spaces;
+                }
             }
         });
     });
