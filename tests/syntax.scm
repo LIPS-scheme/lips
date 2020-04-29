@@ -265,7 +265,6 @@
         (define-syntax merge
           (syntax-rules ()
             ((_) '())
-            ;; ((_ (foo ...)) (list foo ...)) ;; rest === nil
             ((_ (foo ...) . rest)
              (append (list foo ...) (merge . rest)))))
 
@@ -406,3 +405,64 @@
             (foo (bar 1 2) (baz 3 4))))
 
         (t.is result '(((bar 1) (bar 2)) ((baz 3) (baz 4))))))
+
+
+(test_ "syntax-rules: R6RS do macro"
+       (lambda (t)
+         (define-syntax do
+           (syntax-rules ()
+             ((do ((var init step ...) ...)
+                (test expr ...)
+                command ...)
+              (letrec
+                  ((loop
+                    (lambda (var ...)
+                      (if test
+                          (begin
+                            #f ; avoid empty begin
+                            expr ...)
+                          (begin
+                            command
+                            ...
+                            (loop (do "step" var step ...)
+                                  ...))))))
+                (loop init ...)))
+             ((do "step" x)
+              x)
+             ((do "step" x y)
+              y)))
+
+         (t.is (do ((vec (make-vector 5))
+                    (i 0 (+ i 1)))
+                 ((= i 5) vec)
+                 (vector-set! vec i i))
+               #(0 1 2 3 4))
+
+         (t.is (let ((x '(1 3 5 7 9)))
+                 (do ((x x (cdr x))
+                      (sum 0 (+ sum (car x))))
+                   ((null? x) sum)))
+               25)))
+
+(test_ "syntax-rules: R6RS unless & when macros"
+       (lambda (t)
+
+         (define-syntax when
+           (syntax-rules ()
+             ((when test result1 result2 ...)
+              (if test
+                  (begin result1 result2 ...)))))
+
+         (define-syntax unless
+           (syntax-rules ()
+             ((unless test result1 result2 ...)
+              (if (not test)
+                  (begin result1 result2 ...)))))
+
+
+         (t.is (when (> 3 2) 'greater) ‌'greater)
+         (t.is (when (< 3 2) 'greater) ‌undefined) ;; unspecified
+
+         (t.is (unless (> 3 2) 'less) undefined) ;; unspecified
+
+         (t.is (unless (< 3 2) 'less) 'less)))

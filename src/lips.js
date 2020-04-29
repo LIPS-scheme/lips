@@ -2325,7 +2325,7 @@
     }
     // ----------------------------------------------------------------------
     function unbox(obj) {
-        return obj.valueOf();
+        return obj && obj.valueOf && obj.valueOf() || obj;
     }
     // ----------------------------------------------------------------------
     function patchValue(value, context) {
