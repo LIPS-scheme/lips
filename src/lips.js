@@ -5187,7 +5187,7 @@
             Function return list values (functions and variables) inside environment.`),
         // ------------------------------------------------------------------
         'new': doc(function(obj, ...args) {
-            var instance = new (unbind(obj))(...args);
+            var instance = new (unbind(obj))(...args.map(x => unbox(x)));
             Object.defineProperty(instance, '__instance__', {
                 enumerable: false,
                 get: () => true,

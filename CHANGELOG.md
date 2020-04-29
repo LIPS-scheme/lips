@@ -43,6 +43,7 @@
 * fix loading modules with `require`
 * fix macro expand when expansion return list with macro that is data
 * fix lips executable in GNU Emacs run-scheme (comint mode)
+* unbox values in new
 
 ## 0.20.1
 ### Bug fixes

@@ -1,7 +1,7 @@
 # [LIPS is Pretty Simple](https://jcubic.github.io/lips/) - Scheme based Powerful LISP
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&628d6e2f780e0e560003d735e78e470ddfbe5ae8)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&c7cdb9d7d493615ca431fc83d2673865854bfd29)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&cc91fde7195a8236554da603afbfdd15)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -109,7 +109,7 @@ $ lips
 | |   / ^ \   |___||_||_|  <___/  | |
  \_\ /_/ \_\                     /_/
 
-LIPS Scheme Interpreter DEV (2020-04-28)
+LIPS Scheme Interpreter DEV (2020-04-29)
 Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.
