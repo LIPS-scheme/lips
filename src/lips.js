@@ -4533,6 +4533,7 @@
                 throw new Error(msg);
             }
             obj = unbind(obj);
+            key = key.valueOf();
             if (typeof value === 'undefined') {
                 delete obj[key];
             } else {

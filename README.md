@@ -1,7 +1,7 @@
 # [LIPS is Pretty Simple](https://jcubic.github.io/lips/) - Scheme based Powerful LISP
 
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&295b4cb7bf5f5bc7b216ef65b53b314d157db76e)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&59ee94f615627c3eb6cda932b7d74984a559baa3)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&cc91fde7195a8236554da603afbfdd15)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 

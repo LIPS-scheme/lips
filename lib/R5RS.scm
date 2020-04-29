@@ -90,6 +90,13 @@
               (equal? (cdr a) (cdr b))))
         ((and (symbol? a) (symbol? b))
          (equal? (. a 'name) (. b 'name)))
+        ((and (vector? a) (vector? b))
+         (and (= (length a) (length b))
+              (--> a (every (lambda (item i)
+                              (display b)
+                              (display item)
+                              (display i)
+                              (equal? item (vector-ref b i)))))))
         ((and (string? a) (string? b))
          (string=? a b))
         ((and (function? a) (function? b))
@@ -910,5 +917,8 @@
 
    Set every element of the vector to given value."
   (typecheck "vector-ref" vec "array")
-  (--> vec (forEach (lambda (_ i)
-                      (set-obj! vec i value)))))
+  (let recur ((n (- (length vec) 1)))
+    (if (>= n 0)
+        (begin
+          (set-obj! vec n value)
+          (recur (- n 1))))))
