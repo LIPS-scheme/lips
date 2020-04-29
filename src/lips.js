@@ -2517,7 +2517,7 @@
                                 }
                             }).then(exec);
                         } else {
-                            values.forEach(({name, value}) => {
+                            values.forEach(({ name, value }) => {
                                 set(name, value);
                             });
                         }
@@ -2538,7 +2538,7 @@
                         var_body_env = env = var_body_env.inherit('let*[' + i + ']');
                     }
                     if (values) {
-                        values.push({name: pair.car, value});
+                        values.push({ name: pair.car, value });
                         return loop();
                     } else {
                         return unpromise(value, function(value) {
