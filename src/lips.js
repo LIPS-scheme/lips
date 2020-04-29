@@ -2478,32 +2478,51 @@
             var self = this;
             args = this.get('list->array')(code.car);
             var env = self.inherit(name);
-            var var_body_env;
+            var values, var_body_env;
             if (name === 'let*') {
                 var_body_env = env;
+            } else if (name === 'let') {
+                values = []; // collect potential promises
             }
             var i = 0;
+            function exec() {
+                var output = new Pair(new LSymbol('begin'), code.cdr);
+                return evaluate(output, {
+                    env,
+                    dynamic_scope,
+                    error
+                });
+            }
             return (function loop() {
                 var pair = args[i++];
-                function set(value) {
-                    if (isPromise(value)) {
-                        return value.then(set);
-                    } else if (typeof value === 'undefined') {
-                        env.set(pair.car, nil);
+                function set(name, value) {
+                    if (typeof value === 'undefined') {
+                        env.set(name, nil);
                     } else {
-                        env.set(pair.car, value);
+                        env.set(name, value);
                     }
                 }
                 if (dynamic_scope) {
                     dynamic_scope = name === 'let*' ? env : self;
                 }
                 if (!pair) {
-                    var output = new Pair(new LSymbol('begin'), code.cdr);
-                    return evaluate(output, {
-                        env,
-                        dynamic_scope,
-                        error
-                    });
+                    // resolve all promises
+                    if (values && values.length) {
+                        var v = values.map(x => x.value);
+                        var promises = v.filter(isPromise);
+                        if (promises.length) {
+                            return Promise.all(v).then((arr) => {
+                                for (var i = 0, len = arr.length; i < len; ++i) {
+                                    set(values[i].name, arr[i]);
+                                }
+                            }).then(exec);
+                        } else {
+                            values.forEach(({name, value}) => {
+                                set(name, value);
+                            });
+                        }
+                    }
+                    return exec();
                 } else {
                     if (name === 'let') {
                         var_body_env = self;
@@ -2518,7 +2537,15 @@
                     if (name === 'let*') {
                         var_body_env = env = var_body_env.inherit('let*[' + i + ']');
                     }
-                    return unpromise(set(value), loop);
+                    if (values) {
+                        values.push({name: pair.car, value});
+                        return loop();
+                    } else {
+                        return unpromise(value, function(value) {
+                            set(pair.car, value);
+                            return loop();
+                        });
+                    }
                 }
             })();
         });
