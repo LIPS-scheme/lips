@@ -45,6 +45,7 @@
 * fix lips executable in GNU Emacs run-scheme (comint mode)
 * unbox values in new
 * fix named let with nil [#46](https://github.com/jcubic/lips/issues/46)
+* use parser code in string->number
 
 ## 0.20.1
 ### Bug fixes

@@ -5455,12 +5455,16 @@
         'string->number': doc(function(arg, radix = 10) {
             typecheck('string->number', arg, 'string', 1);
             typecheck('string->number', radix, 'number', 2);
-            if (arg.match(int_re)) {
-                return LNumber([arg, radix]);
+            if (arg.match(rational_re)) {
+                return parse_rational(arg);
+            } else if (arg.match(complex_re)) {
+                return parse_complex(arg);
+            } else if (arg.match(int_re)) {
+                return parse_integer(arg);
             } else if (arg.match(float_re)) {
-                return LNumber(parseFloat(arg), true);
+                return LFloat(parseFloat(arg));
             }
-            return LNumber([arg, radix]);
+            throw new Error('string->number: Invalid Syntax');
         }, `(string->number number [radix])
 
            Function convert string to number.`),

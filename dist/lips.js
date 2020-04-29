@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 29 Apr 2020 21:44:07 +0000
+ * build: Wed, 29 Apr 2020 21:54:36 +0000
  */
 (function () {
 	'use strict';
@@ -7472,13 +7472,17 @@
 	      typecheck('string->number', arg, 'string', 1);
 	      typecheck('string->number', radix, 'number', 2);
 
-	      if (arg.match(int_re)) {
-	        return LNumber([arg, radix]);
+	      if (arg.match(rational_re)) {
+	        return parse_rational(arg);
+	      } else if (arg.match(complex_re)) {
+	        return parse_complex(arg);
+	      } else if (arg.match(int_re)) {
+	        return parse_integer(arg);
 	      } else if (arg.match(float_re)) {
-	        return LNumber(parseFloat(arg));
+	        return LFloat(parseFloat(arg));
 	      }
 
-	      return LNumber([arg, radix]);
+	      throw new Error('string->number: Invalid Syntax');
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
 	    'try': doc(new Macro('try', function (code, _ref21) {
@@ -8811,10 +8815,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 29 Apr 2020 21:44:07 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 29 Apr 2020 21:54:36 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 29 Apr 2020 21:44:07 +0000').valueOf();
+	    var date = LString('Wed, 29 Apr 2020 21:54:36 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -8847,7 +8851,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 29 Apr 2020 21:44:07 +0000',
+	    date: 'Wed, 29 Apr 2020 21:54:36 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
