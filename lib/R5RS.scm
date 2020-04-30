@@ -91,7 +91,7 @@
         ((and (symbol? a) (symbol? b))
          (equal? (. a 'name) (. b 'name)))
         ((and (regex? a) (regex? b))
-         (string=? (. a 'source) (. b 'source)))
+         (equal? (. a 'source) (. b 'source)))
         ((and (vector? a) (vector? b))
          (and (= (length a) (length b))
               (--> a (every (lambda (item i)
