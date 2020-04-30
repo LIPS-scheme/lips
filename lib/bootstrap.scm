@@ -384,3 +384,9 @@
    Function return default stdin port."
   (let-env (interaction-environment)
      stdin))
+
+(define (regex? x)
+  "(regex? x)
+
+   Function return true of value is regular expression, it return false otherwise."
+  (string=? (type x) "regex"))
