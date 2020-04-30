@@ -300,6 +300,25 @@
         }
     }
     // ----------------------------------------------------------------------
+    // Stack used in balanced function
+    // TODO: use it in parser
+    // ----------------------------------------------------------------------
+    function Stack() {
+        this.data = [];
+    }
+    Stack.prototype.push = function(item) {
+        this.data.push(item);
+    };
+    Stack.prototype.top = function() {
+        return this.data[this.data.length - 1];
+    };
+    Stack.prototype.pop = function() {
+        return this.data.pop();
+    };
+    Stack.prototype.is_empty = function() {
+        return !this.data.length;
+    };
+    // ----------------------------------------------------------------------
     function tokens(str) {
         var tokens_re = make_token_re();
         str = str.replace(/\n\r|\r/g, '\n');
@@ -426,12 +445,16 @@
     });
     // ----------------------------------------------------------------------
     // :: tokens are the array of strings from tokenizer
-    // :: the return value is lisp code created out of Pair class
+    // :: the return value is array of lisp code created out of Pair class
     // ----------------------------------------------------------------------
     function parse(tokens) {
         if (typeof tokens === 'string') {
             tokens = tokenize(tokens);
         }
+        if (!balanced(tokens)) {
+            throw new Error('Syntax Error: unballanced parenthesis');
+        }
+
         var stack = [];
         var result = [];
         var special = null;
@@ -6466,38 +6489,36 @@
         }
     }
     // -------------------------------------------------------------------------
-    // create token matcher that work with string and object token
-    // -------------------------------------------------------------------------
-    function match_token(arg) {
-        if (arg instanceof RegExp) {
-            return function(token) {
-                if (!token) {
-                    return false;
-                }
-                return (typeof token === 'string' ? token : token.token).match(arg);
-            };
-        } else {
-            return function(token) {
-                if (!token) {
-                    return false;
-                }
-                return (typeof token === 'string' ? token : token.token) === arg;
-            };
-        }
-    }
-    var is_Paren = match_token(/[[\]()]/);
-    // -------------------------------------------------------------------------
     function balanced(code) {
+        var maching_pairs = {
+            '[': ']',
+            '(': ')'
+        };
         var tokens = typeof code === 'string' ? tokenize(code) : code;
-        var parenthesis = tokens.filter(is_Paren);
-        var parens_open = parenthesis.filter(match_token('('));
-        var parens_close = parenthesis.filter(match_token(')'));
 
-        var brackets_open = parenthesis.filter(match_token('['));
-        var brackets_close = parenthesis.filter(match_token(']'));
+        var open_tokens = Object.keys(maching_pairs);
+        var brackets = Object.values(maching_pairs).concat(open_tokens);
+        tokens = tokens.filter(token => brackets.includes(token));
 
-        return parens_open.length === parens_close.length &&
-            brackets_open.length === brackets_close.length;
+        const stack = new Stack();
+        for (const token of tokens) {
+            if (open_tokens.includes(token)) {
+                stack.push(token);
+            } else if (!stack.is_empty()) { // closing token
+                var last = stack.top();
+                // last on stack need to match
+                const closing_token = maching_pairs[last];
+                if (token === closing_token) {
+                    stack.pop();
+                } else {
+                    throw new Error(`Syntax error: missing closing ${closing_token}`);
+                }
+            } else {
+                // closing bracket without opening
+                throw new Error(`Syntnax error: not matched closing ${token.token}`);
+            }
+        }
+        return stack.is_empty();
     }
 
     // -------------------------------------------------------------------------

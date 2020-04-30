@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 29 Apr 2020 21:54:36 +0000
+ * build: Thu, 30 Apr 2020 18:36:14 +0000
  */
 (function () {
 	'use strict';
@@ -1315,6 +1315,30 @@
 	      return str.replace(special, '\\$1');
 	    }
 	  } // ----------------------------------------------------------------------
+	  // Stack used in balanced function
+	  // TODO: use it in parser
+	  // ----------------------------------------------------------------------
+
+
+	  function Stack() {
+	    this.data = [];
+	  }
+
+	  Stack.prototype.push = function (item) {
+	    this.data.push(item);
+	  };
+
+	  Stack.prototype.top = function () {
+	    return this.data[this.data.length - 1];
+	  };
+
+	  Stack.prototype.pop = function () {
+	    return this.data.pop();
+	  };
+
+	  Stack.prototype.is_empty = function () {
+	    return !this.data.length;
+	  }; // ----------------------------------------------------------------------
 
 
 	  function tokens(str) {
@@ -1460,12 +1484,16 @@
 	    specials.append(seq, symbol, type);
 	  }); // ----------------------------------------------------------------------
 	  // :: tokens are the array of strings from tokenizer
-	  // :: the return value is lisp code created out of Pair class
+	  // :: the return value is array of lisp code created out of Pair class
 	  // ----------------------------------------------------------------------
 
 	  function parse(tokens) {
 	    if (typeof tokens === 'string') {
 	      tokens = tokenize(tokens);
+	    }
+
+	    if (!balanced(tokens)) {
+	      throw new Error('Syntax Error: unballanced parenthesis');
 	    }
 
 	    var stack = [];
@@ -8612,8 +8640,6 @@
 	  function exec(_x7, _x8, _x9) {
 	    return _exec.apply(this, arguments);
 	  } // -------------------------------------------------------------------------
-	  // create token matcher that work with string and object token
-	  // -------------------------------------------------------------------------
 
 
 	  function _exec() {
@@ -8684,36 +8710,60 @@
 	    return _exec.apply(this, arguments);
 	  }
 
-	  function match_token(arg) {
-	    if (arg instanceof RegExp) {
-	      return function (token) {
-	        if (!token) {
-	          return false;
-	        }
-
-	        return (typeof token === 'string' ? token : token.token).match(arg);
-	      };
-	    } else {
-	      return function (token) {
-	        if (!token) {
-	          return false;
-	        }
-
-	        return (typeof token === 'string' ? token : token.token) === arg;
-	      };
-	    }
-	  }
-
-	  var is_Paren = match_token(/[[\]()]/); // -------------------------------------------------------------------------
-
 	  function balanced(code) {
+	    var maching_pairs = {
+	      '[': ']',
+	      '(': ')'
+	    };
 	    var tokens = typeof code === 'string' ? tokenize(code) : code;
-	    var parenthesis = tokens.filter(is_Paren);
-	    var parens_open = parenthesis.filter(match_token('('));
-	    var parens_close = parenthesis.filter(match_token(')'));
-	    var brackets_open = parenthesis.filter(match_token('['));
-	    var brackets_close = parenthesis.filter(match_token(']'));
-	    return parens_open.length === parens_close.length && brackets_open.length === brackets_close.length;
+	    var open_tokens = Object.keys(maching_pairs);
+	    var brackets = Object.values(maching_pairs).concat(open_tokens);
+	    tokens = tokens.filter(function (token) {
+	      return brackets.includes(token);
+	    });
+	    var stack = new Stack();
+	    var _iteratorNormalCompletion4 = true;
+	    var _didIteratorError4 = false;
+	    var _iteratorError4 = undefined$1;
+
+	    try {
+	      for (var _iterator4 = tokens[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+	        var token = _step4.value;
+
+	        if (open_tokens.includes(token)) {
+	          stack.push(token);
+	        } else if (!stack.is_empty()) {
+	          // closing token
+	          var last = stack.top(); // last on stack need to match
+
+	          var closing_token = maching_pairs[last];
+
+	          if (token === closing_token) {
+	            stack.pop();
+	          } else {
+	            throw new Error("Syntax error: missing closing ".concat(closing_token));
+	          }
+	        } else {
+	          // closing bracket without opening
+	          throw new Error("Syntnax error: not matched closing ".concat(token.token));
+	        }
+	      }
+	    } catch (err) {
+	      _didIteratorError4 = true;
+	      _iteratorError4 = err;
+	    } finally {
+	      try {
+	        if (!_iteratorNormalCompletion4 && _iterator4["return"] != null) {
+	          _iterator4["return"]();
+	        }
+	      } finally {
+	        if (_didIteratorError4) {
+	          throw _iteratorError4;
+	        }
+	      }
+	    }
+
+	    return stack.is_empty();
 	  } // -------------------------------------------------------------------------
 
 
@@ -8815,10 +8865,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 29 Apr 2020 21:54:36 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 30 Apr 2020 18:36:14 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 29 Apr 2020 21:54:36 +0000').valueOf();
+	    var date = LString('Thu, 30 Apr 2020 18:36:14 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -8851,7 +8901,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 29 Apr 2020 21:54:36 +0000',
+	    date: 'Thu, 30 Apr 2020 18:36:14 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

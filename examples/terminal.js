@@ -71,17 +71,21 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
         greetings: false,
         keymap: {
             ENTER: function(e, original) {
-                if (lips.balanced_parenthesis(this.get_command())) {
+                try {
+                    if (lips.balanced_parenthesis(this.get_command())) {
+                        original();
+                    } else {
+                        var code = term.before_cursor();
+                        var prompt = this.get_prompt();
+                        var formatter = new lips.Formatter(code);
+                        var i = formatter.indent({
+                            indent: 2,
+                            offset: prompt.length
+                        });
+                        this.insert('\n' + (new Array(i + 1).join(' ')));
+                    }
+                } catch (e) {
                     original();
-                } else {
-                    var code = term.before_cursor();
-                    var prompt = this.get_prompt();
-                    var formatter = new lips.Formatter(code);
-                    var i = formatter.indent({
-                        indent: 2,
-                        offset: prompt.length
-                    });
-                    this.insert('\n' + (new Array(i + 1).join(' ')));
                 }
             }
         },

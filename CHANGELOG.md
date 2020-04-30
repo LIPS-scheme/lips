@@ -6,6 +6,8 @@
 * change how arrays are presented, they are look like scheme vector `#(...)`
 * rename `string` to `repr`
 * new API `lips.Intepreter` - for using interpreter that have different stdout/stdin
+* balanced_parenthesis now throw exception on broken code
+* remove global env from public API (you can still access it using `env.parent`)
 ### Features
 * start implementing R5RS spec
 * streams example
