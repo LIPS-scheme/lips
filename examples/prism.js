@@ -10,10 +10,10 @@
 // (it's modification of JavaScript regex, only look behind was modified)
 Prism.languages.insertBefore('scheme', 'string', {
    'regex': {
-		  pattern: /(^|\s)\/(?:\[(?:[^\]\\\r\n]|\\.)*]|\\.|[^/\\\[\r\n])+\/[gimyus]{0,6}(?=(?:\s|\/\*(?:[^*]|\*(?!\/))*\*\/)*(?:$|[\r\n,.;:})\]]|\/\/))/,
-		  lookbehind: true,
-		  greedy: true
-	  }
+       pattern: /(^|\s)\/(?:\[(?:[^\]\\\r\n]|\\.)*]|\\.|[^/\\\[\r\n])+\/[gimyus]{0,6}(?=(?:\s|\/\*(?:[^*]|\*(?!\/))*\*\/)*(?:$|[\r\n,.;:})\]]|\/\/))/,
+       lookbehind: true,
+       greedy: true
+   }
 });
 
 Prism.languages.scheme.function.pattern = /(\()[^()'\s]+(?=[()\s]|$)/;

@@ -222,6 +222,7 @@ if (options.version || options.V) {
                         print(result);
                         if (multiline) {
                             rl.setPrompt(prompt);
+                            multiline = false;
                         }
                         rl.prompt();
                     }
@@ -230,6 +231,7 @@ if (options.version || options.V) {
                     if (process.stdin.isTTY) {
                         if (multiline) {
                             rl.setPrompt(prompt);
+                            multiline = false;
                         }
                         rl.prompt();
                     }
