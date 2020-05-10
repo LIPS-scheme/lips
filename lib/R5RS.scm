@@ -277,7 +277,8 @@
   "(make-rectangular im re)
 
    Create complex number from imaginary and real part."
-  (lips.LNumber (make-object :im im :re re)))
+  (let ((value `((re . ,re) (im . ,im))))
+    (lips.LComplex (--> value (toObject true)))))
 
 ;; -----------------------------------------------------------------------------
 (define (real? n)

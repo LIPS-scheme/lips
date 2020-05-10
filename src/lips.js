@@ -1321,7 +1321,11 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toObject = function() {
+    // by default toObject was created to create JavaScript objects,
+    // so it use valueOf to get native values
+    // literal parameter was a hack to allow create LComplex from LIPS code
+    // ----------------------------------------------------------------------
+    Pair.prototype.toObject = function(literal = false) {
         var node = this;
         var result = {};
         while (true) {
@@ -1336,10 +1340,14 @@
                 }
                 var cdr = pair.cdr;
                 if (cdr instanceof Pair) {
-                    cdr = cdr.toObject();
+                    cdr = cdr.toObject(literal);
                 }
-                if (cdr instanceof LNumber || cdr instanceof LString) {
-                    cdr = cdr.valueOf();
+                if (cdr instanceof LNumber ||
+                    cdr instanceof LString ||
+                    cdr instanceof LCharacter) {
+                    if (!literal) {
+                        cdr = cdr.valueOf();
+                    }
                 }
                 result[name] = cdr;
                 node = node.cdr;

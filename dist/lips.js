@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 10 May 2020 17:06:48 +0000
+ * build: Sun, 10 May 2020 17:29:56 +0000
  */
 (function () {
 	'use strict';
@@ -2557,9 +2557,14 @@
 	      }
 	    }
 	  }; // ----------------------------------------------------------------------
+	  // by default toObject was created to create JavaScript objects,
+	  // so it use valueOf to get native values
+	  // literal parameter was a hack to allow create LComplex from LIPS code
+	  // ----------------------------------------------------------------------
 
 
 	  Pair.prototype.toObject = function () {
+	    var literal = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : false;
 	    var node = this;
 	    var result = {};
 
@@ -2579,11 +2584,13 @@
 	        var cdr = pair.cdr;
 
 	        if (cdr instanceof Pair) {
-	          cdr = cdr.toObject();
+	          cdr = cdr.toObject(literal);
 	        }
 
-	        if (cdr instanceof LNumber || cdr instanceof LString) {
-	          cdr = cdr.valueOf();
+	        if (cdr instanceof LNumber || cdr instanceof LString || cdr instanceof LCharacter) {
+	          if (!literal) {
+	            cdr = cdr.valueOf();
+	          }
 	        }
 
 	        result[name] = cdr;
@@ -8967,10 +8974,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 10 May 2020 17:06:48 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 10 May 2020 17:29:56 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 10 May 2020 17:06:48 +0000').valueOf();
+	    var date = LString('Sun, 10 May 2020 17:29:56 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9003,7 +9010,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 10 May 2020 17:06:48 +0000',
+	    date: 'Sun, 10 May 2020 17:29:56 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
