@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 10 May 2020 16:42:14 +0000
+ * build: Sun, 10 May 2020 17:06:48 +0000
  */
 (function () {
 	'use strict';
@@ -1179,9 +1179,9 @@
 	    'tab': '\t'
 	  };
 	  var character_symbols = Object.keys(characters).join('|');
-	  var char_re = new RegExp("^#\\\\(?:".concat(character_symbols, "|[\\s\\S])$"), 'i'); // (int | flat) ? ([-+]
+	  var char_re = new RegExp("^#\\\\(?:".concat(character_symbols, "|[\\s\\S])$"), 'i'); // complex with (int) (float) (rational)
 
-	  var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
+	  var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?[0-9]+\/[0-9]+|(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:[0-9]+\/[0-9]+|(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
 	  var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -1233,8 +1233,6 @@
 	  function parse_number(arg) {
 	    if (arg.match(rational_re)) {
 	      return parse_rational(arg);
-	    } else if (arg.match(complex_re)) {
-	      return parse_complex(arg);
 	    } else if (arg.match(int_re)) {
 	      return parse_integer(arg);
 	    } else if (arg.match(float_re)) {
@@ -1326,13 +1324,13 @@
 
 
 	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
-	  var string_re = /"(?:\\[\S\s]|[^"])*"?/g; // ----------------------------------------------------------------------
+	  var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
 
 	  function make_token_re() {
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+(?:[-+][0-9]+/[0-9]+i)?|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -8969,10 +8967,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 10 May 2020 16:42:14 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 10 May 2020 17:06:48 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 10 May 2020 16:42:14 +0000').valueOf();
+	    var date = LString('Sun, 10 May 2020 17:06:48 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9005,7 +9003,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 10 May 2020 16:42:14 +0000',
+	    date: 'Sun, 10 May 2020 17:06:48 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
