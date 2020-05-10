@@ -3042,7 +3042,7 @@
     // -------------------------------------------------------------------------
     LComplex.prototype._op = function(op, n) {
         const fn = LComplex._op[op];
-        return this[fn].call(this, n);
+        return this[fn](n);
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.cmp = function(n) {
@@ -3390,9 +3390,6 @@
     LNumber.isComplex = function(n) {
         var ret = n instanceof LComplex ||
             (LNumber.isNumber(n.im) && LNumber.isNumber(n.re));
-        if (LNumber.isNumber(n.im) && n.re === undefined) {
-            debugger;
-        }
         return ret;
     };
     // -------------------------------------------------------------------------
@@ -3455,19 +3452,19 @@
     };
     // -------------------------------------------------------------------------
     var matrix = (function() {
-        var i = (a,b) => [a,b];
+        var i = (a, b) => [a, b];
         return {
             bigint: {
                 'bigint': i,
                 'float': (a, b) => [LFloat(a.valueOf()), b],
-                'rational': (a, b) => [{num: a, denom: 1}, b],
-                'complex': (a, b) => [{im: 0, re: a}, b]
+                'rational': (a, b) => [{ num: a, denom: 1 }, b],
+                'complex': (a, b) => [{ im: 0, re: a }, b]
             },
             float: {
-                'bigint': (a,b) => [a, LFloat(b.valueOf())],
+                'bigint': (a, b) => [a, LFloat(b.valueOf())],
                 'float': i,
-                'rational': (a,b) => [a, LFloat(b.valueOf())],
-                'complex':  (a,b) => [{re: a, im: LFloat(0, true)}, b]
+                'rational': (a, b) => [a, LFloat(b.valueOf())],
+                'complex': (a, b) => [{ re: a, im: LFloat(0, true) }, b]
             },
             complex: {
                 bigint: complex('bigint'),
@@ -3476,7 +3473,7 @@
                 complex: i
             },
             rational: {
-                bigint: (a, b) => [a, {num: b, denom: 1}],
+                bigint: (a, b) => [a, { num: b, denom: 1 }],
                 float: (a, b) => [LFloat(a.valueOf()), b],
                 rational: i,
                 complex: complex('rational')
@@ -3631,7 +3628,6 @@
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.pow = function(n) {
-        const [a, b] = this.coerce(n);
         if (LNumber.isNative(this.value)) {
             try {
                 var pow = new Function('a,b', 'return a**b;');

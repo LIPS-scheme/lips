@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 10 May 2020 16:36:01 +0000
+ * build: Sun, 10 May 2020 16:42:14 +0000
  */
 (function () {
 	'use strict';
@@ -4831,7 +4831,7 @@
 
 	  LComplex.prototype._op = function (op, n) {
 	    var fn = LComplex._op[op];
-	    return this[fn].call(this, n);
+	    return this[fn](n);
 	  }; // -------------------------------------------------------------------------
 
 
@@ -5296,11 +5296,6 @@
 
 	  LNumber.isComplex = function (n) {
 	    var ret = n instanceof LComplex || LNumber.isNumber(n.im) && LNumber.isNumber(n.re);
-
-	    if (LNumber.isNumber(n.im) && n.re === undefined$1) {
-	      debugger;
-	    }
-
 	    return ret;
 	  }; // -------------------------------------------------------------------------
 
@@ -5610,11 +5605,6 @@
 
 
 	  LNumber.prototype.pow = function (n) {
-	    var _this$coerce5 = this.coerce(n),
-	        _this$coerce6 = slicedToArray(_this$coerce5, 2),
-	        a = _this$coerce6[0],
-	        b = _this$coerce6[1];
-
 	    if (LNumber.isNative(this.value)) {
 	      try {
 	        var pow = new Function('a,b', 'return a**b;');
@@ -5666,10 +5656,10 @@
 
 
 	  LNumber.prototype.cmp = function (n) {
-	    var _this$coerce7 = this.coerce(n),
-	        _this$coerce8 = slicedToArray(_this$coerce7, 2),
-	        a = _this$coerce8[0],
-	        b = _this$coerce8[1];
+	    var _this$coerce5 = this.coerce(n),
+	        _this$coerce6 = slicedToArray(_this$coerce5, 2),
+	        a = _this$coerce6[0],
+	        b = _this$coerce6[1];
 
 	    function cmp(a, b) {
 	      if (a.value < b.value) {
@@ -8979,10 +8969,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 10 May 2020 16:36:01 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 10 May 2020 16:42:14 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 10 May 2020 16:36:01 +0000').valueOf();
+	    var date = LString('Sun, 10 May 2020 16:42:14 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9015,7 +9005,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 10 May 2020 16:36:01 +0000',
+	    date: 'Sun, 10 May 2020 16:42:14 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
