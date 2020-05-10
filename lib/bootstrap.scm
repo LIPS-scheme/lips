@@ -134,6 +134,13 @@
             expr
             `(. ,(string->symbol (car parts)) ,@(cdr parts))))))
 
+;; ---------------------------------------------------------------------------------------
+(define (plain-object? x)
+  "(plain-object? x)
+
+   Function check if value is plain JavaScript object. Created using make-object macro."
+  (and (eq? (type x) "object") (eq? (. x 'constructor) Object)))
+
 ;; -----------------------------------------------------------------------------
 (define (symbol->string s)
   "(symbol->string symbol)

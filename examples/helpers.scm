@@ -67,13 +67,6 @@
     (if (pair? pair) (cdr pair) false)))
 
 ;; ---------------------------------------------------------------------------------------
-(define (plain-object? x)
-  "(plain-object? x)
-
-   Function check if value is plain JavaScript object. Created using make-object macro."
-  (and (eq? (type x) "object") (eq? (. x 'constructor) Object)))
-
-;; ---------------------------------------------------------------------------------------
 ;; LIPS Object System
 ;; ---------------------------------------------------------------------------------------
 
@@ -125,5 +118,13 @@
 (define-macro (with-tags expr)
   "(with-tags expression)
 
-   Macro that evalute LIPS shorter code for S-Expression equivalent of JSX"
+   Macro that evalute LIPS shorter code for S-Expression equivalent of JSX.
+   e.g.:
+
+   (with-tags (:div (:class \"item\" :id \"item-1\")
+                    (list (:span () \"Random Item\")
+                          (:a (:onclick (lambda (e) (alert \"close\")))
+                              \"close\"))))
+
+   Above expression can be passed to function that renders JSX (like render in React or Preact)"
   (make-tags expr))

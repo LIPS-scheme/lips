@@ -208,6 +208,18 @@
         }
     }
     // ----------------------------------------------------------------------
+    function parse_number(arg) {
+        if (arg.match(rational_re)) {
+            return parse_rational(arg);
+        } else if (arg.match(complex_re)) {
+            return parse_complex(arg);
+        } else if (arg.match(int_re)) {
+            return parse_integer(arg);
+        } else if (arg.match(float_re)) {
+            return LFloat(parseFloat(arg));
+        }
+    }
+    // ----------------------------------------------------------------------
     function parse_complex(arg) {
         if (arg === '-i') {
             return { im: -1, re: 0 };
@@ -215,11 +227,11 @@
         var parts = arg.match(complex_re);
         var re, im;
         if (parts.length === 2) {
-            re = LFloat(0);
-            im = LFloat(parseFloat(parts[1]));
+            im = parse_number(parts[1]);
+            re = 0;
         } else {
-            re = LFloat(parts[1] ? parseFloat(parts[1]) : 0);
-            im = LFloat(parseFloat(parts[2]));
+            re = parts[1] ? parse_number(parts[1]) : 0;
+            im = parse_number(parts[2]);
         }
         return LComplex({ im, re });
     }
@@ -275,17 +287,14 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
-    var string_re = /"(?:\\[\S\s]|[^"])*"/g;
+    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
+    var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
     // ----------------------------------------------------------------------
     function make_token_re() {
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
         return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
-        /*
-        return new RegExp(`("(?:\\\\[\\S\\s]|[^"])*"|#\\\\(?:newline|space|\\S)|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+|\\/(?! )[^\\n\\/\\\\]*(?:\\\\[\\S\\s][^\\n\\/\\\\]*)*\\/[gimy]*(?=\\s|\\(|\\)|\\]|\\[|$)|\\[|\\]|\\(|\\)|"(?:\\\\[\\S\\s]|[^"])+|\\n|(?:\\\\[\\S\\s]|[^"])*"|;.*|(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
-        */
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -450,9 +459,6 @@
     function parse(tokens) {
         if (typeof tokens === 'string') {
             tokens = tokenize(tokens);
-        }
-        if (!balanced(tokens)) {
-            throw new Error('Syntax Error: unballanced parenthesis');
         }
 
         var stack = [];
@@ -2640,6 +2646,7 @@
         return limit(n + 1, curry(guardMathCall, fn));
     }
     // -------------------------------------------------------------------------
+    // some functional magic
     var singleMathOp = curry(limitMathOp, 1);
     var binaryMathOp = curry(limitMathOp, 2);
     // -------------------------------------------------------------------------
@@ -2844,17 +2851,17 @@
     // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
     // -------------------------------------------------------------------------
-    function LNumber(n) {
+    function LNumber(n, force = false) {
         if (typeof this !== 'undefined' && !(this instanceof LNumber) ||
             typeof this === 'undefined') {
-            return new LNumber(n);
+            return new LNumber(n, force);
         }
         if (typeof n === 'undefined') {
             throw new Error('Invlaid LNumber constructor call');
         }
         var _type = LNumber.getType(n);
         if (LNumber.types[_type]) {
-            return LNumber.types[_type](n);
+            return LNumber.types[_type](n, force);
         }
         var parsable = n instanceof Array && LString.isString(n[0]) &&
             LNumber.isNumber(n[1]);
@@ -2931,34 +2938,38 @@
     }
     // -------------------------------------------------------------------------
     LNumber.types = {
-        float: function(n) {
-            return new LFloat(n);
+        float: function(n, force = false) {
+            return new LFloat(n, force);
         },
-        complex: function(n) {
-            return new LComplex(n);
+        complex: function(n, force = false) {
+            return new LComplex(n, force);
         },
-        rational: function(n) {
-            return new LRational(n);
+        rational: function(n, force = false) {
+            return new LRational(n, force);
         }
     };
     // -------------------------------------------------------------------------
     // :: COMPLEX TYPE
     // -------------------------------------------------------------------------
-    function LComplex(n) {
+    function LComplex(n, force = false) {
         if (typeof this !== 'undefined' && !(this instanceof LComplex) ||
             typeof this === 'undefined') {
-            return new LComplex(n);
+            return new LComplex(n, force);
         }
         if (n instanceof LComplex) {
             return LComplex({ im: n.im, re: n.re });
         }
-        if (LNumber.isNumber(n)) {
+        if (LNumber.isNumber(n) && force) {
             n = { im: 0, re: n.valueOf() };
         } else if (!LNumber.isComplex(n)) {
             throw new Error('Invalid constructor call for LComplex');
         }
-        this.im = LNumber(n.im);
-        this.re = LNumber(n.re);
+        const [im, re] = LNumber.coerce(n.im, n.re);
+        if (im.cmp(0) === 0) {
+            return re;
+        }
+        this.im = im;
+        this.re = re;
         this.type = 'complex';
     }
     // -------------------------------------------------------------------------
@@ -2966,10 +2977,10 @@
     LComplex.prototype.constructor = LComplex;
     // -------------------------------------------------------------------------
     LComplex.prototype.add = function(n) {
-        return this.op(n, function(a_re, b_re, a_im, b_im) {
+        return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
             return {
-                re: a_re.add(b_re),
-                im: a_im.add(b_im)
+                re: a_re.op('+', b_re),
+                im: a_im.op('+', b_im)
             };
         });
     };
@@ -2981,13 +2992,15 @@
             throw new Error('[LComplex::add] Invalid value');
         }
         const conj = LComplex({ re: n.re, im: n.im.sub() });
-        var denom = n.re.mul(n.re).add(n.im.mul(n.im)).valueOf();
+        var denom = n.re.mul(n.re).add(n.im.mul(n.im));
         var num = this.mul(conj);
-        return LComplex({ re: num.re.div(denom), im: num.im.div(denom) });
+        const re = num.re.op('/', denom);
+        const im = num.im.op('/', denom);
+        return LComplex({ re, im });
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.sub = function(n) {
-        return this.op(n, function(a_re, b_re, a_im, b_im) {
+        return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
             return {
                 re: a_re.sub(b_re),
                 im: a_im.sum(b_im)
@@ -2996,7 +3009,7 @@
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.mul = function(n) {
-        return this.op(n, function(a_re, b_re, a_im, b_im) {
+        return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
             var ret = {
                 re: a_re.mul(b_re).sub(a_im.mul(b_im)),
                 im: a_re.mul(b_im).add(b_re.mul(a_im))
@@ -3005,7 +3018,7 @@
         });
     };
     // -------------------------------------------------------------------------
-    LComplex.prototype.op = function(n, fn) {
+    LComplex.prototype.complex_op = function(n, fn) {
         if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
             n = { im: 0, re: n };
         } else if (!LNumber.isComplex(n)) {
@@ -3015,12 +3028,33 @@
         var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
         var ret = fn(this.re, re, this.im, im);
         if ('im' in ret && 're' in ret) {
-            if (ret.im.cmp(0) === 0) {
-                return LNumber(ret.re);
-            }
             return LComplex(ret);
         }
         return ret;
+    };
+    // -------------------------------------------------------------------------
+    LComplex._op = {
+        '+': 'add',
+        '-': 'sub',
+        '*': 'mul',
+        '/': 'div'
+    };
+    // -------------------------------------------------------------------------
+    LComplex.prototype._op = function(op, n) {
+        const fn = LComplex._op[op];
+        return this[fn].call(this, n);
+    };
+    // -------------------------------------------------------------------------
+    LComplex.prototype.cmp = function(n) {
+        const [a, b] = this.coerce(n);
+        const [re_a, re_b] = a.re.coerce(b.re);
+        const re_cmp = re_a.cmp(re_b);
+        if (re_cmp !== 0) {
+            return re_cmp;
+        } else {
+            const [im_a, im_b] = a.im.coerce(b.im);
+            return im_a.cmp(im_b);
+        }
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.valueOf = function() {
@@ -3057,14 +3091,25 @@
             this.type = 'float';
         }
     }
+    // -------------------------------------------------------------------------
     LFloat.prototype = Object.create(LNumber.prototype);
     LFloat.prototype.constructor = LFloat;
+    // -------------------------------------------------------------------------
     LFloat.prototype.toString = function() {
         if (!LNumber.isFloat(this.value)) {
             return this.value + '.0';
         }
         return this.value.toString();
     };
+    // -------------------------------------------------------------------------
+    LFloat.prototype._op = function(op, n) {
+        if (n instanceof LNumber) {
+            n = n.value;
+        }
+        const fn = LNumber._ops[op];
+        return LFloat(fn(this.value, n), true);
+    };
+    // -------------------------------------------------------------------------
     // same aproximation as in guile scheme
     LFloat.prototype.toRational = function(n = null) {
         if (n === null) {
@@ -3072,6 +3117,7 @@
         }
         return approxRatio(n.valueOf())(this.value.valueOf());
     };
+    // -------------------------------------------------------------------------
     var toRational = approxRatio(1e-10);
     function approxRatio(eps) {
         return function(n) {
@@ -3130,7 +3176,7 @@
             return new LRational(n, force);
         }
         if (!LNumber.isRational(n)) {
-            throw new Error('Invalid constructor call for LBigInteger');
+            throw new Error('Invalid constructor call for LRational');
         }
         if (n.num % n.denom === 0 && !force) {
             return LNumber(n.num / n.denom);
@@ -3139,8 +3185,10 @@
         this.denom = LNumber(n.denom);
         this.type = 'rational';
     }
+    // -------------------------------------------------------------------------
     LRational.prototype = Object.create(LNumber.prototype);
     LRational.prototype.constructor = LRational;
+    // -------------------------------------------------------------------------
     LRational.prototype.pow = function(n) {
         var cmp = n.cmp(0);
         if (cmp === 0) {
@@ -3160,6 +3208,7 @@
         }
         return result;
     };
+    // -------------------------------------------------------------------------
     LRational.prototype.abs = function() {
         var num = this.num;
         var denom = this.denom;
@@ -3171,20 +3220,37 @@
         }
         return LRational({ num, denom });
     };
+    // -------------------------------------------------------------------------
     LRational.prototype.cmp = function(n) {
         return LNumber(this.valueOf()).cmp(n);
     };
+    // -------------------------------------------------------------------------
     LRational.prototype.toString = function() {
         var gdc = global_env.get('gdc')(this.num, this.denom);
-        if (gdc !== 1) {
+        var num, denom;
+        if (gdc.cmp(1) !== 0) {
             gdc = LNumber(gdc);
-            return this.num.div(gdc) + '/' + this.denom.div(gdc);
+            num = this.num.div(gdc);
+            denom = this.denom.div(gdc);
+        } else {
+            num = this.num;
+            denom = this.denom;
         }
-        return this.num + '/' + this.denom;
+        const minus = this.cmp(0) < 0;
+        if (minus) {
+            if (num.abs().cmp(denom.abs()) === 0) {
+                return num.toString();
+            }
+        } else if (num.cmp(denom) === 0) {
+            return num.toString();
+        }
+        return num + '/' + denom;
     };
+    // -------------------------------------------------------------------------
     LRational.prototype.valueOf = function() {
         return LFloat(this.num.valueOf()).div(this.denom.valueOf());
     };
+    // -------------------------------------------------------------------------
     LRational.prototype.mul = function(n) {
         if (LNumber.isRational(n)) {
             var num = this.num.mul(n.num);
@@ -3193,6 +3259,7 @@
         }
         return LNumber(this.valueOf()).mul(n);
     };
+    // -------------------------------------------------------------------------
     LRational.prototype.div = function(n) {
         if (LNumber.isRational(n)) {
             var num = this.num.mul(n.denom);
@@ -3201,9 +3268,11 @@
         }
         return LNumber(this.valueOf()).div(n);
     };
-    LRational.prototype.op = function(op, n) {
+    // -------------------------------------------------------------------------
+    LRational.prototype._op = function(op, n) {
         return this[rev_mapping[op]](n);
     };
+    // -------------------------------------------------------------------------
     LRational.prototype.sub = function(n) {
         if (LNumber.isRational(n)) {
             var num = n.num.sub();
@@ -3220,6 +3289,7 @@
         }
         return this.add(n);
     };
+    // -------------------------------------------------------------------------
     LRational.prototype.add = function(n) {
         if (LNumber.isRational(n)) {
             var a_denom = this.denom;
@@ -3261,34 +3331,39 @@
     LBigInteger.prototype = Object.create(LNumber.prototype);
     LBigInteger.prototype.constructor = LBigInteger;
     // -------------------------------------------------------------------------
-    LBigInteger.prototype.op = function(op, n) {
-        if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
-            var bn_op = {
-                '+': 'iadd',
-                '-': 'isub',
-                '*': 'imul',
-                '/': 'idiv',
-                '%': 'imod',
-                '|': 'ior',
-                '&': 'iand',
-                '~': 'inot',
-                '<<': 'ishrn',
-                '>>': 'ishln'
-            };
-            op = bn_op[op];
-            return LBigInteger(this.value.clone()[op](n), false);
+    LBigInteger.bn_op = {
+        '+': 'iadd',
+        '-': 'isub',
+        '*': 'imul',
+        '/': 'idiv',
+        '%': 'imod',
+        '|': 'ior',
+        '&': 'iand',
+        '~': 'inot',
+        '<<': 'ishrn',
+        '>>': 'ishln'
+    };
+    // -------------------------------------------------------------------------
+    LBigInteger.prototype._op = function(op, n) {
+        if (typeof n === 'undefined') {
+            if (LNumber.isBN(this.value)) {
+                op = LBigInteger.bn_op[op];
+                return LBigInteger(this.value.clone()[op](), false);
+            }
+            return LBigInteger(LNumber._ops[op](this.value));
         }
-        if (n instanceof LRational) {
-            return LRational({
-                num: this,
-                denom: 1
-            }, true)[rev_mapping[op]](n);
+        if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
+            op = LBigInteger.bn_op[op];
+            return LBigInteger(this.value.clone()[op](n), false);
         }
         if (op === '/') {
             return LRational({ num: this, denom: n });
         }
-        return LBigInteger(LNumber._ops[op](this.value, n && n.value), true);
+        // use native calucaltion becuase it's real bigint value
+        const ret = LNumber._ops[op](this.value, n.value);
+        return LBigInteger(ret);
     };
+    // -------------------------------------------------------------------------
     LBigInteger.prototype.sqrt = function() {
         var value;
         var minus = this.cmp(0) < 0;
@@ -3313,8 +3388,12 @@
     };
     // -------------------------------------------------------------------------
     LNumber.isComplex = function(n) {
-        return n instanceof LComplex ||
+        var ret = n instanceof LComplex ||
             (LNumber.isNumber(n.im) && LNumber.isNumber(n.re));
+        if (LNumber.isNumber(n.im) && n.re === undefined) {
+            debugger;
+        }
+        return ret;
     };
     // -------------------------------------------------------------------------
     LNumber.isRational = function(n) {
@@ -3375,38 +3454,79 @@
         }
     };
     // -------------------------------------------------------------------------
+    var matrix = (function() {
+        var i = (a,b) => [a,b];
+        return {
+            bigint: {
+                'bigint': i,
+                'float': (a, b) => [LFloat(a.valueOf()), b],
+                'rational': (a, b) => [{num: a, denom: 1}, b],
+                'complex': (a, b) => [{im: 0, re: a}, b]
+            },
+            float: {
+                'bigint': (a,b) => [a, LFloat(b.valueOf())],
+                'float': i,
+                'rational': (a,b) => [a, LFloat(b.valueOf())],
+                'complex':  (a,b) => [{re: a, im: LFloat(0, true)}, b]
+            },
+            complex: {
+                bigint: complex('bigint'),
+                float: complex('float'),
+                rational: complex('rational'),
+                complex: i
+            },
+            rational: {
+                bigint: (a, b) => [a, {num: b, denom: 1}],
+                float: (a, b) => [LFloat(a.valueOf()), b],
+                rational: i,
+                complex: complex('rational')
+            }
+        };
+        function complex(type) {
+            return (a, b) => {
+                return [
+                    {
+                        im: coerce(type, a.im.type, a.im),
+                        re: coerce(type, a.re.type, a.re)
+                    },
+                    {
+                        im: coerce(type, a.type, 0),
+                        re: coerce(type, b.type, b)
+                    }
+                ];
+            };
+        }
+    })();
+    // -------------------------------------------------------------------------
+    function coerce(type_a, type_b, a) {
+        return matrix[type_a][type_b](a)[0];
+    }
+    // -------------------------------------------------------------------------
+    LNumber.coerce = function(a, b) {
+        function clean(type) {
+            if (type === 'integer') {
+                return 'bigint';
+            }
+            return type;
+        }
+        const a_type = clean(LNumber.getType(a));
+        const b_type = clean(LNumber.getType(b));
+        if (!matrix[a_type]) {
+            throw new Error(`LNumber::coerce unknown lhs type ${a_type}`);
+        } else if (!matrix[a_type][b_type]) {
+            throw new Error(`LNumber::coerce unknown rhs type ${b_type}`);
+        }
+        return matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
+    };
+    // -------------------------------------------------------------------------
     LNumber.prototype.coerce = function(n) {
-        if (n === null) {
-            n = 0;
+        if (!(typeof n === 'number' || n instanceof LNumber)) {
+            throw new Error(`LNumber: you can't coerce ${type(n)}`);
         }
-        var value;
-        if (n instanceof LNumber) {
-            value = n.value;
-        } else {
-            value = n;
+        if (typeof n === 'number') {
+            n = LNumber(n);
         }
-        if (this instanceof LFloat) {
-            return LFloat(n.valueOf());
-        }
-        if (this instanceof LComplex) {
-            return LComplex({ re: value, im: 0 });
-        }
-        if (this instanceof LRational && !LNumber.isRational(n)) {
-            return LNumber(value);
-        }
-        if (LNumber.isComplex(n)) {
-            return LComplex(n);
-        } else if (LNumber.isRational(n)) {
-            return LRational(n);
-        } else if (LNumber.isFloat(value) || this instanceof LFloat) {
-            return LFloat(value);
-        } else if (typeof this.value === 'bigint' && typeof value !== 'bigint') {
-            return LBigInteger(BigInt(value));
-        } else if (typeof BN !== 'undefined' && this.value instanceof BN &&
-            !value instanceof BN) {
-            return LBigInteger(new BN(value));
-        }
-        return LNumber(value);
+        return LNumber.coerce(this, n);
     };
     // -------------------------------------------------------------------------
     LNumber.getType = function(n) {
@@ -3435,59 +3555,6 @@
         return !!(LNumber.isFloat(this.value) || this.float);
     };
     // -------------------------------------------------------------------------
-    LNumber.prototype.add = function(n) {
-        return LNumber(this.valueOf() + n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.sub = function(n = null) {
-        if (n === null) {
-            return LNumber(-this.valueOf());
-        }
-        return LNumber(this.valueOf() - n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.mul = function(n) {
-        if (n instanceof LComplex) {
-            return LComplex(this).mul(n);
-        }
-        return LNumber(this.valueOf() * n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.div = function(n) {
-        if (n instanceof LComplex) {
-            return LComplex(this).mul(n);
-        }
-        return LNumber(this.valueOf() / n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.rem = function(n) {
-        return LNumber(this.valueOf() % n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.mod = function(n) {
-        return LNumber(this.valueOf() % n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.or = function(n) {
-        return LNumber(this.ValueOf() | n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.and = function(n) {
-        return LNumber(this.valueOf() & n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.neg = function() {
-        return LNumber(~this.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.shl = function(n) {
-        return LNumber(this.valueOf() >> n.valueOf());
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.shr = function(n) {
-        return this.op(n);
-    };
-
     var mapping = {
         'add': '+',
         'sub': '-',
@@ -3545,7 +3612,14 @@
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.op = function(op, n) {
-        return LNumber(LNumber._ops[op](this.valueOf(), n && n.valueOf()));
+        if (typeof n === 'undefined') {
+            return LNumber(LNumber._ops[op](this.valueOf()));
+        }
+        const [a, b] = this.coerce(n);
+        if (a._op) {
+            return a._op(op, b);
+        }
+        return LNumber(LNumber._ops[op](a, b));
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.sqrt = function() {
@@ -3557,7 +3631,7 @@
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.pow = function(n) {
-        n = this.coerce(n);
+        const [a, b] = this.coerce(n);
         if (LNumber.isNative(this.value)) {
             try {
                 var pow = new Function('a,b', 'return a**b;');
@@ -3601,17 +3675,24 @@
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.cmp = function(n) {
-        n = this.coerce(n);
-        if (LNumber.isNative(this.value)) {
-            if (this.value < n.value) {
+        const [a, b] = this.coerce(n);
+        function cmp(a, b) {
+            if (a.value < b.value) {
                 return -1;
-            } else if (this.value === n.value) {
+            } else if (a.value === b.value) {
                 return 0;
             } else {
                 return 1;
             }
-        } else if (LNumber.isBN(this.value)) {
-            return this.value.cmp(n.value);
+        }
+        if (a.type === 'bigint') {
+            if (LNumber.isNative(a.value)) {
+                return cmp(a, b);
+            } else if (LNumber.isBN(a.value)) {
+                return this.value.cmp(b.value);
+            }
+        } else if (a instanceof LFloat) {
+            return cmp(a, b);
         }
     };
     // -------------------------------------------------------------------------
@@ -5895,7 +5976,7 @@
              Macro that decrement the value it work only on symbols`),
         // ------------------------------------------------------------------
         '%': doc(function(a, b) {
-            return LNumber(a).mod(b);
+            return LNumber(a).rem(b);
         }, `(% n1 n2)
 
              Function get reminder of it's arguments.`),
@@ -6515,7 +6596,7 @@
                 }
             } else {
                 // closing bracket without opening
-                throw new Error(`Syntnax error: not matched closing ${token.token}`);
+                throw new Error(`Syntax error: not matched closing ${token}`);
             }
         }
         return stack.is_empty();
@@ -6655,8 +6736,6 @@ You can also use (help name) to display help for specic function or macro.
         evaluate,
 
         Environment,
-        global_environment: global_env,
-        globalEnvironment: global_env,
         env: user_env,
 
         Interpreter,

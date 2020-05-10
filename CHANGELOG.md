@@ -33,6 +33,7 @@
 * improve executable
 * user can define string representation (with object that have `toString` lambda)
 * Hygienic macros: `syntax-rules` transformer macros
+* improve balancing parenthesis
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

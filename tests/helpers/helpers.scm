@@ -12,8 +12,8 @@
                                 (if (equal? ,a_name ,b_name)
                                     (--> e (pass))
                                     (--> e (fail (concat "failed: " (repr ,a_name)
-                                                         " != " (repr ,b_name)
-                                                         " in " (repr ',a))))))))))
+                                                         " != " (repr ,b_name true)
+                                                         " in " (repr ',a true))))))))))
        (if (not (. ,attempt 'passed))
            (--> (. ,attempt 'errors) (forEach (lambda (e)
                                                 (set-obj! e 'savedError undefined)))))
@@ -68,3 +68,11 @@
                                  `(list ,(symbol->string (car spec))
                                         ,@spec))
                                body))))
+
+
+;;(define (test name fn)
+;;  (fn (make-object :is
+;;         (lambda (a b)
+;;           (if (eq? a b)
+;;               (display "ok")
+;;               (throw (concat "FAIL " (number->string a) " != " (number->string b))))))))
