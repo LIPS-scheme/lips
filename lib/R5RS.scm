@@ -317,7 +317,7 @@
    Funcion convert real number to exact ratioanl number."
   (typecheck "inexact->exact" n "number")
   (if (or (real? n) (complex? n))
-      (--> n (toRational 1e-20))
+      (--> n (toRational))
       n))
 
 (add-special! "#i" 'exact->inexact lips.specials.LITERAL)
