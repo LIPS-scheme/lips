@@ -225,7 +225,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)
-  (and (number? x) (string?= (. x 'type) type)))
+  (and (number? x) (string=? (. x 'type) type)))
 
 ;; -----------------------------------------------------------------------------
 (define integer? (%doc
@@ -303,7 +303,12 @@
 
    Convert exact number to inexact."
   (typecheck "exact->inexact" n "number")
-  (lips.LFloat (--> n (valueOf))))
+  (if (complex? n)
+      ;; make-object (&) will use valueOf so it will be float even if it was rational
+      (lips.LComplex &(:im (. n 'im) :re (. n 're)))
+      (if (rational? n)
+          (lips.LFloat (--> n (valueOf)))
+          n)))
 
 ;; -----------------------------------------------------------------------------
 (define (inexact->exact n)
@@ -311,7 +316,7 @@
 
    Funcion convert real number to exact ratioanl number."
   (typecheck "inexact->exact" n "number")
-  (if (real? n)
+  (if (or (real? n) (complex? n))
       (--> n (toRational 1e-20))
       n))
 

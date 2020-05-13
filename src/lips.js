@@ -2983,6 +2983,15 @@
     LComplex.prototype = Object.create(LNumber.prototype);
     LComplex.prototype.constructor = LComplex;
     // -------------------------------------------------------------------------
+    LComplex.prototype.toRational = function(n) {
+        if (LNumber.isFloat(this.im) && LNumber.isFloat(this.re)) {
+            const im = LFloat(this.im).toRational(n);
+            const re = LFloat(this.re).toRational(n);
+            return LComplex({ im, re });
+        }
+        return this;
+    };
+    // -------------------------------------------------------------------------
     LComplex.prototype.add = function(n) {
         return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
             return {

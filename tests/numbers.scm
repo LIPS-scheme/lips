@@ -28,6 +28,9 @@
         (t.is (number->string .1i) "+0.1i")
         (t.is (number->string (/ 10+1i +10i)) "1/10-1i")
         (t.is (number->string (make-rectangular 1/2 2/4)) "1/2+1/2i")
+        (t.is (/ (make-rectangular 1 2) (make-rectangular 2 10)) 11/52-3/52i)
+        (t.is (number->string #e0.5+0.5i) "1/2+1/2i")
+        (t.is (number->string #i1/2+2/4i) "0.5+0.5i")
         (t.is (< 0.1i 0.2i) true)
         (t.is (> 0.1i 0.2i) false)))
 

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 10 May 2020 17:29:56 +0000
+ * build: Wed, 13 May 2020 09:37:06 +0000
  */
 (function () {
 	'use strict';
@@ -4749,6 +4749,20 @@
 	  LComplex.prototype = Object.create(LNumber.prototype);
 	  LComplex.prototype.constructor = LComplex; // -------------------------------------------------------------------------
 
+	  LComplex.prototype.toRational = function (n) {
+	    if (LNumber.isFloat(this.im) && LNumber.isFloat(this.re)) {
+	      var im = LFloat(this.im).toRational(n);
+	      var re = LFloat(this.re).toRational(n);
+	      return LComplex({
+	        im: im,
+	        re: re
+	      });
+	    }
+
+	    return this;
+	  }; // -------------------------------------------------------------------------
+
+
 	  LComplex.prototype.add = function (n) {
 	    return this.complex_op(n, function (a_re, b_re, a_im, b_im) {
 	      return {
@@ -8974,10 +8988,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 10 May 2020 17:29:56 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 13 May 2020 09:37:06 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 10 May 2020 17:29:56 +0000').valueOf();
+	    var date = LString('Wed, 13 May 2020 09:37:06 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9010,7 +9024,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 10 May 2020 17:29:56 +0000',
+	    date: 'Wed, 13 May 2020 09:37:06 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
