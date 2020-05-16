@@ -221,7 +221,6 @@
         var options = {};
         if (parts[1]) {
             var type = parts[1].replace(/#/g, '').split('');
-            var radix;
             if (type.includes('x')) {
                 options.radix = 16;
             } else if (type.includes('o')) {
@@ -244,7 +243,7 @@
         return options;
     }
     // ----------------------------------------------------------------------
-    function parse_rational(arg, radix = null) {
+    function parse_rational(arg) {
         var parse = num_pre_parse(arg);
         var parts = parse.number.split('/');
         var num = LRational({
@@ -270,16 +269,6 @@
         var m = arg.match(/#\\(.*)$/);
         if (m) {
             return LCharacter(m[1]);
-        }
-    }
-    // ----------------------------------------------------------------------
-    function parse_number(arg) {
-        if (arg.match(rational_re)) {
-            return parse_rational(arg);
-        } else if (arg.match(int_re)) {
-            return parse_integer(arg);
-        } else if (arg.match(float_re)) {
-            return LFloat(parseFloat(arg));
         }
     }
     // ----------------------------------------------------------------------
@@ -315,12 +304,10 @@
         im = parse_num(parts[2]);
         if (parts[1]) {
             re = parse_num(parts[1]);
+        } else if (im instanceof LFloat) {
+            re = LFloat(0, true);
         } else {
-            if (im instanceof LFloat) {
-                re = LFloat(0, true);
-            } else {
-                re = LNumber(0);
-            }
+            re = LNumber(0);
         }
         return LComplex({ im, re });
     }

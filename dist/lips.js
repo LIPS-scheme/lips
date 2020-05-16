@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 16 May 2020 21:13:32 +0000
+ * build: Sat, 16 May 2020 21:18:24 +0000
  */
 (function () {
 	'use strict';
@@ -1359,12 +1359,10 @@
 
 	    if (parts[1]) {
 	      re = parse_num(parts[1]);
+	    } else if (im instanceof LFloat) {
+	      re = LFloat(0);
 	    } else {
-	      if (im instanceof LFloat) {
-	        re = LFloat(0);
-	      } else {
-	        re = LNumber(0);
-	      }
+	      re = LNumber(0);
 	    }
 
 	    return LComplex({
@@ -9132,10 +9130,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 16 May 2020 21:13:32 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 16 May 2020 21:18:24 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 16 May 2020 21:13:32 +0000').valueOf();
+	    var date = LString('Sat, 16 May 2020 21:18:24 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9168,7 +9166,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 16 May 2020 21:13:32 +0000',
+	    date: 'Sat, 16 May 2020 21:18:24 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

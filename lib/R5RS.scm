@@ -320,9 +320,6 @@
       (--> n (toRational))
       n))
 
-(add-special! "#i" 'exact->inexact lips.specials.LITERAL)
-(add-special! "#e" 'inexact->exact lips.specials.LITERAL)
-
 ;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
 (define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
