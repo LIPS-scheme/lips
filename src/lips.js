@@ -150,10 +150,37 @@
             });
         };
     }
-    // parse_argument based on function from jQuery Terminal
+    // functions generate regexes to match number rational, integer, complex, complex+ratioanl
+    function num_mnemicic_re(mnemonic) {
+        return mnemonic ? `(?:#${mnemonic}(?:#[ie])?|#[ie]#${mnemonic})` : '(?:#[ie])?';
+    }
+    function gen_rational_re(mnemonic, range) {
+        return `${num_mnemicic_re(mnemonic)}[+-]?${range}+/${range}+`;
+    }
+    // TODO: float complex
+    function gen_complex_re(mnemonic, range) {
+        return `${num_mnemicic_re(mnemonic)}(?:(?:[+-]?${range}+)?[+-]${range}+i|(?:[+-]?${range}+/${range}+)?[+-]${range}+/${range}+i)`;
+    }
+    function gen_integer_re(mnemonic, range) {
+        return `${num_mnemicic_re(mnemonic)}[+-]?${range}+`;
+    }
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-    var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
-    var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
+    var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
+    var complex_float_stre = `(?:#[ie])?(?:${float_stre})?${float_stre}i`;
+    var float_re = new RegExp(`^(#[ie])?${float_stre}$`);
+    function make_complex_match_re(mnemonic, range) {
+        // complex need special treatment of 10e+1i when it's hex or decimal
+        var neg = mnemonic === 'x' ? '(?![+])' : '(?!\\.)';
+        var fl = mnemonic === '' ? float_stre + '|' : '';
+        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+|[+-]?${range}+${neg})?)(${fl}[+-]${range}+/${range}+|[+-]${range}+)i`);
+    }
+    var complex_list_re = (function() {
+        var result = {};
+        [[10, '', '[0-9]'], [16, 'x', '[0-9a-fA-F]'], [8, 'o', '[0-7]'], [2, 'b', '[01]']].forEach(([radix, mnemonic, range]) => {
+            result[radix] = make_complex_match_re(mnemonic, range);
+        });
+        return result;
+    })();
     var characters = {
         'alarm': '\x07',
         'backspace': '\x08',
@@ -168,37 +195,75 @@
     var character_symbols = Object.keys(characters).join('|');
     var char_re = new RegExp(`^#\\\\(?:${character_symbols}|[\\s\\S])$`, 'i');
     // complex with (int) (float) (rational)
-    var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?[0-9]+\/[0-9]+|(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:[0-9]+\/[0-9]+|(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
-    var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
+    function make_num_stre(fn) {
+        var ranges = [
+            ['o', '[0-7]'],
+            ['x', '[0-9a-fA-F]'],
+            ['b', '[01]'],
+            ['', '[0-9]']
+        ];
+        // float exception that don't accept mnemonics
+        var result = ranges.map(([m, range]) => fn(m, range)).join('|');
+        if (fn === gen_complex_re) {
+            result = complex_float_stre + '|' + result;
+        }
+        return result;
+    }
+    function make_type_re(fn) {
+        return new RegExp('^(?:' + make_num_stre(fn) + ')$');
+    }
+    var complex_re = make_type_re(gen_complex_re);
+    var rational_re = make_type_re(gen_rational_re);
+    var int_re = make_type_re(gen_integer_re);
     /* eslint-enable */
+    function num_pre_parse(arg) {
+        var parts = arg.match(/((?:#[xobie]){0,2})(.*)/i);
+        var options = {};
+        if (parts[1]) {
+            var type = parts[1].replace(/#/g, '').split('');
+            var radix;
+            if (type.includes('x')) {
+                options.radix = 16;
+            } else if (type.includes('o')) {
+                options.radix = 8;
+            } else if (type.includes('b')) {
+                options.radix = 2;
+            } else {
+                options.radix = 10;
+            }
+            if (type.includes('i')) {
+                options.inexact = true;
+            }
+            if (type.includes('e')) {
+                options.exact = true;
+            }
+        } else {
+            options.radix = 10;
+        }
+        options.number = parts[2];
+        return options;
+    }
     // ----------------------------------------------------------------------
-    function parse_rational(arg) {
-        var parts = arg.split('/');
-        return LRational({
-            num: parseInt(parts[0], 10),
-            denom: parseInt(parts[1], 10)
+    function parse_rational(arg, radix = null) {
+        var parse = num_pre_parse(arg);
+        var parts = parse.number.split('/');
+        var num = LRational({
+            num: LNumber([parts[0], parse.radix]),
+            denom: LNumber([parts[1], parse.radix])
         });
+        if (parse.inexact) {
+            return num.valueOf();
+        } else {
+            return num;
+        }
     }
     // ----------------------------------------------------------------------
     function parse_integer(arg) {
-        var m = arg.match(/^(?:#([xbo]))?([+-]?[0-9a-f]+)$/i);
-        var radix;
-        if (m && m[1]) {
-            switch (m[1]) {
-                case 'x':
-                    radix = 16;
-                    break;
-                case 'o':
-                    radix = 8;
-                    break;
-                case 'b':
-                    radix = 2;
-                    break;
-            }
-        } else {
-            radix = 10;
+        var parse = num_pre_parse(arg);
+        if (parse.inexact) {
+            return LFloat(parseInt(parse.number, parse.radix), true);
         }
-        return LNumber([m[2], radix]);
+        return LNumber([parse.number, parse.radix]);
     }
     // ----------------------------------------------------------------------
     function parse_character(arg) {
@@ -222,16 +287,51 @@
         if (arg === '-i') {
             return { im: -1, re: 0 };
         }
-        var parts = arg.match(complex_re);
+        function parse_num(n) {
+            var value;
+            if (n.match(int_re)) {
+                value = LNumber([n, parse.radix]);
+            } else if (n.match(rational_re)) {
+                var parts = n.split('/');
+                value = LRational({
+                    num: LNumber([parts[0], parse.radix]),
+                    denom: LNumber([parts[1], parse.radix])
+                });
+            } else if (n.match(float_re)) {
+                var float = LFloat(parseFloat(n));
+                if (parse.exact) {
+                    return float.toRational();
+                }
+                return float;
+            }
+            if (parse.inexact) {
+                return LFloat(value.valueOf(), true);
+            }
+            return value;
+        }
+        var parse = num_pre_parse(arg);
+        var parts = parse.number.match(complex_list_re[parse.radix.toString()]);
         var re, im;
-        if (parts.length === 2) {
-            im = parse_number(parts[1]);
-            re = 0;
+        im = parse_num(parts[2]);
+        if (parts[1]) {
+            re = parse_num(parts[1]);
         } else {
-            re = parts[1] ? parse_number(parts[1]) : 0;
-            im = parse_number(parts[2]);
+            if (im instanceof LFloat) {
+                re = LFloat(0, true);
+            } else {
+                re = LNumber(0);
+            }
         }
         return LComplex({ im, re });
+    }
+    // ----------------------------------------------------------------------
+    function parse_float(arg) {
+        var parse = num_pre_parse(arg);
+        var value = parseFloat(parse.number);
+        if (parse.exact || !parse.number.match(/\./) && !parse.inexact) {
+            return LNumber(value);
+        }
+        return LFloat(value, true);
     }
     // ----------------------------------------------------------------------
     function parse_string(string) {
@@ -266,7 +366,7 @@
         } else if (arg.match(int_re)) {
             return parse_integer(arg);
         } else if (arg.match(float_re)) {
-            return LFloat(parseFloat(arg));
+            return parse_float(arg);
         } else if (arg === 'nil') {
             return nil;
         } else if (arg === 'true') {
@@ -287,13 +387,18 @@
     /* eslint-disable */
     var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
-    var number_parital = '';
+    // generate regex for all number literals
+    var num_stre = complex_float_stre + '|' + [
+        gen_complex_re,
+        gen_rational_re,
+        gen_integer_re
+    ].map(make_num_stre).join('|');
     // ----------------------------------------------------------------------
     function make_token_re() {
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+(?:[-+][0-9]+/[0-9]+i)?|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|${num_stre}(?=[\\n\\s()])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?${float_stre}|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -2883,16 +2988,26 @@
             n = 0;
         }
         var value;
+        if (parsable) {
+            var [str, radix] = n;
+            if (str instanceof LString) {
+                str = str.valueOf();
+            }
+            if (radix instanceof LNumber) {
+                radix = radix.valueOf();
+            }
+            var sign = str.match(/^([+-])/);
+            var minus = false;
+            if (sign) {
+                str = str.replace(/^[+-]/, '');
+                if (sign[1] === '-') {
+                    minus = true;
+                }
+            }
+        }
         if (typeof BigInt !== 'undefined') {
             if (typeof n !== 'bigint') {
                 if (parsable) {
-                    let [str, radix] = n;
-                    if (str instanceof LString) {
-                        str = str.valueOf();
-                    }
-                    if (radix instanceof LNumber) {
-                        radix = radix.valueOf();
-                    }
                     let prefix;
                     // default number base (radix) supported by BigInt constructor
                     switch (radix) {
@@ -2921,6 +3036,9 @@
                 } else {
                     value = BigInt(n);
                 }
+                if (minus) {
+                    value *= BigInt(-1);
+                }
             } else {
                 value = n;
             }
@@ -2931,13 +3049,6 @@
             }
             return LBigInteger(new BN(n));
         } else if (parsable) {
-            let [str, radix] = n;
-            if (str instanceof LString) {
-                str = str.valueOf();
-            }
-            if (radix instanceof LNumber) {
-                radix = radix.valueOf();
-            }
             this.value = parseInt(str, radix);
         } else {
             this.value = n;
@@ -2972,7 +3083,7 @@
             throw new Error('Invalid constructor call for LComplex');
         }
         const [im, re] = LNumber.coerce(n.im, n.re);
-        if (im.cmp(0) === 0) {
+        if (im.cmp(0) === 0 && !force) {
             return re;
         }
         this.im = im;
@@ -3044,7 +3155,8 @@
         var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
         var ret = fn(this.re, re, this.im, im);
         if ('im' in ret && 're' in ret) {
-            return LComplex(ret);
+            var x = LComplex(ret, true);
+            return x;
         }
         return ret;
     };
@@ -3238,7 +3350,7 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.cmp = function(n) {
-        return LNumber(this.valueOf()).cmp(n);
+        return LNumber(this.valueOf(), true).cmp(n);
     };
     // -------------------------------------------------------------------------
     LRational.prototype.toString = function() {
@@ -3472,24 +3584,31 @@
         return {
             bigint: {
                 'bigint': i,
-                'float': (a, b) => [LFloat(a.valueOf()), b],
+                'float': (a, b) => [LFloat(a.valueOf(), true), b],
                 'rational': (a, b) => [{ num: a, denom: 1 }, b],
                 'complex': (a, b) => [{ im: 0, re: a }, b]
             },
             float: {
-                'bigint': (a, b) => [a, LFloat(b.valueOf())],
+                'bigint': (a, b) => [a, b && LFloat(b.valueOf(), true)],
                 'float': i,
-                'rational': (a, b) => [a, LFloat(b.valueOf())],
+                'rational': (a, b) => [a, b && LFloat(b.valueOf(), true)],
                 'complex': (a, b) => [{ re: a, im: LFloat(0, true) }, b]
             },
             complex: {
                 bigint: complex('bigint'),
                 float: complex('float'),
                 rational: complex('rational'),
-                complex: i
+                complex: (a, b) => {
+                    const [a_re, b_re] = LNumber.coerce(a.re, b.re);
+                    const [a_im, b_im] = LNumber.coerce(a.im, b.im);
+                    return [
+                        { im: a_im, re: a_re },
+                        { im: b_im, re: b_re }
+                    ];
+                }
             },
             rational: {
-                bigint: (a, b) => [a, { num: b, denom: 1 }],
+                bigint: (a, b) => [a, b || { num: b, denom: 1 }],
                 float: (a, b) => [LFloat(a.valueOf()), b],
                 rational: i,
                 complex: complex('rational')
@@ -3503,7 +3622,7 @@
                         re: coerce(type, a.re.type, a.re)
                     },
                     {
-                        im: coerce(type, a.type, 0),
+                        im: coerce(type, a.im.type, 0),
                         re: coerce(type, b.type, b)
                     }
                 ];

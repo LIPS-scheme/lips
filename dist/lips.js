@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 13 May 2020 09:37:06 +0000
+ * build: Sat, 16 May 2020 21:13:32 +0000
  */
 (function () {
 	'use strict';
@@ -912,41 +912,6 @@
 
 	var toConsumableArray = _toConsumableArray;
 
-	function _iterableToArrayLimit(arr, i) {
-	  if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;
-	  var _arr = [];
-	  var _n = true;
-	  var _d = false;
-	  var _e = undefined;
-
-	  try {
-	    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-	      _arr.push(_s.value);
-
-	      if (i && _arr.length === i) break;
-	    }
-	  } catch (err) {
-	    _d = true;
-	    _e = err;
-	  } finally {
-	    try {
-	      if (!_n && _i["return"] != null) _i["return"]();
-	    } finally {
-	      if (_d) throw _e;
-	    }
-	  }
-
-	  return _arr;
-	}
-
-	var iterableToArrayLimit = _iterableToArrayLimit;
-
-	function _slicedToArray(arr, i) {
-	  return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || unsupportedIterableToArray(arr, i) || nonIterableRest();
-	}
-
-	var slicedToArray = _slicedToArray;
-
 	function _defineProperty(obj, key, value) {
 	  if (key in obj) {
 	    Object.defineProperty(obj, key, {
@@ -1001,6 +966,41 @@
 	}
 
 	var objectWithoutProperties = _objectWithoutProperties;
+
+	function _iterableToArrayLimit(arr, i) {
+	  if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;
+	  var _arr = [];
+	  var _n = true;
+	  var _d = false;
+	  var _e = undefined;
+
+	  try {
+	    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+	      _arr.push(_s.value);
+
+	      if (i && _arr.length === i) break;
+	    }
+	  } catch (err) {
+	    _d = true;
+	    _e = err;
+	  } finally {
+	    try {
+	      if (!_n && _i["return"] != null) _i["return"]();
+	    } finally {
+	      if (_d) throw _e;
+	    }
+	  }
+
+	  return _arr;
+	}
+
+	var iterableToArrayLimit = _iterableToArrayLimit;
+
+	function _slicedToArray(arr, i) {
+	  return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || unsupportedIterableToArray(arr, i) || nonIterableRest();
+	}
+
+	var slicedToArray = _slicedToArray;
 
 	var _typeof_1 = createCommonjsModule(function (module) {
 	function _typeof(obj) {
@@ -1161,12 +1161,51 @@
 	        }
 	      });
 	    };
-	  } // parse_argument based on function from jQuery Terminal
+	  } // functions generate regexes to match number rational, integer, complex, complex+ratioanl
 
+
+	  function num_mnemicic_re(mnemonic) {
+	    return mnemonic ? "(?:#".concat(mnemonic, "(?:#[ie])?|#[ie]#").concat(mnemonic, ")") : '(?:#[ie])?';
+	  }
+
+	  function gen_rational_re(mnemonic, range) {
+	    return "".concat(num_mnemicic_re(mnemonic), "[+-]?").concat(range, "+/").concat(range, "+");
+	  } // TODO: float complex
+
+
+	  function gen_complex_re(mnemonic, range) {
+	    return "".concat(num_mnemicic_re(mnemonic), "(?:(?:[+-]?").concat(range, "+)?[+-]").concat(range, "+i|(?:[+-]?").concat(range, "+/").concat(range, "+)?[+-]").concat(range, "+/").concat(range, "+i)");
+	  }
+
+	  function gen_integer_re(mnemonic, range) {
+	    return "".concat(num_mnemicic_re(mnemonic), "[+-]?").concat(range, "+");
+	  }
 
 	  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-	  var int_re = /^(?:#x[-+]?[0-9a-f]+|#o[-+]?[0-7]+|#b[-+]?[01]+|[-+]?[0-9]+)$/i;
-	  var float_re = /^([-+]?([0-9]+([eE][-+]?[0-9]+)|(\.[0-9]+|[0-9]+\.[0-9]+)([eE][-+]?[0-9]+)?)|[0-9]+\.)$/;
+	  var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
+	  var complex_float_stre = "(?:#[ie])?(?:".concat(float_stre, ")?").concat(float_stre, "i");
+	  var float_re = new RegExp("^(#[ie])?".concat(float_stre, "$"));
+
+	  function make_complex_match_re(mnemonic, range) {
+	    // complex need special treatment of 10e+1i when it's hex or decimal
+	    var neg = mnemonic === 'x' ? '(?![+])' : '(?!\\.)';
+	    var fl = mnemonic === '' ? float_stre + '|' : '';
+	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]").concat(range, "+/").concat(range, "+|[+-]").concat(range, "+)i"));
+	  }
+
+	  var complex_list_re = function () {
+	    var result = {};
+	    [[10, '', '[0-9]'], [16, 'x', '[0-9a-fA-F]'], [8, 'o', '[0-7]'], [2, 'b', '[01]']].forEach(function (_ref) {
+	      var _ref2 = slicedToArray(_ref, 3),
+	          radix = _ref2[0],
+	          mnemonic = _ref2[1],
+	          range = _ref2[2];
+
+	      result[radix] = make_complex_match_re(mnemonic, range);
+	    });
+	    return result;
+	  }();
+
 	  var characters = {
 	    'alarm': '\x07',
 	    'backspace': '\x08',
@@ -1181,43 +1220,90 @@
 	  var character_symbols = Object.keys(characters).join('|');
 	  var char_re = new RegExp("^#\\\\(?:".concat(character_symbols, "|[\\s\\S])$"), 'i'); // complex with (int) (float) (rational)
 
-	  var complex_re = /^((?:(?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?[0-9]+\/[0-9]+|(?:(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))(?=[+-]|i))?((?:[-+]?[0-9]+(?:[eE][-+]?[0-9]+)?)|(?:[-+]?(?:[0-9]+\/[0-9]+|(?:\.[0-9]+|[0-9]+\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\.))i|-i$/;
-	  var rational_re = /^[-+]?[0-9]+\/[0-9]+$/;
+	  function make_num_stre(fn) {
+	    var ranges = [['o', '[0-7]'], ['x', '[0-9a-fA-F]'], ['b', '[01]'], ['', '[0-9]']]; // float exception that don't accept mnemonics
+
+	    var result = ranges.map(function (_ref3) {
+	      var _ref4 = slicedToArray(_ref3, 2),
+	          m = _ref4[0],
+	          range = _ref4[1];
+
+	      return fn(m, range);
+	    }).join('|');
+
+	    if (fn === gen_complex_re) {
+	      result = complex_float_stre + '|' + result;
+	    }
+
+	    return result;
+	  }
+
+	  function make_type_re(fn) {
+	    return new RegExp('^(?:' + make_num_stre(fn) + ')$');
+	  }
+
+	  var complex_re = make_type_re(gen_complex_re);
+	  var rational_re = make_type_re(gen_rational_re);
+	  var int_re = make_type_re(gen_integer_re);
 	  /* eslint-enable */
-	  // ----------------------------------------------------------------------
+
+	  function num_pre_parse(arg) {
+	    var parts = arg.match(/((?:#[xobie]){0,2})(.*)/i);
+	    var options = {};
+
+	    if (parts[1]) {
+	      var type = parts[1].replace(/#/g, '').split('');
+
+	      if (type.includes('x')) {
+	        options.radix = 16;
+	      } else if (type.includes('o')) {
+	        options.radix = 8;
+	      } else if (type.includes('b')) {
+	        options.radix = 2;
+	      } else {
+	        options.radix = 10;
+	      }
+
+	      if (type.includes('i')) {
+	        options.inexact = true;
+	      }
+
+	      if (type.includes('e')) {
+	        options.exact = true;
+	      }
+	    } else {
+	      options.radix = 10;
+	    }
+
+	    options.number = parts[2];
+	    return options;
+	  } // ----------------------------------------------------------------------
+
 
 	  function parse_rational(arg) {
-	    var parts = arg.split('/');
-	    return LRational({
-	      num: parseInt(parts[0], 10),
-	      denom: parseInt(parts[1], 10)
+	    var parse = num_pre_parse(arg);
+	    var parts = parse.number.split('/');
+	    var num = LRational({
+	      num: LNumber([parts[0], parse.radix]),
+	      denom: LNumber([parts[1], parse.radix])
 	    });
+
+	    if (parse.inexact) {
+	      return num.valueOf();
+	    } else {
+	      return num;
+	    }
 	  } // ----------------------------------------------------------------------
 
 
 	  function parse_integer(arg) {
-	    var m = arg.match(/^(?:#([xbo]))?([+-]?[0-9a-f]+)$/i);
-	    var radix;
+	    var parse = num_pre_parse(arg);
 
-	    if (m && m[1]) {
-	      switch (m[1]) {
-	        case 'x':
-	          radix = 16;
-	          break;
-
-	        case 'o':
-	          radix = 8;
-	          break;
-
-	        case 'b':
-	          radix = 2;
-	          break;
-	      }
-	    } else {
-	      radix = 10;
+	    if (parse.inexact) {
+	      return LFloat(parseInt(parse.number, parse.radix));
 	    }
 
-	    return LNumber([m[2], radix]);
+	    return LNumber([parse.number, parse.radix]);
 	  } // ----------------------------------------------------------------------
 
 
@@ -1230,17 +1316,6 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function parse_number(arg) {
-	    if (arg.match(rational_re)) {
-	      return parse_rational(arg);
-	    } else if (arg.match(int_re)) {
-	      return parse_integer(arg);
-	    } else if (arg.match(float_re)) {
-	      return LFloat(parseFloat(arg));
-	    }
-	  } // ----------------------------------------------------------------------
-
-
 	  function parse_complex(arg) {
 	    if (arg === '-i') {
 	      return {
@@ -1249,21 +1324,65 @@
 	      };
 	    }
 
-	    var parts = arg.match(complex_re);
-	    var re, im;
+	    function parse_num(n) {
+	      var value;
 
-	    if (parts.length === 2) {
-	      im = parse_number(parts[1]);
-	      re = 0;
+	      if (n.match(int_re)) {
+	        value = LNumber([n, parse.radix]);
+	      } else if (n.match(rational_re)) {
+	        var parts = n.split('/');
+	        value = LRational({
+	          num: LNumber([parts[0], parse.radix]),
+	          denom: LNumber([parts[1], parse.radix])
+	        });
+	      } else if (n.match(float_re)) {
+	        var _float = LFloat(parseFloat(n));
+
+	        if (parse.exact) {
+	          return _float.toRational();
+	        }
+
+	        return _float;
+	      }
+
+	      if (parse.inexact) {
+	        return LFloat(value.valueOf());
+	      }
+
+	      return value;
+	    }
+
+	    var parse = num_pre_parse(arg);
+	    var parts = parse.number.match(complex_list_re[parse.radix.toString()]);
+	    var re, im;
+	    im = parse_num(parts[2]);
+
+	    if (parts[1]) {
+	      re = parse_num(parts[1]);
 	    } else {
-	      re = parts[1] ? parse_number(parts[1]) : 0;
-	      im = parse_number(parts[2]);
+	      if (im instanceof LFloat) {
+	        re = LFloat(0);
+	      } else {
+	        re = LNumber(0);
+	      }
 	    }
 
 	    return LComplex({
 	      im: im,
 	      re: re
 	    });
+	  } // ----------------------------------------------------------------------
+
+
+	  function parse_float(arg) {
+	    var parse = num_pre_parse(arg);
+	    var value = parseFloat(parse.number);
+
+	    if (parse.exact || !parse.number.match(/\./) && !parse.inexact) {
+	      return LNumber(value);
+	    }
+
+	    return LFloat(value);
 	  } // ----------------------------------------------------------------------
 
 
@@ -1303,7 +1422,7 @@
 	    } else if (arg.match(int_re)) {
 	      return parse_integer(arg);
 	    } else if (arg.match(float_re)) {
-	      return LFloat(parseFloat(arg));
+	      return parse_float(arg);
 	    } else if (arg === 'nil') {
 	      return nil;
 	    } else if (arg === 'true') {
@@ -1324,13 +1443,15 @@
 
 
 	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
-	  var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
+	  var string_re = /"(?:\\[\S\s]|[^"])*"?/g; // generate regex for all number literals
+
+	  var num_stre = complex_float_stre + '|' + [gen_complex_re, gen_rational_re, gen_integer_re].map(make_num_stre).join('|'); // ----------------------------------------------------------------------
 
 	  function make_token_re() {
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|#[xbo][0-9a-f]+(?=[\\s()]|$)|[0-9]+/[0-9]+(?:[-+][0-9]+/[0-9]+i)?|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:(?:[-+]?(?:(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)[0-9]i)|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|").concat(num_stre, "(?=[\\n\\s()])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?").concat(float_stre, "|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -1508,11 +1629,11 @@
 
 
 	  var defined_specials = [["'", new LSymbol('quote'), specials.LITERAL], ['`', new LSymbol('quasiquote'), specials.LITERAL], [',@', new LSymbol('unquote-splicing'), specials.LITERAL], [',', new LSymbol('unquote'), specials.LITERAL]];
-	  defined_specials.forEach(function (_ref) {
-	    var _ref2 = slicedToArray(_ref, 3),
-	        seq = _ref2[0],
-	        symbol = _ref2[1],
-	        type = _ref2[2];
+	  defined_specials.forEach(function (_ref5) {
+	    var _ref6 = slicedToArray(_ref5, 3),
+	        seq = _ref6[0],
+	        symbol = _ref6[1],
+	        type = _ref6[2];
 
 	    specials.append(seq, symbol, type);
 	  }); // ----------------------------------------------------------------------
@@ -3035,10 +3156,10 @@
 	  }; // ----------------------------------------------------------------------
 
 
-	  Macro.prototype.invoke = function (code, _ref3, macro_expand) {
-	    var env = _ref3.env,
-	        dynamic_scope = _ref3.dynamic_scope,
-	        error = _ref3.error;
+	  Macro.prototype.invoke = function (code, _ref7, macro_expand) {
+	    var env = _ref7.env,
+	        dynamic_scope = _ref7.dynamic_scope,
+	        error = _ref7.error;
 	    var args = {
 	      dynamic_scope: dynamic_scope,
 	      error: error,
@@ -3058,7 +3179,7 @@
 
 	  function macro_expand(single) {
 	    return /*#__PURE__*/function () {
-	      var _ref4 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2(code, args) {
+	      var _ref8 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2(code, args) {
 	        var env, traverse, _traverse;
 
 	        return regenerator.wrap(function _callee2$(_context2) {
@@ -3212,7 +3333,7 @@
 	      }));
 
 	      return function (_x, _x2) {
-	        return _ref4.apply(this, arguments);
+	        return _ref8.apply(this, arguments);
 	      };
 	    }();
 	  } // ----------------------------------------------------------------------
@@ -3232,9 +3353,9 @@
 
 	  Syntax.prototype = Object.create(Macro.prototype);
 
-	  Syntax.prototype.invoke = function (code, _ref5, macro_expand) {
-	    var error = _ref5.error,
-	        env = _ref5.env;
+	  Syntax.prototype.invoke = function (code, _ref9, macro_expand) {
+	    var error = _ref9.error,
+	        env = _ref9.env;
 	    var args = {
 	      error: error,
 	      env: env,
@@ -4148,9 +4269,9 @@
 	                }
 	              }).then(exec);
 	            } else {
-	              values.forEach(function (_ref6) {
-	                var name = _ref6.name,
-	                    value = _ref6.value;
+	              values.forEach(function (_ref10) {
+	                var name = _ref10.name,
+	                    value = _ref10.value;
 	                set(name, value);
 	              });
 	            }
@@ -4194,9 +4315,9 @@
 
 	  function pararel(name, fn) {
 	    return new Macro(name, function (code) {
-	      var _ref7 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref7.dynamic_scope,
-	          error = _ref7.error;
+	      var _ref11 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref11.dynamic_scope,
+	          error = _ref11.error;
 
 	      var env = this;
 
@@ -4609,22 +4730,35 @@
 
 	    var value;
 
+	    if (parsable) {
+	      var _n = n,
+	          _n2 = slicedToArray(_n, 2),
+	          str = _n2[0],
+	          radix = _n2[1];
+
+	      if (str instanceof LString) {
+	        str = str.valueOf();
+	      }
+
+	      if (radix instanceof LNumber) {
+	        radix = radix.valueOf();
+	      }
+
+	      var sign = str.match(/^([+-])/);
+	      var minus = false;
+
+	      if (sign) {
+	        str = str.replace(/^[+-]/, '');
+
+	        if (sign[1] === '-') {
+	          minus = true;
+	        }
+	      }
+	    }
+
 	    if (typeof BigInt !== 'undefined') {
 	      if (typeof n !== 'bigint') {
 	        if (parsable) {
-	          var _n = n,
-	              _n2 = slicedToArray(_n, 2),
-	              str = _n2[0],
-	              radix = _n2[1];
-
-	          if (str instanceof LString) {
-	            str = str.valueOf();
-	          }
-
-	          if (radix instanceof LNumber) {
-	            radix = radix.valueOf();
-	          }
-
 	          var prefix; // default number base (radix) supported by BigInt constructor
 
 	          switch (radix) {
@@ -4659,6 +4793,10 @@
 	        } else {
 	          value = BigInt(n);
 	        }
+
+	        if (minus) {
+	          value *= BigInt(-1);
+	        }
 	      } else {
 	        value = n;
 	      }
@@ -4671,20 +4809,7 @@
 
 	      return LBigInteger(new BN(n));
 	    } else if (parsable) {
-	      var _n3 = n,
-	          _n4 = slicedToArray(_n3, 2),
-	          _str = _n4[0],
-	          _radix = _n4[1];
-
-	      if (_str instanceof LString) {
-	        _str = _str.valueOf();
-	      }
-
-	      if (_radix instanceof LNumber) {
-	        _radix = _radix.valueOf();
-	      }
-
-	      this.value = parseInt(_str, _radix);
+	      this.value = parseInt(str, radix);
 	    } else {
 	      this.value = n;
 	    }
@@ -4736,7 +4861,7 @@
 	        im = _LNumber$coerce2[0],
 	        re = _LNumber$coerce2[1];
 
-	    if (im.cmp(0) === 0) {
+	    if (im.cmp(0) === 0 && !force) {
 	      return re;
 	    }
 
@@ -4834,7 +4959,8 @@
 	    var ret = fn(this.re, re, this.im, im);
 
 	    if ('im' in ret && 're' in ret) {
-	      return LComplex(ret);
+	      var x = LComplex(ret, true);
+	      return x;
 	    }
 
 	    return ret;
@@ -5095,7 +5221,7 @@
 
 
 	  LRational.prototype.cmp = function (n) {
-	    return LNumber(this.valueOf()).cmp(n);
+	    return LNumber(this.valueOf(), true).cmp(n);
 	  }; // -------------------------------------------------------------------------
 
 
@@ -5411,11 +5537,11 @@
 	      },
 	      "float": {
 	        'bigint': function bigint(a, b) {
-	          return [a, LFloat(b.valueOf())];
+	          return [a, b && LFloat(b.valueOf())];
 	        },
 	        'float': i,
 	        'rational': function rational(a, b) {
-	          return [a, LFloat(b.valueOf())];
+	          return [a, b && LFloat(b.valueOf())];
 	        },
 	        'complex': function complex(a, b) {
 	          return [{
@@ -5428,11 +5554,29 @@
 	        bigint: complex('bigint'),
 	        "float": complex('float'),
 	        rational: complex('rational'),
-	        complex: i
+	        complex: function complex(a, b) {
+	          var _LNumber$coerce3 = LNumber.coerce(a.re, b.re),
+	              _LNumber$coerce4 = slicedToArray(_LNumber$coerce3, 2),
+	              a_re = _LNumber$coerce4[0],
+	              b_re = _LNumber$coerce4[1];
+
+	          var _LNumber$coerce5 = LNumber.coerce(a.im, b.im),
+	              _LNumber$coerce6 = slicedToArray(_LNumber$coerce5, 2),
+	              a_im = _LNumber$coerce6[0],
+	              b_im = _LNumber$coerce6[1];
+
+	          return [{
+	            im: a_im,
+	            re: a_re
+	          }, {
+	            im: b_im,
+	            re: b_re
+	          }];
+	        }
 	      },
 	      rational: {
 	        bigint: function bigint(a, b) {
-	          return [a, {
+	          return [a, b || {
 	            num: b,
 	            denom: 1
 	          }];
@@ -5451,7 +5595,7 @@
 	          im: coerce(type, a.im.type, a.im),
 	          re: coerce(type, a.re.type, a.re)
 	        }, {
-	          im: coerce(type, a.type, 0),
+	          im: coerce(type, a.im.type, 0),
 	          re: coerce(type, b.type, b)
 	        }];
 	      };
@@ -5854,7 +5998,7 @@
 
 
 	  Interpreter.prototype.exec = /*#__PURE__*/function () {
-	    var _ref8 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(code) {
+	    var _ref12 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(code) {
 	      var dynamic,
 	          _args5 = arguments;
 	      return regenerator.wrap(function _callee3$(_context3) {
@@ -5878,7 +6022,7 @@
 	    }));
 
 	    return function (_x5) {
-	      return _ref8.apply(this, arguments);
+	      return _ref12.apply(this, arguments);
 	    };
 	  }(); // -------------------------------------------------------------------------
 
@@ -6361,9 +6505,9 @@
 	      return unbind(a) === unbind(b);
 	    }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
 	    // ------------------------------------------------------------------
-	    help: doc(new Macro('help', function (code, _ref9) {
-	      var dynamic_scope = _ref9.dynamic_scope,
-	          error = _ref9.error;
+	    help: doc(new Macro('help', function (code, _ref13) {
+	      var dynamic_scope = _ref13.dynamic_scope,
+	          error = _ref13.error;
 	      var symbol;
 
 	      if (code.car instanceof LSymbol) {
@@ -6406,9 +6550,9 @@
 	    }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
 	    // ------------------------------------------------------------------
 	    'set!': doc(new Macro('set!', function (code) {
-	      var _ref10 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref10.dynamic_scope,
-	          error = _ref10.error;
+	      var _ref14 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref14.dynamic_scope,
+	          error = _ref14.error;
 
 	      if (dynamic_scope) {
 	        dynamic_scope = this;
@@ -6552,9 +6696,9 @@
 	      }).then(function () {});
 	    }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
 	    // ------------------------------------------------------------------
-	    'while': doc(new Macro('while', function (code, _ref11) {
-	      var dynamic_scope = _ref11.dynamic_scope,
-	          error = _ref11.error;
+	    'while': doc(new Macro('while', function (code, _ref15) {
+	      var dynamic_scope = _ref15.dynamic_scope,
+	          error = _ref15.error;
 	      var self = this;
 	      var begin = new Pair(new LSymbol('begin'), code.cdr);
 	      var result;
@@ -6595,9 +6739,9 @@
 	      }();
 	    }), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
 	    // ------------------------------------------------------------------
-	    'if': doc(new Macro('if', function (code, _ref12) {
-	      var dynamic_scope = _ref12.dynamic_scope,
-	          error = _ref12.error;
+	    'if': doc(new Macro('if', function (code, _ref16) {
+	      var dynamic_scope = _ref16.dynamic_scope,
+	          error = _ref16.error;
 
 	      if (dynamic_scope) {
 	        dynamic_scope = this;
@@ -6686,9 +6830,9 @@
 	      }();
 	    }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
 	    // ------------------------------------------------------------------
-	    'ignore': new Macro('ignore', function (code, _ref13) {
-	      var dynamic_scope = _ref13.dynamic_scope,
-	          error = _ref13.error;
+	    'ignore': new Macro('ignore', function (code, _ref17) {
+	      var dynamic_scope = _ref17.dynamic_scope,
+	          error = _ref17.error;
 	      var args = {
 	        env: this,
 	        error: error
@@ -6827,9 +6971,9 @@
 	    }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
 	    // ------------------------------------------------------------------
 	    lambda: new Macro('lambda', function (code) {
-	      var _ref14 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref14.dynamic_scope,
-	          error = _ref14.error;
+	      var _ref18 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref18.dynamic_scope,
+	          error = _ref18.error;
 
 	      var self = this;
 
@@ -6937,9 +7081,9 @@
 	    'macroexpand': new Macro('macroexpand', macro_expand()),
 	    'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
 	    // ------------------------------------------------------------------
-	    'define-macro': doc(new Macro(macro, function (macro, _ref15) {
-	      var dynamic_scope = _ref15.dynamic_scope,
-	          error = _ref15.error;
+	    'define-macro': doc(new Macro(macro, function (macro, _ref19) {
+	      var dynamic_scope = _ref19.dynamic_scope,
+	          error = _ref19.error;
 
 	      if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
 	        var name = macro.car.car.name;
@@ -7038,8 +7182,8 @@
 	        return symbols;
 	      }
 
-	      return new Syntax(function (code, _ref16) {
-	        var macro_expand = _ref16.macro_expand;
+	      return new Syntax(function (code, _ref20) {
+	        var macro_expand = _ref20.macro_expand;
 	        var scope = env.inherit('syntax');
 
 	        if (dynamic_scope) {
@@ -7151,10 +7295,10 @@
 	          }
 
 	          if (isPromise(car) || isPromise(cdr)) {
-	            return Promise.all([car, cdr]).then(function (_ref17) {
-	              var _ref18 = slicedToArray(_ref17, 2),
-	                  car = _ref18[0],
-	                  cdr = _ref18[1];
+	            return Promise.all([car, cdr]).then(function (_ref21) {
+	              var _ref22 = slicedToArray(_ref21, 2),
+	                  car = _ref22[0],
+	                  cdr = _ref22[1];
 
 	              return new Pair(car, cdr);
 	            });
@@ -7649,11 +7793,11 @@
 	      throw new Error('string->number: Invalid Syntax');
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
-	    'try': doc(new Macro('try', function (code, _ref19) {
+	    'try': doc(new Macro('try', function (code, _ref23) {
 	      var _this7 = this;
 
-	      var dynamic_scope = _ref19.dynamic_scope,
-	          _error = _ref19.error;
+	      var dynamic_scope = _ref23.dynamic_scope,
+	          _error = _ref23.error;
 	      return new Promise(function (resolve) {
 	        var args = {
 	          env: _this7,
@@ -8097,9 +8241,9 @@
 	    // ------------------------------------------------------------------
 	    'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
 	    // ------------------------------------------------------------------
-	    or: doc(new Macro('or', function (code, _ref20) {
-	      var dynamic_scope = _ref20.dynamic_scope,
-	          error = _ref20.error;
+	    or: doc(new Macro('or', function (code, _ref24) {
+	      var dynamic_scope = _ref24.dynamic_scope,
+	          error = _ref24.error;
 	      var args = this.get('list->array')(code);
 	      var self = this;
 
@@ -8139,9 +8283,9 @@
 	    }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
 	    // ------------------------------------------------------------------
 	    and: doc(new Macro('and', function (code) {
-	      var _ref21 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	          dynamic_scope = _ref21.dynamic_scope,
-	          error = _ref21.error;
+	      var _ref25 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	          dynamic_scope = _ref25.dynamic_scope,
+	          error = _ref25.error;
 
 	      var args = this.get('list->array')(code);
 	      var self = this;
@@ -8577,10 +8721,10 @@
 	    }
 	  }
 
-	  function getFunctionArgs(rest, _ref22) {
-	    var env = _ref22.env,
-	        dynamic_scope = _ref22.dynamic_scope,
-	        error = _ref22.error;
+	  function getFunctionArgs(rest, _ref26) {
+	    var env = _ref26.env,
+	        dynamic_scope = _ref26.dynamic_scope,
+	        error = _ref26.error;
 	    var args = [];
 	    var node = rest;
 	    markCycles(node);
@@ -8653,11 +8797,11 @@
 
 
 	  function evaluate(code) {
-	    var _ref23 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-	        env = _ref23.env,
-	        dynamic_scope = _ref23.dynamic_scope,
-	        _ref23$error = _ref23.error,
-	        error = _ref23$error === void 0 ? function () {} : _ref23$error;
+	    var _ref27 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+	        env = _ref27.env,
+	        dynamic_scope = _ref27.dynamic_scope,
+	        _ref27$error = _ref27.error,
+	        error = _ref27$error === void 0 ? function () {} : _ref27$error;
 
 	    try {
 	      if (dynamic_scope === true) {
@@ -8988,10 +9132,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 13 May 2020 09:37:06 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 16 May 2020 21:13:32 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 13 May 2020 09:37:06 +0000').valueOf();
+	    var date = LString('Sat, 16 May 2020 21:13:32 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9024,7 +9168,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 13 May 2020 09:37:06 +0000',
+	    date: 'Sat, 16 May 2020 21:13:32 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
