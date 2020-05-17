@@ -1,4 +1,10 @@
 javascript:(function(next) {
+    /**
+     * This is bookmarklet that will create terminal with LIPS REPL
+     *
+     * Copyright (C) Jakub T. Jankiewicz <https://jcubic.pl>
+     * Released under MIT license
+     */
     if (window.jQuery) {
         return next(window.jQuery);
     }
@@ -24,7 +30,7 @@ javascript:(function(next) {
         }
     })(500);
 })(function($) {
-    var ref = 'devel';
+    const REF = 'devel';
     function init() {
         var t = $('div.terminal');
         if (t.length) {
@@ -32,6 +38,10 @@ javascript:(function(next) {
                 $(this).terminal().destroy().remove();
             });
         }
+        $.terminal.defaults.formatters = $.terminal.defaults.formatters.filter((x) => {
+            return x.name !== 'syntax_scheme';
+        });
+        $.terminal.syntax("scheme");
         $('.shell-wrapper').remove();
         var wrapper = $('<div>').addClass('shell-wrapper').appendTo('body');
         var nav = $('<nav/>').appendTo(wrapper);
@@ -54,6 +64,7 @@ javascript:(function(next) {
             wrapper.remove();
         }).appendTo(nav);
         var term = terminal({ selector: $('<div>').appendTo('body'), name: 'lips', lips });
+        term.echo(lips.banner.replace(/^[\s\S]+(LIPS.*\nCopy.*\n)[\s\S]*/, '$1'), {formatters: false});
         term.appendTo(wrapper);
         $('style.terminal').remove();
         $('<style class="terminal">.terminal { font-size-adjust: none; --size: 1.2;height: calc(100% - 31px); } .shell-wrapper nav {cursor: row-resize; color:#ccc;border-bottom:1px solid #ccc;font-family:monospace;text-align: right;background: black;} .shell-wrapper {position: fixed;z-index:99999;bottom:0;left:0;right:0;height:150px; }.shell-destroy {padding: 5px;cursor:pointer;display: inline-block;}</style>').appendTo('head');
@@ -61,13 +72,15 @@ javascript:(function(next) {
     ['https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css',
      'https://unpkg.com/prismjs/themes/prism-coy.css'
     ].forEach(function(url) {
-        var link = $('<link href="' + url + '" rel="stylesheet"/>');
-        var head = $('head');
-        if (head.length) {
-            link.appendTo(head);
-        } else {
-            link.appendTo('body');
-        }
+        if (!$('link[href="' + url + '"]').length) {
+            var link = $('<link href="' + url + '" rel="stylesheet"/>');
+            var head = $('head');
+            if (head.length) {
+                link.appendTo(head);
+            } else {
+                link.appendTo('body');
+            }
+           }
     });
     if ($.terminal && $.terminal.prism) {
         init();
@@ -79,8 +92,8 @@ javascript:(function(next) {
             'https://unpkg.com/jquery.terminal/js/prism.js',
             /*`https://cdn.jsdelivr.net/gh/jcubic/lips@${ref}/dist/lips.js`, */
             'https://unpkg.com/prismjs/components/prism-scheme.min.js',
-            `https://cdn.jsdelivr.net/gh/jcubic/lips@${ref}/examples/terminal.js`,
-            `https://cdn.jsdelivr.net/gh/jcubic/lips@${ref}/examples/prism.js`
+            `https://cdn.jsdelivr.net/gh/jcubic/lips@${REF}/examples/terminal.js`,
+            `https://cdn.jsdelivr.net/gh/jcubic/lips@${REF}/examples/prism.js`
         ];
         (function recur() {
             var script = scripts.shift();
