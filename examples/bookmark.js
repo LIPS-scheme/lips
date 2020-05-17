@@ -31,7 +31,7 @@ javascript:(function(next) {
     })(500);
 })(function($) {
     const REF = 'devel';
-    function init() {
+    function init(boostrap) {
         var t = $('div.terminal');
         if (t.length) {
             t.each(function() {
@@ -64,6 +64,15 @@ javascript:(function(next) {
             wrapper.remove();
         }).appendTo(nav);
         var term = terminal({ selector: $('<div>').appendTo('body'), name: 'lips', lips });
+        if (boostrap) {
+            var path = `https://cdn.jsdelivr.net/gh/jcubic/lips@${REF}/`;
+            term.exec([
+                '(load "' + path + 'lib/bootstrap.scm")',
+                '(load "' + path + 'lib/R5RS.scm")',
+                '(load "' + path + 'examples/helpers.scm")',
+                '(load "' + path + 'examples/defstruct.scm")'
+            ].join('\n'), true);
+        }
         term.echo(lips.banner.replace(/^[\s\S]+(LIPS.*\nCopy.*\n)[\s\S]*/, '$1'), {formatters: false});
         term.appendTo(wrapper);
         $('style.terminal').remove();
@@ -90,7 +99,6 @@ javascript:(function(next) {
             'https://unpkg.com/js-polyfills/keyboard.js',
             'https://unpkg.com/prismjs/prism.js',
             'https://unpkg.com/jquery.terminal/js/prism.js',
-            /*`https://cdn.jsdelivr.net/gh/jcubic/lips@${ref}/dist/lips.js`, */
             'https://unpkg.com/prismjs/components/prism-scheme.min.js',
             `https://cdn.jsdelivr.net/gh/jcubic/lips@${REF}/examples/terminal.js`,
             `https://cdn.jsdelivr.net/gh/jcubic/lips@${REF}/examples/prism.js`
@@ -98,7 +106,13 @@ javascript:(function(next) {
         (function recur() {
             var script = scripts.shift();
             if (!script) {
-                init();
+                if (window.lips) {
+                    init();
+                } else {
+                    $.getScript(`https://cdn.jsdelivr.net/gh/jcubic/lips@${REF}/dist/lips.js`, () => {
+                        init(true);
+                    });
+                }
             } else {
                 $.getScript(script, recur);
             }
