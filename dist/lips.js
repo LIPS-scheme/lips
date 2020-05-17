@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 May 2020 09:42:53 +0000
+ * build: Sun, 17 May 2020 09:52:01 +0000
  */
 (function () {
 	'use strict';
@@ -1195,7 +1195,7 @@
 	      fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
 	    }
 
-	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+)i"));
+	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+(?!").concat(range, ")|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+)i"));
 	  }
 
 	  var complex_list_re = function () {
@@ -9137,10 +9137,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 17 May 2020 09:42:53 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 17 May 2020 09:52:01 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 17 May 2020 09:42:53 +0000').valueOf();
+	    var date = LString('Sun, 17 May 2020 09:52:01 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9173,7 +9173,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 17 May 2020 09:42:53 +0000',
+	    date: 'Sun, 17 May 2020 09:52:01 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

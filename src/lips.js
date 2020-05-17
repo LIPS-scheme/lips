@@ -175,7 +175,7 @@
         if (mnemonic === '') {
             fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
         }
-        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+|[+-]?${range}+${neg})?)(${fl}[+-]?${range}+/${range}+|[+-]?${range}+)i`);
+        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+${neg})?)(${fl}[+-]?${range}+/${range}+|[+-]?${range}+)i`);
     }
     var complex_list_re = (function() {
         var result = {};

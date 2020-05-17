@@ -93,6 +93,8 @@
         (t.is (number->string #b-100i) "-4i")
         (t.is (number->string #i#b+100i) "+4.0i")
         (t.is (number->string #b#i-100i) "-4.0i")
+        (t.is (number->string #i#b+1/10i) "+0.5i")
+        (t.is (number->string #i#b1/10i) "+0.5i")
         (t.is (number->string #i#b1/100+1/100i) "0.25+0.25i")
         (t.is (number->string #i#b-1/100+1/100i) "-0.25+0.25i")
         (t.is (number->string #b#i1/100+1/100i) "0.25+0.25i")
