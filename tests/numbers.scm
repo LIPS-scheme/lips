@@ -132,8 +132,31 @@
 
         (t.is (remainder -13 -4.0) -1.0)))
 
-(test "numbers: matrix"
-      (lambda (t)
+(test "numbers: operators +"
+  (lambda (t)
+    (t.is (+ 1 1.0 1/10) 2.1)
+    (t.is (number->string (+ 1/2 1/2 1.0)) "2.0")
 
-        (t.is (+ 1 1.0 1/10) 2.1)
-        (t.is (number->string (+ 1/2 1/2 1.0)) "2.0")))
+    (t.is (+ 1 1) 2)
+
+    (t.is (+ 1 1.1) 2.1)
+    (t.is (+ 1.1 1) 2.1)
+
+    (t.is (+ 1/2 1/3) 5/6)
+    (t.is (+ 1 1/2) 3/2)
+    (t.is (+ 1/2 1) 3/2)
+
+    (t.is (+ 1.1 1/2) 1.6)
+    (t.is (+ 1/2 1.1) 1.6)
+
+    ;; TODO: handle mixed types as in Kawa
+    ;;(t.is (+ 0.1 10i) 0.1+10i)
+    ;;(t.is (+ 10 0.01i) 10+0.01i)
+    ;;(t.is (+ 1/10 0.01i) 1/10+0.01i)
+    ;;(t.is (+ 0.01 1/10i) 0.01+1/10i)
+    ;;(t.is (+ 1/10 #b100i) 1/10+4i)
+    ;;(t.is (+ #b100 1/10i) 4+1/10i)
+
+    (t.is (+ 10i 10i) 20i)
+    (t.is (+ 10 10i) 10+10i)
+    (t.is (+ 10i 10) 10+10i)))
