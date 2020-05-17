@@ -21,9 +21,13 @@
 
 (test "numbers: literals"
       (lambda (t)
+        (t.is (number->string (. (lips.parse "#i100") 0)) "100.0")
+        (t.is (number->string (. (lips.parse "#i100i") 0)) "+100.0i")
+
         (t.is #b100+100i 4+4i)
         (t.is (number->string 100) "100")
         (t.is (number->string -100) "-100")
+        (t.is (number->string #e100.0) "100")
         (t.is (number->string #i100) "100.0")
         (t.is (number->string #i-100) "-100.0")
 
@@ -76,6 +80,10 @@
         (t.is (number->string 1.0i) "+1.0i")
         (t.is (number->string -1.0i) "-1.0i")
         (t.is (number->string #e-1.0i) "-1i")
+        (t.is (number->string 100i) "+100i")
+        (t.is (number->string #i100i) "+100.0i")
+        (t.is (number->string #i#b100i) "+4.0i")
+
         (t.is (number->string #e0.1+0.1i) "1/10+1/10i")
         (t.is (number->string #b100+100i) "4+4i")
         (t.is (number->string #b#i100+100i) "4.0+4.0i")

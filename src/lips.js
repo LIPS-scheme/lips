@@ -159,7 +159,7 @@
     }
     // TODO: float complex
     function gen_complex_re(mnemonic, range) {
-        return `${num_mnemicic_re(mnemonic)}(?:(?:[+-]?${range}+)?[+-]${range}+i|(?:[+-]?${range}+/${range}+)?[+-]${range}+/${range}+i)`;
+        return `${num_mnemicic_re(mnemonic)}(?:(?:[+-]?${range}+)?[+-]?${range}+i|(?:[+-]?${range}+/${range}+)?[+-]?${range}+/${range}+i)`;
     }
     function gen_integer_re(mnemonic, range) {
         return `${num_mnemicic_re(mnemonic)}[+-]?${range}+`;
@@ -170,9 +170,12 @@
     var float_re = new RegExp(`^(#[ie])?${float_stre}$`);
     function make_complex_match_re(mnemonic, range) {
         // complex need special treatment of 10e+1i when it's hex or decimal
-        var neg = mnemonic === 'x' ? '(?![+])' : '(?!\\.)';
-        var fl = mnemonic === '' ? float_stre + '|' : '';
-        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+|[+-]?${range}+${neg})?)(${fl}[+-]${range}+/${range}+|[+-]${range}+)i`);
+        var neg = mnemonic === 'x' ? `(?!\\+|${range})` : `(?!\\.|${range})`;
+        var fl = '';
+        if (mnemonic === '') {
+            fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
+        }
+        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+|[+-]?${range}+${neg})?)(${fl}[+-]?${range}+/${range}+|[+-]?${range}+)i`);
     }
     var complex_list_re = (function() {
         var result = {};
@@ -299,7 +302,9 @@
             return value;
         }
         var parse = num_pre_parse(arg);
-        var parts = parse.number.match(complex_list_re[parse.radix.toString()]);
+        var parts = parse.number.match(complex_list_re[parse.radix]);
+        //console.log(complex_list_re[parse.radix]);
+        //console.log({parts, parse});
         var re, im;
         im = parse_num(parts[2]);
         if (parts[1]) {
@@ -372,7 +377,7 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
+    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
     // generate regex for all number literals
     var num_stre = complex_float_stre + '|' + [
@@ -385,7 +390,7 @@
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|${num_stre}(?=[\\n\\s()])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?${float_stre}|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|${num_stre}(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?${float_stre}|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------

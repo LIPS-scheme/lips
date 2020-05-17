@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 16 May 2020 21:18:24 +0000
+ * build: Sun, 17 May 2020 09:42:53 +0000
  */
 (function () {
 	'use strict';
@@ -1174,7 +1174,7 @@
 
 
 	  function gen_complex_re(mnemonic, range) {
-	    return "".concat(num_mnemicic_re(mnemonic), "(?:(?:[+-]?").concat(range, "+)?[+-]").concat(range, "+i|(?:[+-]?").concat(range, "+/").concat(range, "+)?[+-]").concat(range, "+/").concat(range, "+i)");
+	    return "".concat(num_mnemicic_re(mnemonic), "(?:(?:[+-]?").concat(range, "+)?[+-]?").concat(range, "+i|(?:[+-]?").concat(range, "+/").concat(range, "+)?[+-]?").concat(range, "+/").concat(range, "+i)");
 	  }
 
 	  function gen_integer_re(mnemonic, range) {
@@ -1188,9 +1188,14 @@
 
 	  function make_complex_match_re(mnemonic, range) {
 	    // complex need special treatment of 10e+1i when it's hex or decimal
-	    var neg = mnemonic === 'x' ? '(?![+])' : '(?!\\.)';
-	    var fl = mnemonic === '' ? float_stre + '|' : '';
-	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]").concat(range, "+/").concat(range, "+|[+-]").concat(range, "+)i"));
+	    var neg = mnemonic === 'x' ? "(?!\\+|".concat(range, ")") : "(?!\\.|".concat(range, ")");
+	    var fl = '';
+
+	    if (mnemonic === '') {
+	      fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
+	    }
+
+	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+)i"));
 	  }
 
 	  var complex_list_re = function () {
@@ -1353,7 +1358,9 @@
 	    }
 
 	    var parse = num_pre_parse(arg);
-	    var parts = parse.number.match(complex_list_re[parse.radix.toString()]);
+	    var parts = parse.number.match(complex_list_re[parse.radix]); //console.log(complex_list_re[parse.radix]);
+	    //console.log({parts, parse});
+
 	    var re, im;
 	    im = parse_num(parts[2]);
 
@@ -1440,7 +1447,7 @@
 	  /* eslint-disable */
 
 
-	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=\s|\[|\]|\(|\)|$)|;.*)/g;
+	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|;.*)/g;
 	  var string_re = /"(?:\\[\S\s]|[^"])*"?/g; // generate regex for all number literals
 
 	  var num_stre = complex_float_stre + '|' + [gen_complex_re, gen_rational_re, gen_integer_re].map(make_num_stre).join('|'); // ----------------------------------------------------------------------
@@ -1449,7 +1456,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|").concat(num_stre, "(?=[\\n\\s()])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?").concat(float_stre, "|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|").concat(num_stre, "(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?").concat(float_stre, "|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -9130,10 +9137,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 16 May 2020 21:18:24 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 17 May 2020 09:42:53 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 16 May 2020 21:18:24 +0000').valueOf();
+	    var date = LString('Sun, 17 May 2020 09:42:53 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9166,7 +9173,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 16 May 2020 21:18:24 +0000',
+	    date: 'Sun, 17 May 2020 09:42:53 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
