@@ -3754,12 +3754,21 @@
         return new LNumber(Math.sqrt(value));
     };
     // -------------------------------------------------------------------------
+    var pow = new Function('a,b', 'return a**b;');
+    var power_operator_suported = (function() {
+        try {
+            pow(1,1);
+            return true;
+        } catch(e) {
+            return false;
+        }
+    })();
+    // -------------------------------------------------------------------------
     LNumber.prototype.pow = function(n) {
         if (LNumber.isNative(this.value)) {
-            try {
-                var pow = new Function('a,b', 'return a**b;');
+            if (power_operator_suported) {
                 n.value = pow(this.value, n.value);
-            } catch (e) {
+            } else {
                 throw new Error("Power operator not supported");
             }
         } else if (LNumber.isBN(this.value)) {

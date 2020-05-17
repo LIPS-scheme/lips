@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 May 2020 09:52:01 +0000
+ * build: Sun, 17 May 2020 13:38:54 +0000
  */
 (function () {
 	'use strict';
@@ -5772,12 +5772,23 @@
 	  }; // -------------------------------------------------------------------------
 
 
+	  var pow = new Function('a,b', 'return a**b;');
+
+	  var power_operator_suported = function () {
+	    try {
+	      pow(1, 1);
+	      return true;
+	    } catch (e) {
+	      return false;
+	    }
+	  }(); // -------------------------------------------------------------------------
+
+
 	  LNumber.prototype.pow = function (n) {
 	    if (LNumber.isNative(this.value)) {
-	      try {
-	        var pow = new Function('a,b', 'return a**b;');
+	      if (power_operator_suported) {
 	        n.value = pow(this.value, n.value);
-	      } catch (e) {
+	      } else {
 	        throw new Error("Power operator not supported");
 	      }
 	    } else if (LNumber.isBN(this.value)) {
@@ -9137,10 +9148,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 17 May 2020 09:52:01 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 17 May 2020 13:38:54 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 17 May 2020 09:52:01 +0000').valueOf();
+	    var date = LString('Sun, 17 May 2020 13:38:54 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9173,7 +9184,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 17 May 2020 09:52:01 +0000',
+	    date: 'Sun, 17 May 2020 13:38:54 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
