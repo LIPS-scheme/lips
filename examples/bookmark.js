@@ -67,7 +67,7 @@ javascript:(function(next) {
         term.echo(lips.banner.replace(/^[\s\S]+(LIPS.*\nCopy.*\n)[\s\S]*/, '$1'), {formatters: false});
         term.appendTo(wrapper);
         $('style.terminal').remove();
-        $('<style class="terminal">.terminal { font-size-adjust: none; --size: 1.2;height: calc(100% - 31px); } .shell-wrapper nav {cursor: row-resize; color:#ccc;border-bottom:1px solid #ccc;font-family:monospace;text-align: right;background: black;} .shell-wrapper {position: fixed;z-index:99999;bottom:0;left:0;right:0;height:150px; }.shell-destroy {padding: 5px;cursor:pointer;display: inline-block;}</style>').appendTo('head');
+        $('<style class="terminal">.terminal { font-size-adjust: none; --size: 1.2;height: calc(100% - 26px); } .shell-wrapper nav {cursor: row-resize; color:#ccc;border-bottom:1px solid #ccc;font-family:monospace;text-align: right;background: black;} .shell-wrapper {position: fixed;z-index:99999;bottom:0;left:0;right:0;height:150px; }.shell-destroy {padding: 5px;cursor:pointer;display: inline-block;}</style>').appendTo('head');
     }
     ['https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css',
      'https://unpkg.com/prismjs/themes/prism-coy.css'
