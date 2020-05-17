@@ -3754,12 +3754,15 @@
         return new LNumber(Math.sqrt(value));
     };
     // -------------------------------------------------------------------------
+    // if browser doesn't support ** it will not parse the code so we use
+    // Function constructor for test
+    // -------------------------------------------------------------------------
     var pow = new Function('a,b', 'return a**b;');
     var power_operator_suported = (function() {
         try {
-            pow(1,1);
+            pow(1, 1);
             return true;
-        } catch(e) {
+        } catch (e) {
             return false;
         }
     })();
@@ -6087,22 +6090,34 @@
 
              Function substract 1 from the number and return result.`),
         // ------------------------------------------------------------------
-        '++': doc(new Macro('++', function(code) {
+        '++': doc(Macro.defmacro('++', function(code) {
             typecheck('++', code.car, 'symbol');
-            var car = this.get(code.car);
-            var value = LNumber(car).add(1);
-            this.set(code.car, value);
-            return value;
+            typecheck('++', code.cdr, 'nil');
+            return Pair.fromArray([
+                new LSymbol('set!'),
+                code.car,
+                [
+                    new LSymbol('+'),
+                    code.car,
+                    LNumber(1)
+                ]
+            ]);
         }), `(++ variable)
 
              Macro that work only on variables and increment the value by one.`),
         // ------------------------------------------------------------------
         '--': doc(new Macro('--', function(code) {
             typecheck('--', code.car, 'symbol');
-            var car = this.get(code.car);
-            var value = LNumber(car).sub(1);
-            this.set(code.car, value);
-            return value;
+            typecheck('--', code.cdr, 'nil');
+            return Pair.fromArray([
+                new LSymbol('set!'),
+                code.car,
+                [
+                    new LSymbol('-'),
+                    code.car,
+                    LNumber(1)
+                ]
+            ]);
         }), `(-- variable)
 
              Macro that decrement the value it work only on symbols`),

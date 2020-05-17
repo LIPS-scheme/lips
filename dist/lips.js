@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 May 2020 13:38:54 +0000
+ * build: Sun, 17 May 2020 13:58:14 +0000
  */
 (function () {
 	'use strict';
@@ -5770,6 +5770,9 @@
 
 	    return new LNumber(Math.sqrt(value));
 	  }; // -------------------------------------------------------------------------
+	  // if browser doesn't support ** it will not parse the code so we use
+	  // Function constructor for test
+	  // -------------------------------------------------------------------------
 
 
 	  var pow = new Function('a,b', 'return a**b;');
@@ -8184,20 +8187,16 @@
 	      return LNumber(number).sub(1);
 	    }), "(1- number)\n\n             Function substract 1 from the number and return result."),
 	    // ------------------------------------------------------------------
-	    '++': doc(new Macro('++', function (code) {
+	    '++': doc(Macro.defmacro('++', function (code) {
 	      typecheck('++', code.car, 'symbol');
-	      var car = this.get(code.car);
-	      var value = LNumber(car).add(1);
-	      this.set(code.car, value);
-	      return value;
+	      typecheck('++', code.cdr, 'nil');
+	      return Pair.fromArray([new LSymbol('set!'), code.car, [new LSymbol('+'), code.car, LNumber(1)]]);
 	    }), "(++ variable)\n\n             Macro that work only on variables and increment the value by one."),
 	    // ------------------------------------------------------------------
 	    '--': doc(new Macro('--', function (code) {
 	      typecheck('--', code.car, 'symbol');
-	      var car = this.get(code.car);
-	      var value = LNumber(car).sub(1);
-	      this.set(code.car, value);
-	      return value;
+	      typecheck('--', code.cdr, 'nil');
+	      return Pair.fromArray([new LSymbol('set!'), code.car, [new LSymbol('-'), code.car, LNumber(1)]]);
 	    }), "(-- variable)\n\n             Macro that decrement the value it work only on symbols"),
 	    // ------------------------------------------------------------------
 	    '%': doc(function (a, b) {
@@ -9148,10 +9147,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 17 May 2020 13:38:54 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 17 May 2020 13:58:14 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 17 May 2020 13:38:54 +0000').valueOf();
+	    var date = LString('Sun, 17 May 2020 13:58:14 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9184,7 +9183,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 17 May 2020 13:38:54 +0000',
+	    date: 'Sun, 17 May 2020 13:58:14 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
