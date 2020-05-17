@@ -558,7 +558,7 @@
 
    Function return list of characters created from list."
   (typecheck "string->list" string "string")
-  (array->list (--> string (split "") (map (lambda (x) (lips.Character x))))))
+  (array->list (--> string (split "") (map (lambda (x) (lips.LCharacter x))))))
 
 ;; -----------------------------------------------------------------------------
 ;; (let ((x "hello")) (string-set! x 0 #\H) x)
@@ -593,7 +593,7 @@
    Function return character inside string at given zero-based index."
   (typecheck "string-ref" string "string" 1)
   (typecheck "string-ref" k "number" 2)
-  (lips.Character (. string k)))
+  (lips.LCharacter (. string k)))
 
 (define (%string-cmp name string1 string2)
   "(%string-cmp name a b)
@@ -696,7 +696,7 @@
         "(char? obj)
 
          Function check if object is character."
-        (curry instanceof lips.Character)))
+        (curry instanceof lips.LCharacter)))
 
 ;; -----------------------------------------------------------------------------
 (define (char->integer chr)
