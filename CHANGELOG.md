@@ -35,6 +35,7 @@
 * Hygienic macros: `syntax-rules` transformer macros
 * improve balancing parenthesis
 * expose balanced method in public API (preferred name)
+* optional brackets
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
