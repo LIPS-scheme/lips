@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 May 2020 13:58:14 +0000
+ * build: Mon, 18 May 2020 06:39:29 +0000
  */
 (function () {
 	'use strict';
@@ -9147,10 +9147,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 17 May 2020 13:58:14 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 18 May 2020 06:39:29 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 17 May 2020 13:58:14 +0000').valueOf();
+	    var date = LString('Mon, 18 May 2020 06:39:29 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9183,7 +9183,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 17 May 2020 13:58:14 +0000',
+	    date: 'Mon, 18 May 2020 06:39:29 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -9193,6 +9193,7 @@
 	    Interpreter: Interpreter,
 	    balanced_parenthesis: balanced,
 	    balancedParenthesis: balanced,
+	    balanced: balanced,
 	    Macro: Macro,
 	    Syntax: Syntax,
 	    Pair: Pair,

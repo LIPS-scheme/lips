@@ -6888,6 +6888,7 @@ You can also use (help name) to display help for specic function or macro.
         Interpreter,
         balanced_parenthesis: balanced,
         balancedParenthesis: balanced,
+        balanced,
 
         Macro,
         Syntax,
