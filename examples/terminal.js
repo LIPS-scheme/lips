@@ -6,7 +6,7 @@
  */
 /* global jQuery, clearTimeout, setTimeout */
 
-function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
+function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefined) {
     var position;
     var timer;
     var help = lips.env.get('help');
@@ -34,7 +34,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}) {
             const { evaluate, Pair, LSymbol, nil } = lips;
             var new_code = new Pair(new LSymbol('__help'), code);
             var doc = evaluate(new_code, { env: this, error });
-            term.echo(doc, { formatters: false });
+            if (doc !== undefined) {
+                term.echo(doc, { formatters: false });
+            }
         }), lips.env.get('help').__doc__),
         // ---------------------------------------------------------------------
         error: doc(function(message) {

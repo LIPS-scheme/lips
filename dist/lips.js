@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 18 May 2020 07:00:16 +0000
+ * build: Mon, 18 May 2020 09:31:00 +0000
  */
 (function () {
 	'use strict';
@@ -6549,6 +6549,8 @@
 	        if (ret && ret.__doc__) {
 	          return ret.__doc__;
 	        }
+
+	        return;
 	      }
 
 	      return this.get(symbol).__doc__;
@@ -9156,10 +9158,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 18 May 2020 07:00:16 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 18 May 2020 09:31:00 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 18 May 2020 07:00:16 +0000').valueOf();
+	    var date = LString('Mon, 18 May 2020 09:31:00 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9171,7 +9173,7 @@
 
 	    var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-	    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Scheme Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+	    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
 	    return banner;
 	  }(); // -------------------------------------------------------------------------
 	  // to be used with string function when code is minified
@@ -9192,7 +9194,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 18 May 2020 07:00:16 +0000',
+	    date: 'Mon, 18 May 2020 09:31:00 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

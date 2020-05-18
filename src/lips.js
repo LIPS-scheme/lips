@@ -4408,6 +4408,7 @@
                 if (ret && ret.__doc__) {
                     return ret.__doc__;
                 }
+                return;
             }
             return this.get(symbol).__doc__;
         }), `(help object)
@@ -6856,8 +6857,9 @@
 | |   / ^ \\   |___||_||_|  <___/  | |
  \\_\\ /_/ \\_\\                     /_/
 
-LIPS Scheme Interpreter {{VER}} (${_build})
+LIPS Interpreter {{VER}} (${_build})
 Copyright (c) 2018-${_year} Jakub T. Jankiewicz <https://jcubic.pl/me>
+
 
 Type (env) to see environment with functions macros and variables.
 You can also use (help name) to display help for specic function or macro.
