@@ -947,7 +947,7 @@
         exceptions: {
             specials: [
                 /^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/,
-                'let-env', 'syntax-rules', 'try', 'catch'
+                'let-env', 'syntax-rules', 'try', 'catch', 'while'
             ],
             shift: {
                 1: ['&', '#']
@@ -3895,7 +3895,7 @@
         if (this.peekChar() === eof) {
             return eof;
         }
-        var ballancer = 0;
+        var balancer = 0;
         var result = [];
         var parens = ['(', ')'];
         if (!parens.includes(this._tokens[this._index])) {
@@ -3905,12 +3905,12 @@
             var token = this._tokens[this._index];
             result.push(this._tokens[this._index]);
             if (token === ')') {
-                ballancer--;
+                balancer--;
             } else if (token === '(') {
-                ballancer++;
+                balancer++;
             }
             this._index++;
-        } while (ballancer !== 0);
+        } while (balancer !== 0);
         return result;
     };
     InputStringPort.prototype.peekChar = function() {
@@ -6722,7 +6722,12 @@
             '[': ']',
             '(': ')'
         };
-        var tokens = typeof code === 'string' ? tokenize(code) : code;
+        var tokens;
+        if (typeof code === 'string') {
+            tokens = tokenize(code);
+        } else {
+            tokens = code.map(x => x && x.token ? x.token : x);
+        }
 
         var open_tokens = Object.keys(maching_pairs);
         var brackets = Object.values(maching_pairs).concat(open_tokens);

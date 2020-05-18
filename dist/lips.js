@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 18 May 2020 06:39:29 +0000
+ * build: Mon, 18 May 2020 07:00:16 +0000
  */
 (function () {
 	'use strict';
@@ -2107,7 +2107,7 @@
 	    offset: 0,
 	    indent: 2,
 	    exceptions: {
-	      specials: [/^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/, 'let-env', 'syntax-rules', 'try', 'catch'],
+	      specials: [/^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/, 'let-env', 'syntax-rules', 'try', 'catch', 'while'],
 	      shift: {
 	        1: ['&', '#']
 	      }
@@ -5947,7 +5947,7 @@
 	      return eof;
 	    }
 
-	    var ballancer = 0;
+	    var balancer = 0;
 	    var result = [];
 	    var parens = ['(', ')'];
 
@@ -5960,13 +5960,13 @@
 	      result.push(this._tokens[this._index]);
 
 	      if (token === ')') {
-	        ballancer--;
+	        balancer--;
 	      } else if (token === '(') {
-	        ballancer++;
+	        balancer++;
 	      }
 
 	      this._index++;
-	    } while (ballancer !== 0);
+	    } while (balancer !== 0);
 
 	    return result;
 	  };
@@ -9006,7 +9006,16 @@
 	      '[': ']',
 	      '(': ')'
 	    };
-	    var tokens = typeof code === 'string' ? tokenize(code) : code;
+	    var tokens;
+
+	    if (typeof code === 'string') {
+	      tokens = tokenize(code);
+	    } else {
+	      tokens = code.map(function (x) {
+	        return x && x.token ? x.token : x;
+	      });
+	    }
+
 	    var open_tokens = Object.keys(maching_pairs);
 	    var brackets = Object.values(maching_pairs).concat(open_tokens);
 	    tokens = tokens.filter(function (token) {
@@ -9147,10 +9156,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 18 May 2020 06:39:29 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 18 May 2020 07:00:16 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 18 May 2020 06:39:29 +0000').valueOf();
+	    var date = LString('Mon, 18 May 2020 07:00:16 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9183,7 +9192,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 18 May 2020 06:39:29 +0000',
+	    date: 'Mon, 18 May 2020 07:00:16 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
