@@ -52,6 +52,7 @@
 * unbox values in new
 * fix named let with nil [#46](https://github.com/jcubic/lips/issues/46)
 * use parser code in string->number
+* fix repr of native object instances (e.g.: `Uint8Array`)
 
 ## 0.20.1
 ### Bug fixes

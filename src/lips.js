@@ -1608,7 +1608,7 @@
             var name;
             if (typeof constructor.__className === 'string') {
                 name = constructor.__className;
-            } else if (type(obj) === 'instance') {
+            } else if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
                 name = 'instance';
             } else {
                 name = constructor.name;
