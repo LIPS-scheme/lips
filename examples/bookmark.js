@@ -95,13 +95,15 @@ javascript:(function(next) {
         init();
     } else {
         var scripts = [
-            'https://unpkg.com/jquery.terminal/js/jquery.terminal.min.js',
-            'https://unpkg.com/js-polyfills/keyboard.js',
-            'https://unpkg.com/prismjs/prism.js',
-            'https://unpkg.com/jquery.terminal/js/prism.js',
-            'https://unpkg.com/prismjs/components/prism-scheme.min.js',
-            `https://cdn.jsdelivr.net/gh/jcubic/lips@${REF}/examples/terminal.js`,
-            `https://cdn.jsdelivr.net/gh/jcubic/lips@${REF}/examples/prism.js`
+            'https://cdn.jsdelivr.net/npm/prismjs/prism.js',
+            [
+                'https://cdn.jsdelivr.net/combine/npm/jquery.terminal',
+                'npm/jquery.terminal/js/prism.js',
+                'npm/prismjs/components/prism-scheme.min.js',
+                `gh/jcubic/lips@${REF}/examples/terminal.js`,
+                `gh/jcubic/lips@${REF}/examples/prism.js`,
+                'npm/js-polyfills/keyboard.js'
+            ].join(','),
         ];
         (function recur() {
             var script = scripts.shift();
