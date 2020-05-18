@@ -1598,6 +1598,9 @@
             var constructor = obj.constructor;
             var plain_object = typeof obj === 'object' && constructor === Object;
             if (plain_object) {
+                if (typeof obj[Symbol.iterator] === 'function') {
+                    return '#<iterator>';
+                }
                 return '&(' + Object.keys(obj).map(key => {
                     return `:${key} ${toString(obj[key], quote)}`;
                 }).join(' ') + ')';
@@ -6485,6 +6488,10 @@
             }
             if (obj.constructor.__className) {
                 return obj.constructor.__className;
+            }
+            if (obj.constructor === Object &&
+                typeof obj[Symbol.iterator] === 'function') {
+                return 'iterator';
             }
             return obj.constructor.name.toLowerCase();
         }

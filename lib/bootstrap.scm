@@ -30,12 +30,16 @@
      ,@body))
 
 ;; -----------------------------------------------------------------------------
-(define-macro (define-syntax name expr)
+(define-macro (define-syntax name expr . rest)
+  "(define-syntax name expression [__doc__])
+  
+   Macro define new hygienic macro using syntax-rules with optional documentation"
   (let ((expr-name (gensym)))
     `(define ,name
        (let ((,expr-name ,expr))
          (typecheck "define-syntax" ,expr-name "syntax")
-         ,expr-name))))
+         ,expr-name)
+       ,@rest)))
 
 ;; -----------------------------------------------------------------------------
 (define (quoted-symbol? x)
@@ -62,7 +66,7 @@
                (on \"click\" (lambda () (display \"click\"))))
 
           (--> document (querySelectorAll \"div\"))
-          (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\/title>/) 1)
+          (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\\/title>/) 1)
           (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")"
   (let ((obj (gensym)))
     `(let* ((,obj ,expr))
@@ -121,6 +125,13 @@
 
    Function check if argument is list with single element"
   (and (pair? list) (not (cdr list))))
+
+;; -----------------------------------------------------------------------------
+(define (iterator? x)
+   "(iterator? x)
+
+     Function check if value is JavaScript iterator object"
+   (and (object? x) (procedure? (. x Symbol.iterator))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (.. expr)
