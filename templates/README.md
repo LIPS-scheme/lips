@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 
 
-LISP is Powerful LISP based on Scheme dialect and R5RS specification.
+LIPS is Powerful Lisp based on Scheme dialect and R5RS specification.
 LIPS is created in JavaScript and work in Browser and Node.js.
 
 [Demo](https://jcubic.github.io/lips/#demo)
@@ -14,9 +14,9 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 ## Features
 
 * Almost fully Compatible with R5RS,
-* Full Lisp macros, backquote and macroexpand,
+* Lisp macros, backquote and macroexpand,
 * Scheme Hygienic Macros with `sytnax-rules`,
-* Parser Syntax extensions,
+* Parser Syntax extensions and string representation,
 * RegExp-es are first class objects,
 * Functions in LIPS are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
@@ -24,7 +24,6 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 * Library agnostic - you can use it with any JavaScript library,
 * Almost no dependencies (only bn.js for big integers),
 * Easy extension using JavaScript using Macros or functions,
-* Parser symbol transformers allow to add new syntax,
 * Builtin pretty printer,
 * JavaScript object literals with `&(:foo 10)` (created using parser extensions),
 * Builtin help system like in Emacs Lisp,
@@ -32,8 +31,8 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 * You can access and modify function code while function is running,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
-* Functions code introspection/manipulation at runtime give more power to the programmer,
-* Optional dynamic scope.
+* Functions code introspection/manipulation at runtime, give more power to the programmer,
+* Optional dynamic scope (can be used to build Emacs Lisp interpreter on top of LIPS).
 
 ## Installation
 

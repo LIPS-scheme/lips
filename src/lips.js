@@ -1613,7 +1613,10 @@
                     fn = repr.get(constructor);
                 } else {
                     repr.forEach(function(value, key) {
-                        if (obj instanceof key && !(obj instanceof Object)) {
+                        // if key is Object it should only work for plain_object
+                        // because otherwise it will match every object
+                        if (obj instanceof key &&
+                            (key === Object && plain_object || key !== Object)) {
                             fn = value;
                         }
                     });
@@ -4302,8 +4305,8 @@
             data in string port.`),
         // ------------------------------------------------------------------
         read: doc(function read(arg) {
-            if (typeof arg === 'string') {
-                return parse(tokenize(arg))[0];
+            if (LString.isString(arg)) {
+                return parse(tokenize(arg.valueOf()))[0];
             }
             if (arg instanceof InputStringPort) {
                 var tokens = arg.read();
@@ -4809,10 +4812,10 @@
             }
             obj = unbind(obj);
             key = key.valueOf();
-            if (typeof value === 'undefined') {
+            if (arguments.length === 2) {
                 delete obj[key];
             } else {
-                obj[key] = value.valueOf();
+                obj[key] = value ? value.valueOf() : value;
             }
         }, `(set-obj! obj key value)
 

@@ -2,11 +2,11 @@
 
 [![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&58d1c789d842d4077ba4d641c15fd492776a7286)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&aaf36664ee094befb1772281cc4b13099374106a)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
-LISP is Powerful LISP based on Scheme dialect and R5RS specification.
+LIPS is Powerful Lisp based on Scheme dialect and R5RS specification.
 LIPS is created in JavaScript and work in Browser and Node.js.
 
 [Demo](https://jcubic.github.io/lips/#demo)
@@ -14,9 +14,9 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 ## Features
 
 * Almost fully Compatible with R5RS,
-* Full Lisp macros, backquote and macroexpand,
+* Lisp macros, backquote and macroexpand,
 * Scheme Hygienic Macros with `sytnax-rules`,
-* Parser Syntax extensions,
+* Parser Syntax extensions and string representation,
 * RegExp-es are first class objects,
 * Functions in LIPS are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
@@ -24,7 +24,6 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 * Library agnostic - you can use it with any JavaScript library,
 * Almost no dependencies (only bn.js for big integers),
 * Easy extension using JavaScript using Macros or functions,
-* Parser symbol transformers allow to add new syntax,
 * Builtin pretty printer,
 * JavaScript object literals with `&(:foo 10)` (created using parser extensions),
 * Builtin help system like in Emacs Lisp,
@@ -32,8 +31,8 @@ LIPS is created in JavaScript and work in Browser and Node.js.
 * You can access and modify function code while function is running,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros and functions,
-* Functions code introspection/manipulation at runtime give more power to the programmer,
-* Optional dynamic scope.
+* Functions code introspection/manipulation at runtime, give more power to the programmer,
+* Optional dynamic scope (can be used to build Emacs Lisp interpreter on top of LIPS).
 
 ## Installation
 

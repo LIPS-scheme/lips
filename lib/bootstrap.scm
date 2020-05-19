@@ -425,6 +425,16 @@
   (typecheck "add-repr!" fn "function")
   (ignore (--> lips.repr (set type fn))))
 
+;; -----------------------------------------------------------------------------
+(define (remove-repr! type)
+  "(remove-repr! type)
+
+   Function remove string represention to the type, which should be constructor function,
+   added by add-repr! function."
+  (typecheck "add-repr!" type "function")
+  (ignore (--> lips.repr (delete type))))
+
+;; -----------------------------------------------------------------------------
 ;; Object representation
 (add-repr! Object
            (lambda (x q)

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 19 May 2020 07:10:39 +0000
+ * build: Tue, 19 May 2020 17:07:50 +0000
  */
 (function () {
 	'use strict';
@@ -2915,7 +2915,9 @@
 	          fn = repr.get(constructor);
 	        } else {
 	          repr.forEach(function (value, key) {
-	            if (obj instanceof key && !(obj instanceof Object)) {
+	            // if key is Object it should only work for plain_object
+	            // because otherwise it will match every object
+	            if (obj instanceof key && (key === Object && plain_object || key !== Object)) {
 	              fn = value;
 	            }
 	          });
@@ -6435,8 +6437,8 @@
 	    read: doc(function read(arg) {
 	      var _this4 = this;
 
-	      if (typeof arg === 'string') {
-	        return parse(tokenize(arg))[0];
+	      if (LString.isString(arg)) {
+	        return parse(tokenize(arg.valueOf()))[0];
 	      }
 
 	      if (arg instanceof InputStringPort) {
@@ -6941,10 +6943,10 @@
 	      obj = unbind(obj);
 	      key = key.valueOf();
 
-	      if (typeof value === 'undefined') {
+	      if (arguments.length === 2) {
 	        delete obj[key];
 	      } else {
-	        obj[key] = value.valueOf();
+	        obj[key] = value ? value.valueOf() : value;
 	      }
 	    }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
 	    // ------------------------------------------------------------------
@@ -9192,10 +9194,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 19 May 2020 07:10:39 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 19 May 2020 17:07:50 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 19 May 2020 07:10:39 +0000').valueOf();
+	    var date = LString('Tue, 19 May 2020 17:07:50 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9228,7 +9230,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 19 May 2020 07:10:39 +0000',
+	    date: 'Tue, 19 May 2020 17:07:50 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
