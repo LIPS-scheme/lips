@@ -248,10 +248,6 @@
       (error e.message))))
 
 ;; -----------------------------------------------------------------------------
-;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
-;; -----------------------------------------------------------------------------
-(add-special! "&" 'make-object lips.specials.SPLICE)
-;; -----------------------------------------------------------------------------
 (define (alist->assign desc . sources)
   "(alist->assign alist . list-of-alists)
 
@@ -273,7 +269,8 @@
   "(key? symbol)
 
    Function check if symbol is key symbol, have colon as first character."
-  (and (symbol? symbol) (string=? ":" (substring (symbol->string symbol) 0 1))))
+  ;; we can't use string=? because it's in R5RS.scm we use same code that use cmp
+  (and (symbol? symbol) (== (--> (substring (symbol->string symbol) 0 1) (cmp ":")) 0)))
 
 ;; -----------------------------------------------------------------------------
 (define (key->string symbol)
@@ -407,4 +404,35 @@
   "(regex? x)
 
    Function return true of value is regular expression, it return false otherwise."
-  (string=? (type x) "regex"))
+  (== (--> (type x) (cmp "regex")) 0))
+
+;; -----------------------------------------------------------------------------
+;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
+;; -----------------------------------------------------------------------------
+(add-special! "&" 'make-object lips.specials.SPLICE)
+;; -----------------------------------------------------------------------------
+(define (add-repr! type fn)
+  "(add-repr! type fn)
+
+   Function add string represention to the type, which should be constructor function.
+
+   Function fn should have args (obj q) and it should return string, obj is vlaue that
+   need to be converted to string, if the object is nested and you need to use `repr`,
+   it should pass second parameter q to repr, so string will be quoted when it's true.
+
+   e.g.: (lambda (obj q) (string-append \"<\" (repr obj q) \">\"))"
+  (typecheck "add-repr!" type "function")
+  (typecheck "add-repr!" fn "function")
+  (ignore (--> lips.repr (set type fn))))
+
+;; Object representation
+(add-repr! Object
+           (lambda (x q)
+             (concat "&("
+                     (--> (Object.keys x)
+                          (map (lambda (key)
+                                 (concat ":" key
+                                         " "
+                                         (repr (. x key) q))))
+                          (join " "))
+                     ")")))

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 18 May 2020 12:17:37 +0000
+ * build: Tue, 19 May 2020 07:10:39 +0000
  */
 (function () {
 	'use strict';
@@ -2818,8 +2818,9 @@
 	    } else {
 	      return nil;
 	    }
-	  }; // ----------------------------------------------------------------------
+	  };
 
+	  var repr = new Map(); // ----------------------------------------------------------------------
 
 	  function toString(obj, quote) {
 	    if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
@@ -2882,10 +2883,6 @@
 	      return JSON.stringify(obj).replace(/\\n/g, '\n');
 	    }
 
-	    if (root.HTMLElement && obj instanceof root.HTMLElement) {
-	      return "#<HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
-	    }
-
 	    if (_typeof_1(obj) === 'object') {
 	      // user defined representation
 	      if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
@@ -2899,10 +2896,6 @@
 	        if (typeof obj[Symbol.iterator] === 'function') {
 	          return '#<iterator>';
 	        }
-
-	        return '&(' + Object.keys(obj).map(function (key) {
-	          return ":".concat(key, " ").concat(toString(obj[key], quote));
-	        }).join(' ') + ')';
 	      }
 
 	      var name;
@@ -2912,7 +2905,35 @@
 	      } else if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
 	        name = 'instance';
 	      } else {
+	        if (is_prototype(obj)) {
+	          return '#<prototype>';
+	        }
+
+	        var fn;
+
+	        if (repr.has(constructor)) {
+	          fn = repr.get(constructor);
+	        } else {
+	          repr.forEach(function (value, key) {
+	            if (obj instanceof key && !(obj instanceof Object)) {
+	              fn = value;
+	            }
+	          });
+	        }
+
+	        if (fn) {
+	          if (typeof fn === 'function') {
+	            return fn(obj, quote);
+	          } else {
+	            throw new Error('toString: Invalid repr value');
+	          }
+	        }
+
 	        name = constructor.name;
+	      }
+
+	      if (root.HTMLElement && obj instanceof root.HTMLElement) {
+	        return "#<HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
 	      }
 
 	      if (name !== '') {
@@ -2927,6 +2948,11 @@
 	    }
 
 	    return obj;
+	  } // ----------------------------------------------------------------------------
+
+
+	  function is_prototype(obj) {
+	    return obj && _typeof_1(obj) === 'object' && obj.hasOwnProperty("constructor") && typeof obj.constructor === "function" && obj.constructor.prototype === obj;
 	  } // ----------------------------------------------------------------------------
 
 
@@ -9166,10 +9192,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 18 May 2020 12:17:37 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 19 May 2020 07:10:39 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 18 May 2020 12:17:37 +0000').valueOf();
+	    var date = LString('Tue, 19 May 2020 07:10:39 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9202,7 +9228,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 18 May 2020 12:17:37 +0000',
+	    date: 'Tue, 19 May 2020 07:10:39 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -9223,6 +9249,7 @@
 	    OutputStringPort: OutputStringPort,
 	    Formatter: Formatter,
 	    specials: specials,
+	    repr: repr,
 	    nil: nil,
 	    LSymbol: LSymbol,
 	    LNumber: LNumber,

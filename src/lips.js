@@ -1539,7 +1539,7 @@
             return nil;
         }
     };
-
+    var repr = new Map();
     // ----------------------------------------------------------------------
     function toString(obj, quote) {
         if (typeof jQuery !== 'undefined' &&
@@ -1587,9 +1587,6 @@
         if (obj === null || (typeof obj === 'string' && quote)) {
             return JSON.stringify(obj).replace(/\\n/g, '\n');
         }
-        if (root.HTMLElement && obj instanceof root.HTMLElement) {
-            return `#<HTMLElement(${obj.tagName.toLowerCase()})>`;
-        }
         if (typeof obj === 'object') {
             // user defined representation
             if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
@@ -1601,9 +1598,6 @@
                 if (typeof obj[Symbol.iterator] === 'function') {
                     return '#<iterator>';
                 }
-                return '&(' + Object.keys(obj).map(key => {
-                    return `:${key} ${toString(obj[key], quote)}`;
-                }).join(' ') + ')';
             }
             var name;
             if (typeof constructor.__className === 'string') {
@@ -1611,7 +1605,30 @@
             } else if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
                 name = 'instance';
             } else {
+                if (is_prototype(obj)) {
+                    return '#<prototype>';
+                }
+                var fn;
+                if (repr.has(constructor)) {
+                    fn = repr.get(constructor);
+                } else {
+                    repr.forEach(function(value, key) {
+                        if (obj instanceof key && !(obj instanceof Object)) {
+                            fn = value;
+                        }
+                    });
+                }
+                if (fn) {
+                    if (typeof fn === 'function') {
+                        return fn(obj, quote);
+                    } else {
+                        throw new Error('toString: Invalid repr value');
+                    }
+                }
                 name = constructor.name;
+            }
+            if (root.HTMLElement && obj instanceof root.HTMLElement) {
+                return `#<HTMLElement(${obj.tagName.toLowerCase()})>`;
             }
             if (name !== '') {
                 return '#<' + name + '>';
@@ -1623,7 +1640,14 @@
         }
         return obj;
     }
-
+    // ----------------------------------------------------------------------------
+    function is_prototype(obj) {
+        return obj &&
+            typeof obj === 'object' &&
+            obj.hasOwnProperty("constructor") &&
+            typeof obj.constructor === "function" &&
+            obj.constructor.prototype === obj;
+    }
     // ----------------------------------------------------------------------------
     Pair.prototype.markCycles = function() {
         markCycles(this);
@@ -6917,6 +6941,7 @@ You can also use (help name) to display help for specic function or macro.
 
         Formatter,
         specials,
+        repr,
         nil,
 
         LSymbol,
