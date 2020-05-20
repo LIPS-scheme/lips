@@ -3441,12 +3441,18 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.add = function(n) {
+        if (LNumber.isBigInteger(n)) {
+            const a_num = this.num;
+            const denom = this.denom;
+            const num = n.mul(denom).add(a_num);
+            return LRational({ num, denom });
+        }
         if (LNumber.isRational(n)) {
-            var a_denom = this.denom;
-            var b_denom = n.denom;
-            var a_num = this.num;
-            var b_num = n.num;
-            var denom, num;
+            const a_denom = this.denom;
+            const b_denom = n.denom;
+            const a_num = this.num;
+            const b_num = n.num;
+            let denom, num;
             if (a_denom !== b_denom) {
                 num = b_denom.mul(a_num).add(b_num.mul(a_denom));
                 denom = a_denom.mul(b_denom);

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 19 May 2020 17:07:50 +0000
+ * build: Wed, 20 May 2020 08:48:55 +0000
  */
 (function () {
 	'use strict';
@@ -5352,24 +5352,35 @@
 
 
 	  LRational.prototype.add = function (n) {
-	    if (LNumber.isRational(n)) {
-	      var a_denom = this.denom;
-	      var b_denom = n.denom;
+	    if (LNumber.isBigInteger(n)) {
 	      var a_num = this.num;
-	      var b_num = n.num;
-	      var denom, num;
-
-	      if (a_denom !== b_denom) {
-	        num = b_denom.mul(a_num).add(b_num.mul(a_denom));
-	        denom = a_denom.mul(b_denom);
-	      } else {
-	        num = a_num.add(b_num);
-	        denom = a_denom;
-	      }
-
+	      var denom = this.denom;
+	      var num = n.mul(denom).add(a_num);
 	      return LRational({
 	        num: num,
 	        denom: denom
+	      });
+	    }
+
+	    if (LNumber.isRational(n)) {
+	      var a_denom = this.denom;
+	      var b_denom = n.denom;
+	      var _a_num = this.num;
+	      var b_num = n.num;
+
+	      var _denom, _num;
+
+	      if (a_denom !== b_denom) {
+	        _num = b_denom.mul(_a_num).add(b_num.mul(a_denom));
+	        _denom = a_denom.mul(b_denom);
+	      } else {
+	        _num = _a_num.add(b_num);
+	        _denom = a_denom;
+	      }
+
+	      return LRational({
+	        num: _num,
+	        denom: _denom
 	      });
 	    }
 
@@ -9194,10 +9205,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 19 May 2020 17:07:50 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 20 May 2020 08:48:55 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 19 May 2020 17:07:50 +0000').valueOf();
+	    var date = LString('Wed, 20 May 2020 08:48:55 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9230,7 +9241,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 19 May 2020 17:07:50 +0000',
+	    date: 'Wed, 20 May 2020 08:48:55 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

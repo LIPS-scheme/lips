@@ -137,17 +137,17 @@
     (t.is (+ 1 1.0 1/10) 2.1)
     (t.is (number->string (+ 1/2 1/2 1.0)) "2.0")
 
-    (t.is (+ 1 1) 2)
+    (t.is (number->string (+ 1 1)) "2")
 
-    (t.is (+ 1 1.1) 2.1)
-    (t.is (+ 1.1 1) 2.1)
+    (t.is (number->string (+ 1 1.1)) "2.1")
+    (t.is (number->string (+ 1.1 1)) "2.1")
 
-    (t.is (+ 1/2 1/3) 5/6)
-    (t.is (+ 1 1/2) 3/2)
-    (t.is (+ 1/2 1) 3/2)
+    (t.is (number->string (+ 1/2 1/3)) "5/6")
+    (t.is (number->string (+ 1 1/2)) "3/2")
+    (t.is (number->string (+ 1/2 1)) "3/2")
 
-    (t.is (+ 1.1 1/2) 1.6)
-    (t.is (+ 1/2 1.1) 1.6)
+    (t.is (number->string (+ 1.1 1/2)) "1.6")
+    (t.is (number->string (+ 1/2 1.1)) "1.6")
 
     ;; TODO: handle mixed types as in Kawa
     ;;(t.is (+ 0.1 10i) 0.1+10i)
