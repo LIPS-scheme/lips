@@ -5731,9 +5731,8 @@
             Function return length of the object, the object can be list
             or any object that have length property.`),
         // ------------------------------------------------------------------
-        'string->number': doc(function(arg, radix = 10) {
+        'string->number': doc(function(arg) {
             typecheck('string->number', arg, 'string', 1);
-            typecheck('string->number', radix, 'number', 2);
             if (arg.match(rational_re)) {
                 return parse_rational(arg);
             } else if (arg.match(complex_re)) {

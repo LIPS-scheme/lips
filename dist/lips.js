@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 21 May 2020 06:41:49 +0000
+ * build: Thu, 21 May 2020 06:58:24 +0000
  */
 (function () {
 	'use strict';
@@ -7835,9 +7835,7 @@
 	    }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
 	    // ------------------------------------------------------------------
 	    'string->number': doc(function (arg) {
-	      var radix = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 10;
 	      typecheck('string->number', arg, 'string', 1);
-	      typecheck('string->number', radix, 'number', 2);
 
 	      if (arg.match(rational_re)) {
 	        return parse_rational(arg);
@@ -9200,10 +9198,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 21 May 2020 06:41:49 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 21 May 2020 06:58:24 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 21 May 2020 06:41:49 +0000').valueOf();
+	    var date = LString('Thu, 21 May 2020 06:58:24 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9236,7 +9234,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 21 May 2020 06:41:49 +0000',
+	    date: 'Thu, 21 May 2020 06:58:24 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
