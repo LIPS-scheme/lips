@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 20 May 2020 08:48:55 +0000
+ * build: Thu, 21 May 2020 06:41:49 +0000
  */
 (function () {
 	'use strict';
@@ -1174,7 +1174,8 @@
 
 
 	  function gen_complex_re(mnemonic, range) {
-	    return "".concat(num_mnemicic_re(mnemonic), "(?:(?:[+-]?").concat(range, "+)?[+-]?").concat(range, "+i|(?:[+-]?").concat(range, "+/").concat(range, "+)?[+-]?").concat(range, "+/").concat(range, "+i)");
+	    // [+-]i have (?=..) so it don't match +i from +inf.0
+	    return "".concat(num_mnemicic_re(mnemonic), "(?:[+-]?(?:").concat(range, "+/").concat(range, "+|").concat(range, "+))?(?:[+-]i|[+-]?(?:").concat(range, "+/").concat(range, "+|").concat(range, "+)i)(?=[()[\\]\\s]|$)");
 	  }
 
 	  function gen_integer_re(mnemonic, range) {
@@ -1182,8 +1183,9 @@
 	  }
 
 	  var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-	  var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
-	  var complex_float_stre = "(?:#[ie])?(?:".concat(float_stre, ")?").concat(float_stre, "i");
+	  var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)'; // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
+
+	  var complex_float_stre = "(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|".concat(float_stre, "|[+-]?[0-9]+))?(?:").concat(float_stre, "|[+-](?:[0-9]+/[0-9]+|[0-9]+))i");
 	  var float_re = new RegExp("^(#[ie])?".concat(float_stre, "$"));
 
 	  function make_complex_match_re(mnemonic, range) {
@@ -1195,7 +1197,7 @@
 	      fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
 	    }
 
-	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+(?!").concat(range, ")|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+)i"));
+	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+(?!").concat(range, ")|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+|[+-])i"));
 	  }
 
 	  var complex_list_re = function () {
@@ -1322,17 +1324,14 @@
 
 
 	  function parse_complex(arg) {
-	    if (arg === '-i') {
-	      return {
-	        im: -1,
-	        re: 0
-	      };
-	    }
-
 	    function parse_num(n) {
 	      var value;
 
-	      if (n.match(int_re)) {
+	      if (n === '+') {
+	        value = LNumber(1);
+	      } else if (n === '-') {
+	        value = LNumber(-1);
+	      } else if (n.match(int_re)) {
 	        value = LNumber([n, parse.radix]);
 	      } else if (n.match(rational_re)) {
 	        var parts = n.split('/');
@@ -1358,9 +1357,7 @@
 	    }
 
 	    var parse = num_pre_parse(arg);
-	    var parts = parse.number.match(complex_list_re[parse.radix]); //console.log(complex_list_re[parse.radix]);
-	    //console.log({parts, parse});
-
+	    var parts = parse.number.match(complex_list_re[parse.radix]);
 	    var re, im;
 	    im = parse_num(parts[2]);
 
@@ -1450,9 +1447,9 @@
 	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|;.*)/g;
 	  var string_re = /"(?:\\[\S\s]|[^"])*"?/g; // generate regex for all number literals
 
-	  var num_stre = complex_float_stre + '|' + [gen_complex_re, gen_rational_re, gen_integer_re].map(make_num_stre).join('|'); // ----------------------------------------------------------------------
+	  var num_stre = [gen_complex_re, gen_rational_re, gen_integer_re].map(make_num_stre).join('|'); // ----------------------------------------------------------------------
 
-	  function make_token_re() {
+	  function make_tokens_re() {
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
@@ -1501,7 +1498,7 @@
 
 
 	  function tokens(str) {
-	    var tokens_re = make_token_re();
+	    var tokens_re = make_tokens_re();
 	    str = str.replace(/\n\r|\r/g, '\n');
 	    var count = 0;
 	    var line = 0;
@@ -4893,10 +4890,8 @@
 	      throw new Error('Invalid constructor call for LComplex');
 	    }
 
-	    var _LNumber$coerce = LNumber.coerce(n.im, n.re),
-	        _LNumber$coerce2 = slicedToArray(_LNumber$coerce, 2),
-	        im = _LNumber$coerce2[0],
-	        re = _LNumber$coerce2[1];
+	    var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
+	    var re = n.re instanceof LNumber ? n.re : LNumber(n.re); //const [im, re] = LNumber.coerce(n.im, n.re);
 
 	    if (im.cmp(0) === 0 && !force) {
 	      return re;
@@ -5603,15 +5598,15 @@
 	        "float": complex('float'),
 	        rational: complex('rational'),
 	        complex: function complex(a, b) {
-	          var _LNumber$coerce3 = LNumber.coerce(a.re, b.re),
-	              _LNumber$coerce4 = slicedToArray(_LNumber$coerce3, 2),
-	              a_re = _LNumber$coerce4[0],
-	              b_re = _LNumber$coerce4[1];
+	          var _LNumber$coerce = LNumber.coerce(a.re, b.re),
+	              _LNumber$coerce2 = slicedToArray(_LNumber$coerce, 2),
+	              a_re = _LNumber$coerce2[0],
+	              b_re = _LNumber$coerce2[1];
 
-	          var _LNumber$coerce5 = LNumber.coerce(a.im, b.im),
-	              _LNumber$coerce6 = slicedToArray(_LNumber$coerce5, 2),
-	              a_im = _LNumber$coerce6[0],
-	              b_im = _LNumber$coerce6[1];
+	          var _LNumber$coerce3 = LNumber.coerce(a.im, b.im),
+	              _LNumber$coerce4 = slicedToArray(_LNumber$coerce3, 2),
+	              a_im = _LNumber$coerce4[0],
+	              b_im = _LNumber$coerce4[1];
 
 	          return [{
 	            im: a_im,
@@ -9205,10 +9200,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 20 May 2020 08:48:55 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 21 May 2020 06:41:49 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 20 May 2020 08:48:55 +0000').valueOf();
+	    var date = LString('Thu, 21 May 2020 06:41:49 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9241,7 +9236,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 20 May 2020 08:48:55 +0000',
+	    date: 'Thu, 21 May 2020 06:41:49 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

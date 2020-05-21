@@ -159,14 +159,16 @@
     }
     // TODO: float complex
     function gen_complex_re(mnemonic, range) {
-        return `${num_mnemicic_re(mnemonic)}(?:(?:[+-]?${range}+)?[+-]?${range}+i|(?:[+-]?${range}+/${range}+)?[+-]?${range}+/${range}+i)`;
+        // [+-]i have (?=..) so it don't match +i from +inf.0
+        return `${num_mnemicic_re(mnemonic)}(?:[+-]?(?:${range}+/${range}+|${range}+))?(?:[+-]i|[+-]?(?:${range}+/${range}+|${range}+)i)(?=[()[\\]\\s]|$)`;
     }
     function gen_integer_re(mnemonic, range) {
         return `${num_mnemicic_re(mnemonic)}[+-]?${range}+`;
     }
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
     var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
-    var complex_float_stre = `(?:#[ie])?(?:${float_stre})?${float_stre}i`;
+    // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
+    var complex_float_stre = `(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|${float_stre}|[+-]?[0-9]+))?(?:${float_stre}|[+-](?:[0-9]+/[0-9]+|[0-9]+))i`;
     var float_re = new RegExp(`^(#[ie])?${float_stre}$`);
     function make_complex_match_re(mnemonic, range) {
         // complex need special treatment of 10e+1i when it's hex or decimal
@@ -175,7 +177,7 @@
         if (mnemonic === '') {
             fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
         }
-        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+${neg})?)(${fl}[+-]?${range}+/${range}+|[+-]?${range}+)i`);
+        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+${neg})?)(${fl}[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i`);
     }
     var complex_list_re = (function() {
         var result = {};
@@ -276,12 +278,13 @@
     }
     // ----------------------------------------------------------------------
     function parse_complex(arg) {
-        if (arg === '-i') {
-            return { im: -1, re: 0 };
-        }
         function parse_num(n) {
             var value;
-            if (n.match(int_re)) {
+            if (n === '+') {
+                value = LNumber(1);
+            } else if (n === '-') {
+                value = LNumber(-1);
+            } else if (n.match(int_re)) {
                 value = LNumber([n, parse.radix]);
             } else if (n.match(rational_re)) {
                 var parts = n.split('/');
@@ -303,8 +306,6 @@
         }
         var parse = num_pre_parse(arg);
         var parts = parse.number.match(complex_list_re[parse.radix]);
-        //console.log(complex_list_re[parse.radix]);
-        //console.log({parts, parse});
         var re, im;
         im = parse_num(parts[2]);
         if (parts[1]) {
@@ -380,13 +381,13 @@
     var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
     // generate regex for all number literals
-    var num_stre = complex_float_stre + '|' + [
+    var num_stre = [
         gen_complex_re,
         gen_rational_re,
         gen_integer_re
     ].map(make_num_stre).join('|');
     // ----------------------------------------------------------------------
-    function make_token_re() {
+    function make_tokens_re() {
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
@@ -425,7 +426,7 @@
     };
     // ----------------------------------------------------------------------
     function tokens(str) {
-        var tokens_re = make_token_re();
+        var tokens_re = make_tokens_re();
         str = str.replace(/\n\r|\r/g, '\n');
         var count = 0;
         var line = 0;
@@ -3104,7 +3105,9 @@
         } else if (!LNumber.isComplex(n)) {
             throw new Error('Invalid constructor call for LComplex');
         }
-        const [im, re] = LNumber.coerce(n.im, n.re);
+        var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
+        var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
+        //const [im, re] = LNumber.coerce(n.im, n.re);
         if (im.cmp(0) === 0 && !force) {
             return re;
         }

@@ -95,6 +95,60 @@
         (t.is (number->string #b#i-100i) "-4.0i")
         (t.is (number->string #i#b+1/10i) "+0.5i")
         (t.is (number->string #i#b1/10i) "+0.5i")
+        ;; mixed
+        (t.is (number->string 1/2+10i) "1/2+10i")
+        (t.is (number->string -1/2+10i) "-1/2+10i")
+        (t.is (number->string -1/2-10i) "-1/2-10i")
+        (t.is (number->string +10+1/2i) "10+1/2i")
+        (t.is (number->string +10-1/2i) "10-1/2i")
+        (t.is (number->string -10+1/2i) "-10+1/2i")
+        (t.is (number->string -10-1/2i) "-10-1/2i")
+
+        (t.is (number->string 1/2+0.01i) "1/2+0.01i")
+        (t.is (number->string 0.01+1/2i) "0.01+1/2i")
+        (t.is (number->string 0.01+10i) "0.01+10i")
+        (t.is (number->string 0.01+1/10i) "0.01+1/10i")
+
+        ;; just i
+        (t.is (number->string +i) "+1i")
+        (t.is (number->string -i) "-1i")
+        (t.is (number->string 10+i) "10+1i")
+
+        (t.is (number->string 10-i) "10-1i")
+        (t.is (number->string -10-i) "-10-1i")
+        (t.is (number->string -10+i) "-10+1i")
+
+        (t.is (number->string 1/2+i) "1/2+1i")
+        (t.is (number->string 1/2-i) "1/2-1i")
+        (t.is (number->string +1/2+i) "1/2+1i")
+        (t.is (number->string +1/2-i) "1/2-1i")
+        (t.is (number->string -1/2+i) "-1/2+1i")
+        (t.is (number->string -1/2-i) "-1/2-1i")
+
+        ;; re rational+binary
+        (t.is (number->string #b1/10-i) "1/2-1i")
+        (t.is (number->string #b1/10+i) "1/2+1i")
+        (t.is (number->string #b-1/10-i) "-1/2-1i")
+        (t.is (number->string #b-1/10+i) "-1/2+1i")
+
+        ;; inexact+rational+binary
+        (t.is (number->string #i#b1/10-i) "0.5-1.0i")
+        (t.is (number->string #i#b1/10+i) "0.5+1.0i")
+        (t.is (number->string #i#b-1/10-i) "-0.5-1.0i")
+        (t.is (number->string #i#b-1/10+i) "-0.5+1.0i")
+
+        ;; reversed mnemonics
+        (t.is (number->string #b#i1/10-i) "0.5-1.0i")
+        (t.is (number->string #b#i1/10+i) "0.5+1.0i")
+        (t.is (number->string #b#i-1/10-i) "-0.5-1.0i")
+        (t.is (number->string #b#i-1/10+i) "-0.5+1.0i")
+
+        ;; re int+binary
+        (t.is (number->string #b10-i) "2-1i")
+        (t.is (number->string #b10+i) "2+1i")
+        (t.is (number->string #b-10-i) "-2-1i")
+        (t.is (number->string #b-10+i) "-2+1i")
+
         (t.is (number->string #i#b1/100+1/100i) "0.25+0.25i")
         (t.is (number->string #i#b-1/100+1/100i) "-0.25+0.25i")
         (t.is (number->string #b#i1/100+1/100i) "0.25+0.25i")

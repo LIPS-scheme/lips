@@ -73,8 +73,8 @@
 
 ;; -----------------------------------------------------------------------------
 (add-repr! Uint8Array
-           (lambda (x quote)
-             (string-append "#u8" (repr (u8vector->list x) quote))))
+           (lambda (x _quote)
+             (string-append "#u8" (repr (u8vector->list x) _quote))))
 
 ;;vector->[type]vector!
 ;;list->[type]vector!
