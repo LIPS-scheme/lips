@@ -217,12 +217,14 @@
     function make_type_re(fn) {
         return new RegExp('^(?:' + make_num_stre(fn) + ')$');
     }
-    var complex_re = make_type_re(gen_complex_re);
-    var rational_re = make_type_re(gen_rational_re);
-    var int_re = make_type_re(gen_integer_re);
+    const complex_re = make_type_re(gen_complex_re);
+    const rational_re = make_type_re(gen_rational_re);
+    const int_re = make_type_re(gen_integer_re);
+    const big_num_re = /^[+-]?[0-9]+[eE][+-][0-9]+$/;
+    const pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
     /* eslint-enable */
     function num_pre_parse(arg) {
-        var parts = arg.match(/((?:#[xobie]){0,2})(.*)/i);
+        var parts = arg.match(pre_num_parse_re);
         var options = {};
         if (parts[1]) {
             var type = parts[1].replace(/#/g, '').split('');
@@ -321,10 +323,16 @@
     function parse_float(arg) {
         var parse = num_pre_parse(arg);
         var value = parseFloat(parse.number);
-        if (parse.exact || !parse.number.match(/\./) && !parse.inexact) {
+        var simple_number = parse.number.match(/\.0$/) || !parse.number.match(/\./);
+        if (!parse.inexact && ((parse.exact && simple_number) ||
+                               parse.number.match(big_num_re))) {
             return LNumber(value);
         }
-        return LFloat(value, true);
+        value = LFloat(value, true);
+        if (parse.exact) {
+            return value.toRational();
+        }
+        return value;
     }
     // ----------------------------------------------------------------------
     function parse_string(string) {

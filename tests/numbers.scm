@@ -28,6 +28,7 @@
         (t.is (number->string 100) "100")
         (t.is (number->string -100) "-100")
         (t.is (number->string #e100.0) "100")
+        (t.is (number->string #e0.01) "1/100")
         (t.is (number->string #i100) "100.0")
         (t.is (number->string #i-100) "-100.0")
 

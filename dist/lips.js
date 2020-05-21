@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 21 May 2020 07:42:28 +0000
+ * build: Thu, 21 May 2020 08:35:31 +0000
  */
 (function () {
 	'use strict';
@@ -1252,10 +1252,12 @@
 	  var complex_re = make_type_re(gen_complex_re);
 	  var rational_re = make_type_re(gen_rational_re);
 	  var int_re = make_type_re(gen_integer_re);
+	  var big_num_re = /^[+-]?[0-9]+[eE][+-][0-9]+$/;
+	  var pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
 	  /* eslint-enable */
 
 	  function num_pre_parse(arg) {
-	    var parts = arg.match(/((?:#[xobie]){0,2})(.*)/i);
+	    var parts = arg.match(pre_num_parse_re);
 	    var options = {};
 
 	    if (parts[1]) {
@@ -1379,12 +1381,19 @@
 	  function parse_float(arg) {
 	    var parse = num_pre_parse(arg);
 	    var value = parseFloat(parse.number);
+	    var simple_number = parse.number.match(/\.0$/) || !parse.number.match(/\./);
 
-	    if (parse.exact || !parse.number.match(/\./) && !parse.inexact) {
+	    if (!parse.inexact && (parse.exact && simple_number || parse.number.match(big_num_re))) {
 	      return LNumber(value);
 	    }
 
-	    return LFloat(value);
+	    value = LFloat(value);
+
+	    if (parse.exact) {
+	      return value.toRational();
+	    }
+
+	    return value;
 	  } // ----------------------------------------------------------------------
 
 
@@ -9198,10 +9207,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 21 May 2020 07:42:28 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 21 May 2020 08:35:31 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 21 May 2020 07:42:28 +0000').valueOf();
+	    var date = LString('Thu, 21 May 2020 08:35:31 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9234,7 +9243,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 21 May 2020 07:42:28 +0000',
+	    date: 'Thu, 21 May 2020 08:35:31 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
