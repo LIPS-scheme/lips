@@ -19,8 +19,6 @@
   (set-obj! fn '__doc__ (--> string (replace /^ +/mg "")))
   fn)
 
-(define #f false)
-(define #t true)
 ;; -----------------------------------------------------------------------------
 (define string-append concat)
 (define = ==)

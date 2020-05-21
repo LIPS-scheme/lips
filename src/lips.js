@@ -362,9 +362,9 @@
             return parse_float(arg);
         } else if (arg === 'nil') {
             return nil;
-        } else if (arg === 'true') {
+        } else if (arg === 'true' || arg === '#t') {
             return true;
-        } else if (arg === 'false') {
+        } else if (arg === 'false' || arg === '#f') {
             return false;
         } else {
             return new LSymbol(arg);
