@@ -3091,9 +3091,15 @@
             return new LFloat(n, force);
         },
         complex: function(n, force = false) {
+            if (!LNumber.isComplex(n)) {
+                n = { im: 0, re: n };
+            }
             return new LComplex(n, force);
         },
         rational: function(n, force = false) {
+            if (!LNumber.isRational(n)) {
+                n = { num: n, denom: 1 };
+            }
             return new LRational(n, force);
         }
     };
@@ -3714,7 +3720,9 @@
         } else if (!matrix[a_type][b_type]) {
             throw new Error(`LNumber::coerce unknown rhs type ${b_type}`);
         }
-        return matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
+        const ret = matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
+        //console.log({b_type, a_type, ret});
+        return ret;
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.coerce = function(n) {

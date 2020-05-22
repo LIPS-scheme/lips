@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 22 May 2020 12:00:09 +0000
+ * build: Fri, 22 May 2020 12:27:35 +0000
  */
 (function () {
 	'use strict';
@@ -4866,10 +4866,26 @@
 	    },
 	    complex: function complex(n) {
 	      var force = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : false;
+
+	      if (!LNumber.isComplex(n)) {
+	        n = {
+	          im: 0,
+	          re: n
+	        };
+	      }
+
 	      return new LComplex(n, force);
 	    },
 	    rational: function rational(n) {
 	      var force = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : false;
+
+	      if (!LNumber.isRational(n)) {
+	        n = {
+	          num: n,
+	          denom: 1
+	        };
+	      }
+
 	      return new LRational(n, force);
 	    }
 	  }; // -------------------------------------------------------------------------
@@ -5720,9 +5736,11 @@
 	      throw new Error("LNumber::coerce unknown rhs type ".concat(b_type));
 	    }
 
-	    return matrix[a_type][b_type](a, b).map(function (n) {
+	    var ret = matrix[a_type][b_type](a, b).map(function (n) {
 	      return LNumber(n, true);
-	    });
+	    }); //console.log({b_type, a_type, ret});
+
+	    return ret;
 	  }; // -------------------------------------------------------------------------
 
 
@@ -9249,10 +9267,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 22 May 2020 12:00:09 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 22 May 2020 12:27:35 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 22 May 2020 12:00:09 +0000').valueOf();
+	    var date = LString('Fri, 22 May 2020 12:27:35 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9285,7 +9303,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 22 May 2020 12:00:09 +0000',
+	    date: 'Fri, 22 May 2020 12:27:35 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
