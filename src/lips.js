@@ -166,7 +166,7 @@
         return `${num_mnemicic_re(mnemonic)}[+-]?${range}+`;
     }
     var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
-    var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)(?=[[\\]()\\s])';
+    var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
     // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
     var complex_float_stre = `(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|${float_stre}|[+-]?[0-9]+))?(?:${float_stre}|[+-](?:[0-9]+/[0-9]+|[0-9]+))i`;
     var float_re = new RegExp(`^(#[ie])?${float_stre}$`);
@@ -399,7 +399,7 @@
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|${num_stre}(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?${float_stre}|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
