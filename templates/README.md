@@ -1,4 +1,4 @@
-# [LIPS is Pretty Simple](https://jcubic.github.io/lips/) - Scheme based Powerful Lisp
+# LIPS - Scheme Based Powerful Lisp Language
 
 [![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![npm](https://img.shields.io/badge/npm-{{VER}}-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
@@ -6,8 +6,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 
 
-LIPS is Powerful Lisp based on Scheme dialect and R5RS specification.
-LIPS is created in JavaScript and work in Browser and Node.js.
+LIPS is Powerful Lisp based on Scheme dialect and R5RS specification
+(and part of R7RS), it have extensions that make it easier to interacti
+with JavaScript, it work in Browser and Node.js.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
@@ -156,6 +157,13 @@ $ ./foo.scm
 ```
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
+
+## Name Genesis
+
+The name LISP is recursive acronym LIPS Is Pretty Simple. This name was used
+because first version was very simple implementation. It's not that simple
+anymore, but still it should be pretty easy to modify. Note that some parts of
+the code may be more complex.
 
 ## License
 
