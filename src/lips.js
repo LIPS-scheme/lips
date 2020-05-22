@@ -3139,8 +3139,8 @@
     LComplex.prototype.add = function(n) {
         return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
             return {
-                re: a_re.op('+', b_re),
-                im: a_im.op('+', b_im)
+                re: a_re.add(b_re),
+                im: a_im.add(b_im)
             };
         });
     };
@@ -3180,12 +3180,16 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.complex_op = function(n, fn) {
         if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
-            n = { im: 0, re: n };
+            if (!(n instanceof LNumber)) {
+                n = LNumber(n);
+            }
+            const im = n.asType(0);
+            n = { im, re: n };
         } else if (!LNumber.isComplex(n)) {
             throw new Error('[LComplex::add] Invalid value');
         }
-        var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
-        var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
+        var re = n.re instanceof LNumber ? n.re : this.re.asType(n.re);
+        var im = n.im instanceof LNumber ? n.im : this.im.asType(n.im);
         var ret = fn(this.re, re, this.im, im);
         if ('im' in ret && 're' in ret) {
             var x = LComplex(ret, true);
@@ -3413,21 +3417,29 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.mul = function(n) {
+        if (!(n instanceof LNumber)) {
+            n = LNumber(n); // handle (--> 1/2 (mul 2))
+        }
         if (LNumber.isRational(n)) {
             var num = this.num.mul(n.num);
             var denom = this.denom.mul(n.denom);
             return LRational({ num, denom });
         }
-        return LNumber(this.valueOf()).mul(n);
+        const [a, b] = LNumber.coerce(this, n);
+        return a.mul(b);
     };
     // -------------------------------------------------------------------------
     LRational.prototype.div = function(n) {
+        if (!(n instanceof LNumber)) {
+            n = LNumber(n); // handle (--> 1/2 (div 2))
+        }
         if (LNumber.isRational(n)) {
             var num = this.num.mul(n.denom);
             var denom = this.denom.mul(n.num);
             return LRational({ num, denom });
         }
-        return LNumber(this.valueOf()).div(n);
+        const [a, b] = LNumber.coerce(this, n);
+        return a.div(b);
     };
     // -------------------------------------------------------------------------
     LRational.prototype._op = function(op, n) {
@@ -3435,6 +3447,9 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.sub = function(n) {
+        if (!(n instanceof LNumber)) {
+            n = LNumber(n); // handle (--> 1/2 (sub 1))
+        }
         if (LNumber.isRational(n)) {
             var num = n.num.sub();
             var denom = n.denom;
@@ -3445,18 +3460,13 @@
         } else {
             n = n.sub();
         }
-        if (LNumber.isFloat(n)) {
-            return LFloat(this.valueOf()).add(n);
-        }
-        return this.add(n);
+        const [a, b] = LNumber.coerce(this, n);
+        return a.add(b);
     };
     // -------------------------------------------------------------------------
     LRational.prototype.add = function(n) {
-        if (LNumber.isBigInteger(n)) {
-            const a_num = this.num;
-            const denom = this.denom;
-            const num = n.mul(denom).add(a_num);
-            return LRational({ num, denom });
+        if (!(n instanceof LNumber)) {
+            n = LNumber(n); // handle (--> 1/2 (add 1))
         }
         if (LNumber.isRational(n)) {
             const a_denom = this.denom;
@@ -3476,7 +3486,8 @@
         if (LNumber.isFloat(n)) {
             return LFloat(this.valueOf()).add(n);
         }
-        return LNumber(this.valueOf()).add(n);
+        const [a, b] = LNumber.coerce(this, n);
+        return a.add(b);
     };
     // -------------------------------------------------------------------------
     function LBigInteger(n, native) {
@@ -3595,6 +3606,11 @@
         return this.value.toString();
     };
     // -------------------------------------------------------------------------
+    LNumber.prototype.asType = function(n) {
+        var _type = LNumber.getType(this);
+        return LNumber.types[_type] ? LNumber.types[_type](n) : LNumber(n);
+    };
+    // -------------------------------------------------------------------------
     LNumber.prototype.isBigNumber = function() {
         return typeof this.value === 'bigint' ||
             typeof BN !== 'undefined' && !(this.value instanceof BN);
@@ -3647,10 +3663,21 @@
                 }
             },
             rational: {
-                bigint: (a, b) => [a, b || { num: b, denom: 1 }],
+                bigint: (a, b) => [a, b && { num: b, denom: 1 }],
                 float: (a, b) => [LFloat(a.valueOf()), b],
                 rational: i,
-                complex: complex('rational')
+                complex: (a, b) => {
+                    return [
+                        {
+                            im: coerce(a.type, b.im.type, 0),
+                            re: coerce(a.type, b.re.type, a)
+                        },
+                        {
+                            im: coerce(a.type, b.im.type, b.im),
+                            re: coerce(a.type, b.re.type, b.re)
+                        }
+                    ];
+                }
             }
         };
         function complex(type) {

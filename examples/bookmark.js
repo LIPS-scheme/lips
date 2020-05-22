@@ -30,7 +30,7 @@ javascript:(function(next) {
         }
     })(500);
 })(function($) {
-    const REF = 'devel';
+    const REF = '2e459a7c2c9a651f41c6f6b8062087345ba8f974';
     function init(boostrap) {
         var t = $('div.terminal');
         if (t.length) {

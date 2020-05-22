@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 21 May 2020 08:35:31 +0000
+ * build: Fri, 22 May 2020 12:00:09 +0000
  */
 (function () {
 	'use strict';
@@ -4932,8 +4932,8 @@
 	  LComplex.prototype.add = function (n) {
 	    return this.complex_op(n, function (a_re, b_re, a_im, b_im) {
 	      return {
-	        re: a_re.op('+', b_re),
-	        im: a_im.op('+', b_im)
+	        re: a_re.add(b_re),
+	        im: a_im.add(b_im)
 	      };
 	    });
 	  }; // -------------------------------------------------------------------------
@@ -4987,16 +4987,22 @@
 
 	  LComplex.prototype.complex_op = function (n, fn) {
 	    if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
+	      if (!(n instanceof LNumber)) {
+	        n = LNumber(n);
+	      }
+
+	      var _im = n.asType(0);
+
 	      n = {
-	        im: 0,
+	        im: _im,
 	        re: n
 	      };
 	    } else if (!LNumber.isComplex(n)) {
 	      throw new Error('[LComplex::add] Invalid value');
 	    }
 
-	    var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
-	    var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
+	    var re = n.re instanceof LNumber ? n.re : this.re.asType(n.re);
+	    var im = n.im instanceof LNumber ? n.im : this.im.asType(n.im);
 	    var ret = fn(this.re, re, this.im, im);
 
 	    if ('im' in ret && 're' in ret) {
@@ -5299,6 +5305,10 @@
 
 
 	  LRational.prototype.mul = function (n) {
+	    if (!(n instanceof LNumber)) {
+	      n = LNumber(n); // handle (--> 1/2 (mul 2))
+	    }
+
 	    if (LNumber.isRational(n)) {
 	      var num = this.num.mul(n.num);
 	      var denom = this.denom.mul(n.denom);
@@ -5308,11 +5318,20 @@
 	      });
 	    }
 
-	    return LNumber(this.valueOf()).mul(n);
+	    var _LNumber$coerce = LNumber.coerce(this, n),
+	        _LNumber$coerce2 = slicedToArray(_LNumber$coerce, 2),
+	        a = _LNumber$coerce2[0],
+	        b = _LNumber$coerce2[1];
+
+	    return a.mul(b);
 	  }; // -------------------------------------------------------------------------
 
 
 	  LRational.prototype.div = function (n) {
+	    if (!(n instanceof LNumber)) {
+	      n = LNumber(n); // handle (--> 1/2 (div 2))
+	    }
+
 	    if (LNumber.isRational(n)) {
 	      var num = this.num.mul(n.denom);
 	      var denom = this.denom.mul(n.num);
@@ -5322,7 +5341,12 @@
 	      });
 	    }
 
-	    return LNumber(this.valueOf()).div(n);
+	    var _LNumber$coerce3 = LNumber.coerce(this, n),
+	        _LNumber$coerce4 = slicedToArray(_LNumber$coerce3, 2),
+	        a = _LNumber$coerce4[0],
+	        b = _LNumber$coerce4[1];
+
+	    return a.div(b);
 	  }; // -------------------------------------------------------------------------
 
 
@@ -5332,6 +5356,10 @@
 
 
 	  LRational.prototype.sub = function (n) {
+	    if (!(n instanceof LNumber)) {
+	      n = LNumber(n); // handle (--> 1/2 (sub 1))
+	    }
+
 	    if (LNumber.isRational(n)) {
 	      var num = n.num.sub();
 	      var denom = n.denom;
@@ -5347,52 +5375,51 @@
 	      n = n.sub();
 	    }
 
-	    if (LNumber.isFloat(n)) {
-	      return LFloat(this.valueOf()).add(n);
-	    }
+	    var _LNumber$coerce5 = LNumber.coerce(this, n),
+	        _LNumber$coerce6 = slicedToArray(_LNumber$coerce5, 2),
+	        a = _LNumber$coerce6[0],
+	        b = _LNumber$coerce6[1];
 
-	    return this.add(n);
+	    return a.add(b);
 	  }; // -------------------------------------------------------------------------
 
 
 	  LRational.prototype.add = function (n) {
-	    if (LNumber.isBigInteger(n)) {
+	    if (!(n instanceof LNumber)) {
+	      n = LNumber(n); // handle (--> 1/2 (add 1))
+	    }
+
+	    if (LNumber.isRational(n)) {
+	      var a_denom = this.denom;
+	      var b_denom = n.denom;
 	      var a_num = this.num;
-	      var denom = this.denom;
-	      var num = n.mul(denom).add(a_num);
+	      var b_num = n.num;
+	      var denom, num;
+
+	      if (a_denom !== b_denom) {
+	        num = b_denom.mul(a_num).add(b_num.mul(a_denom));
+	        denom = a_denom.mul(b_denom);
+	      } else {
+	        num = a_num.add(b_num);
+	        denom = a_denom;
+	      }
+
 	      return LRational({
 	        num: num,
 	        denom: denom
 	      });
 	    }
 
-	    if (LNumber.isRational(n)) {
-	      var a_denom = this.denom;
-	      var b_denom = n.denom;
-	      var _a_num = this.num;
-	      var b_num = n.num;
-
-	      var _denom, _num;
-
-	      if (a_denom !== b_denom) {
-	        _num = b_denom.mul(_a_num).add(b_num.mul(a_denom));
-	        _denom = a_denom.mul(b_denom);
-	      } else {
-	        _num = _a_num.add(b_num);
-	        _denom = a_denom;
-	      }
-
-	      return LRational({
-	        num: _num,
-	        denom: _denom
-	      });
-	    }
-
 	    if (LNumber.isFloat(n)) {
 	      return LFloat(this.valueOf()).add(n);
 	    }
 
-	    return LNumber(this.valueOf()).add(n);
+	    var _LNumber$coerce7 = LNumber.coerce(this, n),
+	        _LNumber$coerce8 = slicedToArray(_LNumber$coerce7, 2),
+	        a = _LNumber$coerce8[0],
+	        b = _LNumber$coerce8[1];
+
+	    return a.add(b);
 	  }; // -------------------------------------------------------------------------
 
 
@@ -5539,6 +5566,13 @@
 	  }; // -------------------------------------------------------------------------
 
 
+	  LNumber.prototype.asType = function (n) {
+	    var _type = LNumber.getType(this);
+
+	    return LNumber.types[_type] ? LNumber.types[_type](n) : LNumber(n);
+	  }; // -------------------------------------------------------------------------
+
+
 	  LNumber.prototype.isBigNumber = function () {
 	    return typeof this.value === 'bigint' || typeof BN !== 'undefined' && !(this.value instanceof BN);
 	  }; // -------------------------------------------------------------------------
@@ -5607,15 +5641,15 @@
 	        "float": complex('float'),
 	        rational: complex('rational'),
 	        complex: function complex(a, b) {
-	          var _LNumber$coerce = LNumber.coerce(a.re, b.re),
-	              _LNumber$coerce2 = slicedToArray(_LNumber$coerce, 2),
-	              a_re = _LNumber$coerce2[0],
-	              b_re = _LNumber$coerce2[1];
+	          var _LNumber$coerce9 = LNumber.coerce(a.re, b.re),
+	              _LNumber$coerce10 = slicedToArray(_LNumber$coerce9, 2),
+	              a_re = _LNumber$coerce10[0],
+	              b_re = _LNumber$coerce10[1];
 
-	          var _LNumber$coerce3 = LNumber.coerce(a.im, b.im),
-	              _LNumber$coerce4 = slicedToArray(_LNumber$coerce3, 2),
-	              a_im = _LNumber$coerce4[0],
-	              b_im = _LNumber$coerce4[1];
+	          var _LNumber$coerce11 = LNumber.coerce(a.im, b.im),
+	              _LNumber$coerce12 = slicedToArray(_LNumber$coerce11, 2),
+	              a_im = _LNumber$coerce12[0],
+	              b_im = _LNumber$coerce12[1];
 
 	          return [{
 	            im: a_im,
@@ -5628,7 +5662,7 @@
 	      },
 	      rational: {
 	        bigint: function bigint(a, b) {
-	          return [a, b || {
+	          return [a, b && {
 	            num: b,
 	            denom: 1
 	          }];
@@ -5637,7 +5671,15 @@
 	          return [LFloat(a.valueOf()), b];
 	        },
 	        rational: i,
-	        complex: complex('rational')
+	        complex: function complex(a, b) {
+	          return [{
+	            im: coerce(a.type, b.im.type, 0),
+	            re: coerce(a.type, b.re.type, a)
+	          }, {
+	            im: coerce(a.type, b.im.type, b.im),
+	            re: coerce(a.type, b.re.type, b.re)
+	          }];
+	        }
 	      }
 	    };
 
@@ -9207,10 +9249,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 21 May 2020 08:35:31 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 22 May 2020 12:00:09 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 21 May 2020 08:35:31 +0000').valueOf();
+	    var date = LString('Fri, 22 May 2020 12:00:09 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9243,7 +9285,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 21 May 2020 08:35:31 +0000',
+	    date: 'Fri, 22 May 2020 12:00:09 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
