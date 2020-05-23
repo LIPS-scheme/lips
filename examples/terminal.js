@@ -61,7 +61,8 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
                 }
             });
         }).catch(function(e) {
-            term.error(e.message || e);
+            var message = e.message || e;
+            term.error(message);
             if (e.code) {
                 term.error(e.code.map((line, i) => `[${i+1}]: ${line}`).join('\n'));
             }
@@ -73,8 +74,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
         greetings: false,
         keymap: {
             ENTER: function(e, original) {
+                var command = this.get_command();
                 try {
-                    if (lips.balanced_parenthesis(this.get_command())) {
+                    if (lips.balanced_parenthesis(command)) {
                         original();
                     } else {
                         var code = term.before_cursor();
@@ -87,7 +89,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
                         this.insert('\n' + (new Array(i + 1).join(' ')));
                     }
                 } catch (e) {
-                    original();
+                    this.echo(this.get_prompt() + command);
+                    this.set_command('');
+                    term.error(e.message);
                 }
             }
         },

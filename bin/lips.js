@@ -215,40 +215,46 @@ if (options.version || options.V) {
     boostrap(interp.env).then(function() {
         rl.on('line', function(line) {
             code += line + '\n';
-            if (balanced_parenthesis(code)) {
-                rl.pause();
-                run(code, interp.env).then(function(result) {
-                    if (process.stdin.isTTY) {
-                        print(result);
-                        if (multiline) {
-                            rl.setPrompt(prompt);
-                            multiline = false;
+            try {
+                if (balanced_parenthesis(code)) {
+                    rl.pause();
+                    run(code, interp.env).then(function(result) {
+                        if (process.stdin.isTTY) {
+                            print(result);
+                            if (multiline) {
+                                rl.setPrompt(prompt);
+                                multiline = false;
+                            }
+                            rl.prompt();
                         }
-                        rl.prompt();
-                    }
-                    rl.resume();
-                }).catch(function() {
-                    if (process.stdin.isTTY) {
-                        if (multiline) {
-                            rl.setPrompt(prompt);
-                            multiline = false;
+                        rl.resume();
+                    }).catch(function() {
+                        if (process.stdin.isTTY) {
+                            if (multiline) {
+                                rl.setPrompt(prompt);
+                                multiline = false;
+                            }
+                            rl.prompt();
                         }
-                        rl.prompt();
-                    }
-                });
-                code = '';
-            } else {
-                multiline = true;
-                var ind = indent(code, 2, prompt.length - continuePrompt.length);
-                rl.setPrompt(continuePrompt);
-                rl.prompt();
-                var spaces = new Array(ind + 1).join(' ');
-                if (terminal) {
-                    rl.write(spaces);
+                    });
+                    code = '';
                 } else {
-                    process.stdout.write(spaces);
-                    code += spaces;
+                    multiline = true;
+                    var ind = indent(code, 2, prompt.length - continuePrompt.length);
+                    rl.setPrompt(continuePrompt);
+                    rl.prompt();
+                    var spaces = new Array(ind + 1).join(' ');
+                    if (terminal) {
+                        rl.write(spaces);
+                    } else {
+                        process.stdout.write(spaces);
+                        code += spaces;
+                    }
                 }
+            } catch (e) {
+                console.error(e.message);
+                code = '';
+                rl.prompt();
             }
         });
     });
