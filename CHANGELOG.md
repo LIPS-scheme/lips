@@ -38,6 +38,7 @@
 * optional brackets
 * `interator?` function and detection if iterators from `repr` and `type` [#51](https://github.com/jcubic/lips/issues/51)
 * `add-repr!` function to add string representations to objects
+* `in` function
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol

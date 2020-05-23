@@ -5674,6 +5674,12 @@
 
             Function stop JavaScript code in debugger.`),
         // ------------------------------------------------------------------
+        'in': doc(function(a, b) {
+            return a in b;
+        }, `(in key value)
+
+            Function use is in operator to check if value is in object.`),
+        // ------------------------------------------------------------------
         'instanceof': doc(function(type, obj) {
             return obj instanceof unbind(type);
         }, `(instanceof type obj)
