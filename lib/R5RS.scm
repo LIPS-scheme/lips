@@ -883,11 +883,15 @@
     (apply reduce fn init lists)))
 
 ;; -----------------------------------------------------------------------------
-(define (make-vector n)
-  "(make-vector n)
+(define (make-vector n . rest)
+  "(make-vector n [fill])
 
-   Create new vector with n empty elements."
-  (new Array n))
+   Create new vector with n empty elements. If fill is specified it will set
+   all elements of the vector to that value."
+  (let ((result (new Array n)))
+    (if (not (null? rest))
+        (--> result (fill (car rest)))
+        result)))
 
 ;; -----------------------------------------------------------------------------
 (define (vector? n)
