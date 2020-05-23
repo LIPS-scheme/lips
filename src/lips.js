@@ -1557,10 +1557,32 @@
     };
     var repr = new Map();
     // ----------------------------------------------------------------------
+    function user_repr(obj) {
+        var constructor = obj.constructor || Object;
+        var plain_object = typeof obj === 'object' && constructor === Object;
+        var fn;
+        if (repr.has(constructor)) {
+            fn = repr.get(constructor);
+        } else {
+            repr.forEach(function(value, key) {
+                // if key is Object it should only work for plain_object
+                // because otherwise it will match every object
+                if (obj instanceof key &&
+                    (key === Object && plain_object || key !== Object)) {
+                    fn = value;
+                }
+            });
+        }
+        return fn;
+    }
+    // ----------------------------------------------------------------------
     function toString(obj, quote) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
             return '#<jQuery(' + obj.length + ')>';
+        }
+        if (obj === null) {
+            return 'null';
         }
         if (obj === true) {
             return '#t';
@@ -1608,12 +1630,14 @@
             if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
                 return obj.toString().valueOf();
             }
+            if (typeof obj[Symbol.iterator] === 'function') {
+                return '#<iterator>';
+            }
             var constructor = obj.constructor;
-            var plain_object = typeof obj === 'object' && constructor === Object;
-            if (plain_object) {
-                if (typeof obj[Symbol.iterator] === 'function') {
-                    return '#<iterator>';
-                }
+            if (!constructor) {
+                // this is case of fs.constants in Node.js that is null constructor object
+                // this object can be handled like normal object that have properties
+                constructor = Object;
             }
             var name;
             if (typeof constructor.__className === 'string') {
@@ -1624,19 +1648,7 @@
                 if (is_prototype(obj)) {
                     return '#<prototype>';
                 }
-                var fn;
-                if (repr.has(constructor)) {
-                    fn = repr.get(constructor);
-                } else {
-                    repr.forEach(function(value, key) {
-                        // if key is Object it should only work for plain_object
-                        // because otherwise it will match every object
-                        if (obj instanceof key &&
-                            (key === Object && plain_object || key !== Object)) {
-                            fn = value;
-                        }
-                    });
-                }
+                var fn = user_repr(obj);
                 if (fn) {
                     if (typeof fn === 'function') {
                         return fn(obj, quote);
@@ -1663,6 +1675,7 @@
     function is_prototype(obj) {
         return obj &&
             typeof obj === 'object' &&
+            obj.hasOwnProperty &&
             obj.hasOwnProperty("constructor") &&
             typeof obj.constructor === "function" &&
             obj.constructor.prototype === obj;
@@ -2566,7 +2579,8 @@
     function lipsContext(obj) {
         if (typeof obj === 'function') {
             var context = obj[__context__];
-            if (context && context !== lips && !context.constructor.__className) {
+            if (context && context !== lips && context.constructor &&
+                !context.constructor.__className) {
                 return true;
             }
         }
@@ -6587,14 +6601,16 @@
                     return 'instance';
                 }
             }
-            if (obj.constructor.__className) {
-                return obj.constructor.__className;
+            if (obj.constructor) {
+                if (obj.constructor.__className) {
+                    return obj.constructor.__className;
+                }
+                if (obj.constructor === Object &&
+                    typeof obj[Symbol.iterator] === 'function') {
+                    return 'iterator';
+                }
+                return obj.constructor.name.toLowerCase();
             }
-            if (obj.constructor === Object &&
-                typeof obj[Symbol.iterator] === 'function') {
-                return 'iterator';
-            }
-            return obj.constructor.name.toLowerCase();
         }
         return typeof obj;
     }

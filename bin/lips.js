@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --no-deprecation
 
 const {
     exec,
@@ -90,7 +90,8 @@ function print(result) {
     if (result.length) {
         var last = result.pop();
         if (last !== undefined) {
-            console.log(env.get('repr')(last, true));
+            var ret = env.get('repr')(last, true);
+            console.log(ret.toString());
         }
     }
 }

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 23 May 2020 09:36:43 +0000
+ * build: Sat, 23 May 2020 11:43:53 +0000
  */
 (function () {
 	'use strict';
@@ -2837,9 +2837,34 @@
 
 	  var repr = new Map(); // ----------------------------------------------------------------------
 
+	  function user_repr(obj) {
+	    var constructor = obj.constructor || Object;
+	    var plain_object = _typeof_1(obj) === 'object' && constructor === Object;
+	    var fn;
+
+	    if (repr.has(constructor)) {
+	      fn = repr.get(constructor);
+	    } else {
+	      repr.forEach(function (value, key) {
+	        // if key is Object it should only work for plain_object
+	        // because otherwise it will match every object
+	        if (obj instanceof key && (key === Object && plain_object || key !== Object)) {
+	          fn = value;
+	        }
+	      });
+	    }
+
+	    return fn;
+	  } // ----------------------------------------------------------------------
+
+
 	  function toString(obj, quote) {
 	    if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
 	      return '#<jQuery(' + obj.length + ')>';
+	    }
+
+	    if (obj === null) {
+	      return 'null';
 	    }
 
 	    if (obj === true) {
@@ -2904,13 +2929,16 @@
 	        return obj.toString().valueOf();
 	      }
 
-	      var constructor = obj.constructor;
-	      var plain_object = _typeof_1(obj) === 'object' && constructor === Object;
+	      if (typeof obj[Symbol.iterator] === 'function') {
+	        return '#<iterator>';
+	      }
 
-	      if (plain_object) {
-	        if (typeof obj[Symbol.iterator] === 'function') {
-	          return '#<iterator>';
-	        }
+	      var constructor = obj.constructor;
+
+	      if (!constructor) {
+	        // this is case of fs.constants in Node.js that is null constructor object
+	        // this object can be handled like normal object that have properties
+	        constructor = Object;
 	      }
 
 	      var name;
@@ -2924,19 +2952,7 @@
 	          return '#<prototype>';
 	        }
 
-	        var fn;
-
-	        if (repr.has(constructor)) {
-	          fn = repr.get(constructor);
-	        } else {
-	          repr.forEach(function (value, key) {
-	            // if key is Object it should only work for plain_object
-	            // because otherwise it will match every object
-	            if (obj instanceof key && (key === Object && plain_object || key !== Object)) {
-	              fn = value;
-	            }
-	          });
-	        }
+	        var fn = user_repr(obj);
 
 	        if (fn) {
 	          if (typeof fn === 'function') {
@@ -2969,7 +2985,7 @@
 
 
 	  function is_prototype(obj) {
-	    return obj && _typeof_1(obj) === 'object' && obj.hasOwnProperty("constructor") && typeof obj.constructor === "function" && obj.constructor.prototype === obj;
+	    return obj && _typeof_1(obj) === 'object' && obj.hasOwnProperty && obj.hasOwnProperty("constructor") && typeof obj.constructor === "function" && obj.constructor.prototype === obj;
 	  } // ----------------------------------------------------------------------------
 
 
@@ -4167,7 +4183,7 @@
 	    if (typeof obj === 'function') {
 	      var context = obj[__context__];
 
-	      if (context && context !== lips && !context.constructor.__className) {
+	      if (context && context !== lips && context.constructor && !context.constructor.__className) {
 	        return true;
 	      }
 	    }
@@ -8752,15 +8768,17 @@
 	        }
 	      }
 
-	      if (obj.constructor.__className) {
-	        return obj.constructor.__className;
-	      }
+	      if (obj.constructor) {
+	        if (obj.constructor.__className) {
+	          return obj.constructor.__className;
+	        }
 
-	      if (obj.constructor === Object && typeof obj[Symbol.iterator] === 'function') {
-	        return 'iterator';
-	      }
+	        if (obj.constructor === Object && typeof obj[Symbol.iterator] === 'function') {
+	          return 'iterator';
+	        }
 
-	      return obj.constructor.name.toLowerCase();
+	        return obj.constructor.name.toLowerCase();
+	      }
 	    }
 
 	    return _typeof_1(obj);
@@ -9297,10 +9315,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 23 May 2020 09:36:43 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 23 May 2020 11:43:53 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 23 May 2020 09:36:43 +0000').valueOf();
+	    var date = LString('Sat, 23 May 2020 11:43:53 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9337,7 +9355,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 23 May 2020 09:36:43 +0000',
+	    date: 'Sat, 23 May 2020 11:43:53 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

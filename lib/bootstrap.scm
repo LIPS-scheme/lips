@@ -439,7 +439,7 @@
 (add-repr! Object
            (lambda (x q)
              (concat "&("
-                     (--> (Object.keys x)
+                     (--> (Object.getOwnPropertyNames x)
                           (map (lambda (key)
                                  (concat ":" key
                                          " "
