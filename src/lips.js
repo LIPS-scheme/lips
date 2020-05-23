@@ -502,6 +502,9 @@
     }
     // ----------------------------------------------------------------------
     function tokenize(str, extra, formatter = multiline_formatter) {
+        if (str instanceof LString) {
+            str = str.toString();
+        }
         if (extra) {
             return tokens(str).map(formatter);
         } else {
@@ -562,6 +565,10 @@
     // :: the return value is array of lisp code created out of Pair class
     // ----------------------------------------------------------------------
     function parse(tokens) {
+        // usage in LIPS code
+        if (tokens instanceof LString) {
+            tokens = tokens.toString();
+        }
         if (typeof tokens === 'string') {
             tokens = tokenize(tokens);
         }

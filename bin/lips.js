@@ -214,7 +214,7 @@ if (options.version || options.V) {
     }
     boostrap(interp.env).then(function() {
         rl.on('line', function(line) {
-            code += line + '\n';
+            code += line.replace(/^\s+/, '') + '\n';
             try {
                 if (balanced_parenthesis(code)) {
                     rl.pause();

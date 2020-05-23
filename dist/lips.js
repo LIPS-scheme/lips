@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 23 May 2020 09:05:29 +0000
+ * build: Sat, 23 May 2020 09:36:43 +0000
  */
 (function () {
 	'use strict';
@@ -1587,6 +1587,10 @@
 	  function tokenize(str, extra) {
 	    var formatter = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : multiline_formatter;
 
+	    if (str instanceof LString) {
+	      str = str.toString();
+	    }
+
 	    if (extra) {
 	      return tokens(str).map(formatter);
 	    } else {
@@ -1653,6 +1657,11 @@
 	  // ----------------------------------------------------------------------
 
 	  function parse(tokens) {
+	    // usage in LIPS code
+	    if (tokens instanceof LString) {
+	      tokens = tokens.toString();
+	    }
+
 	    if (typeof tokens === 'string') {
 	      tokens = tokenize(tokens);
 	    }
@@ -9288,10 +9297,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 23 May 2020 09:05:29 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 23 May 2020 09:36:43 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 23 May 2020 09:05:29 +0000').valueOf();
+	    var date = LString('Sat, 23 May 2020 09:36:43 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9328,7 +9337,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 23 May 2020 09:05:29 +0000',
+	    date: 'Sat, 23 May 2020 09:36:43 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
