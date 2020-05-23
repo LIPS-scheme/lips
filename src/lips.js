@@ -2541,6 +2541,7 @@
             }
         });
         hiddenProp(bound, '__fn__', fn);
+        hiddenProp(bound, '__context__', context);
         hiddenProp(bound, '__bound__', true);
         if (isNativeFunction(fn)) {
             hiddenProp(bound, '__native__', true);
@@ -2552,8 +2553,20 @@
     }
     // ----------------------------------------------------------------------
     function isBound(obj) {
-        return typeof obj === 'function' && obj[__fn__];
+        return !!(typeof obj === 'function' && obj[__fn__]);
     }
+    // ----------------------------------------------------------------------
+    function lipsContext(obj) {
+        if (typeof obj === 'function') {
+            var context = obj[__context__];
+            if (context && context !== lips && !context.constructor.__className) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // ----------------------------------------------------------------------
+    var __context__ = Symbol.for('__context__');
     var __fn__ = Symbol.for('__fn__');
     // ----------------------------------------------------------------------
     // :: function bind fn with context but it also move all props
@@ -2995,6 +3008,9 @@
     // :: Number wrapper that handle BigNumbers
     // -------------------------------------------------------------------------
     function LNumber(n, force = false) {
+        if (n instanceof LNumber) {
+            return n;
+        }
         if (typeof this !== 'undefined' && !(this instanceof LNumber) ||
             typeof this === 'undefined') {
             return new LNumber(n, force);
@@ -3288,6 +3304,8 @@
         }
         return approxRatio(n.valueOf())(this.value.valueOf());
     };
+    // -------------------------------------------------------------------------
+    // based on https://rosettacode.org/wiki/Convert_decimal_number_to_rational
     // -------------------------------------------------------------------------
     var toRational = approxRatio(1e-10);
     function approxRatio(eps) {
@@ -3720,9 +3738,7 @@
         } else if (!matrix[a_type][b_type]) {
             throw new Error(`LNumber::coerce unknown rhs type ${b_type}`);
         }
-        const ret = matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
-        //console.log({b_type, a_type, ret});
-        return ret;
+        return matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.coerce = function(n) {
@@ -6727,7 +6743,7 @@
             if (typeof value === 'function') {
                 var args = getFunctionArgs(rest, eval_args);
                 return unpromise(args, function(args) {
-                    if (isBound(value)) {
+                    if (isBound(value) && lipsContext(value)) {
                         args = args.map(unbox);
                     }
                     if (value.__lambda__) {
@@ -6964,6 +6980,10 @@ You can also use (help name) to display help for specic function or macro.
     OutputPort.__className = 'output-port';
     OutputStringPort.__className = 'output-string-port';
     InputStringPort.__className = 'input-string-port';
+    // types used for detect lips objects
+    LNumber.__className = 'number';
+    LCharacter.__className = 'character';
+    LString.__className = 'string';
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',
@@ -7006,6 +7026,7 @@ You can also use (help name) to display help for specic function or macro.
         LBigInteger,
         LCharacter,
         LString,
+        proxy: (x) => x,
         rationalize
     };
     // so it work when used with webpack where it will be not global

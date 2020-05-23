@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&d3c333da2ee5f8d1abe7c1e50dd383e9b060e820)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&73f1d76ce01efee9d55f691c10434fa4996298e0)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -110,7 +110,7 @@ $ lips
 | |   / ^ \   |___||_||_|  <___/  | |
  \_\ /_/ \_\                     /_/
 
-LIPS Scheme Interpreter DEV (2020-05-22)
+LIPS Scheme Interpreter DEV (2020-05-23)
 Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 22 May 2020 14:25:42 +0000
+ * build: Sat, 23 May 2020 09:05:29 +0000
  */
 (function () {
 	'use strict';
@@ -4134,6 +4134,7 @@
 	      }
 	    });
 	    hiddenProp(bound, '__fn__', fn);
+	    hiddenProp(bound, '__context__', context);
 	    hiddenProp(bound, '__bound__', true);
 
 	    if (isNativeFunction(fn)) {
@@ -4149,8 +4150,24 @@
 
 
 	  function isBound(obj) {
-	    return typeof obj === 'function' && obj[__fn__];
-	  }
+	    return !!(typeof obj === 'function' && obj[__fn__]);
+	  } // ----------------------------------------------------------------------
+
+
+	  function lipsContext(obj) {
+	    if (typeof obj === 'function') {
+	      var context = obj[__context__];
+
+	      if (context && context !== lips && !context.constructor.__className) {
+	        return true;
+	      }
+	    }
+
+	    return false;
+	  } // ----------------------------------------------------------------------
+
+
+	  var __context__ = Symbol["for"]('__context__');
 
 	  var __fn__ = Symbol["for"]('__fn__'); // ----------------------------------------------------------------------
 	  // :: function bind fn with context but it also move all props
@@ -4742,6 +4759,10 @@
 	  function LNumber(n) {
 	    var force = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : false;
 
+	    if (n instanceof LNumber) {
+	      return n;
+	    }
+
 	    if (typeof this !== 'undefined' && !(this instanceof LNumber) || typeof this === 'undefined') {
 	      return new LNumber(n, force);
 	    }
@@ -5142,6 +5163,8 @@
 
 	    return approxRatio(n.valueOf())(this.value.valueOf());
 	  }; // -------------------------------------------------------------------------
+	  // based on https://rosettacode.org/wiki/Convert_decimal_number_to_rational
+	  // -------------------------------------------------------------------------
 
 
 	  var toRational = approxRatio(1e-10);
@@ -5736,11 +5759,9 @@
 	      throw new Error("LNumber::coerce unknown rhs type ".concat(b_type));
 	    }
 
-	    var ret = matrix[a_type][b_type](a, b).map(function (n) {
+	    return matrix[a_type][b_type](a, b).map(function (n) {
 	      return LNumber(n, true);
-	    }); //console.log({b_type, a_type, ret});
-
-	    return ret;
+	    });
 	  }; // -------------------------------------------------------------------------
 
 
@@ -8990,7 +9011,7 @@
 	      if (typeof value === 'function') {
 	        var args = getFunctionArgs(rest, eval_args);
 	        return unpromise(args, function (args) {
-	          if (isBound(value)) {
+	          if (isBound(value) && lipsContext(value)) {
 	            args = args.map(unbox);
 	          }
 
@@ -9267,10 +9288,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 22 May 2020 14:25:42 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 23 May 2020 09:05:29 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 22 May 2020 14:25:42 +0000').valueOf();
+	    var date = LString('Sat, 23 May 2020 09:05:29 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9298,12 +9319,16 @@
 	  InputPort.__className = 'input-port';
 	  OutputPort.__className = 'output-port';
 	  OutputStringPort.__className = 'output-string-port';
-	  InputStringPort.__className = 'input-string-port'; // -------------------------------------------------------------------------
+	  InputStringPort.__className = 'input-string-port'; // types used for detect lips objects
+
+	  LNumber.__className = 'number';
+	  LCharacter.__className = 'character';
+	  LString.__className = 'string'; // -------------------------------------------------------------------------
 
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 22 May 2020 14:25:42 +0000',
+	    date: 'Sat, 23 May 2020 09:05:29 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -9334,6 +9359,9 @@
 	    LBigInteger: LBigInteger,
 	    LCharacter: LCharacter,
 	    LString: LString,
+	    proxy: function proxy(x) {
+	      return x;
+	    },
 	    rationalize: rationalize
 	  }; // so it work when used with webpack where it will be not global
 
