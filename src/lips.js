@@ -4947,7 +4947,7 @@
             Function return current environement.`),
         // ------------------------------------------------------------------
         'parent.frame': doc(function() {
-            return nil;
+            return user_env;
         }, `(parent.frame)
 
             Return parent environment if called from inside function.
@@ -7055,7 +7055,6 @@ You can also use (help name) to display help for specic function or macro.
         LBigInteger,
         LCharacter,
         LString,
-        proxy: (x) => x,
         rationalize
     };
     // so it work when used with webpack where it will be not global

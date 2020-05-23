@@ -185,12 +185,14 @@
 
    Funcion return list of environments from parent frames (lambda function calls)"
   (let iter ((result '()) (frame (parent.frame 1)))
-    (if (or (null? frame) (eq? (interaction-environment) frame))
-        result
-        (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
-          (if (function? parent.frame)
-              (iter (cons frame result) (parent.frame 0))
-              result)))))
+    (if (eq? frame (interaction-environment))
+        (cons frame result)
+        (if (null? frame)
+            result
+            (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
+              (if (function? parent.frame)
+                  (iter (cons frame result) (parent.frame 0))
+                  result))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (wait time . expr)

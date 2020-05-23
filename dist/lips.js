@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 23 May 2020 13:40:10 +0000
+ * build: Sat, 23 May 2020 16:00:38 +0000
  */
 (function () {
 	'use strict';
@@ -7104,7 +7104,7 @@
 	    }, "(current-environment)\n\n            Function return current environement."),
 	    // ------------------------------------------------------------------
 	    'parent.frame': doc(function () {
-	      return nil;
+	      return user_env;
 	    }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
 	    // ------------------------------------------------------------------
 	    'eval': doc(function (code, env) {
@@ -9319,10 +9319,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 23 May 2020 13:40:10 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 23 May 2020 16:00:38 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 23 May 2020 13:40:10 +0000').valueOf();
+	    var date = LString('Sat, 23 May 2020 16:00:38 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9359,7 +9359,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 23 May 2020 13:40:10 +0000',
+	    date: 'Sat, 23 May 2020 16:00:38 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
@@ -9390,9 +9390,6 @@
 	    LBigInteger: LBigInteger,
 	    LCharacter: LCharacter,
 	    LString: LString,
-	    proxy: function proxy(x) {
-	      return x;
-	    },
 	    rationalize: rationalize
 	  }; // so it work when used with webpack where it will be not global
 
