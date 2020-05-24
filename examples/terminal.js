@@ -31,7 +31,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
                 args.forEach(function(arg) {
                     out_buffer.push(arg);
                 });
-                if (out_buffer[out_buffer.length - 1].match(/\n$/)) {
+                var last_buff = out_buffer[out_buffer.length - 1];
+                if (last_buff.match(/\n$/)) {
+                    out_buffer[out_buffer.length - 1] = last_buff.replace(/\n$/, '');
                     flush();
                 }
             }

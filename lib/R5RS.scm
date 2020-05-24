@@ -892,11 +892,12 @@
   (char=? (char-downcase char) char))
 
 ;; -----------------------------------------------------------------------------
-(define (newline)
-  "(newline)
+(define (newline . rest)
+  "(newline [port])
 
-   Write newline character to standard output."
-  (display "\n"))
+   Write newline character to standard output or given port"
+  (let ((port (if (null? rest) (current-output-port) (car rest))))
+    (display "\n" port)))
 
 ;; -----------------------------------------------------------------------------
 (define (write obj . rest)
