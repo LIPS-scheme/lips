@@ -130,7 +130,9 @@ function indent(code, indent, offset) {
 
 // -----------------------------------------------------------------------------
 function doc(fn, doc) {
-    fn.__doc__ = doc;
+    fn.__doc__ = doc.split('\n').map(function(line) {
+        return line.trim();
+    }).join('\n');
     return fn;
 }
 
@@ -147,6 +149,11 @@ var interp = Interpreter('repl', {
         newline = !repr.match(/\n$/);
         process.stdout.write(repr);
     }),
+    exit: doc(function() {
+        process.exit();
+    }, `(exit)
+
+        Function exits LIPS script or the REPL.`),
     help: doc(new Macro('help', function(code, { error }) {
         var new_code = new Pair(new LSymbol('__help'), code);
         var doc = evaluate(new_code, { env: this, error });
