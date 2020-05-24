@@ -115,3 +115,36 @@
 (define (struct? struct)
   "check if argument is structure (not that structures are alist)."
   (and (pair? struct) (defstruct:every pair? struct)))
+
+
+(define (last lst)
+  "return last element of the list."
+  (typecheck "last" lst "pair")
+  (if (null? lst)
+      '()
+      (if (null? (cdr lst))
+          (car lst)
+          (last (cdr lst)))))
+
+(define (write-struct struct)
+  "print structure."
+  (if (struct? struct)
+      (begin
+        (display "#<")
+        (for-each (lambda (field)
+                    (let ((first (car field)))
+                      (if (struct? first)
+                          (write-struct first)
+                          (display first)))
+                    (display ":")
+                    (let ((rest (cdr field)))
+                      (if (struct? rest)
+                          (write-struct rest)
+                          (write rest)))
+                    (if (not (eq? field (last struct)))
+                        (display " "))) struct)
+        (display ">"))))
+
+(define (print-struct struct)
+  (write-struct struct)
+  (newline))

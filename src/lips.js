@@ -2538,7 +2538,7 @@
     // :: function get original function that was binded with props
     // ----------------------------------------------------------------------
     function unbind(obj) {
-        if (isBound(obj)) {
+        if (is_bound(obj)) {
             return obj[__fn__];
         }
         return obj;
@@ -2572,15 +2572,31 @@
         return bound;
     }
     // ----------------------------------------------------------------------
-    function isBound(obj) {
+    function is_bound(obj) {
         return !!(typeof obj === 'function' && obj[__fn__]);
     }
     // ----------------------------------------------------------------------
-    function lipsContext(obj) {
+    function lips_context(obj) {
         if (typeof obj === 'function') {
             var context = obj[__context__];
-            if (context && context !== lips && context.constructor &&
-                !context.constructor.__className) {
+            if (context && (context === lips ||
+                            (context.constructor &&
+                             context.constructor.__className))) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // ----------------------------------------------------------------------
+    function is_port(obj) {
+        function port(obj) {
+            return obj instanceof InputPort || obj instanceof OutputPort;
+        }
+        if (typeof obj === 'function') {
+            if (port(obj)) {
+                return true;
+            }
+            if (port(obj[__context__])) {
                 return true;
             }
         }
@@ -6772,10 +6788,10 @@
             if (typeof value === 'function') {
                 var args = getFunctionArgs(rest, eval_args);
                 return unpromise(args, function(args) {
-                    if (isBound(value) && lipsContext(value)) {
+                    if (is_bound(value) && (!lips_context(value) || is_port(value))) {
                         args = args.map(unbox);
                     }
-                    if (value.__lambda__) {
+                    if (value.__lambda__ || is_port(value)) {
                         // lambda need environment as context
                         // normal functions are bound to their contexts
                         value = unbind(value);

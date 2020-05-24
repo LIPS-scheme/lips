@@ -73,15 +73,16 @@ function parse_options(arg, options) {
 }
 
 // -----------------------------------------------------------------------------
-function run(code, env) {
+function run(code, interpreter) {
     if (typeof code !== 'string') {
         code = code.toString();
     }
-    return exec(code, env).catch(function(e) {
+    return interpreter.exec(code).catch(function(e) {
         console.error(e.message);
         if (e.code) {
             console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`).join('\n'));
         }
+        console.error(e.stack);
     });
 }
 
@@ -97,7 +98,7 @@ function print(result) {
 }
 // -----------------------------------------------------------------------------
 
-function boostrap(env) {
+function boostrap(interpreter) {
     var list = ['./lib/bootstrap.scm', './examples/helpers.scm', './lib/R5RS.scm'];
     return (function next() {
         var name = list.shift();
@@ -113,7 +114,7 @@ function boostrap(env) {
                 }
             }
             var data = fs.readFileSync(path);
-            return run(data, env).then(next);
+            return run(data, interpreter).then(next);
         }
     })();
 }
@@ -126,6 +127,33 @@ function indent(code, indent, offset) {
         offset
     });
 }
+
+// -----------------------------------------------------------------------------
+function doc(fn, doc) {
+    fn.__doc__ = doc;
+    return fn;
+}
+
+// -----------------------------------------------------------------------------
+
+var interp = Interpreter('repl', {
+    stdin: InputPort(function() {
+        return new Promise(function(resolve) {
+            rl.question('', resolve);
+        });
+    }),
+    stdout: OutputPort(function(x) {
+        var repr = this.get('repr')(x);
+        newline = !repr.match(/\n$/);
+        process.stdout.write(repr);
+    }),
+    help: doc(new Macro('help', function(code, { error }) {
+        var new_code = new Pair(new LSymbol('__help'), code);
+        var doc = evaluate(new_code, { env: this, error });
+        console.log(doc);
+    }), env.get('help').__doc__),
+    '__help': env.get('help')
+});
 
 // -----------------------------------------------------------------------------
 const options = parse_options(process.argv.slice(2));
@@ -146,21 +174,20 @@ if (options.version || options.V) {
     ].map(([key, ...values]) => {
         return [LSymbol(key), ...values];
     }));
-    exec('(display (concat "(" (join "\n" (map repr output)) ")"))');
+    exec('(display (concat "(" (join "\n" (map repr output)) ")"))', interp);
 } else if (options.c || options.code) {
-    boostrap().then(function() {
-        run(options.c || options.code, env).then(print);
+    boostrap(interp).then(function() {
+        run(options.c || options.code, interp).then(print);
     });
 } else if (options._.length === 1) {
-    var e = env.inherit('file');
     // hack for node-gtk
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
     fs.promises.readFile(options._[0]).then(function(data) {
-        return boostrap(e).then(function() {
-            return run(data.toString().replace(/^#!.*\n/, ''), e);
+        return boostrap(interp).then(function() {
+            return run(data.toString().replace(/^#!.*\n/, ''), interp);
         });
     }).catch(err => {
         console.error(err);
@@ -192,36 +219,28 @@ if (options.version || options.V) {
     var code = '';
     var multiline = false;
     var resolve;
-    var interp = Interpreter('repl', {
-        stdin: InputPort(function() {
-            return new Promise(function(resolve) {
-                rl.question('', resolve);
-            });
-        }),
-        stdout: OutputPort(function(x) {
-            //rl.write(this.get('repr')(x));
-            console.log(this.get('repr')(x));
-        }),
-        help: doc(new Macro('help', function(code, { error }) {
-            var new_code = new Pair(new LSymbol('__help'), code);
-            var doc = evaluate(new_code, { env: this, error });
-            console.log(doc);
-        }), env.get('help').__doc__),
-        '__help': env.get('help')
-    });
-    function doc(fn, doc) {
-        fn.__doc__ = doc;
-        return fn;
-    }
-    boostrap(interp.env).then(function() {
+    var newline;
+    // we use promise loop to fix issue when copy paste list of S-Expression
+    var prev_eval = Promise.resolve();
+    boostrap(interp).then(function() {
         rl.on('line', function(line) {
             code += line.replace(/^\s+/, '') + '\n';
             try {
                 if (balanced_parenthesis(code)) {
                     rl.pause();
-                    run(code, interp.env).then(function(result) {
+                    prev_eval = prev_eval.then(function() {
+                        var result = run(code, interp);
+                        code = '';
+                        return result;
+                    }).then(function(result) {
                         if (process.stdin.isTTY) {
                             print(result);
+                            if (newline) {
+                                // readline don't work with not endend lines
+                                // it ignore those so we end then ourselfs
+                                process.stdout.write("\n");
+                                newline = false;
+                            }
                             if (multiline) {
                                 rl.setPrompt(prompt);
                                 multiline = false;
@@ -238,7 +257,6 @@ if (options.version || options.V) {
                             rl.prompt();
                         }
                     });
-                    code = '';
                 } else {
                     multiline = true;
                     var ind = indent(code, 2, prompt.length - continuePrompt.length);

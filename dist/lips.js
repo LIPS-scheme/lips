@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 23 May 2020 16:00:38 +0000
+ * build: Sun, 24 May 2020 10:33:41 +0000
  */
 (function () {
 	'use strict';
@@ -4134,7 +4134,7 @@
 
 
 	  function unbind(obj) {
-	    if (isBound(obj)) {
+	    if (is_bound(obj)) {
 	      return obj[__fn__];
 	    }
 
@@ -4174,16 +4174,35 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  function isBound(obj) {
+	  function is_bound(obj) {
 	    return !!(typeof obj === 'function' && obj[__fn__]);
 	  } // ----------------------------------------------------------------------
 
 
-	  function lipsContext(obj) {
+	  function lips_context(obj) {
 	    if (typeof obj === 'function') {
 	      var context = obj[__context__];
 
-	      if (context && context !== lips && context.constructor && !context.constructor.__className) {
+	      if (context && (context === lips || context.constructor && context.constructor.__className)) {
+	        return true;
+	      }
+	    }
+
+	    return false;
+	  } // ----------------------------------------------------------------------
+
+
+	  function is_port(obj) {
+	    function port(obj) {
+	      return obj instanceof InputPort || obj instanceof OutputPort;
+	    }
+
+	    if (typeof obj === 'function') {
+	      if (port(obj)) {
+	        return true;
+	      }
+
+	      if (port(obj[__context__])) {
 	        return true;
 	      }
 	    }
@@ -9042,11 +9061,11 @@
 	      if (typeof value === 'function') {
 	        var args = getFunctionArgs(rest, eval_args);
 	        return unpromise(args, function (args) {
-	          if (isBound(value) && lipsContext(value)) {
+	          if (is_bound(value) && (!lips_context(value) || is_port(value))) {
 	            args = args.map(unbox);
 	          }
 
-	          if (value.__lambda__) {
+	          if (value.__lambda__ || is_port(value)) {
 	            // lambda need environment as context
 	            // normal functions are bound to their contexts
 	            value = unbind(value);
@@ -9319,10 +9338,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 23 May 2020 16:00:38 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 24 May 2020 10:33:41 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 23 May 2020 16:00:38 +0000').valueOf();
+	    var date = LString('Sun, 24 May 2020 10:33:41 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9359,7 +9378,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 23 May 2020 16:00:38 +0000',
+	    date: 'Sun, 24 May 2020 10:33:41 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

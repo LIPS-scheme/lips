@@ -14,13 +14,27 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
         fn.__doc__ = doc;
         return fn;
     }
+    // this is way to make term.echo not enter newline it's easier then echo without newline
+    // and it works similar in Node.js REPL
+    var out_buffer = [];
+    function flush() {
+        if (out_buffer.length) {
+            term.echo(out_buffer.join(''), {formatters: false});
+            out_buffer = [];
+        }
+    }
     // -------------------------------------------------------------------------
     var interpreter = lips.Interpreter('demo', {
         stdout: lips.OutputPort(function() {
             var args = Array.from(arguments);
-            args.forEach(function(arg) {
-                term.echo(arg, {formatters: false});
-            });
+            if (args.length) {
+                args.forEach(function(arg) {
+                    out_buffer.push(arg);
+                });
+                if (out_buffer[out_buffer.length - 1].match(/\n$/)) {
+                    flush();
+                }
+            }
         }),
         // ---------------------------------------------------------------------
         stdin: lips.InputPort(function() {
@@ -55,9 +69,11 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
         // format before executing mainly for strings in function docs
         code = new lips.Formatter(code).format();
         return interpreter.exec(code, dynamic).then(function(ret) {
+            flush();
             ret.forEach(function(ret) {
                 if (ret !== undefined) {
                     display(repr(ret, true));
+                    flush();
                 }
             });
         }).catch(function(e) {
