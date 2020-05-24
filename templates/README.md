@@ -158,12 +158,12 @@ $ ./foo.scm
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
-## Name Genesis
+## Name
 
-The name LISP is recursive acronym LIPS Is Pretty Simple. This name was used
-because first version was very simple implementation. It's not that simple
-anymore, but still it should be pretty easy to modify. Note that some parts of
-the code may be more complex.
+The name LIPS is recursive acronym which expand into LIPS Is Pretty Simple.
+This name was used because first version was very simple implementation.
+It's not that simple anymore, but still it should be pretty easy to modify.
+Note that some parts of the code may be more complex.
 
 ## License
 
