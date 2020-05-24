@@ -57,6 +57,7 @@
 * use parser code in string->number
 * fix repr of native object instances (e.g.: `Uint8Array`)
 * fix display/write without newline in both REPLs
+* fix evaluating single false value
 
 ## 0.20.1
 ### Bug fixes

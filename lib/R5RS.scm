@@ -189,7 +189,7 @@
   "(boolean? x)
 
    Function return true if value is boolean."
-   (eq? (type x) "boolean"))
+   (string=? (type x) "boolean"))
 
 ;; -----------------------------------------------------------------------------
 (define (vector-ref vector i)

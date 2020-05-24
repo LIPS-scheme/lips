@@ -370,9 +370,9 @@
             return parse_float(arg);
         } else if (arg === 'nil') {
             return nil;
-        } else if (arg === 'true' || arg === '#t') {
+        } else if (['true', '#t', "'#t"].includes(arg)) {
             return true;
-        } else if (arg === 'false' || arg === '#f') {
+        } else if (['false', '#f', "'#f"].includes(arg)) {
             return false;
         } else {
             return new LSymbol(arg);
@@ -399,7 +399,7 @@
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -5657,8 +5657,8 @@
             Function remove special symbol from parser. Added by \`add-special!\``),
         // ------------------------------------------------------------------
         'add-special!': doc(function(seq, name, type = specials.LITERAL) {
-            typecheck('remove-special!', seq, 'string', 1);
-            typecheck('remove-special!', name, 'symbol', 2);
+            typecheck('add-special!', seq, 'string', 1);
+            typecheck('add-special!', name, 'symbol', 2);
             lips.specials.append(seq, name, type);
         }, `(add-special! symbol name)
 
@@ -6844,10 +6844,10 @@
         var list = parse(string);
         var results = [];
         while (true) {
-            var code = list.shift();
-            if (!code) {
+            if (!list.length) {
                 return results;
             } else {
+                var code = list.shift();
                 var result = await evaluate(code, {
                     env,
                     dynamic_scope,

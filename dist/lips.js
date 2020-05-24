@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 24 May 2020 10:47:39 +0000
+ * build: Sun, 24 May 2020 12:51:37 +0000
  */
 (function () {
 	'use strict';
@@ -1436,9 +1436,9 @@
 	      return parse_float(arg);
 	    } else if (arg === 'nil') {
 	      return nil;
-	    } else if (arg === 'true' || arg === '#t') {
+	    } else if (['true', '#t', "'#t"].includes(arg)) {
 	      return true;
-	    } else if (arg === 'false' || arg === '#f') {
+	    } else if (['false', '#f', "'#f"].includes(arg)) {
 	      return false;
 	    } else {
 	      return new LSymbol(arg);
@@ -1462,7 +1462,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -7852,8 +7852,8 @@
 	    // ------------------------------------------------------------------
 	    'add-special!': doc(function (seq, name) {
 	      var type = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : specials.LITERAL;
-	      typecheck('remove-special!', seq, 'string', 1);
-	      typecheck('remove-special!', name, 'symbol', 2);
+	      typecheck('add-special!', seq, 'string', 1);
+	      typecheck('add-special!', name, 'symbol', 2);
 	      lips.specials.append(seq, name, type);
 	    }, "(add-special! symbol name)\n\n            Add special symbol to the list of transforming operators by the parser.\n            e.g.: `(add-special! '#)` will allow to use `#(1 2 3)` and it will be\n            transformed into (# (1 2 3)) so you can write # macro that will process\n            the list. It's main purpose to to allow to use `define-symbol-macro`"),
 	    // ------------------------------------------------------------------
@@ -9141,16 +9141,15 @@
 
 	            case 3:
 
-	              code = list.shift();
-
-	              if (code) {
-	                _context5.next = 9;
+	              if (list.length) {
+	                _context5.next = 8;
 	                break;
 	              }
 
 	              return _context5.abrupt("return", results);
 
-	            case 9:
+	            case 8:
+	              code = list.shift();
 	              _context5.next = 11;
 	              return evaluate(code, {
 	                env: env,
@@ -9342,10 +9341,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 24 May 2020 10:47:39 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 24 May 2020 12:51:37 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 24 May 2020 10:47:39 +0000').valueOf();
+	    var date = LString('Sun, 24 May 2020 12:51:37 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9382,7 +9381,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 24 May 2020 10:47:39 +0000',
+	    date: 'Sun, 24 May 2020 12:51:37 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
