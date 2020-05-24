@@ -5691,6 +5691,9 @@
             Function stop JavaScript code in debugger.`),
         // ------------------------------------------------------------------
         'in': doc(function(a, b) {
+            if (a instanceof LSymbol || a instanceof LString) {
+                a = a.valueOf();
+            }
             return a in b;
         }, `(in key value)
 

@@ -32,7 +32,7 @@
 ;; -----------------------------------------------------------------------------
 (define-macro (define-syntax name expr . rest)
   "(define-syntax name expression [__doc__])
-  
+
    Macro define new hygienic macro using syntax-rules with optional documentation"
   (let ((expr-name (gensym)))
     `(define ,name
