@@ -714,6 +714,55 @@
       (string-ref (String.fromCodePoint n) 0)
       (throw "argument to integer->char need to be integer.")))
 
+(define (char-upper-case? chr)
+  "(char-upper-case? chr)
+
+   Function return true if value is upper case character. It return false otherwise."
+  (typecheck "char-upper-case?" chr "character")
+  (let ((str (--> chr (toString))))
+    (string=? str (--> str (toUpperCase)))))
+
+;; -----------------------------------------------------------------------------
+
+(define (char-lower-case? chr)
+  "(char-lower-case? chr)
+
+   Function return true if value is lower case character. It return false otherwise."
+  (typecheck "char-lower-case?" chr "character")
+  (let ((str (--> chr (toString))))
+    (string=? str (--> str (toUpperCase)))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (%define-chr-re spec str re)
+  "(%define-chr-re (name chr) sring re)
+
+   Macro define procedure that test character agains regular expression."
+  `(define ,spec
+     ,str
+     (typecheck ,(symbol->string (car spec)) ,(cadr spec) "character")
+     (not (null? (--> chr (toString) (match ,re))))))
+
+;; -----------------------------------------------------------------------------
+(%define-chr-re (char-whitespace? chr)
+  "(char-whitespace? chr)
+
+   Function return true if character is whitespace."
+  /\s/)
+
+;; -----------------------------------------------------------------------------
+(%define-chr-re (char-numeric? chr)
+  "(char-numeric? chr)
+
+   Function return true if character is number."
+  /[0-9]/)
+
+;; -----------------------------------------------------------------------------
+(%define-chr-re (char-alphabetic? chr)
+  "(char-alphabetic? chr)
+
+   Function return true if character is leter of the ASCII alphabet."
+  /[a-z]/i)
+
 ;; -----------------------------------------------------------------------------
 (define (%char-cmp name chr1 chr2)
   "(%char-cmp name a b)
@@ -929,3 +978,11 @@
         (begin
           (set-obj! vec n value)
           (recur (- n 1))))))
+
+;; -----------------------------------------------------------------------------
+(define (vector-length vec)
+  "(vector-length vec)
+
+   Function return length of the vector. If argument is not vector it throw exception."
+  (typecheck "vector-length" vec "array")
+  (length vec))
