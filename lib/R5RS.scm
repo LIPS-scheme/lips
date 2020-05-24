@@ -986,3 +986,17 @@
    Function return length of the vector. If argument is not vector it throw exception."
   (typecheck "vector-length" vec "array")
   (length vec))
+
+;; -----------------------------------------------------------------------------
+(define (list-tail l k)
+  "(list-tail list k)
+
+   Returns the sublist of list obtained by omitting the first k elements."
+  (typecheck "list-tail" l "pair")
+  (let ((l l) (k k))
+    (while (> k 0)
+      (if (null? l)
+          (throw (new Error "list-tail: not enough elements in the list")))
+      (set! l (cdr l))
+      (set! k (- k 1)))
+    l))

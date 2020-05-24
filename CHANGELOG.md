@@ -38,7 +38,7 @@
 * optional brackets
 * `interator?` function and detection if iterators from `repr` and `type` [#51](https://github.com/jcubic/lips/issues/51)
 * `add-repr!` function to add string representations to objects
-* new `in` and `bound?` functions
+* new `in`, `list-tail` and `bound?` functions
 * add new `exit` function into executable interpreter
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
