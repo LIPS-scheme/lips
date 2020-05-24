@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&9c87d2cabcbaa167c75419f326aa01ee860c31e1)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&e72e876caa0d7db8577fdc64de72e0f6efee0f6c)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -147,17 +147,15 @@ lips foo.scm
 You can also write executable files that use lips using shebang (SRFI-22)
 
 ```
-$ cat foo.scm
+cat foo.scm
 #!/usr/bin/env lips
 
 (let ((what "World"))
   (display (string-append "Hello " what))
   (newline))
 
-$ chmod a+x foo.scm
-$ ./foo.scm
-Hello World
-$
+chmod a+x foo.scm
+./foo.scm
 ```
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.

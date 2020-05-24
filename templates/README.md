@@ -147,17 +147,15 @@ lips foo.scm
 You can also write executable files that use lips using shebang (SRFI-22)
 
 ```
-$ cat foo.scm
+cat foo.scm
 #!/usr/bin/env lips
 
 (let ((what "World"))
   (display (string-append "Hello " what))
   (newline))
 
-$ chmod a+x foo.scm
-$ ./foo.scm
-Hello World
-$
+chmod a+x foo.scm
+./foo.scm
 ```
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
