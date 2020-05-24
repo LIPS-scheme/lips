@@ -986,16 +986,3 @@
    Function return length of the vector. If argument is not vector it throw exception."
   (typecheck "vector-length" vec "array")
   (length vec))
-
-
-(define (bound? x . rest)
-  "(bound? x [env])
-
-   Function check if variable is defined in given environement or interaction environment
-   if not specified."
-  (let ((env (if (null? rest) (interaction-environment) (car rest))))
-    (try (begin
-           (--> env (get x))
-           true)
-         (catch (e)
-                false))))

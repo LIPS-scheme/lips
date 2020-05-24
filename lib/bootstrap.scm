@@ -448,3 +448,16 @@
                                          (repr (. x key) q))))
                           (join " "))
                      ")")))
+
+;; -----------------------------------------------------------------------------
+(define (bound? x . rest)
+  "(bound? x [env])
+
+   Function check if variable is defined in given environement or interaction environment
+   if not specified."
+  (let ((env (if (null? rest) (interaction-environment) (car rest))))
+    (try (begin
+           (--> env (get x))
+           true)
+         (catch (e)
+                false))))
