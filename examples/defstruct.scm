@@ -33,11 +33,13 @@
 
 (define (defstruct:alist->object arg)
   "Function create JavaScript object from AList"
-  (and (pair? arg)
-       (--> arg (toObject))))
+  (typecheck "defstruct:every" arg "pair")
+  (--> arg (toObject)))
 
 (define (defstruct:every fn list)
   "return true if every element return true for a function applied to every element"
+  (typecheck "defstruct:every" fn "function")
+  (typecheck "defstruct:every" list "pair")
   (== (length list) (length (filter fn list))))
 
 (define (defstruct:error symbol message)
@@ -55,16 +57,21 @@
 
 (define (defstruct:make-name name)
   "create struct constructor name."
+  (typecheck "defstruct:make-name" name "symbol")
   (string->symbol (string-append "make-" (symbol->string name))))
 
 
 (define (defstruct:make-getter name field)
   "create filed acess function name."
+  (typecheck "defstruct:make-getter" name "symbol")
+  (typecheck "defstruct:make-getter" field "symbol")
   (string->symbol (string-append (symbol->string name) "-"
                                  (symbol->string field))))
 
 (define (defstruct:make-setter name field)
   "create field setter function name."
+  (typecheck "defstruct:make-setter" name "symbol")
+  (typecheck "defstruct:make-setter" field "symbol")
   (string->symbol (string-append "set-"
                                  (symbol->string name) "-"
                                  (symbol->string field) "!")))
@@ -72,6 +79,7 @@
 
 (define (defstruct:make-predicate name)
   "create predicate function name."
+  (typecheck "defstruct:make-predicate" name "symbol")
   (string->symbol (string-append (symbol->string name) "?")))
 
 
@@ -105,10 +113,12 @@
 
 (define (defstruct:unique item list)
   "check if item ocour only once."
+  (typecheck "last" lst "pair" 2)
   (== (length (filter (lambda (i) (eq? item i)) list)) 1))
 
 (define (defstruct:every-unique list)
   "check if every element ocour only once."
+  (typecheck "last" lst "pair")
   (defstruct:every (lambda (item) (defstruct:unique item list)) list))
 
 
@@ -117,7 +127,7 @@
   (and (pair? struct) (defstruct:every pair? struct)))
 
 
-(define (last lst)
+(define (defstruct:last lst)
   "return last element of the list."
   (typecheck "last" lst "pair")
   (if (null? lst)
@@ -131,18 +141,20 @@
   (if (struct? struct)
       (begin
         (display "#<")
-        (for-each (lambda (field)
-                    (let ((first (car field)))
-                      (if (struct? first)
-                          (write-struct first)
-                          (display first)))
-                    (display ":")
-                    (let ((rest (cdr field)))
-                      (if (struct? rest)
-                          (write-struct rest)
-                          (write rest)))
-                    (if (not (eq? field (last struct)))
-                        (display " "))) struct)
+        (let ((last (defstruct:last struct)))
+          (for-each (lambda (field)
+                      (let ((first (car field)))
+                        (if (struct? first)
+                            (write-struct first)
+                            (display first)))
+                      (display ":")
+                      (let ((rest (cdr field)))
+                        (if (struct? rest)
+                            (write-struct rest)
+                            (write rest)))
+                      (if (not (eq? field last))
+                          (display " ")))
+                    struct)
         (display ">"))))
 
 (define (print-struct struct)
