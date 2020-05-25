@@ -182,9 +182,10 @@ if (options.version || options.V) {
         return [LSymbol(key), ...values];
     }));
     exec('(display (concat "(" (join "\n" (map repr output)) ")"))', interp);
-} else if (options.c || options.code) {
+} else if (options.e || options.eval || options.c || options.code) {
+    // from 1.0 documentation should use -e but it's not breaking change
     boostrap(interp).then(function() {
-        run(options.c || options.code, interp).then(print);
+        run(options.e || options.eval || options.c || options.code, interp).then(print);
     });
 } else if (options._.length === 1) {
     // hack for node-gtk
@@ -204,7 +205,7 @@ if (options.version || options.V) {
 } else if (options.h || options.help) {
     var name = process.argv[1];
     console.log(format('%s\nusage:\n%s [-h]|[-c <code>]|<filename>\n\n\t[-h --help] this help message' +
-                       '\n\t[-c --code] execute code\n\t[--version -V] Display version information ' +
+                       '\n\t[-e --eval] execute code\n\t[--version -V] Display version information ' +
                        'according to srfi-176\n\nif called without arguments it will run REPL and if' +
                        'called with one argument\nit will treat it as filename and execute it.', banner, name));
 } else {

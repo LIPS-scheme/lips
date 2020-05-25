@@ -40,6 +40,7 @@
 * `add-repr!` function to add string representations to objects
 * new `string=?`, `sort`, `in`, `list-tail` and `bound?` functions
 * add new `exit` function into executable interpreter
+* -e/eval option (help and docs will show new options, instead of -c/code but old still works)
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
