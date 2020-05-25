@@ -1,4 +1,5 @@
-;; this file contain essential functions and macros for LIPS
+;; -*- scheme -*-
+;; This file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful LISP in JavaScript
 ;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
@@ -461,3 +462,31 @@
            true)
          (catch (e)
                 false))))
+
+;; -----------------------------------------------------------------------------
+;; source https://stackoverflow.com/a/4297432/387194
+;; -----------------------------------------------------------------------------
+(define (qsort e predicate)
+  "(qsort list predicate)
+
+   Sort the list using quick sort alorithm according to predicate."
+  (if (or (null? e) (<= (length e) 1))
+      e
+      (let loop ((left nil) (right nil)
+                 (pivot (car e)) (rest (cdr e)))
+        (if (null? rest)
+            (append (append (qsort left predicate) (list pivot)) (qsort right predicate))
+            (if (predicate (car rest) pivot)
+                (loop (append left (list (car rest))) right pivot (cdr rest))
+                (loop left (append right (list (car rest))) pivot (cdr rest)))))))
+
+;; -----------------------------------------------------------------------------
+(define (sort list . rest)
+  "(sort list [predicate])
+
+   Sort the list using optional predicate function. if not function is specified
+   it will use <= and sort in increasing order."
+  (let ((predicate (if (null? rest) <= (car rest))))
+    (typecheck "sort" list "pair")
+    (typecheck "sort" predicate "function")
+    (qsort list predicate)))
