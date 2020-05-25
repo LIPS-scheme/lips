@@ -99,7 +99,7 @@ function print(result) {
 // -----------------------------------------------------------------------------
 
 function boostrap(interpreter) {
-    var list = ['./lib/bootstrap.scm', './examples/helpers.scm', './lib/R5RS.scm'];
+    var list = ['./lib/bootstrap.scm', './examples/helpers.scm', './lib/R5RS.scm', './lib/R7RS.scm'];
     return (function next() {
         var name = list.shift();
         if (name) {

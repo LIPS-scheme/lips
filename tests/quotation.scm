@@ -13,6 +13,13 @@
                         (quasiquote (let ((name (quote y)))
                                       (quasiquote (list (quote (unquote name))))))))))
 
+(test "quasiquote: double backquote and unquote on list"
+      (lambda (t)
+        (define result (eval (let ((x '((list 1 2 3) (list 1 2 3) (list 1 2 3))))
+                               `(list `(,,@x)))))
+
+        (t.is result '(((1 2 3) (1 2 3) (1 2 3))))))
+
 (test "quasiquote: quaisquote quoted unquoted function"
       (lambda (t)
 

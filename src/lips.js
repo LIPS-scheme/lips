@@ -352,6 +352,23 @@
         }
     }
     // ----------------------------------------------------------------------
+    function parse_symbol(arg) {
+        if (arg.match(/^\|.*\|$/)) {
+            arg = arg.replace(/(^\|)|(\|$)/g, '');
+            var chars = {
+                t: '\t',
+                r: '\r',
+                n: '\n'
+            };
+            arg = arg.replace(/\\(x[^;]+);/g, function(_, chr) {
+                return String.fromCharCode(parseInt('0' + chr, 16));
+            }).replace(/\\(.)/g, function(_, chr) {
+                return chars[chr] || chr;
+            });
+        }
+        return new LSymbol(arg);
+    }
+    // ----------------------------------------------------------------------
     function parse_argument(arg) {
         var regex = arg.match(re_re);
         if (regex) {
@@ -375,7 +392,7 @@
         } else if (['false', '#f', "'#f"].includes(arg)) {
             return false;
         } else {
-            return new LSymbol(arg);
+            return parse_symbol(arg);
         }
     }
     // ----------------------------------------------------------------------
@@ -386,7 +403,7 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|;.*)/g;
+    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||;.*)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
     // generate regex for all number literals
     var num_stre = [
@@ -399,7 +416,7 @@
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -1623,7 +1640,7 @@
             obj = obj.toString();
         }
         if (obj === null || (typeof obj === 'string' && quote)) {
-            return JSON.stringify(obj).replace(/\\n/g, '\n');
+            return JSON.stringify(obj);
         }
         if (typeof obj === 'object') {
             // user defined representation
@@ -5396,17 +5413,21 @@
                         if (pair.cdr instanceof Pair) {
                             if (pair.cdr.cdr !== nil) {
                                 if (pair.cdr.car instanceof Pair) {
-                                    return unpromise(
-                                        recur(pair.cdr.cdr, unquote_cnt, max_unq),
-                                        function(value) {
-                                            var unquoted = evaluate(pair.cdr.car, {
-                                                env: self,
-                                                dynamic_scope,
-                                                error
-                                            });
-                                            return new Pair(unquoted, value);
+                                    let list = nil;
+                                    // evaluate all values in unquote
+                                    return (function recur(node) {
+                                        if (node === nil) {
+                                            return list;
                                         }
-                                    );
+                                        return unpromise(evaluate(node.car, {
+                                            env: self,
+                                            dynamic_scope,
+                                            error
+                                        }), function(next) {
+                                            list = new Pair(next, list);
+                                            return recur(node.cdr);
+                                        });
+                                    })(pair.cdr);
                                 } else {
                                     return pair.cdr;
                                 }

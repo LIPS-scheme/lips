@@ -1,6 +1,3 @@
-
-
-
 (test "timing test"
       (lambda (t)
         (--> t (is (function? (.. Date.now)) true))
@@ -14,5 +11,12 @@
                 (lambda (a b) b)) 5)
         (t.is (call-with-values (lambda () (values 4 5)) +) 9)))
 
-(define start (--> Date (now)))
-(delay 100 (display (equal? (>= (- (--> Date (now)) start) 100) true)))
+(test "symbols"
+      (lambda (t)
+        (t.is '|foo\x20;bar| (string->symbol "foo bar"))
+        (t.is '|\n| (string->symbol "\n"))
+        (t.is '|\t\t| (string->symbol "\t\t"))
+        (t.is '|\r| (string->symbol "\r"))
+        (t.is '|\s| 's)
+        (t.is '|\x3BB;| 'λ)
+        (t.is '|\x9;\x9;| '|\t\t|)))

@@ -24,7 +24,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 25 May 2020 10:44:31 +0000
+ * build: Mon, 25 May 2020 18:42:49 +0000
  */
 (function () {
 	'use strict';
@@ -1417,6 +1417,25 @@
 	  } // ----------------------------------------------------------------------
 
 
+	  function parse_symbol(arg) {
+	    if (arg.match(/^\|.*\|$/)) {
+	      arg = arg.replace(/(^\|)|(\|$)/g, '');
+	      var chars = {
+	        t: '\t',
+	        r: '\r',
+	        n: '\n'
+	      };
+	      arg = arg.replace(/\\(x[^;]+);/g, function (_, chr) {
+	        return String.fromCharCode(parseInt('0' + chr, 16));
+	      }).replace(/\\(.)/g, function (_, chr) {
+	        return chars[chr] || chr;
+	      });
+	    }
+
+	    return new LSymbol(arg);
+	  } // ----------------------------------------------------------------------
+
+
 	  function parse_argument(arg) {
 	    var regex = arg.match(re_re);
 
@@ -1441,7 +1460,7 @@
 	    } else if (['false', '#f', "'#f"].includes(arg)) {
 	      return false;
 	    } else {
-	      return new LSymbol(arg);
+	      return parse_symbol(arg);
 	    }
 	  } // ----------------------------------------------------------------------
 
@@ -1453,7 +1472,7 @@
 	  /* eslint-disable */
 
 
-	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|;.*)/g;
+	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||;.*)/g;
 	  var string_re = /"(?:\\[\S\s]|[^"])*"?/g; // generate regex for all number literals
 
 	  var num_stre = [gen_complex_re, gen_rational_re, gen_integer_re].map(make_num_stre).join('|'); // ----------------------------------------------------------------------
@@ -1462,7 +1481,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|;.*|\\|[^|]+\\||(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -2920,7 +2939,7 @@
 	    }
 
 	    if (obj === null || typeof obj === 'string' && quote) {
-	      return JSON.stringify(obj).replace(/\\n/g, '\n');
+	      return JSON.stringify(obj);
 	    }
 
 	    if (_typeof_1(obj) === 'object') {
@@ -5640,29 +5659,12 @@
 	  }; // -------------------------------------------------------------------------
 
 
-	  function minus_zero(n) {
-	    debugger;
-
-	    if (typeof BigInt !== 'undefined' && typeof n !== 'bigint') {
-	      return Object.is(-0, n.valueOf());
-	    }
-
-	    if (Object.is(-0, n)) {
-	      return true;
-	    }
-
-	    return false;
-	  } // -------------------------------------------------------------------------
-
-
 	  LNumber.prototype.toString = LNumber.prototype.toJSON = function (radix) {
-	    var prefix = minus_zero(this.value) ? '-' : '';
-
 	    if (radix > 2 && radix < 36) {
-	      return prefix + this.value.toString(radix);
+	      return this.value.toString(radix);
 	    }
 
-	    return prefix + this.value.toString();
+	    return this.value.toString();
 	  }; // -------------------------------------------------------------------------
 
 
@@ -7619,14 +7621,22 @@
 	            if (pair.cdr instanceof Pair) {
 	              if (pair.cdr.cdr !== nil) {
 	                if (pair.cdr.car instanceof Pair) {
-	                  return unpromise(recur(pair.cdr.cdr, unquote_cnt, max_unq), function (value) {
-	                    var unquoted = evaluate(pair.cdr.car, {
+	                  var list = nil; // evaluate all values in unquote
+
+	                  return function recur(node) {
+	                    if (node === nil) {
+	                      return list;
+	                    }
+
+	                    return unpromise(evaluate(node.car, {
 	                      env: self,
 	                      dynamic_scope: dynamic_scope,
 	                      error: error
+	                    }), function (next) {
+	                      list = new Pair(next, list);
+	                      return recur(node.cdr);
 	                    });
-	                    return new Pair(unquoted, value);
-	                  });
+	                  }(pair.cdr);
 	                } else {
 	                  return pair.cdr;
 	                }
@@ -9358,10 +9368,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 25 May 2020 10:44:31 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 25 May 2020 18:42:49 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 25 May 2020 10:44:31 +0000').valueOf();
+	    var date = LString('Mon, 25 May 2020 18:42:49 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9398,7 +9408,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 25 May 2020 10:44:31 +0000',
+	    date: 'Mon, 25 May 2020 18:42:49 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
