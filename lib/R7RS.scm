@@ -22,3 +22,18 @@
                          (== (length item) 3))
                     vars)))
         ,(if return? (cadr test)))))
+
+;; -----------------------------------------------------------------------------
+(define (list-match? predicate list)
+  (typecheck "list-match?" predicate #("function" "macro"))
+  (typecheck "list-match?" list "pair")
+  (or (or (null? list)
+          (null? (cdr list)))
+      (and (predicate (car list) (cadr list))
+           (list-match? predicate (cdr list)))))
+
+;; -----------------------------------------------------------------------------
+(define (symbol=? . args)
+  (list-match? (lambda (a b)
+                 (and (symbol? a) (symbol? b) (equal? a b)))
+               args))
