@@ -577,19 +577,12 @@
                 }
             }
         }
-        console.log(remove_list);
         tokens = tokens.slice();
         remove_list.reverse();
         for (const [begin, end] of remove_list) {
             tokens.splice(begin, end - begin);
         }
         return tokens;
-        for (let remove of remove_list) {
-            for (let i = remove[0]; i < remove[1]; ++i) {
-                delete tokens[i];
-            }
-        }
-        return tokens.filter(Boolean);
     }
     // ----------------------------------------------------------------------
     // :: Parser macros transformers

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 09 Jun 2020 09:07:03 +0000
+ * build: Tue, 09 Jun 2020 09:48:34 +0000
  */
 (function () {
 	'use strict';
@@ -1675,7 +1675,6 @@
 	      }
 	    }
 
-	    console.log(remove_list);
 	    tokens = tokens.slice();
 	    remove_list.reverse();
 
@@ -2282,8 +2281,8 @@
 
 	    var shift = settings.exceptions.shift;
 
-	    for (var _i4 = 0, _Object$entries = Object.entries(shift); _i4 < _Object$entries.length; _i4++) {
-	      var _Object$entries$_i = slicedToArray(_Object$entries[_i4], 2),
+	    for (var _i2 = 0, _Object$entries = Object.entries(shift); _i2 < _Object$entries.length; _i2++) {
+	      var _Object$entries$_i = slicedToArray(_Object$entries[_i2], 2),
 	          indent = _Object$entries$_i[0],
 	          tokens = _Object$entries$_i[1];
 
@@ -2962,8 +2961,8 @@
 
 	    var types = [RegExp, Nil, LSymbol, LNumber, LCharacter, Values];
 
-	    for (var _i5 = 0, _types = types; _i5 < _types.length; _i5++) {
-	      var _type2 = _types[_i5];
+	    for (var _i3 = 0, _types = types; _i3 < _types.length; _i3++) {
+	      var _type2 = _types[_i3];
 
 	      if (obj instanceof _type2) {
 	        return obj.toString();
@@ -8853,8 +8852,8 @@
 	      return 'syntax';
 	    }
 
-	    for (var _i6 = 0, _Object$entries2 = Object.entries(mapping); _i6 < _Object$entries2.length; _i6++) {
-	      var _Object$entries2$_i = slicedToArray(_Object$entries2[_i6], 2),
+	    for (var _i4 = 0, _Object$entries2 = Object.entries(mapping); _i4 < _Object$entries2.length; _i4++) {
+	      var _Object$entries2$_i = slicedToArray(_Object$entries2[_i4], 2),
 	          _key35 = _Object$entries2$_i[0],
 	          value = _Object$entries2$_i[1];
 
@@ -9426,10 +9425,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 09 Jun 2020 09:07:03 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 09 Jun 2020 09:48:34 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 09 Jun 2020 09:07:03 +0000').valueOf();
+	    var date = LString('Tue, 09 Jun 2020 09:48:34 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9466,7 +9465,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 09 Jun 2020 09:07:03 +0000',
+	    date: 'Tue, 09 Jun 2020 09:48:34 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
