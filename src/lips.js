@@ -6480,12 +6480,7 @@
             return !value;
         }, `(not object)
 
-            Function return negation of the argument.`),
-        '->': doc(function(obj, name, ...args) {
-            return obj[name](...args);
-        }, `(-> obj name . args)
-
-            Function get function from object and call it with arguments.`)
+            Function return negation of the argument.`)
     }, undefined, 'global');
     var user_env = global_env.inherit('user-env');
     global_env.set('**interaction-environment**', user_env);

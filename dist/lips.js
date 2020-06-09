@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 09 Jun 2020 09:48:34 +0000
+ * build: Tue, 09 Jun 2020 09:54:40 +0000
  */
 (function () {
 	'use strict';
@@ -8629,14 +8629,7 @@
 	      }
 
 	      return !value;
-	    }, "(not object)\n\n            Function return negation of the argument."),
-	    '->': doc(function (obj, name) {
-	      for (var _len33 = arguments.length, args = new Array(_len33 > 2 ? _len33 - 2 : 0), _key34 = 2; _key34 < _len33; _key34++) {
-	        args[_key34 - 2] = arguments[_key34];
-	      }
-
-	      return obj[name].apply(obj, args);
-	    }, "(-> obj name . args)\n\n            Function get function from object and call it with arguments.")
+	    }, "(not object)\n\n            Function return negation of the argument.")
 	  }, undefined$1, 'global');
 	  var user_env = global_env.inherit('user-env');
 	  global_env.set('**interaction-environment**', user_env); // -------------------------------------------------------------------------
@@ -8854,11 +8847,11 @@
 
 	    for (var _i4 = 0, _Object$entries2 = Object.entries(mapping); _i4 < _Object$entries2.length; _i4++) {
 	      var _Object$entries2$_i = slicedToArray(_Object$entries2[_i4], 2),
-	          _key35 = _Object$entries2$_i[0],
+	          _key34 = _Object$entries2$_i[0],
 	          value = _Object$entries2$_i[1];
 
 	      if (obj instanceof value) {
-	        return _key35;
+	        return _key34;
 	      }
 	    }
 
@@ -9425,10 +9418,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 09 Jun 2020 09:48:34 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 09 Jun 2020 09:54:40 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 09 Jun 2020 09:48:34 +0000').valueOf();
+	    var date = LString('Tue, 09 Jun 2020 09:54:40 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9465,7 +9458,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 09 Jun 2020 09:48:34 +0000',
+	    date: 'Tue, 09 Jun 2020 09:54:40 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

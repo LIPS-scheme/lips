@@ -8,6 +8,7 @@
 * new API `lips.Intepreter` - for using interpreter that have different stdout/stdin
 * balanced_parenthesis now throw exception on broken code
 * remove global env from public API (you can still access it using `env.parent`)
+* remove `->` function (it will collide with SRFI 197 that may be implemented in the future)
 ### Features
 * start implementing R5RS spec
 * streams example
