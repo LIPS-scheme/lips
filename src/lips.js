@@ -410,7 +410,7 @@
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||;.*)/g;
+    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||#;|;.*|#\|(?!\|#)[\s\S]*\|#)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
     // generate regex for all number literals
     var num_stre = [
@@ -423,7 +423,7 @@
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -532,7 +532,7 @@
         if (extra) {
             return tokens(str).map(formatter);
         } else {
-            return tokens(str).map(function(token) {
+            var result = tokens(str).map(function(token) {
                 var ret = formatter(token);
                 if (!ret || typeof ret.token !== 'string') {
                     throw new Error('[tokenize] Invalid formatter wrong return object');
@@ -543,9 +543,53 @@
                 }
                 return ret.token.trim();
             }).filter(function(token) {
-                return token && !token.match(/^;/);
+                return token && !token.match(/^;/) && !token.match(/^#\|[\s\S]*\|#$/);
             });
+            return strip_s_comments(result);
         }
+    }
+    // ----------------------------------------------------------------------
+    function strip_s_comments(tokens) {
+        var s_count = 0;
+        var s_start = null;
+        var remove_list = [];
+        for (let i = 0; i < tokens.length; ++i) {
+            const token = tokens[i];
+            if (token === '#;') {
+                if (['(', '['].includes(tokens[i + 1])) {
+                    s_count = 1;
+                    s_start = i;
+                } else {
+                    remove_list.push([i, i + 2]);
+                }
+                i += 1;
+                continue;
+            }
+            if (s_start !== null) {
+                if ([')', ']'].includes(token)) {
+                    s_count--;
+                } else if (['(', '['].includes(token)) {
+                    s_count++;
+                }
+                if (s_count === 0) {
+                    remove_list.push([s_start, i + 1]);
+                    s_start = null;
+                }
+            }
+        }
+        console.log(remove_list);
+        tokens = tokens.slice();
+        remove_list.reverse();
+        for (const [begin, end] of remove_list) {
+            tokens.splice(begin, end - begin);
+        }
+        return tokens;
+        for (let remove of remove_list) {
+            for (let i = remove[0]; i < remove[1]; ++i) {
+                delete tokens[i];
+            }
+        }
+        return tokens.filter(Boolean);
     }
     // ----------------------------------------------------------------------
     // :: Parser macros transformers

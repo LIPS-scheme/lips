@@ -1,5 +1,12 @@
 /**@license
- * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript - v. DEV
+ *   __ __                          __
+ *  / / \ \       _    _  ___  ___  \ \
+ * | |   \ \     | |  | || . \/ __>  | |
+ * | |    > \    | |_ | ||  _/\__ \  | |
+ * | |   / ^ \   |___||_||_|  <___/  | |
+ *  \_\ /_/ \_\                     /_/ v. DEV
+ *
+ * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
  * Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
@@ -24,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 25 May 2020 18:42:49 +0000
+ * build: Tue, 09 Jun 2020 09:07:03 +0000
  */
 (function () {
 	'use strict';
@@ -1472,7 +1479,7 @@
 	  /* eslint-disable */
 
 
-	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||;.*)/g;
+	  var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||#;|;.*|#\|(?!\|#)[\s\S]*\|#)/g;
 	  var string_re = /"(?:\\[\S\s]|[^"])*"?/g; // generate regex for all number literals
 
 	  var num_stre = [gen_complex_re, gen_rational_re, gen_integer_re].map(make_num_stre).join('|'); // ----------------------------------------------------------------------
@@ -1481,7 +1488,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|#;|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -1613,7 +1620,7 @@
 	    if (extra) {
 	      return tokens(str).map(formatter);
 	    } else {
-	      return tokens(str).map(function (token) {
+	      var result = tokens(str).map(function (token) {
 	        var ret = formatter(token);
 
 	        if (!ret || typeof ret.token !== 'string') {
@@ -1627,9 +1634,60 @@
 
 	        return ret.token.trim();
 	      }).filter(function (token) {
-	        return token && !token.match(/^;/);
+	        return token && !token.match(/^;/) && !token.match(/^#\|[\s\S]*\|#$/);
 	      });
+	      return strip_s_comments(result);
 	    }
+	  } // ----------------------------------------------------------------------
+
+
+	  function strip_s_comments(tokens) {
+	    var s_count = 0;
+	    var s_start = null;
+	    var remove_list = [];
+
+	    for (var i = 0; i < tokens.length; ++i) {
+	      var token = tokens[i];
+
+	      if (token === '#;') {
+	        if (['(', '['].includes(tokens[i + 1])) {
+	          s_count = 1;
+	          s_start = i;
+	        } else {
+	          remove_list.push([i, i + 2]);
+	        }
+
+	        i += 1;
+	        continue;
+	      }
+
+	      if (s_start !== null) {
+	        if ([')', ']'].includes(token)) {
+	          s_count--;
+	        } else if (['(', '['].includes(token)) {
+	          s_count++;
+	        }
+
+	        if (s_count === 0) {
+	          remove_list.push([s_start, i + 1]);
+	          s_start = null;
+	        }
+	      }
+	    }
+
+	    console.log(remove_list);
+	    tokens = tokens.slice();
+	    remove_list.reverse();
+
+	    for (var _i = 0, _remove_list = remove_list; _i < _remove_list.length; _i++) {
+	      var _remove_list$_i = slicedToArray(_remove_list[_i], 2),
+	          begin = _remove_list$_i[0],
+	          end = _remove_list$_i[1];
+
+	      tokens.splice(begin, end - begin);
+	    }
+
+	    return tokens;
 	  } // ----------------------------------------------------------------------
 	  // :: Parser macros transformers
 	  // ----------------------------------------------------------------------
@@ -2224,8 +2282,8 @@
 
 	    var shift = settings.exceptions.shift;
 
-	    for (var _i = 0, _Object$entries = Object.entries(shift); _i < _Object$entries.length; _i++) {
-	      var _Object$entries$_i = slicedToArray(_Object$entries[_i], 2),
+	    for (var _i4 = 0, _Object$entries = Object.entries(shift); _i4 < _Object$entries.length; _i4++) {
+	      var _Object$entries$_i = slicedToArray(_Object$entries[_i4], 2),
 	          indent = _Object$entries$_i[0],
 	          tokens = _Object$entries$_i[1];
 
@@ -2904,8 +2962,8 @@
 
 	    var types = [RegExp, Nil, LSymbol, LNumber, LCharacter, Values];
 
-	    for (var _i2 = 0, _types = types; _i2 < _types.length; _i2++) {
-	      var _type2 = _types[_i2];
+	    for (var _i5 = 0, _types = types; _i5 < _types.length; _i5++) {
+	      var _type2 = _types[_i5];
 
 	      if (obj instanceof _type2) {
 	        return obj.toString();
@@ -8795,8 +8853,8 @@
 	      return 'syntax';
 	    }
 
-	    for (var _i3 = 0, _Object$entries2 = Object.entries(mapping); _i3 < _Object$entries2.length; _i3++) {
-	      var _Object$entries2$_i = slicedToArray(_Object$entries2[_i3], 2),
+	    for (var _i6 = 0, _Object$entries2 = Object.entries(mapping); _i6 < _Object$entries2.length; _i6++) {
+	      var _Object$entries2$_i = slicedToArray(_Object$entries2[_i6], 2),
 	          _key35 = _Object$entries2$_i[0],
 	          value = _Object$entries2$_i[1];
 
@@ -9368,10 +9426,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 25 May 2020 18:42:49 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 09 Jun 2020 09:07:03 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 25 May 2020 18:42:49 +0000').valueOf();
+	    var date = LString('Tue, 09 Jun 2020 09:07:03 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9408,7 +9466,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 25 May 2020 18:42:49 +0000',
+	    date: 'Tue, 09 Jun 2020 09:07:03 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
