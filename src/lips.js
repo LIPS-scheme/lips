@@ -1,4 +1,11 @@
 /**@license
+ *   __ __                          __
+ *  / / \ \       _    _  ___  ___  \ \
+ * | |   \ \     | |  | || . \/ __>  | |
+ * | |    > \    | |_ | ||  _/\__ \  | |
+ * | |   / ^ \   |___||_||_|  <___/  | |
+ *  \_\ /_/ \_\                     /_/
+ *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
  * Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
