@@ -111,15 +111,15 @@
 
 
 
-(define (defstruct:unique item list)
+(define (defstruct:unique item lst)
   "check if item ocour only once."
   (typecheck "last" lst "pair" 2)
-  (== (length (filter (lambda (i) (eq? item i)) list)) 1))
+  (== (length (filter (lambda (i) (eq? item i)) lst)) 1))
 
-(define (defstruct:every-unique list)
+(define (defstruct:every-unique lst)
   "check if every element ocour only once."
   (typecheck "last" lst "pair")
-  (defstruct:every (lambda (item) (defstruct:unique item list)) list))
+  (defstruct:every (lambda (item) (defstruct:unique item lst)) lst))
 
 
 (define (struct? struct)
@@ -134,7 +134,7 @@
       '()
       (if (null? (cdr lst))
           (car lst)
-          (last (cdr lst)))))
+          (defstruct:last (cdr lst)))))
 
 (define (write-struct struct)
   "print structure."
@@ -155,7 +155,7 @@
                       (if (not (eq? field last))
                           (display " ")))
                     struct)
-        (display ">"))))
+        (display ">")))))
 
 (define (print-struct struct)
   (write-struct struct)
