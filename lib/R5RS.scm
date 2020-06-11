@@ -414,7 +414,7 @@
   "(memq obj list)
 
    Function return first object in the list that match using eq? function."
-  (typecheck "memq" list (vector "nil" "pair"))
+  (typecheck "memq" list '("nil" "pair"))
   (%mem/search car eq? obj list ))
 
 ;; -----------------------------------------------------------------------------
@@ -422,7 +422,7 @@
   "(memv obj list)
 
    Function return first object in the list that match using eqv? function."
-  (typecheck "memv" list (vector "nil" "pair"))
+  (typecheck "memv" list '("nil" "pair"))
   (%mem/search car eqv? obj list))
 
 ;; -----------------------------------------------------------------------------
@@ -430,7 +430,7 @@
   "(member obj list)
 
    Function return first object in the list that match using equal? function."
-  (typecheck "member" list (vector "nil" "pair"))
+  (typecheck "member" list '("nil" "pair"))
   (%mem/search car equal? obj list))
 
 ;; -----------------------------------------------------------------------------
@@ -1001,3 +1001,29 @@
       (set! l (cdr l))
       (set! k (- k 1)))
     l))
+
+;; -----------------------------------------------------------------------------
+(define-macro (case val . list)
+  "(case value
+        ((<items>) result1)
+        ((<items>) result2)
+        [else result3])
+
+   Macro for switch case statement. It test if value is any of the item. If
+   item match the value it will return coresponding result expression value.
+   If no value match and there is else it will return that result."
+  (if (pair? list)
+      (let* ((item (car list))
+             (first (car item))
+             (result (cadr item))
+             (rest (cdr list))
+             (value (gensym)))
+        `(let ((,value ,val))
+           (if (member ,value ',first)
+               ,result
+               ,(if (and (pair? rest)
+                         (eq? (caar rest) 'else))
+                    'xxx
+                    (if (not (null? rest))
+                        `(case ,value ,@rest))))))
+      nil))
