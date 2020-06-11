@@ -31,9 +31,14 @@
 (test "numbers: literals"
       (lambda (t)
 
+        (t.is (number->string (. (lips.parse "#i1e10") 0)) "10000000000.0")
+        (t.is (number->string (. (lips.parse "#i1e+10") 0)) "10000000000.0")
         (t.is (number->string (. (lips.parse "1e10") 0)) "10000000000")
         (t.is (number->string (. (lips.parse "#e1e10") 0)) "10000000000")
         (t.is (number->string (. (lips.parse "#e1e+10") 0)) "10000000000")
+        (t.is (number->string (. (lips.parse "1.2e+20") 0)) "120000000000000000000")
+        (t.is (number->string (. (lips.parse "1.2e+100") 0)) "1.2e+100")
+        (t.is (number->string (. (lips.parse "#e1.2e+100") 0)) "12000000000000000579368471762264830745925351641438118996218960879725310776966939220757021024069877760")
         (t.is (number->string (. (lips.parse "#i1e+100") 0)) "1.0e+100")
         (t.is (number->string (. (lips.parse "#i1e-100") 0)) "1.0e-100")
         (t.is (number->string (. (lips.parse "1.2e-100") 0)) "1.2e-100")

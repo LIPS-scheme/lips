@@ -327,6 +327,10 @@
         return LComplex({ im, re });
     }
     // ----------------------------------------------------------------------
+    function is_int(value) {
+        return parseInt(value.toString(), 10) === value;
+    }
+    // ----------------------------------------------------------------------
     function parse_float(arg) {
         var parse = num_pre_parse(arg);
         var value = parseFloat(parse.number);
@@ -337,6 +341,11 @@
             if (parse.exact && simple_number) {
                 return LNumber(value);
             }
+            // positive big num that parse to int e.g.: 1.2e+20
+            if (is_int(value) && parse.number.match(/e\+?[0-9]/i)) {
+                return LNumber(value);
+            }
+            // too big we calculate power of 10 by hand
             if (big_num_match) {
                 var factor = LNumber(parseInt(big_num_match[2], 10));
                 if (factor.cmp(0) === 1) {
