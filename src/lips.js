@@ -227,7 +227,7 @@
     const complex_re = make_type_re(gen_complex_re);
     const rational_re = make_type_re(gen_rational_re);
     const int_re = make_type_re(gen_integer_re);
-    const big_num_re = /^[+-]?[0-9]+[eE][+-][0-9]+$/;
+    const big_num_re = /^([+-]?[0-9]+)[eE]([+-]?[0-9]+)$/;
     const pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
     /* eslint-enable */
     function num_pre_parse(arg) {
@@ -330,10 +330,19 @@
     function parse_float(arg) {
         var parse = num_pre_parse(arg);
         var value = parseFloat(parse.number);
-        var simple_number = parse.number.match(/\.0$/) || !parse.number.match(/\./);
-        if (!parse.inexact && ((parse.exact && simple_number) ||
-                               parse.number.match(big_num_re))) {
-            return LNumber(value);
+        var big_num_match = parse.number.match(big_num_re);
+        var simple_number = (parse.number.match(/\.0$/) || !parse.number.match(/\./)) && !big_num_match;
+        if (!parse.inexact) {
+            if (parse.exact && simple_number) {
+                return LNumber(value);
+            }
+            if (big_num_match) {
+                var factor = LNumber(parseInt(big_num_match[2]));
+                if (factor.cmp(0) === 1) {
+                    factor = LNumber(10).pow(factor);
+                    return LNumber(parseInt(big_num_match[1])).mul(factor);
+                }
+            }
         }
         value = LFloat(value, true);
         if (parse.exact) {
@@ -3381,10 +3390,11 @@
     LFloat.prototype.constructor = LFloat;
     // -------------------------------------------------------------------------
     LFloat.prototype.toString = function() {
-        if (!LNumber.isFloat(this.value)) {
-            return this.value + '.0';
+        var str =  this.value.toString();
+        if (!LNumber.isFloat(this.value) && !str.match(/e/i)) {
+            return str + '.0';
         }
-        return this.value.toString();
+        return str.replace(/^([0-9]+)e/, '$1.0e');
     };
     // -------------------------------------------------------------------------
     LFloat.prototype._op = function(op, n) {

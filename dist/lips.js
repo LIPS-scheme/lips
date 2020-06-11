@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 09 Jun 2020 09:54:40 +0000
+ * build: Thu, 11 Jun 2020 09:27:32 +0000
  */
 (function () {
 	'use strict';
@@ -1259,7 +1259,7 @@
 	  var complex_re = make_type_re(gen_complex_re);
 	  var rational_re = make_type_re(gen_rational_re);
 	  var int_re = make_type_re(gen_integer_re);
-	  var big_num_re = /^[+-]?[0-9]+[eE][+-][0-9]+$/;
+	  var big_num_re = /^([+-]?[0-9]+)[eE]([+-]?[0-9]+)$/;
 	  var pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
 	  /* eslint-enable */
 
@@ -1388,10 +1388,22 @@
 	  function parse_float(arg) {
 	    var parse = num_pre_parse(arg);
 	    var value = parseFloat(parse.number);
-	    var simple_number = parse.number.match(/\.0$/) || !parse.number.match(/\./);
+	    var big_num_match = parse.number.match(big_num_re);
+	    var simple_number = (parse.number.match(/\.0$/) || !parse.number.match(/\./)) && !big_num_match;
 
-	    if (!parse.inexact && (parse.exact && simple_number || parse.number.match(big_num_re))) {
-	      return LNumber(value);
+	    if (!parse.inexact) {
+	      if (parse.exact && simple_number) {
+	        return LNumber(value);
+	      }
+
+	      if (big_num_match) {
+	        var factor = LNumber(parseInt(big_num_match[2]));
+
+	        if (factor.cmp(0) === 1) {
+	          factor = LNumber(10).pow(factor);
+	          return LNumber(parseInt(big_num_match[1])).mul(factor);
+	        }
+	      }
 	    }
 
 	    value = LFloat(value);
@@ -5255,11 +5267,13 @@
 	  LFloat.prototype.constructor = LFloat; // -------------------------------------------------------------------------
 
 	  LFloat.prototype.toString = function () {
-	    if (!LNumber.isFloat(this.value)) {
-	      return this.value + '.0';
+	    var str = this.value.toString();
+
+	    if (!LNumber.isFloat(this.value) && !str.match(/e/i)) {
+	      return str + '.0';
 	    }
 
-	    return this.value.toString();
+	    return str.replace(/^([0-9]+)e/, '$1.0e');
 	  }; // -------------------------------------------------------------------------
 
 
@@ -9418,10 +9432,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 09 Jun 2020 09:54:40 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 11 Jun 2020 09:27:32 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 09 Jun 2020 09:54:40 +0000').valueOf();
+	    var date = LString('Thu, 11 Jun 2020 09:27:32 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9458,7 +9472,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 09 Jun 2020 09:54:40 +0000',
+	    date: 'Thu, 11 Jun 2020 09:27:32 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
