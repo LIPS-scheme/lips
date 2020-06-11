@@ -331,16 +331,17 @@
         var parse = num_pre_parse(arg);
         var value = parseFloat(parse.number);
         var big_num_match = parse.number.match(big_num_re);
-        var simple_number = (parse.number.match(/\.0$/) || !parse.number.match(/\./)) && !big_num_match;
+        var simple_number = (parse.number.match(/\.0$/) ||
+                             !parse.number.match(/\./)) && !big_num_match;
         if (!parse.inexact) {
             if (parse.exact && simple_number) {
                 return LNumber(value);
             }
             if (big_num_match) {
-                var factor = LNumber(parseInt(big_num_match[2]));
+                var factor = LNumber(parseInt(big_num_match[2], 10));
                 if (factor.cmp(0) === 1) {
                     factor = LNumber(10).pow(factor);
-                    return LNumber(parseInt(big_num_match[1])).mul(factor);
+                    return LNumber(parseInt(big_num_match[1], 10)).mul(factor);
                 }
             }
         }
@@ -3390,7 +3391,7 @@
     LFloat.prototype.constructor = LFloat;
     // -------------------------------------------------------------------------
     LFloat.prototype.toString = function() {
-        var str =  this.value.toString();
+        var str = this.value.toString();
         if (!LNumber.isFloat(this.value) && !str.match(/e/i)) {
             return str + '.0';
         }
