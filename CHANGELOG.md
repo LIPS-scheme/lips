@@ -42,6 +42,8 @@
 * new `string=?`, `sort`, `in`, `list-tail` and `bound?` functions
 * add new `exit` function into executable interpreter
 * -e/eval option (help and docs will show new options, instead of -c/code but old still works)
+* `case` macro
+* relative load inside load + auto .scm suffix
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
@@ -60,6 +62,7 @@
 * fix repr of native object instances (e.g.: `Uint8Array`)
 * fix display/write without newline in both REPLs
 * fix evaluating single false value
+
 
 ## 0.20.1
 ### Bug fixes

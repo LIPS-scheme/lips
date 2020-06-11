@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 11 Jun 2020 17:28:10 +0000
+ * build: Thu, 11 Jun 2020 21:19:34 +0000
  */
 (function () {
 	'use strict';
@@ -7040,15 +7040,34 @@
 	        env = this.get('**interaction-environment**');
 	      }
 
+	      var PATH = '**module-path**';
+	      var module_path = global_env.get(PATH, {
+	        throwError: false
+	      });
+	      file = file.valueOf();
+
+	      if (!file.match(/.scm$/)) {
+	        file += '.scm';
+	      }
+
 	      if (typeof this.get('global', {
 	        throwError: false
 	      }) !== 'undefined') {
 	        return new Promise(function (resolve, reject) {
-	          require('fs').readFile(file.valueOf(), function (err, data) {
+	          var path = require('path');
+
+	          if (module_path) {
+	            file = path.join(module_path, file);
+	          }
+
+	          env.set(PATH, path.dirname(file));
+
+	          require('fs').readFile(file, function (err, data) {
 	            if (err) {
 	              reject(err);
 	            } else {
 	              exec(data.toString(), env).then(function () {
+	                env.set(PATH, module_path);
 	                resolve();
 	              });
 	            }
@@ -7056,11 +7075,19 @@
 	        });
 	      }
 
+	      if (module_path) {
+	        module_path = module_path.valueOf();
+	        file = module_path + '/' + file.replace(/^\.?\/?/, '');
+	      }
+
 	      return root.fetch(file).then(function (res) {
 	        return res.text();
 	      }).then(function (code) {
+	        global_env.set(PATH, file.replace(/\/[^\/]*$/, ''));
 	        return exec(code, env);
-	      }).then(function () {});
+	      }).then(function () {})["finally"](function () {
+	        global_env.set(PATH, module_path);
+	      });
 	    }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
 	    // ------------------------------------------------------------------
 	    'while': doc(new Macro('while', function (code, _ref15) {
@@ -8022,6 +8049,12 @@
 	    'typecheck': doc(function (label, arg, expected, position) {
 	      if (expected instanceof Pair) {
 	        expected = expected.toArray();
+	      }
+
+	      if (expected instanceof Array) {
+	        expected = expected.map(function (x) {
+	          return x.valueOf();
+	        });
 	      }
 
 	      typecheck(label, arg, expected, position);
@@ -9501,10 +9534,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 11 Jun 2020 17:28:10 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 11 Jun 2020 21:19:34 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 11 Jun 2020 17:28:10 +0000').valueOf();
+	    var date = LString('Thu, 11 Jun 2020 21:19:34 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9541,7 +9574,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 11 Jun 2020 17:28:10 +0000',
+	    date: 'Thu, 11 Jun 2020 21:19:34 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

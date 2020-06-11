@@ -4811,22 +4811,40 @@
             } else {
                 env = this.get('**interaction-environment**');
             }
+            const PATH = '**module-path**';
+            var module_path = global_env.get(PATH, { throwError: false });
+            file = file.valueOf();
+            if (!file.match(/.scm$/)) {
+                file += '.scm';
+            }
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
-                    require('fs').readFile(file.valueOf(), function(err, data) {
+                    var path = require('path');
+                    if (module_path) {
+                        file = path.join(module_path, file);
+                    }
+                    env.set(PATH, path.dirname(file));
+                    require('fs').readFile(file, function(err, data) {
                         if (err) {
                             reject(err);
                         } else {
                             exec(data.toString(), env).then(() => {
+                                env.set(PATH, module_path);
                                 resolve();
                             });
                         }
                     });
                 });
             }
+            if (module_path) {
+                module_path = module_path.valueOf();
+                file = module_path + '/' + file.replace(/^\.?\/?/, '');
+            }
             return root.fetch(file).then(res => res.text()).then((code) => {
+                global_env.set(PATH, file.replace(/\/[^\/]*$/, ''));
                 return exec(code, env);
-            }).then(() => {
+            }).then(() => {}).finally(() => {
+                global_env.set(PATH, module_path);
             });
         }, `(load filename)
 
@@ -5779,6 +5797,9 @@
         'typecheck': doc(function(label, arg, expected, position) {
             if (expected instanceof Pair) {
                 expected = expected.toArray();
+            }
+            if (expected instanceof Array) {
+                expected = expected.map(x => x.valueOf());
             }
             typecheck(label, arg, expected, position);
         }, `(typecheck label value type [position])
