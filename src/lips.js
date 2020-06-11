@@ -89,10 +89,14 @@
     // -------------------------------------------------------------------------
     /* eslint-disable */
     function log(x, regex = null) {
+        var literal = arguments[1] === true;
         function msg(x) {
             var value = global_env.get('repr')(x);
-            if (regex === null || regex.test(value)) {
+            if (regex === null || regex instanceof RegExp && regex.test(value)) {
                 console.log(global_env.get('type')(x) + ": " + value);
+            }
+            if (literal) {
+                console.log(x);
             }
         }
         if (isPromise(x)) {
@@ -3500,11 +3504,16 @@
         if (!LNumber.isRational(n)) {
             throw new Error('Invalid constructor call for LRational');
         }
-        if (n.num % n.denom === 0 && !force) {
-            return LNumber(n.num / n.denom);
+        var num = LNumber(n.num);
+        var denom = LNumber(n.denom);
+        if (!force) {
+            var is_integer = num.op('%', denom) === 0;
+            if (is_integer) {
+                return LNumber(num.div(denom));
+            }
         }
-        this.num = LNumber(n.num);
-        this.denom = LNumber(n.denom);
+        this.num = num;
+        this.denom = denom;
         this.type = 'rational';
     }
     // -------------------------------------------------------------------------
@@ -3693,7 +3702,7 @@
                 op = LBigInteger.bn_op[op];
                 return LBigInteger(this.value.clone()[op](), false);
             }
-            return LBigInteger(LNumber._ops[op](this.value));
+            return LBigInteger(LNumber._ops[op](this.value), true);
         }
         if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
             op = LBigInteger.bn_op[op];
@@ -3704,7 +3713,7 @@
         }
         // use native calucaltion becuase it's real bigint value
         const ret = LNumber._ops[op](this.value, n.value);
-        return LBigInteger(ret);
+        return LBigInteger(ret, true);
     };
     // -------------------------- -----------------------------------------------
     LBigInteger.prototype.sqrt = function() {

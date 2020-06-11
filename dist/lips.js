@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 11 Jun 2020 16:10:42 +0000
+ * build: Thu, 11 Jun 2020 17:28:10 +0000
  */
 (function () {
 	'use strict';
@@ -5417,12 +5417,19 @@
 	      throw new Error('Invalid constructor call for LRational');
 	    }
 
-	    if (n.num % n.denom === 0 && !force) {
-	      return LNumber(n.num / n.denom);
+	    var num = LNumber(n.num);
+	    var denom = LNumber(n.denom);
+
+	    if (!force) {
+	      var is_integer = num.op('%', denom) === 0;
+
+	      if (is_integer) {
+	        return LNumber(num.div(denom));
+	      }
 	    }
 
-	    this.num = LNumber(n.num);
-	    this.denom = LNumber(n.denom);
+	    this.num = num;
+	    this.denom = denom;
 	    this.type = 'rational';
 	  } // -------------------------------------------------------------------------
 
@@ -5688,7 +5695,7 @@
 	        return LBigInteger(this.value.clone()[op](), false);
 	      }
 
-	      return LBigInteger(LNumber._ops[op](this.value));
+	      return LBigInteger(LNumber._ops[op](this.value), true);
 	    }
 
 	    if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
@@ -5706,7 +5713,7 @@
 
 	    var ret = LNumber._ops[op](this.value, n.value);
 
-	    return LBigInteger(ret);
+	    return LBigInteger(ret, true);
 	  }; // -------------------------- -----------------------------------------------
 
 
@@ -9494,10 +9501,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 11 Jun 2020 16:10:42 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 11 Jun 2020 17:28:10 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 11 Jun 2020 16:10:42 +0000').valueOf();
+	    var date = LString('Thu, 11 Jun 2020 17:28:10 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9534,7 +9541,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 11 Jun 2020 16:10:42 +0000',
+	    date: 'Thu, 11 Jun 2020 17:28:10 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
