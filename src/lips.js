@@ -331,26 +331,41 @@
         return parseInt(value.toString(), 10) === value;
     }
     // ----------------------------------------------------------------------
+    function parse_big_int(str) {
+        var num_match = str.match(/^(([-+]?[0-9]*)(?:\.([0-9]+))?)e([-+]?[0-9]+)/i);
+        if (num_match) {
+            var exponent = parseInt(num_match[4]);
+            var mantisa = parseFloat(num_match[1], 10);
+            var decimal_points = num_match[3] && num_match[3].length;
+            if (decimal_points && decimal_points < Math.abs(exponent)) {
+                mantisa *= Math.pow(10, decimal_points);
+                exponent += decimal_points * (exponent > 0 ? -1 : 1);
+            }
+        }
+        return { exponent, mantisa };
+    }
+    // ----------------------------------------------------------------------
     function parse_float(arg) {
         var parse = num_pre_parse(arg);
         var value = parseFloat(parse.number);
-        var big_num_match = parse.number.match(big_num_re);
         var simple_number = (parse.number.match(/\.0$/) ||
-                             !parse.number.match(/\./)) && !big_num_match;
+                             !parse.number.match(/\./)) && !parse.number.match(/e/i);
         if (!parse.inexact) {
             if (parse.exact && simple_number) {
                 return LNumber(value);
             }
-            // positive big num that parse to int e.g.: 1.2e+20
+            // positive big num that eval to int e.g.: 1.2e+20
             if (is_int(value) && parse.number.match(/e\+?[0-9]/i)) {
                 return LNumber(value);
             }
-            // too big we calculate power of 10 by hand
-            if (big_num_match) {
-                var factor = LNumber(parseInt(big_num_match[2], 10));
-                if (factor.cmp(0) === 1) {
-                    factor = LNumber(10).pow(factor);
-                    return LNumber(parseInt(big_num_match[1], 10)).mul(factor);
+            // calculate big int and big fration by hand - it don't fit into JS float
+            var { mantisa, exponent } = parse_big_int(parse.number);
+            if (mantisa !== undefined && exponent !== undefined) {
+                var factor = LNumber(10).pow(LNumber(Math.abs(exponent)));
+                if (parse.exact && exponent < 0) {
+                    return LRational({ num: mantisa, denom: factor });
+                } else if (exponent > 0) {
+                    return LNumber(mantisa).mul(factor);
                 }
             }
         }
@@ -3533,12 +3548,17 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.toString = function() {
-        var gdc = global_env.get('gdc')(this.num, this.denom);
+        var gdc = this.num.gdc(this.denom);
         var num, denom;
         if (gdc.cmp(1) !== 0) {
-            gdc = LNumber(gdc);
             num = this.num.div(gdc);
+            if (num instanceof LRational) {
+                num = LNumber(num.valueOf(true));
+            }
             denom = this.denom.div(gdc);
+            if (denom instanceof LRational) {
+                denom = LNumber(denom.valueOf(true));
+            }
         } else {
             num = this.num;
             denom = this.denom;
@@ -3551,10 +3571,13 @@
         } else if (num.cmp(denom) === 0) {
             return num.toString();
         }
-        return num + '/' + denom;
+        return num.toString() + '/' + denom.toString();
     };
     // -------------------------------------------------------------------------
-    LRational.prototype.valueOf = function() {
+    LRational.prototype.valueOf = function(exact) {
+        if (exact) {
+            return LNumber._ops['/'](this.num.value, this.denom.value);
+        }
         return LFloat(this.num.valueOf()).div(this.denom.valueOf());
     };
     // -------------------------------------------------------------------------
@@ -3696,6 +3719,27 @@
             return LComplex({ re: 0, im: value });
         }
         return value;
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.gdc = function(b) {
+        // ref: https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
+        var a = this.abs();
+        b = b.abs();
+        if (b.cmp(a) === 1) {
+            var temp = a;
+            a = b;
+            b = temp;
+        }
+        while (true) {
+            a = a.rem(b);
+            if (a.cmp(0) === 0) {
+                return b;
+            }
+            b = b.rem(a);
+            if (b.cmp(0) === 0) {
+                return a;
+            }
+        }
     };
     // -------------------------------------------------------------------------
     LNumber.isFloat = function isFloat(n) {
@@ -6193,20 +6237,9 @@
              (define add12 (add 2))
              (display (add12 3 4))`),
         'gdc': doc(function GCD(...args) {
-            // implementation based on
-            // https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
-            var i, y,
-                n = args.length,
-                x = abs(args[0]);
-            for (i = 1; i < n; i++) {
-                y = abs(args[i]);
-
-                while (x && y) {
-                    (x > y) ? x %= y : y %= x;
-                }
-                x += y;
-            }
-            return LNumber(x);
+            return args.reduce(function(result, item) {
+                return result.gdc(item);
+            });
         }, `(gdc n1 n2 ...)
 
             Function return the greatest common divisor of their arguments.`),
