@@ -204,17 +204,19 @@ if (options.version || options.V) {
     });
 } else if (options.h || options.help) {
     var name = process.argv[1];
-    console.log(format('%s\nusage:\n%s [-h]|[-c <code>]|<filename>\n\n\t[-h --help] this help message' +
-                       '\n\t[-e --eval] execute code\n\t[--version -V] Display version information ' +
-                       'according to srfi-176\n\nif called without arguments it will run REPL and if' +
-                       'called with one argument\nit will treat it as filename and execute it.', banner, name));
+    var intro = banner.replace(/(me>\n)[\s\S]+$/, '$1');
+    console.log(format('%s\nusage:\n%s [-q] | -h | -c <code> | <filename>\n\n\t[-h --help] this helpmess' +
+                       'age\n\t[-e --eval] execute code\n\t[--version -V] Display version information ac' +
+                       'cording to srfi-176\n\t[-q --quiet] don\'t display banner in REPL\n\nif called w' +
+                       'ithout arguments it will run REPL and ifcalled with one argument\nit will treat ' +
+                       'it as filename and execute it.', intro, name));
 } else {
-    if (process.stdin.isTTY) {
+    if (process.stdin.isTTY && !options.q && !options.quiet) {
         console.log(banner);
     }
     var prompt = 'lips> ';
     var continuePrompt = '... ';
-    var terminal = !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS)
+    var terminal = !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS);
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -232,7 +234,8 @@ if (options.version || options.V) {
     var prev_eval = Promise.resolve();
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
-            code += line.replace(/^\s+/, '') + '\n';
+            line = line.replace(/^\s+/, '');
+            code += line + '\n';
             try {
                 if (balanced_parenthesis(code)) {
                     rl.pause();
