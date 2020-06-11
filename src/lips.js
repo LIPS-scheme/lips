@@ -334,8 +334,8 @@
     function parse_big_int(str) {
         var num_match = str.match(/^(([-+]?[0-9]*)(?:\.([0-9]+))?)e([-+]?[0-9]+)/i);
         if (num_match) {
-            var exponent = parseInt(num_match[4]);
-            var mantisa = parseFloat(num_match[1], 10);
+            var exponent = parseInt(num_match[4], 10);
+            var mantisa = parseFloat(num_match[1]);
             var decimal_points = num_match[3] && num_match[3].length;
             if (decimal_points && decimal_points < Math.abs(exponent)) {
                 mantisa *= Math.pow(10, decimal_points);
@@ -3706,7 +3706,7 @@
         const ret = LNumber._ops[op](this.value, n.value);
         return LBigInteger(ret);
     };
-    // -------------------------------------------------------------------------
+    // -------------------------- -----------------------------------------------
     LBigInteger.prototype.sqrt = function() {
         var value;
         var minus = this.cmp(0) < 0;

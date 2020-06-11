@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 11 Jun 2020 15:58:51 +0000
+ * build: Thu, 11 Jun 2020 16:10:42 +0000
  */
 (function () {
 	'use strict';
@@ -1393,8 +1393,8 @@
 	    var num_match = str.match(/^(([-+]?[0-9]*)(?:\.([0-9]+))?)e([-+]?[0-9]+)/i);
 
 	    if (num_match) {
-	      var exponent = parseInt(num_match[4]);
-	      var mantisa = parseFloat(num_match[1], 10);
+	      var exponent = parseInt(num_match[4], 10);
+	      var mantisa = parseFloat(num_match[1]);
 	      var decimal_points = num_match[3] && num_match[3].length;
 
 	      if (decimal_points && decimal_points < Math.abs(exponent)) {
@@ -5707,7 +5707,7 @@
 	    var ret = LNumber._ops[op](this.value, n.value);
 
 	    return LBigInteger(ret);
-	  }; // -------------------------------------------------------------------------
+	  }; // -------------------------- -----------------------------------------------
 
 
 	  LBigInteger.prototype.sqrt = function () {
@@ -9494,10 +9494,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 11 Jun 2020 15:58:51 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 11 Jun 2020 16:10:42 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 11 Jun 2020 15:58:51 +0000').valueOf();
+	    var date = LString('Thu, 11 Jun 2020 16:10:42 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9534,7 +9534,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 11 Jun 2020 15:58:51 +0000',
+	    date: 'Thu, 11 Jun 2020 16:10:42 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
