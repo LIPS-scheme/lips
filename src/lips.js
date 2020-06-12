@@ -4841,7 +4841,7 @@
                 file = module_path + '/' + file.replace(/^\.?\/?/, '');
             }
             return root.fetch(file).then(res => res.text()).then((code) => {
-                global_env.set(PATH, file.replace(/\/[^\/]*$/, ''));
+                global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
                 return exec(code, env);
             }).then(() => {}).finally(() => {
                 global_env.set(PATH, module_path);

@@ -1023,7 +1023,10 @@
                ,result
                ,(if (and (pair? rest)
                          (eq? (caar rest) 'else))
-                    'xxx
+                    (cadar rest)
                     (if (not (null? rest))
                         `(case ,value ,@rest))))))
       nil))
+
+;; -----------------------------------------------------------------------------
+(--> lips.Formatter.defaults.exceptions.specials (push "case")) ;; 2 indent
