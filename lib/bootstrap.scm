@@ -490,3 +490,7 @@
     (typecheck "sort" list "pair")
     (typecheck "sort" predicate "function")
     (qsort list predicate)))
+
+
+(let ((a 10))
+  (+ a a))

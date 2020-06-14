@@ -442,9 +442,11 @@
     }
     // ----------------------------------------------------------------------
     function is_symbol_string(str) {
-        return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/['"]/) ||
-                 str.match(int_re) || str.match(float_re) ||
-                 ['nil', 'true', 'false'].includes(str));
+        return !(['(', ')'].includes(str) || str.match(re_re) ||
+                 str.match(/^"[\s\S]+"$/) || str.match(int_re) ||
+                 str.match(float_re) || str.match(complex_re) ||
+                 str.match(rational_re) ||
+                 ['#t', '#f', 'nil', 'true', 'false'].includes(str));
     }
     // ----------------------------------------------------------------------
     /* eslint-disable */
@@ -963,14 +965,18 @@
             function not_symbol_match() {
                 return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
             }
+            function match_next() {
+                var next_pattern = pattern[p + 1];
+                var next_input = input[i + 1];
+                if (next_pattern !== undefined && next_input !== undefined) {
+                    return inner_match([next_pattern], [next_input]);
+                }
+            }
             var p = 0;
             var glob = {};
             for (var i = 0; i < input.length; ++i) {
                 if (typeof pattern[p] === 'undefined') {
                     return i;
-                }
-                if (!input[i].trim()) {
-                    continue;
                 }
                 if (pattern[p] instanceof Pattern) {
                     if (pattern[p].flag === '+') {
@@ -1008,17 +1014,17 @@
                     }
                 } else if (typeof pattern[p] === 'symbol') {
                     if (pattern[p] === Symbol.for('*')) {
-                        // ignore S-expressions inside for case when next pattern is ')'
+                        // ignore S-expressions inside for case when next pattern is )
                         glob[p] = glob[p] || 0;
-                        if (input[i] === '(') {
+                        if (['(', '['].includes(input[i])) {
                             glob[p]++;
-                        } else if (input[i] === ')') {
+                        } else if ([')', ']'].includes(input[i])) {
                             glob[p]--;
                         }
                         if (empty_match()) {
                             i -= 1;
                         } else if ((typeof pattern[p + 1] !== 'undefined' &&
-                                    glob[p] === 0 && pattern[p + 1] !== input[i + 1]) ||
+                                    glob[p] === 0 && match_next() === -1) ||
                                    glob[p] > 0) {
                             continue;
                         }
@@ -1202,7 +1208,7 @@
     var p_o = /[[(]/;
     var p_e = /[\])]/;
     var not_p = /[^()[\]]/;
-    const not_paren = new Ahead(/[^)\]]/);
+    const not_close = new Ahead(/[^)\]]/);
     const glob = Symbol.for('*');
     const sexp = new Pattern([p_o, glob, p_e], '+');
     const symbol = new Pattern([Symbol.for('symbol')], '?');
@@ -1212,20 +1218,20 @@
     var let_re = /^(let|let\*|letrec|let-env)(:?-syntax)?$/;
     Formatter.rules = [
         [[p_o, 'begin'], 1],
-        [[p_o, 'begin', sexp], 1, not_paren],
+        [[p_o, 'begin', sexp], 1, not_close],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
-        [[p_o, let_re, symbol, p_o, let_value], 2, not_paren],
-        [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_paren],
-        [[/(?!lambda)/, p_o, glob, p_e], 1, not_paren],
-        [[p_o, 'if', not_p], 1, not_paren],
+        [[p_o, let_re, symbol, p_o, let_value], 2, not_close],
+        [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
+        [[/(?!lambda)/, p_o, glob, p_e], 1, not_close],
+        [[p_o, 'if', not_p], 1, not_close],
         [[p_o, 'if', not_p, glob], 1],
         [[p_o, 'if', [p_o, glob, p_e]], 1],
         [[p_o, 'if', [p_o, glob, p_e], not_p], 1],
-        [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_paren],
+        [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
         [[p_o, [p_o, glob, p_e], string_re], 1],
         [[p_o, def_lambda_re, p_o, glob, p_e], 1],
-        [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_paren],
-        [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_paren]
+        [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close],
+        [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
@@ -1246,6 +1252,7 @@
             var sub = tokens.slice(0, i);
             var sexp = {};
             rules.map(b => b[1]).forEach(count => {
+                count = count.valueOf();
                 if (!sexp[count]) {
                     sexp[count] = previousSexp(sub, count);
                 }
@@ -6693,7 +6700,7 @@
     }
     // -------------------------------------------------------------------------
     function typeErrorMessage(fn, got, expected, position = null) {
-        let postfix = fn ? ` in function \`${fn}\`` : '';
+        let postfix = fn ? ` in expression \`${fn}\`` : '';
         if (position !== null) {
             postfix += ` argument ${position}`;
         }

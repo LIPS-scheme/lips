@@ -1003,6 +1003,7 @@
     l))
 
 ;; -----------------------------------------------------------------------------
+
 (define-macro (case val . list)
   "(case value
         ((<items>) result1)
@@ -1012,21 +1013,24 @@
    Macro for switch case statement. It test if value is any of the item. If
    item match the value it will return coresponding result expression value.
    If no value match and there is else it will return that result."
-  (if (pair? list)
-      (let* ((item (car list))
-             (first (car item))
-             (result (cadr item))
-             (rest (cdr list))
-             (value (gensym)))
-        `(let ((,value ,val))
-           (if (member ,value ',first)
-               ,result
-               ,(if (and (pair? rest)
-                         (eq? (caar rest) 'else))
-                    (cadar rest)
-                    (if (not (null? rest))
-                        `(case ,value ,@rest))))))
-      nil))
+  (let ((value (gensym))
+        (fn (gensym)))
+    `(let ((,value ,val))
+       ,(let iter ((list list))
+          (if (pair? list)
+              (let* ((item (car list))
+                     (first (car item))
+                     (result (cadr item))
+                     (rest (cdr list)))
+                 `(if (memv ,value ',first)
+                      ,result
+                      ,(if (and (pair? rest)
+                                (eq? (caar rest) 'else))
+                           `(let ((,fn ,(cadar rest)))
+                              (typecheck "case" ,fn "function")
+                              (,fn ,value))
+                           (if (not (null? rest))
+                               (iter rest))))))))))
 
 ;; -----------------------------------------------------------------------------
 (--> lips.Formatter.defaults.exceptions.specials (push "case")) ;; 2 indent

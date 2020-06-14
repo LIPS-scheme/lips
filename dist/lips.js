@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 12 Jun 2020 14:54:04 +0000
+ * build: Sun, 14 Jun 2020 06:35:48 +0000
  */
 (function () {
 	'use strict';
@@ -1523,7 +1523,7 @@
 
 
 	  function is_symbol_string(str) {
-	    return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/['"]/) || str.match(int_re) || str.match(float_re) || ['nil', 'true', 'false'].includes(str));
+	    return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/^"[\s\S]+"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || ['#t', '#f', 'nil', 'true', 'false'].includes(str));
 	  } // ----------------------------------------------------------------------
 
 	  /* eslint-disable */
@@ -2133,16 +2133,21 @@
 	        return pattern[p] === Symbol["for"]('symbol') && !is_symbol_string(input[i]);
 	      }
 
+	      function match_next() {
+	        var next_pattern = pattern[p + 1];
+	        var next_input = input[i + 1];
+
+	        if (next_pattern !== undefined$1 && next_input !== undefined$1) {
+	          return inner_match([next_pattern], [next_input]);
+	        }
+	      }
+
 	      var p = 0;
 	      var glob = {};
 
 	      for (var i = 0; i < input.length; ++i) {
 	        if (typeof pattern[p] === 'undefined') {
 	          return i;
-	        }
-
-	        if (!input[i].trim()) {
-	          continue;
 	        }
 
 	        if (pattern[p] instanceof Pattern) {
@@ -2189,18 +2194,18 @@
 	          }
 	        } else if (_typeof_1(pattern[p]) === 'symbol') {
 	          if (pattern[p] === Symbol["for"]('*')) {
-	            // ignore S-expressions inside for case when next pattern is ')'
+	            // ignore S-expressions inside for case when next pattern is )
 	            glob[p] = glob[p] || 0;
 
-	            if (input[i] === '(') {
+	            if (['(', '['].includes(input[i])) {
 	              glob[p]++;
-	            } else if (input[i] === ')') {
+	            } else if ([')', ']'].includes(input[i])) {
 	              glob[p]--;
 	            }
 
 	            if (empty_match()) {
 	              i -= 1;
-	            } else if (typeof pattern[p + 1] !== 'undefined' && glob[p] === 0 && pattern[p + 1] !== input[i + 1] || glob[p] > 0) {
+	            } else if (typeof pattern[p + 1] !== 'undefined' && glob[p] === 0 && match_next() === -1 || glob[p] > 0) {
 	              continue;
 	            }
 	          } else if (not_symbol_match()) {
@@ -2431,7 +2436,7 @@
 	  var p_o = /[[(]/;
 	  var p_e = /[\])]/;
 	  var not_p = /[^()[\]]/;
-	  var not_paren = new Ahead(/[^)\]]/);
+	  var not_close = new Ahead(/[^)\]]/);
 	  var glob = Symbol["for"]('*');
 	  var sexp = new Pattern([p_o, glob, p_e], '+');
 	  var symbol = new Pattern([Symbol["for"]('symbol')], '?');
@@ -2439,7 +2444,7 @@
 
 	  var def_lambda_re = /^(define|lambda|syntax-rules)/;
 	  var let_re = /^(let|let\*|letrec|let-env)(:?-syntax)?$/;
-	  Formatter.rules = [[[p_o, 'begin'], 1], [[p_o, 'begin', sexp], 1, not_paren], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, p_o, let_value], 2, not_paren], [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_paren], [[/(?!lambda)/, p_o, glob, p_e], 1, not_paren], [[p_o, 'if', not_p], 1, not_paren], [[p_o, 'if', not_p, glob], 1], [[p_o, 'if', [p_o, glob, p_e]], 1], [[p_o, 'if', [p_o, glob, p_e], not_p], 1], [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_paren], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_paren], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_paren]]; // ----------------------------------------------------------------------
+	  Formatter.rules = [[[p_o, 'begin'], 1], [[p_o, 'begin', sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, p_o, let_value], 2, not_close], [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close], [[/(?!lambda)/, p_o, glob, p_e], 1, not_close], [[p_o, 'if', not_p], 1, not_close], [[p_o, 'if', not_p, glob], 1], [[p_o, 'if', [p_o, glob, p_e]], 1], [[p_o, 'if', [p_o, glob, p_e], not_p], 1], [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]]; // ----------------------------------------------------------------------
 
 	  Formatter.prototype["break"] = function () {
 	    var code = this._code.replace(/\n[ \t]*/g, '\n ');
@@ -2467,6 +2472,8 @@
 	      rules.map(function (b) {
 	        return b[1];
 	      }).forEach(function (count) {
+	        count = count.valueOf();
+
 	        if (!sexp[count]) {
 	          sexp[count] = previousSexp(sub, count);
 	        }
@@ -8888,7 +8895,7 @@
 
 	  function typeErrorMessage(fn, got, expected) {
 	    var position = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : null;
-	    var postfix = fn ? " in function `".concat(fn, "`") : '';
+	    var postfix = fn ? " in expression `".concat(fn, "`") : '';
 
 	    if (position !== null) {
 	      postfix += " argument ".concat(position);
@@ -9534,10 +9541,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 12 Jun 2020 14:54:04 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 14 Jun 2020 06:35:48 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 12 Jun 2020 14:54:04 +0000').valueOf();
+	    var date = LString('Sun, 14 Jun 2020 06:35:48 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9574,7 +9581,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 12 Jun 2020 14:54:04 +0000',
+	    date: 'Sun, 14 Jun 2020 06:35:48 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
