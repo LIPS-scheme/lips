@@ -339,11 +339,14 @@
         var num_match = str.match(/^(([-+]?[0-9]*)(?:\.([0-9]+))?)e([-+]?[0-9]+)/i);
         if (num_match) {
             var exponent = parseInt(num_match[4], 10);
-            var mantisa = parseFloat(num_match[1]);
+            var mantisa;// = parseFloat(num_match[1]);
+            var digits = num_match[1].replace(/[-+]?([0-9]*)\..+$/, '$1').length;
             var decimal_points = num_match[3] && num_match[3].length;
-            if (decimal_points && decimal_points < Math.abs(exponent)) {
-                mantisa *= Math.pow(10, decimal_points);
-                exponent += decimal_points * (exponent > 0 ? -1 : 1);
+            if (digits < Math.abs(exponent)) {
+                mantisa = LNumber([num_match[1].replace(/\./, ''), 10]);
+                if (decimal_points) {
+                    exponent -= decimal_points;
+                }
             }
         }
         return { exponent, mantisa };
@@ -1688,6 +1691,12 @@
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
             return '#<jQuery(' + obj.length + ')>';
+        }
+        if (obj === Number.NEGATIVE_INFINITY) {
+            return '-inf.0';
+        }
+        if (obj === Number.POSITIVE_INFINITY) {
+            return '+inf.0';
         }
         if (obj === null) {
             return 'null';
@@ -3515,7 +3524,7 @@
         }
         var num = LNumber(n.num);
         var denom = LNumber(n.denom);
-        if (!force) {
+        if (!force && denom.cmp(0) !== 0) {
             var is_integer = num.op('%', denom) === 0;
             if (is_integer) {
                 return LNumber(num.div(denom));
@@ -3593,6 +3602,12 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.valueOf = function(exact) {
+        if (this.denom.cmp(0) === 0) {
+            if (this.num.cmp(0) < 0) {
+                return Number.NEGATIVE_INFINITY;
+            }
+            return Number.POSITIVE_INFINITY;
+        }
         if (exact) {
             return LNumber._ops['/'](this.num.value, this.denom.value);
         }

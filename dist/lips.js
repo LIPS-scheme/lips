@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Jun 2020 15:34:06 +0000
+ * build: Sun, 14 Jun 2020 18:06:07 +0000
  */
 (function () {
 	'use strict';
@@ -1394,12 +1394,17 @@
 
 	    if (num_match) {
 	      var exponent = parseInt(num_match[4], 10);
-	      var mantisa = parseFloat(num_match[1]);
+	      var mantisa; // = parseFloat(num_match[1]);
+
+	      var digits = num_match[1].replace(/[-+]?([0-9]*)\..+$/, '$1').length;
 	      var decimal_points = num_match[3] && num_match[3].length;
 
-	      if (decimal_points && decimal_points < Math.abs(exponent)) {
-	        mantisa *= Math.pow(10, decimal_points);
-	        exponent += decimal_points * (exponent > 0 ? -1 : 1);
+	      if (digits < Math.abs(exponent)) {
+	        mantisa = LNumber([num_match[1].replace(/\./, ''), 10]);
+
+	        if (decimal_points) {
+	          exponent -= decimal_points;
+	        }
 	      }
 	    }
 
@@ -2995,6 +3000,14 @@
 	  function toString(obj, quote) {
 	    if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
 	      return '#<jQuery(' + obj.length + ')>';
+	    }
+
+	    if (obj === Number.NEGATIVE_INFINITY) {
+	      return '-inf.0';
+	    }
+
+	    if (obj === Number.POSITIVE_INFINITY) {
+	      return '+inf.0';
 	    }
 
 	    if (obj === null) {
@@ -5428,7 +5441,7 @@
 	    var num = LNumber(n.num);
 	    var denom = LNumber(n.denom);
 
-	    if (!force) {
+	    if (!force && denom.cmp(0) !== 0) {
 	      var is_integer = num.op('%', denom) === 0;
 
 	      if (is_integer) {
@@ -5534,6 +5547,14 @@
 
 
 	  LRational.prototype.valueOf = function (exact) {
+	    if (this.denom.cmp(0) === 0) {
+	      if (this.num.cmp(0) < 0) {
+	        return Number.NEGATIVE_INFINITY;
+	      }
+
+	      return Number.POSITIVE_INFINITY;
+	    }
+
 	    if (exact) {
 	      return LNumber._ops['/'](this.num.value, this.denom.value);
 	    }
@@ -9554,10 +9575,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 14 Jun 2020 15:34:06 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 14 Jun 2020 18:06:07 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 14 Jun 2020 15:34:06 +0000').valueOf();
+	    var date = LString('Sun, 14 Jun 2020 18:06:07 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9594,7 +9615,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 14 Jun 2020 15:34:06 +0000',
+	    date: 'Sun, 14 Jun 2020 18:06:07 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
