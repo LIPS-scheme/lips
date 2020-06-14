@@ -79,10 +79,20 @@ function run(code, interpreter) {
     }
     return interpreter.exec(code).catch(function(e) {
         console.error(e.message);
+        console.error('Call (stack-trace) to see the stack');
+        console.error('Throwed exception is in global exception variable, use ' +
+                      '(display exception.stack) to display JS stack trace');
         if (e.code) {
-            console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`).join('\n'));
+            strace = e.code.map((line, i) => {
+                var prefix = `[${i+1}]: `;
+                var formatter = new Formatter(line);
+                var output = formatter.break().format({
+                    offset: prefix.length
+                });
+                return prefix + output;
+            }).join('\n');
         }
-        console.error(e.stack);
+        global.exception = e;
     });
 }
 
@@ -137,7 +147,7 @@ function doc(fn, doc) {
 }
 
 // -----------------------------------------------------------------------------
-
+var strace;
 var interp = Interpreter('repl', {
     stdin: InputPort(function() {
         return new Promise(function(resolve) {
@@ -149,6 +159,13 @@ var interp = Interpreter('repl', {
         newline = !repr.match(/\n$/);
         process.stdout.write(repr);
     }),
+    'stack-trace': doc(function() {
+        if (strace) {
+            console.log(strace);
+        }
+    }, `(stack-trace)
+
+        Function display stack trace of last error`),
     exit: doc(function() {
         process.exit();
     }, `(exit)

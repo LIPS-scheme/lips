@@ -55,6 +55,14 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
             }
         }), lips.env.get('help').__doc__),
         // ---------------------------------------------------------------------
+        'stack-trace': doc(function() {
+            if (strace) {
+                term.echo(strace);
+            }
+        }, `(stack-trace)
+
+            Function display stack trace of last error`),
+        // ---------------------------------------------------------------------
         error: doc(function(message) {
             term.error(message);
         }, lips.env.get('error').__doc__),
@@ -67,6 +75,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
     // -------------------------------------------------------------------------
     var display = interpreter.get('display');
     var repr = interpreter.get('repr');
+    var strace;
     var term = jQuery(selector).terminal(function(code, term) {
         // format before executing mainly for strings in function docs
         code = new lips.Formatter(code).format();
@@ -81,9 +90,20 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
         }).catch(function(e) {
             var message = e.message || e;
             term.error(message);
+            term.echo('[[;red;]Call ][[;#fff;](stack-trace)][[;red;] to see the stack]');
+            term.echo('[[;red;]Thrown exception is in global exception variable,\nuse ' +
+                      '][[;#fff;](display exception.stack)][[;red;] to display JS stack trace]');
             if (e.code) {
-                term.error(e.code.map((line, i) => `[${i+1}]: ${line}`).join('\n'));
+                strace = e.code.map((line, i) => {
+                    var prefix = `[${i+1}]: `;
+                    var formatter = new lips.Formatter(line);
+                    var output = formatter.break().format({
+                        offset: prefix.length
+                    });
+                    return prefix + output;
+                }).join('\n');
             }
+            window.exception = e;
         });
     }, {
         name,
@@ -119,7 +139,7 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
                 var prompt = this.get_prompt();
                 try {
                     var formatter = new lips.Formatter(code);
-                    var output = formatter.format({
+                    var output = formatter.break().format({
                         offset: prompt.length
                     });
                 } catch(e) {
