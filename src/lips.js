@@ -5657,7 +5657,10 @@
              original list.`),
         // ------------------------------------------------------------------
         reverse: doc(function(arg) {
-            typecheck('reverse', arg, ['array', 'pair']);
+            typecheck('reverse', arg, ['array', 'pair', 'nil']);
+            if (arg === nil) {
+                return nil;
+            }
             if (arg instanceof Pair) {
                 var arr = this.get('list->array')(arg).reverse();
                 return this.get('array->list')(arr);
@@ -6715,8 +6718,12 @@
     }
     // -------------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
+        fn = fn.valueOf();
         const arg_type = type(arg).toLowerCase();
         var match = false;
+        if (expected instanceof Pair) {
+            expected = expected.toArray();
+        }
         if (expected instanceof Array) {
             expected = expected.map(x => x.valueOf().toLowerCase());
             if (expected.includes(arg_type)) {

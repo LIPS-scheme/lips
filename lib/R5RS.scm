@@ -372,14 +372,38 @@
   args)
 
 ;; -----------------------------------------------------------------------------
-(define (list-tail x k)
-  "(list-tail x k)
+(define (list-tail l k)
+  "(list-tail list k)
 
-   Function return tail of k element of a list."
-  (if (zero? k)
-      x
-      (list-tail (cdr x) (- k 1))))
+   Returns the sublist of list obtained by omitting the first k elements."
+  (typecheck "list-tail" l '("pair" "nil"))
+  (if (< k 0)
+      (throw (new Error "list-ref: index out of range"))
+      (let ((l l) (k k))
+        (while (> k 0)
+          (if (null? l)
+              (throw (new Error "list-tail: not enough elements in the list")))
+          (set! l (cdr l))
+          (set! k (- k 1)))
+        l)))
 
+;; -----------------------------------------------------------------------------
+(define (list-ref l k)
+  "(list-ref list n)
+
+   Returns n element of a list."
+  (typecheck "list-ref" l '("pair" "nil"))
+  (if (< k 0)
+      (throw (new Error "list-ref: index out of range"))
+      (let ((l l) (k k))
+        (while (> k 0)
+          (if (null? l)
+              (throw (new Error "list-ref: not enough elements in the list")))
+          (set! l (cdr l))
+          (set! k (- k 1)))
+        (if (null? l)
+            l
+            (car l)))))
 ;; -----------------------------------------------------------------------------
 (define (not x)
   "(not x)
@@ -987,20 +1011,6 @@
    Function return length of the vector. If argument is not vector it throw exception."
   (typecheck "vector-length" vec "array")
   (length vec))
-
-;; -----------------------------------------------------------------------------
-(define (list-tail l k)
-  "(list-tail list k)
-
-   Returns the sublist of list obtained by omitting the first k elements."
-  (typecheck "list-tail" l "pair")
-  (let ((l l) (k k))
-    (while (> k 0)
-      (if (null? l)
-          (throw (new Error "list-tail: not enough elements in the list")))
-      (set! l (cdr l))
-      (set! k (- k 1)))
-    l))
 
 ;; -----------------------------------------------------------------------------
 
