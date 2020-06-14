@@ -102,15 +102,7 @@
          (= (--> a (filter (lambda (item i) (equal? item (. b i)))) 'length) (length a)))
         (else (eqv? a b))))
 
-;; -----------------------------------------------------------------------------
-(define (every fn list)
-  "(every fn list)
 
-   Function call function fn on each item of the list, if every value is true
-   it will return true otherwise it return false"
-  (if (null? list)
-      true
-      (and (fn (car list)) (every fn (cdr list)))))
 
 ;; -----------------------------------------------------------------------------
 (define make-promise
