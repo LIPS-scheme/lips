@@ -80,7 +80,7 @@ function run(code, interpreter) {
     return interpreter.exec(code).catch(function(e) {
         console.error(e.message);
         console.error('Call (stack-trace) to see the stack');
-        console.error('Throwed exception is in global exception variable, use ' +
+        console.error('Thrown exception is in global exception variable, use ' +
                       '(display exception.stack) to display JS stack trace');
         if (e.code) {
             strace = e.code.map((line, i) => {
@@ -222,11 +222,11 @@ if (options.version || options.V) {
 } else if (options.h || options.help) {
     var name = process.argv[1];
     var intro = banner.replace(/(me>\n)[\s\S]+$/, '$1');
-    console.log(format('%s\nusage:\n%s [-q] | -h | -c <code> | <filename>\n\n\t[-h --help] this helpmess' +
-                       'age\n\t[-e --eval] execute code\n\t[--version -V] Display version information ac' +
-                       'cording to srfi-176\n\t[-q --quiet] don\'t display banner in REPL\n\nif called w' +
-                       'ithout arguments it will run REPL and ifcalled with one argument\nit will treat ' +
-                       'it as filename and execute it.', intro, name));
+    console.log(format('%s\nusage:\n%s [-q] | -h | -c <code> | <filename>\n\n  [-h --help]\t\tthis helpme' +
+                       'ssage\n  [-e --eval]\t\tExecute code\n  [--version -V]\tDisplay version informati' +
+                       'on according to srfi-176\n  [-q --quiet]\t\tdon\'t display banner in REPL\n\nif c' +
+                       'alled without arguments it will run REPL and ifcalled with one argument\nit will ' +
+                       'treat it as filename and execute it.', intro, name));
 } else {
     if (process.stdin.isTTY && !options.q && !options.quiet) {
         console.log(banner);

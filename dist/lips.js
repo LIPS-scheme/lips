@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Jun 2020 09:19:44 +0000
+ * build: Sun, 14 Jun 2020 15:34:06 +0000
  */
 (function () {
 	'use strict';
@@ -2444,7 +2444,8 @@
 
 	  var def_lambda_re = /^(define|lambda|syntax-rules)/;
 	  var let_re = /^(let|let\*|letrec|let-env)(:?-syntax)?$/;
-	  Formatter.rules = [[[p_o, 'begin'], 1], [[p_o, 'begin', sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, p_o, let_value], 2, not_close], [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close], [[/(?!lambda)/, p_o, glob, p_e], 1, not_close], [[p_o, 'if', not_p], 1, not_close], [[p_o, 'if', not_p, glob], 1], [[p_o, 'if', [p_o, glob, p_e]], 1], [[p_o, 'if', [p_o, glob, p_e], not_p], 1], [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]]; // ----------------------------------------------------------------------
+	  Formatter.rules = [[[p_o, 'begin'], 1], [[p_o, 'begin', sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
+	  [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close], [[/(?!lambda)/, p_o, glob, p_e], 1, not_close], [[p_o, /if|while/, not_p], 1, not_close], [[p_o, 'while', not_p, sexp], 1, not_close], [[p_o, 'while', [p_o, glob, p_e], sexp], 1, not_close], [[p_o, 'if', not_p, glob], 1], [[p_o, /if|while/, [p_o, glob, p_e]], 1], [[p_o, 'if', [p_o, glob, p_e], not_p], 1], [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]]; // ----------------------------------------------------------------------
 
 	  Formatter.prototype["break"] = function () {
 	    var code = this._code.replace(/\n[ \t]*/g, '\n ');
@@ -7912,7 +7913,11 @@
 	    }, "(append! name expression)\n\n             Destructive version of append, it modify the list in place. It return\n             original list."),
 	    // ------------------------------------------------------------------
 	    reverse: doc(function (arg) {
-	      typecheck('reverse', arg, ['array', 'pair']);
+	      typecheck('reverse', arg, ['array', 'pair', 'nil']);
+
+	      if (arg === nil) {
+	        return nil;
+	      }
 
 	      if (arg instanceof Pair) {
 	        var arr = this.get('list->array')(arg).reverse();
@@ -8355,7 +8360,7 @@
 	          return value || some(fn, list.cdr);
 	        });
 	      }
-	    }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If it don't find the value it will return false"),
+	    }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If none of the values give true, the function return false"),
 	    // ------------------------------------------------------------------
 	    fold: doc(fold('fold', function (fold, fn, init) {
 	      for (var _len23 = arguments.length, lists = new Array(_len23 > 3 ? _len23 - 3 : 0), _key23 = 3; _key23 < _len23; _key23++) {
@@ -8915,8 +8920,13 @@
 
 	  function typecheck(fn, arg, expected) {
 	    var position = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : null;
+	    fn = fn.valueOf();
 	    var arg_type = type(arg).toLowerCase();
 	    var match = false;
+
+	    if (expected instanceof Pair) {
+	      expected = expected.toArray();
+	    }
 
 	    if (expected instanceof Array) {
 	      expected = expected.map(function (x) {
@@ -9544,10 +9554,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 14 Jun 2020 09:19:44 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 14 Jun 2020 15:34:06 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 14 Jun 2020 09:19:44 +0000').valueOf();
+	    var date = LString('Sun, 14 Jun 2020 15:34:06 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9559,7 +9569,7 @@
 
 	    var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-	    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+	    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ")\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz <https://jcubic.pl/me>\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
 	    return banner;
 	  }(); // -------------------------------------------------------------------------
 	  // to be used with string function when code is minified
@@ -9584,7 +9594,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 14 Jun 2020 09:19:44 +0000',
+	    date: 'Sun, 14 Jun 2020 15:34:06 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

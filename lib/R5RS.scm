@@ -93,9 +93,6 @@
         ((and (vector? a) (vector? b))
          (and (= (length a) (length b))
               (--> a (every (lambda (item i)
-                              (display b)
-                              (display item)
-                              (display i)
                               (equal? item (vector-ref b i)))))))
         ((and (string? a) (string? b))
          (string=? a b))
@@ -106,11 +103,14 @@
         (else (eqv? a b))))
 
 ;; -----------------------------------------------------------------------------
-(define (every . args)
-  "(every . args)
+(define (every fn list)
+  "(every fn list)
 
-   Function return true if every argument is true otherwise it return false."
-  (= (length args) (length (filter (lambda (x) x) args))))
+   Function call function fn on each item of the list, if every value is true
+   it will return true otherwise it return false"
+  (if (null? list)
+      true
+      (and (fn (car list)) (every fn (cdr list)))))
 
 ;; -----------------------------------------------------------------------------
 (define make-promise

@@ -6151,7 +6151,7 @@
 
             Higher order function that call argument on each element of the list.
             It stops when function fn return true for a value if so it will
-            return true. If it don't find the value it will return false`),
+            return true. If none of the values give true, the function return false`),
         // ------------------------------------------------------------------
         fold: doc(fold('fold', function(fold, fn, init, ...lists) {
             typecheck('fold', fn, 'function');
@@ -7170,7 +7170,6 @@
 
 LIPS Interpreter {{VER}} (${_build})
 Copyright (c) 2018-${_year} Jakub T. Jankiewicz <https://jcubic.pl/me>
-
 
 Type (env) to see environment with functions macros and variables.
 You can also use (help name) to display help for specic function or macro.
