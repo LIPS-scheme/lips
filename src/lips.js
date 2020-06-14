@@ -1687,28 +1687,25 @@
         return fn;
     }
     // ----------------------------------------------------------------------
+    var str_mapping = new Map();
+    [
+        [Number.NEGATIVE_INFINITY, '-inf.0'],
+        [Number.POSITIVE_INFINITY, '+inf.0'],
+        [true, '#t'],
+        [false, '#f'],
+        [null, 'null'],
+        [undefined, '#<undefined>']
+    ].forEach(([key, value]) => {
+        str_mapping.set(key, value);
+    });
+    // ----------------------------------------------------------------------
     function toString(obj, quote) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
             return '#<jQuery(' + obj.length + ')>';
         }
-        if (obj === Number.NEGATIVE_INFINITY) {
-            return '-inf.0';
-        }
-        if (obj === Number.POSITIVE_INFINITY) {
-            return '+inf.0';
-        }
-        if (obj === null) {
-            return 'null';
-        }
-        if (obj === true) {
-            return '#t';
-        }
-        if (obj === false) {
-            return '#f';
-        }
-        if (typeof obj === 'undefined') {
-            return '#<undefined>';
+        if (str_mapping.has(obj)) {
+            return str_mapping.get(obj);
         }
         if (obj instanceof Pair) {
             return obj.toString(quote);
@@ -4505,6 +4502,7 @@
         'undefined': undefined,
         'true': true,
         'false': false,
+        'null': null,
         'NaN': NaN,
         // ------------------------------------------------------------------
         stdout: new OutputPort(function(...args) {
