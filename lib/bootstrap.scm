@@ -491,6 +491,23 @@
     (typecheck "sort" predicate "function")
     (qsort list predicate)))
 
+;; -----------------------------------------------------------------------------
+(define (every fn list)
+  "(every fn list)
 
-(let ((a 10))
-  (+ a a))
+   Function call function fn on each item of the list, if every value is true
+   it will return true otherwise it return false"
+  (if (null? list)
+      true
+      (and (fn (car list)) (every fn (cdr list)))))
+
+;; -----------------------------------------------------------------------------
+(define (zip . args)
+  "(zip list1 list2 ...)
+
+   Create one list by taking each element if each list."
+  (if (null? args)
+      nil
+      (if (some null? args)
+         nil
+         (cons (map car args) (apply zip (map cdr args))))))

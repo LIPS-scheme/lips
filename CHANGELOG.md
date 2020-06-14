@@ -45,6 +45,7 @@
 * -e/eval option (help and docs will show new options, instead of -c/code but old still works)
 * `case` macro
 * relative load inside load + auto .scm suffix
+* new `zip` function
 ### Bug fixes
 * fix list function [#27](https://github.com/jcubic/lips/issues/27)
 * fix `(begin (gensym))` macro that evaluate to symbol
