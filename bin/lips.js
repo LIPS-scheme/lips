@@ -234,7 +234,6 @@ if (options.version || options.V) {
     var prev_eval = Promise.resolve();
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
-            line = line.replace(/^\s+/, '');
             code += line + '\n';
             try {
                 if (balanced_parenthesis(code)) {
@@ -287,5 +286,7 @@ if (options.version || options.V) {
                 rl.prompt();
             }
         });
+    }).catch(function() {
+        console.error('Internal Error: boostrap filed');
     });
 }

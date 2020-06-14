@@ -4828,17 +4828,20 @@
                 return new Promise((resolve, reject) => {
                     var path = require('path');
                     if (module_path) {
+                        module_path = module_path.valueOf();
                         file = path.join(module_path, file);
                     }
-                    env.set(PATH, path.dirname(file));
+                    global_env.set(PATH, path.dirname(file));
                     require('fs').readFile(file, function(err, data) {
                         if (err) {
+                            console.log(err);
                             reject(err);
+                            global_env.set(PATH, module_path);
                         } else {
                             exec(data.toString(), env).then(() => {
-                                env.set(PATH, module_path);
                                 resolve();
-                            });
+                                global_env.set(PATH, module_path);
+                            }).catch(reject);
                         }
                     });
                 });
@@ -5981,8 +5984,8 @@
             typecheck('apply', fn, 'function', 1);
             var last = list.pop();
             typecheck('apply', last, ['pair', 'nil'], list.length + 2);
-            list = list.concat(this.get('list->array')(last));
-            return fn(...list);
+            list = list.concat(this.get('list->array').call(this, last));
+            return fn.apply(this, list);
         }, `(apply fn list)
 
             Function that call function with list of arguments.`),
