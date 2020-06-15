@@ -2631,7 +2631,10 @@
     }
     // ----------------------------------------------------------------------
     function unbox(obj) {
-        return obj && obj.valueOf && obj.valueOf() || obj;
+        if (obj && obj.valueOf) {
+            return obj.valueOf();
+        }
+        return obj;
     }
     // ----------------------------------------------------------------------
     function patchValue(value, context) {
@@ -6703,7 +6706,7 @@
                 } else {
                     var dir = nodeModuleFind(root);
                     if (dir) {
-                        value = require(path.join(dir, "node_modules", module));
+                        value = require(path.join(dir, 'node_modules', module));
                     } else {
                         value = require(module);
                     }

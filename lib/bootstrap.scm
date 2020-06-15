@@ -496,7 +496,7 @@
   "(every fn list)
 
    Function call function fn on each item of the list, if every value is true
-   it will return true otherwise it return false"
+   it will return true otherwise it return false."
   (if (null? list)
       true
       (and (fn (car list)) (every fn (cdr list)))))
