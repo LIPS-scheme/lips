@@ -139,7 +139,10 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
                 var prompt = this.get_prompt();
                 try {
                     var formatter = new lips.Formatter(code);
-                    var output = formatter.break().format({
+                    if (!code.match(/\n/)) {
+                        formatter.break();
+                    }
+                    var output = formatter.format({
                         offset: prompt.length
                     });
                 } catch(e) {
