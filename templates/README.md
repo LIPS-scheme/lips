@@ -4,7 +4,7 @@
 [![travis](https://travis-ci.org/jcubic/lips.svg?branch={{BRANCH}}&{{COMMIT}})](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 
-LIPS is very simple Lisp, similar to Scheme written in JavaScript.
+LIPS is powerfull and modern Lisp, based on Scheme written in JavaScript.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 

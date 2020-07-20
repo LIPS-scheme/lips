@@ -1,10 +1,10 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-0.20.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&2b24bb0edb0c69f7873fc943df34bc7c925c1625)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&8596749d42bd16c097f1e54a15df40f5a84f18d2)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&52aba06ba0a695568564177bab7ef6e8)](https://coveralls.io/github/jcubic/lips?branch=master)
 
-LIPS is very simple Lisp, similar to Scheme written in JavaScript.
+LIPS is powerfull and modern Lisp, based on Scheme written in JavaScript.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
