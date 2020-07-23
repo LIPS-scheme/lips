@@ -166,7 +166,9 @@ function terminal({selector, lips, dynamic = false, name = 'terminal'}, undefine
             echo_command();
             this.echo(maches.map(command => {
                 return lips.tokenize(command).pop();
-            }));
+            }), {
+                formatters: false
+            });
         },
         completion: function(string) {
             let tokens = lips.tokenize(this.before_cursor(), true);
