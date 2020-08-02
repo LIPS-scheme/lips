@@ -148,10 +148,18 @@ function doc(fn, doc) {
 
 // -----------------------------------------------------------------------------
 var strace;
+var rl;
 var interp = Interpreter('repl', {
     stdin: InputPort(function() {
         return new Promise(function(resolve) {
-            rl.question('', resolve);
+            rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout
+            });
+            rl.question('', function(data) {
+                resolve(data);
+                rl.close();
+            });
         });
     }),
     stdout: OutputPort(function(x) {
@@ -234,11 +242,20 @@ if (options.version || options.V) {
     var prompt = 'lips> ';
     var continuePrompt = '... ';
     var terminal = !!process.stdin.isTTY && !(process.env.EMACS || process.env.INSIDE_EMACS);
-    const rl = readline.createInterface({
+    rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
         prompt: prompt,
         terminal
+    });
+    var highlight = require('../../prism-cli/index.js');
+    rl._writeToOutput = function _writeToOutput(stringToWrite) {
+        rl.output.write(highlight(stringToWrite, 'scheme', true));
+    };
+    process.stdin.on('keypress', (c, k) => {
+        setTimeout(function() {
+            rl._refreshLine(); // force refresh colors
+        }, 0);
     });
     if (process.stdin.isTTY) {
         rl.prompt();
