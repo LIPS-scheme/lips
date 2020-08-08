@@ -49,7 +49,7 @@
     } else {
         root.lips = factory(root, root.BN);
     }
-})(typeof global !== 'undefined' ? global : window, function(root, BN, undefined) {
+})(typeof global !== 'undefined' ? global : self, function(root, BN, undefined) {
     "use strict";
     /* eslint-disable */
     /* istanbul ignore next */
@@ -4132,8 +4132,51 @@
             return new InputPort(read);
         }
         typecheck('InputPort', read, 'function');
+        this._index = 0;
+        this._in_char = 0;
         this.read = read;
     }
+    InputPort.prototype.read_line = function() {
+        return this.read();
+    };
+    InputPort.prototype.get_next_tokens = function() {
+        if (!this._tokens) {
+            this._tokens = tokenize(this._string);
+        }
+        if (typeof this._tokens[this._index] === 'undefined') {
+            return eof;
+        }
+        var balancer = 0;
+        var result = [];
+        var parens = ['(', ')', '[', ']'];
+        if (!parens.includes(this._tokens[this._index])) {
+            return this._tokens[this._index++];
+        }
+        do {
+            var token = this._tokens[this._index];
+            result.push(this._tokens[this._index]);
+            if (token === ')' || token === ']') {
+                balancer--;
+            } else if (token === '(' || token === '[') {
+                balancer++;
+            }
+            this._index++;
+        } while (balancer !== 0);
+        return result;
+    };
+    InputPort.prototype.read_char = function() {
+        var char = this.peek_char();
+        if (char !== eof) {
+            this._in_char++;
+        }
+        return char;
+    };
+    InputPort.prototype.peek_char = function() {
+        if (this._in_char >= this._string.length) {
+            return eof;
+        }
+        return LCharacter(this._string[this._in_char]);
+    };
     // -------------------------------------------------------------------------
     function OutputPort(write) {
         if (typeof this !== 'undefined' && !(this instanceof OutputPort) ||
@@ -4175,46 +4218,23 @@
             return new InputStringPort(string);
         }
         typecheck('InputStringPort', string, 'string');
-        this._tokens = tokenize(string);
+        this._string = string.valueOf();
         this._index = 0;
         this._in_char = 0;
         this.read = () => {
-            return this.getNextTokens();
+            return this.get_next_tokens();
         };
     }
     InputStringPort.prototype = Object.create(InputPort.prototype);
     InputStringPort.prototype.constructor = InputStringPort;
-    InputStringPort.prototype.getNextTokens = function() {
-        if (this.peekChar() === eof) {
+    InputStringPort.prototype.read_line = function() {
+        var after = this._string.substring(this._in_char);
+        if (!after) {
             return eof;
         }
-        var balancer = 0;
-        var result = [];
-        var parens = ['(', ')'];
-        if (!parens.includes(this._tokens[this._index])) {
-            return this._tokens[this._index++];
-        }
-        do {
-            var token = this._tokens[this._index];
-            result.push(this._tokens[this._index]);
-            if (token === ')') {
-                balancer--;
-            } else if (token === '(') {
-                balancer++;
-            }
-            this._index++;
-        } while (balancer !== 0);
-        return result;
-    };
-    InputStringPort.prototype.peekChar = function() {
-        if (this._index > this._tokens.length - 1) {
-            return eof;
-        }
-        if (this._index === this._tokens.length - 1 &&
-            this.in_char > this._tokens[this._index].length) {
-            return eof;
-        }
-        return this._tokens[this._index][this.in_char];
+        var line = after.match(/([^\n])(?:\n|$)/)[0];
+        this._in_char += line.length;
+        return line;
     };
     // -------------------------------------------------------------------------
     var eof = new EOF();
@@ -4222,11 +4242,6 @@
     EOF.prototype.toString = function() {
         return '<#eof>';
     };
-    // -------------------------------------------------------------------------
-    function SilentError(message) {
-        this.message = message;
-    }
-    SilentError.prototype = Object.create(Error.prototype);
     // -------------------------------------------------------------------------
     // simpler way to create interpreter with interaction-environment
     // -------------------------------------------------------------------------
@@ -4241,7 +4256,7 @@
         this.env = user_env.inherit(name, obj);
     }
     // -------------------------------------------------------------------------
-    Interpreter.prototype.exec = async function(code, dynamic = false) {
+    Interpreter.prototype.exec = function(code, dynamic = false) {
         typecheck('Intepreter::exec', code, 'string', 1);
         typecheck('Intepreter::exec', dynamic, 'boolean', 2);
         // simple solution to overwrite this variable in each interpreter
@@ -4562,22 +4577,35 @@
         // ------------------------------------------------------------------
         'peek-char': doc(function(port) {
             typecheck('peek-char', port, ['input-port', 'input-string-port']);
-            return port.peekChar();
+            return port.peek_char();
         }, `(peek-char port)
 
             Function get character from string port or EOF object if no more
             data in string port.`),
         // ------------------------------------------------------------------
+        'read-line': doc(function(port) {
+            if (typeof port === 'undefined') {
+                port = this.get('stdin');
+            }
+            typecheck('read-line', port, ['input-port', 'input-string-port']);
+            return port.read_line();
+        }, `(read-char port)
+
+            Function read next character from input port.`),
+        // ------------------------------------------------------------------
+        'read-char': doc(function(port) {
+            if (typeof port === 'undefined') {
+                port = this.get('stdin');
+            }
+            typecheck('read-char', port, ['input-port', 'input-string-port']);
+            return port.read_char();
+        }, `(read-char port)
+
+            Function read next character from input port.`),
+        // ------------------------------------------------------------------
         read: doc(function read(arg) {
             if (LString.isString(arg)) {
                 return parse(tokenize(arg.valueOf()))[0];
-            }
-            if (arg instanceof InputStringPort) {
-                var tokens = arg.read();
-                if (tokens === eof) {
-                    return eof;
-                }
-                return parse(tokens)[0];
             }
             var port;
             if (arg instanceof InputPort) {
@@ -4585,8 +4613,11 @@
             } else {
                 port = this.get('stdin');
             }
-            return port.read().then((text) => {
-                return read.call(this, text);
+            return unpromise(port.read(), function(result) {
+                if (result === eof) {
+                    return eof;
+                }
+                return parse(result)[0];
             });
         }, `(read [string])
 
@@ -6047,9 +6078,6 @@
                 var args = {
                     env: this,
                     error: (e) => {
-                        if (e instanceof SilentError) {
-                            throw new SilentError(e.message);
-                        }
                         var env = this.inherit('try');
                         env.set(code.cdr.car.cdr.car.car, e);
                         var args = {
@@ -6065,7 +6093,6 @@
                         ), args), function(result) {
                             resolve(result);
                         });
-                        throw new SilentError(e.message);
                     }
                 };
                 if (dynamic_scope) {
@@ -6073,7 +6100,7 @@
                 }
                 var ret = evaluate(code.car, args);
                 if (isPromise(ret)) {
-                    ret.catch(args.error).then(resolve);
+                    ret.then(resolve).catch(args.error);
                 } else {
                     resolve(ret);
                 }
