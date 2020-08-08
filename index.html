@@ -2,8 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title>LIPS - Powerful Scheme based LISP in JavaScript</title>
-    <meta name="Description" content="Modern and powerful LISP written in JavaScript with literal regexes, that hide use of promises, full access to JavaScript and real LISP macro system."/>
+    <title>LIPS - Powerful Scheme based lips in JavaScript</title>
+    <meta name="Description" content="Modern and powerful lisp written in JavaScript with literal regexes, that hide use of promises, full access to JavaScript and real lisp macro system."/>
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png"/>
     <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png"/>
     <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png"/>
@@ -74,7 +74,7 @@
       <li>Easy extension using JavaScript using Macros or functions,</li>
       <li>Regexes are first class objects same as macros that are resolved at runtime,</li>
       <li>BigInt support (for browsers that don't have native support you will need <a href="https://github.com/indutny/bn.js/">bn.js</a>),</li>
-      <li>Optional dynamic scope (like in Emacs LISP),</li>
+      <li>Optional dynamic scope (like in Emacs Lisp),</li>
       <li>Node.js and Web based Interpreter (REPL).</li>
     </ul>
   </section>
@@ -96,39 +96,29 @@
     </div>
   </section>
   <section id="installation">
-    <header><h2>Installation</h2></header>
-    <h3>Node/Webpack</h3>
-    <pre><code class="language-bash">
-npm install @jcubic/lips
-## or global
-npm install -g @jcubic/lips
-    </code></pre>
-    <p>then you code use:</p>
-    <pre><code class="language-javascript">
-var {exec} = require('@jcubic/lips');
-// or
-import {exec} from '@jcubic/lips';
-    </code></pre>
-    <p>Then use it like this:</p>
-    <pre><code class="language-javascript">
-exec("(let ((a 10) (b 20)) (* a b))").then(result => {
-   const [value] = result;
-   console.log(value);
-});
-    </code></pre>
-    <h3>Browser</h3>
-    <p>When using LISP in browser you need to include the file</p>
-    <p>If you want to use Webpack see <a href="https://github.com/jcubic/lips/wiki/Webpack">wiki page</a> for details</p>
+    <header><h2>Browser</h2></header>
+    <p>When using LIPS in browser you need to include the main script file.</p>
+    <p>If you want to use Webpack see <a href="https://github.com/jcubic/lips/wiki/Webpack">wiki page</a> for details.</p>
     <pre><code class="language-markup">
 &lt;script src="https://unpkg.com/@jcubic/lips"&gt;&lt;/script&gt;
     </code></pre>
-    <header><h2>Executable</h2></header>
-    <p>There is also executable script, where you can run LIPS code from file or as REPL.</p>
+    <p>You can put LIPS code directly in script tag:</p>
+    <pre><code class="language-markup">
+&lt;script type="text/x-lips"&gt;
+  (print "hello")
+  ;; this will load and evaluate external file
+  (load "example.lips")
+&lt;script&gt;
+    </code></pre>
+    <p>You can also use src attribute to link to source file.</p>
+    <pre><code class="language-html">
+&lt;script type="text/x-lips" src="example.lips"&gt;&lt;script&gt;
+    </code></pre>
+    <header><h2>Node</h2></header>
     <pre><code class="language-bash">
-## for repl
-./node_modules/.bin/lips
-## run file
-./node_modules/.bin/lips foo.lips
+npm install -g @jcubic/lips
+    </code></pre>
+    <pre><code class="language-bash">
 ## if installed as global just use
 lips
 lips foo.lips
@@ -147,20 +137,21 @@ lips -c '(print "hello world")'
 chmod a+x foo.lips
 ./foo.lips # or just foo.lips depend on your $PATH
     </code></pre>
-    <header><h2>Usage in HTML</h2></header>
-    <p>In HTML you can just use inline code with proper type attribute (after including the lips js file)</p>
-    <pre><code class="language-html">
-  &lt;script type="text/x-lips"&gt;
-    (print "hello")
-    ;; this will load and evaluate external file
-    (load "example.lips")
-  &lt;script&gt;
+    <header><h2>Direct API</h2></header>
+    <p>You can also run execute LIPS programaticaly (in Node.js/Webpack).</p>
+    <pre><code class="language-javascript">
+var lips = require('@jcubic/lips');
+// or
+import lips from '@jcubic/lips';
     </code></pre>
-    <p>You can also use src attribute to link to source file</p>
-    <pre><code class="language-html">
-  &lt;script type="text/x-lips" src="example.lips"&gt;&lt;script&gt;
+    <p>Then use it like this:</p>
+    <pre><code class="language-javascript">
+lips.exec("(let ((a 10) (b 20)) (* a b))").then(result => {
+   // result is always array
+   const [value] = result;
+   console.log(value);
+});
     </code></pre>
-    <p>You can also run LIPS code progamatically the same as in Node.</p>
   </section>
     <footer>
     <p>Copyright (c) 2018-2020 <a href="https://jcubic.pl/me">Jakub T. Jankiewicz</a></p>
