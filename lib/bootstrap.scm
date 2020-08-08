@@ -77,7 +77,8 @@
                   `(let* ((,name ,(cond ((quoted-symbol? code) (symbol->string (cadr code)))
                                         ((pair? code) (symbol->string (car code)))
                                         (true code)))
-                          (,value (. ,obj ,name)))
+                          ;; get and . accept list of properties
+                          (,value (apply get ,obj (split "." ,name))))
                      ,(if (and (pair? code) (not (quoted-symbol? code)))
                          `(set! ,obj (,value ,@(cdr code)))
                          `(set! ,obj ,value)))))
