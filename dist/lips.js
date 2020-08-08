@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 08 Aug 2020 14:17:02 +0000
+ * build: Sat, 08 Aug 2020 15:36:41 +0000
  */
 (function () {
 	'use strict';
@@ -1232,7 +1232,7 @@
 	    'tab': '\t'
 	  };
 	  var character_symbols = Object.keys(characters).join('|');
-	  var char_re = new RegExp("^#\\\\(?:".concat(character_symbols, "|[\\s\\S])$"), 'i'); // complex with (int) (float) (rational)
+	  var char_re = new RegExp("^#\\\\(?:x[0-9af]+|".concat(character_symbols, "|[\\s\\S])$"), 'i'); // complex with (int) (float) (rational)
 
 	  function make_num_stre(fn) {
 	    var ranges = [['o', '[0-7]'], ['x', '[0-9a-fA-F]'], ['b', '[01]'], ['', '[0-9]']]; // float exception that don't accept mnemonics
@@ -1323,10 +1323,19 @@
 
 
 	  function parse_character(arg) {
-	    var m = arg.match(/#\\(.*)$/);
+	    var m = arg.match(/#\\(x?)(.*)$/);
+
+	    var _char;
 
 	    if (m) {
-	      return LCharacter(m[1]);
+	      if (m[1]) {
+	        var ord = parseInt(m[2], 16);
+	        _char = String.fromCharCode(ord);
+	      } else {
+	        _char = m[2];
+	      }
+
+	      return LCharacter(_char);
 	    }
 	  } // ----------------------------------------------------------------------
 
@@ -1543,7 +1552,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:".concat(character_symbols, "|[\\s\\S])|#f|#t|#;|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(#\\\\(?:x[0-9a-f]+|".concat(character_symbols, "|[\\s\\S])|#f|#t|#;|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -4898,9 +4907,9 @@
 	    return LString(this._string.toUpperCase());
 	  };
 
-	  LString.prototype.set = function (n, _char) {
-	    if (_char instanceof LCharacter) {
-	      _char = _char["char"];
+	  LString.prototype.set = function (n, _char2) {
+	    if (_char2 instanceof LCharacter) {
+	      _char2 = _char2["char"];
 	    }
 
 	    var string = [];
@@ -4909,7 +4918,7 @@
 	      string.push(this._string.substring(0, n));
 	    }
 
-	    string.push(_char);
+	    string.push(_char2);
 
 	    if (n < this._string.length - 1) {
 	      string.push(this._string.substring(n + 1));
@@ -6284,13 +6293,13 @@
 	  };
 
 	  InputPort.prototype.read_char = function () {
-	    var _char2 = this.peek_char();
+	    var _char3 = this.peek_char();
 
-	    if (_char2 !== eof) {
+	    if (_char3 !== eof) {
 	      this._in_char++;
 	    }
 
-	    return _char2;
+	    return _char3;
 	  };
 
 	  InputPort.prototype.peek_char = function () {
@@ -9577,10 +9586,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 08 Aug 2020 14:17:02 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 08 Aug 2020 15:36:41 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 08 Aug 2020 14:17:02 +0000').valueOf();
+	    var date = LString('Sat, 08 Aug 2020 15:36:41 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9617,7 +9626,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 08 Aug 2020 14:17:02 +0000',
+	    date: 'Sat, 08 Aug 2020 15:36:41 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

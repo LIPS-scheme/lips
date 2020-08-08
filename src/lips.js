@@ -209,7 +209,7 @@
         'tab': '\t'
     };
     var character_symbols = Object.keys(characters).join('|');
-    var char_re = new RegExp(`^#\\\\(?:${character_symbols}|[\\s\\S])$`, 'i');
+    var char_re = new RegExp(`^#\\\\(?:x[0-9af]+|${character_symbols}|[\\s\\S])$`, 'i');
     // complex with (int) (float) (rational)
     function make_num_stre(fn) {
         var ranges = [
@@ -284,9 +284,16 @@
     }
     // ----------------------------------------------------------------------
     function parse_character(arg) {
-        var m = arg.match(/#\\(.*)$/);
+        var m = arg.match(/#\\(x?)(.*)$/);
+        var char;
         if (m) {
-            return LCharacter(m[1]);
+            if (m[1]) {
+                var ord = parseInt(m[2], 16);
+                char = String.fromCharCode(ord);
+            } else {
+                char = m[2];
+            }
+            return LCharacter(char);
         }
     }
     // ----------------------------------------------------------------------
@@ -466,7 +473,7 @@
         var tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(#\\\\(?:${character_symbols}|[\\s\\S])|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(#\\\\(?:x[0-9a-f]+|${character_symbols}|[\\s\\S])|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
