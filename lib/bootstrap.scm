@@ -68,17 +68,19 @@
 
           (--> document (querySelectorAll \"div\"))
           (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\\/title>/) 1)
-          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")"
+          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")
+          (--> document.body
+               (style.setProperty \"--animation\" \"terminal-underline\"))"
   (let ((obj (gensym)))
     `(let* ((,obj ,expr))
        ,@(map (lambda (code)
-                (let ((name (gensym))
-                      (value (gensym)))
-                  `(let* ((,name ,(cond ((quoted-symbol? code) (symbol->string (cadr code)))
-                                        ((pair? code) (symbol->string (car code)))
-                                        (true code)))
-                          ;; get and . accept list of properties
-                          (,value (apply get ,obj (split "." ,name))))
+                (let ((value (gensym)))
+                  `(let* ((,value ,(let ((name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
+                                                     ((pair? code) (symbol->string (car code)))
+                                                     (true code))))
+                                       (if (string? name)
+                                           `(. ,obj ,@(split "." name))
+                                           `(. ,obj ,name)))))
                      ,(if (and (pair? code) (not (quoted-symbol? code)))
                          `(set! ,obj (,value ,@(cdr code)))
                          `(set! ,obj ,value)))))
