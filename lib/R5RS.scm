@@ -607,7 +607,7 @@
    Function return character inside string at given zero-based index."
   (typecheck "string-ref" string "string" 1)
   (typecheck "string-ref" k "number" 2)
-  (lips.LCharacter (. string k)))
+  (lips.LCharacter (--> string (get k))))
 
 (define (%string-cmp name string1 string2)
   "(%string-cmp name a b)
@@ -722,7 +722,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define (integer->char n)
-  "(char->integer chr)
+  "(integer->char chr)
 
    Function convert number argument to chararacter."
   (typecheck "integer->char" n "number")
