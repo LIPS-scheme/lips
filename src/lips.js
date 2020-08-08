@@ -284,15 +284,18 @@
     }
     // ----------------------------------------------------------------------
     function parse_character(arg) {
-        var m = arg.match(/#\\(x?)(.*)$/);
+        var m = arg.match(/#\\x([0-9a-f]+)$/i);
         var char;
         if (m) {
-            if (m[1]) {
-                var ord = parseInt(m[2], 16);
-                char = String.fromCharCode(ord);
-            } else {
-                char = m[2];
+            var ord = parseInt(m[1], 16);
+            char = String.fromCharCode(ord);
+        } else {
+            m = arg.match(/#\\(.+)$/);
+            if (m) {
+                char = m[1];
             }
+        }
+        if (char) {
             return LCharacter(char);
         }
     }
