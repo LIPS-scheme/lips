@@ -210,7 +210,7 @@ if (options.version || options.V) {
 } else if (options.e || options.eval || options.c || options.code) {
     // from 1.0 documentation should use -e but it's not breaking change
     boostrap(interp).then(function() {
-        run(options.e || options.eval || options.c || options.code, interp).then(print);
+        return run(options.e || options.eval || options.c || options.code, interp).then(print);
     });
 } else if (options._.length === 1) {
     // hack for node-gtk
@@ -219,7 +219,7 @@ if (options.version || options.V) {
         output: process.stdout
     });
     fs.promises.readFile(options._[0]).then(function(data) {
-        return boostrap(interp).then(function() {
+        return boostrap(interp).then(() => {
             return run(data.toString().replace(/^#!.*\n/, ''), interp);
         });
     }).catch(err => {
@@ -269,6 +269,27 @@ if (options.version || options.V) {
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
             code += line + '\n';
+            var format, spaces, stdout;
+            var lines = code.split('\n');
+            // fix previous line
+            if (terminal && lines.length > 1) {
+                var prev_line = lines[lines.length - 2].replace(/^\s+/, '');
+                if (lines.length > 2) {
+                    var prev = lines.slice(0, -2).join('\n');
+                    fs.appendFileSync('lips.log', prev + '\n');
+                    var i = indent(prev, 2, prompt.length - continuePrompt.length);
+                    spaces = new Array(i + 1).join(' ');
+                    lines[lines.length - 2] = spaces + prev_line;
+                    code = lines.join('\n');
+                    stdout = continuePrompt + spaces;
+                } else {
+                    stdout = prompt;
+                }
+                fs.appendFileSync('lips.log', stdout + prev_line + '\n{i]' + i + '\n');
+                stdout += highlight(prev_line, 'scheme', true);
+                format = '\x1b[1F\x1b[K' + stdout + '\n';
+                process.stdout.write(format);
+            }
             try {
                 if (balanced_parenthesis(code)) {
                     rl.pause();
@@ -306,12 +327,9 @@ if (options.version || options.V) {
                     var ind = indent(code, 2, prompt.length - continuePrompt.length);
                     rl.setPrompt(continuePrompt);
                     rl.prompt();
-                    var spaces = new Array(ind + 1).join(' ');
+                    spaces = new Array(ind + 1).join(' ');
                     if (terminal) {
                         rl.write(spaces);
-                    } else {
-                        process.stdout.write(spaces);
-                        code += spaces;
                     }
                 }
             } catch (e) {
