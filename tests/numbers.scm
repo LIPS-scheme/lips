@@ -120,6 +120,16 @@
         (t.is (number->string #i100i) "+100.0i")
         (t.is (number->string #i#b100i) "+4.0i")
 
+        ;; uppercase
+        (t.is (number->string #E0.1) "1/10")
+        (t.is (number->string #I10) "10.0")
+        (t.is (number->string #I#B10) "2.0")
+        (t.is (number->string #X#IA) "10.0")
+        (t.is (number->string #XA) "10")
+        (t.is (number->string #XAa) "170")
+        (t.is (number->string #O#I77) "63.0")
+        (t.is (number->string #O77) "63")
+
         (t.is (number->string #e0.1+0.1i) "1/10+1/10i")
         (t.is (number->string #b100+100i) "4+4i")
         (t.is (number->string #b#i100+100i) "4.0+4.0i")

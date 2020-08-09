@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 08 Aug 2020 16:12:22 +0000
+ * build: Sun, 09 Aug 2020 08:01:23 +0000
  */
 (function () {
 	'use strict';
@@ -1193,7 +1193,7 @@
 	  var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)'; // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
 
 	  var complex_float_stre = "(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|".concat(float_stre, "|[+-]?[0-9]+))?(?:").concat(float_stre, "|[+-](?:[0-9]+/[0-9]+|[0-9]+))i");
-	  var float_re = new RegExp("^(#[ie])?".concat(float_stre, "$"));
+	  var float_re = new RegExp("^(#[ie])?".concat(float_stre, "$"), 'i');
 
 	  function make_complex_match_re(mnemonic, range) {
 	    // complex need special treatment of 10e+1i when it's hex or decimal
@@ -1204,7 +1204,7 @@
 	      fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
 	    }
 
-	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+(?!").concat(range, ")|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+|[+-])i"));
+	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+(?!").concat(range, ")|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+|[+-])i"), 'i');
 	  }
 
 	  var complex_list_re = function () {
@@ -1253,7 +1253,7 @@
 	  }
 
 	  function make_type_re(fn) {
-	    return new RegExp('^(?:' + make_num_stre(fn) + ')$');
+	    return new RegExp('^(?:' + make_num_stre(fn) + ')$', 'i');
 	  }
 
 	  var complex_re = make_type_re(gen_complex_re);
@@ -1267,7 +1267,7 @@
 	    var options = {};
 
 	    if (parts[1]) {
-	      var type = parts[1].replace(/#/g, '').split('');
+	      var type = parts[1].replace(/#/g, '').toLowerCase().split('');
 
 	      if (type.includes('x')) {
 	        options.radix = 16;
@@ -9590,10 +9590,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 08 Aug 2020 16:12:22 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 09 Aug 2020 08:01:23 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 08 Aug 2020 16:12:22 +0000').valueOf();
+	    var date = LString('Sun, 09 Aug 2020 08:01:23 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9630,7 +9630,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 08 Aug 2020 16:12:22 +0000',
+	    date: 'Sun, 09 Aug 2020 08:01:23 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

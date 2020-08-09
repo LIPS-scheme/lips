@@ -180,7 +180,7 @@
     var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
     // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
     var complex_float_stre = `(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|${float_stre}|[+-]?[0-9]+))?(?:${float_stre}|[+-](?:[0-9]+/[0-9]+|[0-9]+))i`;
-    var float_re = new RegExp(`^(#[ie])?${float_stre}$`);
+    var float_re = new RegExp(`^(#[ie])?${float_stre}$`, 'i');
     function make_complex_match_re(mnemonic, range) {
         // complex need special treatment of 10e+1i when it's hex or decimal
         var neg = mnemonic === 'x' ? `(?!\\+|${range})` : `(?!\\.|${range})`;
@@ -188,7 +188,7 @@
         if (mnemonic === '') {
             fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
         }
-        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+${neg})?)(${fl}[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i`);
+        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+${neg})?)(${fl}[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i`, 'i');
     }
     var complex_list_re = (function() {
         var result = {};
@@ -226,7 +226,7 @@
         return result;
     }
     function make_type_re(fn) {
-        return new RegExp('^(?:' + make_num_stre(fn) + ')$');
+        return new RegExp('^(?:' + make_num_stre(fn) + ')$', 'i');
     }
     const complex_re = make_type_re(gen_complex_re);
     const rational_re = make_type_re(gen_rational_re);
@@ -238,7 +238,7 @@
         var parts = arg.match(pre_num_parse_re);
         var options = {};
         if (parts[1]) {
-            var type = parts[1].replace(/#/g, '').split('');
+            var type = parts[1].replace(/#/g, '').toLowerCase().split('');
             if (type.includes('x')) {
                 options.radix = 16;
             } else if (type.includes('o')) {
