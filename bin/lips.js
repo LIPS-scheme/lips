@@ -248,7 +248,7 @@ if (options.version || options.V) {
         prompt: prompt,
         terminal
     });
-    var highlight = require('../../prism-cli/index.js');
+    var highlight = require('prism-cli');
     rl._writeToOutput = function _writeToOutput(stringToWrite) {
         rl.output.write(highlight(stringToWrite, 'scheme', true));
     };
