@@ -1754,9 +1754,6 @@
             if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
                 return obj.toString().valueOf();
             }
-            if (typeof obj[Symbol.iterator] === 'function') {
-                return '#<iterator>';
-            }
             var constructor = obj.constructor;
             if (!constructor) {
                 // this is case of fs.constants in Node.js that is null constructor object
@@ -1787,6 +1784,9 @@
             }
             if (name !== '') {
                 return '#<' + name + '>';
+            }
+            if (typeof obj[Symbol.iterator] === 'function') {
+                return '#<iterator>';
             }
             return '#<Object>';
         }
