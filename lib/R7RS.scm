@@ -5,7 +5,7 @@
 ;; https://small.r7rs.org/attachment/r7rs.pdf
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful LISP in JavaScript
-;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
@@ -50,3 +50,8 @@
   (list-match? (lambda (a b)
                  (and (symbol? a) (symbol? b) (equal? a b)))
                args))
+
+;;(define (read-line . rest)
+;;  (let ((port (if (null? rest) (current-input-port) (car rest))))
+;;    (while (let ((char (peek-char port)))
+;;             (and (not (string? 
