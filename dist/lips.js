@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 11 Aug 2020 08:35:26 +0000
+ * build: Tue, 11 Aug 2020 12:25:27 +0000
  */
 (function () {
 	'use strict';
@@ -8003,6 +8003,13 @@
 	        args[_key17] = arguments[_key17];
 	      }
 
+	      args = args.map(function (item) {
+	        if (item instanceof Pair) {
+	          return item.clone();
+	        }
+
+	        return item;
+	      });
 	      return args.reverse().reduce(function (list, item) {
 	        return new Pair(item, list);
 	      }, nil);
@@ -8359,8 +8366,13 @@
 	      }
 
 	      typecheck('map', fn, 'function');
+	      var is_list = this.get('list?');
 	      lists.forEach(function (arg, i) {
-	        typecheck('map', arg, ['pair', 'nil'], i + 1);
+	        typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
+
+	        if (arg instanceof Pair && !is_list.call(_this7, arg)) {
+	          throw new Error("map: argument ".concat(i + 1, " is not a list"));
+	        }
 	      });
 
 	      if (lists.length === 0) {
@@ -8387,6 +8399,26 @@
 	        });
 	      });
 	    }, "(map fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments. The return\n            values of the function call is acumulated in result list and\n            returned by the call to map."),
+	    // ------------------------------------------------------------------
+	    'list?': doc(function (obj) {
+	      var node = obj;
+
+	      while (true) {
+	        if (node === nil) {
+	          return true;
+	        }
+
+	        if (!(node instanceof Pair)) {
+	          return false;
+	        }
+
+	        if (node.haveCycles('cdr')) {
+	          return false;
+	        }
+
+	        node = node.cdr;
+	      }
+	    }, "(list? obj)\n\n            Function test if value is proper linked list structure.\n            The car of each pair can be any value. It return false on cycles.\""),
 	    // ------------------------------------------------------------------
 	    some: doc(function some(fn, list) {
 	      typecheck('some', fn, 'function');
@@ -9594,10 +9626,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 11 Aug 2020 08:35:26 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 11 Aug 2020 12:25:27 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 11 Aug 2020 08:35:26 +0000').valueOf();
+	    var date = LString('Tue, 11 Aug 2020 12:25:27 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9634,7 +9666,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 11 Aug 2020 08:35:26 +0000',
+	    date: 'Tue, 11 Aug 2020 12:25:27 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

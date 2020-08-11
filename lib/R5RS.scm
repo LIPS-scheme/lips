@@ -202,18 +202,6 @@
   (set-obj! vector i obj))
 
 ;; -----------------------------------------------------------------------------
-(define (list? x)
-  "(list? x)
-
-   Function test if value is proper linked list structure.
-   The car of each pair can be any value. It return false on cycles."
-  (or (eq? x nil) ;; empty list
-      (and (pair? x)
-           (or (null? (cdr x))
-               (and (not (x.haveCycles "cdr"))
-                    (list? (cdr x)))))))
-
-;; -----------------------------------------------------------------------------
 (define (%number-type type x)
   (and (number? x) (string=? (. x 'type) type)))
 
@@ -355,13 +343,6 @@
   (typecheck "quotient" a "number" 1)
   (typecheck "quotient" b "number" 2)
   (truncate (/ a b)))
-
-;; -----------------------------------------------------------------------------
-(define (list . args)
-  "(list . args)
-
-   Function create new list out of its arguments."
-  args)
 
 ;; -----------------------------------------------------------------------------
 (define (list-tail l k)

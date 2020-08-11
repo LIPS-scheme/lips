@@ -5760,6 +5760,12 @@
             value it will throw exception`),
         // ------------------------------------------------------------------
         list: doc(function(...args) {
+            args = args.map(item => {
+                if (item instanceof Pair) {
+                    return item.clone();
+                }
+                return item;
+            });
             return args.reverse().reduce((list, item) => new Pair(item, list), nil);
         }, `(list . args)
 
@@ -6165,8 +6171,13 @@
         // ------------------------------------------------------------------
         map: doc(function map(fn, ...lists) {
             typecheck('map', fn, 'function');
+            var is_list = this.get('list?');
             lists.forEach((arg, i) => {
                 typecheck('map', arg, ['pair', 'nil'], i + 1);
+                // detect cycles
+                if (arg instanceof Pair && !is_list.call(this, arg)) {
+                    throw new Error(`map: argument ${i + 1} is not a list`);
+                }
             });
             if (lists.length === 0) {
                 return nil;
@@ -6191,6 +6202,25 @@
             with that many argument as number of list arguments. The return
             values of the function call is acumulated in result list and
             returned by the call to map.`),
+        // ------------------------------------------------------------------
+        'list?': doc(function(obj) {
+            var node = obj;
+            while (true) {
+                if (node === nil) {
+                    return true;
+                }
+                if (!(node instanceof Pair)) {
+                    return false;
+                }
+                if (node.haveCycles('cdr')) {
+                    return false;
+                }
+                node = node.cdr;
+            }
+        }, `(list? obj)
+
+            Function test if value is proper linked list structure.
+            The car of each pair can be any value. It return false on cycles."`),
         // ------------------------------------------------------------------
         some: doc(function some(fn, list) {
             typecheck('some', fn, 'function');
