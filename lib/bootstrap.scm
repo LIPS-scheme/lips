@@ -2,7 +2,7 @@
 ;; This file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful LISP in JavaScript
-;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
@@ -379,8 +379,12 @@
 
 ;; -----------------------------------------------------------------------------
 ;; formatter rules for cond to break after each S-Expression
-;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro use RegExp constructor
-(define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+")) 1 (Ahead "[^)]"))))
+;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro
+;; use RegExp constructor
+;; -----------------------------------------------------------------------------
+(define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+"))
+                               1
+                               (Ahead "[^)]"))))
 
 ;; -----------------------------------------------------------------------------
 (define (interaction-environment)
@@ -442,6 +446,7 @@
 
 ;; -----------------------------------------------------------------------------
 ;; Object representation
+;; -----------------------------------------------------------------------------
 (add-repr! Object
            (lambda (x q)
              (concat "&("
@@ -508,9 +513,35 @@
 (define (zip . args)
   "(zip list1 list2 ...)
 
-   Create one list by taking each element if each list."
+   Create one list by taking each element of each list."
   (if (null? args)
       nil
       (if (some null? args)
          nil
          (cons (map car args) (apply zip (map cdr args))))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (promise . body)
+  "(promise . body)
+
+   Anaphoric macro that expose resolve and reject functions from JS promise"
+  `(new Promise (lambda (resolve reject)
+                  (try (begin ,@body)
+                       (catch (e)
+                              (error (.. e.message)))))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (timer time . body)
+  "(timer time . body)
+
+   Macro evaluate expression after delay, it return timer. To clear the timer you can use
+   native JS clearTimeout function."
+  `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
+
+;; ---------------------------------------------------------------------------------------
+(define (defmacro? obj)
+  "(defmacro? expression)
+
+   Function check if object is macro and it's expandable"
+  (and (macro? obj) (. obj 'defmacro)))
+

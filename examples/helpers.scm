@@ -13,25 +13,6 @@
   (apply (.. console.log) args))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (promise . body)
-  "(promise . body)
-
-   Anaphoric macro that expose resolve and reject functions from JS promise"
-  `(new Promise (lambda (resolve reject)
-                  (try (begin ,@body)
-                       (catch (e)
-                              (error (.. e.message)))))))
-
-
-;; ---------------------------------------------------------------------------------------
-(define-macro (timer time . body)
-  "(timer time . body)
-
-   Macro evaluate expression after delay, it return timer. To clear the timer you can use
-   native JS clearTimeout function."
-  `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
-
-;; ---------------------------------------------------------------------------------------
 (define-macro (module name . body)
   "(module module-name . body)
 
@@ -52,17 +33,10 @@
   `(define ,name (--> ,module (get ',name))))
 
 ;; ---------------------------------------------------------------------------------------
-(define (defmacro? obj)
-  "(defmacro? expression)
-
-   Function check if object is macro and it's expandable"
-  (and (macro? obj) (. obj 'defmacro)))
-
-;; ---------------------------------------------------------------------------------------
 (define (assocv key alist)
   "(assocv key alist)
 
-   Return value of alist if found or undefined of not."
+   Return value of alist if found or undefined if not."
   (let ((pair (assoc key alist)))
     (if (pair? pair) (cdr pair) false)))
 
