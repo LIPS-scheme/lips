@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 10 Aug 2020 17:52:40 +0000
+ * build: Tue, 11 Aug 2020 08:35:26 +0000
  */
 (function () {
 	'use strict';
@@ -4250,7 +4250,10 @@
 	        return LString(object);
 
 	      case 'number':
-	        return LNumber(object);
+	        if (!Number.isNaN(object)) {
+	          return LNumber(object);
+	        }
+
 	    }
 
 	    return object;
@@ -8590,6 +8593,7 @@
 	    'abs': doc(singleMathOp(function (n) {
 	      return LNumber(n).abs();
 	    }), "(abs number)\n\n             Function create absolute value from number."),
+	    // ------------------------------------------------------------------
 	    'truncate': doc(function (n) {
 	      if (LNumber.isFloat(n)) {
 	        if (n instanceof LNumber) {
@@ -9590,10 +9594,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 10 Aug 2020 17:52:40 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 11 Aug 2020 08:35:26 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 10 Aug 2020 17:52:40 +0000').valueOf();
+	    var date = LString('Tue, 11 Aug 2020 08:35:26 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9630,7 +9634,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 10 Aug 2020 17:52:40 +0000',
+	    date: 'Tue, 11 Aug 2020 08:35:26 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

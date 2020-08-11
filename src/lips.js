@@ -2635,7 +2635,9 @@
             case 'string':
                 return LString(object);
             case 'number':
-                return LNumber(object);
+                if (!Number.isNaN(object)) {
+                    return LNumber(object);
+                }
         }
         return object;
     }
@@ -6413,6 +6415,7 @@
         }), `(abs number)
 
              Function create absolute value from number.`),
+        // ------------------------------------------------------------------
         'truncate': doc(function(n) {
             if (LNumber.isFloat(n)) {
                 if (n instanceof LNumber) {
