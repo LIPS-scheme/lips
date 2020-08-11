@@ -444,6 +444,7 @@
                    ((null? x) sum)))
                25)))
 
+;; foo foo ... should match single element foo ... should match nil
 (test_ "syntax-rules: R6RS unless & when macros"
        (lambda (t)
 

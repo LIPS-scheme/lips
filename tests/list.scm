@@ -13,6 +13,9 @@
 
 (test "list: cycles"
       (lambda (t)
+        ;; not cycle #44
+        (let ((x (list 1 2)))
+          (t.is (repr (list x x)) "((1 2) (1 2))"))
         (let ((x '(1 2 3)))
           (set-cdr! (cddr x) x)
           (t.is (repr x) "#0=(1 2 3 . #0#)"))

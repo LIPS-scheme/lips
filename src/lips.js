@@ -1828,64 +1828,61 @@
     // ----------------------------------------------------------------------------
     function markCycles(pair) {
         var seen_pairs = [];
-        var cycles = {
-            car: [],
-            cdr: []
-        };
+        var cycles = [];
         var refs = [];
         function visit(pair) {
             if (!seen_pairs.includes(pair)) {
                 seen_pairs.push(pair);
             }
         }
-        function set(node, type, child) {
+        function set(node, type, child, parents) {
             if (child instanceof Pair) {
-                if (seen_pairs.includes(child)) {
+                if (parents.includes(child)) {
                     if (!refs.includes(child)) {
                         refs.push(child);
                     }
-                    if (!cycles[type].includes(node)) {
-                        if (!node.cycles) {
-                            node.cycles = {};
-                        }
-                        node.cycles[type] = child;
-                        cycles[type].push(node);
+                    if (!node.cycles) {
+                        node.cycles = {};
+                    }
+                    node.cycles[type] = child;
+                    if (!cycles.includes(node)) {
+                        cycles.push(node);
                     }
                     return true;
                 }
             }
         }
-        function detect(pair) {
+        function detect(pair, parents) {
             if (pair instanceof Pair) {
                 delete pair.ref;
                 delete pair.cycles;
                 visit(pair);
-                if (!set(pair, 'car', pair.car)) {
-                    detect(pair.car);
+                parents.push(pair);
+                var car = set(pair, 'car', pair.car, parents);
+                var cdr = set(pair, 'cdr', pair.cdr, parents);
+                if (!car) {
+                    detect(pair.car, parents.slice());
                 }
-                if (!set(pair, 'cdr', pair.cdr)) {
-                    detect(pair.cdr);
+                if (!cdr) {
+                    detect(pair.cdr, parents.slice());
                 }
             }
         }
-        function cycle_node(node) {
-            return cycles.car.includes(node) || cycles.cdr.includes(node);
+        function mark_node(node, type) {
+            if (node.cycles[type] instanceof Pair) {
+                const count = ref_nodes.indexOf(node.cycles[type]);
+                node.cycles[type] = `#${count}#`;
+            }
         }
-        function mark_cycles(type) {
-            cycles[type].forEach(node => {
-                if (node.cycles[type] instanceof Pair) {
-                    const count = ref_nodes.indexOf(node.cycles[type]);
-                    node.cycles[type] = `#${count}#`;
-                }
-            });
-        }
-        detect(pair);
+        detect(pair, []);
         var ref_nodes = seen_pairs.filter(node => refs.includes(node));
         ref_nodes.forEach((node, i) => {
             node.ref = `#${i}=`;
         });
-        mark_cycles('car');
-        mark_cycles('cdr');
+        cycles.forEach(node => {
+            mark_node(node, 'car');
+            mark_node(node, 'cdr');
+        });
     }
 
     // ----------------------------------------------------------------------

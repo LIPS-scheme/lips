@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 11 Aug 2020 16:03:05 +0000
+ * build: Tue, 11 Aug 2020 18:01:42 +0000
  */
 (function () {
 	'use strict';
@@ -3166,10 +3166,7 @@
 
 	  function markCycles(pair) {
 	    var seen_pairs = [];
-	    var cycles = {
-	      car: [],
-	      cdr: []
-	    };
+	    var cycles = [];
 	    var refs = [];
 
 	    function visit(pair) {
@@ -3178,20 +3175,21 @@
 	      }
 	    }
 
-	    function set(node, type, child) {
+	    function set(node, type, child, parents) {
 	      if (child instanceof Pair) {
-	        if (seen_pairs.includes(child)) {
+	        if (parents.includes(child)) {
 	          if (!refs.includes(child)) {
 	            refs.push(child);
 	          }
 
-	          if (!cycles[type].includes(node)) {
-	            if (!node.cycles) {
-	              node.cycles = {};
-	            }
+	          if (!node.cycles) {
+	            node.cycles = {};
+	          }
 
-	            node.cycles[type] = child;
-	            cycles[type].push(node);
+	          node.cycles[type] = child;
+
+	          if (!cycles.includes(node)) {
+	            cycles.push(node);
 	          }
 
 	          return true;
@@ -3199,40 +3197,43 @@
 	      }
 	    }
 
-	    function detect(pair) {
+	    function detect(pair, parents) {
 	      if (pair instanceof Pair) {
 	        delete pair.ref;
 	        delete pair.cycles;
 	        visit(pair);
+	        parents.push(pair);
+	        var car = set(pair, 'car', pair.car, parents);
+	        var cdr = set(pair, 'cdr', pair.cdr, parents);
 
-	        if (!set(pair, 'car', pair.car)) {
-	          detect(pair.car);
+	        if (!car) {
+	          detect(pair.car, parents.slice());
 	        }
 
-	        if (!set(pair, 'cdr', pair.cdr)) {
-	          detect(pair.cdr);
+	        if (!cdr) {
+	          detect(pair.cdr, parents.slice());
 	        }
 	      }
 	    }
 
-	    function mark_cycles(type) {
-	      cycles[type].forEach(function (node) {
-	        if (node.cycles[type] instanceof Pair) {
-	          var count = ref_nodes.indexOf(node.cycles[type]);
-	          node.cycles[type] = "#".concat(count, "#");
-	        }
-	      });
+	    function mark_node(node, type) {
+	      if (node.cycles[type] instanceof Pair) {
+	        var count = ref_nodes.indexOf(node.cycles[type]);
+	        node.cycles[type] = "#".concat(count, "#");
+	      }
 	    }
 
-	    detect(pair);
+	    detect(pair, []);
 	    var ref_nodes = seen_pairs.filter(function (node) {
 	      return refs.includes(node);
 	    });
 	    ref_nodes.forEach(function (node, i) {
 	      node.ref = "#".concat(i, "=");
 	    });
-	    mark_cycles('car');
-	    mark_cycles('cdr');
+	    cycles.forEach(function (node) {
+	      mark_node(node, 'car');
+	      mark_node(node, 'cdr');
+	    });
 	  } // ----------------------------------------------------------------------
 
 
@@ -9659,10 +9660,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 11 Aug 2020 16:03:05 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 11 Aug 2020 18:01:42 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 11 Aug 2020 16:03:05 +0000').valueOf();
+	    var date = LString('Tue, 11 Aug 2020 18:01:42 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9699,7 +9700,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 11 Aug 2020 16:03:05 +0000',
+	    date: 'Tue, 11 Aug 2020 18:01:42 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
