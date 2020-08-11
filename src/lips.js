@@ -5795,12 +5795,6 @@
             value it will throw exception`),
         // ------------------------------------------------------------------
         list: doc(function(...args) {
-            args = args.map(item => {
-                if (item instanceof Pair) {
-                    return item.clone();
-                }
-                return item;
-            });
             return args.reverse().reduce((list, item) => new Pair(item, list), nil);
         }, `(list . args)
 
