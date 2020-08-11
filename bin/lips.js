@@ -21,6 +21,10 @@ const {
 const fs = require('fs');
 const { format } = require('util');
 const readline = require('readline');
+var highlight = require('prism-cli');
+var Prism = require('prismjs');
+require('prismjs/components/prism-scheme.min.js');
+require('../examples/prism.js');
 
 // -----------------------------------------------------------------------------
 // code taken from jQuery Terminal
@@ -147,6 +151,11 @@ function doc(fn, doc) {
 }
 
 // -----------------------------------------------------------------------------
+function scheme(str) {
+    return highlight(str, 'scheme', { grammar: Prism.languages.scheme });
+}
+
+// -----------------------------------------------------------------------------
 var strace;
 var rl;
 var interp = Interpreter('repl', {
@@ -248,9 +257,8 @@ if (options.version || options.V) {
         prompt: prompt,
         terminal
     });
-    var highlight = require('prism-cli');
-    rl._writeToOutput = function _writeToOutput(stringToWrite) {
-        rl.output.write(highlight(stringToWrite, 'scheme', true));
+    rl._writeToOutput = function _writeToOutput(string) {
+        rl.output.write(scheme(string));
     };
     process.stdin.on('keypress', (c, k) => {
         setTimeout(function() {
@@ -286,7 +294,7 @@ if (options.version || options.V) {
                     stdout = prompt;
                 }
                 fs.appendFileSync('lips.log', stdout + prev_line + '\n{i]' + i + '\n');
-                stdout += highlight(prev_line, 'scheme', true);
+                stdout += scheme(prev_line);
                 format = '\x1b[1F\x1b[K' + stdout + '\n';
                 process.stdout.write(format);
             }
