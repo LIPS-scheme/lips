@@ -1886,11 +1886,11 @@
     }
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toString = function(quote) {
+    Pair.prototype.toString = function(quote, rest) {
         var arr = [];
         if (this.ref) {
             arr.push(this.ref + '(');
-        } else {
+        } else if (!rest) {
             arr.push('(');
         }
         if (this.car !== undefined) {
@@ -1908,15 +1908,21 @@
                     arr.push(' . ');
                     arr.push(this.cycles.cdr);
                 } else {
-                    var cdr = this.cdr.toString(quote).replace(/^((?:#[0-9]+=)?)\(|\)$/g, '$1');
-                    arr.push(' ');
+                    if (this.cdr.ref) {
+                        arr.push(' . ');
+                    } else {
+                        arr.push(' ');
+                    }
+                    const cdr = this.cdr.toString(quote, true);
                     arr.push(cdr);
                 }
             } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
                 arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
             }
         }
-        arr.push(')');
+        if (!rest || this.ref) {
+            arr.push(')');
+        }
         return arr.join('');
     };
 

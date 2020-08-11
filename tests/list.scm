@@ -28,4 +28,4 @@
         (let ((x '(1 (2) 3)))
           (set-cdr! (cadr x) (cdr x))
           (set-cdr! (cddr x) x)
-          (t.is (repr x) "#0=(1 #1=(2 . #1#) 3 . #0#)"))))
+          (t.is (repr x) "#0=(1 . #1=((2 . #1#) 3 . #0#))"))))

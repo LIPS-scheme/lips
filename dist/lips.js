@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 11 Aug 2020 18:01:42 +0000
+ * build: Tue, 11 Aug 2020 18:47:18 +0000
  */
 (function () {
 	'use strict';
@@ -3237,12 +3237,12 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  Pair.prototype.toString = function (quote) {
+	  Pair.prototype.toString = function (quote, rest) {
 	    var arr = [];
 
 	    if (this.ref) {
 	      arr.push(this.ref + '(');
-	    } else {
+	    } else if (!rest) {
 	      arr.push('(');
 	    }
 
@@ -3264,8 +3264,13 @@
 	          arr.push(' . ');
 	          arr.push(this.cycles.cdr);
 	        } else {
-	          var cdr = this.cdr.toString(quote).replace(/^((?:#[0-9]+=)?)\(|\)$/g, '$1');
-	          arr.push(' ');
+	          if (this.cdr.ref) {
+	            arr.push(' . ');
+	          } else {
+	            arr.push(' ');
+	          }
+
+	          var cdr = this.cdr.toString(quote, true);
 	          arr.push(cdr);
 	        }
 	      } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
@@ -3273,7 +3278,10 @@
 	      }
 	    }
 
-	    arr.push(')');
+	    if (!rest || this.ref) {
+	      arr.push(')');
+	    }
+
 	    return arr.join('');
 	  }; // ----------------------------------------------------------------------
 
@@ -9660,10 +9668,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 11 Aug 2020 18:01:42 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 11 Aug 2020 18:47:18 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 11 Aug 2020 18:01:42 +0000').valueOf();
+	    var date = LString('Tue, 11 Aug 2020 18:47:18 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9700,7 +9708,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 11 Aug 2020 18:01:42 +0000',
+	    date: 'Tue, 11 Aug 2020 18:47:18 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
