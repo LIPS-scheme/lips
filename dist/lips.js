@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 11 Aug 2020 12:25:27 +0000
+ * build: Tue, 11 Aug 2020 12:42:33 +0000
  */
 (function () {
 	'use strict';
@@ -3030,6 +3030,10 @@
 
 	    if (obj instanceof Pair) {
 	      return obj.toString(quote);
+	    }
+
+	    if (Number.isNaN(obj)) {
+	      return '+nan.0';
 	    }
 
 	    var types = [RegExp, Nil, LSymbol, LNumber, LCharacter, Values];
@@ -9038,7 +9042,7 @@
 	    };
 
 	    if (Number.isNaN(obj)) {
-	      return 'NaN';
+	      return 'NaN ';
 	    }
 
 	    if (obj === nil) {
@@ -9626,10 +9630,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 11 Aug 2020 12:25:27 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 11 Aug 2020 12:42:33 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 11 Aug 2020 12:25:27 +0000').valueOf();
+	    var date = LString('Tue, 11 Aug 2020 12:42:33 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9666,7 +9670,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 11 Aug 2020 12:25:27 +0000',
+	    date: 'Tue, 11 Aug 2020 12:42:33 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

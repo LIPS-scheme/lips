@@ -1720,6 +1720,9 @@
         if (obj instanceof Pair) {
             return obj.toString(quote);
         }
+        if (Number.isNaN(obj)) {
+            return '+nan.0';
+        }
         var types = [RegExp, Nil, LSymbol, LNumber, LCharacter, Values];
         for (let type of types) {
             if (obj instanceof type) {
@@ -6845,7 +6848,7 @@
             'native-symbol': Symbol
         };
         if (Number.isNaN(obj)) {
-            return 'NaN';
+            return 'NaN ';
         }
         if (obj === nil) {
             return 'nil';
