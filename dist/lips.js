@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 11 Aug 2020 13:09:10 +0000
+ * build: Tue, 11 Aug 2020 15:41:04 +0000
  */
 (function () {
 	'use strict';
@@ -3019,7 +3019,7 @@
 	    str_mapping.set(key, value);
 	  }); // ----------------------------------------------------------------------
 
-	  function toString(obj, quote) {
+	  function toString(obj, quote, skip_cycles) {
 	    if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
 	      return '#<jQuery(' + obj.length + ')>';
 	    }
@@ -3029,6 +3029,11 @@
 	    }
 
 	    if (obj instanceof Pair) {
+	      // make sure that repr directly after update set the cycle ref
+	      if (!skip_cycles) {
+	        obj.markCycles();
+	      }
+
 	      return obj.toString(quote);
 	    }
 
@@ -3160,65 +3165,84 @@
 
 
 	  function markCycles(pair) {
-	    var seenPairs = [];
-	    var cycles = new Map();
+	    var seen_pairs = [];
+	    var cycles = {
+	      car: [],
+	      cdr: []
+	    };
+	    var refs = [];
 
-	    function cycleName(pair) {
-	      if (pair instanceof Pair) {
-	        if (seenPairs.includes(pair)) {
-	          if (!cycles.has(pair)) {
-	            var count = cycles.size;
-	            var name = "#".concat(count, "#");
-	            pair.ref = "#".concat(count, "=");
-	            cycles.set(pair, name);
-	            return name;
+	    function visit(pair) {
+	      if (!seen_pairs.includes(pair)) {
+	        seen_pairs.push(pair);
+	      }
+	    }
+
+	    function set(node, type, child) {
+	      if (child instanceof Pair) {
+	        if (seen_pairs.includes(child)) {
+	          if (!refs.includes(child)) {
+	            refs.push(child);
 	          }
 
-	          return cycles.get(pair);
+	          if (!cycles[type].includes(node)) {
+	            if (!node.cycles) {
+	              node.cycles = {};
+	            }
+
+	            node.cycles[type] = child;
+	            cycles[type].push(node);
+	          }
+
+	          return true;
 	        }
 	      }
 	    }
 
 	    function detect(pair) {
 	      if (pair instanceof Pair) {
-	        seenPairs.push(pair);
-	        var cycles = {};
-	        var carCycle = cycleName(pair.car);
-	        var cdrCycle = cycleName(pair.cdr);
+	        delete pair.ref;
+	        delete pair.cycles;
+	        visit(pair);
 
-	        if (carCycle) {
-	          cycles['car'] = carCycle;
-	        } else {
+	        if (!set(pair, 'car', pair.car)) {
 	          detect(pair.car);
 	        }
 
-	        if (cdrCycle) {
-	          cycles['cdr'] = cdrCycle;
-	        } else {
+	        if (!set(pair, 'cdr', pair.cdr)) {
 	          detect(pair.cdr);
-	        }
-
-	        if (carCycle || cdrCycle) {
-	          pair.cycles = cycles;
-	        } else if (pair.cycles) {
-	          delete pair.cycles;
 	        }
 	      }
 	    }
 
+	    function mark_cycles(type) {
+	      cycles[type].forEach(function (node) {
+	        if (node.cycles[type] instanceof Pair) {
+	          var count = ref_nodes.indexOf(node.cycles[type]);
+	          node.cycles[type] = "#".concat(count, "#");
+	        }
+	      });
+	    }
+
 	    detect(pair);
+	    var ref_nodes = seen_pairs.filter(function (node) {
+	      return refs.includes(node);
+	    });
+	    ref_nodes.forEach(function (node, i) {
+	      node.ref = "#".concat(i, "=");
+	    });
+	    mark_cycles('car');
+	    mark_cycles('cdr');
 	  } // ----------------------------------------------------------------------
 
 
-	  Pair.prototype.toString = function (quote, rest) {
+	  Pair.prototype.toString = function (quote) {
 	    var arr = [];
 
-	    if (!rest) {
-	      if (this.ref) {
-	        arr.push(this.ref + '(');
-	      } else {
-	        arr.push('(');
-	      }
+	    if (this.ref) {
+	      arr.push(this.ref + '(');
+	    } else {
+	      arr.push('(');
 	    }
 
 	    if (this.car !== undefined$1) {
@@ -3227,7 +3251,7 @@
 	      if (this.cycles && this.cycles.car) {
 	        value = this.cycles.car;
 	      } else {
-	        value = toString(this.car, quote);
+	        value = toString(this.car, quote, true);
 	      }
 
 	      if (value !== undefined$1) {
@@ -3239,19 +3263,16 @@
 	          arr.push(' . ');
 	          arr.push(this.cycles.cdr);
 	        } else {
-	          var cdr = this.cdr.toString(quote, true);
+	          var cdr = this.cdr.toString(quote).replace(/^((?:#[0-9]+=)?)\(|\)$/g, '$1');
 	          arr.push(' ');
 	          arr.push(cdr);
 	        }
 	      } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-	        arr = arr.concat([' . ', toString(this.cdr, quote)]);
+	        arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
 	      }
 	    }
 
-	    if (!rest) {
-	      arr.push(')');
-	    }
-
+	    arr.push(')');
 	    return arr.join('');
 	  }; // ----------------------------------------------------------------------
 
@@ -9645,10 +9666,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 11 Aug 2020 13:09:10 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 11 Aug 2020 15:41:04 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 11 Aug 2020 13:09:10 +0000').valueOf();
+	    var date = LString('Tue, 11 Aug 2020 15:41:04 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9685,7 +9706,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 11 Aug 2020 13:09:10 +0000',
+	    date: 'Tue, 11 Aug 2020 15:41:04 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

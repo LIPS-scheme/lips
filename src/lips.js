@@ -1709,7 +1709,7 @@
         str_mapping.set(key, value);
     });
     // ----------------------------------------------------------------------
-    function toString(obj, quote) {
+    function toString(obj, quote, skip_cycles) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
             return '#<jQuery(' + obj.length + ')>';
@@ -1718,6 +1718,10 @@
             return str_mapping.get(obj);
         }
         if (obj instanceof Pair) {
+            // make sure that repr directly after update set the cycle ref
+            if (!skip_cycles) {
+                obj.markCycles();
+            }
             return obj.toString(quote);
         }
         if (Number.isNaN(obj)) {
@@ -1823,64 +1827,81 @@
 
     // ----------------------------------------------------------------------------
     function markCycles(pair) {
-        var seenPairs = [];
-        var cycles = new Map();
-        function cycleName(pair) {
-            if (pair instanceof Pair) {
-                if (seenPairs.includes(pair)) {
-                    if (!cycles.has(pair)) {
-                        const count = cycles.size;
-                        const name = `#${count}#`;
-                        pair.ref = `#${count}=`;
-                        cycles.set(pair, name);
-                        return name;
+        var seen_pairs = [];
+        var cycles = {
+            car: [],
+            cdr: []
+        };
+        var refs = [];
+        function visit(pair) {
+            if (!seen_pairs.includes(pair)) {
+                seen_pairs.push(pair);
+            }
+        }
+        function set(node, type, child) {
+            if (child instanceof Pair) {
+                if (seen_pairs.includes(child)) {
+                    if (!refs.includes(child)) {
+                        refs.push(child);
                     }
-                    return cycles.get(pair);
+                    if (!cycles[type].includes(node)) {
+                        if (!node.cycles) {
+                            node.cycles = {};
+                        }
+                        node.cycles[type] = child;
+                        cycles[type].push(node);
+                    }
+                    return true;
                 }
             }
         }
         function detect(pair) {
             if (pair instanceof Pair) {
-                seenPairs.push(pair);
-                var cycles = {};
-                var carCycle = cycleName(pair.car);
-                var cdrCycle = cycleName(pair.cdr);
-                if (carCycle) {
-                    cycles['car'] = carCycle;
-                } else {
+                delete pair.ref;
+                delete pair.cycles;
+                visit(pair);
+                if (!set(pair, 'car', pair.car)) {
                     detect(pair.car);
                 }
-                if (cdrCycle) {
-                    cycles['cdr'] = cdrCycle;
-                } else {
+                if (!set(pair, 'cdr', pair.cdr)) {
                     detect(pair.cdr);
-                }
-                if (carCycle || cdrCycle) {
-                    pair.cycles = cycles;
-                } else if (pair.cycles) {
-                    delete pair.cycles;
                 }
             }
         }
+        function cycle_node(node) {
+            return cycles.car.includes(node) || cycles.cdr.includes(node);
+        }
+        function mark_cycles(type) {
+            cycles[type].forEach(node => {
+                if (node.cycles[type] instanceof Pair) {
+                    const count = ref_nodes.indexOf(node.cycles[type]);
+                    node.cycles[type] = `#${count}#`;
+                }
+            });
+        }
         detect(pair);
+        var ref_nodes = seen_pairs.filter(node => refs.includes(node));
+        ref_nodes.forEach((node, i) => {
+            node.ref = `#${i}=`;
+        });
+        mark_cycles('car');
+        mark_cycles('cdr');
     }
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toString = function(quote, rest) {
+    Pair.prototype.toString = function(quote) {
         var arr = [];
-        if (!rest) {
-            if (this.ref) {
-                arr.push(this.ref + '(');
-            } else {
-                arr.push('(');
-            }
+        if (this.ref) {
+            arr.push(this.ref + '(');
+        } else {
+            arr.push('(');
         }
         if (this.car !== undefined) {
             var value;
             if (this.cycles && this.cycles.car) {
                 value = this.cycles.car;
             } else {
-                value = toString(this.car, quote);
+                value = toString(this.car, quote, true);
             }
             if (value !== undefined) {
                 arr.push(value);
@@ -1890,17 +1911,15 @@
                     arr.push(' . ');
                     arr.push(this.cycles.cdr);
                 } else {
-                    var cdr = this.cdr.toString(quote, true);
+                    var cdr = this.cdr.toString(quote).replace(/^((?:#[0-9]+=)?)\(|\)$/g, '$1');
                     arr.push(' ');
                     arr.push(cdr);
                 }
             } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-                arr = arr.concat([' . ', toString(this.cdr, quote)]);
+                arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
             }
         }
-        if (!rest) {
-            arr.push(')');
-        }
+        arr.push(')');
         return arr.join('');
     };
 
