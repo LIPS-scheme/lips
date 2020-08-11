@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 11 Aug 2020 12:42:33 +0000
+ * build: Tue, 11 Aug 2020 13:09:10 +0000
  */
 (function () {
 	'use strict';
@@ -3161,16 +3161,20 @@
 
 	  function markCycles(pair) {
 	    var seenPairs = [];
-	    var cycles = [];
+	    var cycles = new Map();
 
 	    function cycleName(pair) {
 	      if (pair instanceof Pair) {
 	        if (seenPairs.includes(pair)) {
-	          if (!cycles.includes(pair)) {
-	            cycles.push(pair);
+	          if (!cycles.has(pair)) {
+	            var count = cycles.size;
+	            var name = "#".concat(count, "#");
+	            pair.ref = "#".concat(count, "=");
+	            cycles.set(pair, name);
+	            return name;
 	          }
 
-	          return "#".concat(cycles.length - 1, "#");
+	          return cycles.get(pair);
 	        }
 	      }
 	    }
@@ -3206,8 +3210,16 @@
 	  } // ----------------------------------------------------------------------
 
 
-	  Pair.prototype.toString = function (quote) {
-	    var arr = ['('];
+	  Pair.prototype.toString = function (quote, rest) {
+	    var arr = [];
+
+	    if (!rest) {
+	      if (this.ref) {
+	        arr.push(this.ref + '(');
+	      } else {
+	        arr.push('(');
+	      }
+	    }
 
 	    if (this.car !== undefined$1) {
 	      var value;
@@ -3227,7 +3239,7 @@
 	          arr.push(' . ');
 	          arr.push(this.cycles.cdr);
 	        } else {
-	          var cdr = this.cdr.toString(quote).replace(/^\(|\)$/g, '');
+	          var cdr = this.cdr.toString(quote, true);
 	          arr.push(' ');
 	          arr.push(cdr);
 	        }
@@ -3236,7 +3248,10 @@
 	      }
 	    }
 
-	    arr.push(')');
+	    if (!rest) {
+	      arr.push(')');
+	    }
+
 	    return arr.join('');
 	  }; // ----------------------------------------------------------------------
 
@@ -9630,10 +9645,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 11 Aug 2020 12:42:33 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 11 Aug 2020 13:09:10 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 11 Aug 2020 12:42:33 +0000').valueOf();
+	    var date = LString('Tue, 11 Aug 2020 13:09:10 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9670,7 +9685,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 11 Aug 2020 12:42:33 +0000',
+	    date: 'Tue, 11 Aug 2020 13:09:10 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

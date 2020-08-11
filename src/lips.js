@@ -1824,14 +1824,18 @@
     // ----------------------------------------------------------------------------
     function markCycles(pair) {
         var seenPairs = [];
-        var cycles = [];
+        var cycles = new Map();
         function cycleName(pair) {
             if (pair instanceof Pair) {
                 if (seenPairs.includes(pair)) {
-                    if (!cycles.includes(pair)) {
-                        cycles.push(pair);
+                    if (!cycles.has(pair)) {
+                        const count = cycles.size;
+                        const name = `#${count}#`;
+                        pair.ref = `#${count}=`;
+                        cycles.set(pair, name);
+                        return name;
                     }
-                    return `#${cycles.length - 1}#`;
+                    return cycles.get(pair);
                 }
             }
         }
@@ -1862,8 +1866,15 @@
     }
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toString = function(quote) {
-        var arr = ['('];
+    Pair.prototype.toString = function(quote, rest) {
+        var arr = [];
+        if (!rest) {
+            if (this.ref) {
+                arr.push(this.ref + '(');
+            } else {
+                arr.push('(');
+            }
+        }
         if (this.car !== undefined) {
             var value;
             if (this.cycles && this.cycles.car) {
@@ -1879,7 +1890,7 @@
                     arr.push(' . ');
                     arr.push(this.cycles.cdr);
                 } else {
-                    var cdr = this.cdr.toString(quote).replace(/^\(|\)$/g, '');
+                    var cdr = this.cdr.toString(quote, true);
                     arr.push(' ');
                     arr.push(cdr);
                 }
@@ -1887,7 +1898,9 @@
                 arr = arr.concat([' . ', toString(this.cdr, quote)]);
             }
         }
-        arr.push(')');
+        if (!rest) {
+            arr.push(')');
+        }
         return arr.join('');
     };
 
