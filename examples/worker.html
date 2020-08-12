@@ -8,80 +8,98 @@
     <!--[if IE]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <script src="../src/lips.js"></script>
     <script>
-function fworker(fn) {
-    // ref: https://stackoverflow.com/a/10372280/387194
-    var str = '(' + fn.toString() + ')()';
-    var URL = window.URL || window.webkitURL;
-    var blob;
-    try {
-        blob = new Blob([str], {type: 'application/javascript'});
-    } catch (e) { // Backwards-compatibility
-        window.BlobBuilder = window.BlobBuilder ||
-            window.WebKitBlobBuilder ||
-            window.MozBlobBuilder;
-        blob = new BlobBuilder();
-        blob.append(str);
-        blob = blob.getBlob();
-    }
-    return new Worker(URL.createObjectURL(blob));
-}
+    // worker example - included code is little bit slower because LIPS url
+    // is sent to worker using RPC system, but vanila JavaScript example use url
+    // directly in function that is converted to Blob so it load faster
+    var worker = new lips.Worker("https://cdn.jsdelivr.net/gh/jcubic/lips@devel");
+    (async function() {
+      const [ result ] = await worker.rpc('eval', [`(let* ((what "hello")
+                                                           (who "world")
+                                                           (message (string-append what " " who)))
+                                                      (display message)
+                                                      message)`]);
+      console.log(result);
+    })();
 
-var worker = fworker(function() {
-    importScripts("https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js");
-    var i = new lips.Interpreter('worker');
-    var bootstrap = i.exec(`(let-env lips.env.parent
-                               (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/bootstrap.scm")
-                               (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/R5RS.scm"))`);
-    // string, numbers, booleans
-    self.addEventListener('message', function(response) {
-        var data = response.data;
-        var id = data.id;
-        if (data.type !== 'RPC' || id === null) {
-            return;
-        }
-        if (data.method === 'eval') {
-            bootstrap.then(function() {
-                i.exec(data.params[0]).then(function(result) {
-                    result = result.map(function(value) {
-                        return value && value.valueOf();
-                    });
-                    self.postMessage({id: id, type: 'RPC', result: result});
-                });
-            });
-        }
-    });
-});
-var rpc = (function() {
-    var id = 0;
-    return function rpc(method, params) {
-        var _id = ++id;
-        return new Promise(function(resolve) {
-            worker.addEventListener('message', function handler(response) {
-                var data = response.data;
-                if (data && data.type === 'RPC' && data.id === _id) {
-                    resolve(data.result);
-                    worker.removeEventListener('message', handler);
-                }
-            });
-            worker.postMessage({ type: 'RPC', method: method, id: _id, params: params });
-        });
-    };
-})();
+    (function manual_init() {
+      // below is the code that can be used to initalize LIPS in worker withtou extra code
+      // almost the same code is in the library
+      function fworker(fn) {
+          // ref: https://stackoverflow.com/a/10372280/387194
+          var str = '(' + fn.toString() + ')()';
+          var URL = window.URL || window.webkitURL;
+          var blob;
+          try {
+              blob = new Blob([str], {type: 'application/javascript'});
+          } catch (e) { // Backwards-compatibility
+              window.BlobBuilder = window.BlobBuilder ||
+                  window.WebKitBlobBuilder ||
+                  window.MozBlobBuilder;
+              blob = new BlobBuilder();
+              blob.append(str);
+              blob = blob.getBlob();
+          }
+          return new Worker(URL.createObjectURL(blob));
+      }
 
-(async function() {
-  const [ result ] = await rpc('eval', [`(let* ((what "hello")
-                                                (who "world")
-                                                (message (string-append what " " who)))
-                                           (display message)
-                                           message)`]);
-  console.log(result);
-})();
+      var worker = fworker(function() {
+          importScripts("https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js");
+          var i = new lips.Interpreter('worker');
+          var bootstrap = i.exec(`(let-env lips.env.parent
+                                     (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/bootstrap.scm")
+                                     (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/R5RS.scm")
+                                     (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/R7RS.scm"))`);
+          // string, numbers, booleans
+          self.addEventListener('message', function(response) {
+              var data = response.data;
+              var id = data.id;
+              if (data.type !== 'RPC' || id === null) {
+                  return;
+              }
+              if (data.method === 'eval') {
+                  bootstrap.then(function() {
+                      i.exec(data.params[0]).then(function(result) {
+                          result = result.map(function(value) {
+                              return value && value.valueOf();
+                          });
+                          self.postMessage({id: id, type: 'RPC', result: result});
+                      });
+                  });
+              }
+          });
+      });
+      var rpc = (function() {
+          var id = 0;
+          return function rpc(method, params) {
+              var _id = ++id;
+              return new Promise(function(resolve) {
+                  worker.addEventListener('message', function handler(response) {
+                      var data = response.data;
+                      if (data && data.type === 'RPC' && data.id === _id) {
+                          resolve(data.result);
+                          worker.removeEventListener('message', handler);
+                      }
+                  });
+                  worker.postMessage({ type: 'RPC', method: method, id: _id, params: params });
+              });
+          };
+      })();
 
+      (async function() {
+        const [ result ] = await rpc('eval', [`(let* ((what "hello")
+                                                      (who "Worker")
+                                                      (message (string-append what " " who)))
+                                                 (display message)
+                                                 message)`]);
+        console.log(result);
+      })();
+    })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
-
+  <p>Open developer tools to see the console messages</p>
 </body>
 </html>

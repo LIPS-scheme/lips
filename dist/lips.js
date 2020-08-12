@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 12 Aug 2020 17:29:43 +0000
+ * build: Wed, 12 Aug 2020 18:51:45 +0000
  */
 (function () {
 	'use strict';
@@ -1044,7 +1044,7 @@
 	 * TODO: consider using exec in env.eval or use different maybe_async code
 	 */
 
-	/* global define, jQuery, BigInt, Map, Set, Symbol */
+	/* global define, jQuery, BigInt, Map, Set, Symbol, importScripts */
 	(function (root, factory) {
 	  if (typeof define === 'function' && define.amd) {
 	    // AMD. Register as an anonymous module.
@@ -7100,6 +7100,19 @@
 	      });
 	    }), "(set! name value)\n\n            Macro that can be used to set the value of the variable (mutate)\n            it search the scope chain until it finds first non emtpy slot and set it."),
 	    // ------------------------------------------------------------------
+	    'unset!': doc(new Macro('set!', function (code) {
+	      if (!(code.car instanceof LSymbol)) {
+	        throw new Error('unset! first argument need to be a symbol or ' + 'dot accessor that evaluate to object.');
+	      }
+
+	      var symbol = code.car;
+	      var ref = this.ref(symbol);
+
+	      if (ref) {
+	        delete ref.env[symbol.name];
+	      }
+	    }), "(unset! name)\n\n            Function delete specified name from environment."),
+	    // ------------------------------------------------------------------
 	    'set-car!': doc(function (slot, value) {
 	      typecheck('set-car!', slot, 'pair');
 	      slot.car = value;
@@ -8164,11 +8177,6 @@
 	      });
 	      return instance;
 	    }, "(new obj . args)\n\n            Function create new JavaScript instance of an object."),
-	    // ------------------------------------------------------------------
-	    'unset!': doc(function (symbol) {
-	      typecheck('unset!', symbol, 'symbol');
-	      delete this.env[symbol.name];
-	    }, "(unset! name)\n\n            Function delete specified name from environment."),
 	    // ------------------------------------------------------------------
 	    'typecheck': doc(function (label, arg, expected, position) {
 	      if (expected instanceof Pair) {
@@ -9596,6 +9604,136 @@
 	  } // -------------------------------------------------------------------------
 
 
+	  function fworker(fn) {
+	    // ref: https://stackoverflow.com/a/10372280/387194
+	    var str = '(' + fn.toString() + ')()';
+	    var URL = window.URL || window.webkitURL;
+	    var blob;
+
+	    try {
+	      blob = new Blob([str], {
+	        type: 'application/javascript'
+	      });
+	    } catch (e) {
+	      // Backwards-compatibility
+	      var BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+	      blob = new BlobBuilder();
+	      blob.append(str);
+	      blob = blob.getBlob();
+	    }
+
+	    return new root.Worker(URL.createObjectURL(blob));
+	  } // -------------------------------------------------------------------------
+
+
+	  function Worker(url) {
+	    this.url = url;
+	    var worker = this.worker = fworker(function () {
+	      var interpreter;
+	      var bootstrap; // string, numbers, booleans
+
+	      self.addEventListener('message', function (response) {
+	        var data = response.data;
+	        var id = data.id;
+
+	        if (data.type !== 'RPC' || id === null) {
+	          return;
+	        }
+
+	        function send_result(result) {
+	          self.postMessage({
+	            id: id,
+	            type: 'RPC',
+	            result: result
+	          });
+	        }
+
+	        function send_error(message) {
+	          self.postMessage({
+	            id: id,
+	            type: 'RPC',
+	            error: message
+	          });
+	        }
+
+	        if (data.method === 'eval') {
+	          if (!bootstrap) {
+	            send_error('Worker RPC: LIPS not initilized, call init first');
+	            return;
+	          }
+
+	          bootstrap.then(function () {
+	            var _data$params = slicedToArray(data.params, 2),
+	                code = _data$params[0],
+	                dynamic = _data$params[1];
+
+	            interpreter.exec(code, dynamic).then(function (result) {
+	              result = result.map(function (value) {
+	                return value && value.valueOf();
+	              });
+	              send_result(result);
+	            })["catch"](function (error) {
+	              send_error(error);
+	            });
+	          });
+	        } else if (data.method === 'init') {
+	          var _data$params2 = slicedToArray(data.params, 1),
+	              _url = _data$params2[0];
+
+	          if (typeof _url !== 'string') {
+	            send_error('Worker RPC: url is not a string');
+	          } else {
+	            importScripts("".concat(_url, "/dist/lips.min.js"));
+	            interpreter = new lips.Interpreter('worker');
+	            bootstrap = interpreter.exec("(let-env lips.env.parent\n                                                        (load \"".concat(_url, "/lib/bootstrap.scm\")\n                                                        (load \"").concat(_url, "/lib/R5RS.scm\")\n                                                        (load \"").concat(_url, "/lib/R7RS.scm\"))"));
+	            bootstrap.then(function () {
+	              send_result(true);
+	            });
+	          }
+	        }
+	      });
+	    });
+
+	    this.rpc = function () {
+	      var id = 0;
+	      return function rpc(method, params) {
+	        var _id = ++id;
+
+	        return new Promise(function (resolve, reject) {
+	          worker.addEventListener('message', function handler(response) {
+	            var data = response.data;
+
+	            if (data && data.type === 'RPC' && data.id === _id) {
+	              if (data.error) {
+	                reject(data.error);
+	              } else {
+	                resolve(data.result);
+	              }
+
+	              worker.removeEventListener('message', handler);
+	            }
+	          });
+	          worker.postMessage({
+	            type: 'RPC',
+	            method: method,
+	            id: _id,
+	            params: params
+	          });
+	        });
+	      };
+	    }();
+
+	    this.rpc('init', [url])["catch"](function (error) {
+	      console.error(error);
+	    });
+
+	    this.exec = function (code) {
+	      var dynamic = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : false;
+	      return this.rpc('eval', [code, dynamic]);
+	    };
+	  } // -------------------------------------------------------------------------
+
+
 	  Pair.unDry = function (value) {
 	    return new Pair(value.car, value.cdr);
 	  };
@@ -9694,10 +9832,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 12 Aug 2020 17:29:43 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 12 Aug 2020 18:51:45 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 12 Aug 2020 17:29:43 +0000').valueOf();
+	    var date = LString('Wed, 12 Aug 2020 18:51:45 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9734,13 +9872,14 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 12 Aug 2020 17:29:43 +0000',
+	    date: 'Wed, 12 Aug 2020 18:51:45 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
 	    evaluate: evaluate,
 	    Environment: Environment,
 	    env: user_env,
+	    Worker: Worker,
 	    Interpreter: Interpreter,
 	    balanced_parenthesis: balanced,
 	    balancedParenthesis: balanced,

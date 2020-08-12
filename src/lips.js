@@ -36,7 +36,7 @@
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
-/* global define, jQuery, BigInt, Map, Set, Symbol */
+/* global define, jQuery, BigInt, Map, Set, Symbol, importScripts */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -7217,6 +7217,111 @@
     }
 
     // -------------------------------------------------------------------------
+    function fworker(fn) {
+        // ref: https://stackoverflow.com/a/10372280/387194
+        var str = '(' + fn.toString() + ')()';
+        var URL = window.URL || window.webkitURL;
+        var blob;
+        try {
+            blob = new Blob([str], { type: 'application/javascript' });
+        } catch (e) { // Backwards-compatibility
+            const BlobBuilder = window.BlobBuilder ||
+                window.WebKitBlobBuilder ||
+                window.MozBlobBuilder;
+            blob = new BlobBuilder();
+            blob.append(str);
+            blob = blob.getBlob();
+        }
+        return new root.Worker(URL.createObjectURL(blob));
+    }
+
+    // -------------------------------------------------------------------------
+    function Worker(url) {
+        this.url = url;
+        const worker = this.worker = fworker(function() {
+            var interpreter;
+            var bootstrap;
+            // string, numbers, booleans
+            self.addEventListener('message', function(response) {
+                var data = response.data;
+                var id = data.id;
+                if (data.type !== 'RPC' || id === null) {
+                    return;
+                }
+                function send_result(result) {
+                    self.postMessage({ id: id, type: 'RPC', result: result });
+                }
+                function send_error(message) {
+                    self.postMessage({ id: id, type: 'RPC', error: message });
+                }
+                if (data.method === 'eval') {
+                    if (!bootstrap) {
+                        send_error('Worker RPC: LIPS not initilized, call init first');
+                        return;
+                    }
+                    bootstrap.then(function() {
+                        const [ code, dynamic ] = data.params;
+                        interpreter.exec(code, dynamic).then(function(result) {
+                            result = result.map(function(value) {
+                                return value && value.valueOf();
+                            });
+                            send_result(result);
+                        }).catch(error => {
+                            send_error(error);
+                        });
+                    });
+                } else if (data.method === 'init') {
+                    const [ url ] = data.params;
+                    if (typeof url !== 'string') {
+                        send_error('Worker RPC: url is not a string');
+                    } else {
+                        importScripts(`${url}/dist/lips.min.js`);
+                        interpreter = new lips.Interpreter('worker');
+                        bootstrap = interpreter.exec(`(let-env lips.env.parent
+                                                        (load "${url}/lib/bootstrap.scm")
+                                                        (load "${url}/lib/R5RS.scm")
+                                                        (load "${url}/lib/R7RS.scm"))`);
+                        bootstrap.then(() => {
+                            send_result(true);
+                        });
+                    }
+                }
+            });
+        });
+        this.rpc = (function() {
+            var id = 0;
+            return function rpc(method, params) {
+                var _id = ++id;
+                return new Promise(function(resolve, reject) {
+                    worker.addEventListener('message', function handler(response) {
+                        var data = response.data;
+                        if (data && data.type === 'RPC' && data.id === _id) {
+                            if (data.error) {
+                                reject(data.error);
+                            } else {
+                                resolve(data.result);
+                            }
+                            worker.removeEventListener('message', handler);
+                        }
+                    });
+                    worker.postMessage({
+                        type: 'RPC',
+                        method: method,
+                        id: _id,
+                        params: params
+                    });
+                });
+            };
+        })();
+        this.rpc('init', [url]).catch((error) => {
+            console.error(error);
+        });
+        this.exec = function(code, dynamic = false) {
+            return this.rpc('eval', [code, dynamic]);
+        };
+    }
+
+    // -------------------------------------------------------------------------
     Pair.unDry = function(value) {
         return new Pair(value.car, value.cdr);
     };
@@ -7355,6 +7460,8 @@ You can also use (help name) to display help for specic function or macro.
 
         Environment,
         env: user_env,
+
+        Worker,
 
         Interpreter,
         balanced_parenthesis: balanced,
