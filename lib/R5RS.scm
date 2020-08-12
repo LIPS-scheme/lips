@@ -13,13 +13,6 @@
 ;;         (+ 2 (escape 3)))))
 
 ;; -----------------------------------------------------------------------------
-(define (%doc string fn)
-  (typecheck "doc" fn "function")
-  (typecheck "doc" string "string")
-  (set-obj! fn '__doc__ (--> string (replace /^ +/mg "")))
-  fn)
-
-;; -----------------------------------------------------------------------------
 (define string-append concat)
 (define = ==)
 (define remainder %)

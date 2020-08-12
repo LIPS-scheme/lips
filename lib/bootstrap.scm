@@ -6,6 +6,13 @@
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
+(define (%doc string fn)
+  (typecheck "%doc" fn "function")
+  (typecheck "%doc" string "string")
+  (set-obj! fn '__doc__ (--> string (replace /^ +/mg "")))
+  fn)
+
+;; -----------------------------------------------------------------------------
 (define-macro (let-syntax vars . body)
   "(let-syntax ((name fn)) body)
 
@@ -544,4 +551,37 @@
 
    Function check if object is macro and it's expandable"
   (and (macro? obj) (. obj 'defmacro)))
+
+
+;; ---------------------------------------------------------------------------------------
+(define (n-ary n fn)
+  "(n-ary n fn)
+  
+   Return new function that limit number of arguments to n."
+  (lambda args
+    (apply fn (take n args))))
+
+;; ---------------------------------------------------------------------------------------
+(define (take n lst)
+  "(take n list)
+  
+   Return n first values of the list."
+  (let iter ((result '()) (i n) (lst lst))
+    (if (or (null? lst) (<= i 0))
+        (reverse result)
+        (iter (cons (car lst) result) (- i 1) (cdr lst)))))
+
+;; ---------------------------------------------------------------------------------------
+(define unary (%doc "(unary fn)
+
+                     Function return new function with arguments limited to one."
+                    (curry n-ary 1)))
+
+;; ---------------------------------------------------------------------------------------
+(define binary (%doc "(binary fn)
+
+                      Function return new function with arguments limited to two."
+                      (curry n-ary 2)))
+
+;; ---------------------------------------------------------------------------------------
 
