@@ -19,6 +19,7 @@ const {
     InputPort,
     OutputPort } = require('../dist/lips');
 const fs = require('fs');
+const path = require('path');
 const { format } = require('util');
 const readline = require('readline');
 var highlight = require('prism-cli');
@@ -77,11 +78,11 @@ function parse_options(arg, options) {
 }
 
 // -----------------------------------------------------------------------------
-function run(code, interpreter) {
+function run(code, interpreter, dynamic = false) {
     if (typeof code !== 'string') {
         code = code.toString();
     }
-    return interpreter.exec(code).catch(function(e) {
+    return interpreter.exec(code, dynamic).catch(function(e) {
         console.error(e.message);
         console.error('Call (stack-trace) to see the stack');
         console.error('Thrown exception is in global exception variable, use ' +
@@ -197,7 +198,7 @@ var interp = Interpreter('repl', {
 });
 
 // -----------------------------------------------------------------------------
-const options = parse_options(process.argv.slice(2));
+const options = parse_options(process.argv.slice(2), {boolean: ['d', 'dynamic']});
 if (options.version || options.V) {
     // SRFI 176
     var os = require('os');
@@ -216,12 +217,14 @@ if (options.version || options.V) {
         return [LSymbol(key), ...values];
     }));
     boostrap(interp).then(function() {
-        run('(for-each (lambda (x) (write x) (newline)) output)', interp);
+        run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
     });
 } else if (options.e || options.eval || options.c || options.code) {
     // from 1.0 documentation should use -e but it's not breaking change
     boostrap(interp).then(function() {
-        return run(options.e || options.eval || options.c || options.code, interp).then(print);
+        const code = options.e || options.eval || options.c || options.code;
+        const dynamic = options.d || options.dynamic;
+        return run(code, interp, dynamic).then(print);
     });
 } else if (options._.length === 1) {
     // hack for node-gtk
@@ -231,7 +234,9 @@ if (options.version || options.V) {
     });
     fs.promises.readFile(options._[0]).then(function(data) {
         return boostrap(interp).then(() => {
-            return run(data.toString().replace(/^#!.*\n/, ''), interp);
+            const code = data.toString().replace(/^#!.*\n/, '');
+            const dynamic = options.d || options.dynamic;
+            return run(code, interp, dynamic);
         });
     }).catch(err => {
         console.error(err);
@@ -241,14 +246,17 @@ if (options.version || options.V) {
 } else if (options.h || options.help) {
     var name = process.argv[1];
     var intro = banner.replace(/(me>\n)[\s\S]+$/, '$1');
-    console.log(format('%s\nusage:\n%s [-q] | -h | -c <code> | <filename>\n\n  [-h --help]\t\tthis helpme' +
-                       'ssage\n  [-e --eval]\t\tExecute code\n  [--version -V]\tDisplay version informati' +
-                       'on according to srfi-176\n  [-q --quiet]\t\tdon\'t display banner in REPL\n\nif c' +
-                       'alled without arguments it will run REPL and ifcalled with one argument\nit will ' +
-                       'treat it as filename and execute it.', intro, name));
+    console.log(format('%s\nusage:\n  %s -q | -h | -c <code> | <filename> | -d\n\n  [-h --help]\t\tthis' +
+                       ' help message\n  [-e --eval]\t\texecute code\n  [-V --version]\tdisplay version' +
+                       'information according to srfi-176\n  [-q --quiet]\t\tdon\'t display banner in R' +
+                       'EPL\n  [-d --dynamic]\trun interpreter with dynamic scope\n\nif called without ' +
+                       'arguments it will run REPL and if called with one argument\nit will treat it as' +
+                       ' filename and execute it.', intro, path.basename(name)));
 } else {
+    const dynamic = options.d || options.dynamic;
+    const entry = '   ' + (dynamic ? 'dynamic' : 'lexical') + ' scope $1';
     if (process.stdin.isTTY && !options.q && !options.quiet) {
-        console.log(banner);
+        console.log(banner.replace(/(\n\nLIPS.+)/m, entry));
     }
     var prompt = 'lips> ';
     var continuePrompt = '... ';
@@ -304,7 +312,7 @@ if (options.version || options.V) {
                 if (balanced_parenthesis(code)) {
                     rl.pause();
                     prev_eval = prev_eval.then(function() {
-                        var result = run(code, interp);
+                        var result = run(code, interp, dynamic);
                         code = '';
                         return result;
                     }).then(function(result) {
