@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Worker Example</title>
+    <meta name="Description" content="Example of using LIPS in worker with RPC like API"/>
+    <link rel="shortcut icon" href=""/>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+function fworker(fn) {
+    // ref: https://stackoverflow.com/a/10372280/387194
+    var str = '(' + fn.toString() + ')()';
+    var URL = window.URL || window.webkitURL;
+    var blob;
+    try {
+        blob = new Blob([str], {type: 'application/javascript'});
+    } catch (e) { // Backwards-compatibility
+        window.BlobBuilder = window.BlobBuilder ||
+            window.WebKitBlobBuilder ||
+            window.MozBlobBuilder;
+        blob = new BlobBuilder();
+        blob.append(str);
+        blob = blob.getBlob();
+    }
+    return new Worker(URL.createObjectURL(blob));
+}
+
+var worker = fworker(function() {
+    importScripts("https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js");
+    var i = new lips.Interpreter('worker');
+    var bootstrap = i.exec(`(let-env lips.env.parent
+                               (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/bootstrap.scm")
+                               (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/R5RS.scm"))`);
+    // string, numbers, booleans
+    self.addEventListener('message', function(response) {
+        var data = response.data;
+        var id = data.id;
+        if (data.type !== 'RPC' || id === null) {
+            return;
+        }
+        if (data.method === 'eval') {
+            bootstrap.then(function() {
+                i.exec(data.params[0]).then(function(result) {
+                    result = result.map(function(value) {
+                        return value && value.valueOf();
+                    });
+                    self.postMessage({id: id, type: 'RPC', result: result});
+                });
+            });
+        }
+    });
+});
+var rpc = (function() {
+    var id = 0;
+    return function rpc(method, params) {
+        var _id = ++id;
+        return new Promise(function(resolve) {
+            worker.addEventListener('message', function handler(response) {
+                var data = response.data;
+                if (data && data.type === 'RPC' && data.id === _id) {
+                    resolve(data.result);
+                    worker.removeEventListener('message', handler);
+                }
+            });
+            worker.postMessage({ type: 'RPC', method: method, id: _id, params: params });
+        });
+    };
+})();
+
+(async function() {
+  const [ result ] = await rpc('eval', [`(let* ((what "hello")
+                                                (who "world")
+                                                (message (string-append what " " who)))
+                                           (display message)
+                                           message)`]);
+  console.log(result);
+})();
+
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+</body>
+</html>
