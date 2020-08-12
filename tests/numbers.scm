@@ -120,6 +120,8 @@
         (t.is (number->string #i100i) "+100.0i")
         (t.is (number->string #i#b100i) "+4.0i")
 
+        (t.is (number->string #xA+Ai) "10+10i")
+
         ;; uppercase
         (t.is (number->string #E0.1) "1/10")
         (t.is (number->string #I10) "10.0")
@@ -199,6 +201,34 @@
         (t.is (number->string #i#b-1/100+1/100i) "-0.25+0.25i")
         (t.is (number->string #b#i1/100+1/100i) "0.25+0.25i")
         (t.is (number->string #b#i-1/100+1/100i) "-0.25+0.25i")))
+
+(test "numbers: string->number"
+      (lambda (t)
+        ;; accept radix
+        (t.is (string->number "A" 16) 10)
+        (t.is (string->number "10" 8) 8)
+        (t.is (string->number "10" 2) 2)
+
+        (t.is (string->number "1/A" 16) 1/10)
+        (t.is (string->number "1/10" 8) 1/8)
+        (t.is (string->number "1/10" 2) 1/2)
+
+        (t.is (string->number "A+Ai" 16) 10+10i)
+        (t.is (string->number "10+10i" 8) 8+8i)
+        (t.is (string->number "10+10i" 2) 2+2i)
+
+        ;; reject radix
+        (t.is (string->number "#x10" 10) #x10)
+        (t.is (string->number "#o10" 10) #o10)
+        (t.is (string->number "#b10" 10) #b10)
+
+        (t.is (string->number "#x1/10" 10) 1/16)
+        (t.is (string->number "#o1/10" 10) 1/8)
+        (t.is (string->number "#b1/10" 10) 1/2)
+
+        (t.is (string->number "#x10+10i" 10) 16+16i)
+        (t.is (string->number "#o10+10i" 10) 8+8i)
+        (t.is (string->number "#b10+10i" 10) 2+2i)))
 
 (test "numbers: complex"
       (lambda (t)

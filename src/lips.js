@@ -186,18 +186,23 @@
         var neg = mnemonic === 'x' ? `(?!\\+|${range})` : `(?!\\.|${range})`;
         var fl = '';
         if (mnemonic === '') {
-            fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
+            fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))';
         }
-        return new RegExp(`((?:${fl}[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+${neg})?)(${fl}[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i`, 'i');
+        return new RegExp(`^((?:${fl}|[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+${neg})?)(${fl}|[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i$`, 'i');
     }
     var complex_list_re = (function() {
         var result = {};
-        [[10, '', '[0-9]'], [16, 'x', '[0-9a-fA-F]'], [8, 'o', '[0-7]'], [2, 'b', '[01]']].forEach(([radix, mnemonic, range]) => {
+        [
+            [10, '', '[0-9]'],
+            [16, 'x', '[0-9a-fA-F]'],
+            [8, 'o', '[0-7]'],
+            [2, 'b', '[01]']
+        ].forEach(([radix, mnemonic, range]) => {
             result[radix] = make_complex_match_re(mnemonic, range);
         });
         return result;
     })();
-    var characters = {
+    const characters = {
         'alarm': '\x07',
         'backspace': '\x08',
         'delete': '\x7F',
@@ -208,18 +213,18 @@
         'space': ' ',
         'tab': '\t'
     };
-    var character_symbols = Object.keys(characters).join('|');
-    var char_re = new RegExp(`^#\\\\(?:x[0-9af]+|${character_symbols}|[\\s\\S])$`, 'i');
+    const character_symbols = Object.keys(characters).join('|');
+    const char_re = new RegExp(`^#\\\\(?:x[0-9af]+|${character_symbols}|[\\s\\S])$`, 'i');
     // complex with (int) (float) (rational)
     function make_num_stre(fn) {
-        var ranges = [
+        const ranges = [
             ['o', '[0-7]'],
             ['x', '[0-9a-fA-F]'],
             ['b', '[01]'],
             ['', '[0-9]']
         ];
         // float exception that don't accept mnemonics
-        var result = ranges.map(([m, range]) => fn(m, range)).join('|');
+        let result = ranges.map(([m, range]) => fn(m, range)).join('|');
         if (fn === gen_complex_re) {
             result = complex_float_stre + '|' + result;
         }
@@ -231,6 +236,14 @@
     const complex_re = make_type_re(gen_complex_re);
     const rational_re = make_type_re(gen_rational_re);
     const int_re = make_type_re(gen_integer_re);
+
+    // regexes with full range but without mnemonics for string->number
+    const int_bare_re = new RegExp('^(?:' + gen_integer_re('', '[0-9a-f]') + ')$', 'i');
+    const rational_bare_re = new RegExp('^(?:' + gen_rational_re('', '[0-9a-f]') + ')$', 'i');
+    const complex_bare_re = new RegExp('^(?:' + gen_complex_re('', '[0-9a-f]') + ')$', 'i');
+
+    const complex_bare_match_re = make_complex_match_re('', '[0-9a-fA-F]');
+
     const big_num_re = /^([+-]?[0-9]+)[eE]([+-]?[0-9]+)$/;
     const pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
     /* eslint-enable */
@@ -245,8 +258,6 @@
                 options.radix = 8;
             } else if (type.includes('b')) {
                 options.radix = 2;
-            } else {
-                options.radix = 10;
             }
             if (type.includes('i')) {
                 options.inexact = true;
@@ -254,19 +265,17 @@
             if (type.includes('e')) {
                 options.exact = true;
             }
-        } else {
-            options.radix = 10;
         }
         options.number = parts[2];
         return options;
     }
     // ----------------------------------------------------------------------
-    function parse_rational(arg) {
+    function parse_rational(arg, radix = 10) {
         var parse = num_pre_parse(arg);
         var parts = parse.number.split('/');
         var num = LRational({
-            num: LNumber([parts[0], parse.radix]),
-            denom: LNumber([parts[1], parse.radix])
+            num: LNumber([parts[0], parse.radix || radix]),
+            denom: LNumber([parts[1], parse.radix || radix])
         });
         if (parse.inexact) {
             return num.valueOf();
@@ -275,12 +284,12 @@
         }
     }
     // ----------------------------------------------------------------------
-    function parse_integer(arg) {
+    function parse_integer(arg, radix = 10) {
         var parse = num_pre_parse(arg);
         if (parse.inexact) {
-            return LFloat(parseInt(parse.number, parse.radix), true);
+            return LFloat(parseInt(parse.number, parse.radix || radix), true);
         }
-        return LNumber([parse.number, parse.radix]);
+        return LNumber([parse.number, parse.radix || radix]);
     }
     // ----------------------------------------------------------------------
     function parse_character(arg) {
@@ -300,20 +309,20 @@
         }
     }
     // ----------------------------------------------------------------------
-    function parse_complex(arg) {
+    function parse_complex(arg, radix = 10) {
         function parse_num(n) {
             var value;
             if (n === '+') {
                 value = LNumber(1);
             } else if (n === '-') {
                 value = LNumber(-1);
-            } else if (n.match(int_re)) {
-                value = LNumber([n, parse.radix]);
-            } else if (n.match(rational_re)) {
+            } else if (n.match(int_bare_re)) {
+                value = LNumber([n, radix]);
+            } else if (n.match(rational_bare_re)) {
                 var parts = n.split('/');
                 value = LRational({
-                    num: LNumber([parts[0], parse.radix]),
-                    denom: LNumber([parts[1], parse.radix])
+                    num: LNumber([parts[0], radix]),
+                    denom: LNumber([parts[1], radix])
                 });
             } else if (n.match(float_re)) {
                 var float = LFloat(parseFloat(n));
@@ -321,6 +330,8 @@
                     return float.toRational();
                 }
                 return float;
+            } else {
+                throw new Error('Internal Parser Error');
             }
             if (parse.inexact) {
                 return LFloat(value.valueOf(), true);
@@ -328,7 +339,14 @@
             return value;
         }
         var parse = num_pre_parse(arg);
-        var parts = parse.number.match(complex_list_re[parse.radix]);
+        radix = parse.radix || radix;
+        var parts;
+        var bare_match = parse.number.match(complex_bare_match_re);
+        if (radix !== 10 && bare_match) {
+            parts = bare_match;
+        } else {
+            parts = parse.number.match(complex_list_re[radix]);
+        }
         var re, im;
         im = parse_num(parts[2]);
         if (parts[1]) {
@@ -6107,14 +6125,17 @@
             Function return length of the object, the object can be list
             or any object that have length property.`),
         // ------------------------------------------------------------------
-        'string->number': doc(function(arg) {
+        'string->number': doc(function(arg, radix = 10) {
             typecheck('string->number', arg, 'string', 1);
-            if (arg.match(rational_re)) {
-                return parse_rational(arg);
-            } else if (arg.match(complex_re)) {
-                return parse_complex(arg);
-            } else if (arg.match(int_re)) {
-                return parse_integer(arg);
+            typecheck('string->number', radix, 'number', 2);
+            arg = arg.valueOf();
+            radix = radix.valueOf();
+            if (arg.match(rational_bare_re) || arg.match(rational_re)) {
+                return parse_rational(arg, radix);
+            } else if (arg.match(complex_bare_re) || arg.match(complex_re)) {
+                return parse_complex(arg, radix);
+            } else if (arg.match(int_bare_re) || arg.match(int_re)) {
+                return parse_integer(arg, radix);
             } else if (arg.match(float_re)) {
                 return LFloat(parseFloat(arg));
             }

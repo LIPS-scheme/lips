@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 12 Aug 2020 09:34:51 +0000
+ * build: Wed, 12 Aug 2020 15:38:20 +0000
  */
 (function () {
 	'use strict';
@@ -1201,10 +1201,10 @@
 	    var fl = '';
 
 	    if (mnemonic === '') {
-	      fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))|';
+	      fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))';
 	    }
 
-	    return new RegExp("((?:".concat(fl, "[+-]?").concat(range, "+/").concat(range, "+(?!").concat(range, ")|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+|[+-])i"), 'i');
+	    return new RegExp("^((?:".concat(fl, "|[+-]?").concat(range, "+/").concat(range, "+(?!").concat(range, ")|[+-]?").concat(range, "+").concat(neg, ")?)(").concat(fl, "|[+-]?").concat(range, "+/").concat(range, "+|[+-]?").concat(range, "+|[+-])i$"), 'i');
 	  }
 
 	  var complex_list_re = function () {
@@ -1258,7 +1258,12 @@
 
 	  var complex_re = make_type_re(gen_complex_re);
 	  var rational_re = make_type_re(gen_rational_re);
-	  var int_re = make_type_re(gen_integer_re);
+	  var int_re = make_type_re(gen_integer_re); // regexes with full range but without mnemonics for string->number
+
+	  var int_bare_re = new RegExp('^(?:' + gen_integer_re('', '[0-9a-f]') + ')$', 'i');
+	  var rational_bare_re = new RegExp('^(?:' + gen_rational_re('', '[0-9a-f]') + ')$', 'i');
+	  var complex_bare_re = new RegExp('^(?:' + gen_complex_re('', '[0-9a-f]') + ')$', 'i');
+	  var complex_bare_match_re = make_complex_match_re('', '[0-9a-fA-F]');
 	  var pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
 	  /* eslint-enable */
 
@@ -1275,8 +1280,6 @@
 	        options.radix = 8;
 	      } else if (type.includes('b')) {
 	        options.radix = 2;
-	      } else {
-	        options.radix = 10;
 	      }
 
 	      if (type.includes('i')) {
@@ -1286,8 +1289,6 @@
 	      if (type.includes('e')) {
 	        options.exact = true;
 	      }
-	    } else {
-	      options.radix = 10;
 	    }
 
 	    options.number = parts[2];
@@ -1296,11 +1297,12 @@
 
 
 	  function parse_rational(arg) {
+	    var radix = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 10;
 	    var parse = num_pre_parse(arg);
 	    var parts = parse.number.split('/');
 	    var num = LRational({
-	      num: LNumber([parts[0], parse.radix]),
-	      denom: LNumber([parts[1], parse.radix])
+	      num: LNumber([parts[0], parse.radix || radix]),
+	      denom: LNumber([parts[1], parse.radix || radix])
 	    });
 
 	    if (parse.inexact) {
@@ -1312,13 +1314,14 @@
 
 
 	  function parse_integer(arg) {
+	    var radix = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 10;
 	    var parse = num_pre_parse(arg);
 
 	    if (parse.inexact) {
-	      return LFloat(parseInt(parse.number, parse.radix));
+	      return LFloat(parseInt(parse.number, parse.radix || radix));
 	    }
 
-	    return LNumber([parse.number, parse.radix]);
+	    return LNumber([parse.number, parse.radix || radix]);
 	  } // ----------------------------------------------------------------------
 
 
@@ -1345,6 +1348,8 @@
 
 
 	  function parse_complex(arg) {
+	    var radix = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 10;
+
 	    function parse_num(n) {
 	      var value;
 
@@ -1352,13 +1357,13 @@
 	        value = LNumber(1);
 	      } else if (n === '-') {
 	        value = LNumber(-1);
-	      } else if (n.match(int_re)) {
-	        value = LNumber([n, parse.radix]);
-	      } else if (n.match(rational_re)) {
+	      } else if (n.match(int_bare_re)) {
+	        value = LNumber([n, radix]);
+	      } else if (n.match(rational_bare_re)) {
 	        var parts = n.split('/');
 	        value = LRational({
-	          num: LNumber([parts[0], parse.radix]),
-	          denom: LNumber([parts[1], parse.radix])
+	          num: LNumber([parts[0], radix]),
+	          denom: LNumber([parts[1], radix])
 	        });
 	      } else if (n.match(float_re)) {
 	        var _float = LFloat(parseFloat(n));
@@ -1368,6 +1373,8 @@
 	        }
 
 	        return _float;
+	      } else {
+	        throw new Error('Internal Parser Error');
 	      }
 
 	      if (parse.inexact) {
@@ -1378,7 +1385,16 @@
 	    }
 
 	    var parse = num_pre_parse(arg);
-	    var parts = parse.number.match(complex_list_re[parse.radix]);
+	    radix = parse.radix || radix;
+	    var parts;
+	    var bare_match = parse.number.match(complex_bare_match_re);
+
+	    if (radix !== 10 && bare_match) {
+	      parts = bare_match;
+	    } else {
+	      parts = parse.number.match(complex_list_re[radix]);
+	    }
+
 	    var re, im;
 	    im = parse_num(parts[2]);
 
@@ -8300,14 +8316,18 @@
 	    }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
 	    // ------------------------------------------------------------------
 	    'string->number': doc(function (arg) {
+	      var radix = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 10;
 	      typecheck('string->number', arg, 'string', 1);
+	      typecheck('string->number', radix, 'number', 2);
+	      arg = arg.valueOf();
+	      radix = radix.valueOf();
 
-	      if (arg.match(rational_re)) {
-	        return parse_rational(arg);
-	      } else if (arg.match(complex_re)) {
-	        return parse_complex(arg);
-	      } else if (arg.match(int_re)) {
-	        return parse_integer(arg);
+	      if (arg.match(rational_bare_re) || arg.match(rational_re)) {
+	        return parse_rational(arg, radix);
+	      } else if (arg.match(complex_bare_re) || arg.match(complex_re)) {
+	        return parse_complex(arg, radix);
+	      } else if (arg.match(int_bare_re) || arg.match(int_re)) {
+	        return parse_integer(arg, radix);
 	      } else if (arg.match(float_re)) {
 	        return LFloat(parseFloat(arg));
 	      }
@@ -9668,10 +9688,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 12 Aug 2020 09:34:51 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 12 Aug 2020 15:38:20 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 12 Aug 2020 09:34:51 +0000').valueOf();
+	    var date = LString('Wed, 12 Aug 2020 15:38:20 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9708,7 +9728,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 12 Aug 2020 09:34:51 +0000',
+	    date: 'Wed, 12 Aug 2020 15:38:20 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
