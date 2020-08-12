@@ -4396,7 +4396,7 @@
         if (symbol instanceof LString) {
             symbol = symbol.valueOf();
         }
-        if (symbol in this.env) {
+        if (this.env.hasOwnProperty(symbol)) {
             return Value(this.env[symbol]);
         }
         if (this.parent) {
