@@ -4872,6 +4872,20 @@
             Macro that can be used to set the value of the variable (mutate)
             it search the scope chain until it finds first non emtpy slot and set it.`),
         // ------------------------------------------------------------------
+        'unset!': doc(new Macro('set!', function(code) {
+            if (!(code.car instanceof LSymbol)) {
+                throw new Error('unset! first argument need to be a symbol or ' +
+                                'dot accessor that evaluate to object.');
+            }
+            const symbol = code.car;
+            var ref = this.ref(symbol);
+            if (ref) {
+                delete ref.env[symbol.name];
+            }
+        }), `(unset! name)
+
+            Function delete specified name from environment.`),
+        // ------------------------------------------------------------------
         'set-car!': doc(function(slot, value) {
             typecheck('set-car!', slot, 'pair');
             slot.car = value;
@@ -5916,13 +5930,6 @@
         }, `(new obj . args)
 
             Function create new JavaScript instance of an object.`),
-        // ------------------------------------------------------------------
-        'unset!': doc(function(symbol) {
-            typecheck('unset!', symbol, 'symbol');
-            delete this.env[symbol.name];
-        }, `(unset! name)
-
-            Function delete specified name from environment.`),
         // ------------------------------------------------------------------
         'typecheck': doc(function(label, arg, expected, position) {
             if (expected instanceof Pair) {

@@ -14,10 +14,12 @@ readDir('./tests/').then(function(filenames) {
     return readFile(`tests/${file}`).then(d => d.toString());
   })).then(async function (files) {
       await lips.exec(`
-      (load "./lib/bootstrap.scm")
-      (load "./lib/R5RS.scm")
-      (load "./examples/helpers.scm")
-      (load "./tests/helpers/helpers.scm")
+        (let-env lips.env.parent
+          (load "./lib/bootstrap.scm")
+          (load "./lib/R5RS.scm")
+          (load "./lib/R7RS.scm")
+          (load "./examples/helpers.scm")
+          (load "./tests/helpers/helpers.scm"))
       `);
       return lips.exec([`
       (define test (require "ava"))
