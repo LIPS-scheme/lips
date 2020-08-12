@@ -552,11 +552,10 @@
    Function check if object is macro and it's expandable"
   (and (macro? obj) (. obj 'defmacro)))
 
-
 ;; ---------------------------------------------------------------------------------------
 (define (n-ary n fn)
   "(n-ary n fn)
-  
+
    Return new function that limit number of arguments to n."
   (lambda args
     (apply fn (take n args))))
@@ -564,7 +563,7 @@
 ;; ---------------------------------------------------------------------------------------
 (define (take n lst)
   "(take n list)
-  
+
    Return n first values of the list."
   (let iter ((result '()) (i n) (lst lst))
     (if (or (null? lst) (<= i 0))
@@ -584,4 +583,46 @@
                       (curry n-ary 2)))
 
 ;; ---------------------------------------------------------------------------------------
+;; LIPS Object System
+;; ---------------------------------------------------------------------------------------
+
+(define (%class-lambda expr)
+  "(class-lambda expr)
+
+   Return lambda expression where input expression lambda have `this` as first argument."
+  (let ((args (cdadadr expr)))
+    `(lambda (,@args)
+       (,(cadr expr) this ,@args))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (define-class name parent . body)
+  "(define-class name parent . body)
+
+   Define class - JavaScript function constructor with prototype.
+
+   usage:
+
+     (define-class Person Object
+         (constructor (lambda (self name)
+                        (set-obj! self '_name name)))
+         (hi (lambda (self)
+               (display (string-append self._name \" say hi\"))
+               (newline))))
+     (define jack (new Person \"Jack\"))
+     (jack.hi)"
+  (let iter ((functions '()) (constructor '()) (lst body))
+    (if (null? lst)
+        `(begin
+           (define ,name ,(if (null? constructor) `(lambda ()) (%class-lambda constructor)))
+           (--> Object (defineProperty ,name "name" (make-object :value
+                                                                 ,(symbol->string name))))
+           ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
+                `(set-obj! ,name 'prototype (--> Object (create ,parent))))
+           ,@(map (lambda (fn)
+                    `(set-obj! (. ,name 'prototype) ',(car fn) ,(%class-lambda fn)))
+                  functions))
+        (let ((item (car lst)))
+          (if (eq? (car item) 'constructor)
+              (iter functions item (cdr lst))
+              (iter (cons item functions) constructor (cdr lst)))))))
 

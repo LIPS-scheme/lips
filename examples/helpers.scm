@@ -41,39 +41,6 @@
     (if (pair? pair) (cdr pair) false)))
 
 ;; ---------------------------------------------------------------------------------------
-;; LIPS Object System
-;; ---------------------------------------------------------------------------------------
-
-(define (class-lambda expr)
-  "(class-lambda expr)
-
-   Return lambda expression where input expression lambda have `this` as first argument."
-  (let ((args (cdadadr expr)))
-    `(lambda (,@args)
-       (,(cadr expr) this ,@args))))
-
-;; ---------------------------------------------------------------------------------------
-(define-macro (define-class name parent . body)
-  "(define-class name parent . body)
-
-   Define class - JavaScript function constructor with prototype."
-  (let iter ((functions '()) (constructor nil) (lst body))
-    (if (not (null? list))
-        (if (not (eq? (caar lst) 'constructor))
-            (iter (cons (car lst) functions) nil (cdr lst))
-            (let* ((functions (append functions (cdr lst)))
-                   (constructor (car lst)))
-              `(begin
-                 (define ,name ,(class-lambda constructor))
-                 (--> Object (defineProperty ,name "name" (make-object :value
-                                                                       ,(symbol->string name))))
-                 ,(if (not (null? parent))
-                      `(set-obj! ,name 'prototype (--> Object (create ,parent))))
-                 ,@(map (lambda (fn)
-                          `(set-obj! (. ,name 'prototype) ',(car fn) ,(class-lambda fn)))
-                        functions)))))))
-
-;; ---------------------------------------------------------------------------------------
 (define (make-tags expr)
   "(make-tags expression)
 

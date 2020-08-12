@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 12 Aug 2020 18:51:45 +0000
+ * build: Wed, 12 Aug 2020 23:51:49 +0000
  */
 (function () {
 	'use strict';
@@ -6577,7 +6577,7 @@
 	      symbol = symbol.valueOf();
 	    }
 
-	    if (symbol in this.env) {
+	    if (this.env.hasOwnProperty(symbol)) {
 	      return Value(this.env[symbol]);
 	    }
 
@@ -7419,6 +7419,11 @@
 
 	      if (arguments.length === 2) {
 	        delete obj[key];
+	      } else if (is_prototype(obj) && typeof value === 'function') {
+	        obj[key] = unbind(value);
+	        obj[key].__prototype__ = true;
+	      } else if (typeof value === 'function') {
+	        obj[key] = value;
 	      } else {
 	        obj[key] = value ? value.valueOf() : value;
 	      }
@@ -9430,7 +9435,7 @@
 	            args = args.map(unbox);
 	          }
 
-	          if (value.__lambda__ || is_port(value)) {
+	          if (value.__lambda__ && !value.__prototype__ || is_port(value)) {
 	            // lambda need environment as context
 	            // normal functions are bound to their contexts
 	            value = unbind(value);
@@ -9832,10 +9837,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Wed, 12 Aug 2020 18:51:45 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Wed, 12 Aug 2020 23:51:49 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Wed, 12 Aug 2020 18:51:45 +0000').valueOf();
+	    var date = LString('Wed, 12 Aug 2020 23:51:49 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9872,7 +9877,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Wed, 12 Aug 2020 18:51:45 +0000',
+	    date: 'Wed, 12 Aug 2020 23:51:49 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

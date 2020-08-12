@@ -5212,6 +5212,11 @@
             key = key.valueOf();
             if (arguments.length === 2) {
                 delete obj[key];
+            } else if (is_prototype(obj) && typeof value === 'function') {
+                obj[key] = unbind(value);
+                obj[key].__prototype__ = true;
+            } else if (typeof value === 'function') {
+                obj[key] = value;
             } else {
                 obj[key] = value ? value.valueOf() : value;
             }
@@ -7106,7 +7111,7 @@
                     if (is_bound(value) && (!lips_context(value) || is_port(value))) {
                         args = args.map(unbox);
                     }
-                    if (value.__lambda__ || is_port(value)) {
+                    if (value.__lambda__ && !value.__prototype__ || is_port(value)) {
                         // lambda need environment as context
                         // normal functions are bound to their contexts
                         value = unbind(value);
