@@ -6135,7 +6135,7 @@
             } else if (arg.match(complex_bare_re) || arg.match(complex_re)) {
                 return parse_complex(arg, radix);
             } else {
-                const valid_bare = (radix === 10 && !arg.match(/e/i)) || radix == 16;
+                const valid_bare = (radix === 10 && !arg.match(/e/i)) || radix === 16;
                 if (arg.match(int_bare_re) && valid_bare || arg.match(int_re)) {
                     return parse_integer(arg, radix);
                 }
