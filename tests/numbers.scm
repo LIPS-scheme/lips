@@ -204,6 +204,10 @@
 
 (test "numbers: string->number"
       (lambda (t)
+        ;; edge cases - big nums and hex
+        (t.is (string->number "1e2" 16) 482)
+        (t.is (string->number "1e2") 100)
+
         ;; accept radix
         (t.is (string->number "A" 16) 10)
         (t.is (string->number "10" 8) 8)

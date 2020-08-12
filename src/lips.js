@@ -6134,10 +6134,14 @@
                 return parse_rational(arg, radix);
             } else if (arg.match(complex_bare_re) || arg.match(complex_re)) {
                 return parse_complex(arg, radix);
-            } else if (arg.match(int_bare_re) || arg.match(int_re)) {
-                return parse_integer(arg, radix);
-            } else if (arg.match(float_re)) {
-                return LFloat(parseFloat(arg));
+            } else {
+                const valid_bare = (radix === 10 && !arg.match(/e/i)) || radix == 16;
+                if (arg.match(int_bare_re) && valid_bare || arg.match(int_re)) {
+                    return parse_integer(arg, radix);
+                }
+                if (arg.match(float_re)) {
+                    return parse_float(arg);
+                }
             }
             throw new Error('string->number: Invalid Syntax');
         }, `(string->number number [radix])
