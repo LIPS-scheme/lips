@@ -202,9 +202,9 @@ if (options.version || options.V) {
     // SRFI 176
     var os = require('os');
     global.output = Pair.fromArray([
-        ["command", process.argv[1]],
+        ["command", "lips"],
         ["website", "https://jcubic.github.io/lips/"],
-        ['languages', 'scheme', 'r5rs'].map(LSymbol),
+        ['languages', 'scheme', 'r5rs', 'r7rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
         ["scheme.srfi", 6, 22, 23, 46, 176],
         ["release", version],
@@ -215,7 +215,9 @@ if (options.version || options.V) {
     ].map(([key, ...values]) => {
         return [LSymbol(key), ...values];
     }));
-    exec('(display (concat "(" (join "\n" (map repr output)) ")"))', interp);
+    boostrap(interp).then(function() {
+        run('(for-each (lambda (x) (write x) (newline)) output)', interp);
+    });
 } else if (options.e || options.eval || options.c || options.code) {
     // from 1.0 documentation should use -e but it's not breaking change
     boostrap(interp).then(function() {
