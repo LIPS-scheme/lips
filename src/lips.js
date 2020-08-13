@@ -4955,7 +4955,7 @@
             const PATH = '**module-path**';
             var module_path = global_env.get(PATH, { throwError: false });
             file = file.valueOf();
-            if (!file.match(/.scm$/)) {
+            if (!file.match(/.[^.]+$/)) {
                 file += '.scm';
             }
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
