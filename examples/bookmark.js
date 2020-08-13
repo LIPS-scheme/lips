@@ -69,8 +69,7 @@ javascript:(function(next) {
             term.exec([
                 '(load "' + path + 'lib/bootstrap.scm")',
                 '(load "' + path + 'lib/R5RS.scm")',
-                '(load "' + path + 'examples/helpers.scm")',
-                '(load "' + path + 'examples/defstruct.scm")'
+                '(load "' + path + 'lib/R7RS.scm")'
             ].join('\n'), true);
         }
         term.echo(lips.banner.replace(/^[\s\S]+(LIPS.*\nCopy.*\n)[\s\S]*/, '$1'), {formatters: false});
