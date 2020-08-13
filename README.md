@@ -2,15 +2,15 @@
 
 [![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&a8f0b78d09f25accc7dfcb9bb276d3c8f71ecccc)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&93fc946870d6dd2fd081e99d8caa3c20f138a15f)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
-LIPS is Powerful Lisp based on Scheme dialect and R5RS specification
-(and part of R7RS), it have extensions that make it easier to interacti
+LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
+specification (and part on R7RS), it have extensions that make it easier to interact
 with JavaScript, it work in Browser and Node.js.
 
-[Demo](https://jcubic.github.io/lips/#demo)
+[Demo](https://jcubic.github.io/lips/#demo LIPS: Scheme based lisp Demo)
 
 ## Features
 
@@ -31,7 +31,7 @@ with JavaScript, it work in Browser and Node.js.
 * You can access `__doc__` and `__code__` of any defined functions,
 * You can access and modify function code while function is running,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
-* Almost everything is first class object including macros and functions,
+* Almost everything is first class object including macros, functions and environments,
 * Functions code introspection/manipulation at runtime, give more power to the programmer,
 * Optional dynamic scope (can be used to build Emacs Lisp interpreter on top of LIPS).
 

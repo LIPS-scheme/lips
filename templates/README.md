@@ -6,11 +6,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 
 
-LIPS is Powerful Lisp based on Scheme dialect and R5RS specification
-(and part of R7RS), it have extensions that make it easier to interacti
+LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
+specification (and part on R7RS), it have extensions that make it easier to interact
 with JavaScript, it work in Browser and Node.js.
 
-[Demo](https://jcubic.github.io/lips/#demo)
+[Demo](https://jcubic.github.io/lips/#demo LIPS: Scheme based lisp Demo)
 
 ## Features
 
@@ -31,7 +31,7 @@ with JavaScript, it work in Browser and Node.js.
 * You can access `__doc__` and `__code__` of any defined functions,
 * You can access and modify function code while function is running,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
-* Almost everything is first class object including macros and functions,
+* Almost everything is first class object including macros, functions and environments,
 * Functions code introspection/manipulation at runtime, give more power to the programmer,
 * Optional dynamic scope (can be used to build Emacs Lisp interpreter on top of LIPS).
 
