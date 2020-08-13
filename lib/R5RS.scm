@@ -940,7 +940,7 @@
   "(vector? n)
 
    Function return true of value is vector and false if not."
-  (string=? (type n) "vector"))
+  (string=? (type n) "array"))
 
 ;; -----------------------------------------------------------------------------
 (define (vector-ref vec n)

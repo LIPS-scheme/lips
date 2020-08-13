@@ -103,7 +103,7 @@
          (apply ,vector lst))
        ;; -----------------------------------------------------------------------------
        (define (,vector->tvector vector)
-         (typecheck ,vector->tvector vector "vector")
+         (typecheck ,vector->tvector vector "array")
          (,TypedArray.from vector))
        ;; -----------------------------------------------------------------------------
        (add-special! ,repr-str ',type-vector lips.specials.SPLICE)
