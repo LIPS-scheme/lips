@@ -308,7 +308,8 @@
   "(dir obj)
 
    Function return all props on the object including those in prototype chain."
-  (if (null? obj) nil
+  (if (or (null? obj) (eq? obj Object.prototype))
+      nil
       (append (array->list (Object.getOwnPropertyNames obj))
               (dir (Object.getPrototypeOf obj)))))
 

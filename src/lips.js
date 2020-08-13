@@ -4484,10 +4484,13 @@
                     try {
                         if (value instanceof Value) {
                             value = value.valueOf();
-                            return get(value, ...rest);
                         } else {
-                            return get(root, ...parts);
+                            value = get(root, first);
+                            if (typeof value === 'function') {
+                                value = unbind(value);
+                            }
                         }
+                        return get(value, ...rest);
                     } catch (e) {
                         // ignore symbols in expansion that look like
                         // property access e.g. %as.data

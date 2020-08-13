@@ -65,6 +65,7 @@
 * fix repr of native object instances (e.g.: `Uint8Array`)
 * fix display/write without newline in both REPLs
 * fix evaluating single false value
+* fix dir to not include values of `Object.prototype`
 
 
 ## 0.20.1
