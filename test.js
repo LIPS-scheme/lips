@@ -1,3 +1,11 @@
+/*
+ * Boostrap tests written in Scheme using AVA testing framework
+ *
+ * This file is part of the LIPS - Scheme based Powerful lips in JavaScript
+ *
+ * Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
+ * Released under the MIT license
+ */
 const ava = require('ava');
 
 const {promisify} = require('util');

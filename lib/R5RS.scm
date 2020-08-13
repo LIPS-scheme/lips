@@ -4,7 +4,7 @@
 ;; Reference:
 ;; https://schemers.org/Documents/Standards/R5RS/HTML/
 ;;
-;; This file is part of the LIPS - Scheme based Powerful LISP in JavaScript
+;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
 ;; Copyright (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
