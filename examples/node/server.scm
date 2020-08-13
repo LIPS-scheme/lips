@@ -1,4 +1,4 @@
-#!/home/kuba/projects/jcubic/lips/bin/lips.js
+#!/usr/bin/env lips
 
 (define express (require "express"))
 (define app (express))

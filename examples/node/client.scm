@@ -1,4 +1,4 @@
-#!/home/kuba/projects/jcubic/lips/bin/lips.js
+#!/usr/bin/env lips
 
 (define http (require "http"))
 (define https (require "https"))
