@@ -501,3 +501,31 @@
                    t
                    (my-or rest ...))))))
          (t.is (let ((t #t)) (my-or #f t)) #t)))
+
+
+(test_ "syntax-rules: recursive do"
+       (lambda (t)
+         (define-syntax do
+            (syntax-rules ()
+              ((do ((var start inc) ...) (test) body ...)
+               (do ((var start inc) ...) (test ()) body ...))
+              ((do ((var start inc) ...) (test result) body ...)
+               (begin
+                  (let iter ((var start) ...)
+                    (if test
+                        result
+                        (begin
+                           body ...
+                           (iter inc ...))))))))
+          ;; not working - calling base case without result
+          (t.is (do ((i 10 (- i 1)))
+                    ((zero? i)))
+                '())
+
+          ;; working direct matching
+          (t.is (let ((result '()))
+                  (do ((i 10 (- i 1)))
+                      ((zero? i) result)
+                      (set! result (cons i result))))
+                '(1 2 3 4 5 6 7 8 9 10))))
+
