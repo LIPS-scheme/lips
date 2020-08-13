@@ -156,8 +156,19 @@
 
 ;; -----------------------------------------------------------------------------
 (define (quotient a b)
-  (typecheck "quotient" x "number")
-  (/ a b))
+  "(quotient a b)
+
+   Return quotient from divition as integer."
+  (typecheck "quotient" a "number")
+  (typecheck "quotient" b "number")
+  (if (zero? b 0)
+     (throw (new Error "quotient: divition by zero"))
+     (let ((quotient (/ a b)))
+       (if (integer? quotient)
+           quotient
+           (if (> quotient 0)
+               (floor quotient)
+               (ceiling quotient))))))
 
 ;; -----------------------------------------------------------------------------
 (define (number->string x . rest)
@@ -327,15 +338,6 @@
   (typecheck "remainder" a "number" 1)
   (typecheck "remainder" b "number" 2)
   (- a (* b (truncate (/ a b)))))
-
-;; -----------------------------------------------------------------------------
-(define (quotient a b)
-  "(quotient a b)
-
-   Function return integer part from division operation."
-  (typecheck "quotient" a "number" 1)
-  (typecheck "quotient" b "number" 2)
-  (truncate (/ a b)))
 
 ;; -----------------------------------------------------------------------------
 (define (list-tail l k)
