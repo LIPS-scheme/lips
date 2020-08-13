@@ -657,3 +657,21 @@
    Above expression can be passed to function that renders JSX (like render in React, Preact)
    To get the string from the macro you can use vhtml library from npm."
   (make-tags expr))
+
+;; ---------------------------------------------------------------------------------------
+
+(define (get-script url)
+  "(get-script url)
+
+   Load JavaScript file in browser by adding script tag to head of the current document."
+  (if (not (bound? 'document))
+      (throw (new Error "get-script: document not defined"))
+      (let ((script (document.createElement "script")))
+        (new Promise (lambda (resolve reject)
+                        (set-obj! script 'src url)
+                        (set-obj! script 'onload (lambda ()
+                                                   (resolve)))
+                        (set-obj! script 'onerror (lambda ()
+                                                    (reject "get-script: Failed to load")))
+                        (if document.head
+                            (document.head.appendChild script)))))))
