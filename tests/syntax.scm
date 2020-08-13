@@ -467,3 +467,37 @@
          (t.is (unless (> 3 2) 'less) undefined) ;; unspecified
 
          (t.is (unless (< 3 2) 'less) 'less)))
+
+
+(test_ "syntax-rules: guile example"
+       (lambda (t)
+          (define-syntax define-matcher-macro
+            (syntax-rules ()
+              ((_ name lit)
+               (define-syntax name
+                 (syntax-rules ()
+                  ((_ lit) #t)
+                  ((_ else) #f))))))
+
+             (define-matcher-macro is-literal-foo? "foo")
+
+             (t.is (is-literal-foo? "foo") #t)
+             (t.is (is-literal-foo? "bar") #f)
+             (let ((foo "foo"))
+                (t.is (is-literal-foo? foo) #f))))
+
+(test "syntax-rules: my-or hygiene"
+      (lambda (t)
+
+        (define-syntax my-or
+          (syntax-rules ()
+            ((my-or)
+             #t)
+            ((my-or exp)
+             exp)
+            ((my-or exp rest ...)
+             (let ((t exp))
+               (if t
+                   t
+                   (my-or rest ...))))))
+         (t.is (let ((t #t)) (my-or #f t)) #t)))

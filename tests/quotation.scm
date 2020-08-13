@@ -1,3 +1,16 @@
+(test_ "quasiquote: it should double splice the list"
+       (lambda (t)
+         (define result (eval (let ((x '((list 1 2 3) (list 1 2 3) (list 1 2 3))))
+            `(list `(,@,@x)))
+             (interaction-environment)))
+
+         (t.is result '((1 2 3 1 2 3 1 2 3)))))
+
+(test_ "quasiquote: it should backquote & unquote multiple times"
+       (lambda (t)
+         (define result `(```,,,,@(list 1 2)))
+         (t.is result '((quasiquote (quasiquote (quasiquote (unquote (unquote (unquote 1 2))))))))))
+
 (test "quasiquote: it should return list"
       (lambda (t)
         (t.is (eval (let ((x '((list 1 2 3) (list 1 2 3) (list 1 2 3))))
