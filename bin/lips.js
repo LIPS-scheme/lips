@@ -25,7 +25,7 @@ const readline = require('readline');
 var highlight = require('prism-cli');
 var Prism = require('prismjs');
 require('prismjs/components/prism-scheme.min.js');
-require('../examples/prism.js');
+require('../lib/js/prism.js');
 
 // -----------------------------------------------------------------------------
 process.on('uncaughtException', function (err) {
