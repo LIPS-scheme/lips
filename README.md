@@ -1,7 +1,7 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
-[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&f657b12dcfdfaa886988b0b8b7bfb7a4a437da4b)](https://travis-ci.org/jcubic/lips)
+[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.2-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&2e7b60eb3b8909eaac32c72dd9687e904e9d7132)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
@@ -124,7 +124,7 @@ $ lips
 | |   / ^ \   |___||_||_|  <___/  | |
  \_\ /_/ \_\                     /_/
 
-LIPS Scheme Interpreter 1.0.0-beta.1 (2020-08-14)
+LIPS Scheme Interpreter 1.0.0-beta.2 (2020-08-14)
 Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.
