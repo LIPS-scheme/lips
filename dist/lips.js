@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 14 Aug 2020 07:24:30 +0000
+ * build: Fri, 14 Aug 2020 07:29:32 +0000
  */
 (function () {
 	'use strict';
@@ -3946,7 +3946,9 @@
 	  }
 	  */
 	  // ----------------------------------------------------------------------
-	  // TODO: handle lambda
+	  // :: This function is called after syntax-rules macro is evaluated
+	  // :: and if there are any gensyms added by macro they need to restored
+	  // :: to original symbols
 	  // ----------------------------------------------------------------------
 
 
@@ -9842,10 +9844,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 14 Aug 2020 07:24:30 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 14 Aug 2020 07:29:32 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 14 Aug 2020 07:24:30 +0000').valueOf();
+	    var date = LString('Fri, 14 Aug 2020 07:29:32 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9882,7 +9884,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 14 Aug 2020 07:24:30 +0000',
+	    date: 'Fri, 14 Aug 2020 07:29:32 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -2404,7 +2404,9 @@
     }
     */
     // ----------------------------------------------------------------------
-    // TODO: handle lambda
+    // :: This function is called after syntax-rules macro is evaluated
+    // :: and if there are any gensyms added by macro they need to restored
+    // :: to original symbols
     // ----------------------------------------------------------------------
     function clear_gensyms(node, gensyms) {
         function traverse(node) {
