@@ -6,6 +6,8 @@
  * Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  */
+
+// without this tests stop before running LIPS files
 const ava = require('ava');
 
 const {promisify} = require('util');
@@ -17,7 +19,7 @@ const lips = require('./src/lips');
 
 readDir('./tests/').then(function(filenames) {
   return Promise.all(filenames.filter(function(file) {
-      return file.match(/.scm$/) && !file.match(/^\.#/);
+      return file.match(/.scm$/) && !file.match(/^\.#|^_/);
   }).map(function(file) {
     return readFile(`tests/${file}`).then(d => d.toString());
   })).then(async function (files) {
