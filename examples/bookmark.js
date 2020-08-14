@@ -38,6 +38,7 @@ javascript:(function(next) {
                 $(this).terminal().destroy().remove();
             });
         }
+        $.terminal.defaults.linksNoReferrer = true;
         $.terminal.defaults.formatters = $.terminal.defaults.formatters.filter((x) => {
             return x.name !== 'syntax_scheme';
         });
@@ -72,7 +73,11 @@ javascript:(function(next) {
                 '(load "' + path + 'lib/R7RS.scm")'
             ].join('\n'), true);
         }
-        term.echo(lips.banner.replace(/^[\s\S]+(LIPS.*\nCopy.*\n)[\s\S]*/, '$1'), {formatters: false});
+        function format_baner(banner) {
+            return banner.replace(/^[\s\S]+(LIPS.*\nCopy.*\n)[\s\S]*/, '$1')
+                .replace(/(Jakub T. Jankiewicz)/, '[[!;;;;https://jcubic.pl/me]$1]');
+        }
+        term.echo(format_baner(lips.banner), {formatters: false});
         term.appendTo(wrapper);
         $('style.terminal').remove();
         $('<style class="terminal">.terminal { font-size-adjust: none; --size: 1.2;height: calc(100% - 26px); } .shell-wrapper nav {cursor: row-resize; color:#ccc;border-bottom:1px solid #ccc;font-family:monospace;text-align: right;background: black;} .shell-wrapper {position: fixed;z-index:99999;bottom:0;left:0;right:0;height:150px; }.shell-destroy {padding: 5px;cursor:pointer;display: inline-block;}</style>').appendTo('head');
