@@ -1,7 +1,7 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&b6ce157ca6a95a4bd832999060e184ea1653cd8a)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&cb6a2b25444bd4902081bec08d7184472781ae1e)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
