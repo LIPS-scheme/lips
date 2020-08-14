@@ -910,19 +910,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define fold-right reduce)
-
-;; -----------------------------------------------------------------------------
-(define (fold-left fn init . lists)
-  "(fold-left fn init . lists)
-
-   Similar higher order function to reduce (fold-right) that apply the function
-   on each element in reverse order and return single combined value."
-  (typecheck "fold-left" fn "function")
-  (for-each (lambda (x)
-              (typecheck "fold-left" x "pair"))
-            lists)
-  (let ((lists (map reverse lists)))
-    (apply reduce fn init lists)))
+(define fold-left fold)
 
 ;; -----------------------------------------------------------------------------
 (define (make-vector n . rest)
