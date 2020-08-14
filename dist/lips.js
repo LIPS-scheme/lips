@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 13 Aug 2020 15:34:42 +0000
+ * build: Fri, 14 Aug 2020 07:24:30 +0000
  */
 (function () {
 	'use strict';
@@ -3686,8 +3686,8 @@
 	      var pattern_names = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : [];
 	      var ellipsis = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : false;
 	      log({
-	        code: code.toString(),
-	        pattern: pattern.toString()
+	        code: code && code.toString(),
+	        pattern: pattern && pattern.toString()
 	      }); // pattern (a b (x ...)) and (x ...) match nil
 
 	      if (pattern instanceof Pair && pattern.car instanceof Pair && pattern.car.cdr instanceof Pair && LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
@@ -8543,7 +8543,7 @@
 	          return l.car;
 	        })).concat([value]));
 	      });
-	    }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements on the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
+	    }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements of the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
 	    // ------------------------------------------------------------------
 	    pluck: doc(function () {
 	      for (var _len24 = arguments.length, keys = new Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
@@ -9842,10 +9842,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 13 Aug 2020 15:34:42 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 14 Aug 2020 07:24:30 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 13 Aug 2020 15:34:42 +0000').valueOf();
+	    var date = LString('Fri, 14 Aug 2020 07:24:30 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9882,7 +9882,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 13 Aug 2020 15:34:42 +0000',
+	    date: 'Fri, 14 Aug 2020 07:24:30 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

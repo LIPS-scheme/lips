@@ -2170,7 +2170,10 @@
         log(symbols);
         /* eslint-disable complexity */
         function traverse(pattern, code, pattern_names = [], ellipsis = false) {
-            log({ code: code.toString(), pattern: pattern.toString() });
+            log({
+                code: code && code.toString(),
+                pattern: pattern && pattern.toString()
+            });
             // pattern (a b (x ...)) and (x ...) match nil
             if (pattern instanceof Pair &&
                 pattern.car instanceof Pair &&
@@ -6325,7 +6328,7 @@
         }), `(fold fn init . lists)
 
              Function fold is reverse of the reduce. it call function \`fn\`
-             on each elements on the list and return single value.
+             on each elements of the list and return single value.
              e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))
              for: (fold fn '() alist blist`),
         // ------------------------------------------------------------------
