@@ -1,7 +1,7 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&cb6a2b25444bd4902081bec08d7184472781ae1e)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&f657b12dcfdfaa886988b0b8b7bfb7a4a437da4b)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
@@ -11,30 +11,30 @@ with JavaScript, it work in Browser and Node.js.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
-[Devel Beta demo](https://codepen.io/jcubic/pen/GxgWBq)
+[1.0.0 Beta demo](https://codepen.io/jcubic/full/YzqwoJd)
 
 ## Features
 
-* Almost fully Compatible with R5RS,
+* Almost fully Compatible with R5RS and partially with R7RS,
 * Lisp macros, backquote and macroexpand,
 * Scheme Hygienic Macros with `sytnax-rules`,
-* Parser Syntax extensions and string representation,
-* RegExp-es are first class objects,
+* Parser Syntax extensions and string representation (that allow to create transparent new data types),
+* Regular expression are first class objects same ans macros and environments,
 * Functions in LIPS are normal JavaScript functions,
-* You can invoke native JavaScript functions and methods from Lips,
+* You can invoke native JavaScript functions and methods from LIPS,
+* Dot notation for JavaScript object methods and properties,
 * Promises are treated as values they resolve to (so async code look like sync - like auto `async/await`),
 * Library agnostic - you can use it with any JavaScript library,
-* Almost no dependencies (only bn.js for big integers),
+* Almost no dependencies (only bn.js for big integers and prism-cli for Node based REPL),
 * Easy extension using JavaScript using Macros or functions,
 * Builtin pretty printer,
 * JavaScript object literals with `&(:foo 10)` (created using parser extensions),
 * Builtin help system like in Emacs Lisp,
+* Powerful introspection functions (you can access internals and modify functions while they are running),
 * You can access `__doc__` and `__code__` of any defined functions,
-* You can access and modify function code while function is running,
 * `BigInt` support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
-* Almost everything is first class object including macros, functions and environments,
-* Functions code introspection/manipulation at runtime, give more power to the programmer,
 * Optional dynamic scope (can be used to build Emacs Lisp interpreter on top of LIPS).
+* Optional brackets support (useful when testing code from some books about Scheme).
 
 ## Installation
 
