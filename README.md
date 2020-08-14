@@ -1,8 +1,7 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
-[![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
-[![npm](https://img.shields.io/badge/npm-0.20.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&0072a12f183f28ac06cfd812dabeaa101b061a08)](https://travis-ci.org/jcubic/lips)
+[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&b6ce157ca6a95a4bd832999060e184ea1653cd8a)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
@@ -10,7 +9,9 @@ LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
 specification (and part on R7RS), it have extensions that make it easier to interact
 with JavaScript, it work in Browser and Node.js.
 
-[Demo](https://jcubic.github.io/lips/#demo LIPS: Scheme based lisp Demo)
+[Demo](https://jcubic.github.io/lips/#demo)
+
+[Devel Beta demo](https://codepen.io/jcubic/pen/GxgWBq)
 
 ## Features
 
@@ -30,17 +31,30 @@ with JavaScript, it work in Browser and Node.js.
 * Builtin help system like in Emacs Lisp,
 * You can access `__doc__` and `__code__` of any defined functions,
 * You can access and modify function code while function is running,
-* BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
+* `BigInt` support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
 * Almost everything is first class object including macros, functions and environments,
 * Functions code introspection/manipulation at runtime, give more power to the programmer,
 * Optional dynamic scope (can be used to build Emacs Lisp interpreter on top of LIPS).
 
 ## Installation
 
-use npm
+To install you can use use npm (or yarn):
 
 ```
 npm install @jcubic/lips
+```
+
+or yarn:
+
+```
+yarn add @jcubic/lips
+```
+
+
+To install 1.0.0 beta version use:
+
+```
+npm install @jcubic/lips@beta
 ```
 
 then include the file in script tag, You can grab the version from unpkg.com
@@ -61,7 +75,7 @@ https://cdn.rawgit.com/jcubic/lips/devel/dist/lips.min.js
 Simplest way is to include the lips code in script tag:
 
 ```html
-<script type="text/x-lips">
+<script type="text/x-scheme">
 (let ((what "world")
       (greet "hello"))
    (display (string-append "hello" " " what)))
@@ -110,7 +124,7 @@ $ lips
 | |   / ^ \   |___||_||_|  <___/  | |
  \_\ /_/ \_\                     /_/
 
-LIPS Scheme Interpreter 0.20.1 (2020-08-14)
+LIPS Scheme Interpreter 1.0.0-beta.1 (2020-08-14)
 Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
 
 Type (env) to see environment with functions macros and variables.

@@ -1,6 +1,7 @@
 .PHONY: publish test coveralls lint
 
 VERSION={{VERSION}}
+VERSION_DASH=`echo -n "{{VERSION}}" | sed "s/-/%E2%80%93/"`
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 YEAR=`date +%Y`
@@ -41,21 +42,27 @@ dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
 
 Makefile: templates/Makefile
-	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/" templates/Makefile > Makefile
+	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/g" templates/Makefile > Makefile
 
 package.json: templates/package.json .$(VERSION)
-	$(SED) -e "s/{{VER}}/"$(VERSION)"/" templates/package.json > package.json || true
+	$(SED) -e "s/{{VER}}/"$(VERSION)"/g" templates/package.json > package.json || true
 
 README.md: templates/README.md dist/lips.js .$(VERSION)
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \
-	"s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{YEAR}}/${YEAR}/g" \
-	-e "s/{{DATE}}/${DATE_SHORT}/" -e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md || \
+	"s/{{VER_DASH}}/$(VERSION_DASH)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" \
+	-e "s/{{YEAR}}/${YEAR}/g"  -e "s/{{DATE}}/${DATE_SHORT}/" -e "s/{{COMMIT}}/$(COMMIT)/g" \
+	< templates/README.md > README.md || \
 	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{YEAR}}/${YEAR}/g" \
 	-e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" -e "s/{{DATE}}/${DATE_SHORT}/" \
-	< templates/README.md > README.md
+	-e "s/{{VER_DASH}}/$(VERSION_DASH)/g" < templates/README.md > README.md
 
 .$(VERSION): Makefile
 	touch .$(VERSION)
+
+publish-beta:
+	$(GIT) clone $(URL) --depth 1 npm
+	$(CD) npm && $(NPM) publish --access=public --tag beta
+	$(RM) -rf npm
 
 publish:
 	$(GIT) clone $(URL) --depth 1 npm
