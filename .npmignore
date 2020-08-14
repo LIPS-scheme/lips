@@ -1,7 +1,10 @@
 spec
 *~
 coverage
+todo.html
+*.lips
 Makefile
+favicon.ico
 jest.config.js
 version
 templates
