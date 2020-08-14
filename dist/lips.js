@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 14 Aug 2020 21:14:33 +0000
+ * build: Fri, 14 Aug 2020 22:01:45 +0000
  */
 (function () {
 	'use strict';
@@ -6524,6 +6524,7 @@
 	      }
 	    }
 
+	    this.docs = new Map();
 	    this.env = obj;
 	    this.parent = parent;
 	    this.name = name || 'anonymous';
@@ -6542,6 +6543,34 @@
 	    }
 
 	    return new Environment(obj || {}, this, name);
+	  }; // -------------------------------------------------------------------------
+	  // :: lookup function for variable doc strings
+	  // -------------------------------------------------------------------------
+
+
+	  Environment.prototype.doc = function (name) {
+	    var value = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
+
+	    if (name instanceof LSymbol) {
+	      name = name.name;
+	    }
+
+	    if (name instanceof LString) {
+	      name = name.valueOf();
+	    }
+
+	    if (value) {
+	      this.docs.set(name, value);
+	      return this;
+	    }
+
+	    if (this.docs.has(name)) {
+	      return this.docs.get(name);
+	    }
+
+	    if (this.parent) {
+	      return this.parent.doc(name);
+	    }
 	  }; // -------------------------------------------------------------------------
 	  // :: function create frame environment for usage in functions
 	  // -------------------------------------------------------------------------
@@ -6727,6 +6756,8 @@
 
 
 	  Environment.prototype.set = function (name, value) {
+	    var doc = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
+
 	    if (LNumber.isNumber(value)) {
 	      value = LNumber(value);
 	    }
@@ -6738,11 +6769,17 @@
 	    }
 
 	    this.env[name] = value;
+
+	    if (doc) {
+	      this.doc(name, doc);
+	    }
+
+	    return this;
 	  }; // -------------------------------------------------------------------------
 
 
 	  Environment.prototype.has = function (name) {
-	    return typeof this.env[name] !== 'undefined';
+	    return this.env.hasOwnProperty(name);
 	  }; // -------------------------------------------------------------------------
 
 
@@ -7021,9 +7058,28 @@
 	        }
 
 	        return;
+	      } // TODO: print the string with display
+	      //       remove monkey patches in REPL
+
+
+	      var __doc__;
+
+	      var value = this.get(symbol);
+	      __doc__ = value && value.__doc__;
+
+	      if (__doc__) {
+	        return __doc__;
 	      }
 
-	      return this.get(symbol).__doc__;
+	      var ref = this.ref(symbol);
+
+	      if (ref) {
+	        __doc__ = ref.doc(symbol);
+
+	        if (__doc__) {
+	          return __doc__;
+	        }
+	      }
 	    }), "(help object)\n\n             Macro returns documentation for function or macros including parser\n             macros but only if called with parser macro symbol like (help `).\n             For normal functions and macros you can save the function in variable."),
 	    // ------------------------------------------------------------------
 	    cons: doc(function (car, cdr) {
@@ -7406,14 +7462,16 @@
 	      typecheck('define', code.car, 'symbol');
 	      return unpromise(value, function (value) {
 	        if (env.name === Syntax.merge_env) {
-	          env.parent.set(code.car, value);
-	        } else {
-	          env.set(code.car, value);
+	          env = env.parent;
 	        }
 
-	        if (code.cdr.cdr instanceof Pair && LString.isString(code.cdr.cdr.car) && value !== null && _typeof_1(value) === 'object') {
-	          value.__doc__ = code.cdr.cdr.car.valueOf();
+	        var __doc__;
+
+	        if (code.cdr.cdr instanceof Pair && LString.isString(code.cdr.cdr.car)) {
+	          __doc__ = code.cdr.cdr.car.valueOf();
 	        }
+
+	        env.set(code.car, value, __doc__);
 	      });
 	    }), "(define name expression)\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
 	    // ------------------------------------------------------------------
@@ -9848,10 +9906,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 14 Aug 2020 21:14:33 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 14 Aug 2020 22:01:45 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 14 Aug 2020 21:14:33 +0000').valueOf();
+	    var date = LString('Fri, 14 Aug 2020 22:01:45 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9888,7 +9946,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 14 Aug 2020 21:14:33 +0000',
+	    date: 'Fri, 14 Aug 2020 22:01:45 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

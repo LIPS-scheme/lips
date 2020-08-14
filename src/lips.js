@@ -4359,6 +4359,7 @@
                 name = arguments[0];
             }
         }
+        this.docs = new Map();
         this.env = obj;
         this.parent = parent;
         this.name = name || 'anonymous';
@@ -4372,6 +4373,27 @@
             name = 'child of ' + (this.name || 'unknown');
         }
         return new Environment(obj || {}, this, name);
+    };
+    // -------------------------------------------------------------------------
+    // :: lookup function for variable doc strings
+    // -------------------------------------------------------------------------
+    Environment.prototype.doc = function(name, value = null) {
+        if (name instanceof LSymbol) {
+            name = name.name;
+        }
+        if (name instanceof LString) {
+            name = name.valueOf();
+        }
+        if (value) {
+            this.docs.set(name, value);
+            return this;
+        }
+        if (this.docs.has(name)) {
+            return this.docs.get(name);
+        }
+        if (this.parent) {
+            return this.parent.doc(name);
+        }
     };
     // -------------------------------------------------------------------------
     // :: function create frame environment for usage in functions
@@ -4514,7 +4536,7 @@
         }
     };
     // -------------------------------------------------------------------------
-    Environment.prototype.set = function(name, value) {
+    Environment.prototype.set = function(name, value, doc = null) {
         if (LNumber.isNumber(value)) {
             value = LNumber(value);
         }
@@ -4524,10 +4546,14 @@
             name = name.valueOf();
         }
         this.env[name] = value;
+        if (doc) {
+            this.doc(name, doc);
+        }
+        return this;
     };
     // -------------------------------------------------------------------------
     Environment.prototype.has = function(name) {
-        return typeof this.env[name] !== 'undefined';
+        return this.env.hasOwnProperty(name);
     };
     // -------------------------------------------------------------------------
     Environment.prototype.ref = function(name) {
@@ -4811,7 +4837,21 @@
                 }
                 return;
             }
-            return this.get(symbol).__doc__;
+            // TODO: print the string with display
+            //       remove monkey patches in REPL
+            var __doc__;
+            var value = this.get(symbol);
+            __doc__ = value && value.__doc__;
+            if (__doc__) {
+                return __doc__;
+            }
+            var ref = this.ref(symbol);
+            if (ref) {
+                __doc__ = ref.doc(symbol);
+                if (__doc__) {
+                    return __doc__;
+                }
+            }
         }), `(help object)
 
              Macro returns documentation for function or macros including parser
@@ -5197,15 +5237,14 @@
             typecheck('define', code.car, 'symbol');
             return unpromise(value, value => {
                 if (env.name === Syntax.merge_env) {
-                    env.parent.set(code.car, value);
-                } else {
-                    env.set(code.car, value);
+                    env = env.parent;
                 }
+                let __doc__;
                 if (code.cdr.cdr instanceof Pair &&
-                    LString.isString(code.cdr.cdr.car) &&
-                    value !== null && typeof value === 'object') {
-                    value.__doc__ = code.cdr.cdr.car.valueOf();
+                    LString.isString(code.cdr.cdr.car)) {
+                    __doc__ = code.cdr.cdr.car.valueOf();
                 }
+                env.set(code.car, value, __doc__);
             });
         }), `(define name expression)
              (define (function-name . args) body)

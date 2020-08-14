@@ -1,6 +1,7 @@
 ## 1.0.0-beta.2
 ### Features
-* doc strings on object based variables
+* doc strings on variables
+* fix Environment::has (ref) on variable that are undefined
 
 ## 1.0.0-beta.3
 ## Bugfix
