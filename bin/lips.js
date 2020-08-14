@@ -28,6 +28,15 @@ require('prismjs/components/prism-scheme.min.js');
 require('../examples/prism.js');
 
 // -----------------------------------------------------------------------------
+process.on('uncaughtException', function (err) {
+  log_error(err.message);
+});
+
+// -----------------------------------------------------------------------------
+function log_error(message) {
+    fs.appendFileSync('error.log', message + '\n');
+}
+// -----------------------------------------------------------------------------
 // code taken from jQuery Terminal
 function parse_options(arg, options) {
     var settings = Object.assign({}, {
@@ -87,6 +96,7 @@ function run(code, interpreter, dynamic = false) {
         console.error('Call (stack-trace) to see the stack');
         console.error('Thrown exception is in global exception variable, use ' +
                       '(display exception.stack) to display JS stack trace');
+        log_error(e.message);
         if (e.code) {
             strace = e.code.map((line, i) => {
                 var prefix = `[${i+1}]: `;
@@ -239,6 +249,7 @@ if (options.version || options.V) {
             return run(code, interp, dynamic);
         });
     }).catch(err => {
+        log_error(err.message || err);
         console.error(err);
     }).finally(function() {
         rl.close();
@@ -294,7 +305,6 @@ if (options.version || options.V) {
                 var prev_line = lines[lines.length - 2].replace(/^\s+/, '');
                 if (lines.length > 2) {
                     var prev = lines.slice(0, -2).join('\n');
-                    fs.appendFileSync('lips.log', prev + '\n');
                     var i = indent(prev, 2, prompt.length - continuePrompt.length);
                     spaces = new Array(i + 1).join(' ');
                     lines[lines.length - 2] = spaces + prev_line;
@@ -303,7 +313,6 @@ if (options.version || options.V) {
                 } else {
                     stdout = prompt;
                 }
-                fs.appendFileSync('lips.log', stdout + prev_line + '\n{i]' + i + '\n');
                 stdout += scheme(prev_line);
                 format = '\x1b[1F\x1b[K' + stdout + '\n';
                 process.stdout.write(format);
@@ -356,7 +365,9 @@ if (options.version || options.V) {
                 rl.prompt();
             }
         });
-    }).catch(function() {
+    }).catch(function(e) {
+        log_error('Internal Error: boostrap filed');
+        log_error(e.message || e);
         console.error('Internal Error: boostrap filed');
     });
 }

@@ -1,4 +1,4 @@
-## 1.0.0-beta
+## 1.0.0-beta.1
 ### Breaking
 * rename `ceil` to `ceiling` (like in R5RS spec)
 * break `let*` to work the same as in scheme (it was working like `letrec`)
