@@ -1,3 +1,73 @@
+## 1.0.0-beta.1
+### Breaking
+* rename `ceil` to `ceiling` (like in R5RS spec)
+* break `let*` to work the same as in scheme (it was working like `letrec`)
+* `if` no longer require boolean as cond
+* change how arrays are presented, they are look like scheme vector `#(...)`
+* rename `string` to `repr`
+* new API `lips.Intepreter` - for using interpreter that have different stdout/stdin
+* balanced_parenthesis now throw exception on broken code
+* remove global env from public API (you can still access it using `env.parent`)
+* remove `->` function (it will collide with SRFI 197 that may be implemented in the future)
+* `every` have now same signature as `some` which is `(fn list)`
+### Features
+* start implementing R5RS spec
+* streams example
+* `<`, `>`, `==`, `<=` and `>=` now have variable number of arguments
+* new `throw` function that throw JS exception
+* expose `typecheck` function that test type of the arguments and throw exception if don't match
+* new `gdc` and `lcm` functions
+* new `string->number` and `number->string` functions
+* new `list?` function
+* new `vector-ref` (same as `(. v n)` but with typecheck)
+* new `+inf.0` and `-inf.0`
+* new `max`, `min` and `truncate`
+* restore `print` it's now alias for display
+* you can now access nested objects as symbols (e.g `(lips.LNumber 10)`)
+* new Number types (complex and rational)
+* input/output ports + string ports
+* add `letrec` macro
+* `inexact->exact` and `rationalize` (thanks to Kawa/C-Gambit projects)
+* parsing hex, octal, binary, complex, rational numbers
+* characters literals `#\A` and character and string functions
+* display `#t` and `#f` for boolean values in terminal
+* new `interaction-environment` function + `load` use that env by default
+* improve executable
+* user can define string representation (with object that have `toString` lambda)
+* Hygienic macros: `syntax-rules` transformer macros
+* improve balancing parenthesis
+* expose balanced method in public API (preferred name)
+* optional brackets
+* `interator?` function and detection if iterators from `repr` and `type` [#51](https://github.com/jcubic/lips/issues/51)
+* `add-repr!` function to add string representations to objects
+* new `string=?`, `sort`, `in`, `list-tail` and `bound?` functions
+* add new `exit` function into executable interpreter
+* -e/eval option (help and docs will show new options, instead of -c/code but old still works)
+* `case` macro
+* relative load inside load + auto .scm suffix
+* new `zip`, `n-ary`, `binary`, `unary`, `take` functions
+* new `get-script` function
+### Bug fixes
+* fix list function [#27](https://github.com/jcubic/lips/issues/27)
+* fix `(begin (gensym))` macro that evaluate to symbol
+* update defstruct to export only needed functions (local functions are namespaced)
+* prevent of evaluation of `(define (x . a) a)) (x 1 2 3)` (`list` in scheme)
+* fix `LNumber::String` with radix
+* fix formatting of float numbers
+* fix try..catch
+* fix display of function/macro docs (remove white space in parser)
+* fix loading modules with `require`
+* fix macro expand when expansion return list with macro that is data
+* fix lips executable in GNU Emacs run-scheme (comint mode)
+* unbox values in new
+* fix named let with nil [#46](https://github.com/jcubic/lips/issues/46)
+* use parser code in string->number
+* fix repr of native object instances (e.g.: `Uint8Array`)
+* fix display/write without newline in both REPLs
+* fix evaluating single false value
+* fix dir to not include values of `Object.prototype`
+
+
 ## 0.20.1
 ### Bug fixes
 * fix formatter indent

@@ -1,5 +1,3 @@
-/* global require, describe, it, expect */
-
 var lips = require('../dist/lips');
 
 var {
@@ -10,12 +8,14 @@ var {
     LSymbol,
     nil,
     Environment,
-    global_environment,
+    env: global_environment,
     LNumber,
+    LString,
+    LFloat,
     quote
 } = lips;
 
-var deps = lips.exec('(load "./examples/helpers.lips")');
+var deps = lips.exec('(load "./lib/bootstrap.scm") (load "./examples/helpers.scm")');
 
 describe('tokenizer', function() {
     it('should create tokens for simple list', function() {
@@ -161,13 +161,13 @@ describe('parser', function() {
                 new Pair(
                     /( \/)/g,
                     new Pair(
-                        'bar baz',
+                        LString('bar baz'),
                         new Pair(
                             LNumber(10),
                             new Pair(
                                 LNumber(1.1),
                                 new Pair(
-                                    LNumber(10e2),
+                                    LFloat(10e2),
                                     nil
                                 )
                             )
@@ -320,7 +320,7 @@ describe('evaluate', function() {
         fun: function(a, b) {
             if (LNumber.isNumber(a)) {
                 return LNumber(a).add(b);
-            } else if (typeof a === 'string') {
+            } else if (LString.isString(a)) {
                 return a + b;
             }
         },
@@ -331,238 +331,16 @@ describe('evaluate', function() {
     });
     it('should call function', function() {
         expect(exec('(fun 1 2)', env)).toEqual(LNumber(3));
-        expect(exec('(fun "foo" "bar")', env)).toEqual("foobar");
+        expect(exec('(fun "foo" "bar")', env)).toEqual(LString("foobar"));
     });
     it('should set environment', function() {
         exec('(define x "foobar")', env);
-        expect(exec('x', env)).toEqual("foobar");
+        expect(exec('x', env)).toEqual(LString("foobar"));
         expect(exec('x')).toEqual(undefined);
     });
     it('should create list', function() {
         expect(exec('(cons 1 (cons 2 (cons 3 nil)))'))
             .toEqual(deepQuote(Pair.fromArray([LNumber(1), LNumber(2), LNumber(3)])));
-    });
-    describe('quasiquote', function() {
-        function exec(code) {
-            var env = lips.env.inherit('quasiquote');
-            return lips.exec(code, env);
-        }
-        it('should unquote from single quasiquote', function() {
-            var code = "`(let ((name 'x)) `(let ((name 'y)) `(list ',name)))";
-            return exec(code).then(function(result) {
-                expect(result[0].toString()).toEqual(
-                    [
-                        '(let ((name (quote x)))',
-                        '(quasiquote (let ((name (quote y)))',
-                        '(quasiquote (list (quote (unquote name)))))))'
-                    ].join(' ')
-                );
-            });
-        });
-        it('should quaisquote quoted unquoted function', function() {
-            // `',(foo) came from book "On Lips" by Paul Graham
-            return exec(`(define (foo) 'bar) \`',(foo)`).then(result => {
-                expect(result[1].toString()).toEqual('(quote bar)');
-            });
-        });
-        it('should unquote symple and double unquote symbol', function() {
-            var code = "(let ((y 20)) `(let ((x 10)) `(list ,x ,,y)))";
-            return exec(code).then(result => {
-                delete result[0].data;
-                expect(result[0]).toEqual(Pair.fromArray([
-                    new LSymbol('let'), [[new LSymbol('x'), new LNumber(10)]],
-                    [
-                        new LSymbol('quasiquote'),
-                        [
-                            new LSymbol('list'),
-                            [
-                                new LSymbol('unquote'),
-                                new LSymbol('x')
-                            ],
-                            [
-                                new LSymbol('unquote'),
-                                new LNumber(20)
-                            ]
-                        ]
-                    ]
-                ]));
-            });
-        });
-        it('should join symbol', function() {
-            return exec("(let ((x 'foo)) `(a ,@x))").then(result => {
-                expect(result[0].toString()).toEqual('(a . foo)');
-            });
-        });
-        it('should unquote from double quotation', function() {
-            var code = `(let ((x '(1 2)))
-                     \`(let ((x '(2 3)))
-                        (begin
-                          \`(list ,(car x))
-                          \`(list ,,(car x)))))`;
-            return exec(code).then(result => {
-                expect(result[0].toString()).toEqual([
-                    '(let ((x (quote (2 3))))',
-                    '(begin',
-                    '(quasiquote (list (unquote (car x))))',
-                    '(quasiquote (list (unquote 1)))))'
-                ].join(' '));
-            });
-        });
-        it('should evaluate unquote inside unquote-splice and double quasiquote', () => {
-            var code = `(define-macro (bar)
-                          (let ((x 10) (y '(1 2 3)) (z 'foo))
-                            \`(list ,x \`(,@(list ',y)))))
-                        (bar)`;
-            return exec(code).then(result => {
-                expect(result[1].toString()).toEqual('(10 ((1 2 3)))');
-            });
-        });
-        it('should evaluate unquote quote unquote inside double quasiquote', function() {
-            var code = `(define-macro (bar)
-                           (let ((x 10) (y '(1 2 3)) (z 'foo))
-                             \`(list ,x \`(,',z ,,@y))))
-                        (bar)`;
-            return exec(code).then(result => {
-                expect(result[1].toString()).toEqual('(10 (foo 1 2 3))');
-            });
-        });
-        it('should evaluate nested quasiquote and unquote with bare list', function() {
-            var code = `(define-macro (bar)
-                          (let ((x 10) (y '(1 2 3)) (z 'foo))
-                             \`(list ,x \`(,',z \`(list ,,,@y)))))
-                        (define (foo x) x)
-                        (eval (cadr (bar)))`;
-            return exec(code).then(result => {
-                expect(result[2].toString()).toEqual('(list 1 2 3)');
-            });
-        });
-    });
-    describe('quote', function() {
-        it('should return literal list', function() {
-            expect(exec(`'(1 2 3 (4 5))`)).toEqual(
-                quote(Pair.fromArray([
-                    LNumber(1),
-                    LNumber(2),
-                    LNumber(3),
-                    [LNumber(4), LNumber(5)]
-                ]))
-            );
-        });
-        it('should return alist', function() {
-            expect(exec(`'((foo . 1)
-                           (bar . 2.1)
-                           (baz . "string")
-                           (quux . /foo./g))`)).toEqual(
-                quote(new Pair(
-                    new Pair(
-                        new LSymbol('foo'),
-                        LNumber(1)
-                    ),
-                    new Pair(
-                        new Pair(
-                            new LSymbol('bar'),
-                            LNumber(2.1)
-                        ),
-                        new Pair(
-                            new Pair(
-                                new LSymbol('baz'),
-                                "string"
-                            ),
-                            new Pair(
-                                new Pair(
-                                    new LSymbol('quux'),
-                                    /foo./g
-                                ),
-                                nil
-                            )
-                        )
-                    )
-                ))
-            );
-        });
-    });
-    describe('quasiquote', function() {
-        it('should create list with function call', async function() {
-            expect(await exec('`(1 2 3 ,(fun 2 2) 5)', env)).toEqual(
-                quote(Pair.fromArray([1, 2, 3, 4, 5].map(LNumber)))
-            );
-        });
-        it('should create list with value', async function() {
-            expect(await exec('`(1 2 3 ,value 4)', env)).toEqual(
-                quote(Pair.fromArray([1, 2, 3, rand, 4].map(LNumber)))
-            );
-        });
-        it('should create single list using uquote-splice', async function() {
-            expect(await exec('`(1 2 3 ,@(f2 4 5) 6)', env)).toEqual(
-                quote(Pair.fromArray([1, 2, 3, 4, 5, 6].map(LNumber)))
-            );
-        });
-        it('should create single pair', async function() {
-            var specs = [
-                '`(1 . 2)',
-                '`(,(car (list 1 2 3)) . 2)',
-                '`(1 . ,(cadr (list 1 2 3)))',
-                '`(,(car (list 1 2 3)) . ,(cadr (list 1 2 3)))'
-            ];
-            for (let code of specs) {
-                expect(await exec(code)).toEqual(quote(new Pair(LNumber(1), LNumber(2))));
-            }
-        });
-        it('should create list from pair syntax', async function() {
-            expect(await exec('`(,(car (list 1 2 3)) . (1 2 3))')).toEqual(
-                quote(Pair.fromArray([
-                    LNumber(1),
-                    LNumber(1),
-                    LNumber(2),
-                    LNumber(3)
-                ]))
-            );
-        });
-        it('should create alist with values', async function() {
-            expect(await exec(`\`((1 . ,(car (list 1 2)))
-                            (2 . ,(cadr (list 1 "foo"))))`))
-                .toEqual(
-                    quote(new Pair(
-                        new Pair(LNumber(1), LNumber(1)),
-                        new Pair(new Pair(LNumber(2), "foo"), nil)))
-                );
-            expect(await exec(`\`((,(car (list "foo")) . ,(car (list 1 2)))
-                            (2 . ,(cadr (list 1 "foo"))))`))
-                .toEqual(quote(new Pair(
-                    new Pair("foo", LNumber(1)),
-                    new Pair(
-                        new Pair(LNumber(2), "foo"),
-                        nil
-                    ))));
-        });
-        it('should process nested backquote', async function() {
-            expect(await exec('`(1 2 3 ,(cadr `(1 ,(concat "foo" "bar") 3)) 4)')).toEqual(
-                quote(Pair.fromArray([
-                    LNumber(1), LNumber(2), LNumber(3), "foobar", LNumber(4)
-                ]))
-            );
-        });
-        it('should process multiple backquote/unquote', async function() {
-            expect(await exec('``(a ,,(+ 1 2) ,(+ 3 4))')).toEqual(
-                quote(Pair.fromArray([
-                    new LSymbol('quasiquote'),
-                    [
-                        new LSymbol('a'),
-                        [
-                            new LSymbol('unquote'),
-                            LNumber(3)
-                        ],
-                        [
-                            new LSymbol('unquote'),
-                            [
-                                new LSymbol('+'),
-                                LNumber(3),
-                                LNumber(4)
-                            ]
-                        ]
-                    ]
-                ])));
-        });
     });
     describe('trampoline', function() {
         var code = `(define Y
@@ -574,7 +352,7 @@ describe('evaluate', function() {
                     (define (trampoline f)
                          (lambda args
                             (let ((result (apply f args)))
-                                (while (eq? (type result) "function")
+                                (while (equal? (type result) "function")
                                    (set! result (result)))
                                 result)))
 
@@ -586,7 +364,7 @@ describe('evaluate', function() {
                                              (lambda ()
                                                  (f (- n 1) (* n acc)))))))) n 1))
 
-                       (string (! 1000))`;
+                       (repr (! 1000))`;
         var factorial_1000 = [
             "402387260077093773543702433923003985719374864210714632543799910",
             "429938512398629020592044208486969404800479988610197196058631666",
@@ -637,14 +415,14 @@ describe('evaluate', function() {
                     undefined,
                     undefined,
                     undefined,
-                    factorial_1000
+                    LString(factorial_1000)
                 ]);
             });
         });
         it('should throw exception', function() {
             return lips.exec(code, env, env).catch(e => {
                 expect(e.code instanceof Array).toBeTruthy();
-                expect(e.code.pop()).toEqual('(string (! 1000))');
+                expect(e.code.pop()).toEqual('(repr (! 1000))');
                 expect(e).toEqual(new Error("Unbound variable `f'"));
             });
         });
@@ -684,23 +462,26 @@ describe('environment', function() {
             return this.name;
         }
     };
+    function scope(e) {
+        return lips.exec('(scope_name)', e).then(result => result[0].valueOf());
+    }
     it('should return name of the enviroment', function() {
         var e = env.inherit('foo', functions);
-        return lips.exec('(scope_name)', e).then(result => {
-            return expect(result).toEqual(['foo']);
+        return scope(e).then(result => {
+            return expect(result).toEqual('foo');
         });
     });
     it('should create default scope name', function() {
         var e = env.inherit(functions);
-        return lips.exec('(scope_name)', e).then(result => {
-            return expect(result).toEqual(['child of global']);
+        return scope(e).then(result => {
+            return expect(result).toEqual('child of user-env');
         });
     });
     it('should create default scope name for child scope', function() {
         var e = env.inherit('foo', functions);
         var child = e.inherit();
-        return lips.exec('(scope_name)', child).then(result => {
-            return expect(result).toEqual(['child of foo']);
+        return scope(child).then(result => {
+            return expect(result).toEqual('child of foo');
         });
     });
 });
@@ -884,7 +665,7 @@ describe('env', function() {
     }
     function testValue([code, expected]) {
         return lips.exec(code).then(([result]) => {
-            expect(result).toEqual(expected);
+            expect([code, result]).toEqual([code, expected]);
         });
     }
     describe('reduce', function() {
@@ -914,8 +695,8 @@ describe('env', function() {
         it('should create uniqe symbols', function() {
             return Promise.all([
                 [`(eq? (gensym "foo") (gensym "foo"))`, false],
-                [`(eq? 'foo 'foo)`, true],
-                [`(eq? (string (gensym "foo")) (string (gensym "foo")))`, true]
+                [`(eq? 'foo 'foo)`, true]
+                //[`(string=? (repr (gensym "foo")) (repr (gensym "foo")))`, true]
             ].map(testValue));
         });
     });

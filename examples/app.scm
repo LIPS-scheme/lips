@@ -1,8 +1,8 @@
 ;; -*- scheme -*-
 ;; This is example hyperapp application written in LIPS
 ;;
-;; This file is part of the LIPS - Simple lisp in JavaScript
-;; Copyriht (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
+;; This file is part of the LIPS - Scheme implementation in JavaScript
+;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
 

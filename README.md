@@ -1,27 +1,39 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
+[![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![npm](https://img.shields.io/badge/npm-0.20.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&1206332b79604df694ee77e6533b8a6293b99524)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&52aba06ba0a695568564177bab7ef6e8)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&0072a12f183f28ac06cfd812dabeaa101b061a08)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
-LIPS is powerful and modern Lisp, based on Scheme written in JavaScript.
+LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
+specification (and part on R7RS), it have extensions that make it easier to interact
+with JavaScript, it work in Browser and Node.js.
 
-[Demo](https://jcubic.github.io/lips/#demo)
+[Demo](https://jcubic.github.io/lips/#demo LIPS: Scheme based lisp Demo)
 
-## Key features
+## Features
 
-* Full lisp macros, backquote and macroexpand,
-* Functions in lips are normal JavaScript functions,
+* Almost fully Compatible with R5RS,
+* Lisp macros, backquote and macroexpand,
+* Scheme Hygienic Macros with `sytnax-rules`,
+* Parser Syntax extensions and string representation,
+* RegExp-es are first class objects,
+* Functions in LIPS are normal JavaScript functions,
 * You can invoke native JavaScript functions and methods from Lips,
 * Promises are treated as values they resolve to (so async code look like sync - like auto `async/await`),
-* Library agnostic - you can use it with any library,
+* Library agnostic - you can use it with any JavaScript library,
+* Almost no dependencies (only bn.js for big integers),
 * Easy extension using JavaScript using Macros or functions,
-* RegExp-es are first class objects,
+* Builtin pretty printer,
+* JavaScript object literals with `&(:foo 10)` (created using parser extensions),
+* Builtin help system like in Emacs Lisp,
+* You can access `__doc__` and `__code__` of any defined functions,
+* You can access and modify function code while function is running,
 * BigInt support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
-* Almost everything is first class object including macros and functions,
-* Functions code introspection/manipulation at runtime give more power to the programmer,
-* Optional dynamic scope.
+* Almost everything is first class object including macros, functions and environments,
+* Functions code introspection/manipulation at runtime, give more power to the programmer,
+* Optional dynamic scope (can be used to build Emacs Lisp interpreter on top of LIPS).
 
 ## Installation
 
@@ -52,14 +64,14 @@ Simplest way is to include the lips code in script tag:
 <script type="text/x-lips">
 (let ((what "world")
       (greet "hello"))
-   (display (concat "hello" " " what)))
+   (display (string-append "hello" " " what)))
 </script>
 ```
 
 or use `src` attribute:
 
 ```html
-<script type="text/x-lips" src="example.lips"></script>
+<script type="text/x-scheme" src="example.lips"></script>
 ```
 
 Running programmatically:
@@ -91,8 +103,18 @@ you can run interpreter from terminal:
 
 ```
 $ lips
-LIPS Interpreter (Simple Scheme like Lisp)
-Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
+  __ __                          __
+ / / \ \       _    _  ___  ___  \ \
+| |   \ \     | |  | || . \/ __>  | |
+| |    > \    | |_ | ||  _/\__ \  | |
+| |   / ^ \   |___||_||_|  <___/  | |
+ \_\ /_/ \_\                     /_/
+
+LIPS Scheme Interpreter 0.20.1 (2020-08-14)
+Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
+
+Type (env) to see environment with functions macros and variables.
+You can also use (help name) to display help for specic function or macro.
 
 lips> (define (square x)
 ...     (* x x))
@@ -101,48 +123,52 @@ lips> (square 10)
 lips>
 ```
 
-One feature of LIPS REPL is that it auto indent the lines when you press enter and didn't finish the code.
+One feature of LIPS REPL is that it auto indent the lines when you press enter
+and didn't finish the code.
 
 You can also run code as string with:
 
 ```
-lips -c '(let ((what "World")) (display (concat "Hello " what)))'
+lips -c '(let ((what "World")) (display (string-append "Hello " what)))'
 ```
 
 and you can run a file using:
 
 ```
-cat > foo.lips <<EOF
+cat > foo.scm <<EOF
 (let ((what "World"))
-  (display (concat "Hello " what)))
+  (display (string-append "Hello " what))
+  (newline))
 EOF
 
-lips foo.lips
+lips foo.scm
 ```
 
-You can also write executable files that use lips shebang
+You can also write executable files that use lips using shebang (SRFI-22)
 
 ```
-cat > foo.lips <<EOF
+cat foo.scm
 #!/usr/bin/env lips
+
 (let ((what "World"))
-  (display (concat "Hello " what)))
-EOF
-chmod a+x foo.lips
-foo.lips
+  (display (string-append "Hello " what))
+  (newline))
+
+chmod a+x foo.scm
+./foo.scm
 ```
 
-```
-cat <<EOF
-something
-EOF
-```
+Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
-> if just example of using cat to create multiline file from bash, you should use proper editor for
-> writing files.
+## Name
+
+The name LIPS is recursive acronym which expand into LIPS Is Pretty Simple.
+This name was used because first version was very simple implementation.
+It's not that simple anymore, but still it should be pretty easy to modify.
+Note that some parts of the code may be more complex.
 
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license
 
-Copyright (c) 2018-2019 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2020 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)

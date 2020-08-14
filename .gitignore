@@ -1,9 +1,12 @@
 *~
 node_modules
 coverage
+.htaccess
 npm-debug.log
 \#*
 .\#*
 .DEV
 .[0-9]*
 www
+_*
+.nyc_output

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.js"></script>
+</head>
+<body>
+  <button id="button">click</button>
+  <script type="text/x-scheme">
+    (let-env lips.env.parent
+       (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/bootstrap.scm")
+       (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/R5RS.scm")
+       (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/R7RS.scm"))
+  </script>
+  <script type="text/x-scheme">
+  (define msg "hello")
+  (button.addEventListener "click" (lambda () (display msg) (newline)))
+  (window.addEventListener "message" (lambda (data) (console.log data)))
+  </script>
+</body>
+</html>

@@ -3,10 +3,13 @@
 VERSION={{VERSION}}
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
+YEAR=`date +%Y`
+DATE_SHORT=`date +%Y-%m-%d`
 SPEC_CHECKSUM=`md5sum spec/lips.spec.js | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
 
+MAKE=make
 GIT=git
 CD=cd
 SED=sed
@@ -18,11 +21,11 @@ NPM=npm
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
+NPM=npm
 UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 
-
-ALL: Makefile .$(VERSION) dist/lips.js dist/lips.min.js README.md package.json
+ALL: Makefile  package.json .$(VERSION) dist/lips.js dist/lips.min.js README.md
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
@@ -31,7 +34,7 @@ dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(CP) dist/tmp.js dist/lips.js
 	$(RM) dist/tmp.js
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
-	dist/lips.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" \
+	dist/lips.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" -e "s/{{YEAR}}/${YEAR}/" \
 	dist/lips.js
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
@@ -43,12 +46,13 @@ Makefile: templates/Makefile
 package.json: templates/package.json .$(VERSION)
 	$(SED) -e "s/{{VER}}/"$(VERSION)"/" templates/package.json > package.json || true
 
-README.md: templates/README.md .$(VERSION)
+README.md: templates/README.md dist/lips.js .$(VERSION)
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \
-	"s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" \
-	-e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md || \
-	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e \
-	"s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md
+	"s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{YEAR}}/${YEAR}/g" \
+	-e "s/{{DATE}}/${DATE_SHORT}/" -e "s/{{COMMIT}}/$(COMMIT)/g" < templates/README.md > README.md || \
+	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{YEAR}}/${YEAR}/g" \
+	-e "s/{{CHECKSUM}}/$(SPEC_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" -e "s/{{DATE}}/${DATE_SHORT}/" \
+	< templates/README.md > README.md
 
 .$(VERSION): Makefile
 	touch .$(VERSION)
@@ -58,11 +62,23 @@ publish:
 	$(CD) npm && $(NPM) publish --access=public
 	$(RM) -rf npm
 
+jest-test: dist/lips.js
+	@$(JEST) --coverage spec/*.spec.js
+
 test: dist/lips.js
-	$(JEST)
+	@$(NPM) run test
+
+watch-test:
+	@inotifywait -m -e close_write src/lips.js tests/*.scm | while read even; do $(MAKE) --no-print-directory test; done
+
+watch-lint:
+	@inotifywait -m -e close_write src/lips.js | while read even; do $(MAKE) --no-print-directory lint; done
+
+watch-make:
+	@inotifywait -m -e close_write src/lips.js | while read even; do $(MAKE) --no-print-directory; done
 
 coveralls:
-	$(CAT) ./coverage/lcov.info | $(COVERALLS)
+	$(NPM) run coverage
 
 lint:
 	$(ESLINT) src/lips.js spec/lips.spec.js
