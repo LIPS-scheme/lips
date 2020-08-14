@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 14 Aug 2020 07:29:32 +0000
+ * build: Fri, 14 Aug 2020 21:14:33 +0000
  */
 (function () {
 	'use strict';
@@ -7410,6 +7410,10 @@
 	        } else {
 	          env.set(code.car, value);
 	        }
+
+	        if (code.cdr.cdr instanceof Pair && LString.isString(code.cdr.cdr.car) && value !== null && _typeof_1(value) === 'object') {
+	          value.__doc__ = code.cdr.cdr.car.valueOf();
+	        }
 	      });
 	    }), "(define name expression)\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
 	    // ------------------------------------------------------------------
@@ -9844,10 +9848,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 14 Aug 2020 07:29:32 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 14 Aug 2020 21:14:33 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 14 Aug 2020 07:29:32 +0000').valueOf();
+	    var date = LString('Fri, 14 Aug 2020 21:14:33 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9884,7 +9888,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 14 Aug 2020 07:29:32 +0000',
+	    date: 'Fri, 14 Aug 2020 21:14:33 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

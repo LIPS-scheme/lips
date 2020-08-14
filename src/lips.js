@@ -5201,6 +5201,11 @@
                 } else {
                     env.set(code.car, value);
                 }
+                if (code.cdr.cdr instanceof Pair &&
+                    LString.isString(code.cdr.cdr.car) &&
+                    value !== null && typeof value === 'object') {
+                    value.__doc__ = code.cdr.cdr.car.valueOf();
+                }
             });
         }), `(define name expression)
              (define (function-name . args) body)

@@ -1,3 +1,11 @@
+## 1.0.0-beta.2
+### Features
+* doc strings on object based variables
+
+## 1.0.0-beta.3
+## Bugfix
+* fix broken REPL
+
 ## 1.0.0-beta.1
 ### Breaking
 * rename `ceil` to `ceiling` (like in R5RS spec)
