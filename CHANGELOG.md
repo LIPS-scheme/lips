@@ -1,7 +1,10 @@
-## 1.0.0-beta.2
+## 1.0.0-beta.4
 ### Features
 * doc strings on variables
 * fix Environment::has (ref) on variable that are undefined
+* fix macroexpand with pprint on syntax macros
+* fix formatter breaking rules definition in LIPS + (+ fix `cond`)
+* fix rational? on integers (bigint)
 
 ## 1.0.0-beta.3
 ## Bugfix
