@@ -197,3 +197,28 @@
                     (cons 'bar 2.1)
                     (cons 'baz "string")
                     (cons 'quux /foo./g)))))
+
+(test "quote: should return literal atoms"
+      (lambda (t)
+
+        (t.is (list '#f
+                    '#t
+                    '10
+                    '10+10i
+                    '#x10
+                    '#x#i10
+                    '#e#x10
+                    '#e#o7
+                    '#\x
+                    '#\newline)
+
+              (list #f
+                    #t
+                    10
+                    10+10i
+                    #x10
+                    #x#i10
+                    #e#x10
+                    #e#o7
+                    #\x
+                    #\newline))))

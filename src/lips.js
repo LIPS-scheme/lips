@@ -214,7 +214,8 @@
         'tab': '\t'
     };
     const character_symbols = Object.keys(characters).join('|');
-    const char_re = new RegExp(`^#\\\\(?:x[0-9af]+|${character_symbols}|[\\s\\S])$`, 'i');
+    const char_sre_re = `#\\\\(?:x[0-9a-f]+|${character_symbols}|[\\s\\S])`;
+    const char_re = new RegExp(`^${char_sre_re}$`, 'i');
     // complex with (int) (float) (rational)
     function make_num_stre(fn) {
         const ranges = [
@@ -463,9 +464,9 @@
             return parse_float(arg);
         } else if (arg === 'nil') {
             return nil;
-        } else if (['true', '#t', "'#t"].includes(arg)) {
+        } else if (['true', '#t'].includes(arg)) {
             return true;
-        } else if (['false', '#f', "'#f"].includes(arg)) {
+        } else if (['false', '#f'].includes(arg)) {
             return false;
         } else {
             return parse_symbol(arg);
@@ -491,10 +492,10 @@
     ].map(make_num_stre).join('|');
     // ----------------------------------------------------------------------
     function make_tokens_re() {
-        var tokens = specials.names()
+        const tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(#\\\\(?:x[0-9a-f]+|${character_symbols}|[\\s\\S])|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(${char_sre_re}|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|'(?=#[ft]|(?:#[xiobe]){1,2}|#\\\\)|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -5534,23 +5535,24 @@
                 let symbols = [];
                 while (node !== nil) {
                     const x = node.car;
-                    if (!(x instanceof LSymbol)) {
-                        throw new Error('syntax: wrong identifier');
-                    }
                     symbols.push(x.valueOf());
                     node = node.cdr;
                 }
                 return symbols;
             }
-            let ellipsis, rules, symbols;
+            function validate_identifiers(node) {
+                while (node !== nil) {
+                    const x = node.car;
+                    if (!(x instanceof LSymbol)) {
+                        throw new Error('syntax-rules: wrong identifier');
+                    }
+                    node = node.cdr;
+                }
+            }
             if (macro.car instanceof LSymbol) {
-                ellipsis = macro.car;
-                symbols = get_identifiers(macro.cdr.car);
-                rules = macro.cdr.cdr;
+                validate_identifiers(macro.cdr.car);
             } else {
-                ellipsis = '...';
-                symbols = get_identifiers(macro.car);
-                rules = macro.cdr;
+                validate_identifiers(macro.car);
             }
             return new Syntax(function(code, { macro_expand }) {
                 var scope = env.inherit('syntax');
@@ -5559,6 +5561,16 @@
                 }
                 var var_scope = this;
                 var eval_args = { env: scope, dynamic_scope, error };
+                let ellipsis, rules, symbols;
+                if (macro.car instanceof LSymbol) {
+                    ellipsis = macro.car;
+                    symbols = get_identifiers(macro.cdr.car);
+                    rules = macro.cdr.cdr;
+                } else {
+                    ellipsis = '...';
+                    symbols = get_identifiers(macro.car);
+                    rules = macro.cdr;
+                }
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 15 Aug 2020 14:39:21 +0000
+ * build: Sat, 15 Aug 2020 16:38:23 +0000
  */
 (function () {
 	'use strict';
@@ -1232,7 +1232,8 @@
 	    'tab': '\t'
 	  };
 	  var character_symbols = Object.keys(characters).join('|');
-	  var char_re = new RegExp("^#\\\\(?:x[0-9af]+|".concat(character_symbols, "|[\\s\\S])$"), 'i'); // complex with (int) (float) (rational)
+	  var char_sre_re = "#\\\\(?:x[0-9a-f]+|".concat(character_symbols, "|[\\s\\S])");
+	  var char_re = new RegExp("^".concat(char_sre_re, "$"), 'i'); // complex with (int) (float) (rational)
 
 	  function make_num_stre(fn) {
 	    var ranges = [['o', '[0-7]'], ['x', '[0-9a-fA-F]'], ['b', '[01]'], ['', '[0-9]']]; // float exception that don't accept mnemonics
@@ -1546,9 +1547,9 @@
 	      return parse_float(arg);
 	    } else if (arg === 'nil') {
 	      return nil;
-	    } else if (['true', '#t', "'#t"].includes(arg)) {
+	    } else if (['true', '#t'].includes(arg)) {
 	      return true;
-	    } else if (['false', '#f', "'#f"].includes(arg)) {
+	    } else if (['false', '#f'].includes(arg)) {
 	      return false;
 	    } else {
 	      return parse_symbol(arg);
@@ -1572,7 +1573,7 @@
 	    var tokens = specials.names().sort(function (a, b) {
 	      return b.length - a.length || a.localeCompare(b);
 	    }).map(escape_regex).join('|');
-	    return new RegExp("(#\\\\(?:x[0-9a-f]+|".concat(character_symbols, "|[\\s\\S])|#f|#t|#;|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|(?!#:|'#[ft])(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+	    return new RegExp("(".concat(char_sre_re, "|#f|#t|#;|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|'(?=#[ft]|(?:#[xiobe]){1,2}|#\\\\)|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
 	  }
 	  /* eslint-enable */
 	  // ----------------------------------------------------------------------
@@ -7792,11 +7793,6 @@
 
 	        while (node !== nil) {
 	          var x = node.car;
-
-	          if (!(x instanceof LSymbol)) {
-	            throw new Error('syntax: wrong identifier');
-	          }
-
 	          symbols.push(x.valueOf());
 	          node = node.cdr;
 	        }
@@ -7804,16 +7800,22 @@
 	        return symbols;
 	      }
 
-	      var ellipsis, rules, symbols;
+	      function validate_identifiers(node) {
+	        while (node !== nil) {
+	          var x = node.car;
+
+	          if (!(x instanceof LSymbol)) {
+	            throw new Error('syntax-rules: wrong identifier');
+	          }
+
+	          node = node.cdr;
+	        }
+	      }
 
 	      if (macro.car instanceof LSymbol) {
-	        ellipsis = macro.car;
-	        symbols = get_identifiers(macro.cdr.car);
-	        rules = macro.cdr.cdr;
+	        validate_identifiers(macro.cdr.car);
 	      } else {
-	        ellipsis = '...';
-	        symbols = get_identifiers(macro.car);
-	        rules = macro.cdr;
+	        validate_identifiers(macro.car);
 	      }
 
 	      return new Syntax(function (code, _ref21) {
@@ -7830,6 +7832,17 @@
 	          dynamic_scope: dynamic_scope,
 	          error: error
 	        };
+	        var ellipsis, rules, symbols;
+
+	        if (macro.car instanceof LSymbol) {
+	          ellipsis = macro.car;
+	          symbols = get_identifiers(macro.cdr.car);
+	          rules = macro.cdr.cdr;
+	        } else {
+	          ellipsis = '...';
+	          symbols = get_identifiers(macro.car);
+	          rules = macro.cdr;
+	        }
 
 	        while (rules !== nil) {
 	          var rule = rules.car.car;
@@ -9928,10 +9941,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 15 Aug 2020 14:39:21 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 15 Aug 2020 16:38:23 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 15 Aug 2020 14:39:21 +0000').valueOf();
+	    var date = LString('Sat, 15 Aug 2020 16:38:23 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9968,7 +9981,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 15 Aug 2020 14:39:21 +0000',
+	    date: 'Sat, 15 Aug 2020 16:38:23 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
