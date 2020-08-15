@@ -1264,6 +1264,7 @@
         [[p_o, keywords_re('begin')], 1],
         [[p_o, keywords_re('begin'), sexp], 1, not_close],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
+        [[p_o, keywords_re('define-syntax'), /.+/], 1],
         //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
         [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
         [[/(?!lambda)/, p_o, glob, p_e], 1, not_close],
@@ -1277,7 +1278,7 @@
         [[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1],
         [[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
         [[p_o, [p_o, glob, p_e], string_re], 1],
-        [[p_o, def_lambda_re, p_o, glob, p_e], 1],
+        [[p_o, def_lambda_re, p_o, glob, p_e], 1, not_close],
         [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close],
         [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]
     ];

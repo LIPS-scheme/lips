@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 15 Aug 2020 11:09:48 +0000
+ * build: Sat, 15 Aug 2020 14:35:18 +0000
  */
 (function () {
 	'use strict';
@@ -2497,9 +2497,9 @@
 	    return new RegExp("^(?:#:)?(?:".concat(args.join('|'), ")$"));
 	  }
 
-	  Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, keywords_re('begin'), sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
+	  Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, keywords_re('begin'), sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, keywords_re('define-syntax'), /.+/], 1], //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
 	  [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close], [[/(?!lambda)/, p_o, glob, p_e], 1, not_close], [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
-	  [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1], [[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1], [[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]]; // ----------------------------------------------------------------------
+	  [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1], [[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1], [[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]]; // ----------------------------------------------------------------------
 
 	  Formatter.prototype["break"] = function () {
 	    var code = this._code.replace(/\n[ \t]*/g, '\n ');
@@ -9927,10 +9927,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 15 Aug 2020 11:09:48 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 15 Aug 2020 14:35:18 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 15 Aug 2020 11:09:48 +0000').valueOf();
+	    var date = LString('Sat, 15 Aug 2020 14:35:18 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9967,7 +9967,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 15 Aug 2020 11:09:48 +0000',
+	    date: 'Sat, 15 Aug 2020 14:35:18 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
