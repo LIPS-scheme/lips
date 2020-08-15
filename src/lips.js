@@ -1098,8 +1098,10 @@
         indent: 2,
         exceptions: {
             specials: [
-                /^define/, 'lambda', 'let*', /^(let|letrec)(-syntax)?$/,
-                'let-env', 'syntax-rules', 'try', 'catch', 'while'
+                /^(?:#:)?define/, /^(?:#:)?lambda/, /^(?:#:)?let*/,
+                /^(?:#:)?(let|letrec)(-syntax)?$/, /(?:#:)?let-env/,
+                /(?:#:)?syntax-rules/, /(?:#:)?try/, /(?:#:)?catch/,
+                /(?:#:)?while/
             ],
             shift: {
                 1: ['&', '#']
@@ -1245,22 +1247,27 @@
     const symbol = new Pattern([Symbol.for('symbol')], '?');
     const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
-    var def_lambda_re = /^(define|lambda|syntax-rules)/;
-    var let_re = /^(let|let\*|letrec|let-env)(:?-syntax)?$/;
+    var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
+    var let_re = /^(?:#:)?(let|let\*|letrec|let-env)(:?-syntax)?$/;
+    function keywords_re(...args) {
+        return new RegExp(`^(?:#:)?(?:${args.join('|')})$`);
+    }
     Formatter.rules = [
-        [[p_o, 'begin'], 1],
-        [[p_o, 'begin', sexp], 1, not_close],
+        [[p_o, keywords_re('begin')], 1],
+        [[p_o, keywords_re('begin'), sexp], 1, not_close],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
         //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
         [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
         [[/(?!lambda)/, p_o, glob, p_e], 1, not_close],
-        [[p_o, /if|while/, not_p], 1, not_close],
-        [[p_o, 'while', not_p, sexp], 1, not_close],
-        [[p_o, 'while', [p_o, glob, p_e], sexp], 1, not_close],
-        [[p_o, 'if', not_p, glob], 1],
-        [[p_o, /if|while/, [p_o, glob, p_e]], 1],
-        [[p_o, 'if', [p_o, glob, p_e], not_p], 1],
-        [[p_o, 'if', [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
+        [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
+        [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
+        [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
+        [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
+        [[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close],
+        [[p_o, keywords_re('if'), not_p, glob], 1],
+        [[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1],
+        [[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1],
+        [[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
         [[p_o, [p_o, glob, p_e], string_re], 1],
         [[p_o, def_lambda_re, p_o, glob, p_e], 1],
         [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close],
