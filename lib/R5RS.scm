@@ -207,7 +207,13 @@
 
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)
-  (and (number? x) (string=? (. x 'type) type)))
+  (typecheck "%number-type" type (vector "string" "pair"))
+  (let* ((t (. x 'type))
+         (typeof (lambda (type) (string=? t type))))
+    (and (number? x)
+         (if (pair? type)
+             (some typeof type)
+             (typeof type)))))
 
 ;; -----------------------------------------------------------------------------
 (define integer? (%doc
@@ -222,7 +228,7 @@
 ;; -----------------------------------------------------------------------------
 (define rational? (%doc
                   ""
-                  (curry %number-type "rational")))
+                  (curry %number-type '("rational" "bigint"))))
 
 ;; -----------------------------------------------------------------------------
 (define (typecheck-args _type name _list)
