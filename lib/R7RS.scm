@@ -17,18 +17,19 @@
    test to check if the loop should continue. If test is signle call the macro
    will not return anything. If the test is pair of expression and value the
    macro will return that value after finish."
-  (let ((return? (not (symbol? (car test)))))
-    `(let (,@(map (lambda (spec)
+  (let ((return? (eq? (length test) 2)) (loop (gensym)))
+    `(let ,loop (,@(map (lambda (spec)
                     `(,(car spec) ,(cadr spec)))
                  vars))
-        (while (not ,(if return? `,(car test) `,test))
-          ,@body
-          ,@(map (lambda (spec)
-                   `(set! ,(car spec) ,(caddr spec)))
-              (filter (lambda (item)
-                         (== (length item) 3))
-                    vars)))
-        ,(if return? (cadr test)))))
+          (if (not ,(car test))
+              (begin
+                ,@body
+                (,loop ,@(map (lambda (spec)
+                                (if (null? (cddr spec))
+                                    (car spec)
+                                    (caddr spec)))
+                              vars)))
+                ,(if return? (cadr test))))))
 
 ;; -----------------------------------------------------------------------------
 (define (list-match? predicate list)
