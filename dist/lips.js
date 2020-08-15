@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 15 Aug 2020 16:43:59 +0000
+ * build: Sat, 15 Aug 2020 17:33:25 +0000
  */
 (function () {
 	'use strict';
@@ -1333,7 +1333,7 @@
 
 	    if (m) {
 	      var ord = parseInt(m[1], 16);
-	      _char = String.fromCharCode(ord);
+	      _char = String.fromCodePoint(ord);
 	    } else {
 	      m = arg.match(/#\\(.+)$/);
 
@@ -1493,7 +1493,7 @@
 	    // handle non JSON escapes and skip unicode escape \u (even partial)
 	    var re = /([^\\\n])(\\(?:\\{2})*)(?!u[0-9AF]{1,4})(.)/gi;
 	    string = string.replace(re, function (_, before, slashes, chr) {
-	      if (!['"', '/', 'b', 'f', 'n', 'r', 't'].includes(chr)) {
+	      if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't'].includes(chr)) {
 	        slashes = slashes.substring(1).replace(/\\\\/, '\\');
 	        return before + slashes + chr;
 	      }
@@ -9941,10 +9941,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 15 Aug 2020 16:43:59 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 15 Aug 2020 17:33:25 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 15 Aug 2020 16:43:59 +0000').valueOf();
+	    var date = LString('Sat, 15 Aug 2020 17:33:25 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9981,7 +9981,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 15 Aug 2020 16:43:59 +0000',
+	    date: 'Sat, 15 Aug 2020 17:33:25 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -298,7 +298,7 @@
         var char;
         if (m) {
             var ord = parseInt(m[1], 16);
-            char = String.fromCharCode(ord);
+            char = String.fromCodePoint(ord);
         } else {
             m = arg.match(/#\\(.+)$/);
             if (m) {
@@ -416,7 +416,7 @@
         // handle non JSON escapes and skip unicode escape \u (even partial)
         var re = /([^\\\n])(\\(?:\\{2})*)(?!u[0-9AF]{1,4})(.)/gi;
         string = string.replace(re, function(_, before, slashes, chr) {
-            if (!['"', '/', 'b', 'f', 'n', 'r', 't'].includes(chr)) {
+            if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't'].includes(chr)) {
                 slashes = slashes.substring(1).replace(/\\\\/, '\\');
                 return before + slashes + chr;
             }

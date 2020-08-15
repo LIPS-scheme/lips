@@ -5,6 +5,9 @@
 * fix macroexpand with pprint on syntax macros
 * fix formatter breaking rules definition in LIPS + (+ fix `cond`)
 * fix rational? on integers (bigint)
+* fix parsing escape slash inside strings
+* don't throw exception on parse error in string->number (return false)
+* fix silent accepting two big code point `#\xFFFFFF`
 
 ## 1.0.0-beta.3
 ## Bugfix
