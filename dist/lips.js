@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 15 Aug 2020 14:35:18 +0000
+ * build: Sat, 15 Aug 2020 14:39:21 +0000
  */
 (function () {
 	'use strict';
@@ -7804,6 +7804,18 @@
 	        return symbols;
 	      }
 
+	      var ellipsis, rules, symbols;
+
+	      if (macro.car instanceof LSymbol) {
+	        ellipsis = macro.car;
+	        symbols = get_identifiers(macro.cdr.car);
+	        rules = macro.cdr.cdr;
+	      } else {
+	        ellipsis = '...';
+	        symbols = get_identifiers(macro.car);
+	        rules = macro.cdr;
+	      }
+
 	      return new Syntax(function (code, _ref21) {
 	        var macro_expand = _ref21.macro_expand;
 	        var scope = env.inherit('syntax');
@@ -7818,17 +7830,6 @@
 	          dynamic_scope: dynamic_scope,
 	          error: error
 	        };
-	        var ellipsis, rules, symbols;
-
-	        if (macro.car instanceof LSymbol) {
-	          ellipsis = macro.car;
-	          symbols = get_identifiers(macro.cdr.car);
-	          rules = macro.cdr.cdr;
-	        } else {
-	          ellipsis = '...';
-	          symbols = get_identifiers(macro.car);
-	          rules = macro.cdr;
-	        }
 
 	        while (rules !== nil) {
 	          var rule = rules.car.car;
@@ -9927,10 +9928,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 15 Aug 2020 14:35:18 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 15 Aug 2020 14:39:21 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 15 Aug 2020 14:35:18 +0000').valueOf();
+	    var date = LString('Sat, 15 Aug 2020 14:39:21 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9967,7 +9968,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 15 Aug 2020 14:35:18 +0000',
+	    date: 'Sat, 15 Aug 2020 14:39:21 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

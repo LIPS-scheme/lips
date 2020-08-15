@@ -5542,6 +5542,16 @@
                 }
                 return symbols;
             }
+            let ellipsis, rules, symbols;
+            if (macro.car instanceof LSymbol) {
+                ellipsis = macro.car;
+                symbols = get_identifiers(macro.cdr.car);
+                rules = macro.cdr.cdr;
+            } else {
+                ellipsis = '...';
+                symbols = get_identifiers(macro.car);
+                rules = macro.cdr;
+            }
             return new Syntax(function(code, { macro_expand }) {
                 var scope = env.inherit('syntax');
                 if (dynamic_scope) {
@@ -5549,16 +5559,6 @@
                 }
                 var var_scope = this;
                 var eval_args = { env: scope, dynamic_scope, error };
-                let ellipsis, rules, symbols;
-                if (macro.car instanceof LSymbol) {
-                    ellipsis = macro.car;
-                    symbols = get_identifiers(macro.cdr.car);
-                    rules = macro.cdr.cdr;
-                } else {
-                    ellipsis = '...';
-                    symbols = get_identifiers(macro.car);
-                    rules = macro.cdr;
-                }
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
