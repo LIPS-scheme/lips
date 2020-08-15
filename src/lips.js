@@ -6236,7 +6236,7 @@
                     return parse_float(arg);
                 }
             }
-            throw new Error('string->number: Invalid Syntax');
+            return false;
         }, `(string->number number [radix])
 
            Function convert string to number.`),

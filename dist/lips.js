@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 15 Aug 2020 16:38:23 +0000
+ * build: Sat, 15 Aug 2020 16:43:59 +0000
  */
 (function () {
 	'use strict';
@@ -8455,7 +8455,7 @@
 	        }
 	      }
 
-	      throw new Error('string->number: Invalid Syntax');
+	      return false;
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
 	    'try': doc(new Macro('try', function (code, _ref24) {
@@ -9941,10 +9941,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 15 Aug 2020 16:38:23 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 15 Aug 2020 16:43:59 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 15 Aug 2020 16:38:23 +0000').valueOf();
+	    var date = LString('Sat, 15 Aug 2020 16:43:59 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9981,7 +9981,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 15 Aug 2020 16:38:23 +0000',
+	    date: 'Sat, 15 Aug 2020 16:43:59 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
