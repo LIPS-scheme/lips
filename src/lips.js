@@ -1039,8 +1039,8 @@
                     if (!input[i].match(pattern[p])) {
                         return -1;
                     }
-                } else if (typeof pattern[p] === 'string') {
-                    if (pattern[p] !== input[i]) {
+                } else if (lips.LString.isString(pattern[p])) {
+                    if (pattern[p].valueOf() !== input[i]) {
                         return -1;
                     }
                 } else if (typeof pattern[p] === 'symbol') {
@@ -1226,6 +1226,10 @@
     function Ahead(pattern) {
         this.pattern = pattern;
     }
+    // TODO: make it print
+    Ahead.prototype.toString = function() {
+        return `#<pattern(${this.pattern})>`;
+    };
     // ----------------------------------------------------------------------
     Ahead.prototype.match = function(string) {
         return string.match(this.pattern);
@@ -1235,6 +1239,10 @@
         this.pattern = pattern;
         this.flag = flag;
     }
+    // TODO: make it print
+    Pattern.prototype.toString = function() {
+        return `#<pattern(${this.pattern} ${this.flag})>`;
+    };
     // ----------------------------------------------------------------------
     Formatter.Pattern = Pattern;
     Formatter.Ahead = Ahead;
@@ -1298,6 +1306,7 @@
                 }
             });
             for (let [pattern, count, ext] of rules) {
+                count = count.valueOf();
                 var m = match(pattern, sexp[count].filter(t => t.trim()));
                 var next = tokens.slice(i).find(t => t.trim());
                 if (m && (ext instanceof Ahead && ext.match(next) || !ext)) {

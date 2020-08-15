@@ -349,13 +349,13 @@
 
    Anaphoric Macro for defining patterns for formatter. With Ahead, Pattern and * defined values."
   (let ((rules (gensym)))
-    `(let ((,rules (.. lips.Formatter.rules))
+    `(let ((,rules lips.Formatter.rules)
            (Ahead (lambda (pattern)
                     (let ((Ahead (.. lips.Formatter.Ahead)))
                       (new Ahead (if (string? pattern) (new RegExp pattern) pattern)))))
-           (* ((.. Symbol.for) "*"))
+           (* (Symbol.for "*"))
            (Pattern (lambda (pattern flag)
-                      (new (.. lips.Formatter.Pattern) (list->array pattern)
+                      (new lips.Formatter.Pattern (list->array pattern)
                            (if (null? flag) undefined flag)))))
        ,@(map (lambda (pattern)
                 `(--> ,rules (push (tree->array (tree-map native.number ,@pattern)))))
@@ -390,7 +390,18 @@
 ;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro
 ;; use RegExp constructor
 ;; -----------------------------------------------------------------------------
-(define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+"))
+(define (%r re . rest)
+  "(%r re)
+
+   Create new regular expression from string, to not break Emacs formatting"
+   (if (null? rest)
+     (new RegExp re)
+     (new RegExp re (car rest))))
+
+;; -----------------------------------------------------------------------------
+(define-formatter-rule ((list (list "("
+                                    (%r "(?:#:)?cond")
+                                    (Pattern (list "(" * ")") "+"))
                                1
                                (Ahead "[^)]"))))
 

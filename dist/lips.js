@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 15 Aug 2020 10:25:44 +0000
+ * build: Sat, 15 Aug 2020 11:09:48 +0000
  */
 (function () {
 	'use strict';
@@ -2222,8 +2222,8 @@
 	          if (!input[i].match(pattern[p])) {
 	            return -1;
 	          }
-	        } else if (typeof pattern[p] === 'string') {
-	          if (pattern[p] !== input[i]) {
+	        } else if (lips.LString.isString(pattern[p])) {
+	          if (pattern[p].valueOf() !== input[i]) {
 	            return -1;
 	          }
 	        } else if (_typeof_1(pattern[p]) === 'symbol') {
@@ -2451,7 +2451,12 @@
 
 	  function Ahead(pattern) {
 	    this.pattern = pattern;
-	  } // ----------------------------------------------------------------------
+	  } // TODO: make it print
+
+
+	  Ahead.prototype.toString = function () {
+	    return "#<pattern(".concat(this.pattern, ")>");
+	  }; // ----------------------------------------------------------------------
 
 
 	  Ahead.prototype.match = function (string) {
@@ -2462,7 +2467,12 @@
 	  function Pattern(pattern, flag) {
 	    this.pattern = pattern;
 	    this.flag = flag;
-	  } // ----------------------------------------------------------------------
+	  } // TODO: make it print
+
+
+	  Pattern.prototype.toString = function () {
+	    return "#<pattern(".concat(this.pattern, " ").concat(this.flag, ")>");
+	  }; // ----------------------------------------------------------------------
 
 
 	  Formatter.Pattern = Pattern;
@@ -2534,6 +2544,7 @@
 	              count = _step2$value[1],
 	              ext = _step2$value[2];
 
+	          count = count.valueOf();
 	          var m = match(pattern, sexp[count].filter(function (t) {
 	            return t.trim();
 	          }));
@@ -9916,10 +9927,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 15 Aug 2020 10:25:44 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 15 Aug 2020 11:09:48 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 15 Aug 2020 10:25:44 +0000').valueOf();
+	    var date = LString('Sat, 15 Aug 2020 11:09:48 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9956,7 +9967,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 15 Aug 2020 10:25:44 +0000',
+	    date: 'Sat, 15 Aug 2020 11:09:48 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
