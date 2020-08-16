@@ -60,7 +60,6 @@
 
 (set-repr! Array
            (lambda (x q)
-             (console.log x)
              (let ((arr (--> x (map (lambda (x) (repr x q))))))
                (concat "#(" (--> arr (join " ")) ")"))))
 

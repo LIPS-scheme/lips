@@ -3,6 +3,8 @@
 * add/remove-specials and add/remove-repr are now set/unset
 ### Features
 * doc strings on variables
+* persistent history in executable REPL
+### Bugfix
 * fix Environment::has (ref) on variable that are undefined
 * fix macroexpand with pprint on syntax macros
 * fix formatter breaking rules definition in LIPS + (+ fix `cond`)
