@@ -3408,9 +3408,29 @@
         } else if (!LNumber.isComplex(n)) {
             throw new Error('[LComplex::add] Invalid value');
         }
-        const conj = LComplex({ re: n.re, im: n.im.sub() });
-        var denom = n.re.mul(n.re).add(n.im.mul(n.im));
-        var num = this.mul(conj);
+        const [ a, b ] = this.coerce(n);
+        const conj = LComplex({ re: b.re, im: b.im.sub() });
+        let denom, num;
+        // fix rounding when calculating (/ 1.0 1/10+1/10i)
+        if (a.im instanceof LFloat || a.im instanceof LFloat ||
+            b.im instanceof LFloat || b.im instanceof LFloat) {
+            let { re, im } = b;
+            let x, y;
+            if (re instanceof LFloat) {
+                x = re.toRational().mul(re.toRational());
+            } else {
+                x = re.mul(re);
+            }
+            if (im instanceof LFloat) {
+                y = im.toRational().mul(im.toRational());
+            } else {
+                y = im.mul(im);
+            }
+            denom = x.add(y).valueOf();
+        } else {
+            denom = b.re.mul(b.re).add(b.im.mul(b.im));
+        }
+        num = a.mul(conj);
         const re = num.re.op('/', denom);
         const im = num.im.op('/', denom);
         return LComplex({ re, im });
@@ -3718,7 +3738,8 @@
             return LRational({ num, denom });
         }
         const [a, b] = LNumber.coerce(this, n);
-        return a.div(b);
+        const ret = a.div(b);
+        return ret;
     };
     // -------------------------------------------------------------------------
     LRational.prototype._op = function(op, n) {
@@ -3726,6 +3747,9 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.sub = function(n) {
+        if (typeof n === 'undefined') {
+            return this.mul(-1);
+        }
         if (!(n instanceof LNumber)) {
             n = LNumber(n); // handle (--> 1/2 (sub 1))
         }

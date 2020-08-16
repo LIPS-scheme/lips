@@ -489,6 +489,15 @@
                 false))))
 
 ;; -----------------------------------------------------------------------------
+(define (environment-bound? env x)
+  "(environment-bound? env symbol)
+
+   Function check if symbol is bound variable similar to bound?."
+  (typecheck "environment-bound?" env "environment" 1)
+  (typecheck "environment-bound?" x "symbol" 2)
+  (bound? x env))
+
+;; -----------------------------------------------------------------------------
 ;; source https://stackoverflow.com/a/4297432/387194
 ;; -----------------------------------------------------------------------------
 (define (qsort e predicate)

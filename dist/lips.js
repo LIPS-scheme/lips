@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 16 Aug 2020 11:42:36 +0000
+ * build: Sun, 16 Aug 2020 18:19:55 +0000
  */
 (function () {
 	'use strict';
@@ -5263,12 +5263,40 @@
 	      throw new Error('[LComplex::add] Invalid value');
 	    }
 
+	    var _this$coerce = this.coerce(n),
+	        _this$coerce2 = slicedToArray(_this$coerce, 2),
+	        a = _this$coerce2[0],
+	        b = _this$coerce2[1];
+
 	    var conj = LComplex({
-	      re: n.re,
-	      im: n.im.sub()
+	      re: b.re,
+	      im: b.im.sub()
 	    });
-	    var denom = n.re.mul(n.re).add(n.im.mul(n.im));
-	    var num = this.mul(conj);
+	    var denom, num; // fix rounding when calculating (/ 1.0 1/10+1/10i)
+
+	    if (a.im instanceof LFloat || a.im instanceof LFloat || b.im instanceof LFloat || b.im instanceof LFloat) {
+	      var _re = b.re,
+	          _im = b.im;
+	      var x, y;
+
+	      if (_re instanceof LFloat) {
+	        x = _re.toRational().mul(_re.toRational());
+	      } else {
+	        x = _re.mul(_re);
+	      }
+
+	      if (_im instanceof LFloat) {
+	        y = _im.toRational().mul(_im.toRational());
+	      } else {
+	        y = _im.mul(_im);
+	      }
+
+	      denom = x.add(y).valueOf();
+	    } else {
+	      denom = b.re.mul(b.re).add(b.im.mul(b.im));
+	    }
+
+	    num = a.mul(conj);
 	    var re = num.re.op('/', denom);
 	    var im = num.im.op('/', denom);
 	    return LComplex({
@@ -5305,10 +5333,10 @@
 	        n = LNumber(n);
 	      }
 
-	      var _im = n.asType(0);
+	      var _im2 = n.asType(0);
 
 	      n = {
-	        im: _im,
+	        im: _im2,
 	        re: n
 	      };
 	    } else if (!LNumber.isComplex(n)) {
@@ -5342,10 +5370,10 @@
 
 
 	  LComplex.prototype.cmp = function (n) {
-	    var _this$coerce = this.coerce(n),
-	        _this$coerce2 = slicedToArray(_this$coerce, 2),
-	        a = _this$coerce2[0],
-	        b = _this$coerce2[1];
+	    var _this$coerce3 = this.coerce(n),
+	        _this$coerce4 = slicedToArray(_this$coerce3, 2),
+	        a = _this$coerce4[0],
+	        b = _this$coerce4[1];
 
 	    var _a$re$coerce = a.re.coerce(b.re),
 	        _a$re$coerce2 = slicedToArray(_a$re$coerce, 2),
@@ -5691,7 +5719,8 @@
 	        a = _LNumber$coerce4[0],
 	        b = _LNumber$coerce4[1];
 
-	    return a.div(b);
+	    var ret = a.div(b);
+	    return ret;
 	  }; // -------------------------------------------------------------------------
 
 
@@ -5701,6 +5730,10 @@
 
 
 	  LRational.prototype.sub = function (n) {
+	    if (typeof n === 'undefined') {
+	      return this.mul(-1);
+	    }
+
 	    if (!(n instanceof LNumber)) {
 	      n = LNumber(n); // handle (--> 1/2 (sub 1))
 	    }
@@ -6212,10 +6245,10 @@
 	      return LNumber(LNumber._ops[op](this.valueOf()));
 	    }
 
-	    var _this$coerce3 = this.coerce(n),
-	        _this$coerce4 = slicedToArray(_this$coerce3, 2),
-	        a = _this$coerce4[0],
-	        b = _this$coerce4[1];
+	    var _this$coerce5 = this.coerce(n),
+	        _this$coerce6 = slicedToArray(_this$coerce5, 2),
+	        a = _this$coerce6[0],
+	        b = _this$coerce6[1];
 
 	    if (a._op) {
 	      return a._op(op, b);
@@ -6305,10 +6338,10 @@
 
 
 	  LNumber.prototype.cmp = function (n) {
-	    var _this$coerce5 = this.coerce(n),
-	        _this$coerce6 = slicedToArray(_this$coerce5, 2),
-	        a = _this$coerce6[0],
-	        b = _this$coerce6[1];
+	    var _this$coerce7 = this.coerce(n),
+	        _this$coerce8 = slicedToArray(_this$coerce7, 2),
+	        a = _this$coerce8[0],
+	        b = _this$coerce8[1];
 
 	    function cmp(a, b) {
 	      if (a.value < b.value) {
@@ -9935,10 +9968,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 16 Aug 2020 11:42:36 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 16 Aug 2020 18:19:55 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 16 Aug 2020 11:42:36 +0000').valueOf();
+	    var date = LString('Sun, 16 Aug 2020 18:19:55 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9975,7 +10008,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 16 Aug 2020 11:42:36 +0000',
+	    date: 'Sun, 16 Aug 2020 18:19:55 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
