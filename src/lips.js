@@ -3606,7 +3606,7 @@
         var num = LNumber(n.num);
         var denom = LNumber(n.denom);
         if (!force && denom.cmp(0) !== 0) {
-            var is_integer = num.op('%', denom) === 0;
+            var is_integer = num.op('%', denom).cmp(0) === 0;
             if (is_integer) {
                 return LNumber(num.div(denom));
             }
@@ -3813,11 +3813,15 @@
             op = LBigInteger.bn_op[op];
             return LBigInteger(this.value.clone()[op](n), false);
         }
+        const ret = LNumber._ops[op](this.value, n.value);
         if (op === '/') {
+            var is_integer = this.op('%', n).cmp(0) === 0;
+            if (is_integer) {
+                return LNumber(ret);
+            }
             return LRational({ num: this, denom: n });
         }
         // use native calucaltion becuase it's real bigint value
-        const ret = LNumber._ops[op](this.value, n.value);
         return LBigInteger(ret, true);
     };
     // -------------------------- -----------------------------------------------

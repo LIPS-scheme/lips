@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 16 Aug 2020 07:43:23 +0000
+ * build: Sun, 16 Aug 2020 11:42:36 +0000
  */
 (function () {
 	'use strict';
@@ -5528,7 +5528,7 @@
 	    var denom = LNumber(n.denom);
 
 	    if (!force && denom.cmp(0) !== 0) {
-	      var is_integer = num.op('%', denom) === 0;
+	      var is_integer = num.op('%', denom).cmp(0) === 0;
 
 	      if (is_integer) {
 	        return LNumber(num.div(denom));
@@ -5818,15 +5818,21 @@
 	      return LBigInteger(this.value.clone()[op](n), false);
 	    }
 
+	    var ret = LNumber._ops[op](this.value, n.value);
+
 	    if (op === '/') {
+	      var is_integer = this.op('%', n).cmp(0) === 0;
+
+	      if (is_integer) {
+	        return LNumber(ret);
+	      }
+
 	      return LRational({
 	        num: this,
 	        denom: n
 	      });
 	    } // use native calucaltion becuase it's real bigint value
 
-
-	    var ret = LNumber._ops[op](this.value, n.value);
 
 	    return LBigInteger(ret, true);
 	  }; // -------------------------- -----------------------------------------------
@@ -9929,10 +9935,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 16 Aug 2020 07:43:23 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 16 Aug 2020 11:42:36 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 16 Aug 2020 07:43:23 +0000').valueOf();
+	    var date = LString('Sun, 16 Aug 2020 11:42:36 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9969,7 +9975,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 16 Aug 2020 07:43:23 +0000',
+	    date: 'Sun, 16 Aug 2020 11:42:36 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
