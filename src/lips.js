@@ -1775,17 +1775,6 @@
             }
             return '#<procedure>';
         }
-        if (obj instanceof Array) {
-            var result = [];
-            for (var i = 0, n = obj.length; i < n; ++i) {
-                if (!(i in obj)) {
-                    result.push('#<unspecified>');
-                } else {
-                    result.push(toString(obj[i], true));
-                }
-            }
-            return '#(' + result.join(' ') + ')';
-        }
         if (obj instanceof LString) {
             obj = obj.toString();
         }
@@ -1806,8 +1795,6 @@
             var name;
             if (typeof constructor.__className === 'string') {
                 name = constructor.__className;
-            } else if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
-                name = 'instance';
             } else {
                 if (is_prototype(obj)) {
                     return '#<prototype>';
@@ -1821,6 +1808,9 @@
                     }
                 }
                 name = constructor.name;
+            }
+            if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
+                name = 'instance';
             }
             if (root.HTMLElement && obj instanceof root.HTMLElement) {
                 return `#<HTMLElement(${obj.tagName.toLowerCase()})>`;
@@ -6031,23 +6021,26 @@
            Type can be string or list of strings. Position optional argument
            is used to created proper error message.`),
         // ------------------------------------------------------------------
-        'remove-special!': doc(function(symbol) {
+        'unset-special!': doc(function(symbol) {
             typecheck('remove-special!', symbol, 'string');
-            delete specials[symbol];
-        }, `(remove-special! symbol)
+            delete specials[symbol.valueOf()];
+        }, `(unset-special! name)
 
-            Function remove special symbol from parser. Added by \`add-special!\``),
+            Function remove special symbol from parser. Added by \`set-special!\`,
+            name must be a string.`),
         // ------------------------------------------------------------------
-        'add-special!': doc(function(seq, name, type = specials.LITERAL) {
-            typecheck('add-special!', seq, 'string', 1);
-            typecheck('add-special!', name, 'symbol', 2);
-            lips.specials.append(seq, name, type);
-        }, `(add-special! symbol name)
+        'set-special!': doc(function(seq, name, type = specials.LITERAL) {
+            typecheck('set-special!', seq, 'string', 1);
+            typecheck('set-special!', name, 'symbol', 2);
+            lips.specials.append(seq.valueOf(), name, type);
+        }, `(set-special! symbol name [type])
 
             Add special symbol to the list of transforming operators by the parser.
-            e.g.: \`(add-special! '#)\` will allow to use \`#(1 2 3)\` and it will be
-            transformed into (# (1 2 3)) so you can write # macro that will process
-            the list. It's main purpose to to allow to use \`define-symbol-macro\``),
+            e.g.: \`(add-special! "#" 'x)\` will allow to use \`#(1 2 3)\` and it will be
+            transformed into (x (1 2 3)) so you can write x macro that will process
+            the list. 3rd argument is optional and it can be constant value
+            lips.specials.SPLICE if this constant is used it will transform
+            \`#(1 2 3)\` into (x 1 2 3) that is required by # that define vectors.`),
         // ------------------------------------------------------------------
         'get': get,
         '.': get,

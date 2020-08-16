@@ -436,11 +436,7 @@
   (== (--> (type x) (cmp "regex")) 0))
 
 ;; -----------------------------------------------------------------------------
-;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
-;; -----------------------------------------------------------------------------
-(add-special! "&" 'make-object lips.specials.SPLICE)
-;; -----------------------------------------------------------------------------
-(define (add-repr! type fn)
+(define (set-repr! type fn)
   "(add-repr! type fn)
 
    Function add string represention to the type, which should be constructor function.
@@ -455,18 +451,20 @@
   (ignore (--> lips.repr (set type fn))))
 
 ;; -----------------------------------------------------------------------------
-(define (remove-repr! type)
-  "(remove-repr! type)
+(define (unset-repr! type)
+  "(unset-repr! type)
 
    Function remove string represention to the type, which should be constructor function,
    added by add-repr! function."
-  (typecheck "add-repr!" type "function")
+  (typecheck "unset-repr!" type "function")
   (ignore (--> lips.repr (delete type))))
 
 ;; -----------------------------------------------------------------------------
-;; Object representation
+;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
 ;; -----------------------------------------------------------------------------
-(add-repr! Object
+(set-special! "&" 'make-object lips.specials.SPLICE)
+;; -----------------------------------------------------------------------------
+(set-repr! Object
            (lambda (x q)
              (concat "&("
                      (--> (Object.getOwnPropertyNames x)

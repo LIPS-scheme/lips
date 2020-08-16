@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 15 Aug 2020 17:33:25 +0000
+ * build: Sun, 16 Aug 2020 07:43:23 +0000
  */
 (function () {
 	'use strict';
@@ -3097,20 +3097,6 @@
 	      return '#<procedure>';
 	    }
 
-	    if (obj instanceof Array) {
-	      var result = [];
-
-	      for (var i = 0, n = obj.length; i < n; ++i) {
-	        if (!(i in obj)) {
-	          result.push('#<unspecified>');
-	        } else {
-	          result.push(toString(obj[i], true));
-	        }
-	      }
-
-	      return '#(' + result.join(' ') + ')';
-	    }
-
 	    if (obj instanceof LString) {
 	      obj = obj.toString();
 	    }
@@ -3137,8 +3123,6 @@
 
 	      if (typeof constructor.__className === 'string') {
 	        name = constructor.__className;
-	      } else if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
-	        name = 'instance';
 	      } else {
 	        if (is_prototype(obj)) {
 	          return '#<prototype>';
@@ -3155,6 +3139,10 @@
 	        }
 
 	        name = constructor.name;
+	      }
+
+	      if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
+	        name = 'instance';
 	      }
 
 	      if (root.HTMLElement && obj instanceof root.HTMLElement) {
@@ -8301,17 +8289,17 @@
 	      typecheck(label, arg, expected, position);
 	    }, "(typecheck label value type [position])\n\n           Function check type and throw exception if type don't match.\n           Type can be string or list of strings. Position optional argument\n           is used to created proper error message."),
 	    // ------------------------------------------------------------------
-	    'remove-special!': doc(function (symbol) {
+	    'unset-special!': doc(function (symbol) {
 	      typecheck('remove-special!', symbol, 'string');
-	      delete specials[symbol];
-	    }, "(remove-special! symbol)\n\n            Function remove special symbol from parser. Added by `add-special!`"),
+	      delete specials[symbol.valueOf()];
+	    }, "(unset-special! name)\n\n            Function remove special symbol from parser. Added by `set-special!`,\n            name must be a string."),
 	    // ------------------------------------------------------------------
-	    'add-special!': doc(function (seq, name) {
+	    'set-special!': doc(function (seq, name) {
 	      var type = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : specials.LITERAL;
-	      typecheck('add-special!', seq, 'string', 1);
-	      typecheck('add-special!', name, 'symbol', 2);
-	      lips.specials.append(seq, name, type);
-	    }, "(add-special! symbol name)\n\n            Add special symbol to the list of transforming operators by the parser.\n            e.g.: `(add-special! '#)` will allow to use `#(1 2 3)` and it will be\n            transformed into (# (1 2 3)) so you can write # macro that will process\n            the list. It's main purpose to to allow to use `define-symbol-macro`"),
+	      typecheck('set-special!', seq, 'string', 1);
+	      typecheck('set-special!', name, 'symbol', 2);
+	      lips.specials.append(seq.valueOf(), name, type);
+	    }, "(set-special! symbol name [type])\n\n            Add special symbol to the list of transforming operators by the parser.\n            e.g.: `(add-special! \"#\" 'x)` will allow to use `#(1 2 3)` and it will be\n            transformed into (x (1 2 3)) so you can write x macro that will process\n            the list. 3rd argument is optional and it can be constant value\n            lips.specials.SPLICE if this constant is used it will transform\n            `#(1 2 3)` into (x 1 2 3) that is required by # that define vectors."),
 	    // ------------------------------------------------------------------
 	    'get': get,
 	    '.': get,
@@ -9941,10 +9929,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 15 Aug 2020 17:33:25 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 16 Aug 2020 07:43:23 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 15 Aug 2020 17:33:25 +0000').valueOf();
+	    var date = LString('Sun, 16 Aug 2020 07:43:23 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -9981,7 +9969,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 15 Aug 2020 17:33:25 +0000',
+	    date: 'Sun, 16 Aug 2020 07:43:23 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

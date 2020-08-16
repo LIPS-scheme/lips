@@ -35,7 +35,7 @@
          (symbol (cadr spec))
          (args (cddr spec)))
      `(begin
-        (add-special! ,symbol ',name ,(string->symbol
+        (set-special! ,symbol ',name ,(string->symbol
                                        (concat "lips.specials."
                                                (symbol->string type))))
         (define-macro (,name ,@args) ,@rest))))
@@ -57,6 +57,12 @@
 
    Macro for defining vectors (arrays)."
   `(list->array (list ,@(map (lambda (object) `(quote ,object)) arg))))
+
+(set-repr! Array
+           (lambda (x q)
+             (console.log x)
+             (let ((arr (--> x (map (lambda (x) (repr x q))))))
+               (concat "#(" (--> arr (join " ")) ")"))))
 
 ;; -----------------------------------------------------------------------------
 (define (eqv? a b)
