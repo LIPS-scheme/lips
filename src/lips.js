@@ -4964,9 +4964,11 @@
                     if (parts.length > 1) {
                         var prop = parts.pop();
                         var name = parts.join('.');
-                        var obj = this.get(name);
-                        obj[prop] = value;
-                        return;
+                        var obj = this.get(name, { throwError: false });
+                        if (obj && typeof obj === 'object') {
+                            obj[prop] = value;
+                            return;
+                        }
                     }
                     ref = this;
                 }
