@@ -6,6 +6,7 @@
 * doc strings on variables
 * persistent history in executable REPL
 * repr of promises (from `delay` function)
+* allow `set!` with doted JS notation
 ### Bugfix
 * fix Environment::has (ref) on variable that are undefined
 * fix macroexpand with pprint on syntax macros

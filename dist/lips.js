@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 17 Aug 2020 11:18:21 +0000
+ * build: Mon, 17 Aug 2020 11:40:59 +0000
  */
 (function () {
 	'use strict';
@@ -7158,6 +7158,8 @@
 	    }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
 	    // ------------------------------------------------------------------
 	    'set!': doc(new Macro('set!', function (code) {
+	      var _this5 = this;
+
 	      var _ref15 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
 	          dynamic_scope = _ref15.dynamic_scope,
 	          error = _ref15.error;
@@ -7166,13 +7168,13 @@
 	        dynamic_scope = this;
 	      }
 
+	      var ref;
 	      var value = evaluate(code.cdr.car, {
 	        env: this,
 	        dynamic_scope: dynamic_scope,
 	        error: error
 	      });
 	      value = resolvePromises(value);
-	      var ref;
 
 	      function set(key, value) {
 	        if (isPromise(key)) {
@@ -7211,16 +7213,29 @@
 	        throw new Error('set! first argument need to be a symbol or ' + 'dot accessor that evaluate to object.');
 	      }
 
-	      ref = this.ref(code.car.name);
-
-	      if (!ref) {
-	        ref = this;
-	      } // we don't return value because we only care about sync of set value
+	      var symbol = code.car.valueOf();
+	      ref = this.ref(code.car.name); // we don't return value because we only care about sync of set value
 	      // when value is a promise
 
-
 	      return unpromise(value, function (value) {
-	        ref.set(code.car, value);
+	        if (!ref) {
+	          // case (set! fn.toString (lambda () "xxx"))
+	          var parts = symbol.split('.');
+
+	          if (parts.length > 1) {
+	            var prop = parts.pop();
+	            var name = parts.join('.');
+
+	            var obj = _this5.get(name);
+
+	            obj[prop] = value;
+	            return;
+	          }
+
+	          ref = _this5;
+	        }
+
+	        ref.set(symbol, value);
 	      });
 	    }), "(set! name value)\n\n            Macro that can be used to set the value of the variable (mutate)\n            it search the scope chain until it finds first non emtpy slot and set it."),
 	    // ------------------------------------------------------------------
@@ -7596,7 +7611,7 @@
 	    }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
 	    // ------------------------------------------------------------------
 	    'eval': doc(function (code, env) {
-	      var _this5 = this;
+	      var _this6 = this;
 
 	      typecheck('eval', code, ['symbol', 'pair', 'array']);
 	      env = env || this;
@@ -7610,14 +7625,14 @@
 	          env: env,
 	          //dynamic_scope: this,
 	          error: function error(e) {
-	            _this5.get('error').call(_this5, e.message);
+	            _this6.get('error').call(_this6, e.message);
 
 	            if (e.code) {
 	              var stack = e.code.map(function (line, i) {
 	                return "[".concat(i + 1, "]: ").concat(line);
 	              }).join('\n');
 
-	              _this5.get('error').call(_this5, stack);
+	              _this6.get('error').call(_this6, stack);
 	            }
 	          }
 	        });
@@ -8498,15 +8513,15 @@
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
 	    'try': doc(new Macro('try', function (code, _ref24) {
-	      var _this6 = this;
+	      var _this7 = this;
 
 	      var dynamic_scope = _ref24.dynamic_scope,
 	          _error = _ref24.error;
 	      return new Promise(function (resolve) {
 	        var args = {
-	          env: _this6,
+	          env: _this7,
 	          error: function error(e) {
-	            var env = _this6.inherit('try');
+	            var env = _this7.inherit('try');
 
 	            env.set(code.cdr.car.cdr.car.car, e);
 	            var args = {
@@ -8515,7 +8530,7 @@
 	            };
 
 	            if (dynamic_scope) {
-	              args.dynamic_scope = _this6;
+	              args.dynamic_scope = _this7;
 	            }
 
 	            unpromise(evaluate(new Pair(new LSymbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
@@ -8525,7 +8540,7 @@
 	        };
 
 	        if (dynamic_scope) {
-	          args.dynamic_scope = _this6;
+	          args.dynamic_scope = _this7;
 	        }
 
 	        var ret = evaluate(code.car, args);
@@ -8583,7 +8598,7 @@
 	    }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
 	    // ------------------------------------------------------------------
 	    map: doc(function map(fn) {
-	      var _this7 = this;
+	      var _this8 = this;
 
 	      for (var _len23 = arguments.length, lists = new Array(_len23 > 1 ? _len23 - 1 : 0), _key23 = 1; _key23 < _len23; _key23++) {
 	        lists[_key23 - 1] = arguments[_key23];
@@ -8594,7 +8609,7 @@
 	      lists.forEach(function (arg, i) {
 	        typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-	        if (arg instanceof Pair && !is_list.call(_this7, arg)) {
+	        if (arg instanceof Pair && !is_list.call(_this8, arg)) {
 	          throw new Error("map: argument ".concat(i + 1, " is not a list"));
 	        }
 	      });
@@ -8616,7 +8631,7 @@
 	      var env = this.newFrame(fn, args);
 	      env.set('parent.frame', parent_frame);
 	      return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-	        return unpromise(map.call.apply(map, [_this7, fn].concat(toConsumableArray(lists.map(function (l) {
+	        return unpromise(map.call.apply(map, [_this8, fn].concat(toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
 	        })))), function (rest) {
 	          return new Pair(head, rest);
@@ -8712,7 +8727,7 @@
 	    }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
 	    // ------------------------------------------------------------------
 	    reduce: doc(fold('reduce', function (reduce, fn, init) {
-	      var _this8 = this;
+	      var _this9 = this;
 
 	      for (var _len26 = arguments.length, lists = new Array(_len26 > 3 ? _len26 - 3 : 0), _key27 = 3; _key27 < _len26; _key27++) {
 	        lists[_key27 - 3] = arguments[_key27];
@@ -8732,7 +8747,7 @@
 	      return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
 	        return l.car;
 	      })).concat([init])), function (value) {
-	        return reduce.call.apply(reduce, [_this8, fn, value].concat(toConsumableArray(lists.map(function (l) {
+	        return reduce.call.apply(reduce, [_this9, fn, value].concat(toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
 	        }))));
 	      });
@@ -9980,10 +9995,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 17 Aug 2020 11:18:21 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 17 Aug 2020 11:40:59 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 17 Aug 2020 11:18:21 +0000').valueOf();
+	    var date = LString('Mon, 17 Aug 2020 11:40:59 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10020,7 +10035,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 17 Aug 2020 11:18:21 +0000',
+	    date: 'Mon, 17 Aug 2020 11:40:59 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

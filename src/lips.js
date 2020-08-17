@@ -4929,9 +4929,9 @@
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
+            var ref;
             var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
             value = resolvePromises(value);
-            var ref;
             function set(key, value) {
                 if (isPromise(key)) {
                     return key.then(key => set(key, value));
@@ -4953,14 +4953,24 @@
                 throw new Error('set! first argument need to be a symbol or ' +
                                 'dot accessor that evaluate to object.');
             }
+            var symbol = code.car.valueOf();
             ref = this.ref(code.car.name);
-            if (!ref) {
-                ref = this;
-            }
             // we don't return value because we only care about sync of set value
             // when value is a promise
             return unpromise(value, value => {
-                ref.set(code.car, value);
+                if (!ref) {
+                    // case (set! fn.toString (lambda () "xxx"))
+                    var parts = symbol.split('.');
+                    if (parts.length > 1) {
+                        var prop = parts.pop();
+                        var name = parts.join('.');
+                        var obj = this.get(name);
+                        obj[prop] = value;
+                        return;
+                    }
+                    ref = this;
+                }
+                ref.set(symbol, value);
             });
         }), `(set! name value)
 
