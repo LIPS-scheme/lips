@@ -529,3 +529,42 @@
                       (set! result (cons i result))))
                 '(1 2 3 4 5 6 7 8 9 10))))
 
+
+(test_ "syntax-rules: it should define nested syntax-rules"
+      (lambda (t)
+        (define-syntax be-like-begin
+          (syntax-rules ()
+            ((be-like-begin name)
+             (define-syntax name
+               (syntax-rules ()
+                 ((name expr (... ...))
+                  (begin expr (... ...))))))))
+
+        (be-like-begin sequence)
+        (t.is (sequence 1 2 3 4) 4)
+
+        (be-like-begin progn)
+        (t.is (let* ((x 10)
+                     (expr `(,x . ,x)))
+                (prgn
+                 x
+                 x
+                 expr))
+              '(10 . 10))))
+
+(test_ "syntax-rules: should return list with ellipsis"
+       (lambda (t)
+
+         (define-syntax test
+           (syntax-rules ()
+             ((_) (... '(...)))))
+
+         (t.is (test) '(...))
+
+         (define-syntax test
+           (syntax-rules ()
+             ((_) (test 1 2))
+             ((_ arg ...) (list (cons arg (... '...)) ...))))
+
+         (t.is (test 1 2 3) '((1 . ...) (2 . ...) (3 . ...)))
+         (t.is (test) '((1 . ...) (2 . ...)))))
