@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 17 Aug 2020 07:30:04 +0000
+ * build: Mon, 17 Aug 2020 08:51:48 +0000
  */
 (function () {
 	'use strict';
@@ -1491,15 +1491,22 @@
 
 	  function parse_string(string) {
 	    // handle non JSON escapes and skip unicode escape \u (even partial)
-	    var re = /([^\\\n])(\\(?:\\{2})*)(?!u[0-9AF]{1,4})(.)/gi;
+	    var re = /([^\\\n])(\\(?:\\{2})*)(?!x[0-9A-F]+)(?!u[0-9A-F]{2,4})(.)/gi;
 	    string = string.replace(re, function (_, before, slashes, chr) {
-	      if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't'].includes(chr)) {
-	        slashes = slashes.substring(1).replace(/\\\\/, '\\');
-	        return before + slashes + chr;
+	      if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't', 'x'].includes(chr)) {
+	        slashes = slashes.substring(1).replace(/\\\\/, '\\'); //return before + slashes + chr;
 	      }
 
 	      return _;
+	    }).replace(/\\x([0-9a-f]+);/ig, function (_, hex) {
+	      return "\\u" + hex.padStart(4, '0');
 	    }).replace(/\n/g, '\\n'); // in LIPS strings can be multiline
+
+	    var m = string.match(/(\\*)(\\x[0-9A-F])/i);
+
+	    if (m && m[1].length % 2 === 0) {
+	      throw new Error("Invalid string literal, unclosed ".concat(m[2]));
+	    }
 
 	    try {
 	      return LString(JSON.parse(string));
@@ -9968,10 +9975,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 17 Aug 2020 07:30:04 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 17 Aug 2020 08:51:48 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 17 Aug 2020 07:30:04 +0000').valueOf();
+	    var date = LString('Mon, 17 Aug 2020 08:51:48 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10008,7 +10015,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 17 Aug 2020 07:30:04 +0000',
+	    date: 'Mon, 17 Aug 2020 08:51:48 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,

@@ -414,14 +414,20 @@
     // ----------------------------------------------------------------------
     function parse_string(string) {
         // handle non JSON escapes and skip unicode escape \u (even partial)
-        var re = /([^\\\n])(\\(?:\\{2})*)(?!u[0-9AF]{1,4})(.)/gi;
+        var re = /([^\\\n])(\\(?:\\{2})*)(?!x[0-9A-F]+)(?!u[0-9A-F]{2,4})(.)/gi;
         string = string.replace(re, function(_, before, slashes, chr) {
-            if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't'].includes(chr)) {
+            if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't', 'x'].includes(chr)) {
                 slashes = slashes.substring(1).replace(/\\\\/, '\\');
-                return before + slashes + chr;
+                //return before + slashes + chr;
             }
             return _;
+        }).replace(/\\x([0-9a-f]+);/ig, function(_, hex) {
+            return "\\u" + hex.padStart(4, '0');
         }).replace(/\n/g, '\\n'); // in LIPS strings can be multiline
+        var m = string.match(/(\\*)(\\x[0-9A-F])/i);
+        if (m && m[1].length % 2 === 0) {
+            throw new Error(`Invalid string literal, unclosed ${m[2]}`);
+        }
         try {
             return LString(JSON.parse(string));
         } catch (e) {

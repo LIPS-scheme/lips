@@ -19,3 +19,10 @@
         (t.is (read "--x") '(dash x))
         (unset-special! "--")
         (t.is (read "(--)") '(--))))
+
+(test "parser: escape hex literals"
+      (lambda (t)
+         (t.is (to.throw (read "\"\\x9\"")) #t)
+         (t.is "\uFFFF" "￿")
+         (t.is "\x9;\x9;" "\t\t")
+         (t.is '|\x9;\x9;|  '|\t\t|)))

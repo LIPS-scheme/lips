@@ -15,6 +15,7 @@
 * don't throw exception on parse error in string->number (return false)
 * fix silent accepting two big code point `#\xFFFFFF`
 * fix custom repr of instances created by define-class
+* fix parsing R7RS hex literals in strings
 
 ## 1.0.0-beta.3
 ## Bugfix
