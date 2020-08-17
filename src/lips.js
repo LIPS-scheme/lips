@@ -4962,11 +4962,11 @@
                     // case (set! fn.toString (lambda () "xxx"))
                     var parts = symbol.split('.');
                     if (parts.length > 1) {
-                        var prop = parts.pop();
+                        var key = parts.pop();
                         var name = parts.join('.');
                         var obj = this.get(name, { throwError: false });
-                        if (obj && typeof obj === 'object') {
-                            obj[prop] = value;
+                        if (obj) {
+                            this.get('set-obj!').call(this, obj, key, value);
                             return;
                         }
                     }
