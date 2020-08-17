@@ -26,3 +26,28 @@
          (t.is "\uFFFF" "￿")
          (t.is "\x9;\x9;" "\t\t")
          (t.is '|\x9;\x9;|  '|\t\t|)))
+
+(test "parser: quotes with literals"
+      (lambda (t)
+        (t.is ''#f '(quote #f))
+        (t.is ''#x10 '(quote #x10))
+        (t.is ''#o10 '(quote #o10))
+        (t.is ''#b10 '(quote #b10))
+
+        ;; binary
+        (t.is ''#i#b10 '(quote #i#b10))
+        (t.is ''#b#i10 '(quote #b#i10))
+        (t.is ''#e#b10 '(quote #e#b10))
+        (t.is ''#b#e10 '(quote #b#e10))
+
+        ;; hex
+        (t.is ''#i#x10A '(quote #i#x10A))
+        (t.is ''#x#i10A '(quote #x#i10A))
+        (t.is ''#e#x10A '(quote #e#x10A))
+        (t.is ''#x#e10A '(quote #x#e10A))
+
+        ;; octal
+        (t.is ''#i#o10 '(quote #i#o10))
+        (t.is ''#o#i10 '(quote #o#i10))
+        (t.is ''#e#o10 '(quote #e#o10))
+        (t.is ''#o#e10 '(quote #o#e10))))

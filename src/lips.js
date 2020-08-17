@@ -3413,19 +3413,12 @@
         });
     };
     // -------------------------------------------------------------------------
-    LComplex.prototype.div = function(n) {
-        if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
-            n = LComplex({ im: 0, re: n });
-        } else if (!LNumber.isComplex(n)) {
-            throw new Error('[LComplex::add] Invalid value');
-        }
-        const [ a, b ] = this.coerce(n);
-        const conj = LComplex({ re: b.re, im: b.im.sub() });
-        let denom, num;
+    // :: factor is used in / and modulus
+    // -------------------------------------------------------------------------
+    LComplex.prototype.factor = function() {
         // fix rounding when calculating (/ 1.0 1/10+1/10i)
-        if (a.im instanceof LFloat || a.im instanceof LFloat ||
-            b.im instanceof LFloat || b.im instanceof LFloat) {
-            let { re, im } = b;
+        if (this.im instanceof LFloat || this.im instanceof LFloat) {
+            let { re, im } = this;
             let x, y;
             if (re instanceof LFloat) {
                 x = re.toRational().mul(re.toRational());
@@ -3437,11 +3430,47 @@
             } else {
                 y = im.mul(im);
             }
-            denom = x.add(y).valueOf();
+            return x.add(y);
         } else {
-            denom = b.re.mul(b.re).add(b.im.mul(b.im));
+            return this.re.mul(this.re).add(this.im.mul(this.im));
         }
-        num = a.mul(conj);
+    };
+    // -------------------------------------------------------------------------
+    LComplex.prototype.modulus = function() {
+        return this.factor().sqrt();
+    };
+    // -------------------------------------------------------------------------
+    LComplex.prototype.sqrt = function() {
+        const r = this.modulus();
+        // code based ok Kawa Scheme source code (file DComplex.java)
+        // Copyright (c) 1997  Per M.A. Bothner.
+        // Released under MIT License
+        let nr, ni;
+        if (r.cmp(0) === 0) {
+            nr = ni = r;
+        } else if (this.re.cmp(0) === 1) {
+            nr = LFloat(0.5).mul(r.add(this.re)).sqrt();
+            ni = this.im.div(nr).div(2);
+        } else {
+            ni = LFloat(0.5).mul(r.sub(this.re)).sqrt();
+            if (this.im.cmp(0) === -1) {
+                ni = ni.sub();
+            }
+            nr = this.im.div(ni).div(2);
+        }
+        return LComplex({ im: ni, re: nr });
+    };
+    // -------------------------------------------------------------------------
+    LComplex.prototype.div = function(n) {
+        if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
+            n = LComplex({ im: 0, re: n });
+        } else if (!LNumber.isComplex(n)) {
+            throw new Error('[LComplex::add] Invalid value');
+        }
+        const [ a, b ] = this.coerce(n);
+        const conj = LComplex({ re: b.re, im: b.im.sub() });
+        const denom = b.factor().valueOf();
+        const num = a.mul(conj);
         const re = num.re.op('/', denom);
         const im = num.im.op('/', denom);
         return LComplex({ re, im });
@@ -3670,6 +3699,18 @@
         return result;
     };
     // -------------------------------------------------------------------------
+    LRational.prototype.sqrt = function() {
+        const num = this.num.sqrt();
+        const denom = this.denom.sqrt();
+        if (num instanceof LFloat) {
+            num = num.toRational();
+        }
+        if (denom instanceof LFloat) {
+            denom = denom.toRational();
+        }
+        return LRational({ num, denom });
+    };
+    // -------------------------------------------------------------------------
     LRational.prototype.abs = function() {
         var num = this.num;
         var denom = this.denom;
@@ -3864,7 +3905,7 @@
         var value;
         var minus = this.cmp(0) < 0;
         if (LNumber.isNative(this.value)) {
-            value = Math.sqrt(minus ? -this.valueOf() : this.valueOf());
+            value = LNumber(Math.sqrt(minus ? -this.valueOf() : this.valueOf()));
         } else if (LNumber.isBN(this.value)) {
             value = minus ? this.value.neg().sqrt() : this.value.sqrt();
         }

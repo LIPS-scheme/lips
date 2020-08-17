@@ -354,3 +354,28 @@
         (t.is (/ 1.0 1/2+1/2i) 1.0-1.0i)
         (t.is (/ 1.0 1/2+1.0i) 0.4-0.8i)
         (t.is (/ 1.0 1/2+1i) 0.4-0.8i)))
+
+(test "numbers: sqrt"
+      (lambda (t)
+        (for-each (lambda (x)
+                    (t.is (sqrt (* x x)) x))
+                  '(5 5+2i 1/5+1/2i 1/2 5.0 8/9))
+
+        (for-each (lambda (pair)
+                    (let ((x (car pair)))
+                      (t.is (sqrt (* x x)) (cdr pair))))
+                  '((2.0+1/2i . 2+0.5i)))
+
+        (for-each (lambda (pair)
+                    (let ((x (car pair)))
+                      (t.is (sqrt (* x x)) (cdr pair))))
+                  '((2+1/2i . 2+0.5i)
+                    (2+0.5i . 2+0.5i)
+
+                    (1/2+2.0i . 0.5+2i)
+                    (1/2+2i . 0.5+2i)
+
+                    (0.5+2i . 0.5+2i)
+                    (0.5+1/2i . 0.5+0.5i)))
+
+        (t.is (sqrt -9) 3i)))
