@@ -3676,14 +3676,14 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.toString = function() {
-        var gdc = this.num.gdc(this.denom);
+        var gcd = this.num.gcd(this.denom);
         var num, denom;
-        if (gdc.cmp(1) !== 0) {
-            num = this.num.div(gdc);
+        if (gcd.cmp(1) !== 0) {
+            num = this.num.div(gcd);
             if (num instanceof LRational) {
                 num = LNumber(num.valueOf(true));
             }
-            denom = this.denom.div(gdc);
+            denom = this.denom.div(gcd);
             if (denom instanceof LRational) {
                 denom = LNumber(denom.valueOf(true));
             }
@@ -3863,7 +3863,7 @@
         return value;
     };
     // -------------------------------------------------------------------------
-    LNumber.prototype.gdc = function(b) {
+    LNumber.prototype.gcd = function(b) {
         // ref: https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
         var a = this.abs();
         b = b.abs();
@@ -6537,11 +6537,11 @@
              (define add1 (curry add 1))
              (define add12 (add 2))
              (display (add12 3 4))`),
-        'gdc': doc(function GCD(...args) {
+        'gcd': doc(function GCD(...args) {
             return args.reduce(function(result, item) {
-                return result.gdc(item);
+                return result.gcd(item);
             });
-        }, `(gdc n1 n2 ...)
+        }, `(gcd n1 n2 ...)
 
             Function return the greatest common divisor of their arguments.`),
         // ------------------------------------------------------------------

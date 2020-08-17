@@ -1,6 +1,7 @@
 ## 1.0.0-beta.4
 ### Breaking
 * add/remove-specials and add/remove-repr are now set/unset
+* rename wrong `gdc` to correct `gcd`
 ### Features
 * doc strings on variables
 * persistent history in executable REPL

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 16 Aug 2020 18:19:55 +0000
+ * build: Mon, 17 Aug 2020 07:30:04 +0000
  */
 (function () {
 	'use strict';
@@ -5626,17 +5626,17 @@
 
 
 	  LRational.prototype.toString = function () {
-	    var gdc = this.num.gdc(this.denom);
+	    var gcd = this.num.gcd(this.denom);
 	    var num, denom;
 
-	    if (gdc.cmp(1) !== 0) {
-	      num = this.num.div(gdc);
+	    if (gcd.cmp(1) !== 0) {
+	      num = this.num.div(gcd);
 
 	      if (num instanceof LRational) {
 	        num = LNumber(num.valueOf(true));
 	      }
 
-	      denom = this.denom.div(gdc);
+	      denom = this.denom.div(gcd);
 
 	      if (denom instanceof LRational) {
 	        denom = LNumber(denom.valueOf(true));
@@ -5892,7 +5892,7 @@
 	  }; // -------------------------------------------------------------------------
 
 
-	  LNumber.prototype.gdc = function (b) {
+	  LNumber.prototype.gcd = function (b) {
 	    // ref: https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
 	    var a = this.abs();
 	    b = b.abs();
@@ -8765,15 +8765,15 @@
 	    compose: doc(compose, "(compose . fns)\n\n             Higher order function and create new function that apply all functions\n             From right to left and return it's value. Reverse of compose.\n             e.g.:\n             ((compose (curry + 2) (curry * 3)) 3)\n             11\n            "),
 	    pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
 	    curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (display (add12 3 4))"),
-	    'gdc': doc(function GCD() {
+	    'gcd': doc(function GCD() {
 	      for (var _len27 = arguments.length, args = new Array(_len27), _key28 = 0; _key28 < _len27; _key28++) {
 	        args[_key28] = arguments[_key28];
 	      }
 
 	      return args.reduce(function (result, item) {
-	        return result.gdc(item);
+	        return result.gcd(item);
 	      });
-	    }, "(gdc n1 n2 ...)\n\n            Function return the greatest common divisor of their arguments."),
+	    }, "(gcd n1 n2 ...)\n\n            Function return the greatest common divisor of their arguments."),
 	    // ------------------------------------------------------------------
 	    'lcm': doc(function () {
 	      // implementation based on
@@ -9968,10 +9968,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 16 Aug 2020 18:19:55 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 17 Aug 2020 07:30:04 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 16 Aug 2020 18:19:55 +0000').valueOf();
+	    var date = LString('Mon, 17 Aug 2020 07:30:04 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10008,7 +10008,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 16 Aug 2020 18:19:55 +0000',
+	    date: 'Mon, 17 Aug 2020 07:30:04 +0000',
 	    exec: exec,
 	    parse: parse,
 	    tokenize: tokenize,
