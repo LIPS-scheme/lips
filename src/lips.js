@@ -1779,7 +1779,12 @@
             if (isNativeFunction(obj)) {
                 return '#<procedure(native)>';
             }
-            return '#<procedure>';
+            if (isNativeFunction(obj.toString)) {
+                console.log(obj.toString);
+                return '#<procedure>';
+            } else {
+                return obj.toString();
+            }
         }
         if (obj instanceof LString) {
             obj = obj.toString();

@@ -111,15 +111,23 @@
     (typecheck "make-promise" proc "function")
     (let ((result-ready? #f)
           (result #f))
-      (lambda ()
-        (if result-ready?
-            result
-            (let ((x (proc)))
-              (if result-ready?
-                  result
-                  (begin (set! result-ready? #t)
-                         (set! result x)
-                         result))))))))
+      (let ((promise (lambda ()
+                       (if result-ready?
+                           result
+                           (let ((x (proc)))
+                             (if result-ready?
+                                 result
+                                 (begin (set! result-ready? #t)
+                                        (set! result x)
+                                        result)))))))
+        (set-obj! promise 'toString (lambda ()
+                                      (string-append "#<promise - "
+                                                     (if result-ready?
+                                                         (string-append "forced with "
+                                                                        (type result))
+                                                         "not forced")
+                                                     ">")))
+        promise))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (delay expression)
