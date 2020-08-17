@@ -3445,20 +3445,20 @@
         // code based ok Kawa Scheme source code (file DComplex.java)
         // Copyright (c) 1997  Per M.A. Bothner.
         // Released under MIT License
-        let nr, ni;
+        let re, im;
         if (r.cmp(0) === 0) {
-            nr = ni = r;
+            re = im = r;
         } else if (this.re.cmp(0) === 1) {
-            nr = LFloat(0.5).mul(r.add(this.re)).sqrt();
-            ni = this.im.div(nr).div(2);
+            re = LFloat(0.5).mul(r.add(this.re)).sqrt();
+            im = this.im.div(re).div(2);
         } else {
-            ni = LFloat(0.5).mul(r.sub(this.re)).sqrt();
+            im = LFloat(0.5).mul(r.sub(this.re)).sqrt();
             if (this.im.cmp(0) === -1) {
-                ni = ni.sub();
+                im = im.sub();
             }
-            nr = this.im.div(ni).div(2);
+            re = this.im.div(im).div(2);
         }
-        return LComplex({ im: ni, re: nr });
+        return LComplex({ im, re });
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.div = function(n) {

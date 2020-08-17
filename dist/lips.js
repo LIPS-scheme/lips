@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 17 Aug 2020 17:09:16 +0000
+ * build: Mon, 17 Aug 2020 20:57:04 +0000
  */
 (function () {
   'use strict';
@@ -5309,26 +5309,26 @@
       // Copyright (c) 1997  Per M.A. Bothner.
       // Released under MIT License
 
-      var nr, ni;
+      var re, im;
 
       if (r.cmp(0) === 0) {
-        nr = ni = r;
+        re = im = r;
       } else if (this.re.cmp(0) === 1) {
-        nr = LFloat(0.5).mul(r.add(this.re)).sqrt();
-        ni = this.im.div(nr).div(2);
+        re = LFloat(0.5).mul(r.add(this.re)).sqrt();
+        im = this.im.div(re).div(2);
       } else {
-        ni = LFloat(0.5).mul(r.sub(this.re)).sqrt();
+        im = LFloat(0.5).mul(r.sub(this.re)).sqrt();
 
         if (this.im.cmp(0) === -1) {
-          ni = ni.sub();
+          im = im.sub();
         }
 
-        nr = this.im.div(ni).div(2);
+        re = this.im.div(im).div(2);
       }
 
       return LComplex({
-        im: ni,
-        re: nr
+        im: im,
+        re: re
       });
     }; // -------------------------------------------------------------------------
 
@@ -10064,10 +10064,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 17 Aug 2020 17:09:16 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 17 Aug 2020 20:57:04 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 17 Aug 2020 17:09:16 +0000').valueOf();
+      var date = LString('Mon, 17 Aug 2020 20:57:04 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10104,7 +10104,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 17 Aug 2020 17:09:16 +0000',
+      date: 'Mon, 17 Aug 2020 20:57:04 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
