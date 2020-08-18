@@ -172,15 +172,7 @@ chmod a+x foo.scm
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
-## Name
-
-The name LIPS is recursive acronym which expand into LIPS Is Pretty Simple.
-This name was used because first version was very simple implementation.
-It's not that simple anymore, but still it should be pretty easy to modify.
-Note that some parts of the code may be more complex.
-
 ## License
 
-Released under [MIT](http://opensource.org/licenses/MIT) license
-
+Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
 Copyright (c) 2018-{{YEAR}} [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)

@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&27905a895411fe75cfa8541ffad641ef8b8d8ca6)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&e4ef80e686ad870eed7cefe1a971b72d408ff480)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -172,15 +172,7 @@ chmod a+x foo.scm
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
-## Name
-
-The name LIPS is recursive acronym which expand into LIPS Is Pretty Simple.
-This name was used because first version was very simple implementation.
-It's not that simple anymore, but still it should be pretty easy to modify.
-Note that some parts of the code may be more complex.
-
 ## License
 
-Released under [MIT](http://opensource.org/licenses/MIT) license
-
+Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
 Copyright (c) 2018-2020 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
