@@ -1930,32 +1930,30 @@
         } else if (!rest) {
             arr.push('(');
         }
-        if (this.car !== undefined) {
-            var value;
-            if (this.cycles && this.cycles.car) {
-                value = this.cycles.car;
+        var value;
+        if (this.cycles && this.cycles.car) {
+            value = this.cycles.car;
+        } else {
+            value = toString(this.car, quote, true);
+        }
+        if (value !== undefined) {
+            arr.push(value);
+        }
+        if (this.cdr instanceof Pair) {
+            if (this.cycles && this.cycles.cdr) {
+                arr.push(' . ');
+                arr.push(this.cycles.cdr);
             } else {
-                value = toString(this.car, quote, true);
-            }
-            if (value !== undefined) {
-                arr.push(value);
-            }
-            if (this.cdr instanceof Pair) {
-                if (this.cycles && this.cycles.cdr) {
+                if (this.cdr.ref) {
                     arr.push(' . ');
-                    arr.push(this.cycles.cdr);
                 } else {
-                    if (this.cdr.ref) {
-                        arr.push(' . ');
-                    } else {
-                        arr.push(' ');
-                    }
-                    const cdr = this.cdr.toString(quote, true);
-                    arr.push(cdr);
+                    arr.push(' ');
                 }
-            } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-                arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
+                const cdr = this.cdr.toString(quote, true);
+                arr.push(cdr);
             }
+        } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
+            arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
         }
         if (!rest || this.ref) {
             arr.push(')');
@@ -2090,12 +2088,13 @@
         return '#<Macro ' + this.name + '>';
     };
     // ----------------------------------------------------------------------
-    var macro = 'define-macro';
+    const macro = 'define-macro';
     // ----------------------------------------------------------------------
+    const recur_guard = -10000;
     function macro_expand(single) {
         return async function(code, args) {
             var env = args['env'] = this;
-            async function traverse(node, n) {
+            async function traverse(node, n, env) {
                 if (node instanceof Pair && node.car instanceof LSymbol) {
                     if (node.data) {
                         return node;
@@ -2104,37 +2103,47 @@
                     if (value instanceof Macro && value.defmacro) {
                         var code = value instanceof Syntax ? node : node.cdr;
                         var result = await value.invoke(code, args, true);
+                        if (value instanceof Syntax) {
+                            const { expr, scope } = result;
+                            if (expr instanceof Pair) {
+                                if (n !== -1 && n <= 1 || n < recur_guard) {
+                                    return expr;
+                                }
+                                n = n - 1;
+                                return traverse(expr, n, scope);
+                            }
+                            result = expr;
+                        }
                         if (result instanceof LSymbol) {
                             return quote(result);
                         }
                         if (result instanceof Pair) {
-                            if (typeof n === 'number') {
-                                if (n <= 1) {
-                                    return result;
-                                }
-                                n = n - 1;
+                            console.log({ n });
+                            if (n !== -1 && n <= 1 || n < recur_guard) {
+                                return result;
                             }
-                            return traverse(result, n);
+                            n = n - 1;
+                            return traverse(result, n, env);
                         }
                     }
                 }
-                // CYCLE DETECT
+                // TODO: CYCLE DETECT
                 var car = node.car;
                 if (car instanceof Pair) {
-                    car = await traverse(car);
+                    car = await traverse(car, n, env);
                 }
                 var cdr = node.cdr;
                 if (cdr instanceof Pair) {
-                    cdr = await traverse(cdr);
+                    cdr = await traverse(cdr, n, env);
                 }
                 var pair = new Pair(car, cdr);
                 return pair;
             }
             //var new_code = code;
             if (single) {
-                return quote((await traverse(code, 1)).car);
+                return quote((await traverse(code, 1, env)).car);
             } else {
-                return quote((await traverse(code, -1)).car);
+                return quote((await traverse(code, -1, env)).car);
             }
         };
     }
@@ -2220,7 +2229,6 @@
                         }
                         bindings['...'].symbols[name] = code;
                     }
-                    return true;
                 }
             }
             if (pattern instanceof Pair &&
@@ -2240,9 +2248,11 @@
                     if (code === nil) {
                         log('>> 2');
                         if (ellipsis) {
+                            log('NIL');
                             bindings['...'].symbols[name] = nil;
                         } else {
-                            return false;
+                            log('NULL');
+                            bindings['...'].symbols[name] = null;
                         }
                     } else if (code instanceof Pair &&
                                (code.car instanceof Pair || code.car === nil)) {
@@ -2315,7 +2325,7 @@
                 if (symbols.includes(name)) {
                     return true;
                 }
-                log({ name });
+                log({ name, ellipsis });
                 if (ellipsis) {
                     bindings['...'].symbols[name] = bindings['...'].symbols[name] || [];
                     bindings['...'].symbols[name].push(code);
@@ -2327,7 +2337,11 @@
             }
             if (pattern instanceof Pair && code instanceof Pair) {
                 log('>> 12');
-                log(code.toString());
+                log({
+                    a: 12,
+                    code: code && code.toString(),
+                    pattern: pattern.toString()
+                });
                 if (code.cdr === nil) {
                     // last item in in call using in recursive calls on
                     // last element of the list
@@ -2347,11 +2361,14 @@
                         return true;
                     }
                 }
+                log('recur');
                 if (traverse(pattern.car, code.car, pattern_names, ellipsis) &&
                     traverse(pattern.cdr, code.cdr, pattern_names, ellipsis)) {
                     return true;
                 }
-            } else if (pattern === nil && code === nil) {
+            } else if (pattern === nil && (code === nil || code === undefined)) {
+                // undefined is case when you don't have body ...
+                // and you do recursive call
                 return true;
             } else if (pattern.car instanceof Pair &&
                        LSymbol.is(pattern.car.car, ellipsis_symbol)) {
@@ -2529,6 +2546,10 @@
                     log('[t 2');
                     const name = expr.car.valueOf();
                     const item = bindings[name];
+                    if (item === null) {
+                        log({ name });
+                        return;
+                    }
                     if (item) {
                         log({ b: bindings[name] });
                         if (item instanceof Pair) {
@@ -2564,9 +2585,16 @@
                     }
                 }
                 log('[t 3 recur ' + expr.toString());
+                const head = transform_ellipsis_expr(expr.car, bindings, nested, next);
+                const rest = transform_ellipsis_expr(expr.cdr, bindings, nested, next);
+                log({
+                    b: true,
+                    head: head && head.toString(),
+                    rest: rest && rest.toString()
+                });
                 return new Pair(
-                    transform_ellipsis_expr(expr.car, bindings, nested, next),
-                    transform_ellipsis_expr(expr.cdr, bindings, nested, next)
+                    head,
+                    rest
                 );
             }
         }
@@ -2577,7 +2605,7 @@
                 values.push(...symbols.map(x => biding[x]));
             }
             return values.length && values.every(x => {
-                return x instanceof Pair ||
+                return x instanceof Pair || x === null ||
                     x === nil || (x instanceof Array && x.length);
             });
         }
@@ -2585,6 +2613,7 @@
             return Object.keys(object).concat(Object.getOwnPropertySymbols(object));
         }
         function traverse(expr) {
+            log('>> ' + expr.toString());
             if (expr instanceof Pair) {
                 if (expr.cdr instanceof Pair &&
                     LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
@@ -2620,10 +2649,20 @@
                                     // there are two cases ((a . b) ...) and (a ...)
                                     new_bind[key] = value;
                                 };
-                                result = new Pair(
-                                    transform_ellipsis_expr(expr.car, bind, true, next),
-                                    result
+                                const car = transform_ellipsis_expr(
+                                    expr.car,
+                                    bind,
+                                    true,
+                                    next
                                 );
+                                // undefined can be null caused by null binding
+                                // on empty ellipsis
+                                if (car !== undefined) {
+                                    result = new Pair(
+                                        car,
+                                        result
+                                    );
+                                }
                                 bind = new_bind;
                             }
                             if (result !== nil) {
@@ -2656,17 +2695,18 @@
                             const next = (key, value) => {
                                 new_bind[key] = value;
                             };
-                            log({ EXPR: expr.toString() });
                             const value = transform_ellipsis_expr(
                                 expr,
                                 bind,
                                 false,
                                 next
                             );
-                            result = new Pair(
-                                value,
-                                result
-                            );
+                            if (typeof value !== 'undefined') {
+                                result = new Pair(
+                                    value,
+                                    result
+                                );
+                            }
                             bind = new_bind;
                         }
                         if (result !== nil) {
@@ -2681,9 +2721,16 @@
                         return result;
                     }
                 }
+                const head = traverse(expr.car);
+                const rest = traverse(expr.cdr);
+                log({
+                    a: true,
+                    head: head && head.toString(),
+                    rest: rest && rest.toString()
+                });
                 return new Pair(
-                    traverse(expr.car),
-                    traverse(expr.cdr)
+                    head,
+                    rest
                 );
             }
             if (expr instanceof LSymbol) {
@@ -5636,7 +5683,7 @@
             } else {
                 validate_identifiers(macro.car);
             }
-            return new Syntax(function(code, { macro_expand }) {
+            const syntax = new Syntax(function(code, { macro_expand }) {
                 var scope = env.inherit('syntax');
                 if (dynamic_scope) {
                     dynamic_scope = scope;
@@ -5660,6 +5707,7 @@
                     if (bindings) {
                         if (user_env.get('DEBUG', { throwError: false })) {
                             console.log(JSON.stringify(bindings, true, 2));
+                            console.log('MACRO: ' + code.toString());
                         }
                         // name is modified in transform_syntax
                         var names = [];
@@ -5676,8 +5724,7 @@
                         }
                         var new_env = var_scope.merge(scope, Syntax.merge_env);
                         if (macro_expand) {
-                            return expr;
-                            //return { expr, scope: new_env };
+                            return { expr, scope: new_env };
                         }
                         var result = evaluate(expr, { ...eval_args, env: new_env });
                         // Hack: update the result if there are generated
@@ -5689,6 +5736,8 @@
                 }
                 throw new Error(`Invalid Syntax ${code}`);
             }, env);
+            syntax.__code__ = macro;
+            return syntax;
         }, `(syntax-rules () (pattern expression) ...)
 
             Base of Hygienic macro, it will return new syntax expander

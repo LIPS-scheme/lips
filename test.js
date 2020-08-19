@@ -28,7 +28,6 @@ readDir('./tests/').then(function(filenames) {
           (load "./lib/bootstrap.scm")
           (load "./lib/R5RS.scm")
           (load "./lib/R7RS.scm")
-          (load "./examples/helpers.scm")
           (load "./tests/helpers/helpers.scm"))
       `);
       return lips.exec([`

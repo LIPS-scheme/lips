@@ -18,6 +18,8 @@
 * fix silent accepting two big code point `#\xFFFFFF`
 * fix custom repr of instances created by define-class
 * fix parsing R7RS hex literals in strings
+* fix syntax-rules with `(a b ...)` that match single item
+* fix swallowed undefined from `(cons 1 undefined)`
 
 ## 1.0.0-beta.3
 ## Bugfix

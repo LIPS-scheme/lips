@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 17 Aug 2020 20:57:04 +0000
+ * build: Wed, 19 Aug 2020 11:49:55 +0000
  */
 (function () {
   'use strict';
@@ -3290,36 +3290,34 @@
         arr.push('(');
       }
 
-      if (this.car !== undefined$1) {
-        var value;
+      var value;
 
-        if (this.cycles && this.cycles.car) {
-          value = this.cycles.car;
+      if (this.cycles && this.cycles.car) {
+        value = this.cycles.car;
+      } else {
+        value = toString(this.car, quote, true);
+      }
+
+      if (value !== undefined$1) {
+        arr.push(value);
+      }
+
+      if (this.cdr instanceof Pair) {
+        if (this.cycles && this.cycles.cdr) {
+          arr.push(' . ');
+          arr.push(this.cycles.cdr);
         } else {
-          value = toString(this.car, quote, true);
-        }
-
-        if (value !== undefined$1) {
-          arr.push(value);
-        }
-
-        if (this.cdr instanceof Pair) {
-          if (this.cycles && this.cycles.cdr) {
+          if (this.cdr.ref) {
             arr.push(' . ');
-            arr.push(this.cycles.cdr);
           } else {
-            if (this.cdr.ref) {
-              arr.push(' . ');
-            } else {
-              arr.push(' ');
-            }
-
-            var cdr = this.cdr.toString(quote, true);
-            arr.push(cdr);
+            arr.push(' ');
           }
-        } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
-          arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
+
+          var cdr = this.cdr.toString(quote, true);
+          arr.push(cdr);
         }
+      } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
+        arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
       }
 
       if (!rest || this.ref) {
@@ -3487,6 +3485,8 @@
 
     var macro = 'define-macro'; // ----------------------------------------------------------------------
 
+    var recur_guard = -10000;
+
     function macro_expand(single) {
       return /*#__PURE__*/function () {
         var _ref10 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2(code, args) {
@@ -3497,14 +3497,15 @@
               switch (_context2.prev = _context2.next) {
                 case 0:
                   _traverse = function _traverse3() {
-                    _traverse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(node, n) {
-                      var value, code, result, car, cdr, pair;
+                    _traverse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(node, n, env) {
+                      var value, code, result, _result, expr, scope, car, cdr, pair;
+
                       return regenerator.wrap(function _callee$(_context) {
                         while (1) {
                           switch (_context.prev = _context.next) {
                             case 0:
                               if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-                                _context.next = 17;
+                                _context.next = 25;
                                 break;
                               }
 
@@ -3521,7 +3522,7 @@
                               });
 
                               if (!(value instanceof Macro && value.defmacro)) {
-                                _context.next = 17;
+                                _context.next = 25;
                                 break;
                               }
 
@@ -3532,71 +3533,95 @@
                             case 8:
                               result = _context.sent;
 
+                              if (!(value instanceof Syntax)) {
+                                _context.next = 17;
+                                break;
+                              }
+
+                              _result = result, expr = _result.expr, scope = _result.scope;
+
+                              if (!(expr instanceof Pair)) {
+                                _context.next = 16;
+                                break;
+                              }
+
+                              if (!(n !== -1 && n <= 1 || n < recur_guard)) {
+                                _context.next = 14;
+                                break;
+                              }
+
+                              return _context.abrupt("return", expr);
+
+                            case 14:
+                              n = n - 1;
+                              return _context.abrupt("return", traverse(expr, n, scope));
+
+                            case 16:
+                              result = expr;
+
+                            case 17:
                               if (!(result instanceof LSymbol)) {
-                                _context.next = 11;
+                                _context.next = 19;
                                 break;
                               }
 
                               return _context.abrupt("return", quote(result));
 
-                            case 11:
+                            case 19:
                               if (!(result instanceof Pair)) {
-                                _context.next = 17;
+                                _context.next = 25;
                                 break;
                               }
 
-                              if (!(typeof n === 'number')) {
-                                _context.next = 16;
-                                break;
-                              }
+                              console.log({
+                                n: n
+                              });
 
-                              if (!(n <= 1)) {
-                                _context.next = 15;
+                              if (!(n !== -1 && n <= 1 || n < recur_guard)) {
+                                _context.next = 23;
                                 break;
                               }
 
                               return _context.abrupt("return", result);
 
-                            case 15:
+                            case 23:
                               n = n - 1;
+                              return _context.abrupt("return", traverse(result, n, env));
 
-                            case 16:
-                              return _context.abrupt("return", traverse(result, n));
-
-                            case 17:
-                              // CYCLE DETECT
+                            case 25:
+                              // TODO: CYCLE DETECT
                               car = node.car;
 
                               if (!(car instanceof Pair)) {
-                                _context.next = 22;
+                                _context.next = 30;
                                 break;
                               }
 
-                              _context.next = 21;
-                              return traverse(car);
+                              _context.next = 29;
+                              return traverse(car, n, env);
 
-                            case 21:
+                            case 29:
                               car = _context.sent;
 
-                            case 22:
+                            case 30:
                               cdr = node.cdr;
 
                               if (!(cdr instanceof Pair)) {
-                                _context.next = 27;
+                                _context.next = 35;
                                 break;
                               }
 
-                              _context.next = 26;
-                              return traverse(cdr);
+                              _context.next = 34;
+                              return traverse(cdr, n, env);
 
-                            case 26:
+                            case 34:
                               cdr = _context.sent;
 
-                            case 27:
+                            case 35:
                               pair = new Pair(car, cdr);
                               return _context.abrupt("return", pair);
 
-                            case 29:
+                            case 37:
                             case "end":
                               return _context.stop();
                           }
@@ -3606,7 +3631,7 @@
                     return _traverse.apply(this, arguments);
                   };
 
-                  traverse = function _traverse2(_x3, _x4) {
+                  traverse = function _traverse2(_x3, _x4, _x5) {
                     return _traverse.apply(this, arguments);
                   };
 
@@ -3619,7 +3644,7 @@
 
                   _context2.t0 = quote;
                   _context2.next = 7;
-                  return traverse(code, 1);
+                  return traverse(code, 1, env);
 
                 case 7:
                   _context2.t1 = _context2.sent.car;
@@ -3628,7 +3653,7 @@
                 case 11:
                   _context2.t2 = quote;
                   _context2.next = 14;
-                  return traverse(code, -1);
+                  return traverse(code, -1, env);
 
                 case 14:
                   _context2.t3 = _context2.sent.car;
@@ -3748,8 +3773,6 @@
 
               bindings['...'].symbols[name] = code;
             }
-
-            return true;
           }
         }
 
@@ -3772,9 +3795,11 @@
               log('>> 2');
 
               if (ellipsis) {
+                log('NIL');
                 bindings['...'].symbols[_name2] = nil;
               } else {
-                return false;
+                log('NULL');
+                bindings['...'].symbols[_name2] = null;
               }
             } else if (code instanceof Pair && (code.car instanceof Pair || code.car === nil)) {
               log('>> 3 ' + ellipsis);
@@ -3853,7 +3878,8 @@
           }
 
           log({
-            name: _name3
+            name: _name3,
+            ellipsis: ellipsis
           });
 
           if (ellipsis) {
@@ -3871,7 +3897,11 @@
 
         if (pattern instanceof Pair && code instanceof Pair) {
           log('>> 12');
-          log(code.toString());
+          log({
+            a: 12,
+            code: code && code.toString(),
+            pattern: pattern.toString()
+          });
 
           if (code.cdr === nil) {
             // last item in in call using in recursive calls on
@@ -3898,10 +3928,14 @@
             }
           }
 
+          log('recur');
+
           if (traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr, code.cdr, pattern_names, ellipsis)) {
             return true;
           }
-        } else if (pattern === nil && code === nil) {
+        } else if (pattern === nil && (code === nil || code === undefined$1)) {
+          // undefined is case when you don't have body ...
+          // and you do recursive call
           return true;
         } else if (pattern.car instanceof Pair && LSymbol.is(pattern.car.car, ellipsis_symbol)) {
           // pattern (...)
@@ -4117,6 +4151,13 @@
 
             var item = bindings[_name5];
 
+            if (item === null) {
+              log({
+                name: _name5
+              });
+              return;
+            }
+
             if (item) {
               log({
                 b: bindings[_name5]
@@ -4150,10 +4191,10 @@
                   next(_name5, item.slice(1));
                   return Pair.fromArray(item);
                 } else {
-                  var rest = item.slice(1);
+                  var _rest5 = item.slice(1);
 
-                  if (rest.length) {
-                    next(_name5, rest);
+                  if (_rest5.length) {
+                    next(_name5, _rest5);
                   }
 
                   return item[0];
@@ -4165,7 +4206,14 @@
           }
 
           log('[t 3 recur ' + expr.toString());
-          return new Pair(transform_ellipsis_expr(expr.car, bindings, nested, next), transform_ellipsis_expr(expr.cdr, bindings, nested, next));
+          var head = transform_ellipsis_expr(expr.car, bindings, nested, next);
+          var rest = transform_ellipsis_expr(expr.cdr, bindings, nested, next);
+          log({
+            b: true,
+            head: head && head.toString(),
+            rest: rest && rest.toString()
+          });
+          return new Pair(head, rest);
         }
       }
 
@@ -4180,7 +4228,7 @@
         }
 
         return values.length && values.every(function (x) {
-          return x instanceof Pair || x === nil || x instanceof Array && x.length;
+          return x instanceof Pair || x === null || x === nil || x instanceof Array && x.length;
         });
       }
 
@@ -4189,6 +4237,8 @@
       }
 
       function traverse(expr) {
+        log('>> ' + expr.toString());
+
         if (expr instanceof Pair) {
           if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
             log('>> 1');
@@ -4231,7 +4281,13 @@
                     new_bind[key] = value;
                   };
 
-                  result = new Pair(transform_ellipsis_expr(expr.car, _bind, true, next), result);
+                  var car = transform_ellipsis_expr(expr.car, _bind, true, next); // undefined can be null caused by null binding
+                  // on empty ellipsis
+
+                  if (car !== undefined$1) {
+                    result = new Pair(car, result);
+                  }
+
                   _bind = new_bind;
                 };
 
@@ -4263,7 +4319,7 @@
 
               var _bind2 = defineProperty({}, name, symbols[name]);
 
-              var _result = nil;
+              var _result2 = nil;
 
               var _loop2 = function _loop2() {
                 if (!have_binding(_bind2)) {
@@ -4279,11 +4335,12 @@
                   new_bind[key] = value;
                 };
 
-                log({
-                  EXPR: expr.toString()
-                });
                 var value = transform_ellipsis_expr(expr, _bind2, false, next);
-                _result = new Pair(value, _result);
+
+                if (typeof value !== 'undefined') {
+                  _result2 = new Pair(value, _result2);
+                }
+
                 _bind2 = new_bind;
               };
 
@@ -4293,21 +4350,28 @@
                 if (_ret2 === "break") break;
               }
 
-              if (_result !== nil) {
-                _result = _result.reverse();
+              if (_result2 !== nil) {
+                _result2 = _result2.reverse();
               } // case if (x ... y ...) second spread is not processed
               // by ellipsis transformation
 
 
               if (expr.cdr instanceof Pair && expr.cdr.cdr instanceof Pair) {
-                _result.append(traverse(expr.cdr.cdr));
+                _result2.append(traverse(expr.cdr.cdr));
               }
 
-              return _result;
+              return _result2;
             }
           }
 
-          return new Pair(traverse(expr.car), traverse(expr.cdr));
+          var head = traverse(expr.car);
+          var rest = traverse(expr.cdr);
+          log({
+            a: true,
+            head: head && head.toString(),
+            rest: rest && rest.toString()
+          });
+          return new Pair(head, rest);
         }
 
         if (expr instanceof LSymbol) {
@@ -7941,7 +8005,7 @@
           validate_identifiers(macro.car);
         }
 
-        return new Syntax(function (code, _ref21) {
+        var syntax = new Syntax(function (code, _ref21) {
           var macro_expand = _ref21.macro_expand;
           var scope = env.inherit('syntax');
 
@@ -7977,6 +8041,7 @@
                 throwError: false
               })) {
                 console.log(JSON.stringify(bindings, true, 2));
+                console.log('MACRO: ' + code.toString());
               } // name is modified in transform_syntax
 
 
@@ -7997,7 +8062,10 @@
               var new_env = var_scope.merge(scope, Syntax.merge_env);
 
               if (macro_expand) {
-                return expr; //return { expr, scope: new_env };
+                return {
+                  expr: expr,
+                  scope: new_env
+                };
               }
 
               var result = evaluate(expr, _objectSpread(_objectSpread({}, eval_args), {}, {
@@ -8013,6 +8081,8 @@
 
           throw new Error("Invalid Syntax ".concat(code));
         }, env);
+        syntax.__code__ = macro;
+        return syntax;
       }, "(syntax-rules () (pattern expression) ...)\n\n            Base of Hygienic macro, it will return new syntax expander\n            that works like lisp macros."),
       // ------------------------------------------------------------------
       quote: doc(new Macro('quote', function (arg) {
@@ -9434,7 +9504,7 @@
         }
       }
 
-      function promise(_x5) {
+      function promise(_x6) {
         return _promise.apply(this, arguments);
       }
 
@@ -9709,7 +9779,7 @@
     } // -------------------------------------------------------------------------
 
 
-    function exec(_x6, _x7, _x8) {
+    function exec(_x7, _x8, _x9) {
       return _exec.apply(this, arguments);
     } // -------------------------------------------------------------------------
 
@@ -10064,10 +10134,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 17 Aug 2020 20:57:04 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 19 Aug 2020 11:49:55 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 17 Aug 2020 20:57:04 +0000').valueOf();
+      var date = LString('Wed, 19 Aug 2020 11:49:55 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10104,7 +10174,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 17 Aug 2020 20:57:04 +0000',
+      date: 'Wed, 19 Aug 2020 11:49:55 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

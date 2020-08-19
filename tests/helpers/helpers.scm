@@ -11,7 +11,7 @@
                                     (,b_name ,b))
                                 (if (equal? ,a_name ,b_name)
                                     (--> e (pass))
-                                    (--> e (fail (concat "failed: " (repr ,a_name)
+                                    (--> e (fail (concat "failed: " (repr ,a_name true)
                                                          " != " (repr ,b_name true)
                                                          " in " (repr ',a true))))))))))
        (if (not (. ,attempt 'passed))

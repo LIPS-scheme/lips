@@ -207,7 +207,9 @@
    (lambda (t)
 
       (define-syntax foo
-         (syntax-rules () ((_ (a . (b . (c . nil))) ...) '(foo a ... b ... c ...))))
+         (syntax-rules ()
+           ((_ (a . (b . (c . nil))) ...)
+            '(foo a ... b ... c ...))))
 
       (t.is (foo) '(foo))
       (t.is (to.throw (foo 1)) #t)
@@ -219,9 +221,10 @@
 
 (test "syntax-rules: list quine"
   (lambda (t)
-
     (define-syntax foo
-      (syntax-rules () ((_ (x ...) ...) '(foo (x ...) ...))))
+      (syntax-rules ()
+        ((_ (x ...) ...)
+         '(foo (x ...) ...))))
 
     (t.is (foo) '(foo))
     (t.is (to.throw (foo 1)) #t)
@@ -445,7 +448,7 @@
                25)))
 
 ;; foo foo ... should match single element foo ... should match nil
-(test_ "syntax-rules: R6RS unless & when macros"
+(test "syntax-rules: R6RS unless & when macros"
        (lambda (t)
 
          (define-syntax when
@@ -461,12 +464,12 @@
                   (begin result1 result2 ...)))))
 
 
-         (t.is (when (> 3 2) 'greater) ‌'greater)
-         (t.is (when (< 3 2) 'greater) ‌undefined) ;; unspecified
+         (t.is (when (> 3 2) 'foo) 'foo)
+         (t.is (when (< 3 2) 'foo) undefined) ;; unspecified
 
          (t.is (unless (> 3 2) 'less) undefined) ;; unspecified
 
-         (t.is (unless (< 3 2) 'less) 'less)))
+         (t.is (unless (< 3 2) 'foo) 'foo)))
 
 
 (test_ "syntax-rules: guile example"
@@ -481,7 +484,7 @@
 
              (define-matcher-macro is-literal-foo? "foo")
 
-             (t.is (is-literal-foo? "foo") #t)
+             (t.is (is-literal-foo? "foo") #t) ;; this fail
              (t.is (is-literal-foo? "bar") #f)
              (let ((foo "foo"))
                 (t.is (is-literal-foo? foo) #f))))
@@ -503,7 +506,7 @@
          (t.is (let ((t #t)) (my-or #f t)) #t)))
 
 
-(test_ "syntax-rules: recursive do"
+(test "syntax-rules: recursive do"
        (lambda (t)
          (define-syntax do
             (syntax-rules ()
@@ -551,6 +554,16 @@
                  x
                  expr))
               '(10 . 10))))
+
+(test "syntax-rules: recursive call"
+      (lambda (t)
+
+        (define-syntax L
+          (syntax-rules ()
+            ((_) '())
+            ((_ a b ...) (cons a (_ b ...)))))
+
+        (t.is (L 1 2 3) '(1 2 3))))
 
 (test_ "syntax-rules: should return list with ellipsis"
        (lambda (t)
