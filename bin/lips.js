@@ -175,6 +175,7 @@ function scheme(str) {
 // -----------------------------------------------------------------------------
 var strace;
 var rl;
+var newline;
 var interp = Interpreter('repl', {
     stdin: InputPort(function() {
         return new Promise(function(resolve) {
@@ -313,7 +314,6 @@ function run_repl(err, rl) {
     var code = '';
     var multiline = false;
     var resolve;
-    var newline;
     // we use promise loop to fix issue when copy paste list of S-Expression
     var prev_eval = Promise.resolve();
     if (process.stdin.isTTY) {
