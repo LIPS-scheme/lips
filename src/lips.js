@@ -1274,7 +1274,7 @@
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
         //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
         [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
-        [[/(?!lambda)/, p_o, glob, p_e], 1, not_close],
+        [[/(?!lambda)/, new Pattern([p_o, glob, p_e], '+')], 1, not_close],
         [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
         [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
