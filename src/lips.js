@@ -2210,6 +2210,10 @@
                 code: code && code.toString(),
                 pattern: pattern && pattern.toString()
             });
+            if (pattern instanceof LSymbol &&
+                symbols.includes(pattern.valueOf())) {
+                return LSymbol.is(code, pattern);
+            }
             // pattern (a b (x ...)) and (x ...) match nil
             if (pattern instanceof Pair &&
                 pattern.car instanceof Pair &&
@@ -2483,6 +2487,7 @@
             bindings,
             expr,
             scope,
+            symbols,
             names,
             ellipsis: ellipsis_symbol } = options;
         var gensyms = {};
@@ -2496,6 +2501,9 @@
             }
             if (typeof name === 'string' && name in bindings) {
                 return bindings[name];
+            }
+            if (symbols.includes(name)) {
+                return LSymbol(name);
             }
             return rename(name);
         }
@@ -5718,6 +5726,7 @@
                         const new_expr = transform_syntax({
                             bindings,
                             expr,
+                            symbols,
                             scope,
                             lex_scope: var_scope,
                             names,
@@ -5733,7 +5742,8 @@
                         var result = evaluate(expr, { ...eval_args, env: new_env });
                         // Hack: update the result if there are generated
                         //       gensyms that should be literal symbols
-
+                        // TODO: maybe not the part move when literal elisps may
+                        //       be generated, maybe they will need to be mark somehow
                         return clear_gensyms(result, names);
                     }
                     rules = rules.cdr;

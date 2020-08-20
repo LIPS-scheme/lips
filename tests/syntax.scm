@@ -583,7 +583,7 @@
          (t.is (test) '((1 . ...) (2 . ...)))))
 
 
-(test_ "syntax-rules: it should handle identifiers"
+(test "syntax-rules: it should handle identifiers"
        (lambda (t)
        
          (define-syntax for

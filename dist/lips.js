@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 20 Aug 2020 11:17:42 +0000
+ * build: Thu, 20 Aug 2020 19:13:58 +0000
  */
 (function () {
   'use strict';
@@ -3748,7 +3748,12 @@
         log({
           code: code && code.toString(),
           pattern: pattern && pattern.toString()
-        }); // pattern (a b (x ...)) and (x ...) match nil
+        });
+
+        if (pattern instanceof LSymbol && symbols.includes(pattern.valueOf())) {
+          return LSymbol.is(code, pattern);
+        } // pattern (a b (x ...)) and (x ...) match nil
+
 
         if (pattern instanceof Pair && pattern.car instanceof Pair && pattern.car.cdr instanceof Pair && LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
           log('>> 0');
@@ -4057,6 +4062,7 @@
       var bindings = options.bindings,
           expr = options.expr,
           scope = options.scope,
+          symbols = options.symbols,
           names = options.names,
           ellipsis_symbol = options.ellipsis;
       var gensyms = {};
@@ -4074,6 +4080,10 @@
 
         if (typeof name === 'string' && name in bindings) {
           return bindings[name];
+        }
+
+        if (symbols.includes(name)) {
+          return LSymbol(name);
         }
 
         return rename(name);
@@ -4249,8 +4259,8 @@
         if (expr instanceof Pair) {
           if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
             log('>> 1');
-            var symbols = bindings['...'].symbols;
-            var keys = get_names(symbols); // case of list as first argument ((x . y) ...)
+            var _symbols = bindings['...'].symbols;
+            var keys = get_names(_symbols); // case of list as first argument ((x . y) ...)
             // we need to recursively process the list
             // if we have pattern (_ (x y z ...) ...) and code (foo (1 2) (1 2))
             // x an y will be arrays of [1 1] and [2 2] and z will be array
@@ -4271,7 +4281,7 @@
               if (keys.length) {
                 log('>> 2 (a)');
 
-                var _bind = _objectSpread({}, symbols);
+                var _bind = _objectSpread({}, _symbols);
 
                 result = nil;
 
@@ -4311,7 +4321,7 @@
                 return result;
               } else {
                 log('>> 3');
-                var car = transform_ellipsis_expr(expr.car, symbols, true);
+                var car = transform_ellipsis_expr(expr.car, _symbols, true);
 
                 if (car) {
                   return new Pair(car, nil);
@@ -4324,7 +4334,7 @@
 
               var name = expr.car.name;
 
-              var _bind2 = defineProperty({}, name, symbols[name]);
+              var _bind2 = defineProperty({}, name, _symbols[name]);
 
               var _result2 = nil;
 
@@ -8051,6 +8061,7 @@
               var new_expr = transform_syntax({
                 bindings: bindings,
                 expr: expr,
+                symbols: symbols,
                 scope: scope,
                 lex_scope: var_scope,
                 names: names,
@@ -8074,6 +8085,8 @@
                 env: new_env
               })); // Hack: update the result if there are generated
               //       gensyms that should be literal symbols
+              // TODO: maybe not the part move when literal elisps may
+              //       be generated, maybe they will need to be mark somehow
 
               return clear_gensyms(result, names);
             }
@@ -10136,10 +10149,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 20 Aug 2020 11:17:42 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 20 Aug 2020 19:13:58 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 20 Aug 2020 11:17:42 +0000').valueOf();
+      var date = LString('Thu, 20 Aug 2020 19:13:58 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10176,7 +10189,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 20 Aug 2020 11:17:42 +0000',
+      date: 'Thu, 20 Aug 2020 19:13:58 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
