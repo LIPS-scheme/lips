@@ -581,3 +581,28 @@
 
          (t.is (test 1 2 3) '((1 . ...) (2 . ...) (3 . ...)))
          (t.is (test) '((1 . ...) (2 . ...)))))
+
+
+(test_ "syntax-rules: it should handle identifiers"
+       (lambda (t)
+       
+         (define-syntax for
+           (syntax-rules (in as)
+             ((for element in list body ...)
+              (map (lambda (element)
+                      body ...)
+                   list))
+            ((for list as element body ...)
+             (for element in list body ...))))
+         
+         (t.is (let ((result '()))
+                 (for i in '(0 1 2 3 4)
+                      (set! result (cons i result)))
+                  result)
+               '(4 3 2 1 0))
+
+         (t.is (let ((result '()))
+                 (for '(0 1 2 3 4) as i
+                      (set! result (cons i result)))
+                 result)
+               '(4 3 2 1 0))))
