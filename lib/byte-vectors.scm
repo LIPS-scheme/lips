@@ -1,7 +1,8 @@
-;; Implementation of byte vector functions
+;; Implementation of byte vector functions - SRFI-4
 ;;
-;; reference: https://small.r7rs.org/wiki/NumericVectorsCowan/17/
-;;            https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
+;; original code was ased on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
+;; it use JavaScript typed arrays
+;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
 ;; Copyright (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
@@ -27,6 +28,7 @@
            (vector-in-range? (fn-name "%~avector-in-range?"))
            (vector-ref (fn-name "~avector-ref"))
            (repr-str (format "#~a" prefix-str))
+           (vector-length (fn-name "~avector-length"))
            (vector->list (fn-name "~avector->list"))
            (vector-set! (fn-name "~avector-set!"))
            (list->tvector (fn-name "list->~avector"))
@@ -39,6 +41,14 @@
                    Create ~a from give arguments."
                   type-vector help)
          (,TypedArray.from (list->vector args)))
+       ;; -----------------------------------------------------------------------------
+       (define (,vector-length v)
+         ,(format "(~a v)
+
+                   return length of ~a."
+                  vector-length help)
+         (typecheck ,(symbol->string vector-length) v ,l-type)
+         v.length)
        ;; -----------------------------------------------------------------------------
        (define (,make-vector k . fill)
          ,(format "(~a v1 v2 ...)
@@ -65,8 +75,8 @@
                    Function test if index is range for ~a."
                   vector-in-range?
                   help)
-         (typecheck ,vector-in-range? vector ,l-type)
-         (typecheck ,vector-in-range? k "number")
+         (typecheck ,(symbol->string vector-in-range?) vector ,l-type)
+         (typecheck ,(symbol->string vector-in-range?) k "number")
          (let ((len (length vector)))
            (and (>= k 0) (< k len))))
        ;; -----------------------------------------------------------------------------
@@ -76,8 +86,8 @@
                   Function return value frome vector at index k. If index is out of range it throw exception."
                   vector-ref
                   help)
-         (typecheck vector-ref vector ,l-type)
-         (typecheck vector-ref k "number")
+         (typecheck ,(symbol->string vector-ref) vector ,l-type)
+         (typecheck ,(symbol->string vector-ref) k "number")
          (if (not (,vector-in-range? vector k))
              (throw (new Error ,(format "~a index out of range" vector-ref)))
              (. vector k)))
@@ -92,23 +102,23 @@
                    Function set value of ~a at index k. If index is out of range it throw exception."
                   vector-set!
                   help)
-         (typecheck ,vector-set! vector ,l-type)
-         (typecheck ,vector-set! k "number")
+         (typecheck ,(symbol->string vector-set!) vector ,l-type)
+         (typecheck ,(symbol->string vector-set!) k "number")
          (if (not (,vector-in-range? vector k))
              (throw (new Error ,(format "~a index out of range" vector-set!)))
              (set-obj! vector k v)))
        ;; -----------------------------------------------------------------------------
        (define (,list->tvector lst)
-         (typecheck ,list->tvector lst "pair")
+         (typecheck ,(symbol->string list->tvector) lst "pair")
          (apply ,vector lst))
        ;; -----------------------------------------------------------------------------
        (define (,vector->tvector vector)
-         (typecheck ,vector->tvector vector "array")
+         (typecheck ,(symbol->string vector->tvector) vector "array")
          (,TypedArray.from vector))
        ;; -----------------------------------------------------------------------------
-       (add-special! ,repr-str ',type-vector lips.specials.SPLICE)
+       (set-special! ,repr-str ',type-vector lips.specials.SPLICE)
        ;; -----------------------------------------------------------------------------
-       (add-repr! ,type
+       (set-repr! ,type
                   (lambda (x _quote)
                     (string-append ,repr-str (repr (,vector->list x) _quote))))
        )))
