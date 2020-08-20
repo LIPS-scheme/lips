@@ -4888,20 +4888,24 @@
             } else {
                 this.get('display').call(this, arg);
             }
+            this.get('newline').call(this);
         }, `(pprint expression)
 
            Pretty print list expression, if called with non-pair it just call
            print function with passed argument.`),
         // ------------------------------------------------------------------
         print: doc(function(...args) {
-            this.get('stdout').write.apply(this, args.map((arg) => {
-                return this.get('repr')(arg, LString.isString(arg));
-            }));
+            const display = this.get('display');
+            const newline = this.get('newline');
+            args.forEach(arg => {
+                display.call(this, arg);
+                newline.call(this);
+            });
         }, `(print . args)
 
             Function convert each argument to string and print the result to
             standard output (by default it's console but it can be defined
-            it user code)`),
+            it user code), the function call newline after printing each arg.`),
         // ------------------------------------------------------------------
         'format': doc(function format(str, ...args) {
             typecheck('format', str, 'string');

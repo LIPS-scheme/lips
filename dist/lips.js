@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 20 Aug 2020 19:13:58 +0000
+ * build: Thu, 20 Aug 2020 19:59:43 +0000
  */
 (function () {
   'use strict';
@@ -7152,19 +7152,25 @@
         } else {
           this.get('display').call(this, arg);
         }
+
+        this.get('newline').call(this);
       }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
       // ------------------------------------------------------------------
       print: doc(function () {
         var _this4 = this;
 
+        var display = this.get('display');
+        var newline = this.get('newline');
+
         for (var _len13 = arguments.length, args = new Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
           args[_key13] = arguments[_key13];
         }
 
-        this.get('stdout').write.apply(this, args.map(function (arg) {
-          return _this4.get('repr')(arg, LString.isString(arg));
-        }));
-      }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code)"),
+        args.forEach(function (arg) {
+          display.call(_this4, arg);
+          newline.call(_this4);
+        });
+      }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code), the function call newline after printing each arg."),
       // ------------------------------------------------------------------
       'format': doc(function format(str) {
         for (var _len14 = arguments.length, args = new Array(_len14 > 1 ? _len14 - 1 : 0), _key14 = 1; _key14 < _len14; _key14++) {
@@ -10149,10 +10155,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 20 Aug 2020 19:13:58 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 20 Aug 2020 19:59:43 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 20 Aug 2020 19:13:58 +0000').valueOf();
+      var date = LString('Thu, 20 Aug 2020 19:59:43 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10189,7 +10195,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 20 Aug 2020 19:13:58 +0000',
+      date: 'Thu, 20 Aug 2020 19:59:43 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

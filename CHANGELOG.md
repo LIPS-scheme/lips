@@ -20,6 +20,9 @@
 * fix parsing R7RS hex literals in strings
 * fix syntax-rules with `(a b ...)` that match single item
 * fix swallowed undefined from `(cons 1 undefined)`
+* fix identifiers in syntax-rules
+* fix byte vectors
+* make print and pprint always call newline
 
 ## 1.0.0-beta.3
 ## Bugfix
