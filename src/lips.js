@@ -2019,7 +2019,17 @@
         if (typeof x === 'function' && typeof y === 'function') {
             return unbind(x) === unbind(y);
         } else if (x instanceof LNumber && y instanceof LNumber) {
-            return x.type === y.type && x.cmp(y) === 0;
+            let type;
+            if (x.type === y.type) {
+                if (x.type === 'complex') {
+                    type = x.im.type === y.im.type &&
+                        x.re.type === y.re.type;
+                } else {
+                    type = true;
+                }
+                return type && x.cmp(y) === 0;
+            }
+            return false;
         } else if (typeof x === 'number' || typeof y === 'number') {
             x = LNumber(x);
             y = LNumber(y);

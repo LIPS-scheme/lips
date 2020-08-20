@@ -290,8 +290,12 @@
 (define (exact? n)
   "(exact? n)"
   (typecheck "exact?" n "number")
-  (let ((type (. n 'type)))
-    (or (equal? type "bigint") (equal? type "rational"))))
+  (let ((type n.type))
+    (or (string=? type "bigint")
+        (string=? type "rational")
+        (and (string=? type "complex")
+             (exact? n.im)
+             (exact? n.re)))))
 
 (define (inexact? n)
   "(inexact? n)"

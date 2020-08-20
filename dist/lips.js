@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 20 Aug 2020 07:43:56 +0000
+ * build: Thu, 20 Aug 2020 10:40:10 +0000
  */
 (function () {
   'use strict';
@@ -3404,7 +3404,19 @@
       if (typeof x === 'function' && typeof y === 'function') {
         return unbind(x) === unbind(y);
       } else if (x instanceof LNumber && y instanceof LNumber) {
-        return x.type === y.type && x.cmp(y) === 0;
+        var _type3;
+
+        if (x.type === y.type) {
+          if (x.type === 'complex') {
+            _type3 = x.im.type === y.im.type && x.re.type === y.re.type;
+          } else {
+            _type3 = true;
+          }
+
+          return _type3 && x.cmp(y) === 0;
+        }
+
+        return false;
       } else if (typeof x === 'number' || typeof y === 'number') {
         x = LNumber(x);
         y = LNumber(y);
@@ -10134,10 +10146,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 20 Aug 2020 07:43:56 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 20 Aug 2020 10:40:10 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 20 Aug 2020 07:43:56 +0000').valueOf();
+      var date = LString('Thu, 20 Aug 2020 10:40:10 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10174,7 +10186,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 20 Aug 2020 07:43:56 +0000',
+      date: 'Thu, 20 Aug 2020 10:40:10 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

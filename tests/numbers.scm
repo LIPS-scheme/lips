@@ -379,3 +379,21 @@
                     (0.5+1/2i . 0.5+0.5i)))
 
         (t.is (sqrt -9) 3i)))
+
+(test "numbers: eq?"
+      (lambda (t)
+
+        ;; eq? on numbers is unspecifed - in lisp if two numbers are the same
+        ;; but not the same object they are equal
+
+        (t.is (eq? 10.0i 10i) #f)
+        (t.is (eq? 10i 10i) #t)
+        (t.is (eq? 10.0 10) #f)
+
+        (t.is (let ((ret (/ 10i 10.0)))
+                (list (inexact? ret) (= ret 1.0i) (not (eq? ret 1i))))
+              '(#t #t #t))
+
+        (t.is (let ((ret (/ 10i 10)))
+                (list (exact? ret) (= ret 1i) (not (eq? ret 1i))))
+              '(#t #t #f))))
