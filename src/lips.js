@@ -1780,7 +1780,6 @@
                 return '#<procedure(native)>';
             }
             if (isNativeFunction(obj.toString)) {
-                console.log(obj.toString);
                 return '#<procedure>';
             } else {
                 return obj.toString();
@@ -2128,7 +2127,6 @@
                             return quote(result);
                         }
                         if (result instanceof Pair) {
-                            console.log({ n });
                             if (n !== -1 && n <= 1 || n < recur_guard) {
                                 return result;
                             }
@@ -5556,11 +5554,7 @@
                                 env.env[name.name] = value;
                                 break;
                             } else {
-                                if (typeof args[i] === 'undefined') {
-                                    value = nil;
-                                } else {
-                                    value = args[i];
-                                }
+                                value = args[i];
                                 env.env[name.car.name] = value;
                             }
                         }

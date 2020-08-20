@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 20 Aug 2020 10:40:10 +0000
+ * build: Thu, 20 Aug 2020 11:17:42 +0000
  */
 (function () {
   'use strict';
@@ -3108,7 +3108,6 @@
         }
 
         if (isNativeFunction(obj.toString)) {
-          console.log(obj.toString);
           return '#<procedure>';
         } else {
           return obj.toString();
@@ -3517,7 +3516,7 @@
                           switch (_context.prev = _context.next) {
                             case 0:
                               if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-                                _context.next = 25;
+                                _context.next = 24;
                                 break;
                               }
 
@@ -3534,7 +3533,7 @@
                               });
 
                               if (!(value instanceof Macro && value.defmacro)) {
-                                _context.next = 25;
+                                _context.next = 24;
                                 break;
                               }
 
@@ -3581,59 +3580,55 @@
 
                             case 19:
                               if (!(result instanceof Pair)) {
-                                _context.next = 25;
+                                _context.next = 24;
                                 break;
                               }
 
-                              console.log({
-                                n: n
-                              });
-
                               if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                                _context.next = 23;
+                                _context.next = 22;
                                 break;
                               }
 
                               return _context.abrupt("return", result);
 
-                            case 23:
+                            case 22:
                               n = n - 1;
                               return _context.abrupt("return", traverse(result, n, env));
 
-                            case 25:
+                            case 24:
                               // TODO: CYCLE DETECT
                               car = node.car;
 
                               if (!(car instanceof Pair)) {
-                                _context.next = 30;
+                                _context.next = 29;
                                 break;
                               }
 
-                              _context.next = 29;
+                              _context.next = 28;
                               return traverse(car, n, env);
 
-                            case 29:
+                            case 28:
                               car = _context.sent;
 
-                            case 30:
+                            case 29:
                               cdr = node.cdr;
 
                               if (!(cdr instanceof Pair)) {
-                                _context.next = 35;
+                                _context.next = 34;
                                 break;
                               }
 
-                              _context.next = 34;
+                              _context.next = 33;
                               return traverse(cdr, n, env);
 
-                            case 34:
+                            case 33:
                               cdr = _context.sent;
 
-                            case 35:
+                            case 34:
                               pair = new Pair(car, cdr);
                               return _context.abrupt("return", pair);
 
-                            case 37:
+                            case 36:
                             case "end":
                               return _context.stop();
                           }
@@ -7857,12 +7852,7 @@
                   env.env[name.name] = value;
                   break;
                 } else {
-                  if (typeof args[i] === 'undefined') {
-                    value = nil;
-                  } else {
-                    value = args[i];
-                  }
-
+                  value = args[i];
                   env.env[name.car.name] = value;
                 }
               }
@@ -10146,10 +10136,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 20 Aug 2020 10:40:10 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 20 Aug 2020 11:17:42 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 20 Aug 2020 10:40:10 +0000').valueOf();
+      var date = LString('Thu, 20 Aug 2020 11:17:42 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10186,7 +10176,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 20 Aug 2020 10:40:10 +0000',
+      date: 'Thu, 20 Aug 2020 11:17:42 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
