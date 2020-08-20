@@ -32,14 +32,12 @@ The name is recursive acronym which stands for LIPS is Pretty Simple.
 
 ## Integration with JavaScript
 
-* Doted notation.
+* JavaScript like doted notation.
 * Object literals with `&(:foo 10)` (created using parser extensions),
 * Direct access to JavaScript methods, functions and properties.
 * Access to internal implementation details.
 * Creating new JavaScript classes.
 * Modification of prototype of the objects.
-
-More then 25% of code is written directly in the LIPS language.
 
 ## Installation
 

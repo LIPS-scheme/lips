@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&467f7eb13ce64d6e3634ab1f6eaf0a52155b10ad)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&b4f46ce03d31812c2cc6f878af94a338d447de1e)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 
 
@@ -32,14 +32,12 @@ The name is recursive acronym which stands for LIPS is Pretty Simple.
 
 ## Integration with JavaScript
 
-* Doted notation.
+* JavaScript like doted notation.
 * Object literals with `&(:foo 10)` (created using parser extensions),
 * Direct access to JavaScript methods, functions and properties.
 * Access to internal implementation details.
 * Creating new JavaScript classes.
 * Modification of prototype of the objects.
-
-More then 25% of code is written directly in the LIPS language.
 
 ## Installation
 
