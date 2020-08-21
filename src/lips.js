@@ -4940,9 +4940,9 @@
         pprint: doc(function(arg) {
             if (arg instanceof Pair) {
                 arg = new lips.Formatter(arg.toString(true)).break().format();
-                this.get('stdout').write.call(this, arg);
-            } else {
                 this.get('display').call(this, arg);
+            } else {
+                this.get('write').call(this, arg);
             }
             this.get('newline').call(this);
         }, `(pprint expression)
