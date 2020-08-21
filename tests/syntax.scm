@@ -533,7 +533,7 @@
                 '(1 2 3 4 5 6 7 8 9 10))))
 
 
-(test_ "syntax-rules: it should define nested syntax-rules"
+(test "syntax-rules: it should define nested syntax-rules"
       (lambda (t)
         (define-syntax be-like-begin
           (syntax-rules ()
@@ -549,7 +549,7 @@
         (be-like-begin progn)
         (t.is (let* ((x 10)
                      (expr `(,x . ,x)))
-                (prgn
+                (progn
                  x
                  x
                  expr))
@@ -570,7 +570,7 @@
 
          (define-syntax test
            (syntax-rules ()
-             ((_) (... '(...)))))
+             ((_) (... '...))))
 
          (t.is (test) '(...))
 

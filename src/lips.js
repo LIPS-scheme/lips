@@ -1442,6 +1442,36 @@
     LSymbol.prototype.valueOf = function() {
         return this.name.valueOf();
     };
+    // -------------------------------------------------------------------------
+    LSymbol.prototype.is_gensym = function() {
+        return is_gensym(this.name);
+    };
+    // -------------------------------------------------------------------------
+    function is_gensym(symbol) {
+        if (typeof symbol === 'symbol') {
+            return !!symbol.toString().match(/^Symbol\(#:/);
+        }
+        return false;
+    }
+    // -------------------------------------------------------------------------
+    var gensym = (function() {
+        var count = 0;
+        return function(name = null) {
+            if (name instanceof LSymbol) {
+                name = name.valueOf();
+            }
+            if (is_gensym(name)) {
+                // don't do double gynsyms in nested syntax-rules
+                return LSymbol(name);
+            }
+            // use ES6 symbol as name for lips symbol (they are unique)
+            if (name !== null) {
+                return new LSymbol(Symbol(`#:${name}`));
+            }
+            count++;
+            return new LSymbol(Symbol(`#:g${count}`));
+        };
+    })();
     // ----------------------------------------------------------------------
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
@@ -2529,7 +2559,8 @@
             }
             return gensyms[name];
         }
-        function transform_ellipsis_expr(expr, bindings, nested, next = () => {}) {
+        function transform_ellipsis_expr(expr, bindings, state, next = () => {}) {
+            const { nested } = state;
             log(' ==> ' + expr.toString());
             if (expr instanceof LSymbol) {
                 const name = expr.valueOf();
@@ -2601,8 +2632,9 @@
                     }
                 }
                 log('[t 3 recur ' + expr.toString());
-                const head = transform_ellipsis_expr(expr.car, bindings, nested, next);
-                const rest = transform_ellipsis_expr(expr.cdr, bindings, nested, next);
+                var new_state = { nested };
+                const head = transform_ellipsis_expr(expr.car, bindings, new_state, next);
+                const rest = transform_ellipsis_expr(expr.cdr, bindings, new_state, next);
                 log({
                     b: true,
                     head: head && head.toString(),
@@ -2628,11 +2660,16 @@
         function get_names(object) {
             return Object.keys(object).concat(Object.getOwnPropertySymbols(object));
         }
-        function traverse(expr) {
+        function traverse(expr, { disabled } = {}) {
             log('>> ' + expr.toString());
             if (expr instanceof Pair) {
+                // escape ellispsis from R7RS e.g. (... ...)
+                if (!disabled && expr.car instanceof Pair &&
+                    LSymbol.is(expr.car.car, ellipsis_symbol)) {
+                    return traverse(expr.car.cdr, { disabled: true });
+                }
                 if (expr.cdr instanceof Pair &&
-                    LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
+                    LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
                     log('>> 1');
                     const symbols = bindings['...'].symbols;
                     var keys = get_names(symbols);
@@ -2668,7 +2705,7 @@
                                 const car = transform_ellipsis_expr(
                                     expr.car,
                                     bind,
-                                    true,
+                                    { nested: true },
                                     next
                                 );
                                 // undefined can be null caused by null binding
@@ -2687,7 +2724,9 @@
                             return result;
                         } else {
                             log('>> 3');
-                            const car = transform_ellipsis_expr(expr.car, symbols, true);
+                            const car = transform_ellipsis_expr(expr.car, symbols, {
+                                nested: true
+                            });
                             if (car) {
                                 return new Pair(
                                     car,
@@ -2732,13 +2771,13 @@
                         // by ellipsis transformation
                         if (expr.cdr instanceof Pair &&
                             expr.cdr.cdr instanceof Pair) {
-                            result.append(traverse(expr.cdr.cdr));
+                            result.append(traverse(expr.cdr.cdr, { disabled }));
                         }
                         return result;
                     }
                 }
-                const head = traverse(expr.car);
-                const rest = traverse(expr.cdr);
+                const head = traverse(expr.car, { disabled });
+                const rest = traverse(expr.cdr, { disabled });
                 log({
                     a: true,
                     head: head && head.toString(),
@@ -2750,14 +2789,17 @@
                 );
             }
             if (expr instanceof LSymbol) {
-                const value = transform(expr);
+                if (disabled && LSymbol.is(expr, ellipsis_symbol)) {
+                    return expr;
+                }
+                const value = transform(expr, { disabled });
                 if (typeof value !== 'undefined') {
                     return value;
                 }
             }
             return expr;
         }
-        return traverse(expr);
+        return traverse(expr, {});
     }
     // ----------------------------------------------------------------------
     // :: check for nullish values
@@ -4752,21 +4794,6 @@
     Unquote.prototype.toString = function() {
         return '<#unquote[' + this.count + '] ' + this.value + '>';
     };
-    // -------------------------------------------------------------------------
-    var gensym = (function() {
-        var count = 0;
-        return function(name = null) {
-            if (name instanceof LSymbol) {
-                name = name.valueOf();
-            }
-            // use ES6 symbol as name for lips symbol (they are unique)
-            if (name !== null) {
-                return new LSymbol(Symbol(`#:${name}`));
-            }
-            count++;
-            return new LSymbol(Symbol(`#:g${count}`));
-        };
-    })();
     // -------------------------------------------------------------------------
     var global_env = new Environment({
         nil: nil,

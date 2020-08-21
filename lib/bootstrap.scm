@@ -678,7 +678,6 @@
   (make-tags expr))
 
 ;; ---------------------------------------------------------------------------------------
-
 (define (get-script url)
   "(get-script url)
 
@@ -694,3 +693,10 @@
                                                     (reject "get-script: Failed to load")))
                         (if document.head
                             (document.head.appendChild script)))))))
+
+;; ---------------------------------------------------------------------------------------
+(define (gensym? value)
+  "(gensym? value)
+
+   Function return #t if value is symbol and it's gensym it return #f otherwise."
+  (and (symbol? value) (--> value (is_gensym))))

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 20 Aug 2020 19:59:43 +0000
+ * build: Fri, 21 Aug 2020 07:44:49 +0000
  */
 (function () {
   'use strict';
@@ -2710,7 +2710,46 @@
 
     LSymbol.prototype.valueOf = function () {
       return this.name.valueOf();
-    }; // ----------------------------------------------------------------------
+    }; // -------------------------------------------------------------------------
+
+
+    LSymbol.prototype.is_gensym = function () {
+      return is_gensym(this.name);
+    }; // -------------------------------------------------------------------------
+
+
+    function is_gensym(symbol) {
+      if (_typeof_1(symbol) === 'symbol') {
+        return !!symbol.toString().match(/^Symbol\(#:/);
+      }
+
+      return false;
+    } // -------------------------------------------------------------------------
+
+
+    var gensym = function () {
+      var count = 0;
+      return function () {
+        var name = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
+
+        if (name instanceof LSymbol) {
+          name = name.valueOf();
+        }
+
+        if (is_gensym(name)) {
+          // don't do double gynsyms in nested syntax-rules
+          return LSymbol(name);
+        } // use ES6 symbol as name for lips symbol (they are unique)
+
+
+        if (name !== null) {
+          return new LSymbol(Symbol("#:".concat(name)));
+        }
+
+        count++;
+        return new LSymbol(Symbol("#:g".concat(count)));
+      };
+    }(); // ----------------------------------------------------------------------
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
 
@@ -4121,8 +4160,9 @@
         return gensyms[name];
       }
 
-      function transform_ellipsis_expr(expr, bindings, nested) {
+      function transform_ellipsis_expr(expr, bindings, state) {
         var next = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : function () {};
+        var nested = state.nested;
         log(' ==> ' + expr.toString());
 
         if (expr instanceof LSymbol) {
@@ -4223,8 +4263,11 @@
           }
 
           log('[t 3 recur ' + expr.toString());
-          var head = transform_ellipsis_expr(expr.car, bindings, nested, next);
-          var rest = transform_ellipsis_expr(expr.cdr, bindings, nested, next);
+          var new_state = {
+            nested: nested
+          };
+          var head = transform_ellipsis_expr(expr.car, bindings, new_state, next);
+          var rest = transform_ellipsis_expr(expr.cdr, bindings, new_state, next);
           log({
             b: true,
             head: head && head.toString(),
@@ -4254,10 +4297,20 @@
       }
 
       function traverse(expr) {
+        var _ref12 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            disabled = _ref12.disabled;
+
         log('>> ' + expr.toString());
 
         if (expr instanceof Pair) {
-          if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
+          // escape ellispsis from R7RS e.g. (... ...)
+          if (!disabled && expr.car instanceof Pair && LSymbol.is(expr.car.car, ellipsis_symbol)) {
+            return traverse(expr.car.cdr, {
+              disabled: true
+            });
+          }
+
+          if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
             log('>> 1');
             var _symbols = bindings['...'].symbols;
             var keys = get_names(_symbols); // case of list as first argument ((x . y) ...)
@@ -4298,7 +4351,9 @@
                     new_bind[key] = value;
                   };
 
-                  var car = transform_ellipsis_expr(expr.car, _bind, true, next); // undefined can be null caused by null binding
+                  var car = transform_ellipsis_expr(expr.car, _bind, {
+                    nested: true
+                  }, next); // undefined can be null caused by null binding
                   // on empty ellipsis
 
                   if (car !== undefined$1) {
@@ -4321,7 +4376,9 @@
                 return result;
               } else {
                 log('>> 3');
-                var car = transform_ellipsis_expr(expr.car, _symbols, true);
+                var car = transform_ellipsis_expr(expr.car, _symbols, {
+                  nested: true
+                });
 
                 if (car) {
                   return new Pair(car, nil);
@@ -4374,15 +4431,21 @@
 
 
               if (expr.cdr instanceof Pair && expr.cdr.cdr instanceof Pair) {
-                _result2.append(traverse(expr.cdr.cdr));
+                _result2.append(traverse(expr.cdr.cdr, {
+                  disabled: disabled
+                }));
               }
 
               return _result2;
             }
           }
 
-          var head = traverse(expr.car);
-          var rest = traverse(expr.cdr);
+          var head = traverse(expr.car, {
+            disabled: disabled
+          });
+          var rest = traverse(expr.cdr, {
+            disabled: disabled
+          });
           log({
             a: true,
             head: head && head.toString(),
@@ -4392,6 +4455,10 @@
         }
 
         if (expr instanceof LSymbol) {
+          if (disabled && LSymbol.is(expr, ellipsis_symbol)) {
+            return expr;
+          }
+
           var value = transform(expr);
 
           if (typeof value !== 'undefined') {
@@ -4402,7 +4469,7 @@
         return expr;
       }
 
-      return traverse(expr);
+      return traverse(expr, {});
     } // ----------------------------------------------------------------------
     // :: check for nullish values
     // ----------------------------------------------------------------------
@@ -4705,9 +4772,9 @@
                   }
                 }).then(exec);
               } else {
-                values.forEach(function (_ref12) {
-                  var name = _ref12.name,
-                      value = _ref12.value;
+                values.forEach(function (_ref13) {
+                  var name = _ref13.name,
+                      value = _ref13.value;
                   set(name, value);
                 });
               }
@@ -4751,9 +4818,9 @@
 
     function pararel(name, fn) {
       return new Macro(name, function (code) {
-        var _ref13 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref13.dynamic_scope,
-            error = _ref13.error;
+        var _ref14 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref14.dynamic_scope,
+            error = _ref14.error;
 
         var env = this;
 
@@ -7034,26 +7101,6 @@
     } // -------------------------------------------------------------------------
 
 
-    var gensym = function () {
-      var count = 0;
-      return function () {
-        var name = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
-
-        if (name instanceof LSymbol) {
-          name = name.valueOf();
-        } // use ES6 symbol as name for lips symbol (they are unique)
-
-
-        if (name !== null) {
-          return new LSymbol(Symbol("#:".concat(name)));
-        }
-
-        count++;
-        return new LSymbol(Symbol("#:g".concat(count)));
-      };
-    }(); // -------------------------------------------------------------------------
-
-
     var global_env = new Environment({
       nil: nil,
       'undefined': undefined$1,
@@ -7243,9 +7290,9 @@
         return unbind(a) === unbind(b);
       }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
       // ------------------------------------------------------------------
-      help: doc(new Macro('help', function (code, _ref14) {
-        var dynamic_scope = _ref14.dynamic_scope,
-            error = _ref14.error;
+      help: doc(new Macro('help', function (code, _ref15) {
+        var dynamic_scope = _ref15.dynamic_scope,
+            error = _ref15.error;
         var symbol;
 
         if (code.car instanceof LSymbol) {
@@ -7311,9 +7358,9 @@
       'set!': doc(new Macro('set!', function (code) {
         var _this5 = this;
 
-        var _ref15 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref15.dynamic_scope,
-            error = _ref15.error;
+        var _ref16 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref16.dynamic_scope,
+            error = _ref16.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -7518,9 +7565,9 @@
         });
       }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
       // ------------------------------------------------------------------
-      'while': doc(new Macro('while', function (code, _ref16) {
-        var dynamic_scope = _ref16.dynamic_scope,
-            error = _ref16.error;
+      'while': doc(new Macro('while', function (code, _ref17) {
+        var dynamic_scope = _ref17.dynamic_scope,
+            error = _ref17.error;
         var self = this;
         var begin = new Pair(new LSymbol('begin'), code.cdr);
         var result;
@@ -7561,9 +7608,9 @@
         }();
       }), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
       // ------------------------------------------------------------------
-      'if': doc(new Macro('if', function (code, _ref17) {
-        var dynamic_scope = _ref17.dynamic_scope,
-            error = _ref17.error;
+      'if': doc(new Macro('if', function (code, _ref18) {
+        var dynamic_scope = _ref18.dynamic_scope,
+            error = _ref18.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -7652,9 +7699,9 @@
         }();
       }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
       // ------------------------------------------------------------------
-      'ignore': new Macro('ignore', function (code, _ref18) {
-        var dynamic_scope = _ref18.dynamic_scope,
-            error = _ref18.error;
+      'ignore': new Macro('ignore', function (code, _ref19) {
+        var dynamic_scope = _ref19.dynamic_scope,
+            error = _ref19.error;
         var args = {
           env: this,
           error: error
@@ -7804,9 +7851,9 @@
       }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
       // ------------------------------------------------------------------
       lambda: new Macro('lambda', function (code) {
-        var _ref19 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref19.dynamic_scope,
-            error = _ref19.error;
+        var _ref20 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref20.dynamic_scope,
+            error = _ref20.error;
 
         var self = this;
 
@@ -7909,9 +7956,9 @@
       'macroexpand': new Macro('macroexpand', macro_expand()),
       'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
       // ------------------------------------------------------------------
-      'define-macro': doc(new Macro(macro, function (macro, _ref20) {
-        var dynamic_scope = _ref20.dynamic_scope,
-            error = _ref20.error;
+      'define-macro': doc(new Macro(macro, function (macro, _ref21) {
+        var dynamic_scope = _ref21.dynamic_scope,
+            error = _ref21.error;
 
         if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
           var name = macro.car.car.name;
@@ -8023,8 +8070,8 @@
           validate_identifiers(macro.car);
         }
 
-        var syntax = new Syntax(function (code, _ref21) {
-          var macro_expand = _ref21.macro_expand;
+        var syntax = new Syntax(function (code, _ref22) {
+          var macro_expand = _ref22.macro_expand;
           var scope = env.inherit('syntax');
 
           if (dynamic_scope) {
@@ -8145,10 +8192,10 @@
             }
 
             if (isPromise(car) || isPromise(cdr)) {
-              return Promise.all([car, cdr]).then(function (_ref22) {
-                var _ref23 = slicedToArray(_ref22, 2),
-                    car = _ref23[0],
-                    cdr = _ref23[1];
+              return Promise.all([car, cdr]).then(function (_ref23) {
+                var _ref24 = slicedToArray(_ref23, 2),
+                    car = _ref24[0],
+                    cdr = _ref24[1];
 
                 return new Pair(car, cdr);
               });
@@ -8672,11 +8719,11 @@
         return false;
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
-      'try': doc(new Macro('try', function (code, _ref24) {
+      'try': doc(new Macro('try', function (code, _ref25) {
         var _this7 = this;
 
-        var dynamic_scope = _ref24.dynamic_scope,
-            _error = _ref24.error;
+        var dynamic_scope = _ref25.dynamic_scope,
+            _error = _ref25.error;
         return new Promise(function (resolve) {
           var args = {
             env: _this7,
@@ -9122,9 +9169,9 @@
       // ------------------------------------------------------------------
       'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
-      or: doc(new Macro('or', function (code, _ref25) {
-        var dynamic_scope = _ref25.dynamic_scope,
-            error = _ref25.error;
+      or: doc(new Macro('or', function (code, _ref26) {
+        var dynamic_scope = _ref26.dynamic_scope,
+            error = _ref26.error;
         var args = this.get('list->array')(code);
         var self = this;
 
@@ -9164,9 +9211,9 @@
       }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
       // ------------------------------------------------------------------
       and: doc(new Macro('and', function (code) {
-        var _ref26 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref26.dynamic_scope,
-            error = _ref26.error;
+        var _ref27 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref27.dynamic_scope,
+            error = _ref27.error;
 
         var args = this.get('list->array')(code);
         var self = this;
@@ -9606,10 +9653,10 @@
       }
     }
 
-    function getFunctionArgs(rest, _ref27) {
-      var env = _ref27.env,
-          dynamic_scope = _ref27.dynamic_scope,
-          error = _ref27.error;
+    function getFunctionArgs(rest, _ref28) {
+      var env = _ref28.env,
+          dynamic_scope = _ref28.dynamic_scope,
+          error = _ref28.error;
       var args = [];
       var node = rest;
       markCycles(node);
@@ -9682,11 +9729,11 @@
 
 
     function evaluate(code) {
-      var _ref28 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          env = _ref28.env,
-          dynamic_scope = _ref28.dynamic_scope,
-          _ref28$error = _ref28.error,
-          error = _ref28$error === void 0 ? function () {} : _ref28$error;
+      var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          env = _ref29.env,
+          dynamic_scope = _ref29.dynamic_scope,
+          _ref29$error = _ref29.error,
+          error = _ref29$error === void 0 ? function () {} : _ref29$error;
 
       try {
         if (dynamic_scope === true) {
@@ -10155,10 +10202,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 20 Aug 2020 19:59:43 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 21 Aug 2020 07:44:49 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 20 Aug 2020 19:59:43 +0000').valueOf();
+      var date = LString('Fri, 21 Aug 2020 07:44:49 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10195,7 +10242,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 20 Aug 2020 19:59:43 +0000',
+      date: 'Fri, 21 Aug 2020 07:44:49 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
