@@ -2792,14 +2792,17 @@
                             result = result.reverse();
                         }
                         // case if (x ... y ...) second spread is not processed
+                        // and (??? . x) last symbol
                         // by ellipsis transformation
-                        if (expr.cdr instanceof Pair &&
-                            expr.cdr.cdr instanceof Pair) {
-                            const node = traverse(expr.cdr.cdr, { disabled });
-                            if (is_null) {
-                                return node;
+                        if (expr.cdr instanceof Pair) {
+                            if (expr.cdr.cdr instanceof Pair ||
+                                expr.cdr.cdr instanceof LSymbol) {
+                                const node = traverse(expr.cdr.cdr, { disabled });
+                                if (is_null) {
+                                    return node;
+                                }
+                                result.append(node);
                             }
-                            result.append(node);
                         }
                         return result;
                     }
