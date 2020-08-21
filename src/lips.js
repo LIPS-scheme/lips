@@ -2072,6 +2072,31 @@
         }
     }
     // ----------------------------------------------------------------------
+    function same_atom(a, b) {
+        if (type(a) !== type(b)) {
+            return false;
+        }
+        if (!is_atom(a)) {
+            return false;
+        }
+        if (a instanceof RegExp) {
+            return a.source === b.source;
+        }
+        if (a instanceof LString) {
+            return a.valueOf() === b.valueOf();
+        }
+        return equal(a, b);
+    }
+    // ----------------------------------------------------------------------
+    function is_atom(obj) {
+        return obj instanceof LSymbol ||
+            LString.isString(obj) ||
+            obj instanceof LCharacter ||
+            obj instanceof LNumber ||
+            obj === true ||
+            obj === false;
+    }
+    // ----------------------------------------------------------------------
     var truncate = (function() {
         if (Math.trunc) {
             return Math.trunc;
@@ -2237,9 +2262,12 @@
         /* eslint-disable complexity */
         function traverse(pattern, code, pattern_names = [], ellipsis = false) {
             log({
-                code: code && code.toString(),
-                pattern: pattern && pattern.toString()
+                code: code && toString(code, true),
+                pattern: pattern && toString(pattern, true)
             });
+            if (is_atom(pattern) && !(pattern instanceof LSymbol)) {
+                return same_atom(pattern, code);
+            }
             if (pattern instanceof LSymbol &&
                 symbols.includes(pattern.valueOf())) {
                 return LSymbol.is(code, pattern);
@@ -2594,11 +2622,9 @@
                     const name = expr.car.valueOf();
                     const item = bindings[name];
                     if (item === null) {
-                        log({ name });
                         return;
-                    }
-                    if (item) {
-                        log({ b: bindings[name] });
+                    } else if (item) {
+                        log({ b: bindings[name].toString() });
                         if (item instanceof Pair) {
                             log('[t 2 Pair ' + nested);
                             log({ ______: item.toString() });
@@ -2632,29 +2658,26 @@
                     }
                 }
                 log('[t 3 recur ' + expr.toString());
-                var new_state = { nested };
-                const head = transform_ellipsis_expr(expr.car, bindings, new_state, next);
-                const rest = transform_ellipsis_expr(expr.cdr, bindings, new_state, next);
-                log({
-                    b: true,
-                    head: head && head.toString(),
-                    rest: rest && rest.toString()
-                });
+                const head = transform_ellipsis_expr(expr.car, bindings, state, next);
+                const rest = transform_ellipsis_expr(expr.cdr, bindings, state, next);
                 return new Pair(
                     head,
                     rest
                 );
             }
         }
-        function have_binding(biding) {
+        function have_binding(biding, skip_nulls) {
             const values = Object.values(biding);
             const symbols = Object.getOwnPropertySymbols(biding);
             if (symbols.length) {
                 values.push(...symbols.map(x => biding[x]));
             }
             return values.length && values.every(x => {
-                return x instanceof Pair || x === null ||
-                    x === nil || (x instanceof Array && x.length);
+                if (x === null) {
+                    return !skip_nulls;
+                }
+                return x instanceof Pair || x === nil ||
+                    (x instanceof Array && x.length);
             });
         }
         function get_names(object) {
@@ -2740,9 +2763,10 @@
                         // case: (x ...)
                         let name = expr.car.name;
                         let bind = { [name]: symbols[name] };
+                        const is_null = symbols[name] === null;
                         let result = nil;
                         while (true) {
-                            if (!have_binding(bind)) {
+                            if (!have_binding(bind, true)) {
                                 log({ bind });
                                 break;
                             }
@@ -2753,7 +2777,7 @@
                             const value = transform_ellipsis_expr(
                                 expr,
                                 bind,
-                                false,
+                                { nested: false },
                                 next
                             );
                             if (typeof value !== 'undefined') {
@@ -2771,7 +2795,11 @@
                         // by ellipsis transformation
                         if (expr.cdr instanceof Pair &&
                             expr.cdr.cdr instanceof Pair) {
-                            result.append(traverse(expr.cdr.cdr, { disabled }));
+                            const node = traverse(expr.cdr.cdr, { disabled });
+                            if (is_null) {
+                                return node;
+                            }
+                            result.append(node);
                         }
                         return result;
                     }
@@ -4735,7 +4763,8 @@
         }
         if (name instanceof LSymbol) {
             name = name.name;
-        } else if (name instanceof LString) {
+        }
+        if (name instanceof LString) {
             name = name.valueOf();
         }
         this.env[name] = value;
@@ -5750,7 +5779,8 @@
                     if (bindings) {
                         if (user_env.get('DEBUG', { throwError: false })) {
                             console.log(JSON.stringify(bindings, true, 2));
-                            console.log('MACRO: ' + code.toString());
+                            console.log(rule.toString(true));
+                            console.log('MACRO: ' + code.toString(true));
                         }
                         // name is modified in transform_syntax
                         var names = [];

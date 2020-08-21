@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 21 Aug 2020 07:44:49 +0000
+ * build: Fri, 21 Aug 2020 10:42:32 +0000
  */
 (function () {
   'use strict';
@@ -3469,6 +3469,32 @@
     } // ----------------------------------------------------------------------
 
 
+    function same_atom(a, b) {
+      if (type(a) !== type(b)) {
+        return false;
+      }
+
+      if (!is_atom(a)) {
+        return false;
+      }
+
+      if (a instanceof RegExp) {
+        return a.source === b.source;
+      }
+
+      if (a instanceof LString) {
+        return a.valueOf() === b.valueOf();
+      }
+
+      return equal(a, b);
+    } // ----------------------------------------------------------------------
+
+
+    function is_atom(obj) {
+      return obj instanceof LSymbol || LString.isString(obj) || obj instanceof LCharacter || obj instanceof LNumber || obj === true || obj === false;
+    } // ----------------------------------------------------------------------
+
+
     var truncate = function () {
       if (Math.trunc) {
         return Math.trunc;
@@ -3785,9 +3811,13 @@
         var pattern_names = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : [];
         var ellipsis = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : false;
         log({
-          code: code && code.toString(),
-          pattern: pattern && pattern.toString()
+          code: code && toString(code, true),
+          pattern: pattern && toString(pattern, true)
         });
+
+        if (is_atom(pattern) && !(pattern instanceof LSymbol)) {
+          return same_atom(pattern, code);
+        }
 
         if (pattern instanceof LSymbol && symbols.includes(pattern.valueOf())) {
           return LSymbol.is(code, pattern);
@@ -4209,15 +4239,10 @@
             var item = bindings[_name5];
 
             if (item === null) {
-              log({
-                name: _name5
-              });
               return;
-            }
-
-            if (item) {
+            } else if (item) {
               log({
-                b: bindings[_name5]
+                b: bindings[_name5].toString()
               });
 
               if (item instanceof Pair) {
@@ -4263,21 +4288,13 @@
           }
 
           log('[t 3 recur ' + expr.toString());
-          var new_state = {
-            nested: nested
-          };
-          var head = transform_ellipsis_expr(expr.car, bindings, new_state, next);
-          var rest = transform_ellipsis_expr(expr.cdr, bindings, new_state, next);
-          log({
-            b: true,
-            head: head && head.toString(),
-            rest: rest && rest.toString()
-          });
+          var head = transform_ellipsis_expr(expr.car, bindings, state, next);
+          var rest = transform_ellipsis_expr(expr.cdr, bindings, state, next);
           return new Pair(head, rest);
         }
       }
 
-      function have_binding(biding) {
+      function have_binding(biding, skip_nulls) {
         var values = Object.values(biding);
         var symbols = Object.getOwnPropertySymbols(biding);
 
@@ -4288,7 +4305,11 @@
         }
 
         return values.length && values.every(function (x) {
-          return x instanceof Pair || x === null || x === nil || x instanceof Array && x.length;
+          if (x === null) {
+            return !skip_nulls;
+          }
+
+          return x instanceof Pair || x === nil || x instanceof Array && x.length;
         });
       }
 
@@ -4393,10 +4414,11 @@
 
               var _bind2 = defineProperty({}, name, _symbols[name]);
 
+              var is_null = _symbols[name] === null;
               var _result2 = nil;
 
               var _loop2 = function _loop2() {
-                if (!have_binding(_bind2)) {
+                if (!have_binding(_bind2, true)) {
                   log({
                     bind: _bind2
                   });
@@ -4409,7 +4431,9 @@
                   new_bind[key] = value;
                 };
 
-                var value = transform_ellipsis_expr(expr, _bind2, false, next);
+                var value = transform_ellipsis_expr(expr, _bind2, {
+                  nested: false
+                }, next);
 
                 if (typeof value !== 'undefined') {
                   _result2 = new Pair(value, _result2);
@@ -4431,9 +4455,15 @@
 
 
               if (expr.cdr instanceof Pair && expr.cdr.cdr instanceof Pair) {
-                _result2.append(traverse(expr.cdr.cdr, {
+                var node = traverse(expr.cdr.cdr, {
                   disabled: disabled
-                }));
+                });
+
+                if (is_null) {
+                  return node;
+                }
+
+                _result2.append(node);
               }
 
               return _result2;
@@ -7037,7 +7067,9 @@
 
       if (name instanceof LSymbol) {
         name = name.name;
-      } else if (name instanceof LString) {
+      }
+
+      if (name instanceof LString) {
         name = name.valueOf();
       }
 
@@ -8106,7 +8138,8 @@
                 throwError: false
               })) {
                 console.log(JSON.stringify(bindings, true, 2));
-                console.log('MACRO: ' + code.toString());
+                console.log(rule.toString(true));
+                console.log('MACRO: ' + code.toString(true));
               } // name is modified in transform_syntax
 
 
@@ -10202,10 +10235,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 21 Aug 2020 07:44:49 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 21 Aug 2020 10:42:32 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 21 Aug 2020 07:44:49 +0000').valueOf();
+      var date = LString('Fri, 21 Aug 2020 10:42:32 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10242,7 +10275,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 21 Aug 2020 07:44:49 +0000',
+      date: 'Fri, 21 Aug 2020 10:42:32 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

@@ -410,7 +410,7 @@
         (t.is result '(((bar 1) (bar 2)) ((baz 3) (baz 4))))))
 
 
-(test_ "syntax-rules: R6RS do macro"
+(test_f "syntax-rules: R6RS do macro"
        (lambda (t)
          (define-syntax do
            (syntax-rules ()
@@ -471,8 +471,8 @@
 
          (t.is (unless (< 3 2) 'foo) 'foo)))
 
-
-(test_ "syntax-rules: guile example"
+;; guile example
+(test "syntax-rules: literal atoms"
        (lambda (t)
           (define-syntax define-matcher-macro
             (syntax-rules ()
@@ -520,7 +520,7 @@
                         (begin
                            body ...
                            (iter inc ...))))))))
-          ;; not working - calling base case without result
+
           (t.is (do ((i 10 (- i 1)))
                     ((zero? i)))
                 '())
