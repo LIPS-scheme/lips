@@ -1790,13 +1790,13 @@
             const symbols = Object.getOwnPropertySymbols(obj);
             symbols.forEach((key) => {
                 const name = key.toString()
-                      .replace(/Symbol\(([^)]+)\)/, '$1');
+                    .replace(/Symbol\(([^)]+)\)/, '$1');
                 result[name] = toString(obj[key]);
             });
             const props = Object.getOwnPropertyNames(obj);
             props.forEach(key => {
                 const o = obj[key];
-                if (typeof o == 'object' && o.constructor == Object) {
+                if (typeof o === 'object' && o.constructor === Object) {
                     result[key] = symbolize(o);
                 } else {
                     result[key] = toString(o);
