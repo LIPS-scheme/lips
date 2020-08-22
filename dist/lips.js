@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 22 Aug 2020 14:06:34 +0000
+ * build: Sat, 22 Aug 2020 16:08:48 +0000
  */
 (function () {
   'use strict';
@@ -3886,9 +3886,26 @@
         }
 
         if (pattern instanceof Pair && pattern.cdr instanceof Pair && LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
-          // pattern (... ???)
+          // pattern (... ???) - SRFI-46
           if (pattern.cdr.cdr !== nil) {
-            throw new Error('syntax: invalid usage of ellipsis');
+            if (pattern.cdr.cdr instanceof Pair) {
+              // if we have (x ... a b) we need to remove two from the end
+              var list_len = pattern.cdr.cdr.length();
+              var code_len = code.length();
+              var list = code;
+
+              while (code_len - 1 > list_len) {
+                list = list.cdr;
+                code_len--;
+              }
+
+              var rest = list.cdr;
+              list.cdr = nil;
+
+              if (!traverse(pattern.cdr.cdr, rest, pattern_names, ellipsis)) {
+                return false;
+              }
+            }
           }
 
           if (pattern.car instanceof LSymbol) {
@@ -10271,10 +10288,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 22 Aug 2020 14:06:34 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 22 Aug 2020 16:08:48 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 22 Aug 2020 14:06:34 +0000').valueOf();
+      var date = LString('Sat, 22 Aug 2020 16:08:48 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10311,7 +10328,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 22 Aug 2020 14:06:34 +0000',
+      date: 'Sat, 22 Aug 2020 16:08:48 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

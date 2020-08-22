@@ -2330,9 +2330,23 @@
             if (pattern instanceof Pair &&
                 pattern.cdr instanceof Pair &&
                 LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
-                // pattern (... ???)
+                // pattern (... ???) - SRFI-46
                 if (pattern.cdr.cdr !== nil) {
-                    throw new Error('syntax: invalid usage of ellipsis');
+                    if (pattern.cdr.cdr instanceof Pair) {
+                        // if we have (x ... a b) we need to remove two from the end
+                        const list_len = pattern.cdr.cdr.length();
+                        let code_len = code.length();
+                        let list = code;
+                        while (code_len - 1 > list_len) {
+                            list = list.cdr;
+                            code_len--;
+                        }
+                        const rest = list.cdr;
+                        list.cdr = nil;
+                        if (!traverse(pattern.cdr.cdr, rest, pattern_names, ellipsis)) {
+                            return false;
+                        }
+                    }
                 }
                 if (pattern.car instanceof LSymbol) {
                     let name = pattern.car.name;
