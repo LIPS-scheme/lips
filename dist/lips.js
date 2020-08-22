@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 22 Aug 2020 12:03:42 +0000
+ * build: Sat, 22 Aug 2020 13:46:34 +0000
  */
 (function () {
   'use strict';
@@ -3108,6 +3108,34 @@
 
       str_mapping.set(key, value);
     }); // ----------------------------------------------------------------------
+    // :: debug function that can be used with JSON.stringify
+    // :: that will show symbols
+    // ----------------------------------------------------------------------
+
+    function symbolize(obj) {
+      if (obj && _typeof_1(obj) === 'object') {
+        var result = {};
+        var symbols = Object.getOwnPropertySymbols(obj);
+        symbols.forEach(function (key) {
+          var name = key.toString().replace(/Symbol\(([^)]+)\)/, '$1');
+          result[name] = toString(obj[key]);
+        });
+        var props = Object.getOwnPropertyNames(obj);
+        props.forEach(function (key) {
+          var o = obj[key];
+
+          if (_typeof_1(o) == 'object' && o.constructor == Object) {
+            result[key] = symbolize(o);
+          } else {
+            result[key] = toString(o);
+          }
+        });
+        return result;
+      }
+
+      return obj;
+    } // ----------------------------------------------------------------------
+
 
     function toString(obj, quote, skip_cycles) {
       if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
@@ -3354,7 +3382,7 @@
           var cdr = this.cdr.toString(quote, true);
           arr.push(cdr);
         }
-      } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
+      } else if (this.cdr !== nil) {
         arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
       }
 
@@ -4145,9 +4173,12 @@
 
         if (name === ellipsis_symbol) {
           throw new Error('syntax: internal error, ellipis not transformed');
-        }
+        } // symbols are gensyms from nested syntax-rules
 
-        if (typeof name === 'string' && name in bindings) {
+
+        var type = _typeof_1(name);
+
+        if (['string', 'symbol'].includes(type) && name in bindings) {
           return bindings[name];
         }
 
@@ -4292,6 +4323,8 @@
           var rest = transform_ellipsis_expr(expr.cdr, bindings, state, next);
           return new Pair(head, rest);
         }
+
+        return expr;
       }
 
       function have_binding(biding, skip_nulls) {
@@ -8140,8 +8173,8 @@
               if (user_env.get('DEBUG', {
                 throwError: false
               })) {
-                console.log(JSON.stringify(bindings, true, 2));
-                console.log(rule.toString(true));
+                console.log(JSON.stringify(symbolize(bindings), true, 2));
+                console.log('PATTERN: ' + rule.toString(true));
                 console.log('MACRO: ' + code.toString(true));
               } // name is modified in transform_syntax
 
@@ -10238,10 +10271,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 22 Aug 2020 12:03:42 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 22 Aug 2020 13:46:34 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 22 Aug 2020 12:03:42 +0000').valueOf();
+      var date = LString('Sat, 22 Aug 2020 13:46:34 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10278,7 +10311,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 22 Aug 2020 12:03:42 +0000',
+      date: 'Sat, 22 Aug 2020 13:46:34 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

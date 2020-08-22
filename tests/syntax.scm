@@ -346,6 +346,20 @@
         (t.is (list+ 1 2 3) '(1 2 3))
         (t.is (list- 4 5 6) '(4 5 6))))
 
+(test "syntax-rules: nested syntax-rules gensyms (srfi-46)"
+      (lambda (t)
+
+        (define result (let-syntax
+                          ((f (syntax-rules ()
+                                ((f ?e)
+                                 (let-syntax
+                                     ((g (syntax-rules ::: ()
+                                           ((g (??x ?e) (??y :::))
+                                            '((??x) ?e (??y) :::)))))
+                                   (g (1 2) (3 4)))))))
+                        (f :::)))
+        (t.is result '((1) 2 (3) (4)))))
+
 ;; (test "syntax-rules: method caller (srfi-46)"
 ;;       (lambda (t)
 ;;
@@ -367,7 +381,6 @@
 
 
         (t.is (F 10) 3628800)))
-
 
 (test "syntax-rules: join macros"
       (lambda (t)

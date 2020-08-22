@@ -1781,6 +1781,32 @@
         str_mapping.set(key, value);
     });
     // ----------------------------------------------------------------------
+    // :: debug function that can be used with JSON.stringify
+    // :: that will show symbols
+    // ----------------------------------------------------------------------
+    function symbolize(obj) {
+        if (obj && typeof obj === 'object') {
+            var result = {};
+            const symbols = Object.getOwnPropertySymbols(obj);
+            symbols.forEach((key) => {
+                const name = key.toString()
+                      .replace(/Symbol\(([^)]+)\)/, '$1');
+                result[name] = toString(obj[key]);
+            });
+            const props = Object.getOwnPropertyNames(obj);
+            props.forEach(key => {
+                const o = obj[key];
+                if (typeof o == 'object' && o.constructor == Object) {
+                    result[key] = symbolize(o);
+                } else {
+                    result[key] = toString(o);
+                }
+            });
+            return result;
+        }
+        return obj;
+    }
+    // ----------------------------------------------------------------------
     function toString(obj, quote, skip_cycles) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
@@ -1981,7 +2007,7 @@
                 const cdr = this.cdr.toString(quote, true);
                 arr.push(cdr);
             }
-        } else if (typeof this.cdr !== 'undefined' && this.cdr !== nil) {
+        } else if (this.cdr !== nil) {
             arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
         }
         if (!rest || this.ref) {
@@ -2557,7 +2583,9 @@
             if (name === ellipsis_symbol) {
                 throw new Error('syntax: internal error, ellipis not transformed');
             }
-            if (typeof name === 'string' && name in bindings) {
+            // symbols are gensyms from nested syntax-rules
+            var type = typeof name;
+            if (['string', 'symbol'].includes(type) && name in bindings) {
                 return bindings[name];
             }
             if (symbols.includes(name)) {
@@ -2665,6 +2693,7 @@
                     rest
                 );
             }
+            return expr;
         }
         function have_binding(biding, skip_nulls) {
             const values = Object.values(biding);
@@ -5781,8 +5810,8 @@
                     var bindings = extract_patterns(rule, code, symbols, ellipsis);
                     if (bindings) {
                         if (user_env.get('DEBUG', { throwError: false })) {
-                            console.log(JSON.stringify(bindings, true, 2));
-                            console.log(rule.toString(true));
+                            console.log(JSON.stringify(symbolize(bindings), true, 2));
+                            console.log('PATTERN: ' + rule.toString(true));
                             console.log('MACRO: ' + code.toString(true));
                         }
                         // name is modified in transform_syntax
