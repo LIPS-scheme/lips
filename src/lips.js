@@ -2902,7 +2902,8 @@
     }
     // ----------------------------------------------------------------------
     function unbox(obj) {
-        if (obj && obj.valueOf) {
+        var lips_type = [LString, LCharacter, LNumber].some(x => obj instanceof x);
+        if (lips_type) {
             return obj.valueOf();
         }
         return obj;
@@ -6341,6 +6342,12 @@
         }, `(instanceof type obj)
 
             Function check of object is instance of object.`),
+        // ------------------------------------------------------------------
+        'prototype?': doc(
+            is_prototype,
+            `(prototype? obj)
+
+             Function check if value is JavaScript Object prototype.`),
         // ------------------------------------------------------------------
         'macro?': doc(function(obj) {
             return obj instanceof Macro;

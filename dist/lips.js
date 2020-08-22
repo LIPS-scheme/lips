@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 22 Aug 2020 16:08:48 +0000
+ * build: Sat, 22 Aug 2020 16:52:24 +0000
  */
 (function () {
   'use strict';
@@ -4587,7 +4587,11 @@
 
 
     function unbox(obj) {
-      if (obj && obj.valueOf) {
+      var lips_type = [LString, LCharacter, LNumber].some(function (x) {
+        return obj instanceof x;
+      });
+
+      if (lips_type) {
         return obj.valueOf();
       }
 
@@ -8685,6 +8689,8 @@
         return obj instanceof unbind(type);
       }, "(instanceof type obj)\n\n            Function check of object is instance of object."),
       // ------------------------------------------------------------------
+      'prototype?': doc(is_prototype, "(prototype? obj)\n\n             Function check if value is JavaScript Object prototype."),
+      // ------------------------------------------------------------------
       'macro?': doc(function (obj) {
         return obj instanceof Macro;
       }, "(macro? expression)\n\n            Function check if value is a macro."),
@@ -10288,10 +10294,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 22 Aug 2020 16:08:48 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 22 Aug 2020 16:52:24 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 22 Aug 2020 16:08:48 +0000').valueOf();
+      var date = LString('Sat, 22 Aug 2020 16:52:24 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10328,7 +10334,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 22 Aug 2020 16:08:48 +0000',
+      date: 'Sat, 22 Aug 2020 16:52:24 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

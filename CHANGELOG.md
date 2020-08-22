@@ -7,7 +7,7 @@
 * persistent history in executable REPL
 * repr of promises (from `delay` function)
 * allow `set!` with doted JS notation
-* new function `gensym?`
+* new functions `gensym?` and `prototype?`
 ### Bugfix
 * fix Environment::has (ref) on variable that are undefined
 * fix macroexpand with pprint on syntax macros
@@ -25,6 +25,7 @@
 * fix byte vectors
 * make print and pprint always call newline
 * fix escape ellipsis from R7RS
+* fix unboxing values (seen with stack overflow on dir date object)
 
 ## 1.0.0-beta.3
 ## Bugfix
