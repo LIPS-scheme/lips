@@ -1,10 +1,9 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true)
 
-[![Join the chat at https://gitter.im/jcubic/lips](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
-[![npm](https://img.shields.io/badge/npm-DEV-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&a30a3f1e6a7663a7d33596ced712734b05910635)](https://travis-ci.org/jcubic/lips)
+[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.3-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&da27a7e61ac103b695c07f988e42ff9f784409b1)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
-
+[![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
 LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
 specification (and part on R7RS), it have extensions that make it easier to interact
@@ -41,7 +40,7 @@ The name is recursive acronym which stands for LIPS is Pretty Simple.
 
 ## Installation
 
-use npm
+To install you can use use npm (or yarn):
 
 ```
 npm install @jcubic/lips
@@ -58,8 +57,6 @@ To install 1.0.0 beta version use:
 ```
 npm install @jcubic/lips@beta
 ```
-
-
 
 then include the file in script tag, You can grab the version from unpkg.com
 
@@ -93,7 +90,7 @@ e.g. google.com or gihub.com)
 Simplest way is to include the lips code in script tag:
 
 ```html
-<script type="text/x-lips">
+<script type="text/x-scheme">
 (let ((what "world")
       (greet "hello"))
    (display (string-append "hello" " " what)))
