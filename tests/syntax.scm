@@ -360,9 +360,17 @@
                         (f :::)))
         (t.is result '((1) 2 (3) (4)))))
 
-;; (test "syntax-rules: method caller (srfi-46)"
-;;       (lambda (t)
-;;
+(test_ "syntax-rules: elipsis in middle of pattern (srfi-46)"
+      (lambda (t)
+
+        (define result (let-syntax
+                          ((foo (syntax-rules ()
+                                  ((foo ?x ?y ... ?z)
+                                   (list ?x (list ?y ...) ?z)))))
+                        (foo 1 2 3 4 5)))
+
+        (t.is result '(1 (2 3 4) 5))))
+
 
 (test "syntax-rules: rec macro (srfi-31)"
       (lambda (t)
