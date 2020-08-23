@@ -17,10 +17,11 @@ header img {
   float: left;
 }
 header h1 {
-  color: white;
+  color: black;
   margin: 30px;
   display: inline-block;
   letter-spacing: 2px;
+  margin: 55px 0 0 10px;
 }
 header h1, nav, section header h2 {
   font-family: 'Play', sans-serif;
