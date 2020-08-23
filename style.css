@@ -82,7 +82,10 @@ footer {
   padding: 10px;
 }
 footer p, footer a {
-  color: white;
+  color: black;
+}
+footer a:hover {
+  color: #2b343a;
 }
 footer p {
   margin: 0;
