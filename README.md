@@ -1,8 +1,8 @@
-![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true)
+![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
-[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.3-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&844723ae594dfa4c923b8cc4e3fc8bc8b19950f5)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.4-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&c2dba5370e0b6e490eb8bc88f7ee99d7ea2ab0af)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
 LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
@@ -130,7 +130,7 @@ npm install -g @jcubic/lips
 
 you can run interpreter from terminal:
 
-![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
 
 
 You can also run code as string with:
