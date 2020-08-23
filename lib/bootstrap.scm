@@ -349,13 +349,13 @@
 
    Anaphoric Macro for defining patterns for formatter. With Ahead, Pattern and * defined values."
   (let ((rules (gensym)))
-    `(let ((,rules (.. lips.Formatter.rules))
+    `(let ((,rules lips.Formatter.rules)
            (Ahead (lambda (pattern)
                     (let ((Ahead (.. lips.Formatter.Ahead)))
                       (new Ahead (if (string? pattern) (new RegExp pattern) pattern)))))
-           (* ((.. Symbol.for) "*"))
+           (* (Symbol.for "*"))
            (Pattern (lambda (pattern flag)
-                      (new (.. lips.Formatter.Pattern) (list->array pattern)
+                      (new lips.Formatter.Pattern (list->array pattern)
                            (if (null? flag) undefined flag)))))
        ,@(map (lambda (pattern)
                 `(--> ,rules (push (tree->array (tree-map native.number ,@pattern)))))
@@ -390,7 +390,18 @@
 ;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro
 ;; use RegExp constructor
 ;; -----------------------------------------------------------------------------
-(define-formatter-rule ((list (list "(" "cond" (Pattern (list "(" * ")") "+"))
+(define (%r re . rest)
+  "(%r re)
+
+   Create new regular expression from string, to not break Emacs formatting"
+   (if (null? rest)
+     (new RegExp re)
+     (new RegExp re (car rest))))
+
+;; -----------------------------------------------------------------------------
+(define-formatter-rule ((list (list "("
+                                    (%r "(?:#:)?cond")
+                                    (Pattern (list "(" * ")") "+"))
                                1
                                (Ahead "[^)]"))))
 
@@ -425,11 +436,7 @@
   (== (--> (type x) (cmp "regex")) 0))
 
 ;; -----------------------------------------------------------------------------
-;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
-;; -----------------------------------------------------------------------------
-(add-special! "&" 'make-object lips.specials.SPLICE)
-;; -----------------------------------------------------------------------------
-(define (add-repr! type fn)
+(define (set-repr! type fn)
   "(add-repr! type fn)
 
    Function add string represention to the type, which should be constructor function.
@@ -444,18 +451,20 @@
   (ignore (--> lips.repr (set type fn))))
 
 ;; -----------------------------------------------------------------------------
-(define (remove-repr! type)
-  "(remove-repr! type)
+(define (unset-repr! type)
+  "(unset-repr! type)
 
    Function remove string represention to the type, which should be constructor function,
    added by add-repr! function."
-  (typecheck "add-repr!" type "function")
+  (typecheck "unset-repr!" type "function")
   (ignore (--> lips.repr (delete type))))
 
 ;; -----------------------------------------------------------------------------
-;; Object representation
+;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
 ;; -----------------------------------------------------------------------------
-(add-repr! Object
+(set-special! "&" 'make-object lips.specials.SPLICE)
+;; -----------------------------------------------------------------------------
+(set-repr! Object
            (lambda (x q)
              (concat "&("
                      (--> (Object.getOwnPropertyNames x)
@@ -478,6 +487,15 @@
            true)
          (catch (e)
                 false))))
+
+;; -----------------------------------------------------------------------------
+(define (environment-bound? env x)
+  "(environment-bound? env symbol)
+
+   Function check if symbol is bound variable similar to bound?."
+  (typecheck "environment-bound?" env "environment" 1)
+  (typecheck "environment-bound?" x "symbol" 2)
+  (bound? x env))
 
 ;; -----------------------------------------------------------------------------
 ;; source https://stackoverflow.com/a/4297432/387194
@@ -660,7 +678,6 @@
   (make-tags expr))
 
 ;; ---------------------------------------------------------------------------------------
-
 (define (get-script url)
   "(get-script url)
 
@@ -676,3 +693,10 @@
                                                     (reject "get-script: Failed to load")))
                         (if document.head
                             (document.head.appendChild script)))))))
+
+;; ---------------------------------------------------------------------------------------
+(define (gensym? value)
+  "(gensym? value)
+
+   Function return #t if value is symbol and it's gensym it return #f otherwise."
+  (and (symbol? value) (--> value (is_gensym))))

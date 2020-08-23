@@ -302,3 +302,98 @@
     (t.is (+ 10i 10i) 20i)
     (t.is (+ 10 10i) 10+10i)
     (t.is (+ 10i 10) 10+10i)))
+
+(test "numbers: operators /"
+      (lambda (t)
+        (t.is (/ 10 10) 1)
+        (t.is (/ 10 1/10) 100)
+        (t.is (/ 10 2) 5)
+        (t.is (/ 10 3) 10/3)
+        (t.is (/ 10 2.0) 5.0)
+
+        (t.is (/ 1 10+10i) 1/20-1/20i)
+        (t.is (/ 1 10+10.0i) 0.05-0.05i)
+        (t.is (/ 1 10+1/10i) 1000/10001-10/10001i)
+
+        (t.is (/ 1 1.0+1.0i) 0.5-0.5i)
+        (t.is (/ 1 1.0+1i) 0.5-0.5i)
+        (t.is (/ 1 1.0+1/2i) 0.8-0.4i)
+
+        (t.is (/ 1 1/10+1/10i) 5-5i)
+        (t.is (/ 1 1/10+1i) 10/101-100/101i)
+        (t.is (/ 1 1/2+1.0i) 0.4-0.8i)
+
+        (t.is (/ 1/2 10) 1/20)
+        (t.is (/ 1/2 10.0) 0.05)
+        (t.is (/ 1/2 1/2) 1)
+
+        (t.is (/ 1/2 10+10i) 1/40-1/40i)
+        (t.is (/ 1/2 1+2.0i) 0.1-0.2i)
+        (t.is (/ 1/2 1+1/2i) 2/5-1/5i)
+
+        (t.is (/ 1/2 10.0+10.0i) 0.025-0.025i)
+        (t.is (/ 1/2 10.0+10i) 0.025-0.025i)
+        (t.is (/ 1/2 1.0+1/2i) 0.4-0.2i)
+
+        (t.is (/ 1/2 1/20+1/20i) 5-5i)
+        (t.is (/ 1/2 1/2+1i) 1/5-2/5i)
+        (t.is (/ 1/2 1/2+1.0i) 0.2-0.4i)
+
+        (t.is (/ 1.0 1.0) 1.0)
+        (t.is (/ 1.0 2) 0.5)
+        (t.is (/ 1.0 1/10) 10.0)
+
+        (t.is (/ 1.0 1+1i) 0.5-0.5i)
+        (t.is (/ 1.0 1+1.0i) 0.5-0.5i)
+        (t.is (/ 1.0 1+1/2i) 0.8-0.4i)
+
+        (t.is (/ 1.0 1.0+1.0i) 0.5-0.5i)
+        (t.is (/ 1.0 1.0+1i) 0.5-0.5i)
+        (t.is (/ 1.0 1.0+1/2i) 0.8-0.4i)
+
+        (t.is (/ 1.0 1/2+1/2i) 1.0-1.0i)
+        (t.is (/ 1.0 1/2+1.0i) 0.4-0.8i)
+        (t.is (/ 1.0 1/2+1i) 0.4-0.8i)))
+
+(test "numbers: sqrt"
+      (lambda (t)
+        (for-each (lambda (x)
+                    (t.is (sqrt (* x x)) x))
+                  '(5 5+2i 1/5+1/2i 1/2 5.0 8/9))
+
+        (for-each (lambda (pair)
+                    (let ((x (car pair)))
+                      (t.is (sqrt (* x x)) (cdr pair))))
+                  '((2.0+1/2i . 2+0.5i)))
+
+        (for-each (lambda (pair)
+                    (let ((x (car pair)))
+                      (t.is (sqrt (* x x)) (cdr pair))))
+                  '((2+1/2i . 2+0.5i)
+                    (2+0.5i . 2+0.5i)
+
+                    (1/2+2.0i . 0.5+2i)
+                    (1/2+2i . 0.5+2i)
+
+                    (0.5+2i . 0.5+2i)
+                    (0.5+1/2i . 0.5+0.5i)))
+
+        (t.is (sqrt -9) 3i)))
+
+(test "numbers: eq?"
+      (lambda (t)
+
+        ;; eq? on numbers is unspecifed - in lisp if two numbers are the same
+        ;; but not the same object they are equal
+
+        (t.is (eq? 10.0i 10i) #f)
+        (t.is (eq? 10i 10i) #t)
+        (t.is (eq? 10.0 10) #f)
+
+        (t.is (let ((ret (/ 10i 10.0)))
+                (list (inexact? ret) (= ret 1.0i) (not (eq? ret 1i))))
+              '(#t #t #t))
+
+        (t.is (let ((ret (/ 10i 10)))
+                (list (exact? ret) (= ret 1i) (not (eq? ret 1i))))
+              '(#t #t #f))))

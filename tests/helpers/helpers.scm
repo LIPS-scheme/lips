@@ -11,12 +11,13 @@
                                     (,b_name ,b))
                                 (if (equal? ,a_name ,b_name)
                                     (--> e (pass))
-                                    (--> e (fail (concat "failed: " (repr ,a_name)
+                                    (--> e (fail (concat "failed: " (repr ,a_name true)
                                                          " != " (repr ,b_name true)
                                                          " in " (repr ',a true))))))))))
        (if (not (. ,attempt 'passed))
-           (--> (. ,attempt 'errors) (forEach (lambda (e)
-                                                (set-obj! e 'savedError undefined)))))
+           (--> (. ,attempt 'errors)
+                (forEach (lambda (e)
+                           (set-obj! e 'savedError undefined)))))
        (--> ,attempt (commit)))))
 
 (define-macro (to.throw . body)
@@ -52,7 +53,8 @@
                (args (cdddr spec)))
           (let ((result (apply fn args)))
             (if (not (equal? result expected))
-                (error (string-append "FAILED: " (repr (apply list name expected args) true))))
+                (error (string-append "FAILED: "
+                                      (repr (apply list name expected args) true))))
             (t.is result expected))
           (iter (cdr specs))))))
 

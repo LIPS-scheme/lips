@@ -1,3 +1,36 @@
+## 1.0.0-beta.4
+### Breaking
+* add/remove-specials and add/remove-repr are now set/unset
+* rename wrong `gdc` to correct `gcd`
+### Features
+* doc strings on variables
+* persistent history in executable REPL
+* repr of promises (from `delay` function)
+* allow `set!` with doted JS notation
+* new functions `gensym?` and `prototype?`
+### Bugfix
+* fix Environment::has (ref) on variable that are undefined
+* fix macroexpand with pprint on syntax macros
+* fix formatter breaking rules definition in LIPS + (+ fix `cond`)
+* fix rational? on integers (bigint)
+* fix parsing quoted atoms (e.g. `'#f`, `'#\x` or `'#xA`)
+* fix parsing escape slash inside strings
+* don't throw exception on parse error in string->number (return false)
+* fix silent accepting two big code point `#\xFFFFFF`
+* fix custom repr of instances created by define-class
+* fix parsing R7RS hex literals in strings
+* fix syntax-rules with `(a b ...)` that match single item
+* fix swallowed undefined from `(cons 1 undefined)`
+* fix identifiers in syntax-rules
+* fix byte vectors
+* make print and pprint always call newline
+* fix escape ellipsis from R7RS
+* fix unboxing values (seen with stack overflow on dir date object)
+
+## 1.0.0-beta.3
+## Bugfix
+* fix broken REPL
+
 ## 1.0.0-beta.1
 ### Breaking
 * rename `ceil` to `ceiling` (like in R5RS spec)

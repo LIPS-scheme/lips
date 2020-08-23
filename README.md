@@ -1,40 +1,42 @@
-![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
+![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.3-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&68e9b86049d9285d5aafe29f80210120a172652a)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&844723ae594dfa4c923b8cc4e3fc8bc8b19950f5)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
 LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
 specification (and part on R7RS), it have extensions that make it easier to interact
 with JavaScript, it work in Browser and Node.js.
 
+The name is recursive acronym which stands for LIPS is Pretty Simple.
+
 [Demo](https://jcubic.github.io/lips/#demo)
 
-[1.0.0 Beta demo](https://codepen.io/jcubic/full/YzqwoJd)
+[1.0 Beta demo](https://codepen.io/jcubic/full/YzqwoJd)
 
 ## Features
 
-* Almost fully Compatible with R5RS and partially with R7RS,
-* Lisp macros, backquote and macroexpand,
-* Scheme Hygienic Macros with `sytnax-rules`,
-* Parser Syntax extensions and string representation (that allow to create transparent new data types),
-* Regular expression are first class objects same ans macros and environments,
-* Functions in LIPS are normal JavaScript functions,
-* You can invoke native JavaScript functions and methods from LIPS,
-* Dot notation for JavaScript object methods and properties,
-* Promises are treated as values they resolve to (so async code look like sync - like auto `async/await`),
-* Library agnostic - you can use it with any JavaScript library,
-* Almost no dependencies (only bn.js for big integers and prism-cli for Node based REPL),
-* Easy extension using JavaScript using Macros or functions,
-* Builtin pretty printer,
-* JavaScript object literals with `&(:foo 10)` (created using parser extensions),
-* Builtin help system like in Emacs Lisp,
-* Powerful introspection functions (you can access internals and modify functions while they are running),
-* You can access `__doc__` and `__code__` of any defined functions,
-* `BigInt` support, if your browser don't support them, you will need to use [bn.js](https://github.com/indutny/bn.js/),
-* Optional dynamic scope (can be used to build Emacs Lisp interpreter on top of LIPS).
-* Optional brackets support (useful when testing code from some books about Scheme).
+* Compatibile with Scheme specification (R5RS and R7RS)
+* Allow to define of new syntax, using parser extensions.
+* Allow to create new data types, that fit nicely into reader and writer.
+* Introspection and modifaction of the functions code at runtime.
+* Syntax highligthing in NPM installed binaries and on the Web REPL.
+* Builtin autoformatting (pretty printing) of code.
+* Lips macros, Scheme hygienic macros with syntax-rules and macroexpand.
+* Auto unwrapping of JavaScript promises.
+* Almost no dependencies.
+* Builtin help system in REPL (functions and macros have doc strings).
+* Literal Regular Expressions.
+
+## Integration with JavaScript
+
+* JavaScript like doted notation.
+* Object literals with `&(:foo 10)` (created using parser extensions),
+* Direct access to JavaScript methods, functions and properties.
+* Access to internal implementation details.
+* Creating new JavaScript classes.
+* Modification of prototype of the objects.
 
 ## Installation
 
@@ -50,7 +52,6 @@ or yarn:
 yarn add @jcubic/lips
 ```
 
-
 To install 1.0.0 beta version use:
 
 ```
@@ -63,11 +64,25 @@ then include the file in script tag, You can grab the version from unpkg.com
 https://unpkg.com/@jcubic/lips
 ```
 
-or from rawgit
+or from jsdelivery (beta version)
 
 ```
-https://cdn.rawgit.com/jcubic/lips/devel/dist/lips.min.js
+https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
 ```
+
+## Bookmarklet REPL
+
+
+You can also run REPL on any page while you learn Scheme using bookmarklet:
+
+```
+https://github.com/jcubic/lips/blob/master/lib/js/bookmark.js
+```
+
+Create any link in your bookmarks, edit it and copy paste the content of that file.
+Affter you click on the link it will create REPL at the bottom of the page.
+(NOTE: it may don't work on every page because of content security policy, 
+e.g. google.com or gihub.com)
 
 ## Usage
 
@@ -85,7 +100,7 @@ Simplest way is to include the lips code in script tag:
 or use `src` attribute:
 
 ```html
-<script type="text/x-scheme" src="example.lips"></script>
+<script type="text/x-scheme" src="example.scm"></script>
 ```
 
 Running programmatically:
@@ -115,30 +130,8 @@ npm install -g @jcubic/lips
 
 you can run interpreter from terminal:
 
-```
-$ lips
-  __ __                          __
- / / \ \       _    _  ___  ___  \ \
-| |   \ \     | |  | || . \/ __>  | |
-| |    > \    | |_ | ||  _/\__ \  | |
-| |   / ^ \   |___||_||_|  <___/  | |
- \_\ /_/ \_\                     /_/
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
 
-LIPS Scheme Interpreter 1.0.0-beta.3 (2020-08-14)
-Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
-
-Type (env) to see environment with functions macros and variables.
-You can also use (help name) to display help for specic function or macro.
-
-lips> (define (square x)
-...     (* x x))
-lips> (square 10)
-100
-lips>
-```
-
-One feature of LIPS REPL is that it auto indent the lines when you press enter
-and didn't finish the code.
 
 You can also run code as string with:
 
@@ -174,15 +167,7 @@ chmod a+x foo.scm
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
-## Name
-
-The name LIPS is recursive acronym which expand into LIPS Is Pretty Simple.
-This name was used because first version was very simple implementation.
-It's not that simple anymore, but still it should be pretty easy to modify.
-Note that some parts of the code may be more complex.
-
 ## License
 
-Released under [MIT](http://opensource.org/licenses/MIT) license
-
+Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
 Copyright (c) 2018-2020 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)

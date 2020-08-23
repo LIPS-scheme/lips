@@ -35,7 +35,7 @@
          (symbol (cadr spec))
          (args (cddr spec)))
      `(begin
-        (add-special! ,symbol ',name ,(string->symbol
+        (set-special! ,symbol ',name ,(string->symbol
                                        (concat "lips.specials."
                                                (symbol->string type))))
         (define-macro (,name ,@args) ,@rest))))
@@ -57,6 +57,11 @@
 
    Macro for defining vectors (arrays)."
   `(list->array (list ,@(map (lambda (object) `(quote ,object)) arg))))
+
+(set-repr! Array
+           (lambda (x q)
+             (let ((arr (--> x (map (lambda (x) (repr x q))))))
+               (concat "#(" (--> arr (join " ")) ")"))))
 
 ;; -----------------------------------------------------------------------------
 (define (eqv? a b)
@@ -106,15 +111,23 @@
     (typecheck "make-promise" proc "function")
     (let ((result-ready? #f)
           (result #f))
-      (lambda ()
-        (if result-ready?
-            result
-            (let ((x (proc)))
-              (if result-ready?
-                  result
-                  (begin (set! result-ready? #t)
-                         (set! result x)
-                         result))))))))
+      (let ((promise (lambda ()
+                       (if result-ready?
+                           result
+                           (let ((x (proc)))
+                             (if result-ready?
+                                 result
+                                 (begin (set! result-ready? #t)
+                                        (set! result x)
+                                        result)))))))
+        (set-obj! promise 'toString (lambda ()
+                                      (string-append "#<promise - "
+                                                     (if result-ready?
+                                                         (string-append "forced with "
+                                                                        (type result))
+                                                         "not forced")
+                                                     ">")))
+        promise))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (delay expression)
@@ -207,7 +220,13 @@
 
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)
-  (and (number? x) (string=? (. x 'type) type)))
+  (typecheck "%number-type" type (vector "string" "pair"))
+  (let* ((t (. x 'type))
+         (typeof (lambda (type) (string=? t type))))
+    (and (number? x)
+         (if (pair? type)
+             (some typeof type)
+             (typeof type)))))
 
 ;; -----------------------------------------------------------------------------
 (define integer? (%doc
@@ -222,7 +241,7 @@
 ;; -----------------------------------------------------------------------------
 (define rational? (%doc
                   ""
-                  (curry %number-type "rational")))
+                  (curry %number-type '("rational" "bigint"))))
 
 ;; -----------------------------------------------------------------------------
 (define (typecheck-args _type name _list)
@@ -271,8 +290,12 @@
 (define (exact? n)
   "(exact? n)"
   (typecheck "exact?" n "number")
-  (let ((type (. n 'type)))
-    (or (equal? type "bigint") (equal? type "rational"))))
+  (let ((type n.type))
+    (or (string=? type "bigint")
+        (string=? type "rational")
+        (and (string=? type "complex")
+             (exact? n.im)
+             (exact? n.re)))))
 
 (define (inexact? n)
   "(inexact? n)"

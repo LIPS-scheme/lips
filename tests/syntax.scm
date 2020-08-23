@@ -207,7 +207,9 @@
    (lambda (t)
 
       (define-syntax foo
-         (syntax-rules () ((_ (a . (b . (c . nil))) ...) '(foo a ... b ... c ...))))
+         (syntax-rules ()
+           ((_ (a . (b . (c . nil))) ...)
+            '(foo a ... b ... c ...))))
 
       (t.is (foo) '(foo))
       (t.is (to.throw (foo 1)) #t)
@@ -219,9 +221,10 @@
 
 (test "syntax-rules: list quine"
   (lambda (t)
-
     (define-syntax foo
-      (syntax-rules () ((_ (x ...) ...) '(foo (x ...) ...))))
+      (syntax-rules ()
+        ((_ (x ...) ...)
+         '(foo (x ...) ...))))
 
     (t.is (foo) '(foo))
     (t.is (to.throw (foo 1)) #t)
@@ -343,9 +346,38 @@
         (t.is (list+ 1 2 3) '(1 2 3))
         (t.is (list- 4 5 6) '(4 5 6))))
 
-;; (test "syntax-rules: method caller (srfi-46)"
-;;       (lambda (t)
-;;
+(test "syntax-rules: nested syntax-rules gensyms (srfi-46)"
+      (lambda (t)
+
+        (define result (let-syntax
+                          ((f (syntax-rules ()
+                                ((f ?e)
+                                 (let-syntax
+                                     ((g (syntax-rules ::: ()
+                                           ((g (??x ?e) (??y :::))
+                                            '((??x) ?e (??y) :::)))))
+                                   (g (1 2) (3 4)))))))
+                        (f :::)))
+        (t.is result '((1) 2 (3) (4)))))
+
+(test "syntax-rules: tail of ellipsis (srfi-46)"
+      (lambda (t)
+
+        (define result (let-syntax
+                          ((foo (syntax-rules ()
+                                  ((foo ?x ?y ... ?z)
+                                   (list ?x (list ?y ...) ?z)))))
+                        (foo 1 2 3 4 5)))
+
+        (t.is result '(1 (2 3 4) 5))
+
+        (define result (let-syntax
+                          ((foo (syntax-rules ()
+                                  ((foo ?a ?b ... ?c ?d)
+                                   (list ?a (list ?b ...) ?c ?d)))))
+                        (foo 1 2 3 4 5)))
+
+        (t.is result '(1 (2 3) 4 5))))
 
 (test "syntax-rules: rec macro (srfi-31)"
       (lambda (t)
@@ -365,8 +397,7 @@
 
         (t.is (F 10) 3628800)))
 
-
-(test_ "syntax-rules: join macros"
+(test "syntax-rules: join macros"
       (lambda (t)
 
         (define-syntax join_1
@@ -445,7 +476,7 @@
                25)))
 
 ;; foo foo ... should match single element foo ... should match nil
-(test_ "syntax-rules: R6RS unless & when macros"
+(test "syntax-rules: R6RS unless & when macros"
        (lambda (t)
 
          (define-syntax when
@@ -461,15 +492,15 @@
                   (begin result1 result2 ...)))))
 
 
-         (t.is (when (> 3 2) 'greater) ‌'greater)
-         (t.is (when (< 3 2) 'greater) ‌undefined) ;; unspecified
+         (t.is (when (> 3 2) 'foo) 'foo)
+         (t.is (when (< 3 2) 'foo) undefined) ;; unspecified
 
          (t.is (unless (> 3 2) 'less) undefined) ;; unspecified
 
-         (t.is (unless (< 3 2) 'less) 'less)))
+         (t.is (unless (< 3 2) 'foo) 'foo)))
 
-
-(test_ "syntax-rules: guile example"
+;; guile example
+(test "syntax-rules: literal atoms"
        (lambda (t)
           (define-syntax define-matcher-macro
             (syntax-rules ()
@@ -481,7 +512,7 @@
 
              (define-matcher-macro is-literal-foo? "foo")
 
-             (t.is (is-literal-foo? "foo") #t)
+             (t.is (is-literal-foo? "foo") #t) ;; this fail
              (t.is (is-literal-foo? "bar") #f)
              (let ((foo "foo"))
                 (t.is (is-literal-foo? foo) #f))))
@@ -503,7 +534,7 @@
          (t.is (let ((t #t)) (my-or #f t)) #t)))
 
 
-(test_ "syntax-rules: recursive do"
+(test "syntax-rules: recursive do"
        (lambda (t)
          (define-syntax do
             (syntax-rules ()
@@ -517,7 +548,7 @@
                         (begin
                            body ...
                            (iter inc ...))))))))
-          ;; not working - calling base case without result
+
           (t.is (do ((i 10 (- i 1)))
                     ((zero? i)))
                 '())
@@ -529,3 +560,77 @@
                       (set! result (cons i result))))
                 '(1 2 3 4 5 6 7 8 9 10))))
 
+
+(test "syntax-rules: it should define nested syntax-rules"
+      (lambda (t)
+        (define-syntax be-like-begin
+          (syntax-rules ()
+            ((be-like-begin name)
+             (define-syntax name
+               (syntax-rules ()
+                 ((name expr (... ...))
+                  (begin expr (... ...))))))))
+
+        (be-like-begin sequence)
+        (t.is (sequence 1 2 3 4) 4)
+
+        (be-like-begin progn)
+        (t.is (let* ((x 10)
+                     (expr `(,x . ,x)))
+                (progn
+                 x
+                 x
+                 expr))
+              '(10 . 10))))
+
+(test "syntax-rules: recursive call"
+      (lambda (t)
+
+        (define-syntax L
+          (syntax-rules ()
+            ((_) '())
+            ((_ a b ...) (cons a (_ b ...)))))
+
+        (t.is (L 1 2 3) '(1 2 3))))
+
+(test_ "syntax-rules: should return list with ellipsis"
+       (lambda (t)
+
+         (define-syntax test
+           (syntax-rules ()
+             ((_) (... '...))))
+
+         (t.is (test) '(...))
+
+         (define-syntax test
+           (syntax-rules ()
+             ((_) (test 1 2))
+             ((_ arg ...) (list (cons arg (... '...)) ...))))
+
+         (t.is (test 1 2 3) '((1 . ...) (2 . ...) (3 . ...)))
+         (t.is (test) '((1 . ...) (2 . ...)))))
+
+
+(test "syntax-rules: it should handle identifiers"
+       (lambda (t)
+       
+         (define-syntax for
+           (syntax-rules (in as)
+             ((for element in list body ...)
+              (map (lambda (element)
+                      body ...)
+                   list))
+            ((for list as element body ...)
+             (for element in list body ...))))
+         
+         (t.is (let ((result '()))
+                 (for i in '(0 1 2 3 4)
+                      (set! result (cons i result)))
+                  result)
+               '(4 3 2 1 0))
+
+         (t.is (let ((result '()))
+                 (for '(0 1 2 3 4) as i
+                      (set! result (cons i result)))
+                 result)
+               '(4 3 2 1 0))))

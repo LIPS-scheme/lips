@@ -19,6 +19,7 @@ const {
     InputPort,
     OutputPort } = require('../src/lips');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { format } = require('util');
 const readline = require('readline');
@@ -26,6 +27,8 @@ var highlight = require('prism-cli');
 var Prism = require('prismjs');
 require('prismjs/components/prism-scheme.min.js');
 require('../lib/js/prism.js');
+
+const kDebounceHistoryMS = 15;
 
 // -----------------------------------------------------------------------------
 process.on('uncaughtException', function (err) {
@@ -35,6 +38,9 @@ process.on('uncaughtException', function (err) {
 // -----------------------------------------------------------------------------
 function log_error(message) {
     fs.appendFileSync('error.log', message + '\n');
+}
+function debug(message) {
+    console.log(message);
 }
 // -----------------------------------------------------------------------------
 // code taken from jQuery Terminal
@@ -169,6 +175,7 @@ function scheme(str) {
 // -----------------------------------------------------------------------------
 var strace;
 var rl;
+var newline;
 var interp = Interpreter('repl', {
     stdin: InputPort(function() {
         return new Promise(function(resolve) {
@@ -211,13 +218,12 @@ var interp = Interpreter('repl', {
 const options = parse_options(process.argv.slice(2), {boolean: ['d', 'dynamic']});
 if (options.version || options.V) {
     // SRFI 176
-    var os = require('os');
     global.output = Pair.fromArray([
         ["command", "lips"],
         ["website", "https://jcubic.github.io/lips/"],
         ['languages', 'scheme', 'r5rs', 'r7rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
-        ["scheme.srfi", 6, 22, 23, 46, 176],
+        ["scheme.srfi", 4, 6, 22, 23, 46, 176],
         ["release", version],
         ["os.uname", os.platform(), os.release()],
         ["os.env.LANG", process.env.LANG],
@@ -241,6 +247,15 @@ if (options.version || options.V) {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
+    });
+    rl.on('exit', () => {
+        if (rl._flushing) {
+            rl.pause();
+            return rl.once('flushHistory', () => {
+                process.exit();
+            });
+        }
+        process.exit();
     });
     fs.promises.readFile(options._[0]).then(function(data) {
         return boostrap(interp).then(() => {
@@ -286,15 +301,25 @@ if (options.version || options.V) {
             rl._refreshLine(); // force refresh colors
         }, 0);
     });
-    if (process.stdin.isTTY) {
-        rl.prompt();
+    const historySize = Number(env.LIPS_REPL_HISTORY_SIZE);
+    if (!Number.isNaN(historySize) && historySize > 0) {
+        rl.historySize = historySize;
+    } else {
+        rl.historySize = 1000;
     }
+    setupHistory(rl, terminal ? env.LIPS_REPL_HISTORY : '', run_repl);
+}
+function run_repl(err, rl) {
+    const dynamic = options.d || options.dynamic;
     var code = '';
     var multiline = false;
     var resolve;
-    var newline;
     // we use promise loop to fix issue when copy paste list of S-Expression
     var prev_eval = Promise.resolve();
+    if (process.stdin.isTTY) {
+        rl.prompt();
+    }
+    var prev_line;
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
             code += line + '\n';
@@ -302,7 +327,7 @@ if (options.version || options.V) {
             var lines = code.split('\n');
             // fix previous line
             if (terminal && lines.length > 1) {
-                var prev_line = lines[lines.length - 2].replace(/^\s+/, '');
+                prev_line = lines[lines.length - 2].replace(/^\s+/, '');
                 if (lines.length > 2) {
                     var prev = lines.slice(0, -2).join('\n');
                     var i = indent(prev, 2, prompt.length - continuePrompt.length);
@@ -370,4 +395,152 @@ if (options.version || options.V) {
         log_error(e.message || e);
         console.error('Internal Error: boostrap filed');
     });
+}
+
+// source: Node.js https://github.com/nodejs/node/blob/master/lib/internal/repl/history.js
+function _writeToOutput(repl, message) {
+  repl._writeToOutput(message);
+  repl._refreshLine();
+}
+
+function setupHistory(repl, historyPath, ready) {
+  // Empty string disables persistent history
+  if (typeof historyPath === 'string')
+    historyPath = historyPath.trim();
+
+  if (historyPath === '') {
+    repl._historyPrev = _replHistoryMessage;
+    return ready(null, repl);
+  }
+
+  if (!historyPath) {
+    try {
+      historyPath = path.join(os.homedir(), '.lips_repl_history');
+    } catch (err) {
+      _writeToOutput(repl, '\nError: Could not get the home directory.\n' +
+        'REPL session history will not be persisted.\n');
+
+      debug(err.stack);
+      repl._historyPrev = _replHistoryMessage;
+      return ready(null, repl);
+    }
+  }
+
+  let timer = null;
+  let writing = false;
+  let pending = false;
+  repl.pause();
+  // History files are conventionally not readable by others:
+  // https://github.com/nodejs/node/issues/3392
+  // https://github.com/nodejs/node/pull/3394
+  fs.open(historyPath, 'a+', 0o0600, oninit);
+
+  function oninit(err, hnd) {
+    if (err) {
+      // Cannot open history file.
+      // Don't crash, just don't persist history.
+      _writeToOutput(repl, '\nError: Could not open history file.\n' +
+        'REPL session history will not be persisted.\n');
+      debug(err.stack);
+
+      repl._historyPrev = _replHistoryMessage;
+      repl.resume();
+      return ready(null, repl);
+    }
+    fs.close(hnd, onclose);
+  }
+
+  function onclose(err) {
+    if (err) {
+      return ready(err);
+    }
+    fs.readFile(historyPath, 'utf8', onread);
+  }
+
+  function onread(err, data) {
+    if (err) {
+      return ready(err);
+    }
+
+    if (data) {
+      repl.history = data.split(/[\n\r]+/, repl.historySize);
+    } else {
+      repl.history = [];
+    }
+
+    fs.open(historyPath, 'r+', onhandle);
+  }
+
+  function onhandle(err, hnd) {
+    if (err) {
+      return ready(err);
+    }
+    fs.ftruncate(hnd, 0, (err) => {
+      repl._historyHandle = hnd;
+      repl.on('line', online);
+      repl.once('exit', onexit);
+
+      // Reading the file data out erases it
+      repl.once('flushHistory', function() {
+        repl.resume();
+        ready(null, repl);
+      });
+      flushHistory();
+    });
+  }
+
+  // ------ history listeners ------
+  function online(line) {
+    repl._flushing = true;
+
+    if (timer) {
+      clearTimeout(timer);
+    }
+
+    timer = setTimeout(flushHistory, kDebounceHistoryMS);
+  }
+
+  function flushHistory() {
+    timer = null;
+    if (writing) {
+      pending = true;
+      return;
+    }
+    writing = true;
+    const historyData = repl.history.join(os.EOL);
+    fs.write(repl._historyHandle, historyData, 0, 'utf8', onwritten);
+  }
+
+  function onwritten(err, data) {
+    writing = false;
+    if (pending) {
+      pending = false;
+      online();
+    } else {
+      repl._flushing = Boolean(timer);
+      if (!repl._flushing) {
+        repl.emit('flushHistory');
+      }
+    }
+  }
+
+  function onexit() {
+    if (repl._flushing) {
+      repl.once('flushHistory', onexit);
+      return;
+    }
+    repl.off('line', online);
+    fs.close(repl._historyHandle, () => {});
+  }
+}
+
+function _replHistoryMessage() {
+  if (this.history.length === 0) {
+    _writeToOutput(
+      this,
+      '\nPersistent history support disabled. Use user-writable path to enable.\n'
+    );
+  }
+  this._historyPrev = readline.Interface.prototype._historyPrev;
+  return this._historyPrev();
 }
