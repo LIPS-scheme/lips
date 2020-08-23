@@ -45,6 +45,27 @@
     <header><h2>1.0.0 Beta version</h2></header>
     <p>To test latest beta version check <a href="https://codepen.io/jcubic/full/YzqwoJd">CodePen LIPS Demo</a>. Documentation (WIP) for version 1.0.0 can be found on <a href="https://github.com/jcubic/lips/wiki/v1.0-draft">Wiki</a>.</p>
   </section>
+  <section id="bookmark">
+    <header><h2>Bookmarklet</h2></header>
+    <p>When you're learning Scheme you can run the REPL directly on any page that
+       have Scheme tutorial. It even work with PDF (at least in Chrome).
+       Drag this link <a id="bookmark_link">LIPS REPL</a> to your bookmarks.
+       The version of LIPS in REPL is taken from Devel branch. It may change
+       after version 1.0.0 is released.</p>
+    <p><strong>NOTE:</strong> it will not work on this page, because it already
+       have terminal on it and because it have not compatible LIPS version included.</p>
+    <script>
+    (function() {
+    var url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@master/lib/js/bookmark.js';
+    fetch(url).then(function(res) {
+        return res.text();
+    }).then(function(text) {
+        var link = document.querySelector('#bookmark_link');
+        link.setAttribute('href', text);
+    });
+    })();
+    </script>
+  </section>
   <section id="installation">
     <header><h2>Browser</h2></header>
     <p>When using LIPS in browser you need to include the main script file.</p>
