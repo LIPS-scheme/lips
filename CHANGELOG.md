@@ -1,4 +1,6 @@
 ## 1.0.0-beta.5
+### Features
+* new function `make-list`
 ### Bugfix
 * allow to use undefined in let
 

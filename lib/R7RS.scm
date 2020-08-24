@@ -91,3 +91,13 @@
 (define (truncate-remainder x y) (remainder x y))
 
 ;; -----------------------------------------------------------------------------
+(define (make-list n . rest)
+  (if (or (not (integer? n)) (<= n 0))
+      (throw (new Error "make-list: first argument need to be integer larger then 0"))
+      (let ((fill (if (null? rest) undefined (car rest))))
+        (let iter ((n n) (result '()))
+          (if (zero? n)
+              result
+              (iter (- n 1) (cons fill result)))))))
+
+;; -----------------------------------------------------------------------------
