@@ -3106,13 +3106,6 @@
             }
             return (function loop() {
                 var pair = args[i++];
-                function set(name, value) {
-                    if (typeof value === 'undefined') {
-                        env.set(name, nil);
-                    } else {
-                        env.set(name, value);
-                    }
-                }
                 if (dynamic_scope) {
                     dynamic_scope = name === 'let*' ? env : self;
                 }
@@ -3124,12 +3117,12 @@
                         if (promises.length) {
                             return Promise.all(v).then((arr) => {
                                 for (var i = 0, len = arr.length; i < len; ++i) {
-                                    set(values[i].name, arr[i]);
+                                    env.set(values[i].name, arr[i]);
                                 }
                             }).then(exec);
                         } else {
                             values.forEach(({ name, value }) => {
-                                set(name, value);
+                                env.set(name, value);
                             });
                         }
                     }
@@ -3153,7 +3146,7 @@
                         return loop();
                     } else {
                         return unpromise(value, function(value) {
-                            set(pair.car, value);
+                            env.set(pair.car, value);
                             return loop();
                         });
                     }

@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.4
+ *  \_\ /_/ \_\                     /_/ v. DEV
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 23 Aug 2020 07:14:45 +0000
+ * build: Mon, 24 Aug 2020 09:10:34 +0000
  */
 (function () {
   'use strict';
@@ -4832,14 +4832,6 @@
         return function loop() {
           var pair = args[i++];
 
-          function set(name, value) {
-            if (typeof value === 'undefined') {
-              env.set(name, nil);
-            } else {
-              env.set(name, value);
-            }
-          }
-
           if (dynamic_scope) {
             dynamic_scope = name === 'let*' ? env : self;
           }
@@ -4855,14 +4847,14 @@
               if (promises.length) {
                 return Promise.all(v).then(function (arr) {
                   for (var i = 0, len = arr.length; i < len; ++i) {
-                    set(values[i].name, arr[i]);
+                    env.set(values[i].name, arr[i]);
                   }
                 }).then(exec);
               } else {
                 values.forEach(function (_ref13) {
                   var name = _ref13.name,
                       value = _ref13.value;
-                  set(name, value);
+                  env.set(name, value);
                 });
               }
             }
@@ -4893,7 +4885,7 @@
               return loop();
             } else {
               return unpromise(value, function (value) {
-                set(pair.car, value);
+                env.set(pair.car, value);
                 return loop();
               });
             }
@@ -10294,10 +10286,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 23 Aug 2020 07:14:45 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 24 Aug 2020 09:10:34 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 23 Aug 2020 07:14:45 +0000').valueOf();
+      var date = LString('Mon, 24 Aug 2020 09:10:34 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10309,7 +10301,7 @@
 
       var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.4 (".concat(_build, ") <https://git.io/lips-scheme>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://git.io/lips-scheme>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
       return banner;
     }(); // -------------------------------------------------------------------------
     // to be used with string function when code is minified
@@ -10332,9 +10324,9 @@
     LString.__className = 'string'; // -------------------------------------------------------------------------
 
     var lips = {
-      version: '1.0.0-beta.4',
+      version: 'DEV',
       banner: banner,
-      date: 'Sun, 23 Aug 2020 07:14:45 +0000',
+      date: 'Mon, 24 Aug 2020 09:10:34 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

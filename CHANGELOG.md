@@ -1,3 +1,7 @@
+## 1.0.0-beta.5
+### Bugfix
+* allow to use undefined in let
+
 ## 1.0.0-beta.4
 ### Breaking
 * add/remove-specials and add/remove-repr are now set/unset
