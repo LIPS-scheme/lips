@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>LIPS beta demo</title>
+    <meta name="Description" content="LIPS - Scheme based lisp demo. Beta version for 1.0.0"/>
+    <link rel="shortcut icon" href=""/>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal@x.x.x/css/jquery.terminal.min.css,npm/terminal-prism@0.2.0/css/prism.css" rel="stylesheet"/>
+    <style>
+body {
+    margin: 0;
+    height: 100vh;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/combine/npm/jquery,npm/prismjs,npm/prismjs/components/prism-scheme.min.js,npm/@jcubic/lips@beta/lib/js/prism.js,npm/js-polyfills/keyboard.js,npm/jquery.terminal,npm/@jcubic/lips@beta/dist/lips.min.js,npm/@jcubic/lips@beta/lib/js/terminal.js,npm/jquery.terminal/js/prism.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+    <script>
+var term = (function() {
+    var bold = '[[b;rgba(255,255,255,0.99);]';
+    function formatBaner(banner, dynamic) {
+        var entry = '   ' + bold + (dynamic ? 'dynamic' : 'lexical') + ' scope] $1';
+        return banner.replace(/(\((?:env|help [^)]+)\))/g, bold + '$1]')
+            .replace(/(\n\nLIPS.+)/m, entry)
+            .replace(/(Jakub T. Jankiewicz)/, '[[!;;;;https://jcubic.pl/me]$1]');
+    }
+    $.terminal.syntax('scheme');
+    var term = terminal({ selector: 'body', lips, name: 'lisp' });
+    term.echo(formatBaner(lips.banner, false), {formatters: false});
+
+    // load Standard libraries (only first two are required by Scheme)
+    var path = 'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/';
+    term.exec([
+        '(let-env lips.env.parent',
+           '(load "' + path + 'lib/bootstrap.scm")',
+           '(load "' + path + 'lib/R5RS.scm")',
+           '(load "' + path + 'lib/R7RS.scm"))'
+    ].join('\n'), true);
+
+    var repr = term.interpreter.get('repr');
+    return term;
+})();
+</script>
+</body>
+</html>
