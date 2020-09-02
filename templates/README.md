@@ -13,7 +13,7 @@ The name is recursive acronym which stands for LIPS is Pretty Simple.
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
-[1.0 Beta demo](https://codepen.io/jcubic/full/YzqwoJd)
+[1.0 Beta demo](https://jcubic.github.io/lips/beta.html)
 
 ## Features
 
