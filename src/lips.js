@@ -3763,6 +3763,9 @@
             n = n.value;
         }
         const fn = LNumber._ops[op];
+        if (op === '/' && this.value === 0 && n === 0) {
+            return NaN;
+        }
         return LFloat(fn(this.value, n), true);
     };
     // -------------------------------------------------------------------------
@@ -7459,6 +7462,9 @@
                         if (result instanceof Pair) {
                             result.markCycles();
                             return quote(result);
+                        }
+                        if (Number.isNaN(result)) {
+                            return result;
                         }
                         if (typeof result === 'number') {
                             return LNumber(result);
