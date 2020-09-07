@@ -1275,6 +1275,7 @@
     function keywords_re(...args) {
         return new RegExp(`^(?:#:)?(?:${args.join('|')})$`);
     }
+    // line breaking rules
     Formatter.rules = [
         [[p_o, keywords_re('begin')], 1],
         [[p_o, keywords_re('begin'), sexp], 1, not_close],

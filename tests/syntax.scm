@@ -613,7 +613,7 @@
 
 (test "syntax-rules: it should handle identifiers"
        (lambda (t)
-       
+
          (define-syntax for
            (syntax-rules (in as)
              ((for element in list body ...)
@@ -622,7 +622,7 @@
                    list))
             ((for list as element body ...)
              (for element in list body ...))))
-         
+
          (t.is (let ((result '()))
                  (for i in '(0 1 2 3 4)
                       (set! result (cons i result)))
