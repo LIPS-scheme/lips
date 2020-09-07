@@ -1065,3 +1065,34 @@
       n))
 
 ;; -----------------------------------------------------------------------------
+(define (make-polar r angle)
+  "(make-polar magnitude angle)
+
+   Create new complex number from polar parameters."
+  (typecheck "make-polar" r "number")
+  (typecheck "make-polar" angle "number")
+  (if (or (complex? r) (complex? angle))
+      (error "make-polar: argument can't be complex")
+      (let ((re (* r (sin angle)))
+            (im (* r (cos angle))))
+        (make-rectangular im re))))
+
+;; -----------------------------------------------------------------------------
+(define (angle x)
+  "(angle x)
+
+   Return angle of the complex number in polar coordinate system."
+  (if (not (complex? x))
+      (error "angle: number need to be complex")
+      (Math.atan2 x.im x.re)))
+
+;; -----------------------------------------------------------------------------
+(define (magnitude x)
+  "(magnitude x)
+
+   REturn magnitude of the complex number in polar coordinate system."
+  (if (not (complex? x))
+      (error "magnitude: number need to be complex")
+      (sqrt (+ (* x.im x.im) (* x.re x.re)))))
+
+;; -----------------------------------------------------------------------------

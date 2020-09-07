@@ -4,7 +4,9 @@
 * `(/ 0.0 0.0)` return NaN
 * bookmarklet always fetch latest version
 * `case-lambda` hygienic macro (code from R7RS)
-* `numerator`, `denominator`, `imag-part` and `real-part` functions
+* rational `numerator` and `denominator` function (R5RS)
+* complex `imag-part`, `real-part`, `make-polar`, `angle` and `magnitude` functions (R5RS)
+* new function: `radian->degree` and `degree->radian`
 ### Bugfix
 * allow to use undefined in let
 * fix function call that return NaN

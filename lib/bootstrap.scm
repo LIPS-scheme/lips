@@ -700,3 +700,19 @@
 
    Function return #t if value is symbol and it's gensym it return #f otherwise."
   (and (symbol? value) (--> value (is_gensym))))
+
+;; ---------------------------------------------------------------------------------------
+(define (degree->radian x)
+  "(degree->radian x)
+
+   Convert degree to radians."
+  (* x (/ Math.PI 180)))
+
+;; ---------------------------------------------------------------------------------------
+(define (radian->degree x)
+  "(degree->radian x)
+
+   Convert radians to degree."
+  (* x (/ 180 Math.PI)))
+
+;; ---------------------------------------------------------------------------------------
