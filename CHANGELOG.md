@@ -2,6 +2,7 @@
 ### Features
 * new function `make-list`
 * `(/ 0.0 0.0)` return NaN
+* bookmarklet always fetch latest version
 ### Bugfix
 * allow to use undefined in let
 * fix function call that return NaN
