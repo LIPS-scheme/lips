@@ -4,7 +4,7 @@
 * `(/ 0.0 0.0)` return NaN
 * bookmarklet always fetch latest version
 * `case-lambda` hygienic macro (code from R7RS)
-* `numerator` and `denominator` functions
+* `numerator`, `denominator`, `imag-part` and `real-part` functions
 ### Bugfix
 * allow to use undefined in let
 * fix function call that return NaN

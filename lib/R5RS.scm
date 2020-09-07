@@ -1043,3 +1043,25 @@
   (if (and (rational? n) (not (integer? n)))
       n.denom
       (if (exact? n) 1 1.0)))
+
+;; -----------------------------------------------------------------------------
+(define (imag-part n)
+  "(imag-part n)
+
+   Return imaginary part of the complex number n."
+  (typecheck "imag-part" n "number")
+  (if (complex? n)
+      n.im
+      0))
+
+;; -----------------------------------------------------------------------------
+(define (real-part n)
+  "(real-part n)
+
+   Return real part of the complex number n."
+  (typecheck "real-part" n "number")
+  (if (complex? n)
+      n.re
+      n))
+
+;; -----------------------------------------------------------------------------
