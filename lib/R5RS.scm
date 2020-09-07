@@ -1023,3 +1023,23 @@
 
 ;; -----------------------------------------------------------------------------
 (--> lips.Formatter.defaults.exceptions.specials (push "case")) ;; 2 indent
+
+;; -----------------------------------------------------------------------------
+(define (numerator n)
+  "(numerator n)
+
+   Return numberator of rational or same number if n is not rational."
+  (typecheck "numerator" n "number")
+  (if (and (rational? n) (not (integer? n)))
+      n.num
+      n))
+
+;; -----------------------------------------------------------------------------
+(define (denominator n)
+  "(denominator n)
+
+   Return denominator of rational or same number if one is not rational."
+  (typecheck "denominator" n "number")
+  (if (and (rational? n) (not (integer? n)))
+      n.denom
+      (if (exact? n) 1 1.0)))
