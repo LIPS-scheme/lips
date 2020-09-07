@@ -6,6 +6,7 @@
 ### Bugfix
 * allow to use undefined in let
 * fix function call that return NaN
+* fix pretty print of syntax-rules
 
 ## 1.0.0-beta.4
 ### Breaking

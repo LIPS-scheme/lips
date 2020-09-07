@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 07 Sep 2020 12:42:33 +0000
+ * build: Mon, 07 Sep 2020 17:09:40 +0000
  */
 (function () {
   'use strict';
@@ -2229,6 +2229,14 @@
               }
 
               continue;
+            } else if (pattern[p].flag === '*') {
+              m = inner_match(pattern[p].pattern, input.slice(i));
+
+              if (m === -1) {
+                i -= 1;
+                p++;
+                continue;
+              }
             }
           }
 
@@ -2498,6 +2506,7 @@
     var glob = Symbol["for"]('*');
     var sexp = new Pattern([p_o, glob, p_e], '+');
     var symbol = new Pattern([Symbol["for"]('symbol')], '?');
+    var symbols = new Pattern([Symbol["for"]('symbol')], '*');
     var let_value = new Pattern([p_o, Symbol["for"]('symbol'), glob, p_e], '+'); // rules for breaking S-Expressions into lines
 
     var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
@@ -2511,7 +2520,7 @@
       return new RegExp("^(?:#:)?(?:".concat(args.join('|'), ")$"));
     }
 
-    Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, keywords_re('begin'), sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, keywords_re('define-syntax'), /.+/], 1], //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
+    Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, keywords_re('begin'), sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, keywords_re('syntax-rules'), symbol, [p_o, symbols, p_e]], 1], [[p_o, keywords_re('syntax-rules'), symbol, [p_o, symbols, p_e], sexp], 1, not_close], //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
     [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close], [[/(?!lambda)/, new Pattern([p_o, glob, p_e], '+')], 1, not_close], [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
     [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1], [[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1], [[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]]; // ----------------------------------------------------------------------
 
@@ -3115,11 +3124,14 @@
     function symbolize(obj) {
       if (obj && _typeof_1(obj) === 'object') {
         var result = {};
-        var symbols = Object.getOwnPropertySymbols(obj);
-        symbols.forEach(function (key) {
+
+        var _symbols = Object.getOwnPropertySymbols(obj);
+
+        _symbols.forEach(function (key) {
           var name = key.toString().replace(/Symbol\(([^)]+)\)/, '$1');
           result[name] = toString(obj[key]);
         });
+
         var props = Object.getOwnPropertyNames(obj);
         props.forEach(function (key) {
           var o = obj[key];
@@ -4383,8 +4395,8 @@
 
           if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
             log('>> 1');
-            var _symbols = bindings['...'].symbols;
-            var keys = get_names(_symbols); // case of list as first argument ((x . y) ...)
+            var _symbols2 = bindings['...'].symbols;
+            var keys = get_names(_symbols2); // case of list as first argument ((x . y) ...)
             // we need to recursively process the list
             // if we have pattern (_ (x y z ...) ...) and code (foo (1 2) (1 2))
             // x an y will be arrays of [1 1] and [2 2] and z will be array
@@ -4405,7 +4417,7 @@
               if (keys.length) {
                 log('>> 2 (a)');
 
-                var _bind = _objectSpread({}, _symbols);
+                var _bind = _objectSpread({}, _symbols2);
 
                 result = nil;
 
@@ -4447,7 +4459,7 @@
                 return result;
               } else {
                 log('>> 3');
-                var car = transform_ellipsis_expr(expr.car, _symbols, {
+                var car = transform_ellipsis_expr(expr.car, _symbols2, {
                   nested: true
                 });
 
@@ -4462,9 +4474,9 @@
 
               var name = expr.car.name;
 
-              var _bind2 = defineProperty({}, name, _symbols[name]);
+              var _bind2 = defineProperty({}, name, _symbols2[name]);
 
-              var is_null = _symbols[name] === null;
+              var is_null = _symbols2[name] === null;
               var _result2 = nil;
 
               var _loop2 = function _loop2() {
@@ -10295,10 +10307,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 07 Sep 2020 12:42:33 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 07 Sep 2020 17:09:40 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 07 Sep 2020 12:42:33 +0000').valueOf();
+      var date = LString('Mon, 07 Sep 2020 17:09:40 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10335,7 +10347,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 07 Sep 2020 12:42:33 +0000',
+      date: 'Mon, 07 Sep 2020 17:09:40 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

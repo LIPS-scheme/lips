@@ -1040,6 +1040,13 @@
                             p++;
                         }
                         continue;
+                    } else if (pattern[p].flag === '*') {
+                        m = inner_match(pattern[p].pattern, input.slice(i));
+                        if (m === -1) {
+                            i -= 1;
+                            p++;
+                            continue;
+                        }
                     }
                 }
                 if (pattern[p] instanceof RegExp) {
@@ -1260,6 +1267,7 @@
     const glob = Symbol.for('*');
     const sexp = new Pattern([p_o, glob, p_e], '+');
     const symbol = new Pattern([Symbol.for('symbol')], '?');
+    const symbols = new Pattern([Symbol.for('symbol')], '*');
     const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
     var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
@@ -1272,6 +1280,8 @@
         [[p_o, keywords_re('begin'), sexp], 1, not_close],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
+        [[p_o, keywords_re('syntax-rules'), symbol, [p_o, symbols, p_e]], 1],
+        [[p_o, keywords_re('syntax-rules'), symbol, [p_o, symbols, p_e], sexp], 1, not_close],
         //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
         [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
         [[/(?!lambda)/, new Pattern([p_o, glob, p_e], '+')], 1, not_close],
