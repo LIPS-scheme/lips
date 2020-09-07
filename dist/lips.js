@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 07 Sep 2020 17:30:18 +0000
+ * build: Mon, 07 Sep 2020 17:38:16 +0000
  */
 (function () {
   'use strict';
@@ -2507,6 +2507,7 @@
     var sexp = new Pattern([p_o, glob, p_e], '+');
     var symbol = new Pattern([Symbol["for"]('symbol')], '?');
     var symbols = new Pattern([Symbol["for"]('symbol')], '*');
+    var identifiers = [p_o, symbols, p_e];
     var let_value = new Pattern([p_o, Symbol["for"]('symbol'), glob, p_e], '+'); // rules for breaking S-Expressions into lines
 
     var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
@@ -2521,7 +2522,7 @@
     } // line breaking rules
 
 
-    Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, keywords_re('begin'), sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, keywords_re('syntax-rules'), symbol, [p_o, symbols, p_e]], 1], [[p_o, keywords_re('syntax-rules'), symbol, [p_o, symbols, p_e], sexp], 1, not_close], //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
+    Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, keywords_re('begin'), sexp], 1, not_close], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, keywords_re('syntax-rules'), symbol, identifiers], 1], [[p_o, keywords_re('syntax-rules'), symbol, identifiers, sexp], 1, not_close], //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
     [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close], [[/(?!lambda)/, new Pattern([p_o, glob, p_e], '+')], 1, not_close], [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
     [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1], [[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1], [[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close], [[p_o, [p_o, glob, p_e], string_re], 1], [[p_o, def_lambda_re, p_o, glob, p_e], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close], [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]]; // ----------------------------------------------------------------------
 
@@ -10308,10 +10309,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 07 Sep 2020 17:30:18 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 07 Sep 2020 17:38:16 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 07 Sep 2020 17:30:18 +0000').valueOf();
+      var date = LString('Mon, 07 Sep 2020 17:38:16 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10348,7 +10349,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 07 Sep 2020 17:30:18 +0000',
+      date: 'Mon, 07 Sep 2020 17:38:16 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
