@@ -4,6 +4,9 @@
 [![travis](https://travis-ci.org/jcubic/lips.svg?branch={{BRANCH}}&{{COMMIT}})](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
+<a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20make%20programmer%20live%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript,%20lisp%20and%20npm%20to%20create%20your%20applications.&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
+   <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
+</a>
 
 [LIPS is Powerful Scheme based, Lisp language written in JavaScript](https://jcubic.github.io/lips).
 It's based on Scheme dialect and R5RS/R7RS specifications, it have extensions that make it easier
