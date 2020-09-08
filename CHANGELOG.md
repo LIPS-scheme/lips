@@ -3,11 +3,12 @@
 * new function `make-list`
 * `(/ 0.0 0.0)` return NaN
 * bookmarklet always fetch latest version
-* `case-lambda` hygienic macro (code from R7RS)
-* new `boolean=?` and `port?` functions (R7RS)
+* `case-lambda`, `unless` and `when` hygienic macros (code from R7RS)
+* new `boolean=?`, `port?` and `square` functions (R7RS)
+* new `inexact` and `exact` aliases (R7RS)
 * rational `numerator` and `denominator` function (R5RS)
 * complex `imag-part`, `real-part`, `make-polar`, `angle` and `magnitude` functions (R5RS)
-* new function: `radian->degree` and `degree->radian`
+* new function: `radians->degree` and `degree->radians`
 ### Bugfix
 * allow to use undefined in let
 * fix function call that return NaN

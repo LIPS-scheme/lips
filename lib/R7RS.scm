@@ -164,3 +164,34 @@
   (or (output-port? x) (input-port? x)))
 
 ;; -----------------------------------------------------------------------------
+(define (square x)
+  "(square z)
+
+  Returns the square of z. This is equivalent to (* z z)."
+  (* x x))
+
+;; -----------------------------------------------------------------------------
+(define-syntax when
+  (syntax-rules ()
+    ((when test result1 result2 ...)
+     (if test
+         (begin result1 result2 ...))))
+  "(when test body ...)
+
+   Macro execute body when test expression is true."
+
+;; -----------------------------------------------------------------------------
+(define-syntax unless
+  (syntax-rules ()
+    ((unless test result1 result2 ...)
+     (if (not test)
+         (begin result1 result2 ...))))
+  "(unless test body ...)
+
+   Macro execute body when test expression is false.")
+
+;; -----------------------------------------------------------------------------
+(define inexact exact->inexact)
+(define exact inexact->exact)
+
+;; -----------------------------------------------------------------------------
