@@ -1,6 +1,9 @@
 ## 1.0.0-beta.6
+### Features
+* new `string->vector`, `vector->string`, `vector-map` and `string-map` (R7RS)
 ### Bugfix
 * fix repr of HTMLElement
+* fix creating LCharacter from scheme string
 
 ## 1.0.0-beta.5
 ### Features

@@ -3325,6 +3325,9 @@
             typeof this === 'undefined') {
             return new LCharacter(chr);
         }
+        if (chr instanceof LString) {
+            chr = chr.valueOf();
+        }
         if (LCharacter.names[chr]) {
             this.name = chr;
             this.char = LCharacter.names[chr];

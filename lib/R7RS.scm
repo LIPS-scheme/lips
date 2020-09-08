@@ -172,3 +172,45 @@
 (define exact inexact->exact)
 
 ;; -----------------------------------------------------------------------------
+(define (string->vector s)
+  "(string->vector string)
+
+   Function return vector of characters created from string."
+  (typecheck "string->list" s "string")
+  (--> s (split "") (map (lambda (x) (lips.LCharacter x)))))
+
+;; -----------------------------------------------------------------------------
+(define (vector->string v)
+  "(vector->string vector)
+
+   Function return new string created from vector of characters."
+  (typecheck "vector->list" v "array")
+  (--> v (map (lambda (char) (char.valueOf))) (join "")))
+
+;; -----------------------------------------------------------------------------
+(define (vector-map fn . rest)
+  "(vector-map fn vector1 vector2 ...)
+
+   Function return new vector from applying function fn to each element
+   of the vectors, similar to map for lists."
+  (if (or (= (length rest) 0) (not (every vector? rest)))
+      (error "vector-map: function require at least 1 vector")
+      (let ((len (apply min (map vector-length rest)))
+            (result #()))
+        (do ((i 0 (+ i 1)))
+            ((= i len) result)
+            (let* ((args (map (lambda (v) (vector-ref v i)) rest))
+                   (value (apply fn args)))
+              (--> result (push value)))))))
+
+;; -----------------------------------------------------------------------------
+(define (string-map fn . rest)
+  "(string-map fn string1 stringr2 ...)
+
+   Function return new string from applying function fn to each element
+   of the strings, similar to map for lists."
+  (if (or (= (length rest) 0) (not (every string? rest)))
+      (error "string-map: function require at least 1 string")
+      (vector->string (apply vector-map fn (map string->vector rest)))))
+
+;; -----------------------------------------------------------------------------

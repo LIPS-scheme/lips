@@ -568,7 +568,7 @@
 (define (string->list string)
   "(string->list string)
 
-   Function return list of characters created from list."
+   Function return list of characters created from string."
   (typecheck "string->list" string "string")
   (array->list (--> string (split "") (map (lambda (x) (lips.LCharacter x))))))
 
