@@ -176,6 +176,9 @@ chmod a+x foo.scm
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
+## Credits
+* Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod)
+
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
