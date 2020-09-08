@@ -568,7 +568,7 @@
 (define (defmacro? obj)
   "(defmacro? expression)
 
-   Function check if object is macro and it's expandable"
+   Function check if object is macro and it's expandable."
   (and (macro? obj) (. obj 'defmacro)))
 
 ;; ---------------------------------------------------------------------------------------
@@ -714,5 +714,38 @@
 
    Convert radians to degree."
   (* x (/ 180 Math.PI)))
+
+;; ---------------------------------------------------------------------------------------
+(define-syntax while
+  (syntax-rules ()
+    ((_ predicate body ...)
+     (do ()
+       ((not predicate))
+       body ...)))
+  "(while cond . body)
+
+   Macro that create a loop, it exectue body until cond expression is false.")
+
+;; ---------------------------------------------------------------------------------------
+(define-syntax ++
+  (syntax-rules ()
+    ((++ x)
+     (let ((tmp (+ x 1)))
+       (set! x tmp)
+       tmp)))
+  "(++ variable)
+
+   Macro that work only on variables and increment the value by one.")
+
+;; ---------------------------------------------------------------------------------------
+(define-syntax --
+  (syntax-rules ()
+    ((-- x)
+     (let ((tmp (- x 1)))
+       (set! x tmp)
+       tmp)))
+  "(-- variable)
+
+   Macro that decrement the value it work only on symbols")
 
 ;; ---------------------------------------------------------------------------------------

@@ -9,29 +9,6 @@
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
-(define-macro (do vars test . body)
-  "(do ((<var> <init> <next>)) (test expression) . body)
-
-   Iteration macro that evaluate the expression body in scope of the variables.
-   On Eeach loop it increase the variables according to next expression and run
-   test to check if the loop should continue. If test is signle call the macro
-   will not return anything. If the test is pair of expression and value the
-   macro will return that value after finish."
-  (let ((return? (eq? (length test) 2)) (loop (gensym)))
-    `(let ,loop (,@(map (lambda (spec)
-                    `(,(car spec) ,(cadr spec)))
-                 vars))
-          (if (not ,(car test))
-              (begin
-                ,@body
-                (,loop ,@(map (lambda (spec)
-                                (if (null? (cddr spec))
-                                    (car spec)
-                                    (caddr spec)))
-                              vars)))
-                ,(if return? (cadr test))))))
-
-;; -----------------------------------------------------------------------------
 (define (list-match? predicate list)
   "(list-match? predicate list)
 

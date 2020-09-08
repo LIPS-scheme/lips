@@ -19,7 +19,6 @@
 (define -inf.0 Number.NEGATIVE_INFINITY)
 (define +inf.0 Number.POSITIVE_INFINITY)
 (define procedure? function?)
-(define print display) ;; old LIPS function
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
@@ -1081,7 +1080,7 @@
 (define (angle x)
   "(angle x)
 
-   Return angle of the complex number in polar coordinate system."
+   Returns angle of the complex number in polar coordinate system."
   (if (not (complex? x))
       (error "angle: number need to be complex")
       (Math.atan2 x.im x.re)))
@@ -1090,7 +1089,7 @@
 (define (magnitude x)
   "(magnitude x)
 
-   REturn magnitude of the complex number in polar coordinate system."
+   Returns magnitude of the complex number in polar coordinate system."
   (if (not (complex? x))
       (error "magnitude: number need to be complex")
       (sqrt (+ (* x.im x.im) (* x.re x.re)))))

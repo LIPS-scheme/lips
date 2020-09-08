@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 08 Sep 2020 13:24:32 +0000
+ * build: Tue, 08 Sep 2020 16:13:45 +0000
  */
 (function () {
   'use strict';
@@ -7666,52 +7666,139 @@
         });
       }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
       // ------------------------------------------------------------------
-      'while': doc(new Macro('while', function (code, _ref17) {
-        var dynamic_scope = _ref17.dynamic_scope,
-            error = _ref17.error;
-        var self = this;
-        var begin = new Pair(new LSymbol('begin'), code.cdr);
-        var result;
+      'do': doc(new Macro('do', /*#__PURE__*/function () {
+        var _ref17 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(code, _ref18) {
+          var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _node3, _item;
 
-        if (dynamic_scope) {
-          dynamic_scope = self;
-        }
+          return regenerator.wrap(function _callee3$(_context3) {
+            while (1) {
+              switch (_context3.prev = _context3.next) {
+                case 0:
+                  dynamic_scope = _ref18.dynamic_scope, error = _ref18.error;
+                  self = this;
 
-        return function loop() {
-          var cond = evaluate(code.car, {
-            env: self,
-            dynamic_scope: dynamic_scope,
-            error: error
-          });
+                  if (dynamic_scope) {
+                    dynamic_scope = self;
+                  }
 
-          function next(cond) {
-            if (cond && !isNull(cond)) {
-              result = evaluate(begin, {
-                env: self,
-                dynamic_scope: dynamic_scope,
-                error: error
-              });
+                  scope = self.inherit('do');
+                  vars = code.car;
+                  test = code.cdr.car;
+                  body = code.cdr.cdr;
 
-              if (isPromise(result)) {
-                return result.then(function (ret) {
-                  result = ret;
-                  return loop();
-                });
-              } else {
-                return loop();
+                  if (body !== nil) {
+                    body = new Pair(LSymbol('begin'), body);
+                  }
+
+                  eval_args = {
+                    env: scope,
+                    dynamic_scope: dynamic_scope,
+                    error: error
+                  };
+                  node = vars;
+
+                case 10:
+                  if (!(node !== nil)) {
+                    _context3.next = 21;
+                    break;
+                  }
+
+                  item = node.car;
+                  _context3.t0 = scope;
+                  _context3.t1 = item.car;
+                  _context3.next = 16;
+                  return evaluate(item.cdr.car, eval_args);
+
+                case 16:
+                  _context3.t2 = _context3.sent;
+
+                  _context3.t0.set.call(_context3.t0, _context3.t1, _context3.t2);
+
+                  node = node.cdr;
+                  _context3.next = 10;
+                  break;
+
+                case 21:
+                  _context3.next = 23;
+                  return evaluate(test.car, eval_args);
+
+                case 23:
+                  if (_context3.sent) {
+                    _context3.next = 42;
+                    break;
+                  }
+
+                  if (!(body !== nil)) {
+                    _context3.next = 27;
+                    break;
+                  }
+
+                  _context3.next = 27;
+                  return lips.evaluate(body, eval_args);
+
+                case 27:
+                  _node3 = vars;
+
+                case 28:
+                  if (!(_node3 !== nil)) {
+                    _context3.next = 40;
+                    break;
+                  }
+
+                  _item = _node3.car;
+
+                  if (!(_item.cdr.cdr !== nil)) {
+                    _context3.next = 37;
+                    break;
+                  }
+
+                  _context3.t3 = scope;
+                  _context3.t4 = _item.car;
+                  _context3.next = 35;
+                  return evaluate(_item.cdr.cdr.car, eval_args);
+
+                case 35:
+                  _context3.t5 = _context3.sent;
+
+                  _context3.t3.set.call(_context3.t3, _context3.t4, _context3.t5);
+
+                case 37:
+                  _node3 = _node3.cdr;
+                  _context3.next = 28;
+                  break;
+
+                case 40:
+                  _context3.next = 21;
+                  break;
+
+                case 42:
+                  if (!(test.cdr !== nil)) {
+                    _context3.next = 46;
+                    break;
+                  }
+
+                  _context3.next = 45;
+                  return evaluate(test.cdr.car, eval_args);
+
+                case 45:
+                  return _context3.abrupt("return", _context3.sent);
+
+                case 46:
+                case "end":
+                  return _context3.stop();
               }
-            } else {
-              return result;
             }
-          }
+          }, _callee3, this);
+        }));
 
-          return unpromise(cond, next);
-        }();
-      }), "(while cond . body)\n\n            Macro that create a loop, it exectue body untill cond expression is false"),
+        return function (_x6, _x7) {
+          return _ref17.apply(this, arguments);
+        };
+      }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
       // ------------------------------------------------------------------
-      'if': doc(new Macro('if', function (code, _ref18) {
-        var dynamic_scope = _ref18.dynamic_scope,
-            error = _ref18.error;
+      'if': doc(new Macro('if', function (code, _ref19) {
+        var dynamic_scope = _ref19.dynamic_scope,
+            error = _ref19.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -7800,9 +7887,9 @@
         }();
       }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
       // ------------------------------------------------------------------
-      'ignore': new Macro('ignore', function (code, _ref19) {
-        var dynamic_scope = _ref19.dynamic_scope,
-            error = _ref19.error;
+      'ignore': new Macro('ignore', function (code, _ref20) {
+        var dynamic_scope = _ref20.dynamic_scope,
+            error = _ref20.error;
         var args = {
           env: this,
           error: error
@@ -7952,9 +8039,9 @@
       }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
       // ------------------------------------------------------------------
       lambda: new Macro('lambda', function (code) {
-        var _ref20 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref20.dynamic_scope,
-            error = _ref20.error;
+        var _ref21 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref21.dynamic_scope,
+            error = _ref21.error;
 
         var self = this;
 
@@ -8057,9 +8144,9 @@
       'macroexpand': new Macro('macroexpand', macro_expand()),
       'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
       // ------------------------------------------------------------------
-      'define-macro': doc(new Macro(macro, function (macro, _ref21) {
-        var dynamic_scope = _ref21.dynamic_scope,
-            error = _ref21.error;
+      'define-macro': doc(new Macro(macro, function (macro, _ref22) {
+        var dynamic_scope = _ref22.dynamic_scope,
+            error = _ref22.error;
 
         if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
           var name = macro.car.car.name;
@@ -8171,8 +8258,8 @@
           validate_identifiers(macro.car);
         }
 
-        var syntax = new Syntax(function (code, _ref22) {
-          var macro_expand = _ref22.macro_expand;
+        var syntax = new Syntax(function (code, _ref23) {
+          var macro_expand = _ref23.macro_expand;
           var scope = env.inherit('syntax');
 
           if (dynamic_scope) {
@@ -8294,10 +8381,10 @@
             }
 
             if (isPromise(car) || isPromise(cdr)) {
-              return Promise.all([car, cdr]).then(function (_ref23) {
-                var _ref24 = slicedToArray(_ref23, 2),
-                    car = _ref24[0],
-                    cdr = _ref24[1];
+              return Promise.all([car, cdr]).then(function (_ref24) {
+                var _ref25 = slicedToArray(_ref24, 2),
+                    car = _ref25[0],
+                    cdr = _ref25[1];
 
                 return new Pair(car, cdr);
               });
@@ -8823,11 +8910,11 @@
         return false;
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
-      'try': doc(new Macro('try', function (code, _ref25) {
+      'try': doc(new Macro('try', function (code, _ref26) {
         var _this7 = this;
 
-        var dynamic_scope = _ref25.dynamic_scope,
-            _error = _ref25.error;
+        var dynamic_scope = _ref26.dynamic_scope,
+            _error = _ref26.error;
         return new Promise(function (resolve) {
           var args = {
             env: _this7,
@@ -9204,18 +9291,6 @@
         return LNumber(number).sub(1);
       }), "(1- number)\n\n             Function substract 1 from the number and return result."),
       // ------------------------------------------------------------------
-      '++': doc(Macro.defmacro('++', function (code) {
-        typecheck('++', code.car, 'symbol');
-        typecheck('++', code.cdr, 'nil');
-        return Pair.fromArray([new LSymbol('set!'), code.car, [new LSymbol('+'), code.car, LNumber(1)]]);
-      }), "(++ variable)\n\n             Macro that work only on variables and increment the value by one."),
-      // ------------------------------------------------------------------
-      '--': doc(new Macro('--', function (code) {
-        typecheck('--', code.car, 'symbol');
-        typecheck('--', code.cdr, 'nil');
-        return Pair.fromArray([new LSymbol('set!'), code.car, [new LSymbol('-'), code.car, LNumber(1)]]);
-      }), "(-- variable)\n\n             Macro that decrement the value it work only on symbols"),
-      // ------------------------------------------------------------------
       '%': doc(function (a, b) {
         return LNumber(a).rem(b);
       }, "(% n1 n2)\n\n             Function get reminder of it's arguments."),
@@ -9273,9 +9348,9 @@
       // ------------------------------------------------------------------
       'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
-      or: doc(new Macro('or', function (code, _ref26) {
-        var dynamic_scope = _ref26.dynamic_scope,
-            error = _ref26.error;
+      or: doc(new Macro('or', function (code, _ref27) {
+        var dynamic_scope = _ref27.dynamic_scope,
+            error = _ref27.error;
         var args = this.get('list->array')(code);
         var self = this;
 
@@ -9315,9 +9390,9 @@
       }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
       // ------------------------------------------------------------------
       and: doc(new Macro('and', function (code) {
-        var _ref27 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref27.dynamic_scope,
-            error = _ref27.error;
+        var _ref28 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref28.dynamic_scope,
+            error = _ref28.error;
 
         var args = this.get('list->array')(code);
         var self = this;
@@ -9676,70 +9751,70 @@
         }
       }
 
-      function promise(_x6) {
+      function promise(_x8) {
         return _promise.apply(this, arguments);
       }
 
       function _promise() {
-        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(node) {
+        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(node) {
           var pair;
-          return regenerator.wrap(function _callee3$(_context3) {
+          return regenerator.wrap(function _callee4$(_context4) {
             while (1) {
-              switch (_context3.prev = _context3.next) {
+              switch (_context4.prev = _context4.next) {
                 case 0:
-                  _context3.t0 = Pair;
+                  _context4.t0 = Pair;
 
                   if (!node.haveCycles('car')) {
-                    _context3.next = 5;
+                    _context4.next = 5;
                     break;
                   }
 
-                  _context3.t1 = node.car;
-                  _context3.next = 8;
+                  _context4.t1 = node.car;
+                  _context4.next = 8;
                   break;
 
                 case 5:
-                  _context3.next = 7;
+                  _context4.next = 7;
                   return resolve(node.car);
 
                 case 7:
-                  _context3.t1 = _context3.sent;
+                  _context4.t1 = _context4.sent;
 
                 case 8:
-                  _context3.t2 = _context3.t1;
+                  _context4.t2 = _context4.t1;
 
                   if (!node.haveCycles('cdr')) {
-                    _context3.next = 13;
+                    _context4.next = 13;
                     break;
                   }
 
-                  _context3.t3 = node.cdr;
-                  _context3.next = 16;
+                  _context4.t3 = node.cdr;
+                  _context4.next = 16;
                   break;
 
                 case 13:
-                  _context3.next = 15;
+                  _context4.next = 15;
                   return resolve(node.cdr);
 
                 case 15:
-                  _context3.t3 = _context3.sent;
+                  _context4.t3 = _context4.sent;
 
                 case 16:
-                  _context3.t4 = _context3.t3;
-                  pair = new _context3.t0(_context3.t2, _context3.t4);
+                  _context4.t4 = _context4.t3;
+                  pair = new _context4.t0(_context4.t2, _context4.t4);
 
                   if (node.data) {
                     pair.data = true;
                   }
 
-                  return _context3.abrupt("return", pair);
+                  return _context4.abrupt("return", pair);
 
                 case 20:
                 case "end":
-                  return _context3.stop();
+                  return _context4.stop();
               }
             }
-          }, _callee3);
+          }, _callee4);
         }));
         return _promise.apply(this, arguments);
       }
@@ -9757,10 +9832,10 @@
       }
     }
 
-    function getFunctionArgs(rest, _ref28) {
-      var env = _ref28.env,
-          dynamic_scope = _ref28.dynamic_scope,
-          error = _ref28.error;
+    function getFunctionArgs(rest, _ref29) {
+      var env = _ref29.env,
+          dynamic_scope = _ref29.dynamic_scope,
+          error = _ref29.error;
       var args = [];
       var node = rest;
       markCycles(node);
@@ -9833,11 +9908,11 @@
 
 
     function evaluate(code) {
-      var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          env = _ref29.env,
-          dynamic_scope = _ref29.dynamic_scope,
-          _ref29$error = _ref29.error,
-          error = _ref29$error === void 0 ? function () {} : _ref29$error;
+      var _ref30 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          env = _ref30.env,
+          dynamic_scope = _ref30.dynamic_scope,
+          _ref30$error = _ref30.error,
+          error = _ref30$error === void 0 ? function () {} : _ref30$error;
 
       try {
         if (dynamic_scope === true) {
@@ -9955,17 +10030,17 @@
     } // -------------------------------------------------------------------------
 
 
-    function exec(_x7, _x8, _x9) {
+    function exec(_x9, _x10, _x11) {
       return _exec.apply(this, arguments);
     } // -------------------------------------------------------------------------
 
 
     function _exec() {
-      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(string, env, dynamic_scope) {
+      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(string, env, dynamic_scope) {
         var list, results, code, result;
-        return regenerator.wrap(function _callee4$(_context4) {
+        return regenerator.wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -9981,15 +10056,15 @@
               case 3:
 
                 if (list.length) {
-                  _context4.next = 8;
+                  _context5.next = 8;
                   break;
                 }
 
-                return _context4.abrupt("return", results);
+                return _context5.abrupt("return", results);
 
               case 8:
                 code = list.shift();
-                _context4.next = 11;
+                _context5.next = 11;
                 return evaluate(code, {
                   env: env,
                   dynamic_scope: dynamic_scope,
@@ -10008,19 +10083,19 @@
                 });
 
               case 11:
-                result = _context4.sent;
+                result = _context5.sent;
                 results.push(result);
 
               case 13:
-                _context4.next = 3;
+                _context5.next = 3;
                 break;
 
               case 15:
               case "end":
-                return _context4.stop();
+                return _context5.stop();
             }
           }
-        }, _callee4);
+        }, _callee5);
       }));
       return _exec.apply(this, arguments);
     }
@@ -10310,10 +10385,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 08 Sep 2020 13:24:32 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 08 Sep 2020 16:13:45 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 08 Sep 2020 13:24:32 +0000').valueOf();
+      var date = LString('Tue, 08 Sep 2020 16:13:45 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10350,7 +10425,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 08 Sep 2020 13:24:32 +0000',
+      date: 'Tue, 08 Sep 2020 16:13:45 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

@@ -5318,46 +5318,48 @@
 
             Function fetch the file and evaluate its content as LIPS code.`),
         // ------------------------------------------------------------------
-        'while': doc(new Macro('while', function(code, { dynamic_scope, error }) {
+        'do': doc(new Macro('do', async function(code, { dynamic_scope, error }) {
             var self = this;
-            var begin = new Pair(
-                new LSymbol('begin'),
-                code.cdr
-            );
-            var result;
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
-            return (function loop() {
-                var cond = evaluate(code.car, {
-                    env: self,
-                    dynamic_scope,
-                    error
-                });
-                function next(cond) {
-                    if (cond && !isNull(cond)) {
-                        result = evaluate(begin, {
-                            env: self,
-                            dynamic_scope,
-                            error
-                        });
-                        if (isPromise(result)) {
-                            return result.then(ret => {
-                                result = ret;
-                                return loop();
-                            });
-                        } else {
-                            return loop();
-                        }
-                    } else {
-                        return result;
-                    }
+            var scope = self.inherit('do');
+            var vars = code.car;
+            var test = code.cdr.car;
+            var body = code.cdr.cdr;
+            if (body !== nil) {
+                body = new Pair(LSymbol('begin'), body);
+            }
+            const eval_args = { env: scope, dynamic_scope, error };
+            let node = vars;
+            while (node !== nil) {
+                const item = node.car;
+                scope.set(item.car, await evaluate(item.cdr.car, eval_args));
+                node = node.cdr;
+            }
+            while (!(await evaluate(test.car, eval_args))) {
+                if (body !== nil) {
+                    await lips.evaluate(body, eval_args);
                 }
-                return unpromise(cond, next);
-            })();
-        }), `(while cond . body)
+                let node = vars;
+                while (node !== nil) {
+                    const item = node.car;
+                    if (item.cdr.cdr !== nil) {
+                        scope.set(item.car, await evaluate(item.cdr.cdr.car, eval_args));
+                    }
+                    node = node.cdr;
+                }
+            }
+            if (test.cdr !== nil) {
+                return await evaluate(test.cdr.car, eval_args);
+            }
+        }), `(do ((<var> <init> <next>)) (test expression) . body)
 
-            Macro that create a loop, it exectue body untill cond expression is false`),
+             Iteration macro that evaluate the expression body in scope of the variables.
+             On Eeach loop it increase the variables according to next expression and run
+             test to check if the loop should continue. If test is signle call the macro
+             will not return anything. If the test is pair of expression and value the
+             macro will return that value after finish.`),
         // ------------------------------------------------------------------
         'if': doc(new Macro('if', function(code, { dynamic_scope, error }) {
             if (dynamic_scope) {
@@ -6903,38 +6905,6 @@
         }), `(1- number)
 
              Function substract 1 from the number and return result.`),
-        // ------------------------------------------------------------------
-        '++': doc(Macro.defmacro('++', function(code) {
-            typecheck('++', code.car, 'symbol');
-            typecheck('++', code.cdr, 'nil');
-            return Pair.fromArray([
-                new LSymbol('set!'),
-                code.car,
-                [
-                    new LSymbol('+'),
-                    code.car,
-                    LNumber(1)
-                ]
-            ]);
-        }), `(++ variable)
-
-             Macro that work only on variables and increment the value by one.`),
-        // ------------------------------------------------------------------
-        '--': doc(new Macro('--', function(code) {
-            typecheck('--', code.car, 'symbol');
-            typecheck('--', code.cdr, 'nil');
-            return Pair.fromArray([
-                new LSymbol('set!'),
-                code.car,
-                [
-                    new LSymbol('-'),
-                    code.car,
-                    LNumber(1)
-                ]
-            ]);
-        }), `(-- variable)
-
-             Macro that decrement the value it work only on symbols`),
         // ------------------------------------------------------------------
         '%': doc(function(a, b) {
             return LNumber(a).rem(b);
