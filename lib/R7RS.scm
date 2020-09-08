@@ -178,7 +178,7 @@
          (begin result1 result2 ...))))
   "(when test body ...)
 
-   Macro execute body when test expression is true."
+   Macro execute body when test expression is true.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax unless
