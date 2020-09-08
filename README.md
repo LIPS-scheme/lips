@@ -1,15 +1,17 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.5-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&56f02fcdae126b73f885a2ab1a5ed95ebecb1a27)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&3c8ca4179470448eeee29f4caf57bd1206cd73d6)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 
-LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
-specification (and part on R7RS), it have extensions that make it easier to interact
-with JavaScript, it work in Browser and Node.js.
+[LIPS is Powerful Scheme based, Lisp language written in JavaScript](https://jcubic.github.io/lips).
+It's based on Scheme dialect and R5RS/R7RS specifications, it have extensions that make it easier
+to interact with JavaScript, it work in Browser and Node.js.
 
 The name is recursive acronym which stands for LIPS is Pretty Simple.
+
+## Demo
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
@@ -17,12 +19,12 @@ The name is recursive acronym which stands for LIPS is Pretty Simple.
 
 ## Features
 
-* Compatibile with Scheme specification (R5RS and R7RS)
+* Compatible with Scheme specification (R5RS and R7RS)
 * Allow to define of new syntax, using parser extensions.
 * Allow to create new data types, that fit nicely into reader and writer.
-* Introspection and modifaction of the functions code at runtime.
-* Syntax highligthing in NPM installed binaries and on the Web REPL.
-* Builtin autoformatting (pretty printing) of code.
+* Introspection and modification of the functions code at runtime.
+* Syntax highlighting in NPM installed binaries and on the Web REPL.
+* Builtin auto formatting (pretty printing) of code.
 * Lips macros, Scheme hygienic macros with syntax-rules and macroexpand.
 * Auto unwrapping of JavaScript promises.
 * Almost no dependencies.
@@ -40,7 +42,7 @@ The name is recursive acronym which stands for LIPS is Pretty Simple.
 
 ## Installation
 
-To install you can use use npm (or yarn):
+To install you can use npm (or yarn):
 
 ```
 npm install @jcubic/lips
@@ -64,7 +66,14 @@ then include the file in script tag, You can grab the version from unpkg.com
 https://unpkg.com/@jcubic/lips
 ```
 
-or from jsdelivery (beta version)
+or from jsdelivery
+
+```
+https://cdn.jsdelivr.net/npm/@jcubic/lips/dist/lips.min.js
+```
+
+and  beta version
+
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
