@@ -1,3 +1,7 @@
+## 1.0.0-beta.6
+### Bugfix
+* fix repr of HTMLElement
+
 ## 1.0.0-beta.5
 ### Features
 * new function `make-list`

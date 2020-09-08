@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.5
+ *  \_\ /_/ \_\                     /_/ v. DEV
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 08 Sep 2020 09:44:35 +0000
+ * build: Tue, 08 Sep 2020 13:24:32 +0000
  */
 (function () {
   'use strict';
@@ -3099,8 +3099,9 @@
         fn = repr.get(constructor);
       } else {
         repr.forEach(function (value, key) {
-          // if key is Object it should only work for plain_object
+          key = unbind(key); // if key is Object it should only work for plain_object
           // because otherwise it will match every object
+
           if (obj instanceof key && (key === Object && plain_object || key !== Object)) {
             fn = value;
           }
@@ -10309,10 +10310,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 08 Sep 2020 09:44:35 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 08 Sep 2020 13:24:32 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 08 Sep 2020 09:44:35 +0000').valueOf();
+      var date = LString('Tue, 08 Sep 2020 13:24:32 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10324,7 +10325,7 @@
 
       var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.5 (".concat(_build, ") <https://git.io/lips-scheme>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://git.io/lips-scheme>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
       return banner;
     }(); // -------------------------------------------------------------------------
     // to be used with string function when code is minified
@@ -10347,9 +10348,9 @@
     LString.__className = 'string'; // -------------------------------------------------------------------------
 
     var lips = {
-      version: '1.0.0-beta.5',
+      version: 'DEV',
       banner: banner,
-      date: 'Tue, 08 Sep 2020 09:44:35 +0000',
+      date: 'Tue, 08 Sep 2020 13:24:32 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

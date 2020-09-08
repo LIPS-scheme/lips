@@ -1770,6 +1770,7 @@
             fn = repr.get(constructor);
         } else {
             repr.forEach(function(value, key) {
+                key = unbind(key);
                 // if key is Object it should only work for plain_object
                 // because otherwise it will match every object
                 if (obj instanceof key &&
