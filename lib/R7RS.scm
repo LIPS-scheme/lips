@@ -157,3 +157,10 @@
               (cdr args))))
 
 ;; -----------------------------------------------------------------------------
+(define (port? x)
+  "(port? x)
+
+   Function return true of argumet is nput or output port port object."
+  (or (output-port? x) (input-port? x)))
+
+;; -----------------------------------------------------------------------------
