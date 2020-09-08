@@ -124,6 +124,36 @@
                                         . body)
                                       args)
                                      (cl . rest))))))
-           (cl (params body0 ...) ...)))))))
+           (cl (params body0 ...) ...))))))
+  "(case-lambda expr ...)
+
+   Macro create new function with different version of the function depend on
+   number of arguments. Each expression is similar to single lambda.
+
+   e.g.:
+
+       (define sum
+          (case-lambda
+            ((x) x)
+            ((x y) (+ x y))
+            ((x y z) (+ x y z))))
+
+       (sum 1)
+       (sum 1 2)
+       (sum 1 2 3)
+
+   More arguments will give error.")
+
+;; -----------------------------------------------------------------------------
+(define (boolean=? . args)
+  "(boolean=? b1 b2 ...)
+
+   Function check if all arguments are boolean and if they are the same."
+  (if (< (length args) 2)
+      (error "boolean=?: too few arguments")
+      (reduce (lambda (acc item)
+                (and (boolean? item) (eq? acc item)))
+              (car args)
+              (cdr args))))
 
 ;; -----------------------------------------------------------------------------

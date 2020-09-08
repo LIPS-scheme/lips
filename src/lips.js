@@ -4905,6 +4905,12 @@
             Function create new string port as input that can be used to
             read S-exressions from this port using \`read\` function.`),
         // ------------------------------------------------------------------
+        'port?': doc(function(x) {
+            return is_port(x);
+        }, `(port? x)
+
+            Function return true of argumet is nput or output port port object.`),
+        // ------------------------------------------------------------------
         'output-port?': doc(function(x) {
             return x instanceof OutputPort;
         }, `(output-port? arg)

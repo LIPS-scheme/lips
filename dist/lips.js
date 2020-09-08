@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 07 Sep 2020 17:38:16 +0000
+ * build: Tue, 08 Sep 2020 08:26:35 +0000
  */
 (function () {
   'use strict';
@@ -7226,6 +7226,10 @@
         return InputStringPort(string);
       }, "(open-input-string string)\n\n            Function create new string port as input that can be used to\n            read S-exressions from this port using `read` function."),
       // ------------------------------------------------------------------
+      'port?': doc(function (x) {
+        return is_port(x);
+      }, "(port? x)\n\n            Function return true of argumet is nput or output port port object."),
+      // ------------------------------------------------------------------
       'output-port?': doc(function (x) {
         return x instanceof OutputPort;
       }, "(output-port? arg)\n\n            Function return true if argument is output port."),
@@ -10309,10 +10313,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 07 Sep 2020 17:38:16 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 08 Sep 2020 08:26:35 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 07 Sep 2020 17:38:16 +0000').valueOf();
+      var date = LString('Tue, 08 Sep 2020 08:26:35 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10349,7 +10353,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 07 Sep 2020 17:38:16 +0000',
+      date: 'Tue, 08 Sep 2020 08:26:35 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
