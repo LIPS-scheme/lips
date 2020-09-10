@@ -5345,13 +5345,18 @@
                     await lips.evaluate(body, eval_args);
                 }
                 let node = vars;
+                const next = {};
                 while (node !== nil) {
                     const item = node.car;
                     if (item.cdr.cdr !== nil) {
-                        scope.set(item.car, await evaluate(item.cdr.cdr.car, eval_args));
+                        const value = await evaluate(item.cdr.cdr.car, eval_args);
+                        next[item.car.valueOf()] = value;
                     }
                     node = node.cdr;
                 }
+                Object.entries(next).forEach(([key, value]) => {
+                    scope.set(key, value);
+                });
             }
             if (test.cdr !== nil) {
                 return await evaluate(test.cdr.car, eval_args);

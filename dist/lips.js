@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 08 Sep 2020 19:03:46 +0000
+ * build: Thu, 10 Sep 2020 07:53:21 +0000
  */
 (function () {
   'use strict';
@@ -7672,7 +7672,7 @@
       // ------------------------------------------------------------------
       'do': doc(new Macro('do', /*#__PURE__*/function () {
         var _ref17 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(code, _ref18) {
-          var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _node3, _item;
+          var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _node3, next, _item, value;
 
           return regenerator.wrap(function _callee3$(_context3) {
             while (1) {
@@ -7742,36 +7742,41 @@
 
                 case 27:
                   _node3 = vars;
+                  next = {};
 
-                case 28:
+                case 29:
                   if (!(_node3 !== nil)) {
-                    _context3.next = 40;
+                    _context3.next = 39;
                     break;
                   }
 
                   _item = _node3.car;
 
                   if (!(_item.cdr.cdr !== nil)) {
-                    _context3.next = 37;
+                    _context3.next = 36;
                     break;
                   }
 
-                  _context3.t3 = scope;
-                  _context3.t4 = _item.car;
-                  _context3.next = 35;
+                  _context3.next = 34;
                   return evaluate(_item.cdr.cdr.car, eval_args);
 
-                case 35:
-                  _context3.t5 = _context3.sent;
+                case 34:
+                  value = _context3.sent;
+                  next[_item.car.valueOf()] = value;
 
-                  _context3.t3.set.call(_context3.t3, _context3.t4, _context3.t5);
-
-                case 37:
+                case 36:
                   _node3 = _node3.cdr;
-                  _context3.next = 28;
+                  _context3.next = 29;
                   break;
 
-                case 40:
+                case 39:
+                  Object.entries(next).forEach(function (_ref19) {
+                    var _ref20 = slicedToArray(_ref19, 2),
+                        key = _ref20[0],
+                        value = _ref20[1];
+
+                    scope.set(key, value);
+                  });
                   _context3.next = 21;
                   break;
 
@@ -7800,9 +7805,9 @@
         };
       }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
       // ------------------------------------------------------------------
-      'if': doc(new Macro('if', function (code, _ref19) {
-        var dynamic_scope = _ref19.dynamic_scope,
-            error = _ref19.error;
+      'if': doc(new Macro('if', function (code, _ref21) {
+        var dynamic_scope = _ref21.dynamic_scope,
+            error = _ref21.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -7891,9 +7896,9 @@
         }();
       }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
       // ------------------------------------------------------------------
-      'ignore': new Macro('ignore', function (code, _ref20) {
-        var dynamic_scope = _ref20.dynamic_scope,
-            error = _ref20.error;
+      'ignore': new Macro('ignore', function (code, _ref22) {
+        var dynamic_scope = _ref22.dynamic_scope,
+            error = _ref22.error;
         var args = {
           env: this,
           error: error
@@ -8043,9 +8048,9 @@
       }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
       // ------------------------------------------------------------------
       lambda: new Macro('lambda', function (code) {
-        var _ref21 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref21.dynamic_scope,
-            error = _ref21.error;
+        var _ref23 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref23.dynamic_scope,
+            error = _ref23.error;
 
         var self = this;
 
@@ -8148,9 +8153,9 @@
       'macroexpand': new Macro('macroexpand', macro_expand()),
       'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
       // ------------------------------------------------------------------
-      'define-macro': doc(new Macro(macro, function (macro, _ref22) {
-        var dynamic_scope = _ref22.dynamic_scope,
-            error = _ref22.error;
+      'define-macro': doc(new Macro(macro, function (macro, _ref24) {
+        var dynamic_scope = _ref24.dynamic_scope,
+            error = _ref24.error;
 
         if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
           var name = macro.car.car.name;
@@ -8262,8 +8267,8 @@
           validate_identifiers(macro.car);
         }
 
-        var syntax = new Syntax(function (code, _ref23) {
-          var macro_expand = _ref23.macro_expand;
+        var syntax = new Syntax(function (code, _ref25) {
+          var macro_expand = _ref25.macro_expand;
           var scope = env.inherit('syntax');
 
           if (dynamic_scope) {
@@ -8385,10 +8390,10 @@
             }
 
             if (isPromise(car) || isPromise(cdr)) {
-              return Promise.all([car, cdr]).then(function (_ref24) {
-                var _ref25 = slicedToArray(_ref24, 2),
-                    car = _ref25[0],
-                    cdr = _ref25[1];
+              return Promise.all([car, cdr]).then(function (_ref26) {
+                var _ref27 = slicedToArray(_ref26, 2),
+                    car = _ref27[0],
+                    cdr = _ref27[1];
 
                 return new Pair(car, cdr);
               });
@@ -8914,11 +8919,11 @@
         return false;
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
-      'try': doc(new Macro('try', function (code, _ref26) {
+      'try': doc(new Macro('try', function (code, _ref28) {
         var _this7 = this;
 
-        var dynamic_scope = _ref26.dynamic_scope,
-            _error = _ref26.error;
+        var dynamic_scope = _ref28.dynamic_scope,
+            _error = _ref28.error;
         return new Promise(function (resolve) {
           var args = {
             env: _this7,
@@ -9352,9 +9357,9 @@
       // ------------------------------------------------------------------
       'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
-      or: doc(new Macro('or', function (code, _ref27) {
-        var dynamic_scope = _ref27.dynamic_scope,
-            error = _ref27.error;
+      or: doc(new Macro('or', function (code, _ref29) {
+        var dynamic_scope = _ref29.dynamic_scope,
+            error = _ref29.error;
         var args = this.get('list->array')(code);
         var self = this;
 
@@ -9394,9 +9399,9 @@
       }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
       // ------------------------------------------------------------------
       and: doc(new Macro('and', function (code) {
-        var _ref28 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref28.dynamic_scope,
-            error = _ref28.error;
+        var _ref30 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref30.dynamic_scope,
+            error = _ref30.error;
 
         var args = this.get('list->array')(code);
         var self = this;
@@ -9836,10 +9841,10 @@
       }
     }
 
-    function getFunctionArgs(rest, _ref29) {
-      var env = _ref29.env,
-          dynamic_scope = _ref29.dynamic_scope,
-          error = _ref29.error;
+    function getFunctionArgs(rest, _ref31) {
+      var env = _ref31.env,
+          dynamic_scope = _ref31.dynamic_scope,
+          error = _ref31.error;
       var args = [];
       var node = rest;
       markCycles(node);
@@ -9912,11 +9917,11 @@
 
 
     function evaluate(code) {
-      var _ref30 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          env = _ref30.env,
-          dynamic_scope = _ref30.dynamic_scope,
-          _ref30$error = _ref30.error,
-          error = _ref30$error === void 0 ? function () {} : _ref30$error;
+      var _ref32 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          env = _ref32.env,
+          dynamic_scope = _ref32.dynamic_scope,
+          _ref32$error = _ref32.error,
+          error = _ref32$error === void 0 ? function () {} : _ref32$error;
 
       try {
         if (dynamic_scope === true) {
@@ -10389,10 +10394,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 08 Sep 2020 19:03:46 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 10 Sep 2020 07:53:21 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 08 Sep 2020 19:03:46 +0000').valueOf();
+      var date = LString('Thu, 10 Sep 2020 07:53:21 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10429,7 +10434,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 08 Sep 2020 19:03:46 +0000',
+      date: 'Thu, 10 Sep 2020 07:53:21 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
