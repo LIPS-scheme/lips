@@ -6760,7 +6760,8 @@
             if (n instanceof LNumber) {
                 n = n.valueOf();
             }
-            return Pair.fromArray(new Array(n).fill(0).map((_, i) => LNumber(i)));
+            const range = new Array(n).fill(0).map((_, i) => LNumber(i));
+            return Pair.fromArray(range, false);
         }, `(range n)
 
             Function return list of n numbers from 0 to n - 1`),

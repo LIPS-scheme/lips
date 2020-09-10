@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 10 Sep 2020 07:53:21 +0000
+ * build: Thu, 10 Sep 2020 09:20:47 +0000
  */
 (function () {
   'use strict';
@@ -9191,9 +9191,10 @@
           n = n.valueOf();
         }
 
-        return Pair.fromArray(new Array(n).fill(0).map(function (_, i) {
+        var range = new Array(n).fill(0).map(function (_, i) {
           return LNumber(i);
-        }));
+        });
+        return Pair.fromArray(range, false);
       }, "(range n)\n\n            Function return list of n numbers from 0 to n - 1"),
       // ------------------------------------------------------------------
       compose: doc(compose, "(compose . fns)\n\n             Higher order function and create new function that apply all functions\n             From right to left and return it's value. Reverse of compose.\n             e.g.:\n             ((compose (curry + 2) (curry * 3)) 3)\n             11\n            "),
@@ -10394,10 +10395,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 10 Sep 2020 07:53:21 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 10 Sep 2020 09:20:47 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 10 Sep 2020 07:53:21 +0000').valueOf();
+      var date = LString('Thu, 10 Sep 2020 09:20:47 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10434,7 +10435,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 10 Sep 2020 07:53:21 +0000',
+      date: 'Thu, 10 Sep 2020 09:20:47 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
