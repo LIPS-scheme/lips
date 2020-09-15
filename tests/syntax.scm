@@ -634,3 +634,24 @@
                       (set! result (cons i result)))
                  result)
                '(4 3 2 1 0))))
+
+
+(test "syntax-rules: it should define let*"
+      (lambda (t)
+        ;; source https://www.scheme.com/tspl2d/syntax.html#g2252
+        (t.is (type let*) "macro")
+        (define-syntax let*
+          (syntax-rules ()
+            ((_ () e1 e2 ...) (let () e1 e2 ...))
+            ((_ ((i1 v1) (i2 v2) ...) e1 e2 ...)
+             (let ((i1 v1))
+               (let* ((i2 v2) ...) e1 e2 ...)))))
+        (t.is (type let*) "syntax")
+        (t.is (let* ()
+                (+ 1 2))
+              3)
+        (t.is (let* ((x 10)
+                     (y (+ x 2)))
+                (+ x y))
+              22)))
+
