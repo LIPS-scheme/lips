@@ -12,7 +12,7 @@
 It's based on Scheme dialect and R5RS/R7RS specifications, it have extensions that make it easier
 to interact with JavaScript, it work in Browser and Node.js.
 
-The name is recursive acronym which stands for LIPS is Pretty Simple.
+The name is recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Demo
 
@@ -95,6 +95,10 @@ Create any link in your bookmarks, edit it and copy paste the content of that fi
 Affter you click on the link it will create REPL at the bottom of the page.
 (NOTE: it may don't work on every page because of content security policy, 
 e.g. google.com or gihub.com)
+
+If you have trouble with creating bookmarklet you can open
+[LISP Scheme home page](https://jcubic.github.io/lips/#bookmark) where you can
+find link that you can drag to your bookmarks.
 
 ## Usage
 

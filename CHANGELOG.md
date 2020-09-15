@@ -4,6 +4,7 @@
 ### Bugfix
 * fix repr of HTMLElement
 * fix creating LCharacter from scheme string
+* fix `do` macro with let like scope for next values
 
 ## 1.0.0-beta.5
 ### Features

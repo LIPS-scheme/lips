@@ -1,7 +1,7 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.5-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&260e1ddbb43d1d6299412b02a3ef125d8d0dcc98)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&b859de25b0cc8b21aef0cde8e321156f9dc26936)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 <a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20make%20programmer%20live%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript,%20lisp%20and%20npm%20to%20create%20your%20applications.&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
@@ -12,7 +12,7 @@
 It's based on Scheme dialect and R5RS/R7RS specifications, it have extensions that make it easier
 to interact with JavaScript, it work in Browser and Node.js.
 
-The name is recursive acronym which stands for LIPS is Pretty Simple.
+The name is recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Demo
 
@@ -95,6 +95,10 @@ Create any link in your bookmarks, edit it and copy paste the content of that fi
 Affter you click on the link it will create REPL at the bottom of the page.
 (NOTE: it may don't work on every page because of content security policy, 
 e.g. google.com or gihub.com)
+
+If you have trouble with creating bookmarklet you can open
+[LISP Scheme home page](https://jcubic.github.io/lips/#bookmark) where you can
+find link that you can drag to your bookmarks.
 
 ## Usage
 
