@@ -214,3 +214,16 @@
       (vector->string (apply vector-map fn (map string->vector rest)))))
 
 ;; -----------------------------------------------------------------------------
+(define (dynamic-wind before thunk after)
+  "(dynamic-wind before thunk after)
+
+   Function accept 3 procedures/lambdas and execute thunk with before and always
+   after even if error accur"
+  (before)
+  (let ((result (try (thunk)
+                     (catch (e)
+                            (error e)))))
+    (after)
+    result))
+
+;; -----------------------------------------------------------------------------
