@@ -5391,6 +5391,9 @@
                     });
                 }
             };
+            if (code === nil) {
+                throw new Error('too few expressions for `if`');
+            }
             var cond = evaluate(code.car, { env, dynamic_scope, error });
             return unpromise(cond, resolve);
         }), `(if cond true-expr false-expr)

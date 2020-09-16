@@ -8,6 +8,7 @@
 * fix `do` macro with let like scope for next values
 * fix line breaking in formatter
 * fix parsing options in executable (fix for `alias lips="lips -q"`)
+* throw exception when evaluating `(if)`
 
 ## 1.0.0-beta.5
 ### Features
