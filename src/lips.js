@@ -1264,6 +1264,7 @@
     var p_e = /[\])]/;
     var not_p = /[^()[\]]/;
     const not_close = new Ahead(/[^)\]]/);
+    const open = new Ahead(/[([]/);
     const glob = Symbol.for('*');
     const sexp = new Pattern([p_o, glob, p_e], '+');
     const symbol = new Pattern([Symbol.for('symbol')], '?');
@@ -1284,9 +1285,10 @@
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
         [[p_o, keywords_re('syntax-rules'), symbol, identifiers], 1],
         [[p_o, keywords_re('syntax-rules'), symbol, identifiers, sexp], 1, not_close],
-        //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
-        [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
-        [[/(?!lambda)/, new Pattern([p_o, glob, p_e], '+')], 1, not_close],
+        [[p_o, let_re, symbol, p_o, let_value], 2, not_close],
+        //[[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
+        [[p_o, /^(?!.*\blambda\b).*$/, new Pattern([/[^([]/], '+'), sexp], 1, not_close],
+        [[p_o, /^(?!.*\blambda\b).*$/, new Pattern([/[^([]/], '+')], 1, open],
         [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
         [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
