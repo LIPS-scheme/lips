@@ -17,7 +17,7 @@ const {
     env,
     banner,
     InputPort,
-    OutputPort } = require('../src/lips');
+    OutputPort } = require('../dist/lips');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -229,12 +229,12 @@ if (options.version || options.V) {
         ["os.uname", os.platform(), os.release()],
         ["os.env.LANG", process.env.LANG],
         ["os.env.TERM", process.env.TERM],
-        ["build.date", new Date(date).toISOString()]
+        ["build.date", date.match(/^\{\{|\}\}$/) ? date : new Date(date).toISOString()]
     ].map(([key, ...values]) => {
         return [LSymbol(key), ...values];
     }));
     boostrap(interp).then(function() {
-        run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
+        return run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
     });
 } else if (options.e || options.eval || options.c || options.code) {
     // from 1.0 documentation should use -e but it's not breaking change
