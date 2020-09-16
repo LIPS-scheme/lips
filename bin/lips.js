@@ -215,7 +215,8 @@ var interp = Interpreter('repl', {
 });
 
 // -----------------------------------------------------------------------------
-const options = parse_options(process.argv.slice(2), {boolean: ['d', 'dynamic']});
+const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version'];
+const options = parse_options(process.argv.slice(2), { boolean });
 if (options.version || options.V) {
     // SRFI 176
     global.output = Pair.fromArray([
