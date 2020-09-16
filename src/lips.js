@@ -1273,32 +1273,35 @@
     const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
     var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
-    var let_re = /^(?:#:)?(let|let\*|letrec|let-env)(:?-syntax)?$/;
+    /* eslint-disable */
+    var non_def = /^(?!.*\b(?:define|let(?:\*|rec|-env|-syntax)?|lambda|syntax-rules)\b).*$/;
+    /* eslint-enable */
+    var let_re = /^(?:#:)?(let(?:\*|rec|-env|-syntax)?)$/;
     function keywords_re(...args) {
         return new RegExp(`^(?:#:)?(?:${args.join('|')})$`);
     }
     // line breaking rules
     Formatter.rules = [
         [[p_o, keywords_re('begin')], 1],
-        [[p_o, keywords_re('begin'), sexp], 1, not_close],
+        //[[p_o, keywords_re('begin'), sexp], 1, not_close],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
         [[p_o, keywords_re('syntax-rules'), symbol, identifiers], 1],
         [[p_o, keywords_re('syntax-rules'), symbol, identifiers, sexp], 1, not_close],
-        [[p_o, let_re, symbol, p_o, let_value], 2, not_close],
+        //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
         //[[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
-        [[p_o, /^(?!.*\blambda\b).*$/, new Pattern([/[^([]/], '+'), sexp], 1, not_close],
-        [[p_o, /^(?!.*\blambda\b).*$/, new Pattern([/[^([]/], '+')], 1, open],
+        [[p_o, non_def, new Pattern([/[^([]/], '+'), sexp], 1, not_close],
+        [[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
         [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
         [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
         [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
-        [[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close],
+        //[[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close],
         [[p_o, keywords_re('if'), not_p, glob], 1],
-        [[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1],
-        [[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1],
-        [[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
-        [[p_o, [p_o, glob, p_e], string_re], 1],
+        //[[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1],
+        //[[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1],
+        //[[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
+        //[[p_o, [p_o, glob, p_e], string_re], 1],
         [[p_o, def_lambda_re, p_o, glob, p_e], 1, not_close],
         [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close],
         [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]

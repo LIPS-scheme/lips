@@ -749,3 +749,11 @@
    Macro that decrement the value it work only on symbols")
 
 ;; ---------------------------------------------------------------------------------------
+(define (pretty-format pair)
+  "(pretty-format pair)
+
+   Function return pretty printed string from pair expression."
+  (typecheck "pretty-pair" pair "pair")
+  (--> (new lips.Formatter (repr pair true)) (break) (format)))
+
+;; ---------------------------------------------------------------------------------------
