@@ -88,6 +88,7 @@
     }
     // -------------------------------------------------------------------------
     /* eslint-disable */
+    /* istanbul ignore next */
     function log(x, regex = null) {
         var literal = arguments[1] === true;
         function msg(x) {
@@ -107,6 +108,7 @@
         return x;
     }
     if (!root.fetch) {
+        /* istanbul ignore next */
         root.fetch = function(url, options) {
             options = options || {};
             return new Promise( (resolve, reject) => {
@@ -904,9 +906,8 @@
     function matcher(name, arg) {
         if (arg instanceof RegExp) {
             return x => String(x).match(arg);
-        } else if (typeof arg !== 'function') {
-            throw new Error(`${name} argument need to be a function or RegExp`);
-        } else {
+        } else if (typeof arg === 'function') {
+            // it will alwasy be function
             return arg;
         }
     }
@@ -932,6 +933,7 @@
         }).join('\n');
     }
     // ----------------------------------------------------------------------
+    /* istanbul ignore next */
     function dump(arr) {
         if (false) {
             console.log(arr.map((arg) => {
@@ -2298,6 +2300,7 @@
         // in loop we add x to the list so we know that this is not
         // duplicated ellipsis symbol
         function log(x) {
+            /* istanbul ignore next */
             if (user_env.get('DEBUG', { throwError: false })) {
                 console.log(x);
             }
@@ -2626,6 +2629,7 @@
             return rename(name);
         }
         function log(x) {
+            /* istanbul ignore next */
             if (user_env.get('DEBUG', { throwError: false })) {
                 console.log(x);
             }
@@ -5851,6 +5855,7 @@
                     var expr = rules.car.cdr.car;
                     var bindings = extract_patterns(rule, code, symbols, ellipsis);
                     if (bindings) {
+                        /* istanbul ignore next */
                         if (user_env.get('DEBUG', { throwError: false })) {
                             console.log(JSON.stringify(symbolize(bindings), true, 2));
                             console.log('PATTERN: ' + rule.toString(true));
@@ -6297,19 +6302,13 @@
 
             Function create new JavaScript instance of an object.`),
         // ------------------------------------------------------------------
-        'typecheck': doc(function(label, arg, expected, position) {
-            if (expected instanceof Pair) {
-                expected = expected.toArray();
-            }
-            if (expected instanceof Array) {
-                expected = expected.map(x => x.valueOf());
-            }
-            typecheck(label, arg, expected, position);
-        }, `(typecheck label value type [position])
+        'typecheck': doc(
+            typecheck,
+            `(typecheck label value type [position])
 
-           Function check type and throw exception if type don't match.
-           Type can be string or list of strings. Position optional argument
-           is used to created proper error message.`),
+             Function check type and throw exception if type don't match.
+             Type can be string or list of strings. Position optional argument
+             is used to created proper error message.`),
         // ------------------------------------------------------------------
         'unset-special!': doc(function(symbol) {
             typecheck('remove-special!', symbol, 'string');
@@ -7209,13 +7208,17 @@
     function typeErrorMessage(fn, got, expected, position = null) {
         let postfix = fn ? ` in expression \`${fn}\`` : '';
         if (position !== null) {
-            postfix += ` argument ${position}`;
+            postfix += ` (argument ${position})`;
         }
         if (expected instanceof Array) {
-            const last = expected[expected.length - 1];
-            expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+            if (expected.length === 1) {
+                expected = expected[0];
+            } else {
+                const last = expected[expected.length - 1];
+                expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+            }
         }
-        return `Expecting ${expected} got ${got}${postfix}`;
+        return `Expecting ${expected}, got ${got}${postfix}`;
     }
     // -------------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
@@ -7224,6 +7227,9 @@
         var match = false;
         if (expected instanceof Pair) {
             expected = expected.toArray();
+        }
+        if (expected instanceof Array) {
+            expected = expected.map(x => x.valueOf());
         }
         if (expected instanceof Array) {
             expected = expected.map(x => x.valueOf().toLowerCase());

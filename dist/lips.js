@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 17 Sep 2020 00:00:50 +0000
+ * build: Thu, 17 Sep 2020 07:12:26 +0000
  */
 (function () {
   'use strict';
@@ -1109,6 +1109,7 @@
     } // -------------------------------------------------------------------------
 
     if (!root.fetch) {
+      /* istanbul ignore next */
       root.fetch = function (url, options) {
         options = options || {};
         return new Promise(function (resolve, reject) {
@@ -2072,9 +2073,8 @@
         return function (x) {
           return String(x).match(arg);
         };
-      } else if (typeof arg !== 'function') {
-        throw new Error("".concat(name, " argument need to be a function or RegExp"));
-      } else {
+      } else if (typeof arg === 'function') {
+        // it will alwasy be function
         return arg;
       }
     } // ----------------------------------------------------------------------
@@ -3853,6 +3853,7 @@
       // duplicated ellipsis symbol
 
       function log(x) {
+        /* istanbul ignore next */
         if (user_env.get('DEBUG', {
           throwError: false
         })) {
@@ -4235,6 +4236,7 @@
       }
 
       function log(x) {
+        /* istanbul ignore next */
         if (user_env.get('DEBUG', {
           throwError: false
         })) {
@@ -8316,6 +8318,7 @@
             var bindings = extract_patterns(rule, code, symbols, ellipsis);
 
             if (bindings) {
+              /* istanbul ignore next */
               if (user_env.get('DEBUG', {
                 throwError: false
               })) {
@@ -8763,19 +8766,7 @@
         return instance;
       }, "(new obj . args)\n\n            Function create new JavaScript instance of an object."),
       // ------------------------------------------------------------------
-      'typecheck': doc(function (label, arg, expected, position) {
-        if (expected instanceof Pair) {
-          expected = expected.toArray();
-        }
-
-        if (expected instanceof Array) {
-          expected = expected.map(function (x) {
-            return x.valueOf();
-          });
-        }
-
-        typecheck(label, arg, expected, position);
-      }, "(typecheck label value type [position])\n\n           Function check type and throw exception if type don't match.\n           Type can be string or list of strings. Position optional argument\n           is used to created proper error message."),
+      'typecheck': doc(typecheck, "(typecheck label value type [position])\n\n             Function check type and throw exception if type don't match.\n             Type can be string or list of strings. Position optional argument\n             is used to created proper error message."),
       // ------------------------------------------------------------------
       'unset-special!': doc(function (symbol) {
         typecheck('remove-special!', symbol, 'string');
@@ -9630,15 +9621,19 @@
       var postfix = fn ? " in expression `".concat(fn, "`") : '';
 
       if (position !== null) {
-        postfix += " argument ".concat(position);
+        postfix += " (argument ".concat(position, ")");
       }
 
       if (expected instanceof Array) {
-        var last = expected[expected.length - 1];
-        expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+        if (expected.length === 1) {
+          expected = expected[0];
+        } else {
+          var last = expected[expected.length - 1];
+          expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+        }
       }
 
-      return "Expecting ".concat(expected, " got ").concat(got).concat(postfix);
+      return "Expecting ".concat(expected, ", got ").concat(got).concat(postfix);
     } // -------------------------------------------------------------------------
 
 
@@ -9650,6 +9645,12 @@
 
       if (expected instanceof Pair) {
         expected = expected.toArray();
+      }
+
+      if (expected instanceof Array) {
+        expected = expected.map(function (x) {
+          return x.valueOf();
+        });
       }
 
       if (expected instanceof Array) {
@@ -10412,10 +10413,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 17 Sep 2020 00:00:50 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 17 Sep 2020 07:12:26 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 17 Sep 2020 00:00:50 +0000').valueOf();
+      var date = LString('Thu, 17 Sep 2020 07:12:26 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10452,7 +10453,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 17 Sep 2020 00:00:50 +0000',
+      date: 'Thu, 17 Sep 2020 07:12:26 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

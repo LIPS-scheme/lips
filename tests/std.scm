@@ -68,5 +68,15 @@
 (test "std: find"
       (lambda (t)
         (t.is (find odd? (list 1 2 3)) 1)
+        (t.is (find /^[0-9]+$/ (list "foo" "bar" "10")) "10")
+        (t.is (to.throw (find "xxx" (list 1 2 3))) true)
         (t.is (find odd? (list 0 2 4 3)) 3)
         (t.is (find odd? (list 0 2 4 6)) nil)))
+
+(test "std: typecheck"
+      (lambda (t)
+        (t.is (to.throw (typecheck "test" 10 (list "string"))) true)
+        (t.is (try (typecheck "test" 10 (list "string") 0) (catch (e) e.message))
+              "Expecting string, got number in expression `test` (argument 0)")
+        (t.is (try (typecheck "test" 10 (list "string" "character") 0) (catch (e) e.message))
+              "Expecting string or character, got number in expression `test` (argument 0)")))

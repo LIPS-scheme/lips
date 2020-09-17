@@ -27,6 +27,15 @@
          (t.is "\x9;\x9;" "\t\t")
          (t.is '|\x9;\x9;|  '|\t\t|)))
 
+(test "parser: character literals"
+      (lambda (t)
+        (let ((a #\A) (b #\xFF))
+          (t.is (and (string=? (type a) "character")
+                     (string=? (type b) "character"))
+                true)
+          (t.is (a.valueOf) "A")
+          (t.is (b.valueOf) "\xFF;"))))
+
 (test "parser: quotes with literals"
       (lambda (t)
         (t.is ''#f '(quote #f))
