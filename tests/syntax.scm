@@ -285,11 +285,10 @@
             ((_ ((a ==> b) ...) . body)
              (let ((a b) ...) . body))))
 
-        (t.is (let ((==> (lambda (x) (* x x))))
-                (let+ ((a ==> 1)
-                       (b ==> 2))
-                      (==> (+ a b))))
-              9)))
+        (t.is (let+ ((a ==> 1)
+                     (b ==> 2))
+                    (+ a b))
+              3)))
 
 (test "syntax-rules: basic ellipsis (srfi-46)"
       (lambda (t)
@@ -655,3 +654,13 @@
                 (+ x y))
               22)))
 
+(test "syntax: scope + symbols"
+      (lambda (t)
+
+        (define-syntax foo
+          (syntax-rules (++)
+            ((_ x ++ y)
+             (list x 1 1 y))))
+
+        (t.is (foo 1 ++ 2) (list 1 1 1 2))
+        (t.is (to.throw (let ((++ 10)) (foo 1 ++ 2))) true)))

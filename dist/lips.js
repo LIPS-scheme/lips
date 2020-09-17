@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 17 Sep 2020 09:21:02 +0000
+ * build: Thu, 17 Sep 2020 09:54:40 +0000
  */
 (function () {
   'use strict';
@@ -3841,7 +3841,7 @@
     // :: TODO detect cycles
     // ----------------------------------------------------------------------
 
-    function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
+    function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope) {
       var bindings = {
         '...': {
           symbols: {},
@@ -3878,7 +3878,9 @@
         }
 
         if (pattern instanceof LSymbol && symbols.includes(pattern.valueOf())) {
-          return LSymbol.is(code, pattern);
+          var ref = scope.ref(code);
+          var valid_ref = typeof ref === 'undefined' || ref === global_env;
+          return LSymbol.is(code, pattern) && valid_ref;
         } // pattern (a b (x ...)) and (x ...) match nil
 
 
@@ -6883,12 +6885,18 @@
 
     Interpreter.prototype.exec = function (code) {
       var dynamic = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : false;
+      var env = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
       typecheck('Intepreter::exec', code, 'string', 1);
       typecheck('Intepreter::exec', dynamic, 'boolean', 2); // simple solution to overwrite this variable in each interpreter
       // before evaluation of user code
 
       global_env.set('**interaction-environment**', this.env);
-      return exec(code, this.env, dynamic ? this.env : false);
+
+      if (env === null) {
+        env = this.env;
+      }
+
+      return exec(code, env, dynamic ? env : false);
     }; // -------------------------------------------------------------------------
 
 
@@ -8316,7 +8324,7 @@
           while (rules !== nil) {
             var rule = rules.car.car;
             var expr = rules.car.cdr.car;
-            var bindings = extract_patterns(rule, code, symbols, ellipsis);
+            var bindings = extract_patterns(rule, code, symbols, ellipsis, this);
 
             if (bindings) {
               /* istanbul ignore next */
@@ -10414,10 +10422,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 17 Sep 2020 09:21:02 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 17 Sep 2020 09:54:40 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 17 Sep 2020 09:21:02 +0000').valueOf();
+      var date = LString('Thu, 17 Sep 2020 09:54:40 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10454,7 +10462,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 17 Sep 2020 09:21:02 +0000',
+      date: 'Thu, 17 Sep 2020 09:54:40 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

@@ -11,6 +11,7 @@
 * fix parsing options in executable (fix for `alias lips="lips -q"`)
 * throw exception when evaluating `(if)`
 * fix `object?` and `plain-object?`
+* throw exception when invoking syntax that shadow literal identifier
 
 ## 1.0.0-beta.5
 ### Features

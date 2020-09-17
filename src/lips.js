@@ -2289,7 +2289,7 @@
     // :: list of bindings from code that match the pattern
     // :: TODO detect cycles
     // ----------------------------------------------------------------------
-    function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
+    function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope) {
         var bindings = {
             '...': {
                 symbols: { }, // symbols ellipsis (x ...)
@@ -2318,7 +2318,9 @@
             }
             if (pattern instanceof LSymbol &&
                 symbols.includes(pattern.valueOf())) {
-                return LSymbol.is(code, pattern);
+                const ref = scope.ref(code);
+                const valid_ref = typeof ref === 'undefined' || ref === global_env;
+                return LSymbol.is(code, pattern) && valid_ref;
             }
             // pattern (a b (x ...)) and (x ...) match nil
             if (pattern instanceof Pair &&
@@ -4619,13 +4621,16 @@
         this.env = user_env.inherit(name, obj);
     }
     // -------------------------------------------------------------------------
-    Interpreter.prototype.exec = function(code, dynamic = false) {
+    Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
         typecheck('Intepreter::exec', code, 'string', 1);
         typecheck('Intepreter::exec', dynamic, 'boolean', 2);
         // simple solution to overwrite this variable in each interpreter
         // before evaluation of user code
         global_env.set('**interaction-environment**', this.env);
-        return exec(code, this.env, dynamic ? this.env : false);
+        if (env === null) {
+            env = this.env;
+        }
+        return exec(code, env, dynamic ? env : false);
     };
     // -------------------------------------------------------------------------
     Interpreter.prototype.get = function(value) {
@@ -5854,7 +5859,7 @@
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-                    var bindings = extract_patterns(rule, code, symbols, ellipsis);
+                    var bindings = extract_patterns(rule, code, symbols, ellipsis, this);
                     if (bindings) {
                         /* istanbul ignore next */
                         if (user_env.get('DEBUG', { throwError: false })) {

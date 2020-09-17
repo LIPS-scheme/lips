@@ -93,11 +93,11 @@ function parse_options(arg, options) {
 }
 
 // -----------------------------------------------------------------------------
-function run(code, interpreter, dynamic = false) {
+function run(code, interpreter, dynamic = false, env = null) {
     if (typeof code !== 'string') {
         code = code.toString();
     }
-    return interpreter.exec(code, dynamic).catch(function(e) {
+    return interpreter.exec(code, dynamic, env).catch(function(e) {
         console.error(e.message);
         console.error('Call (stack-trace) to see the stack');
         console.error('Thrown exception is in global exception variable, use ' +
@@ -145,7 +145,7 @@ function boostrap(interpreter) {
                 }
             }
             var data = fs.readFileSync(path);
-            return run(data, interpreter).then(next);
+            return run(data, interpreter, false, env.parent).then(next);
         }
     })();
 }
