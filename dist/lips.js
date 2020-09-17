@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 17 Sep 2020 10:51:46 +0000
+ * build: Thu, 17 Sep 2020 16:04:51 +0000
  */
 (function () {
   'use strict';
@@ -3138,6 +3138,8 @@
     // :: that will show symbols
     // ----------------------------------------------------------------------
 
+    /* istanbul ignore next */
+
     function symbolize(obj) {
       if (obj && _typeof_1(obj) === 'object') {
         var result = {};
@@ -4260,22 +4262,21 @@
 
       function rename(name) {
         if (!gensyms[name]) {
-          var value = scope.get(name, {
-            throwError: false
-          });
-          var gensym_name = gensym(name); // keep names so they can be restored after evaluation
+          var ref = scope.ref(name);
+          var gensym_name = gensym(name);
+
+          if (ref) {
+            var value = scope.get(name);
+            scope.set(gensym_name, value);
+          } // keep names so they can be restored after evaluation
           // if there are free symbols as output
           // kind of hack
+
 
           names.push({
             name: name,
             gensym: gensym_name
           });
-
-          if (typeof value !== 'undefined') {
-            scope.set(gensym_name, value);
-          }
-
           gensyms[name] = gensym_name;
         }
 
@@ -8314,7 +8315,17 @@
             dynamic_scope = scope;
           }
 
-          var var_scope = this;
+          var var_scope = this; // for macros that define variables used in macro (2 levels nestting)
+
+          if (var_scope.name === Syntax.merge_env) {
+            // copy refs for defined gynsyms
+            var props = Object.getOwnPropertySymbols(var_scope.env);
+            props.forEach(function (symbol) {
+              var_scope.parent.set(symbol, var_scope.env[symbol]);
+            });
+            var_scope = var_scope.parent;
+          }
+
           var eval_args = {
             env: scope,
             dynamic_scope: dynamic_scope,
@@ -10436,10 +10447,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 17 Sep 2020 10:51:46 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 17 Sep 2020 16:04:51 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 17 Sep 2020 10:51:46 +0000').valueOf();
+      var date = LString('Thu, 17 Sep 2020 16:04:51 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10476,7 +10487,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 17 Sep 2020 10:51:46 +0000',
+      date: 'Thu, 17 Sep 2020 16:04:51 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

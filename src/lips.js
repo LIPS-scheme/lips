@@ -1805,6 +1805,7 @@
     // :: debug function that can be used with JSON.stringify
     // :: that will show symbols
     // ----------------------------------------------------------------------
+    /* istanbul ignore next */
     function symbolize(obj) {
         if (obj && typeof obj === 'object') {
             var result = {};
@@ -2646,17 +2647,18 @@
         }
         function rename(name) {
             if (!gensyms[name]) {
-                var value = scope.get(name, { throwError: false });
+                var ref = scope.ref(name);
                 const gensym_name = gensym(name);
+                if (ref) {
+                    const value = scope.get(name);
+                    scope.set(gensym_name, value);
+                }
                 // keep names so they can be restored after evaluation
                 // if there are free symbols as output
                 // kind of hack
                 names.push({
                     name, gensym: gensym_name
                 });
-                if (typeof value !== 'undefined') {
-                    scope.set(gensym_name, value);
-                }
                 gensyms[name] = gensym_name;
             }
             return gensyms[name];
@@ -5852,6 +5854,15 @@
                     dynamic_scope = scope;
                 }
                 var var_scope = this;
+                // for macros that define variables used in macro (2 levels nestting)
+                if (var_scope.name === Syntax.merge_env) {
+                    // copy refs for defined gynsyms
+                    const props = Object.getOwnPropertySymbols(var_scope.env);
+                    props.forEach(symbol => {
+                        var_scope.parent.set(symbol, var_scope.env[symbol]);
+                    });
+                    var_scope = var_scope.parent;
+                }
                 var eval_args = { env: scope, dynamic_scope, error };
                 let ellipsis, rules, symbols;
                 if (macro.car instanceof LSymbol) {

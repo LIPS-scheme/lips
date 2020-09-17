@@ -692,3 +692,49 @@
         (t.is (to.throw ((lambda (++)
                            (foo 1 ++ 2)) 10))
               true)))
+
+(test "syntax: scope with rewriting"
+      (lambda (t)
+        ;; ref: https://www.cs.utah.edu/plt/scope-sets/
+        (define self (letrec-syntax ([identity (syntax-rules ()
+                                                 [(_ misc-id)
+                                                  (lambda (x)
+                                                    (let ([misc-id 'other])
+                                                      x))])])
+                       (identity x)))
+        (t.is (self 10) 10)
+
+        ;; racket macro
+        (define-syntax define-syntax-rule
+          (syntax-rules ()
+            ((_ (name args ...) body)
+             (define-syntax name (syntax-rules () ((name args ...) body))))))
+
+        (define-syntax-rule (define-other-five misc-id)
+          (begin
+            (define x 5)
+            misc-id))
+
+        (t.is (to.throw (define-other-five x)) true)))
+
+(test "syntax: define syntax macro inside syntax-macro"
+      (lambda (t)
+
+        (define-syntax def (syntax-rules () ((_ x y ) (define x y))))
+        (define-syntax def-2 (syntax-rules () ((_ x y) (def x y))))
+
+        (def foo 10)
+        (def-2 bar 20)
+        (t.is (+ foo bar) 30)))
+
+(test_ "syntax: free variables"
+      (lambda (t)
+        (define-syntax def (syntax-rules ()
+                             ((_ foo bar)
+                              (begin
+                                (define foo bar)
+                                hello))))
+
+        (t.is (def hello 10) 10)
+        (def hello 10)
+        (t.is hello 10)))
