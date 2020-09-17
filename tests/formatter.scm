@@ -18,13 +18,23 @@
 
 
 
-(test "formatter: let + while"
+(test "formatter: cond"
       (lambda (t)
-        (t.snapshot (pretty-format '(let ((x 10))
-                                      (while (> x 0)
-                                        (display x)
-                                        (newline)
-                                        (-- x)))))))
+        (t.snapshot (pretty-format '(cond ((foo 10) 10)
+                                          ((foo (bar baz))
+                                           (begin
+                                             (display "x")
+                                             (newline))
+                                          ((foo)
+                                           (foo bar))))))
+
+        (t.snapshot (pretty-format '(cond ((foo 10) 10)
+                                          ((foo)
+                                           (begin
+                                             (display "x")
+                                             (newline)))
+                                          ((foo)
+                                           (foo bar)))))))
 
 (test "formatter: define"
       (lambda (t)

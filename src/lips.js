@@ -1276,7 +1276,7 @@
     // rules for breaking S-Expressions into lines
     var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
     /* eslint-disable */
-    var non_def = /^(?!.*\b(?:define|let(?:\*|rec|-env|-syntax)?|lambda|syntax-rules)\b).*$/;
+    var non_def = /^(?!.*\b(?:[()[\]]|define|let(?:\*|rec|-env|-syntax)?|lambda|syntax-rules)\b).*$/;
     /* eslint-enable */
     var let_re = /^(?:#:)?(let(?:\*|rec|-env|-syntax)?)$/;
     function keywords_re(...args) {
@@ -1293,7 +1293,8 @@
         //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
         //[[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
         [[p_o, non_def, new Pattern([/[^([]/], '+'), sexp], 1, not_close],
-        [[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
+        [[p_o, p_o, non_def, sexp, p_e], 1, open],
+        //[[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
         [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
         [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
@@ -1320,7 +1321,7 @@
         };
         var tokens = tokenize(code, true).map(token).filter(t => t !== '\n');
         const { rules } = Formatter;
-        for (let i = 0; i < tokens.length; ++i) {
+        for (let i = 1; i < tokens.length; ++i) {
             if (!tokens[i].trim()) {
                 continue;
             }
