@@ -2289,13 +2289,14 @@
     // :: list of bindings from code that match the pattern
     // :: TODO detect cycles
     // ----------------------------------------------------------------------
-    function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope) {
+    function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         var bindings = {
             '...': {
                 symbols: { }, // symbols ellipsis (x ...)
                 lists: [ ]
             }
         };
+        const { expansion, define } = scope;
         // pattern_names parameter is used to distinguish
         // multiple matches of ((x ...) ...) agains ((1 2 3) (1 2 3))
         // in loop we add x to the list so we know that this is not
@@ -2318,9 +2319,15 @@
             }
             if (pattern instanceof LSymbol &&
                 symbols.includes(pattern.valueOf())) {
-                const ref = scope.ref(code);
-                const valid_ref = typeof ref === 'undefined' || ref === global_env;
-                return LSymbol.is(code, pattern) && valid_ref;
+                const ref = expansion.ref(code);
+                // shadowing the indentifier works only with lambda and let
+                if (LSymbol.is(code, pattern)) {
+                    if (typeof ref === 'undefined') {
+                        return true;
+                    }
+                    return ref === define || ref === global_env;
+                }
+                return false;
             }
             // pattern (a b (x ...)) and (x ...) match nil
             if (pattern instanceof Pair &&
@@ -5859,7 +5866,10 @@
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-                    var bindings = extract_patterns(rule, code, symbols, ellipsis, this);
+
+                    var bindings = extract_patterns(rule, code, symbols, ellipsis, {
+                        expansion: this, define: env
+                    });
                     if (bindings) {
                         /* istanbul ignore next */
                         if (user_env.get('DEBUG', { throwError: false })) {

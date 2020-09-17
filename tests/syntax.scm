@@ -654,7 +654,7 @@
                 (+ x y))
               22)))
 
-(test "syntax: scope + symbols"
+(test "syntax: scope + identifiers"
       (lambda (t)
 
         (define-syntax foo
@@ -662,5 +662,33 @@
             ((_ x ++ y)
              (list x 1 1 y))))
 
+        (define (test)
+          (let ((__ 10))
+            (define-syntax foo
+              (syntax-rules (__)
+                ((_ x __ y)
+                 (list x 1 1 y))))
+            (foo 'a __ 2)))
+
+        (t.is (test) (list 'a 1 1 2))
+
+        (define (test)
+          (define-syntax foo
+            (syntax-rules (__)
+              ((_ x __ y)
+               (list x 1 1 y))))
+          (define __ 10)
+          (foo 'b __ 2))
+
+        (t.is (test) (list 'b 1 1 2))
+
         (t.is (foo 1 ++ 2) (list 1 1 1 2))
-        (t.is (to.throw (let ((++ 10)) (foo 1 ++ 2))) true)))
+        (t.is (to.throw (let ((++ 10))
+                          (foo 1 ++ 2)))
+              true)
+        (t.is (to.throw (let* ((++ 10))
+                          (foo 1 ++ 2)))
+              true)
+        (t.is (to.throw ((lambda (++)
+                           (foo 1 ++ 2)) 10))
+              true)))
