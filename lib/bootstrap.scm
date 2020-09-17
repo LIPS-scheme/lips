@@ -400,7 +400,9 @@
      (new RegExp re (car rest))))
 
 ;; -----------------------------------------------------------------------------
-(define-formatter-rule ((list (list "("
+;; replaced by more general formatter in JS, this is left as example of usage
+;; -----------------------------------------------------------------------------
+#;(define-formatter-rule ((list (list "("
                                     (%r "(?:#:)?cond")
                                     (Pattern (list "(" * ")") "+"))
                                1
