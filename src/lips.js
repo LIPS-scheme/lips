@@ -6450,11 +6450,16 @@
         // ------------------------------------------------------------------
         'object?': doc(function(obj) {
             return obj !== nil && obj !== null &&
-                !(obj instanceof LNumber) && typeof obj === 'object' &&
+                !(obj instanceof LCharacter) &&
+                !(obj instanceof RegExp) &&
+                !(obj instanceof LString) &&
+                !(obj instanceof Pair) &&
+                !(obj instanceof LNumber) &&
+                typeof obj === 'object' &&
                 !(obj instanceof Array);
         }, `(object? expression)
 
-            Function check if value is an object.`),
+            Function check if value is an plain object.`),
         // ------------------------------------------------------------------
         flatten: doc(function(list) {
             typecheck('flatten', list, 'pair');
@@ -6572,7 +6577,7 @@
         // ------------------------------------------------------------------
         find: doc(function find(arg, list) {
             typecheck('find', arg, ['regex', 'function']);
-            typecheck('find', list, 'pair');
+            typecheck('find', list, ['pair', 'nil']);
             if (isNull(list)) {
                 return nil;
             }

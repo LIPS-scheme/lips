@@ -161,7 +161,8 @@
   "(plain-object? x)
 
    Function check if value is plain JavaScript object. Created using make-object macro."
-  (and (eq? (type x) "object") (eq? (. x 'constructor) Object)))
+  ;; here we don't use string=? or equal? because it may not be defined
+  (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
 ;; -----------------------------------------------------------------------------
 (define (symbol->string s)

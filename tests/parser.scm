@@ -51,3 +51,20 @@
         (t.is ''#o#i10 '(quote #o#i10))
         (t.is ''#e#o10 '(quote #e#o10))
         (t.is ''#o#e10 '(quote #o#e10))))
+
+(test "parser: it should ignore comments"
+      (lambda (t)
+
+        (t.is (list #;(foo bar (quux)) 10 20) (list 10 20))
+        (t.is (list #;foo 10 20) (list 10 20))
+        (t.is (list 10 #;10+10i 20) (list 10 20))
+        (t.is (list 10 ;foo bar
+                    20)
+              (list 10
+                    20))))
+
+(test "parser: it should return literal space"
+      (lambda (t)
+        (let ((str (make-string 10 #\ )))
+          (t.is (string-length str) 10)
+          (t.is (not (null? (--> str (match /^\s{10}$/)))) #t))))

@@ -2,6 +2,7 @@
 ### Features
 * new `string->vector`, `vector->string`, `vector-map` and `string-map` (R7RS)
 * new `dynamic-wind` function (R7RS)
+* make `equal?` compare plain objects
 ### Bugfix
 * fix repr of HTMLElement
 * fix creating LCharacter from scheme string
@@ -9,6 +10,7 @@
 * fix line breaking in formatter
 * fix parsing options in executable (fix for `alias lips="lips -q"`)
 * throw exception when evaluating `(if)`
+* fix `object?` and `plain-object?`
 
 ## 1.0.0-beta.5
 ### Features

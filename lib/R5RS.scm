@@ -97,9 +97,15 @@
          (%same-functions a b))
         ((and (array? a) (array? b) (eq? (length a) (length b)))
          (= (--> a (filter (lambda (item i) (equal? item (. b i)))) 'length) (length a)))
+        ((and (plain-object? a) (plain-object? b))
+         (let ((keys_a (--> (Object.keys a) (sort)))
+               (keys_b (--> (Object.keys b) (sort))))
+           (and (= (length keys_a)
+                   (length keys_b))
+                (equal? keys_a keys_b)
+                (equal? (--> keys_a (map (lambda (key) (. a key))))
+                        (--> keys_b (map (lambda (key) (. b key))))))))
         (else (eqv? a b))))
-
-
 
 ;; -----------------------------------------------------------------------------
 (define make-promise
