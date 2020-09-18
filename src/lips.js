@@ -1626,24 +1626,20 @@
         if (array.length && !(array instanceof Array)) {
             array = [...array];
         }
-        if (array.length === 0) {
-            return nil;
-        } else {
-            var car;
-            if (array[0] instanceof Array) {
-                car = Pair.fromArray(array[0]);
-            } else {
-                car = array[0];
-            }
-            if (typeof car === 'string') {
+        var result = nil;
+        var i = array.length;
+        while (i--) {
+            let car = array[i];
+            if (car instanceof Array) {
+                car = Pair.fromArray(car);
+            } else if (typeof car === 'string') {
                 car = LString(car);
+            } else if (typeof car === 'number' && !Number.isNaN(car)) {
+                car = LNumber(car);
             }
-            if (array.length === 1) {
-                return new Pair(car, nil);
-            } else {
-                return new Pair(car, Pair.fromArray(array.slice(1)));
-            }
+            result = new Pair(car, result);
         }
+        return result;
     };
 
     // ----------------------------------------------------------------------
