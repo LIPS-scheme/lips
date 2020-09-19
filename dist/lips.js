@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 17 Sep 2020 16:04:51 +0000
+ * build: Sat, 19 Sep 2020 10:02:10 +0000
  */
 (function () {
   'use strict';
@@ -2932,8 +2932,8 @@
       if (deep === false) {
         var list = nil;
 
-        for (var i = array.length; i--;) {
-          list = new Pair(array[i], list);
+        for (var _i3 = array.length; _i3--;) {
+          list = new Pair(array[_i3], list);
         }
 
         return list;
@@ -2943,27 +2943,24 @@
         array = toConsumableArray(array);
       }
 
-      if (array.length === 0) {
-        return nil;
-      } else {
-        var car;
+      var result = nil;
+      var i = array.length;
 
-        if (array[0] instanceof Array) {
-          car = Pair.fromArray(array[0]);
-        } else {
-          car = array[0];
-        }
+      while (i--) {
+        var car = array[i];
 
-        if (typeof car === 'string') {
+        if (car instanceof Array) {
+          car = Pair.fromArray(car);
+        } else if (typeof car === 'string') {
           car = LString(car);
+        } else if (typeof car === 'number' && !Number.isNaN(car)) {
+          car = LNumber(car);
         }
 
-        if (array.length === 1) {
-          return new Pair(car, nil);
-        } else {
-          return new Pair(car, Pair.fromArray(array.slice(1)));
-        }
+        result = new Pair(car, result);
       }
+
+      return result;
     }; // ----------------------------------------------------------------------
     // by default toObject was created to create JavaScript objects,
     // so it use valueOf to get native values
@@ -3168,6 +3165,11 @@
     } // ----------------------------------------------------------------------
 
 
+    function get_props(obj) {
+      return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
+    } // ----------------------------------------------------------------------
+
+
     function toString(obj, quote, skip_cycles) {
       if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
         return '#<jQuery(' + obj.length + ')>';
@@ -3192,8 +3194,8 @@
 
       var types = [RegExp, Nil, LSymbol, LNumber, LCharacter, Values];
 
-      for (var _i3 = 0, _types = types; _i3 < _types.length; _i3++) {
-        var _type2 = _types[_i3];
+      for (var _i4 = 0, _types = types; _i4 < _types.length; _i4++) {
+        var _type2 = _types[_i4];
 
         if (obj instanceof _type2) {
           return obj.toString();
@@ -6892,6 +6894,8 @@
       }
 
       this.env = user_env.inherit(name, obj);
+      var defaults_name = '**interaction-environment-defaults**';
+      this.env.set(defaults_name, get_props(obj).concat(defaults_name));
     } // -------------------------------------------------------------------------
 
 
@@ -6941,6 +6945,24 @@
       this.parent = parent;
       this.name = name || 'anonymous';
     } // -------------------------------------------------------------------------
+
+
+    Environment.prototype.list = function () {
+      return get_props(this.env);
+    }; // -------------------------------------------------------------------------
+
+
+    Environment.prototype.unset = function (name) {
+      if (name instanceof LSymbol) {
+        name = name.valueOf();
+      }
+
+      if (name instanceof LString) {
+        name = name.valueOf();
+      }
+
+      delete this.env[name];
+    }; // -------------------------------------------------------------------------
 
 
     Environment.prototype.inherit = function (name) {
@@ -7507,6 +7529,7 @@
           dynamic_scope = this;
         }
 
+        var env = this;
         var ref;
         var value = evaluate(code.cdr.car, {
           env: this,
@@ -7515,20 +7538,26 @@
         });
         value = resolvePromises(value);
 
-        function set(key, value) {
+        function set(object, key, value) {
+          if (isPromise(object)) {
+            return object.then(function (key) {
+              return set(object, key, value);
+            });
+          }
+
           if (isPromise(key)) {
             return key.then(function (key) {
-              return set(key, value);
+              return set(object, key, value);
             });
           }
 
           if (isPromise(value)) {
             return value.then(function (value) {
-              return set(key, value);
+              return set(object, key, value);
             });
           }
 
-          object[key] = value;
+          env.get('set-obj!').call(env, object, key, value);
           return value;
         }
 
@@ -7545,7 +7574,7 @@
             dynamic_scope: dynamic_scope,
             error: error
           });
-          return set(key, value);
+          return set(object, key, value);
         }
 
         if (!(code.car instanceof LSymbol)) {
@@ -7570,13 +7599,12 @@
               });
 
               if (obj) {
-                _this5.get('set-obj!').call(_this5, obj, key, value);
-
+                set(obj, key, value);
                 return;
               }
             }
 
-            ref = _this5;
+            throw new Error('Unbound variable `' + symbol + '\'');
           }
 
           ref.set(symbol, value);
@@ -9740,8 +9768,8 @@
         return 'syntax';
       }
 
-      for (var _i4 = 0, _Object$entries2 = Object.entries(mapping); _i4 < _Object$entries2.length; _i4++) {
-        var _Object$entries2$_i = slicedToArray(_Object$entries2[_i4], 2),
+      for (var _i5 = 0, _Object$entries2 = Object.entries(mapping); _i5 < _Object$entries2.length; _i5++) {
+        var _Object$entries2$_i = slicedToArray(_Object$entries2[_i5], 2),
             _key35 = _Object$entries2$_i[0],
             value = _Object$entries2$_i[1];
 
@@ -10028,7 +10056,7 @@
               throw new Error(msg);
             }
 
-            throw new Error("Unknown function `".concat(first.name, "'"));
+            throw new Error("Unknown function `".concat(first.toString(), "'"));
           }
         } else if (typeof first === 'function') {
           value = first;
@@ -10447,10 +10475,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 17 Sep 2020 16:04:51 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 19 Sep 2020 10:02:10 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 17 Sep 2020 16:04:51 +0000').valueOf();
+      var date = LString('Sat, 19 Sep 2020 10:02:10 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10487,7 +10515,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 17 Sep 2020 16:04:51 +0000',
+      date: 'Sat, 19 Sep 2020 10:02:10 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

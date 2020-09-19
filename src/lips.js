@@ -1825,6 +1825,10 @@
         return obj;
     }
     // ----------------------------------------------------------------------
+    function get_props(obj) {
+        return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
+    }
+    // ----------------------------------------------------------------------
     function toString(obj, quote, skip_cycles) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
@@ -4624,6 +4628,8 @@
             name = 'anonymous';
         }
         this.env = user_env.inherit(name, obj);
+        const defaults_name = '**interaction-environment-defaults**';
+        this.env.set(defaults_name, get_props(obj).concat(defaults_name));
     }
     // -------------------------------------------------------------------------
     Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
@@ -4664,6 +4670,20 @@
         this.parent = parent;
         this.name = name || 'anonymous';
     }
+    // -------------------------------------------------------------------------
+    Environment.prototype.list = function() {
+        return get_props(this.env);
+    };
+    // -------------------------------------------------------------------------
+    Environment.prototype.unset = function(name) {
+        if (name instanceof LSymbol) {
+            name = name.valueOf();
+        }
+        if (name instanceof LString) {
+            name = name.valueOf();
+        }
+        delete this.env[name];
+    };
     // -------------------------------------------------------------------------
     Environment.prototype.inherit = function(name, obj = {}) {
         if (typeof name === "object") {
@@ -5172,17 +5192,21 @@
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
+            var env = this;
             var ref;
             var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
             value = resolvePromises(value);
-            function set(key, value) {
+            function set(object, key, value) {
+                if (isPromise(object)) {
+                    return object.then(key => set(object, key, value));
+                }
                 if (isPromise(key)) {
-                    return key.then(key => set(key, value));
+                    return key.then(key => set(object, key, value));
                 }
                 if (isPromise(value)) {
-                    return value.then(value => set(key, value));
+                    return value.then(value => set(object, key, value));
                 }
-                object[key] = value;
+                env.get('set-obj!').call(env, object, key, value);
                 return value;
             }
             if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
@@ -5190,7 +5214,7 @@
                 var thrid = code.car.cdr.cdr.car;
                 var object = evaluate(second, { env: this, dynamic_scope, error });
                 var key = evaluate(thrid, { env: this, dynamic_scope, error });
-                return set(key, value);
+                return set(object, key, value);
             }
             if (!(code.car instanceof LSymbol)) {
                 throw new Error('set! first argument need to be a symbol or ' +
@@ -5209,11 +5233,11 @@
                         var name = parts.join('.');
                         var obj = this.get(name, { throwError: false });
                         if (obj) {
-                            this.get('set-obj!').call(this, obj, key, value);
+                            set(obj, key, value);
                             return;
                         }
                     }
-                    ref = this;
+                    throw new Error('Unbound variable `' + symbol + '\'');
                 }
                 ref.set(symbol, value);
             });
@@ -7473,7 +7497,7 @@
                         var msg = `${type(value)} \`${value}' is not a function`;
                         throw new Error(msg);
                     }
-                    throw new Error(`Unknown function \`${first.name}'`);
+                    throw new Error(`Unknown function \`${first.toString()}'`);
                 }
             } else if (typeof first === 'function') {
                 value = first;

@@ -760,3 +760,15 @@
   (--> (new lips.Formatter (repr pair true)) (break) (format)))
 
 ;; ---------------------------------------------------------------------------------------
+(define (reset)
+  "(reset)
+
+  Function reset environment and remove all user defined variables."
+  (let-env **interaction-environment**
+           (let ((defaults **interaction-environment-defaults**)
+                 (env **interaction-environment**))
+             (--> env (list) (forEach (lambda (name)
+                                        (if (not (--> defaults (includes name)))
+                                            (--> env (unset name)))))))))
+
+;; ---------------------------------------------------------------------------------------

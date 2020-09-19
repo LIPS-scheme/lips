@@ -1,4 +1,7 @@
 ## 1.0.0-beta.6
+### Breaking
+* `real?` now return true on integers (bigInts)
+* `set!` throw error when variable not defined
 ### Features
 * new `string->vector`, `vector->string`, `vector-map` and `string-map` (R7RS)
 * new `dynamic-wind` function (R7RS)
