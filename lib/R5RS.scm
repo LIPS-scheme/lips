@@ -289,7 +289,9 @@
 ;; -----------------------------------------------------------------------------
 (define (real? n)
   "(real? n)"
-  (and (number? n) (equal? (. n 'type) "float")))
+  (and (number? n) (let ((type n.type))
+                     (or (string=? type "float")
+                         (string=? type "bigint")))))
 
 ;; -----------------------------------------------------------------------------
 (define (exact? n)
