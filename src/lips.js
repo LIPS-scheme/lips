@@ -107,6 +107,11 @@
         }
         return x;
     }
+    // ----------------------------------------------------------------------
+    /* istanbul ignore next */
+    function is_debug() {
+        return user_env.get('DEBUG', { throwError: false });
+    }
     if (!root.fetch) {
         /* istanbul ignore next */
         root.fetch = function(url, options) {
@@ -603,6 +608,32 @@
             token,
             ...rest
         };
+    }
+    // ----------------------------------------------------------------------
+    function Thunk(fn, cont = () => {}) {
+        this.fn = fn;
+        this.cont = cont;
+    }
+    // ----------------------------------------------------------------------
+    Thunk.prototype.toString = function() {
+        return '#<Thunk>';
+    };
+    // ----------------------------------------------------------------------
+    function trampoline(fn) {
+        return function(...args) {
+            return unwind(fn.apply(this, args));
+        };
+    }
+    // ----------------------------------------------------------------------
+    function unwind(result) {
+        while (result instanceof Thunk) {
+            const thunk = result;
+            result = result.fn();
+            if (!(result instanceof Thunk)) {
+                thunk.cont();
+            }
+        }
+        return result;
     }
     // ----------------------------------------------------------------------
     function tokenize(str, extra, formatter = multiline_formatter) {
@@ -1829,7 +1860,7 @@
         return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
     }
     // ----------------------------------------------------------------------
-    function toString(obj, quote, skip_cycles) {
+    function toString(obj, quote, skip_cycles, ...pair_args) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
             return '#<jQuery(' + obj.length + ')>';
@@ -1842,7 +1873,7 @@
             if (!skip_cycles) {
                 obj.markCycles();
             }
-            return obj.toString(quote);
+            return obj.toString(quote, ...pair_args);
         }
         if (Number.isNaN(obj)) {
             return '+nan.0';
@@ -1966,7 +1997,7 @@
                 }
             }
         }
-        function detect(pair, parents) {
+        const detect = trampoline(function detect_thunk(pair, parents) {
             if (pair instanceof Pair) {
                 delete pair.ref;
                 delete pair.cycles;
@@ -1978,10 +2009,12 @@
                     detect(pair.car, parents.slice());
                 }
                 if (!cdr) {
-                    detect(pair.cdr, parents.slice());
+                    return new Thunk(() => {
+                        return detect_thunk(pair.cdr, parents.slice());
+                    });
                 }
             }
-        }
+        });
         function mark_node(node, type) {
             if (node.cycles[type] instanceof Pair) {
                 const count = ref_nodes.indexOf(node.cycles[type]);
@@ -2000,11 +2033,82 @@
     }
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toString = function(quote, rest) {
+    // trampoline based recursive pair to string that don't overflow the stack
+    // ----------------------------------------------------------------------
+    /* istanbul ignore next */
+    const pair_to_string = (function() {
+        const prefix = (pair, nested) => {
+            var result = [];
+            if (pair.ref) {
+                result.push(pair.ref + '(');
+            } else if (!nested) {
+                result.push('(');
+            }
+            return result;
+        };
+        const postfix = (pair, nested) => {
+            if (is_debug()) {
+                console.log({ ref: pair.ref, nested });
+            }
+            if (!nested || pair.ref) {
+                return [')'];
+            }
+            return [];
+        };
+        return trampoline(function pairToString(pair, quote, extra = {}) {
+            const {
+                nested = false,
+                result = [],
+                cont = () => {
+                    result.push(...postfix(pair, nested));
+                }
+            } = extra;
+            result.push(...prefix(pair, nested));
+            let car;
+            if (pair.cycles && pair.cycles.car) {
+                car = pair.cycles.car;
+            } else {
+                car = toString(pair.car, quote, true, { result, cont });
+            }
+            if (car !== undefined) {
+                result.push(car);
+            }
+            return new Thunk(() => {
+                if (pair.cdr instanceof Pair) {
+                    if (pair.cycles && pair.cycles.cdr) {
+                        result.push(' . ');
+                        result.push(pair.cycles.cdr);
+                    } else {
+                        if (pair.cdr.ref) {
+                            result.push(' . ');
+                        } else {
+                            result.push(' ');
+                        }
+                        return pairToString(pair.cdr, quote, {
+                            nested: true,
+                            result,
+                            cont
+                        });
+                    }
+                } else if (pair.cdr !== nil) {
+                    result.push(' . ');
+                    result.push(toString(pair.cdr, quote));
+                }
+            }, cont);
+        });
+    })();
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.toString = function(quote, { nested = false } = {}) {
+        if (is_debug()) {
+            var result = [];
+            pair_to_string(this, quote, { result });
+            return result.join('');
+        }
         var arr = [];
         if (this.ref) {
             arr.push(this.ref + '(');
-        } else if (!rest) {
+        } else if (!nested) {
             arr.push('(');
         }
         var value;
@@ -2026,13 +2130,13 @@
                 } else {
                     arr.push(' ');
                 }
-                const cdr = this.cdr.toString(quote, true);
+                const cdr = this.cdr.toString(quote, { nested: true });
                 arr.push(cdr);
             }
         } else if (this.cdr !== nil) {
             arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
         }
-        if (!rest || this.ref) {
+        if (!nested || this.ref) {
             arr.push(')');
         }
         return arr.join('');
@@ -2304,7 +2408,7 @@
         // duplicated ellipsis symbol
         function log(x) {
             /* istanbul ignore next */
-            if (user_env.get('DEBUG', { throwError: false })) {
+            if (is_debug()) {
                 console.log(x);
             }
         }
@@ -2641,7 +2745,7 @@
         }
         function log(x) {
             /* istanbul ignore next */
-            if (user_env.get('DEBUG', { throwError: false })) {
+            if (is_debug()) {
                 console.log(x);
             }
         }
@@ -5903,7 +6007,7 @@
                     });
                     if (bindings) {
                         /* istanbul ignore next */
-                        if (user_env.get('DEBUG', { throwError: false })) {
+                        if (is_debug()) {
                             console.log(JSON.stringify(symbolize(bindings), true, 2));
                             console.log('PATTERN: ' + rule.toString(true));
                             console.log('MACRO: ' + code.toString(true));
