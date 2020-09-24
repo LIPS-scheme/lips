@@ -57,3 +57,8 @@
       (lambda (t)
 
         (t.snapshot (pretty-format '(define-syntax foo (syntax-rules () ((_ x) (list x))))))))
+
+(test "formatter: nested list"
+      (lambda (t)
+
+        (t.snapshot (pretty-format '((1 2 3) (1 2 3) (1 2 3))))))

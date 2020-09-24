@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 21 Sep 2020 08:26:29 +0000
+ * build: Thu, 24 Sep 2020 08:44:55 +0000
  */
 (function () {
   'use strict';
@@ -2577,7 +2577,8 @@
     Formatter.rules = [[[p_o, keywords_re('begin')], 1], //[[p_o, keywords_re('begin'), sexp], 1, not_close],
     [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, keywords_re('syntax-rules'), symbol, identifiers], 1], [[p_o, keywords_re('syntax-rules'), symbol, identifiers, sexp], 1, not_close], //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
     //[[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
-    [[p_o, non_def, new Pattern([/[^([]/], '+'), sexp], 1, not_close], [[p_o, p_o, non_def, sexp, p_e], 1, open], //[[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
+    [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], //[[p_o, p_o, non_def, sexp, p_e], 1, open],
+    [[p_o, sexp], 1, open], //[[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
     [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
     [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], //[[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close],
     [[p_o, keywords_re('if'), not_p, glob], 1], //[[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1],
@@ -3406,9 +3407,8 @@
           }
 
           if (!cdr) {
-            var cdr_args = [pair.cdr, parents.slice()];
             return new Thunk(function () {
-              return detect_thunk.apply(void 0, cdr_args);
+              return detect_thunk(pair.cdr, parents.slice());
             });
           }
         }
@@ -10623,10 +10623,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 21 Sep 2020 08:26:29 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 24 Sep 2020 08:44:55 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 21 Sep 2020 08:26:29 +0000').valueOf();
+      var date = LString('Thu, 24 Sep 2020 08:44:55 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10663,7 +10663,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 21 Sep 2020 08:26:29 +0000',
+      date: 'Thu, 24 Sep 2020 08:44:55 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

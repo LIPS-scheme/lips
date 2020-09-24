@@ -1323,8 +1323,9 @@
         [[p_o, keywords_re('syntax-rules'), symbol, identifiers, sexp], 1, not_close],
         //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
         //[[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
-        [[p_o, non_def, new Pattern([/[^([]/], '+'), sexp], 1, not_close],
-        [[p_o, p_o, non_def, sexp, p_e], 1, open],
+        [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
+        //[[p_o, p_o, non_def, sexp, p_e], 1, open],
+        [[p_o, sexp], 1, open],
         //[[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
         [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
         [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
