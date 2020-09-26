@@ -816,6 +816,7 @@
                     stack[stack.length - 1] = Pair.fromArray(top);
                 } else if (is_close(token)) {
                     parents--;
+                    first_value = false;
                     if (!stack.length) {
                         throw new Error('Unbalanced parenthesis');
                     }

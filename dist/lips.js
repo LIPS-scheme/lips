@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 24 Sep 2020 08:44:55 +0000
+ * build: Sat, 26 Sep 2020 19:42:25 +0000
  */
 (function () {
   'use strict';
@@ -1965,6 +1965,7 @@
             stack[stack.length - 1] = Pair.fromArray(top);
           } else if (is_close(token)) {
             parents--;
+            first_value = false;
 
             if (!stack.length) {
               throw new Error('Unbalanced parenthesis');
@@ -8575,7 +8576,7 @@
             rules = rules.cdr;
           }
 
-          throw new Error("Invalid Syntax ".concat(code));
+          throw new Error("Invalid Syntax ".concat(code.toString(true)));
         }, env);
         syntax.__code__ = macro;
         return syntax;
@@ -10623,10 +10624,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 24 Sep 2020 08:44:55 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 26 Sep 2020 19:42:25 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 24 Sep 2020 08:44:55 +0000').valueOf();
+      var date = LString('Sat, 26 Sep 2020 19:42:25 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10663,7 +10664,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 24 Sep 2020 08:44:55 +0000',
+      date: 'Sat, 26 Sep 2020 19:42:25 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

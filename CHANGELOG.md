@@ -15,6 +15,7 @@
 * throw exception when evaluating `(if)`
 * fix `object?` and `plain-object?`
 * throw exception when invoking syntax that shadow literal identifier
+* fix parsing cons dot in `(() . foo)`
 
 ## 1.0.0-beta.5
 ### Features
