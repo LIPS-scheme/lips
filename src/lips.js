@@ -6040,7 +6040,7 @@
                     }
                     rules = rules.cdr;
                 }
-                throw new Error(`Invalid Syntax ${code}`);
+                throw new Error(`Invalid Syntax ${code.toString(true)}`);
             }, env);
             syntax.__code__ = macro;
             return syntax;
