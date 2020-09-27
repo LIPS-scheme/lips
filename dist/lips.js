@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 27 Sep 2020 10:29:33 +0000
+ * build: Sun, 27 Sep 2020 12:47:52 +0000
  */
 (function () {
   'use strict';
@@ -3246,7 +3246,15 @@
         return '+nan.0';
       }
 
-      var types = [RegExp, Nil, LSymbol, LNumber, LCharacter, Values];
+      if (obj instanceof LCharacter) {
+        if (quote) {
+          return obj.toString();
+        }
+
+        return obj.valueOf();
+      }
+
+      var types = [RegExp, Nil, LSymbol, LNumber, Values];
 
       for (var _i4 = 0, _types = types; _i4 < _types.length; _i4++) {
         var _type2 = _types[_i4];
@@ -5322,9 +5330,18 @@
         chr = chr.valueOf();
       }
 
-      if (LCharacter.names[chr]) {
-        this.name = chr;
-        this["char"] = LCharacter.names[chr];
+      if (chr.length > 1) {
+        // this is name
+        chr = chr.toLowerCase();
+
+        if (LCharacter.names[chr]) {
+          this.name = chr;
+          this["char"] = LCharacter.names[chr];
+        } else {
+          // this should never happen
+          // parser don't alow not defined named characters
+          throw new Error('Internal: Unknown named character');
+        }
       } else {
         this["char"] = chr;
         var name = LCharacter.rev_names[chr];
@@ -10624,10 +10641,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 27 Sep 2020 10:29:33 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 27 Sep 2020 12:47:52 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 27 Sep 2020 10:29:33 +0000').valueOf();
+      var date = LString('Sun, 27 Sep 2020 12:47:52 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10664,7 +10681,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 27 Sep 2020 10:29:33 +0000',
+      date: 'Sun, 27 Sep 2020 12:47:52 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

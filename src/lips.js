@@ -1880,7 +1880,13 @@
         if (Number.isNaN(obj)) {
             return '+nan.0';
         }
-        var types = [RegExp, Nil, LSymbol, LNumber, LCharacter, Values];
+        if (obj instanceof LCharacter) {
+            if (quote) {
+                return obj.toString();
+            }
+            return obj.valueOf();
+        }
+        var types = [RegExp, Nil, LSymbol, LNumber, Values];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString();
@@ -3455,12 +3461,20 @@
         if (chr instanceof LString) {
             chr = chr.valueOf();
         }
-        if (LCharacter.names[chr]) {
-            this.name = chr;
-            this.char = LCharacter.names[chr];
+        if (chr.length > 1) {
+            // this is name
+            chr = chr.toLowerCase();
+            if (LCharacter.names[chr]) {
+                this.name = chr;
+                this.char = LCharacter.names[chr];
+            } else {
+                // this should never happen
+                // parser don't alow not defined named characters
+                throw new Error('Internal: Unknown named character');
+            }
         } else {
             this.char = chr;
-            var name = LCharacter.rev_names[chr];
+            const name = LCharacter.rev_names[chr];
             if (name) {
                 this.name = name;
             }

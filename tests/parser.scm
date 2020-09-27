@@ -33,6 +33,8 @@
           (t.is (and (string=? (type a) "character")
                      (string=? (type b) "character"))
                 true)
+          (t.is #\Space #\space)
+          (t.is #\SPACE #\SPace)
           (t.is (a.valueOf) "A")
           (t.is (b.valueOf) "\xFF;"))))
 

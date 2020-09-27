@@ -1,6 +1,8 @@
 ## 1.0.0-beta.7
 ### Features
 * add handling of quasiquote vector `` `#(1 2 ,(+ 1 2)) `` using syntax extensions
+* fix write vs display of character atoms
+* fix mixed case of named characters (e.g.: `#\Space`)
 
 ## 1.0.0-beta.6
 ### Breaking
