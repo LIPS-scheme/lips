@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 27 Sep 2020 12:47:52 +0000
+ * build: Sun, 27 Sep 2020 13:26:50 +0000
  */
 (function () {
   'use strict';
@@ -2773,7 +2773,7 @@
 
 
     LSymbol.prototype.toJSON = LSymbol.prototype.toString = function () {
-      //return '<#symbol \'' + this.name + '\'>';
+      //return '#<symbol \'' + this.name + '\'>';
       if (isSymbol(this.name)) {
         return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
       }
@@ -3254,7 +3254,7 @@
         return obj.valueOf();
       }
 
-      var types = [RegExp, Nil, LSymbol, LNumber, Values];
+      var types = [RegExp, Nil, LSymbol, LNumber, Macro, Values];
 
       for (var _i4 = 0, _types = types; _i4 < _types.length; _i4++) {
         var _type2 = _types[_i4];
@@ -3270,6 +3270,10 @@
         }
 
         if (isNativeFunction(obj.toString)) {
+          if (typeof obj.__name__ === 'string') {
+            return "#<procedure:".concat(obj.__name__, ">");
+          }
+
           return '#<procedure>';
         } else {
           return obj.toString();
@@ -3752,8 +3756,8 @@
         }
       }
 
-      this.name = name;
-      this.fn = fn;
+      this.__name__ = name;
+      this.__fn__ = fn;
     } // ----------------------------------------------------------------------
 
 
@@ -3773,13 +3777,15 @@
         error: error,
         macro_expand: macro_expand
       };
-      var result = this.fn.call(env, code, args, this.name);
+
+      var result = this.__fn__.call(env, code, args, this.__name__);
+
       return result; //return macro_expand ? quote(result) : result;
     }; // ----------------------------------------------------------------------
 
 
     Macro.prototype.toString = function () {
-      return '#<Macro ' + this.name + '>';
+      return "#<macro:".concat(this.__name__, ">");
     }; // ----------------------------------------------------------------------
 
 
@@ -3973,9 +3979,8 @@
 
 
     function Syntax(fn, env) {
-      this.name = 'syntax';
       this.env = env;
-      this.fn = fn; // allow macroexpand
+      this.__fn__ = fn; // allow macroexpand
 
       this.defmacro = true;
     }
@@ -3993,13 +3998,17 @@
         dynamic_scope: this.env,
         macro_expand: macro_expand
       };
-      return this.fn.call(env, code, args, this.name);
+      return this.__fn__.call(env, code, args, this.__name__ || 'syntax');
     };
 
     Syntax.prototype.constructor = Syntax;
 
     Syntax.prototype.toString = function () {
-      return '<#syntax>';
+      if (this.__name__) {
+        return "#<syntax:".concat(this.__name__, ">");
+      }
+
+      return '#<syntax>';
     };
 
     Syntax.className = 'syntax'; // ----------------------------------------------------------------------
@@ -6971,7 +6980,7 @@
     }
 
     OutputPort.prototype.toString = function () {
-      return '<#output-port>';
+      return '#<output-port>';
     }; // -------------------------------------------------------------------------
 
 
@@ -7044,7 +7053,7 @@
     function EOF() {}
 
     EOF.prototype.toString = function () {
-      return '<#eof>';
+      return '#<eof>';
     }; // -------------------------------------------------------------------------
     // simpler way to create interpreter with interaction-environment
     // -------------------------------------------------------------------------
@@ -7221,7 +7230,7 @@
 
 
     Environment.prototype.toString = function () {
-      return '<#env:' + this.name + '>';
+      return '#<env:' + this.name + '>';
     }; // -------------------------------------------------------------------------
 
 
@@ -8164,9 +8173,11 @@
 
         eval_args.env = env;
         var value = code.cdr.car;
+        var new_expr;
 
         if (value instanceof Pair) {
           value = evaluate(value, eval_args);
+          new_expr = true;
         } else if (value instanceof LSymbol) {
           value = env.get(value);
         }
@@ -8175,6 +8186,14 @@
         return unpromise(value, function (value) {
           if (env.name === Syntax.merge_env) {
             env = env.parent;
+          }
+
+          if (new_expr && (typeof value === 'function' && value.__lambda__ || value instanceof Syntax)) {
+            value.__name__ = code.car.valueOf();
+
+            if (value.__name__ instanceof LString) {
+              value.__name__ = value.__name__.valueOf();
+            }
           }
 
           var __doc__;
@@ -10641,10 +10660,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 27 Sep 2020 12:47:52 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 27 Sep 2020 13:26:50 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 27 Sep 2020 12:47:52 +0000').valueOf();
+      var date = LString('Sun, 27 Sep 2020 13:26:50 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10681,7 +10700,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 27 Sep 2020 12:47:52 +0000',
+      date: 'Sun, 27 Sep 2020 13:26:50 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

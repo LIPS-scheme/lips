@@ -80,7 +80,7 @@
           (t.is (string-length str) 10)
           (t.is (not (null? (--> str (match /^\s{10}$/)))) #t))))
 
-(test "parser: vector quasiquote"
+(test "parser: vector quoting"
       (lambda (t)
          (t.is `#(1 2 3) #(1 2 3))
          (t.is `#(1 2 foo) #(1 2 'foo))

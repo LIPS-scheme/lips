@@ -1486,7 +1486,7 @@
     };
     // ----------------------------------------------------------------------
     LSymbol.prototype.toJSON = LSymbol.prototype.toString = function() {
-        //return '<#symbol \'' + this.name + '\'>';
+        //return '#<symbol \'' + this.name + '\'>';
         if (isSymbol(this.name)) {
             return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
         }
@@ -1886,7 +1886,7 @@
             }
             return obj.valueOf();
         }
-        var types = [RegExp, Nil, LSymbol, LNumber, Values];
+        var types = [RegExp, Nil, LSymbol, LNumber, Macro, Values];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString();
@@ -1897,6 +1897,9 @@
                 return '#<procedure(native)>';
             }
             if (isNativeFunction(obj.toString)) {
+                if (typeof obj.__name__ === 'string') {
+                    return `#<procedure:${obj.__name__}>`;
+                }
                 return '#<procedure>';
             } else {
                 return obj.toString();
@@ -2287,8 +2290,8 @@
                 this.__doc__ = trim_lines(doc);
             }
         }
-        this.name = name;
-        this.fn = fn;
+        this.__name__ = name;
+        this.__fn__ = fn;
     }
     // ----------------------------------------------------------------------
     Macro.defmacro = function(name, fn, doc, dump) {
@@ -2303,13 +2306,13 @@
             error,
             macro_expand
         };
-        var result = this.fn.call(env, code, args, this.name);
+        var result = this.__fn__.call(env, code, args, this.__name__);
         return result;
         //return macro_expand ? quote(result) : result;
     };
     // ----------------------------------------------------------------------
     Macro.prototype.toString = function() {
-        return '#<Macro ' + this.name + '>';
+        return `#<macro:${this.__name__}>`;
     };
     // ----------------------------------------------------------------------
     const macro = 'define-macro';
@@ -2374,9 +2377,8 @@
     // TODO: Don't put Syntax as Macro they are not runtime
     // ----------------------------------------------------------------------
     function Syntax(fn, env) {
-        this.name = 'syntax';
         this.env = env;
-        this.fn = fn;
+        this.__fn__ = fn;
         // allow macroexpand
         this.defmacro = true;
     }
@@ -2390,11 +2392,14 @@
             dynamic_scope: this.env,
             macro_expand
         };
-        return this.fn.call(env, code, args, this.name);
+        return this.__fn__.call(env, code, args, this.__name__ || 'syntax');
     };
     Syntax.prototype.constructor = Syntax;
     Syntax.prototype.toString = function() {
-        return '<#syntax>';
+        if (this.__name__) {
+            return `#<syntax:${this.__name__}>`;
+        }
+        return '#<syntax>';
     };
     Syntax.className = 'syntax';
     // ----------------------------------------------------------------------
@@ -4681,7 +4686,7 @@
         this.write = write;
     }
     OutputPort.prototype.toString = function() {
-        return '<#output-port>';
+        return '#<output-port>';
     };
     // -------------------------------------------------------------------------
     function OutputStringPort(toString) {
@@ -4734,7 +4739,7 @@
     var eof = new EOF();
     function EOF() {}
     EOF.prototype.toString = function() {
-        return '<#eof>';
+        return '#<eof>';
     };
     // -------------------------------------------------------------------------
     // simpler way to create interpreter with interaction-environment
@@ -4872,7 +4877,7 @@
     };
     // -------------------------------------------------------------------------
     Environment.prototype.toString = function() {
-        return '<#env:' + this.name + '>';
+        return '#<env:' + this.name + '>';
     };
     // -------------------------------------------------------------------------
     Environment.prototype.clone = function() {
@@ -5040,7 +5045,7 @@
         this.max = max;
     }
     Unquote.prototype.toString = function() {
-        return '<#unquote[' + this.count + '] ' + this.value + '>';
+        return '#<unquote[' + this.count + '] ' + this.value + '>';
     };
     // -------------------------------------------------------------------------
     var global_env = new Environment({
@@ -5685,8 +5690,10 @@
             }
             eval_args.env = env;
             var value = code.cdr.car;
+            let new_expr;
             if (value instanceof Pair) {
                 value = evaluate(value, eval_args);
+                new_expr = true;
             } else if (value instanceof LSymbol) {
                 value = env.get(value);
             }
@@ -5694,6 +5701,14 @@
             return unpromise(value, value => {
                 if (env.name === Syntax.merge_env) {
                     env = env.parent;
+                }
+                if (new_expr &&
+                    ((typeof value === 'function' && value.__lambda__) ||
+                     (value instanceof Syntax))) {
+                    value.__name__ = code.car.valueOf();
+                    if (value.__name__ instanceof LString) {
+                        value.__name__ = value.__name__.valueOf();
+                    }
                 }
                 let __doc__;
                 if (code.cdr.cdr instanceof Pair &&
