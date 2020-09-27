@@ -1,3 +1,22 @@
+## 1.0.0-beta.6
+### Breaking
+* `real?` now return true on integers (bigInts)
+* `set!` throw error when variable not defined
+### Features
+* new `string->vector`, `vector->string`, `vector-map` and `string-map` (R7RS)
+* new `dynamic-wind` function (R7RS)
+* make `equal?` compare plain objects
+### Bugfix
+* fix repr of HTMLElement
+* fix creating LCharacter from scheme string
+* fix `do` macro with let like scope for next values
+* fix line breaking in formatter
+* fix parsing options in executable (fix for `alias lips="lips -q"`)
+* throw exception when evaluating `(if)`
+* fix `object?` and `plain-object?`
+* throw exception when invoking syntax that shadow literal identifier
+* fix parsing cons dot in `(() . foo)`
+
 ## 1.0.0-beta.5
 ### Features
 * new function `make-list`

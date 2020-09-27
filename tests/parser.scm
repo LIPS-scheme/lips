@@ -27,6 +27,15 @@
          (t.is "\x9;\x9;" "\t\t")
          (t.is '|\x9;\x9;|  '|\t\t|)))
 
+(test "parser: character literals"
+      (lambda (t)
+        (let ((a #\A) (b #\xFF))
+          (t.is (and (string=? (type a) "character")
+                     (string=? (type b) "character"))
+                true)
+          (t.is (a.valueOf) "A")
+          (t.is (b.valueOf) "\xFF;"))))
+
 (test "parser: quotes with literals"
       (lambda (t)
         (t.is ''#f '(quote #f))
@@ -51,3 +60,20 @@
         (t.is ''#o#i10 '(quote #o#i10))
         (t.is ''#e#o10 '(quote #e#o10))
         (t.is ''#o#e10 '(quote #o#e10))))
+
+(test "parser: it should ignore comments"
+      (lambda (t)
+
+        (t.is (list #;(foo bar (quux)) 10 20) (list 10 20))
+        (t.is (list #;foo 10 20) (list 10 20))
+        (t.is (list 10 #;10+10i 20) (list 10 20))
+        (t.is (list 10 ;foo bar
+                    20)
+              (list 10
+                    20))))
+
+(test "parser: it should return literal space"
+      (lambda (t)
+        (let ((str (make-string 10 #\ )))
+          (t.is (string-length str) 10)
+          (t.is (not (null? (--> str (match /^\s{10}$/)))) #t))))

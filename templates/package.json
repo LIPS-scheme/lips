@@ -6,6 +6,7 @@
   "unpkg": "dist/lips.min.js",
   "scripts": {
     "test": "nyc ava --timeout 10m --verbose test.js",
+    "test-update": "nyc ava --update-snapshots --timeout 10m --verbose test.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {

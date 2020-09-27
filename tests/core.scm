@@ -15,6 +15,11 @@
           (t.is (bar.square 10) 100)
           (t.is (bar.sum 5) 15))))
 
+(test "core: it should throw on set! with undefined variable"
+      (lambda (t)
+        (t.is (to.throw (set! foo.bar 10)) true)
+        (t.is (to.throw (set! foo 10)) true)))
+
 (test "core: it should set on object literals"
       (lambda (t)
         (let ((x &(:foo "jo")))

@@ -1,15 +1,20 @@
-![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
+![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.5-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&dec6d0cb5bcb1d93f517c1498e2c906adea74c58)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&8d554b50a1c3e1d86cd023c625e06704e99366f8)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
+<a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20make%20programmer%20live%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript,%20lisp%20and%20npm%20to%20create%20your%20applications.&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
+   <img src="https://github.com/jcubic/lips/blob/devel/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
+</a>
 
-LIPS is Powerful Lisp based language. It's based on Scheme dialect and R5RS
-specification (and part on R7RS), it have extensions that make it easier to interact
-with JavaScript, it work in Browser and Node.js.
+[LIPS is Powerful Scheme based, Lisp language written in JavaScript](https://jcubic.github.io/lips).
+It's based on Scheme dialect and R5RS/R7RS specifications, it have extensions that make it easier
+to interact with JavaScript, it work in Browser and Node.js.
 
-The name is recursive acronym which stands for LIPS is Pretty Simple.
+The name is recursive acronym which stands for LIPS Is Pretty Simple.
+
+## Demo
 
 [Demo](https://jcubic.github.io/lips/#demo)
 
@@ -17,12 +22,12 @@ The name is recursive acronym which stands for LIPS is Pretty Simple.
 
 ## Features
 
-* Compatibile with Scheme specification (R5RS and R7RS)
+* Compatible with Scheme specification (R5RS and R7RS)
 * Allow to define of new syntax, using parser extensions.
 * Allow to create new data types, that fit nicely into reader and writer.
-* Introspection and modifaction of the functions code at runtime.
-* Syntax highligthing in NPM installed binaries and on the Web REPL.
-* Builtin autoformatting (pretty printing) of code.
+* Introspection and modification of the functions code at runtime.
+* Syntax highlighting in NPM installed binaries and on the Web REPL.
+* Builtin auto formatting (pretty printing) of code.
 * Lips macros, Scheme hygienic macros with syntax-rules and macroexpand.
 * Auto unwrapping of JavaScript promises.
 * Almost no dependencies.
@@ -40,7 +45,7 @@ The name is recursive acronym which stands for LIPS is Pretty Simple.
 
 ## Installation
 
-To install you can use use npm (or yarn):
+To install you can use npm (or yarn):
 
 ```
 npm install @jcubic/lips
@@ -64,7 +69,14 @@ then include the file in script tag, You can grab the version from unpkg.com
 https://unpkg.com/@jcubic/lips
 ```
 
-or from jsdelivery (beta version)
+or from jsdelivery
+
+```
+https://cdn.jsdelivr.net/npm/@jcubic/lips/dist/lips.min.js
+```
+
+and  beta version
+
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
@@ -83,6 +95,10 @@ Create any link in your bookmarks, edit it and copy paste the content of that fi
 Affter you click on the link it will create REPL at the bottom of the page.
 (NOTE: it may don't work on every page because of content security policy, 
 e.g. google.com or gihub.com)
+
+If you have trouble with creating bookmarklet you can open
+[LISP Scheme home page](https://jcubic.github.io/lips/#bookmark) where you can
+find link that you can drag to your bookmarks.
 
 ## Usage
 
@@ -130,7 +146,7 @@ npm install -g @jcubic/lips
 
 you can run interpreter from terminal:
 
-![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
 
 
 You can also run code as string with:
@@ -166,6 +182,9 @@ chmod a+x foo.scm
 ```
 
 Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
+
+## Credits
+* Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod)
 
 ## License
 

@@ -285,11 +285,10 @@
             ((_ ((a ==> b) ...) . body)
              (let ((a b) ...) . body))))
 
-        (t.is (let ((==> (lambda (x) (* x x))))
-                (let+ ((a ==> 1)
-                       (b ==> 2))
-                      (==> (+ a b))))
-              9)))
+        (t.is (let+ ((a ==> 1)
+                     (b ==> 2))
+                    (+ a b))
+              3)))
 
 (test "syntax-rules: basic ellipsis (srfi-46)"
       (lambda (t)
@@ -634,3 +633,108 @@
                       (set! result (cons i result)))
                  result)
                '(4 3 2 1 0))))
+
+
+(test "syntax-rules: it should define let*"
+      (lambda (t)
+        ;; source https://www.scheme.com/tspl2d/syntax.html#g2252
+        (t.is (type let*) "macro")
+        (define-syntax let*
+          (syntax-rules ()
+            ((_ () e1 e2 ...) (let () e1 e2 ...))
+            ((_ ((i1 v1) (i2 v2) ...) e1 e2 ...)
+             (let ((i1 v1))
+               (let* ((i2 v2) ...) e1 e2 ...)))))
+        (t.is (type let*) "syntax")
+        (t.is (let* ()
+                (+ 1 2))
+              3)
+        (t.is (let* ((x 10)
+                     (y (+ x 2)))
+                (+ x y))
+              22)))
+
+(test "syntax: scope + identifiers"
+      (lambda (t)
+
+        (define-syntax foo
+          (syntax-rules (++)
+            ((_ x ++ y)
+             (list x 1 1 y))))
+
+        (define (test)
+          (let ((__ 10))
+            (define-syntax foo
+              (syntax-rules (__)
+                ((_ x __ y)
+                 (list x 1 1 y))))
+            (foo 'a __ 2)))
+
+        (t.is (test) (list 'a 1 1 2))
+
+        (define (test)
+          (define-syntax foo
+            (syntax-rules (__)
+              ((_ x __ y)
+               (list x 1 1 y))))
+          (define __ 10)
+          (foo 'b __ 2))
+
+        (t.is (test) (list 'b 1 1 2))
+
+        (t.is (foo 1 ++ 2) (list 1 1 1 2))
+        (t.is (to.throw (let ((++ 10))
+                          (foo 1 ++ 2)))
+              true)
+        (t.is (to.throw (let* ((++ 10))
+                          (foo 1 ++ 2)))
+              true)
+        (t.is (to.throw ((lambda (++)
+                           (foo 1 ++ 2)) 10))
+              true)))
+
+(test "syntax: scope with rewriting"
+      (lambda (t)
+        ;; ref: https://www.cs.utah.edu/plt/scope-sets/
+        (define self (letrec-syntax ([identity (syntax-rules ()
+                                                 [(_ misc-id)
+                                                  (lambda (x)
+                                                    (let ([misc-id 'other])
+                                                      x))])])
+                       (identity x)))
+        (t.is (self 10) 10)
+
+        ;; racket macro
+        (define-syntax define-syntax-rule
+          (syntax-rules ()
+            ((_ (name args ...) body)
+             (define-syntax name (syntax-rules () ((name args ...) body))))))
+
+        (define-syntax-rule (define-other-five misc-id)
+          (begin
+            (define x 5)
+            misc-id))
+
+        (t.is (to.throw (define-other-five x)) true)))
+
+(test "syntax: define syntax macro inside syntax-macro"
+      (lambda (t)
+
+        (define-syntax def (syntax-rules () ((_ x y ) (define x y))))
+        (define-syntax def-2 (syntax-rules () ((_ x y) (def x y))))
+
+        (def foo 10)
+        (def-2 bar 20)
+        (t.is (+ foo bar) 30)))
+
+(test_ "syntax: free variables"
+      (lambda (t)
+        (define-syntax def (syntax-rules ()
+                             ((_ foo bar)
+                              (begin
+                                (define foo bar)
+                                hello))))
+
+        (t.is (def hello 10) 10)
+        (def hello 10)
+        (t.is hello 10)))

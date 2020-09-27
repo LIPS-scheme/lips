@@ -3,7 +3,7 @@
 ;; Reference:
 ;; http://people.cs.aau.dk/~normark/prog3-03/html/notes/eval-order_themes-delay-stream-section.html
 ;;
-;; This file is part of the LIPS - Scheme based Powerful LISP in JavaScript
+;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
 ;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
@@ -169,6 +169,6 @@
 (define (scale-stream stream n)
   (map-stream (lambda (x) (* x n)) stream))
   
-(force-stream (limit 10 (stream-map (lambda (a b) (+ a b)) integers (stream-cdr integers))))
+;;(force-stream (limit 10 (stream-map (lambda (a b) (+ a b)) integers (stream-cdr integers))))
 
 

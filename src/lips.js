@@ -88,6 +88,7 @@
     }
     // -------------------------------------------------------------------------
     /* eslint-disable */
+    /* istanbul ignore next */
     function log(x, regex = null) {
         var literal = arguments[1] === true;
         function msg(x) {
@@ -106,7 +107,13 @@
         }
         return x;
     }
+    // ----------------------------------------------------------------------
+    /* istanbul ignore next */
+    function is_debug() {
+        return user_env.get('DEBUG', { throwError: false });
+    }
     if (!root.fetch) {
+        /* istanbul ignore next */
         root.fetch = function(url, options) {
             options = options || {};
             return new Promise( (resolve, reject) => {
@@ -603,6 +610,32 @@
         };
     }
     // ----------------------------------------------------------------------
+    function Thunk(fn, cont = () => {}) {
+        this.fn = fn;
+        this.cont = cont;
+    }
+    // ----------------------------------------------------------------------
+    Thunk.prototype.toString = function() {
+        return '#<Thunk>';
+    };
+    // ----------------------------------------------------------------------
+    function trampoline(fn) {
+        return function(...args) {
+            return unwind(fn.apply(this, args));
+        };
+    }
+    // ----------------------------------------------------------------------
+    function unwind(result) {
+        while (result instanceof Thunk) {
+            const thunk = result;
+            result = result.fn();
+            if (!(result instanceof Thunk)) {
+                thunk.cont();
+            }
+        }
+        return result;
+    }
+    // ----------------------------------------------------------------------
     function tokenize(str, extra, formatter = multiline_formatter) {
         if (str instanceof LString) {
             str = str.toString();
@@ -783,6 +816,7 @@
                     stack[stack.length - 1] = Pair.fromArray(top);
                 } else if (is_close(token)) {
                     parents--;
+                    first_value = false;
                     if (!stack.length) {
                         throw new Error('Unbalanced parenthesis');
                     }
@@ -904,9 +938,8 @@
     function matcher(name, arg) {
         if (arg instanceof RegExp) {
             return x => String(x).match(arg);
-        } else if (typeof arg !== 'function') {
-            throw new Error(`${name} argument need to be a function or RegExp`);
-        } else {
+        } else if (typeof arg === 'function') {
+            // it will alwasy be function
             return arg;
         }
     }
@@ -932,6 +965,7 @@
         }).join('\n');
     }
     // ----------------------------------------------------------------------
+    /* istanbul ignore next */
     function dump(arr) {
         if (false) {
             console.log(arr.map((arg) => {
@@ -1264,6 +1298,7 @@
     var p_e = /[\])]/;
     var not_p = /[^()[\]]/;
     const not_close = new Ahead(/[^)\]]/);
+    const open = new Ahead(/[([]/);
     const glob = Symbol.for('*');
     const sexp = new Pattern([p_o, glob, p_e], '+');
     const symbol = new Pattern([Symbol.for('symbol')], '?');
@@ -1272,31 +1307,37 @@
     const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
     var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
-    var let_re = /^(?:#:)?(let|let\*|letrec|let-env)(:?-syntax)?$/;
+    /* eslint-disable */
+    var non_def = /^(?!.*\b(?:[()[\]]|define|let(?:\*|rec|-env|-syntax)?|lambda|syntax-rules)\b).*$/;
+    /* eslint-enable */
+    var let_re = /^(?:#:)?(let(?:\*|rec|-env|-syntax)?)$/;
     function keywords_re(...args) {
         return new RegExp(`^(?:#:)?(?:${args.join('|')})$`);
     }
     // line breaking rules
     Formatter.rules = [
         [[p_o, keywords_re('begin')], 1],
-        [[p_o, keywords_re('begin'), sexp], 1, not_close],
+        //[[p_o, keywords_re('begin'), sexp], 1, not_close],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
         [[p_o, keywords_re('syntax-rules'), symbol, identifiers], 1],
         [[p_o, keywords_re('syntax-rules'), symbol, identifiers, sexp], 1, not_close],
         //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
-        [[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
-        [[/(?!lambda)/, new Pattern([p_o, glob, p_e], '+')], 1, not_close],
+        //[[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
+        [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
+        //[[p_o, p_o, non_def, sexp, p_e], 1, open],
+        [[p_o, sexp], 1, open],
+        //[[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
         [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
         [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
         [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
-        [[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close],
+        //[[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close],
         [[p_o, keywords_re('if'), not_p, glob], 1],
-        [[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1],
-        [[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1],
-        [[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
-        [[p_o, [p_o, glob, p_e], string_re], 1],
+        //[[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1],
+        //[[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1],
+        //[[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
+        //[[p_o, [p_o, glob, p_e], string_re], 1],
         [[p_o, def_lambda_re, p_o, glob, p_e], 1, not_close],
         [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close],
         [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]
@@ -1313,7 +1354,7 @@
         };
         var tokens = tokenize(code, true).map(token).filter(t => t !== '\n');
         const { rules } = Formatter;
-        for (let i = 0; i < tokens.length; ++i) {
+        for (let i = 1; i < tokens.length; ++i) {
             if (!tokens[i].trim()) {
                 continue;
             }
@@ -1618,24 +1659,20 @@
         if (array.length && !(array instanceof Array)) {
             array = [...array];
         }
-        if (array.length === 0) {
-            return nil;
-        } else {
-            var car;
-            if (array[0] instanceof Array) {
-                car = Pair.fromArray(array[0]);
-            } else {
-                car = array[0];
-            }
-            if (typeof car === 'string') {
+        var result = nil;
+        var i = array.length;
+        while (i--) {
+            let car = array[i];
+            if (car instanceof Array) {
+                car = Pair.fromArray(car);
+            } else if (typeof car === 'string') {
                 car = LString(car);
+            } else if (typeof car === 'number' && !Number.isNaN(car)) {
+                car = LNumber(car);
             }
-            if (array.length === 1) {
-                return new Pair(car, nil);
-            } else {
-                return new Pair(car, Pair.fromArray(array.slice(1)));
-            }
+            result = new Pair(car, result);
         }
+        return result;
     };
 
     // ----------------------------------------------------------------------
@@ -1770,6 +1807,7 @@
             fn = repr.get(constructor);
         } else {
             repr.forEach(function(value, key) {
+                key = unbind(key);
                 // if key is Object it should only work for plain_object
                 // because otherwise it will match every object
                 if (obj instanceof key &&
@@ -1796,6 +1834,7 @@
     // :: debug function that can be used with JSON.stringify
     // :: that will show symbols
     // ----------------------------------------------------------------------
+    /* istanbul ignore next */
     function symbolize(obj) {
         if (obj && typeof obj === 'object') {
             var result = {};
@@ -1819,7 +1858,11 @@
         return obj;
     }
     // ----------------------------------------------------------------------
-    function toString(obj, quote, skip_cycles) {
+    function get_props(obj) {
+        return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
+    }
+    // ----------------------------------------------------------------------
+    function toString(obj, quote, skip_cycles, ...pair_args) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
             return '#<jQuery(' + obj.length + ')>';
@@ -1832,7 +1875,7 @@
             if (!skip_cycles) {
                 obj.markCycles();
             }
-            return obj.toString(quote);
+            return obj.toString(quote, ...pair_args);
         }
         if (Number.isNaN(obj)) {
             return '+nan.0';
@@ -1956,7 +1999,7 @@
                 }
             }
         }
-        function detect(pair, parents) {
+        const detect = trampoline(function detect_thunk(pair, parents) {
             if (pair instanceof Pair) {
                 delete pair.ref;
                 delete pair.cycles;
@@ -1968,10 +2011,12 @@
                     detect(pair.car, parents.slice());
                 }
                 if (!cdr) {
-                    detect(pair.cdr, parents.slice());
+                    return new Thunk(() => {
+                        return detect_thunk(pair.cdr, parents.slice());
+                    });
                 }
             }
-        }
+        });
         function mark_node(node, type) {
             if (node.cycles[type] instanceof Pair) {
                 const count = ref_nodes.indexOf(node.cycles[type]);
@@ -1990,11 +2035,82 @@
     }
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toString = function(quote, rest) {
+    // trampoline based recursive pair to string that don't overflow the stack
+    // ----------------------------------------------------------------------
+    /* istanbul ignore next */
+    const pair_to_string = (function() {
+        const prefix = (pair, nested) => {
+            var result = [];
+            if (pair.ref) {
+                result.push(pair.ref + '(');
+            } else if (!nested) {
+                result.push('(');
+            }
+            return result;
+        };
+        const postfix = (pair, nested) => {
+            if (is_debug()) {
+                console.log({ ref: pair.ref, nested });
+            }
+            if (!nested || pair.ref) {
+                return [')'];
+            }
+            return [];
+        };
+        return trampoline(function pairToString(pair, quote, extra = {}) {
+            const {
+                nested = false,
+                result = [],
+                cont = () => {
+                    result.push(...postfix(pair, nested));
+                }
+            } = extra;
+            result.push(...prefix(pair, nested));
+            let car;
+            if (pair.cycles && pair.cycles.car) {
+                car = pair.cycles.car;
+            } else {
+                car = toString(pair.car, quote, true, { result, cont });
+            }
+            if (car !== undefined) {
+                result.push(car);
+            }
+            return new Thunk(() => {
+                if (pair.cdr instanceof Pair) {
+                    if (pair.cycles && pair.cycles.cdr) {
+                        result.push(' . ');
+                        result.push(pair.cycles.cdr);
+                    } else {
+                        if (pair.cdr.ref) {
+                            result.push(' . ');
+                        } else {
+                            result.push(' ');
+                        }
+                        return pairToString(pair.cdr, quote, {
+                            nested: true,
+                            result,
+                            cont
+                        });
+                    }
+                } else if (pair.cdr !== nil) {
+                    result.push(' . ');
+                    result.push(toString(pair.cdr, quote));
+                }
+            }, cont);
+        });
+    })();
+
+    // ----------------------------------------------------------------------
+    Pair.prototype.toString = function(quote, { nested = false } = {}) {
+        if (is_debug()) {
+            var result = [];
+            pair_to_string(this, quote, { result });
+            return result.join('');
+        }
         var arr = [];
         if (this.ref) {
             arr.push(this.ref + '(');
-        } else if (!rest) {
+        } else if (!nested) {
             arr.push('(');
         }
         var value;
@@ -2016,13 +2132,13 @@
                 } else {
                     arr.push(' ');
                 }
-                const cdr = this.cdr.toString(quote, true);
+                const cdr = this.cdr.toString(quote, { nested: true });
                 arr.push(cdr);
             }
         } else if (this.cdr !== nil) {
             arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
         }
-        if (!rest || this.ref) {
+        if (!nested || this.ref) {
             arr.push(')');
         }
         return arr.join('');
@@ -2280,19 +2396,21 @@
     // :: list of bindings from code that match the pattern
     // :: TODO detect cycles
     // ----------------------------------------------------------------------
-    function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
+    function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         var bindings = {
             '...': {
                 symbols: { }, // symbols ellipsis (x ...)
                 lists: [ ]
             }
         };
+        const { expansion, define } = scope;
         // pattern_names parameter is used to distinguish
         // multiple matches of ((x ...) ...) agains ((1 2 3) (1 2 3))
         // in loop we add x to the list so we know that this is not
         // duplicated ellipsis symbol
         function log(x) {
-            if (user_env.get('DEBUG', { throwError: false })) {
+            /* istanbul ignore next */
+            if (is_debug()) {
                 console.log(x);
             }
         }
@@ -2308,7 +2426,15 @@
             }
             if (pattern instanceof LSymbol &&
                 symbols.includes(pattern.valueOf())) {
-                return LSymbol.is(code, pattern);
+                const ref = expansion.ref(code);
+                // shadowing the indentifier works only with lambda and let
+                if (LSymbol.is(code, pattern)) {
+                    if (typeof ref === 'undefined') {
+                        return true;
+                    }
+                    return ref === define || ref === global_env;
+                }
+                return false;
             }
             // pattern (a b (x ...)) and (x ...) match nil
             if (pattern instanceof Pair &&
@@ -2620,23 +2746,25 @@
             return rename(name);
         }
         function log(x) {
-            if (user_env.get('DEBUG', { throwError: false })) {
+            /* istanbul ignore next */
+            if (is_debug()) {
                 console.log(x);
             }
         }
         function rename(name) {
             if (!gensyms[name]) {
-                var value = scope.get(name, { throwError: false });
+                var ref = scope.ref(name);
                 const gensym_name = gensym(name);
+                if (ref) {
+                    const value = scope.get(name);
+                    scope.set(gensym_name, value);
+                }
                 // keep names so they can be restored after evaluation
                 // if there are free symbols as output
                 // kind of hack
                 names.push({
                     name, gensym: gensym_name
                 });
-                if (typeof value !== 'undefined') {
-                    scope.set(gensym_name, value);
-                }
                 gensyms[name] = gensym_name;
             }
             return gensyms[name];
@@ -3323,6 +3451,9 @@
         if (typeof this !== 'undefined' && !(this instanceof LCharacter) ||
             typeof this === 'undefined') {
             return new LCharacter(chr);
+        }
+        if (chr instanceof LString) {
+            chr = chr.valueOf();
         }
         if (LCharacter.names[chr]) {
             this.name = chr;
@@ -4603,15 +4734,20 @@
             name = 'anonymous';
         }
         this.env = user_env.inherit(name, obj);
+        const defaults_name = '**interaction-environment-defaults**';
+        this.env.set(defaults_name, get_props(obj).concat(defaults_name));
     }
     // -------------------------------------------------------------------------
-    Interpreter.prototype.exec = function(code, dynamic = false) {
+    Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
         typecheck('Intepreter::exec', code, 'string', 1);
         typecheck('Intepreter::exec', dynamic, 'boolean', 2);
         // simple solution to overwrite this variable in each interpreter
         // before evaluation of user code
         global_env.set('**interaction-environment**', this.env);
-        return exec(code, this.env, dynamic ? this.env : false);
+        if (env === null) {
+            env = this.env;
+        }
+        return exec(code, env, dynamic ? env : false);
     };
     // -------------------------------------------------------------------------
     Interpreter.prototype.get = function(value) {
@@ -4640,6 +4776,20 @@
         this.parent = parent;
         this.name = name || 'anonymous';
     }
+    // -------------------------------------------------------------------------
+    Environment.prototype.list = function() {
+        return get_props(this.env);
+    };
+    // -------------------------------------------------------------------------
+    Environment.prototype.unset = function(name) {
+        if (name instanceof LSymbol) {
+            name = name.valueOf();
+        }
+        if (name instanceof LString) {
+            name = name.valueOf();
+        }
+        delete this.env[name];
+    };
     // -------------------------------------------------------------------------
     Environment.prototype.inherit = function(name, obj = {}) {
         if (typeof name === "object") {
@@ -5148,17 +5298,21 @@
             if (dynamic_scope) {
                 dynamic_scope = this;
             }
+            var env = this;
             var ref;
             var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
             value = resolvePromises(value);
-            function set(key, value) {
+            function set(object, key, value) {
+                if (isPromise(object)) {
+                    return object.then(key => set(object, key, value));
+                }
                 if (isPromise(key)) {
-                    return key.then(key => set(key, value));
+                    return key.then(key => set(object, key, value));
                 }
                 if (isPromise(value)) {
-                    return value.then(value => set(key, value));
+                    return value.then(value => set(object, key, value));
                 }
-                object[key] = value;
+                env.get('set-obj!').call(env, object, key, value);
                 return value;
             }
             if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
@@ -5166,7 +5320,7 @@
                 var thrid = code.car.cdr.cdr.car;
                 var object = evaluate(second, { env: this, dynamic_scope, error });
                 var key = evaluate(thrid, { env: this, dynamic_scope, error });
-                return set(key, value);
+                return set(object, key, value);
             }
             if (!(code.car instanceof LSymbol)) {
                 throw new Error('set! first argument need to be a symbol or ' +
@@ -5185,11 +5339,11 @@
                         var name = parts.join('.');
                         var obj = this.get(name, { throwError: false });
                         if (obj) {
-                            this.get('set-obj!').call(this, obj, key, value);
+                            set(obj, key, value);
                             return;
                         }
                     }
-                    ref = this;
+                    throw new Error('Unbound variable `' + symbol + '\'');
                 }
                 ref.set(symbol, value);
             });
@@ -5317,46 +5471,53 @@
 
             Function fetch the file and evaluate its content as LIPS code.`),
         // ------------------------------------------------------------------
-        'while': doc(new Macro('while', function(code, { dynamic_scope, error }) {
+        'do': doc(new Macro('do', async function(code, { dynamic_scope, error }) {
             var self = this;
-            var begin = new Pair(
-                new LSymbol('begin'),
-                code.cdr
-            );
-            var result;
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
-            return (function loop() {
-                var cond = evaluate(code.car, {
-                    env: self,
-                    dynamic_scope,
-                    error
-                });
-                function next(cond) {
-                    if (cond && !isNull(cond)) {
-                        result = evaluate(begin, {
-                            env: self,
-                            dynamic_scope,
-                            error
-                        });
-                        if (isPromise(result)) {
-                            return result.then(ret => {
-                                result = ret;
-                                return loop();
-                            });
-                        } else {
-                            return loop();
-                        }
-                    } else {
-                        return result;
-                    }
+            var scope = self.inherit('do');
+            var vars = code.car;
+            var test = code.cdr.car;
+            var body = code.cdr.cdr;
+            if (body !== nil) {
+                body = new Pair(LSymbol('begin'), body);
+            }
+            const eval_args = { env: scope, dynamic_scope, error };
+            let node = vars;
+            while (node !== nil) {
+                const item = node.car;
+                scope.set(item.car, await evaluate(item.cdr.car, eval_args));
+                node = node.cdr;
+            }
+            while (!(await evaluate(test.car, eval_args))) {
+                if (body !== nil) {
+                    await lips.evaluate(body, eval_args);
                 }
-                return unpromise(cond, next);
-            })();
-        }), `(while cond . body)
+                let node = vars;
+                const next = {};
+                while (node !== nil) {
+                    const item = node.car;
+                    if (item.cdr.cdr !== nil) {
+                        const value = await evaluate(item.cdr.cdr.car, eval_args);
+                        next[item.car.valueOf()] = value;
+                    }
+                    node = node.cdr;
+                }
+                Object.entries(next).forEach(([key, value]) => {
+                    scope.set(key, value);
+                });
+            }
+            if (test.cdr !== nil) {
+                return await evaluate(test.cdr.car, eval_args);
+            }
+        }), `(do ((<var> <init> <next>)) (test expression) . body)
 
-            Macro that create a loop, it exectue body untill cond expression is false`),
+             Iteration macro that evaluate the expression body in scope of the variables.
+             On Eeach loop it increase the variables according to next expression and run
+             test to check if the loop should continue. If test is signle call the macro
+             will not return anything. If the test is pair of expression and value the
+             macro will return that value after finish.`),
         // ------------------------------------------------------------------
         'if': doc(new Macro('if', function(code, { dynamic_scope, error }) {
             if (dynamic_scope) {
@@ -5378,6 +5539,9 @@
                     });
                 }
             };
+            if (code === nil) {
+                throw new Error('too few expressions for `if`');
+            }
             var cond = evaluate(code.car, { env, dynamic_scope, error });
             return unpromise(cond, resolve);
         }), `(if cond true-expr false-expr)
@@ -5816,6 +5980,15 @@
                     dynamic_scope = scope;
                 }
                 var var_scope = this;
+                // for macros that define variables used in macro (2 levels nestting)
+                if (var_scope.name === Syntax.merge_env) {
+                    // copy refs for defined gynsyms
+                    const props = Object.getOwnPropertySymbols(var_scope.env);
+                    props.forEach(symbol => {
+                        var_scope.parent.set(symbol, var_scope.env[symbol]);
+                    });
+                    var_scope = var_scope.parent;
+                }
                 var eval_args = { env: scope, dynamic_scope, error };
                 let ellipsis, rules, symbols;
                 if (macro.car instanceof LSymbol) {
@@ -5830,9 +6003,13 @@
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-                    var bindings = extract_patterns(rule, code, symbols, ellipsis);
+
+                    var bindings = extract_patterns(rule, code, symbols, ellipsis, {
+                        expansion: this, define: env
+                    });
                     if (bindings) {
-                        if (user_env.get('DEBUG', { throwError: false })) {
+                        /* istanbul ignore next */
+                        if (is_debug()) {
                             console.log(JSON.stringify(symbolize(bindings), true, 2));
                             console.log('PATTERN: ' + rule.toString(true));
                             console.log('MACRO: ' + code.toString(true));
@@ -5864,7 +6041,7 @@
                     }
                     rules = rules.cdr;
                 }
-                throw new Error(`Invalid Syntax ${code}`);
+                throw new Error(`Invalid Syntax ${code.toString(true)}`);
             }, env);
             syntax.__code__ = macro;
             return syntax;
@@ -6278,19 +6455,13 @@
 
             Function create new JavaScript instance of an object.`),
         // ------------------------------------------------------------------
-        'typecheck': doc(function(label, arg, expected, position) {
-            if (expected instanceof Pair) {
-                expected = expected.toArray();
-            }
-            if (expected instanceof Array) {
-                expected = expected.map(x => x.valueOf());
-            }
-            typecheck(label, arg, expected, position);
-        }, `(typecheck label value type [position])
+        'typecheck': doc(
+            typecheck,
+            `(typecheck label value type [position])
 
-           Function check type and throw exception if type don't match.
-           Type can be string or list of strings. Position optional argument
-           is used to created proper error message.`),
+             Function check type and throw exception if type don't match.
+             Type can be string or list of strings. Position optional argument
+             is used to created proper error message.`),
         // ------------------------------------------------------------------
         'unset-special!': doc(function(symbol) {
             typecheck('remove-special!', symbol, 'string');
@@ -6431,11 +6602,16 @@
         // ------------------------------------------------------------------
         'object?': doc(function(obj) {
             return obj !== nil && obj !== null &&
-                !(obj instanceof LNumber) && typeof obj === 'object' &&
+                !(obj instanceof LCharacter) &&
+                !(obj instanceof RegExp) &&
+                !(obj instanceof LString) &&
+                !(obj instanceof Pair) &&
+                !(obj instanceof LNumber) &&
+                typeof obj === 'object' &&
                 !(obj instanceof Array);
         }, `(object? expression)
 
-            Function check if value is an object.`),
+            Function check if value is an plain object.`),
         // ------------------------------------------------------------------
         flatten: doc(function(list) {
             typecheck('flatten', list, 'pair');
@@ -6553,7 +6729,7 @@
         // ------------------------------------------------------------------
         find: doc(function find(arg, list) {
             typecheck('find', arg, ['regex', 'function']);
-            typecheck('find', list, 'pair');
+            typecheck('find', list, ['pair', 'nil']);
             if (isNull(list)) {
                 return nil;
             }
@@ -6749,7 +6925,8 @@
             if (n instanceof LNumber) {
                 n = n.valueOf();
             }
-            return Pair.fromArray(new Array(n).fill(0).map((_, i) => LNumber(i)));
+            const range = new Array(n).fill(0).map((_, i) => LNumber(i));
+            return Pair.fromArray(range, false);
         }, `(range n)
 
             Function return list of n numbers from 0 to n - 1`),
@@ -6902,38 +7079,6 @@
         }), `(1- number)
 
              Function substract 1 from the number and return result.`),
-        // ------------------------------------------------------------------
-        '++': doc(Macro.defmacro('++', function(code) {
-            typecheck('++', code.car, 'symbol');
-            typecheck('++', code.cdr, 'nil');
-            return Pair.fromArray([
-                new LSymbol('set!'),
-                code.car,
-                [
-                    new LSymbol('+'),
-                    code.car,
-                    LNumber(1)
-                ]
-            ]);
-        }), `(++ variable)
-
-             Macro that work only on variables and increment the value by one.`),
-        // ------------------------------------------------------------------
-        '--': doc(new Macro('--', function(code) {
-            typecheck('--', code.car, 'symbol');
-            typecheck('--', code.cdr, 'nil');
-            return Pair.fromArray([
-                new LSymbol('set!'),
-                code.car,
-                [
-                    new LSymbol('-'),
-                    code.car,
-                    LNumber(1)
-                ]
-            ]);
-        }), `(-- variable)
-
-             Macro that decrement the value it work only on symbols`),
         // ------------------------------------------------------------------
         '%': doc(function(a, b) {
             return LNumber(a).rem(b);
@@ -7216,13 +7361,17 @@
     function typeErrorMessage(fn, got, expected, position = null) {
         let postfix = fn ? ` in expression \`${fn}\`` : '';
         if (position !== null) {
-            postfix += ` argument ${position}`;
+            postfix += ` (argument ${position})`;
         }
         if (expected instanceof Array) {
-            const last = expected[expected.length - 1];
-            expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+            if (expected.length === 1) {
+                expected = expected[0];
+            } else {
+                const last = expected[expected.length - 1];
+                expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+            }
         }
-        return `Expecting ${expected} got ${got}${postfix}`;
+        return `Expecting ${expected}, got ${got}${postfix}`;
     }
     // -------------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
@@ -7231,6 +7380,9 @@
         var match = false;
         if (expected instanceof Pair) {
             expected = expected.toArray();
+        }
+        if (expected instanceof Array) {
+            expected = expected.map(x => x.valueOf());
         }
         if (expected instanceof Array) {
             expected = expected.map(x => x.valueOf().toLowerCase());
@@ -7451,7 +7603,7 @@
                         var msg = `${type(value)} \`${value}' is not a function`;
                         throw new Error(msg);
                     }
-                    throw new Error(`Unknown function \`${first.name}'`);
+                    throw new Error(`Unknown function \`${first.toString()}'`);
                 }
             } else if (typeof first === 'function') {
                 value = first;

@@ -9,29 +9,6 @@
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
-(define-macro (do vars test . body)
-  "(do ((<var> <init> <next>)) (test expression) . body)
-
-   Iteration macro that evaluate the expression body in scope of the variables.
-   On Eeach loop it increase the variables according to next expression and run
-   test to check if the loop should continue. If test is signle call the macro
-   will not return anything. If the test is pair of expression and value the
-   macro will return that value after finish."
-  (let ((return? (eq? (length test) 2)) (loop (gensym)))
-    `(let ,loop (,@(map (lambda (spec)
-                    `(,(car spec) ,(cadr spec)))
-                 vars))
-          (if (not ,(car test))
-              (begin
-                ,@body
-                (,loop ,@(map (lambda (spec)
-                                (if (null? (cddr spec))
-                                    (car spec)
-                                    (caddr spec)))
-                              vars)))
-                ,(if return? (cadr test))))))
-
-;; -----------------------------------------------------------------------------
 (define (list-match? predicate list)
   "(list-match? predicate list)
 
@@ -193,5 +170,60 @@
 ;; -----------------------------------------------------------------------------
 (define inexact exact->inexact)
 (define exact inexact->exact)
+
+;; -----------------------------------------------------------------------------
+(define (string->vector s)
+  "(string->vector string)
+
+   Function return vector of characters created from string."
+  (typecheck "string->list" s "string")
+  (--> s (split "") (map (lambda (x) (lips.LCharacter x)))))
+
+;; -----------------------------------------------------------------------------
+(define (vector->string v)
+  "(vector->string vector)
+
+   Function return new string created from vector of characters."
+  (typecheck "vector->list" v "array")
+  (--> v (map (lambda (char) (char.valueOf))) (join "")))
+
+;; -----------------------------------------------------------------------------
+(define (vector-map fn . rest)
+  "(vector-map fn vector1 vector2 ...)
+
+   Function return new vector from applying function fn to each element
+   of the vectors, similar to map for lists."
+  (if (or (= (length rest) 0) (not (every vector? rest)))
+      (error "vector-map: function require at least 1 vector")
+      (let ((len (apply min (map vector-length rest)))
+            (result #()))
+        (do ((i 0 (+ i 1)))
+            ((= i len) result)
+            (let* ((args (map (lambda (v) (vector-ref v i)) rest))
+                   (value (apply fn args)))
+              (--> result (push value)))))))
+
+;; -----------------------------------------------------------------------------
+(define (string-map fn . rest)
+  "(string-map fn string1 stringr2 ...)
+
+   Function return new string from applying function fn to each element
+   of the strings, similar to map for lists."
+  (if (or (= (length rest) 0) (not (every string? rest)))
+      (error "string-map: function require at least 1 string")
+      (vector->string (apply vector-map fn (map string->vector rest)))))
+
+;; -----------------------------------------------------------------------------
+(define (dynamic-wind before thunk after)
+  "(dynamic-wind before thunk after)
+
+   Function accept 3 procedures/lambdas and execute thunk with before and always
+   after even if error accur"
+  (before)
+  (let ((result (try (thunk)
+                     (catch (e)
+                            (error e)))))
+    (after)
+    result))
 
 ;; -----------------------------------------------------------------------------

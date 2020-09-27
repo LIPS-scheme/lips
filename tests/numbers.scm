@@ -397,3 +397,11 @@
         (t.is (let ((ret (/ 10i 10)))
                 (list (exact? ret) (= ret 1i) (not (eq? ret 1i))))
               '(#t #t #f))))
+
+(test "numbers: bignum"
+      (lambda (t)
+
+        (define (! n) (apply * (cdr (range (+ n 1)))))
+
+        (t.snapshot (! 10))
+        (t.snapshot (--> (! 8000) (toString)))))

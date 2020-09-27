@@ -93,11 +93,11 @@ function parse_options(arg, options) {
 }
 
 // -----------------------------------------------------------------------------
-function run(code, interpreter, dynamic = false) {
+function run(code, interpreter, dynamic = false, env = null) {
     if (typeof code !== 'string') {
         code = code.toString();
     }
-    return interpreter.exec(code, dynamic).catch(function(e) {
+    return interpreter.exec(code, dynamic, env).catch(function(e) {
         console.error(e.message);
         console.error('Call (stack-trace) to see the stack');
         console.error('Thrown exception is in global exception variable, use ' +
@@ -145,7 +145,7 @@ function boostrap(interpreter) {
                 }
             }
             var data = fs.readFileSync(path);
-            return run(data, interpreter).then(next);
+            return run(data, interpreter, false, env.parent).then(next);
         }
     })();
 }
@@ -215,7 +215,8 @@ var interp = Interpreter('repl', {
 });
 
 // -----------------------------------------------------------------------------
-const options = parse_options(process.argv.slice(2), {boolean: ['d', 'dynamic']});
+const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version'];
+const options = parse_options(process.argv.slice(2), { boolean });
 if (options.version || options.V) {
     // SRFI 176
     global.output = Pair.fromArray([
@@ -228,12 +229,12 @@ if (options.version || options.V) {
         ["os.uname", os.platform(), os.release()],
         ["os.env.LANG", process.env.LANG],
         ["os.env.TERM", process.env.TERM],
-        ["build.date", new Date(date).toISOString()]
+        ["build.date", date.match(/^\{\{|\}\}$/) ? date : new Date(date).toISOString()]
     ].map(([key, ...values]) => {
         return [LSymbol(key), ...values];
     }));
     boostrap(interp).then(function() {
-        run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
+        return run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
     });
 } else if (options.e || options.eval || options.c || options.code) {
     // from 1.0 documentation should use -e but it's not breaking change

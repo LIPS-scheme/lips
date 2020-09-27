@@ -19,7 +19,6 @@
 (define -inf.0 Number.NEGATIVE_INFINITY)
 (define +inf.0 Number.POSITIVE_INFINITY)
 (define procedure? function?)
-(define print display) ;; old LIPS function
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
@@ -98,9 +97,15 @@
          (%same-functions a b))
         ((and (array? a) (array? b) (eq? (length a) (length b)))
          (= (--> a (filter (lambda (item i) (equal? item (. b i)))) 'length) (length a)))
+        ((and (plain-object? a) (plain-object? b))
+         (let ((keys_a (--> (Object.keys a) (sort)))
+               (keys_b (--> (Object.keys b) (sort))))
+           (and (= (length keys_a)
+                   (length keys_b))
+                (equal? keys_a keys_b)
+                (equal? (--> keys_a (map (lambda (key) (. a key))))
+                        (--> keys_b (map (lambda (key) (. b key))))))))
         (else (eqv? a b))))
-
-
 
 ;; -----------------------------------------------------------------------------
 (define make-promise
@@ -284,7 +289,9 @@
 ;; -----------------------------------------------------------------------------
 (define (real? n)
   "(real? n)"
-  (and (number? n) (equal? (. n 'type) "float")))
+  (and (number? n) (let ((type n.type))
+                     (or (string=? type "float")
+                         (string=? type "bigint")))))
 
 ;; -----------------------------------------------------------------------------
 (define (exact? n)
@@ -569,7 +576,7 @@
 (define (string->list string)
   "(string->list string)
 
-   Function return list of characters created from list."
+   Function return list of characters created from string."
   (typecheck "string->list" string "string")
   (array->list (--> string (split "") (map (lambda (x) (lips.LCharacter x))))))
 
@@ -1081,7 +1088,7 @@
 (define (angle x)
   "(angle x)
 
-   Return angle of the complex number in polar coordinate system."
+   Returns angle of the complex number in polar coordinate system."
   (if (not (complex? x))
       (error "angle: number need to be complex")
       (Math.atan2 x.im x.re)))
@@ -1090,7 +1097,7 @@
 (define (magnitude x)
   "(magnitude x)
 
-   REturn magnitude of the complex number in polar coordinate system."
+   Returns magnitude of the complex number in polar coordinate system."
   (if (not (complex? x))
       (error "magnitude: number need to be complex")
       (sqrt (+ (* x.im x.im) (* x.re x.re)))))

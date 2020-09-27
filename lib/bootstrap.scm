@@ -161,7 +161,8 @@
   "(plain-object? x)
 
    Function check if value is plain JavaScript object. Created using make-object macro."
-  (and (eq? (type x) "object") (eq? (. x 'constructor) Object)))
+  ;; here we don't use string=? or equal? because it may not be defined
+  (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
 ;; -----------------------------------------------------------------------------
 (define (symbol->string s)
@@ -399,7 +400,9 @@
      (new RegExp re (car rest))))
 
 ;; -----------------------------------------------------------------------------
-(define-formatter-rule ((list (list "("
+;; replaced by more general formatter in JS, this is left as example of usage
+;; -----------------------------------------------------------------------------
+#;(define-formatter-rule ((list (list "("
                                     (%r "(?:#:)?cond")
                                     (Pattern (list "(" * ")") "+"))
                                1
@@ -568,7 +571,7 @@
 (define (defmacro? obj)
   "(defmacro? expression)
 
-   Function check if object is macro and it's expandable"
+   Function check if object is macro and it's expandable."
   (and (macro? obj) (. obj 'defmacro)))
 
 ;; ---------------------------------------------------------------------------------------
@@ -714,5 +717,58 @@
 
    Convert radians to degree."
   (* x (/ 180 Math.PI)))
+
+;; ---------------------------------------------------------------------------------------
+(define-syntax while
+  (syntax-rules ()
+    ((_ predicate body ...)
+     (do ()
+       ((not predicate))
+       body ...)))
+  "(while cond . body)
+
+   Macro that create a loop, it exectue body until cond expression is false.")
+
+;; ---------------------------------------------------------------------------------------
+(define-syntax ++
+  (syntax-rules ()
+    ((++ x)
+     (let ((tmp (+ x 1)))
+       (set! x tmp)
+       tmp)))
+  "(++ variable)
+
+   Macro that work only on variables and increment the value by one.")
+
+;; ---------------------------------------------------------------------------------------
+(define-syntax --
+  (syntax-rules ()
+    ((-- x)
+     (let ((tmp (- x 1)))
+       (set! x tmp)
+       tmp)))
+  "(-- variable)
+
+   Macro that decrement the value it work only on symbols")
+
+;; ---------------------------------------------------------------------------------------
+(define (pretty-format pair)
+  "(pretty-format pair)
+
+   Function return pretty printed string from pair expression."
+  (typecheck "pretty-pair" pair "pair")
+  (--> (new lips.Formatter (repr pair true)) (break) (format)))
+
+;; ---------------------------------------------------------------------------------------
+(define (reset)
+  "(reset)
+
+  Function reset environment and remove all user defined variables."
+  (let-env **interaction-environment**
+           (let ((defaults **interaction-environment-defaults**)
+                 (env **interaction-environment**))
+             (--> env (list) (forEach (lambda (name)
+                                        (if (not (--> defaults (includes name)))
+                                            (--> env (unset name)))))))))
 
 ;; ---------------------------------------------------------------------------------------
