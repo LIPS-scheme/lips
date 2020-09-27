@@ -772,3 +772,13 @@
                                             (--> env (unset name)))))))))
 
 ;; ---------------------------------------------------------------------------------------
+;; we could evaluate (vector 1 2) from quasiquote, but you can't distinquish between
+;; vector call and when user create `(vector 1 2 3) directly
+;; ---------------------------------------------------------------------------------------
+(set-special! "`#" 'quasiquote-vector lips.specials.SPLICE)
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (quasiquote-vector . args)
+  (list 'list->vector (cons 'quasiquote (cons args nil))))
+
+;; ---------------------------------------------------------------------------------------

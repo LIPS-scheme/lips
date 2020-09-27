@@ -77,3 +77,14 @@
         (let ((str (make-string 10 #\ )))
           (t.is (string-length str) 10)
           (t.is (not (null? (--> str (match /^\s{10}$/)))) #t))))
+
+(test "parser: vector quasiquote"
+      (lambda (t)
+         (t.is `#(1 2 3) #(1 2 3))
+         (t.is `#(1 2 foo) #(1 2 'foo))
+         (t.is '#(1 2 foo) #(1 2 'foo))
+         ;; this is testing for impementations that was not used
+         ;; but it will fail this check
+         (t.is `(vector 1 2 3) '(vector 1 2 3))
+         (t.is `#(10 5 ,(sqrt 4) ,@(map sqrt '(16 9)) 8)
+               #(10 5 2 4 3 8))))

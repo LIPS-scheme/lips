@@ -1,3 +1,7 @@
+## 1.0.0-beta.7
+### Features
+* add handling of quasiquote vector `` `#(1 2 ,(+ 1 2)) `` using syntax extensions
+
 ## 1.0.0-beta.6
 ### Breaking
 * `real?` now return true on integers (bigInts)
