@@ -1102,4 +1102,19 @@
       (error "magnitude: number need to be complex")
       (sqrt (+ (* x.im x.im) (* x.re x.re)))))
 
+;; ---------------------------------------------------------------------------------------
+;; ref: https://stackoverflow.com/a/14675103/387194
+;; ---------------------------------------------------------------------------------------
+(define random
+  (let ((a 69069) (c 1) (m (expt 2 32)) (seed 19380110))
+    (lambda new-seed
+      "(random)
+       (random seed)
+
+       Function generate new random real number using Knuth algorithm."
+      (if (pair? new-seed)
+          (set! seed (car new-seed))
+          (set! seed (modulo (+ (* seed a) c) m)))
+      (exact->inexact (/ seed m)))))
+
 ;; -----------------------------------------------------------------------------
