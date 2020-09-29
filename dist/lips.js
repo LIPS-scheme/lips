@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 27 Sep 2020 13:26:50 +0000
+ * build: Tue, 29 Sep 2020 22:34:21 +0000
  */
 (function () {
   'use strict';
@@ -2160,7 +2160,7 @@
       var i = tokens.length;
 
       if (sexp <= 0) {
-        throw Error("previousSexp: Invlaid argument sexp = ".concat(sexp));
+        throw Error("previousSexp: Invalid argument sexp = ".concat(sexp));
       }
 
       outer: while (sexp-- && i >= 0) {
@@ -5518,7 +5518,7 @@
       }
 
       if (typeof n === 'undefined') {
-        throw new Error('Invlaid LNumber constructor call');
+        throw new Error('Invalid LNumber constructor call');
       }
 
       var _type = LNumber.getType(n);
@@ -9435,7 +9435,7 @@
           }
 
           var item = array[i];
-          return unpromise(fn(item, i), next);
+          return unpromise(fn(item), next);
         }(0);
       }, "(filter fn list)\n            (filter regex list)\n\n            Higher order function that call `fn` for each element of the list\n            and return list for only those elements for which funtion return\n            true value. If called with regex it will create matcher function."),
       // ------------------------------------------------------------------
@@ -10660,10 +10660,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 27 Sep 2020 13:26:50 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 29 Sep 2020 22:34:21 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 27 Sep 2020 13:26:50 +0000').valueOf();
+      var date = LString('Tue, 29 Sep 2020 22:34:21 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10700,7 +10700,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 27 Sep 2020 13:26:50 +0000',
+      date: 'Tue, 29 Sep 2020 22:34:21 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

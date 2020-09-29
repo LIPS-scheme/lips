@@ -1,4 +1,6 @@
 ## 1.0.0-beta.7
+### Breaking
+* from index second argument from `filter` callback
 ### Features
 * add handling of quasiquote vector `` `#(1 2 ,(+ 1 2)) `` using syntax extensions
 * new `random` procedure

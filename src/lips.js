@@ -984,7 +984,7 @@
     function previousSexp(tokens, sexp = 1) {
         var i = tokens.length;
         if (sexp <= 0) {
-            throw Error(`previousSexp: Invlaid argument sexp = ${sexp}`);
+            throw Error(`previousSexp: Invalid argument sexp = ${sexp}`);
         }
         outer: while (sexp-- && i >= 0) {
             var count = 1;
@@ -3597,7 +3597,7 @@
             return new LNumber(n, force);
         }
         if (typeof n === 'undefined') {
-            throw new Error('Invlaid LNumber constructor call');
+            throw new Error('Invalid LNumber constructor call');
         }
         var _type = LNumber.getType(n);
         if (LNumber.types[_type]) {
@@ -6940,7 +6940,7 @@
                     return Pair.fromArray(result);
                 }
                 var item = array[i];
-                return unpromise(fn(item, i), next);
+                return unpromise(fn(item), next);
             })(0);
         }, `(filter fn list)
             (filter regex list)
