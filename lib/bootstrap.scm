@@ -364,27 +364,61 @@
 
 
 ;; -----------------------------------------------------------------------------
-(define-macro (cond . list)
-  "(cond (predicate? . body)
-         (predicate? . body))
+;; macro code taken from https://stackoverflow.com/a/27507779/387194
+;; which is based on https://srfi.schemers.org/srfi-61/srfi-61.html
+;; but with lowercase tokens
+;; -----------------------------------------------------------------------------
+(define-syntax cond
+  (syntax-rules (=> else)
 
-   Macro for condition check. For usage instead of nested ifs."
-  (if (pair? list)
-      (let* ((item (car list))
-             (first (car item))
-             (forms (cdr item))
-             (rest (cdr list)))
-        `(if ,first
-             (begin
-               ,@forms)
-             ,(if (and (pair? rest)
-                       (or (eq? (caar rest) true)
-                           (eq? (caar rest) 'else)))
-                  `(begin
-                     ,@(cdar rest))
-                  (if (not (null? rest))
-                      `(cond ,@rest)))))
-      nil))
+    ((cond (else else1 else2 ...))
+     ;; The (if #t (begin ...)) wrapper ensures that there may be no
+     ;; internal definitions in the body of the clause.  R5RS mandates
+     ;; this in text (by referring to each subform of the clauses as
+     ;; <expression>) but not in its reference implementation of cond,
+     ;; which just expands to (begin ...) with no (if #t ...) wrapper.
+     (if #t (begin else1 else2 ...)))
+
+    ((cond (test => receiver) more-clause ...)
+     (let ((t test))
+       (cond/maybe-more t
+                        (receiver t)
+                        more-clause ...)))
+
+    ((cond (generator guard => receiver) more-clause ...)
+     (call-with-values (lambda () generator)
+       (lambda t
+         (cond/maybe-more (apply guard    t)
+                          (apply receiver t)
+                          more-clause ...))))
+
+    ((cond (test) more-clause ...)
+     (let ((t test))
+       (cond/maybe-more t t more-clause ...)))
+
+    ((cond (test body1 body2 ...) more-clause ...)
+     (cond/maybe-more test
+                      (begin body1 body2 ...)
+                      more-clause ...)))
+  "(cond (predicate? . body)
+         (predicate? . body)
+         (else . body))
+
+   Macro for condition checks. For usage instead of nested ifs.")
+
+;; -----------------------------------------------------------------------------
+(define-syntax cond/maybe-more
+  (syntax-rules ()
+    ((cond/maybe-more test consequent)
+     (if test
+         consequent))
+    ((cond/maybe-more test consequent clause ...)
+     (if test
+         consequent
+         (cond clause ...))))
+  "(cond/maybe-more test consequent ...)
+
+   Helper macro used by cond.")
 
 ;; -----------------------------------------------------------------------------
 ;; formatter rules for cond to break after each S-Expression
