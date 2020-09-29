@@ -42,21 +42,31 @@
 ;; -----------------------------------------------------------------------------
 ;; Vector literals syntax using parser symbol macros
 ;; -----------------------------------------------------------------------------
-(define-symbol-macro SPLICE (vector "#" . arg)
-  "(vector 1 2 3)
-   #(1 2 3)
-
-   Macro for defining vectors (arrays)."
-  `(list->array (list ,@arg)))
+(set-special! "#" 'vector lips.specials.SPLICE)
 
 ;; -----------------------------------------------------------------------------
-(define-symbol-macro SPLICE (quote-vector "'#" . arg)
-  "(make-vector (1 2 3))
-   #(1 2 3)
+(define-syntax vector
+  (syntax-rules ()
+    ((_ arg ...) (list->array (list arg ...))))
+  "(vector 1 2 3 (+ 3 1))
+   #(1 2 3 (+ 3 1))
 
-   Macro for defining vectors (arrays)."
-  `(list->array (list ,@(map (lambda (object) `(quote ,object)) arg))))
+   Macro for defining vectors (JavaScript arrays).")
 
+;; -----------------------------------------------------------------------------
+(set-special! "'#" 'quote-vector lips.specials.SPLICE)
+
+;; -----------------------------------------------------------------------------
+(define-syntax quote-vector
+  (syntax-rules ()
+    ((_ arg ...)
+     (list->array (list (quote arg) ...))))
+  "(quote-vector 1 2 3 foo)
+   '#(1 2 3 foo)
+
+   Macro for defining vectors (JavaScript arrays).")
+
+;; -----------------------------------------------------------------------------
 (set-repr! Array
            (lambda (x q)
              (let ((arr (--> x (map (lambda (x) (repr x q))))))
