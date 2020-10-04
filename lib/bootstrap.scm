@@ -367,6 +367,9 @@
 ;; macro code taken from https://stackoverflow.com/a/27507779/387194
 ;; which is based on https://srfi.schemers.org/srfi-61/srfi-61.html
 ;; but with lowercase tokens
+;; NOTE: this code make everything really slow
+;;       unit tests run from 1min to 6min.
+;; TODO: test this when syntax macros are compiled before evaluation
 ;; -----------------------------------------------------------------------------
 (define-syntax cond
   (syntax-rules (=> else)
@@ -419,6 +422,29 @@
   "(cond/maybe-more test consequent ...)
 
    Helper macro used by cond.")
+
+
+(define-macro (cond . list)
+  "(cond (predicate? . body)
+         (predicate? . body))
+   Macro for condition check. For usage instead of nested ifs."
+  (if (pair? list)
+      (let* ((item (car list))
+             (first (car item))
+             (forms (cdr item))
+             (rest (cdr list)))
+        `(if ,first
+             (begin
+               ,@forms)
+             ,(if (and (pair? rest)
+                       (or (eq? (caar rest) true)
+                           (eq? (caar rest) 'else)))
+                  `(begin
+                     ,@(cdar rest))
+                  (if (not (null? rest))
+                      `(cond ,@rest)))))
+      nil))
+
 
 ;; -----------------------------------------------------------------------------
 ;; formatter rules for cond to break after each S-Expression
