@@ -5407,29 +5407,6 @@
 
             Function return true if value is undfined empty list.`),
         // ------------------------------------------------------------------
-        assoc: doc(function(key, list) {
-            if (key instanceof Pair && !(list instanceof Pair)) {
-                throw new Error('First argument to assoc ned to be a key');
-            }
-            typecheck('assoc', list, 'pair');
-            var node = list;
-            while (true) {
-                if (!(node instanceof Pair) || this.get('empty?')(node)) {
-                    break;
-                }
-                var car = node.car.car;
-                if (equal(car, key)) {
-                    return node.car;
-                } else if (!node.haveCycles('cdr')) {
-                    node = node.cdr;
-                }
-            }
-            return nil;
-        }, `(assoc key alist)
-
-            Function search Alist (list of pairs) until it find the one that
-            have head set equal to key, and return found pair.`),
-        // ------------------------------------------------------------------
         gensym: doc(
             gensym,
             `(gensym)
