@@ -6950,17 +6950,6 @@
             and return list for only those elements for which funtion return
             true value. If called with regex it will create matcher function.`),
         // ------------------------------------------------------------------
-        range: doc(function(n) {
-            typecheck('range', n, 'number');
-            if (n instanceof LNumber) {
-                n = n.valueOf();
-            }
-            const range = new Array(n).fill(0).map((_, i) => LNumber(i));
-            return Pair.fromArray(range, false);
-        }, `(range n)
-
-            Function return list of n numbers from 0 to n - 1`),
-        // ------------------------------------------------------------------
         compose: doc(
             compose,
             `(compose . fns)

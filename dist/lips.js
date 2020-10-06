@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 06 Oct 2020 10:30:37 +0000
+ * build: Tue, 06 Oct 2020 10:34:26 +0000
  */
 (function () {
   'use strict';
@@ -9446,19 +9446,6 @@
         }(0);
       }, "(filter fn list)\n            (filter regex list)\n\n            Higher order function that call `fn` for each element of the list\n            and return list for only those elements for which funtion return\n            true value. If called with regex it will create matcher function."),
       // ------------------------------------------------------------------
-      range: doc(function (n) {
-        typecheck('range', n, 'number');
-
-        if (n instanceof LNumber) {
-          n = n.valueOf();
-        }
-
-        var range = new Array(n).fill(0).map(function (_, i) {
-          return LNumber(i);
-        });
-        return Pair.fromArray(range, false);
-      }, "(range n)\n\n            Function return list of n numbers from 0 to n - 1"),
-      // ------------------------------------------------------------------
       compose: doc(compose, "(compose . fns)\n\n             Higher order function and create new function that apply all functions\n             From right to left and return it's value. Reverse of compose.\n             e.g.:\n             ((compose (curry + 2) (curry * 3)) 3)\n             11\n            "),
       pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
       curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (display (add12 3 4))"),
@@ -10667,10 +10654,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 06 Oct 2020 10:30:37 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 06 Oct 2020 10:34:26 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 06 Oct 2020 10:30:37 +0000').valueOf();
+      var date = LString('Tue, 06 Oct 2020 10:34:26 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10707,7 +10694,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 06 Oct 2020 10:30:37 +0000',
+      date: 'Tue, 06 Oct 2020 10:34:26 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

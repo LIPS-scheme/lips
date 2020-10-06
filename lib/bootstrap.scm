@@ -842,3 +842,15 @@
   (list 'list->vector (cons 'quasiquote (cons args nil))))
 
 ;; ---------------------------------------------------------------------------------------
+(define (range n)
+  "(range n)
+
+   Function return list of n numbers from 0 to n - 1"
+  (typecheck "range" n "number")
+  (let ((result (make-list n)))
+    (do ((l result (cdr l))
+         (i 0 (+ i 1)))
+      ((null? l) result)
+      (set-car! l i))))
+
+;; ---------------------------------------------------------------------------------------
