@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 04 Oct 2020 15:55:47 +0000
+ * build: Tue, 06 Oct 2020 10:30:37 +0000
  */
 (function () {
   'use strict';
@@ -7936,7 +7936,7 @@
                   }
 
                   eval_args = {
-                    env: scope,
+                    env: self,
                     dynamic_scope: dynamic_scope,
                     error: error
                   };
@@ -7964,53 +7964,60 @@
                   break;
 
                 case 21:
-                  _context3.next = 23;
+                  eval_args = {
+                    env: scope,
+                    dynamic_scope: dynamic_scope,
+                    error: error
+                  };
+
+                case 22:
+                  _context3.next = 24;
                   return evaluate(test.car, eval_args);
 
-                case 23:
+                case 24:
                   if (_context3.sent) {
-                    _context3.next = 42;
+                    _context3.next = 43;
                     break;
                   }
 
                   if (!(body !== nil)) {
-                    _context3.next = 27;
+                    _context3.next = 28;
                     break;
                   }
 
-                  _context3.next = 27;
+                  _context3.next = 28;
                   return lips.evaluate(body, eval_args);
 
-                case 27:
+                case 28:
                   _node3 = vars;
                   next = {};
 
-                case 29:
+                case 30:
                   if (!(_node3 !== nil)) {
-                    _context3.next = 39;
+                    _context3.next = 40;
                     break;
                   }
 
                   _item = _node3.car;
 
                   if (!(_item.cdr.cdr !== nil)) {
-                    _context3.next = 36;
+                    _context3.next = 37;
                     break;
                   }
 
-                  _context3.next = 34;
+                  _context3.next = 35;
                   return evaluate(_item.cdr.cdr.car, eval_args);
 
-                case 34:
+                case 35:
                   value = _context3.sent;
                   next[_item.car.valueOf()] = value;
 
-                case 36:
+                case 37:
                   _node3 = _node3.cdr;
-                  _context3.next = 29;
+                  _context3.next = 30;
                   break;
 
-                case 39:
+                case 40:
                   Object.entries(next).forEach(function (_ref20) {
                     var _ref21 = slicedToArray(_ref20, 2),
                         key = _ref21[0],
@@ -8018,22 +8025,22 @@
 
                     scope.set(key, value);
                   });
-                  _context3.next = 21;
+                  _context3.next = 22;
                   break;
 
-                case 42:
+                case 43:
                   if (!(test.cdr !== nil)) {
-                    _context3.next = 46;
+                    _context3.next = 47;
                     break;
                   }
 
-                  _context3.next = 45;
+                  _context3.next = 46;
                   return evaluate(test.cdr.car, eval_args);
 
-                case 45:
+                case 46:
                   return _context3.abrupt("return", _context3.sent);
 
-                case 46:
+                case 47:
                 case "end":
                   return _context3.stop();
               }
@@ -10660,10 +10667,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 04 Oct 2020 15:55:47 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 06 Oct 2020 10:30:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 04 Oct 2020 15:55:47 +0000').valueOf();
+      var date = LString('Tue, 06 Oct 2020 10:30:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10700,7 +10707,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 04 Oct 2020 15:55:47 +0000',
+      date: 'Tue, 06 Oct 2020 10:30:37 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

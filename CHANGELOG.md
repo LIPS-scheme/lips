@@ -1,12 +1,13 @@
 ## 1.0.0-beta.7
 ### Breaking
-* from index second argument from `filter` callback
+* remove second argument from `filter` callback
 ### Features
 * add handling of quasiquote vector `` `#(1 2 ,(+ 1 2)) `` using syntax extensions
 * new `random` procedure
 ### Bugfix
 * fix write vs display of character atoms
 * fix mixed case of named characters (e.g.: `#\Space`)
+* fix `do` macro scope according to R7RS
 
 ## 1.0.0-beta.6
 ### Breaking

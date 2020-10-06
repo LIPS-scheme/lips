@@ -5502,13 +5502,14 @@
             if (body !== nil) {
                 body = new Pair(LSymbol('begin'), body);
             }
-            const eval_args = { env: scope, dynamic_scope, error };
+            let eval_args = { env: self, dynamic_scope, error };
             let node = vars;
             while (node !== nil) {
                 const item = node.car;
                 scope.set(item.car, await evaluate(item.cdr.car, eval_args));
                 node = node.cdr;
             }
+            eval_args = { env: scope, dynamic_scope, error };
             while (!(await evaluate(test.car, eval_args))) {
                 if (body !== nil) {
                     await lips.evaluate(body, eval_args);
