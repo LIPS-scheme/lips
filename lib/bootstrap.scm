@@ -842,15 +842,18 @@
   (list 'list->vector (cons 'quasiquote (cons args nil))))
 
 ;; ---------------------------------------------------------------------------------------
+(define (make-list n . rest)
+  (if (or (not (integer? n)) (<= n 0))
+      (throw (new Error "make-list: first argument need to be integer larger then 0"))
+      (let ((fill (if (null? rest) undefined (car rest))))
+        (array->list (--> (new Array n) (fill fill))))))
+
+;; ---------------------------------------------------------------------------------------
 (define (range n)
   "(range n)
 
    Function return list of n numbers from 0 to n - 1"
   (typecheck "range" n "number")
-  (let ((result (make-list n)))
-    (do ((l result (cdr l))
-         (i 0 (+ i 1)))
-      ((null? l) result)
-      (set-car! l i))))
+  (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
 
 ;; ---------------------------------------------------------------------------------------
