@@ -743,9 +743,10 @@
             (if (char-lower-case? (car (string->list name)))
                 name
                 symbol))
-         ,(alist->object (map (lambda (pair)
-                                (cons (car pair) (cadr pair)))
-                              attrs))
+         (alist->object (,'quasiquote ,(map (lambda (pair)
+                                             (cons (symbol->string (car pair))
+                                                   (list 'unquote (cadr pair))))
+                                           attrs)))
          ,@(if (null? rest)
               nil
               (let ((first (car rest)))
