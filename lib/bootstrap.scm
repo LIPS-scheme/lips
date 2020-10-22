@@ -725,6 +725,54 @@
                (caddr expr)))))
 
 ;; ---------------------------------------------------------------------------------------
+(define (%sxml h expr)
+  "(%sxml h expr)
+
+   Helper function that render expression using create element function."
+  (let* ((have-attrs (and (not (null? (cdr expr)))
+                          (pair? (cadr expr))
+                          (eq? (caadr expr) '@)))
+         (attrs (if have-attrs
+                    (cdadr expr)
+                    nil))
+         (rest (if have-attrs
+                   (cddr expr)
+                   (cdr expr))))
+    `(,h ,(let* ((symbol (car expr))
+                 (name (symbol->string symbol)))
+            (if (char-lower-case? (car (string->list name)))
+                name
+                symbol))
+         ,(alist->object (map (lambda (pair)
+                                (cons (car pair) (cadr pair)))
+                              attrs))
+         ,@(if (null? rest)
+              nil
+              (let ((first (car rest)))
+                (if (pair? first)
+                    (map (lambda (expr)
+                           (%sxml h expr))
+                         rest)
+                    (list first)))))))
+
+;; ---------------------------------------------------------------------------------------
+(set-special! "<html>" 'sxml lips.specials.LITERAL)
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (sxml expr)
+  "(sxml expr)
+   <html>(expr)
+
+   Macro for JSX like syntax but with SXML.
+   e.g. usage:
+
+   <html>(div (@ (data-foo \"hello\")
+                 (id \"foo\"))
+              (span \"hello\")
+              (span \"world\"))"
+  (%sxml 'h expr))
+
+;; ---------------------------------------------------------------------------------------
 (define-macro (with-tags expr)
   "(with-tags expression)
 
