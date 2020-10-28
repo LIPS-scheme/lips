@@ -252,8 +252,8 @@
            ,name))))
 
 ;; -----------------------------------------------------------------------------
-(define-macro (make-object . expr)
-  "(make-object :name value)
+(define-macro (object . expr)
+  "(object :name value)
 
    Macro that create JavaScript object using key like syntax."
   (try
@@ -525,7 +525,7 @@
 ;; -----------------------------------------------------------------------------
 ;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
 ;; -----------------------------------------------------------------------------
-(set-special! "&" 'make-object lips.specials.SPLICE)
+(set-special! "&" 'object lips.specials.SPLICE)
 ;; -----------------------------------------------------------------------------
 (set-repr! Object
            (lambda (x q)
