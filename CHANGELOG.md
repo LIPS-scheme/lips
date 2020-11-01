@@ -5,6 +5,7 @@
 * parser is now async
 ### Features
 * new `random` procedure
+* string repr of all procedures and macros in REPL now have name
 ### Bugfix
 * fix write vs display of character atoms
 * fix mixed case of named characters (e.g.: `#\Space`)
