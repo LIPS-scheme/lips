@@ -186,7 +186,7 @@
   (if (or (= (length rest) 0) (not (every vector? rest)))
       (error "vector-map: function require at least 1 vector")
       (let ((len (apply min (map vector-length rest)))
-            (result #()))
+            (result (vector)))
         (do ((i 0 (+ i 1)))
             ((= i len) result)
             (let* ((args (map (lambda (v) (vector-ref v i)) rest))

@@ -22,11 +22,11 @@
 (test "numbers: not numbers"
       (lambda (t)
         (t.is (. (lips.parse "0.1/0.1") 0) '0.1/0.1)
-        (t.is (. (lips.parse "#i1/2i+0.1+0.1") 0) '(vector i1/2i+0.1+0.1))
+        (t.is (to.throw (lips.parse "#i1/2i+0.1+0.1")) true)
         (t.is (. (lips.parse "1/2i+0.1+0.1") 0) '1/2i+0.1+0.1)
         (t.is (. (lips.parse "1/2/3") 0) '1/2/3)
         (t.is (. (lips.parse "/2/3") 0) '/2/3) ;; not regex
-        (t.is (. (lips.parse "#e0.1/0.1") 0) '(vector e0.1/0.1))))
+        (t.is (to.throw (lips.parse "#e0.1/0.1")) true)))
 
 (test "numbers: literals"
       (lambda (t)

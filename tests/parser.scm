@@ -5,18 +5,16 @@
           (let ((str (--> (list->array (map symbol->string args)) (join "+"))))
             `(string-append "<" ,str "/>")))
 
-        (t.is (eval (read "<>(foo bar)") (current-environment)) "<foo+bar/>")
+        (t.is (read "<>(foo bar)") "<foo+bar/>")
         (unset-special! "<>")
 
         (set-special! "--" 'dash lips.specials.LITERAL)
+
         (define-macro (dash x)
-          `'(,(car x) . (,cadr x)))
+          `'(,(car x) . ,(cadr x)))
 
-        (t.is (eval (read "--(foo bar baz)") (current-environment)) '(foo . bar))
+        (t.is (read "--(foo bar baz)") '(foo . bar))
 
-        (t.is (read "(--)") '((dash)))
-        (t.is (read "(-- x)") '((dash x)))
-        (t.is (read "--x") '(dash x))
         (unset-special! "--")
         (t.is (read "(--)") '(--))))
 
@@ -83,10 +81,5 @@
 (test "parser: vector quoting"
       (lambda (t)
          (t.is `#(1 2 3) #(1 2 3))
-         (t.is `#(1 2 foo) #(1 2 'foo))
-         (t.is '#(1 2 foo) #(1 2 'foo))
-         ;; this is testing for impementations that was not used
-         ;; but it will fail this check
-         (t.is `(vector 1 2 3) '(vector 1 2 3))
-         (t.is `#(10 5 ,(sqrt 4) ,@(map sqrt '(16 9)) 8)
-               #(10 5 2 4 3 8))))
+         (t.is `#(1 2 foo) #(1 2 foo))
+         (t.is '#(1 2 foo) #(1 2 foo))))

@@ -160,7 +160,7 @@
 (define (plain-object? x)
   "(plain-object? x)
 
-   Function check if value is plain JavaScript object. Created using make-object macro."
+   Function check if value is plain JavaScript object. Created using object macro."
   ;; here we don't use string=? or equal? because it may not be defined
   (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
@@ -201,7 +201,7 @@
         (cons frame result)
         (if (null? frame)
             result
-            (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
+            (let ((parent.frame (--> frame (get 'parent.frame (object :throwError false)))))
               (if (function? parent.frame)
                   (iter (cons frame result) (parent.frame 0))
                   result))))))
@@ -232,11 +232,11 @@
 
 
 ;; -----------------------------------------------------------------------------
-(define (object-expander expr)
+(define (object-expander expr . rest)
   "(object-expander '(:foo (:bar 10) (:baz (1 2 3))))
 
    Recursive function helper for defining LIPS code for create objects using key like syntax."
-  (let ((name (gensym)))
+  (let ((name (gensym)) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
@@ -247,7 +247,9 @@
                              (let ((prop (key->string key)))
                                (if (and (pair? value) (key? (car value)))
                                    `(set-obj! ,name ,prop ,(object-expander value))
-                                   `(set-obj! ,name ,prop ,value)))))
+                                    (if quot
+                                        `(set-obj! ,name ,prop ',value)
+                                        `(set-obj! ,name ,prop ,value))))))
                        expr)
            ,name))))
 
@@ -258,6 +260,17 @@
    Macro that create JavaScript object using key like syntax."
   (try
     (object-expander expr)
+    (catch (e)
+      (error e.message))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (object-literal . expr)
+  "(object-literal :name value)
+
+   Macro that create JavaScript object using key like syntax. This is similar,
+   to object but all values are quoted. This macro is used with & object literal."
+  (try
+    (object-expander expr true)
     (catch (e)
       (error e.message))))
 
@@ -523,9 +536,9 @@
   (ignore (--> lips.repr (delete type))))
 
 ;; -----------------------------------------------------------------------------
-;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
+;; add syntax &(:foo 10) that evaluates (object :foo 10)
 ;; -----------------------------------------------------------------------------
-(set-special! "&" 'object lips.specials.SPLICE)
+(set-special! "&" 'object-literal lips.specials.SPLICE)
 ;; -----------------------------------------------------------------------------
 (set-repr! Object
            (lambda (x q)
@@ -696,8 +709,8 @@
     (if (null? lst)
         `(begin
            (define ,name ,(if (null? constructor) `(lambda ()) (%class-lambda constructor)))
-           (--> Object (defineProperty ,name "name" (make-object :value
-                                                                 ,(symbol->string name))))
+           (--> Object (defineProperty ,name "name" (object :value
+                                                            ,(symbol->string name))))
            ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
                 `(set-obj! ,name 'prototype (--> Object (create ,parent))))
            ,@(map (lambda (fn)
@@ -879,16 +892,6 @@
              (--> env (list) (forEach (lambda (name)
                                         (if (not (--> defaults (includes name)))
                                             (--> env (unset name)))))))))
-
-;; ---------------------------------------------------------------------------------------
-;; we could evaluate (vector 1 2) from quasiquote, but you can't distinquish between
-;; vector call and when user create `(vector 1 2 3) directly
-;; ---------------------------------------------------------------------------------------
-(set-special! "`#" 'quasiquote-vector lips.specials.SPLICE)
-
-;; ---------------------------------------------------------------------------------------
-(define-macro (quasiquote-vector . args)
-  (list 'list->vector (cons 'quasiquote (cons args nil))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (make-list n . rest)

@@ -42,7 +42,14 @@
 ;; -----------------------------------------------------------------------------
 ;; Vector literals syntax using parser symbol macros
 ;; -----------------------------------------------------------------------------
-(set-special! "#" 'vector lips.specials.SPLICE)
+(set-special! "#" 'vector-literal lips.specials.SPLICE)
+
+;; -----------------------------------------------------------------------------
+(define-macro (vector-literal . args)
+  (if (not (pair? args))
+      (throw (new Error (concat "Parse Error: vector require pair got "
+                                (type args) " in " (repr args))))
+      (list->array args)))
 
 ;; -----------------------------------------------------------------------------
 (define-syntax vector
@@ -50,19 +57,6 @@
     ((_ arg ...) (list->array (list arg ...))))
   "(vector 1 2 3 (+ 3 1))
    #(1 2 3 (+ 3 1))
-
-   Macro for defining vectors (JavaScript arrays).")
-
-;; -----------------------------------------------------------------------------
-(set-special! "'#" 'quote-vector lips.specials.SPLICE)
-
-;; -----------------------------------------------------------------------------
-(define-syntax quote-vector
-  (syntax-rules ()
-    ((_ arg ...)
-     (list->array (list (quote arg) ...))))
-  "(quote-vector 1 2 3 foo)
-   '#(1 2 3 foo)
 
    Macro for defining vectors (JavaScript arrays).")
 

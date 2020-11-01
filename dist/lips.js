@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 06 Oct 2020 10:34:26 +0000
+ * build: Sun, 01 Nov 2020 12:27:24 +0000
  */
 (function () {
   'use strict';
@@ -94,6 +94,71 @@
 
   module.exports = _construct;
   });
+
+  function _arrayWithHoles(arr) {
+    if (Array.isArray(arr)) return arr;
+  }
+
+  var arrayWithHoles = _arrayWithHoles;
+
+  function _iterableToArray(iter) {
+    if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
+  }
+
+  var iterableToArray = _iterableToArray;
+
+  function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+
+    for (var i = 0, arr2 = new Array(len); i < len; i++) {
+      arr2[i] = arr[i];
+    }
+
+    return arr2;
+  }
+
+  var arrayLikeToArray = _arrayLikeToArray;
+
+  function _unsupportedIterableToArray(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return arrayLikeToArray(o, minLen);
+  }
+
+  var unsupportedIterableToArray = _unsupportedIterableToArray;
+
+  function _nonIterableRest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
+
+  var nonIterableRest = _nonIterableRest;
+
+  function _toArray(arr) {
+    return arrayWithHoles(arr) || iterableToArray(arr) || unsupportedIterableToArray(arr) || nonIterableRest();
+  }
+
+  var toArray = _toArray;
+
+  function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) return arrayLikeToArray(arr);
+  }
+
+  var arrayWithoutHoles = _arrayWithoutHoles;
+
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
+
+  var nonIterableSpread = _nonIterableSpread;
+
+  function _toConsumableArray(arr) {
+    return arrayWithoutHoles(arr) || iterableToArray(arr) || unsupportedIterableToArray(arr) || nonIterableSpread();
+  }
+
+  var toConsumableArray = _toConsumableArray;
 
   var runtime_1 = createCommonjsModule(function (module) {
 
@@ -860,70 +925,31 @@
 
   var asyncToGenerator = _asyncToGenerator;
 
-  function _arrayWithHoles(arr) {
-    if (Array.isArray(arr)) return arr;
-  }
-
-  var arrayWithHoles = _arrayWithHoles;
-
-  function _iterableToArray(iter) {
-    if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
-  }
-
-  var iterableToArray = _iterableToArray;
-
-  function _arrayLikeToArray(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-
-    for (var i = 0, arr2 = new Array(len); i < len; i++) {
-      arr2[i] = arr[i];
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
     }
-
-    return arr2;
   }
 
-  var arrayLikeToArray = _arrayLikeToArray;
+  var classCallCheck = _classCallCheck;
 
-  function _unsupportedIterableToArray(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return arrayLikeToArray(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return arrayLikeToArray(o, minLen);
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
   }
 
-  var unsupportedIterableToArray = _unsupportedIterableToArray;
-
-  function _nonIterableRest() {
-    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
   }
 
-  var nonIterableRest = _nonIterableRest;
-
-  function _toArray(arr) {
-    return arrayWithHoles(arr) || iterableToArray(arr) || unsupportedIterableToArray(arr) || nonIterableRest();
-  }
-
-  var toArray = _toArray;
-
-  function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr)) return arrayLikeToArray(arr);
-  }
-
-  var arrayWithoutHoles = _arrayWithoutHoles;
-
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-
-  var nonIterableSpread = _nonIterableSpread;
-
-  function _toConsumableArray(arr) {
-    return arrayWithoutHoles(arr) || iterableToArray(arr) || unsupportedIterableToArray(arr) || nonIterableSpread();
-  }
-
-  var toConsumableArray = _toConsumableArray;
+  var createClass = _createClass;
 
   function _defineProperty(obj, key, value) {
     if (key in obj) {
@@ -1849,6 +1875,9 @@
       get: function get(name) {
         return this._specials[name];
       },
+      remove: function remove(name) {
+        delete this._specials[name];
+      },
       append: function append(name, value, type) {
         this._specials[name] = {
           seq: name,
@@ -1865,6 +1894,12 @@
 
 
     var defined_specials = [["'", new LSymbol('quote'), specials.LITERAL], ['`', new LSymbol('quasiquote'), specials.LITERAL], [',@', new LSymbol('unquote-splicing'), specials.LITERAL], [',', new LSymbol('unquote'), specials.LITERAL]];
+    Object.defineProperty(specials, 'builtin', {
+      writable: false,
+      value: defined_specials.map(function (arr) {
+        return arr[0];
+      })
+    });
     defined_specials.forEach(function (_ref5) {
       var _ref6 = slicedToArray(_ref5, 3),
           seq = _ref6[0],
@@ -1873,217 +1908,315 @@
 
       specials.append(seq, symbol, type);
     }); // ----------------------------------------------------------------------
-    // :: tokens are the array of strings from tokenizer
-    // :: the return value is array of lisp code created out of Pair class
+    // :: Parser inspired by BiwaScheme
+    // :: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
     // ----------------------------------------------------------------------
 
-    function parse(tokens) {
-      // usage in LIPS code
-      if (tokens instanceof LString) {
-        tokens = tokens.toString();
-      }
+    var Parser = /*#__PURE__*/function () {
+      function Parser(arg, env) {
+        classCallCheck(this, Parser);
 
-      if (typeof tokens === 'string') {
-        tokens = tokenize(tokens);
-      }
-
-      var stack = [];
-      var result = [];
-      var special = null;
-      var special_tokens = specials.names();
-      var special_forms = special_tokens.map(function (s) {
-        return specials.get(s).symbol.name;
-      });
-      var parents = 0;
-      var first_value = false;
-      var specials_stack = [];
-      var single_list_specials = [];
-      var special_count = 0;
-
-      var __SPLICE__ = LSymbol(Symbol["for"]('__splice__'));
-
-      function is_open(token) {
-        return token === '(' || token === '[';
-      }
-
-      function is_close(token) {
-        return token === ')' || token === ']';
-      }
-
-      function pop_join() {
-        var top = stack[stack.length - 1];
-
-        if (top instanceof Array && top[0] instanceof LSymbol && special_forms.includes(top[0].name) && stack.length > 1 && !top[0].literal) {
-          stack.pop();
-
-          if (stack[stack.length - 1].length === 1 && stack[stack.length - 1][0] instanceof LSymbol) {
-            stack[stack.length - 1].push(top);
-          } else if (stack[stack.length - 1] instanceof Pair) {
-            if (stack[stack.length - 1].cdr instanceof Pair) {
-              stack[stack.length - 1] = new Pair(stack[stack.length - 1], Pair.fromArray(top));
-            } else {
-              stack[stack.length - 1].cdr = Pair.fromArray(top);
-            }
-          } else {
-            stack[stack.length - 1].push(top);
-          }
-        }
-      }
-
-      tokens.forEach(function (token) {
-        var top = stack[stack.length - 1];
-
-        if (special_tokens.indexOf(token) !== -1) {
-          special_count++;
-          special = token;
-          stack.push([specials.get(special).symbol]);
-
-          if (!special) {
-            single_list_specials = [];
-          }
-
-          single_list_specials.push(special);
-        } else {
-          if (special) {
-            specials_stack.push(single_list_specials);
-            single_list_specials = [];
-          }
-
-          if (is_open(token)) {
-            first_value = true;
-            parents++;
-            var arr = [];
-
-            if (special && !is_literal(special)) {
-              arr.push(__SPLICE__);
-            }
-
-            stack.push(arr);
-            special = null;
-            special_count = 0;
-          } else if (token === '.' && !first_value) {
-            stack[stack.length - 1] = Pair.fromArray(top);
-          } else if (is_close(token)) {
-            parents--;
-            first_value = false;
-
-            if (!stack.length) {
-              throw new Error('Unbalanced parenthesis');
-            }
-
-            if (stack.length === 1) {
-              var arg = stack.pop();
-
-              if (arg instanceof Array && arg.length === 0) {
-                arg = nil;
-              }
-
-              result.push(arg);
-            } else if (stack.length > 1) {
-              var list = stack.pop();
-              top = stack[stack.length - 1];
-
-              if (top instanceof Array) {
-                if (list.length === 0) {
-                  top.push(nil);
-                } else if (list instanceof Array && list[0] === __SPLICE__) {
-                  var _top;
-
-                  (_top = top).push.apply(_top, toConsumableArray(list.slice(1)));
-                } else {
-                  top.push(list);
-                }
-              } else if (top instanceof Pair) {
-                if (list.length === 0) {
-                  top.append(nil);
-                } else {
-                  top.append(Pair.fromArray(list));
-                }
-              }
-
-              if (specials_stack.length) {
-                single_list_specials = specials_stack.pop();
-
-                while (single_list_specials.length) {
-                  pop_join();
-                  single_list_specials.pop();
-                }
-              } else {
-                pop_join();
-              }
-            }
-
-            if (parents === 0 && stack.length) {
-              result.push(stack.pop());
-            }
-          } else {
-            first_value = false;
-            var value = parse_argument(token);
-
-            if (special) {
-              // special without list like ,foo
-              while (special_count--) {
-                stack[stack.length - 1].push(value);
-                value = stack.pop();
-              }
-
-              specials_stack.pop();
-              special_count = 0;
-              special = false;
-            } else if (value instanceof LSymbol && special_forms.includes(value.name)) {
-              // handle parsing os special forms as literal symbols
-              // (values they expand into)
-              value.literal = true;
-            }
-
-            top = stack[stack.length - 1];
-
-            if (top instanceof Pair) {
-              var node = top;
-
-              while (true) {
-                if (node.cdr === nil) {
-                  if (value instanceof Array) {
-                    node.cdr = Pair.fromArray(value);
-                  } else {
-                    node.cdr = value;
-                  }
-
-                  break;
-                } else {
-                  node = node.cdr;
-                }
-              }
-            } else if (!stack.length) {
-              result.push(value);
-            } else {
-              top.push(value);
-            }
-          }
-        }
-      });
-
-      if (!tokens.filter(function (t) {
-        return t.match(/^[[\]()]$/);
-      }).length && stack.length) {
-        // list of parser macros
-        result = result.concat(stack);
-        stack = [];
-      }
-
-      if (stack.length) {
-        throw new Error('Unbalanced parenthesis 2');
-      }
-
-      return result.map(function (arg) {
-        if (arg instanceof Array) {
-          return Pair.fromArray(arg);
+        if (arg instanceof LString) {
+          arg = arg.toString();
         }
 
-        return arg;
-      });
+        if (typeof arg === 'string') {
+          arg = tokenize(arg);
+        }
+
+        this.tokens = arg;
+        this.env = env;
+        this.i = 0;
+        this._specials = specials.names();
+        this._builtin = specials.builtin;
+      }
+
+      createClass(Parser, [{
+        key: "resolve",
+        value: function resolve(name) {
+          return this.env && this.env.get(name, {
+            throwError: false
+          });
+        }
+      }, {
+        key: "peek",
+        value: function peek() {
+          return this.tokens[this.i] || Parser.EOS;
+        }
+      }, {
+        key: "skip",
+        value: function skip() {
+          this.i++;
+        }
+      }, {
+        key: "specials",
+        value: function specials(token) {
+          return this._specials.includes(token);
+        }
+      }, {
+        key: "builtin",
+        value: function builtin(token) {
+          return this._builtin.includes(token);
+        }
+      }, {
+        key: "read",
+        value: function read() {
+          var token = this.peek();
+          this.skip();
+          return token;
+        }
+      }, {
+        key: "is_open",
+        value: function is_open(token) {
+          return token === '(' || token === '[';
+        }
+      }, {
+        key: "is_close",
+        value: function is_close(token) {
+          return token === ')' || token === ']';
+        }
+      }, {
+        key: "read_list",
+        value: function () {
+          var _read_list = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
+            var head, prev, token, cur;
+            return regenerator.wrap(function _callee$(_context) {
+              while (1) {
+                switch (_context.prev = _context.next) {
+                  case 0:
+                    head = nil, prev = head;
+
+                  case 2:
+                    if (!(this.i < this.tokens.length)) {
+                      _context.next = 25;
+                      break;
+                    }
+
+                    token = this.peek();
+
+                    if (!this.is_close(token)) {
+                      _context.next = 7;
+                      break;
+                    }
+
+                    this.skip();
+                    return _context.abrupt("break", 25);
+
+                  case 7:
+                    if (!(token === '.' && head !== nil)) {
+                      _context.next = 14;
+                      break;
+                    }
+
+                    this.skip();
+                    _context.next = 11;
+                    return this.read_object();
+
+                  case 11:
+                    prev.cdr = _context.sent;
+                    _context.next = 22;
+                    break;
+
+                  case 14:
+                    _context.t0 = Pair;
+                    _context.next = 17;
+                    return this.read_object();
+
+                  case 17:
+                    _context.t1 = _context.sent;
+                    _context.t2 = nil;
+                    cur = new _context.t0(_context.t1, _context.t2);
+
+                    if (head === nil) {
+                      head = cur;
+                    } else {
+                      prev.cdr = cur;
+                    }
+
+                    prev = cur;
+
+                  case 22:
+
+                    _context.next = 2;
+                    break;
+
+                  case 25:
+                    return _context.abrupt("return", head);
+
+                  case 26:
+                  case "end":
+                    return _context.stop();
+                }
+              }
+            }, _callee, this);
+          }));
+
+          function read_list() {
+            return _read_list.apply(this, arguments);
+          }
+
+          return read_list;
+        }()
+      }, {
+        key: "read_value",
+        value: function read_value() {
+          var token = this.read();
+          return parse_argument(token);
+        }
+      }, {
+        key: "read_object",
+        value: function () {
+          var _read_object = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2() {
+            var token, special, expr, object, result;
+            return regenerator.wrap(function _callee2$(_context2) {
+              while (1) {
+                switch (_context2.prev = _context2.next) {
+                  case 0:
+                    token = this.peek();
+
+                    if (!(token === Parser.EOS)) {
+                      _context2.next = 3;
+                      break;
+                    }
+
+                    return _context2.abrupt("return", token);
+
+                  case 3:
+                    if (!this.specials(token)) {
+                      _context2.next = 18;
+                      break;
+                    }
+
+                    special = specials.get(token);
+                    this.skip();
+                    _context2.next = 8;
+                    return this.read_object();
+
+                  case 8:
+                    object = _context2.sent;
+
+                    if (is_literal(token)) {
+                      expr = new Pair(special.symbol, new Pair(object, nil));
+                    } else {
+                      expr = new Pair(special.symbol, object);
+                    }
+
+                    if (!this.builtin(token)) {
+                      _context2.next = 14;
+                      break;
+                    }
+
+                    return _context2.abrupt("return", expr);
+
+                  case 14:
+                    _context2.next = 16;
+                    return evaluate(expr, {
+                      env: this.env,
+                      error: function error(e) {
+                        throw e;
+                      }
+                    });
+
+                  case 16:
+                    result = _context2.sent;
+                    return _context2.abrupt("return", quote(result));
+
+                  case 18:
+                    if (!this.is_open(token)) {
+                      _context2.next = 23;
+                      break;
+                    }
+
+                    this.skip();
+                    return _context2.abrupt("return", this.read_list());
+
+                  case 23:
+                    return _context2.abrupt("return", this.read_value());
+
+                  case 24:
+                  case "end":
+                    return _context2.stop();
+                }
+              }
+            }, _callee2, this);
+          }));
+
+          function read_object() {
+            return _read_object.apply(this, arguments);
+          }
+
+          return read_object;
+        }()
+      }]);
+
+      return Parser;
+    }();
+
+    Parser.EOS = Symbol["for"]('EOS'); // ----------------------------------------------------------------------
+    // :: tokens are the array of strings from tokenizer
+    // :: the return value is array of lisp code created out of Pair class
+    // :: env is needed for parser extensions that will invoke the function
+    // :: or macro assigned to symbol, this function is async because
+    // :: it evaluate the code, from parser extensions, that may return promise
+    // ----------------------------------------------------------------------
+
+    function parse(_x, _x2) {
+      return _parse.apply(this, arguments);
     } // ----------------------------------------------------------------------
 
+
+    function _parse() {
+      _parse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(arg, env) {
+        var parser, result, expr;
+        return regenerator.wrap(function _callee8$(_context8) {
+          while (1) {
+            switch (_context8.prev = _context8.next) {
+              case 0:
+                if (!env) {
+                  if (global_env) {
+                    env = global_env.get('**interaction-environment**', {
+                      throwError: false
+                    });
+                  } else {
+                    env = user_env;
+                  }
+                }
+
+                parser = new Parser(arg, env);
+                result = [];
+
+              case 3:
+
+                _context8.next = 6;
+                return parser.read_object();
+
+              case 6:
+                expr = _context8.sent;
+
+                if (!(expr === Parser.EOS)) {
+                  _context8.next = 9;
+                  break;
+                }
+
+                return _context8.abrupt("break", 12);
+
+              case 9:
+                result.push(expr);
+                _context8.next = 3;
+                break;
+
+              case 12:
+                return _context8.abrupt("return", result);
+
+              case 13:
+              case "end":
+                return _context8.stop();
+            }
+          }
+        }, _callee8);
+      }));
+      return _parse.apply(this, arguments);
+    }
 
     function unpromise(value) {
       var fn = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : function (x) {
@@ -2837,6 +2970,10 @@
       return undefined$1;
     };
 
+    Nil.prototype.toObject = function () {
+      return {};
+    };
+
     Nil.prototype.append = function (x) {
       return new Pair(x, nil);
     };
@@ -2972,8 +3109,9 @@
 
     Pair.fromArray = function (array) {
       var deep = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : true;
+      var quote = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : false;
 
-      if (array instanceof Pair) {
+      if (array instanceof Pair || quote && array instanceof Array && array.data) {
         return array;
       }
 
@@ -2998,7 +3136,7 @@
         var car = array[i];
 
         if (car instanceof Array) {
-          car = Pair.fromArray(car);
+          car = Pair.fromArray(car, deep, quote);
         } else if (typeof car === 'string') {
           car = LString(car);
         } else if (typeof car === 'number' && !Number.isNaN(car)) {
@@ -3641,9 +3779,9 @@
 
 
     function seq_compare(fn, args) {
-      var _args2 = toArray(args),
-          a = _args2[0],
-          rest = _args2.slice(1);
+      var _args4 = toArray(args),
+          a = _args4[0],
+          rest = _args4.slice(1);
 
       while (rest.length > 0) {
         var _rest = rest,
@@ -3795,32 +3933,32 @@
 
     function macro_expand(single) {
       return /*#__PURE__*/function () {
-        var _ref11 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2(code, args) {
+        var _ref11 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(code, args) {
           var env, traverse, _traverse;
 
-          return regenerator.wrap(function _callee2$(_context2) {
+          return regenerator.wrap(function _callee4$(_context4) {
             while (1) {
-              switch (_context2.prev = _context2.next) {
+              switch (_context4.prev = _context4.next) {
                 case 0:
                   _traverse = function _traverse3() {
-                    _traverse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(node, n, env) {
+                    _traverse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(node, n, env) {
                       var value, code, result, _result, expr, scope, car, cdr, pair;
 
-                      return regenerator.wrap(function _callee$(_context) {
+                      return regenerator.wrap(function _callee3$(_context3) {
                         while (1) {
-                          switch (_context.prev = _context.next) {
+                          switch (_context3.prev = _context3.next) {
                             case 0:
                               if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-                                _context.next = 24;
+                                _context3.next = 24;
                                 break;
                               }
 
                               if (!node.data) {
-                                _context.next = 3;
+                                _context3.next = 3;
                                 break;
                               }
 
-                              return _context.abrupt("return", node);
+                              return _context3.abrupt("return", node);
 
                             case 3:
                               value = env.get(node.car, {
@@ -3828,148 +3966,148 @@
                               });
 
                               if (!(value instanceof Macro && value.defmacro)) {
-                                _context.next = 24;
+                                _context3.next = 24;
                                 break;
                               }
 
                               code = value instanceof Syntax ? node : node.cdr;
-                              _context.next = 8;
+                              _context3.next = 8;
                               return value.invoke(code, args, true);
 
                             case 8:
-                              result = _context.sent;
+                              result = _context3.sent;
 
                               if (!(value instanceof Syntax)) {
-                                _context.next = 17;
+                                _context3.next = 17;
                                 break;
                               }
 
                               _result = result, expr = _result.expr, scope = _result.scope;
 
                               if (!(expr instanceof Pair)) {
-                                _context.next = 16;
+                                _context3.next = 16;
                                 break;
                               }
 
                               if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                                _context.next = 14;
+                                _context3.next = 14;
                                 break;
                               }
 
-                              return _context.abrupt("return", expr);
+                              return _context3.abrupt("return", expr);
 
                             case 14:
                               n = n - 1;
-                              return _context.abrupt("return", traverse(expr, n, scope));
+                              return _context3.abrupt("return", traverse(expr, n, scope));
 
                             case 16:
                               result = expr;
 
                             case 17:
                               if (!(result instanceof LSymbol)) {
-                                _context.next = 19;
+                                _context3.next = 19;
                                 break;
                               }
 
-                              return _context.abrupt("return", quote(result));
+                              return _context3.abrupt("return", quote(result));
 
                             case 19:
                               if (!(result instanceof Pair)) {
-                                _context.next = 24;
+                                _context3.next = 24;
                                 break;
                               }
 
                               if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                                _context.next = 22;
+                                _context3.next = 22;
                                 break;
                               }
 
-                              return _context.abrupt("return", result);
+                              return _context3.abrupt("return", result);
 
                             case 22:
                               n = n - 1;
-                              return _context.abrupt("return", traverse(result, n, env));
+                              return _context3.abrupt("return", traverse(result, n, env));
 
                             case 24:
                               // TODO: CYCLE DETECT
                               car = node.car;
 
                               if (!(car instanceof Pair)) {
-                                _context.next = 29;
+                                _context3.next = 29;
                                 break;
                               }
 
-                              _context.next = 28;
+                              _context3.next = 28;
                               return traverse(car, n, env);
 
                             case 28:
-                              car = _context.sent;
+                              car = _context3.sent;
 
                             case 29:
                               cdr = node.cdr;
 
                               if (!(cdr instanceof Pair)) {
-                                _context.next = 34;
+                                _context3.next = 34;
                                 break;
                               }
 
-                              _context.next = 33;
+                              _context3.next = 33;
                               return traverse(cdr, n, env);
 
                             case 33:
-                              cdr = _context.sent;
+                              cdr = _context3.sent;
 
                             case 34:
                               pair = new Pair(car, cdr);
-                              return _context.abrupt("return", pair);
+                              return _context3.abrupt("return", pair);
 
                             case 36:
                             case "end":
-                              return _context.stop();
+                              return _context3.stop();
                           }
                         }
-                      }, _callee);
+                      }, _callee3);
                     }));
                     return _traverse.apply(this, arguments);
                   };
 
-                  traverse = function _traverse2(_x3, _x4, _x5) {
+                  traverse = function _traverse2(_x5, _x6, _x7) {
                     return _traverse.apply(this, arguments);
                   };
 
                   env = args['env'] = this;
 
                   if (!single) {
-                    _context2.next = 11;
+                    _context4.next = 11;
                     break;
                   }
 
-                  _context2.t0 = quote;
-                  _context2.next = 7;
+                  _context4.t0 = quote;
+                  _context4.next = 7;
                   return traverse(code, 1, env);
 
                 case 7:
-                  _context2.t1 = _context2.sent.car;
-                  return _context2.abrupt("return", (0, _context2.t0)(_context2.t1));
+                  _context4.t1 = _context4.sent.car;
+                  return _context4.abrupt("return", (0, _context4.t0)(_context4.t1));
 
                 case 11:
-                  _context2.t2 = quote;
-                  _context2.next = 14;
+                  _context4.t2 = quote;
+                  _context4.next = 14;
                   return traverse(code, -1, env);
 
                 case 14:
-                  _context2.t3 = _context2.sent.car;
-                  return _context2.abrupt("return", (0, _context2.t2)(_context2.t3));
+                  _context4.t3 = _context4.sent.car;
+                  return _context4.abrupt("return", (0, _context4.t2)(_context4.t3));
 
                 case 16:
                 case "end":
-                  return _context2.stop();
+                  return _context4.stop();
               }
             }
-          }, _callee2, this);
+          }, _callee4, this);
         }));
 
-        return function (_x, _x2) {
+        return function (_x3, _x4) {
           return _ref11.apply(this, arguments);
         };
       }();
@@ -4852,19 +4990,19 @@
       }
 
       var bound = fn.bind(context);
-      var props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
+      var props = Object.getOwnPropertyNames(fn).filter(filter_fn_names);
       props.forEach(function (prop) {
         try {
           bound[prop] = fn[prop];
         } catch (e) {// ignore error from express.js while accessing bodyParser
         }
       });
-      hiddenProp(bound, '__fn__', fn);
-      hiddenProp(bound, '__context__', context);
-      hiddenProp(bound, '__bound__', true);
+      hidden_prop(bound, '__fn__', fn);
+      hidden_prop(bound, '__context__', context);
+      hidden_prop(bound, '__bound__', true);
 
       if (isNativeFunction(fn)) {
-        hiddenProp(bound, '__native__', true);
+        hidden_prop(bound, '__native__', true);
       }
 
       bound.valueOf = function () {
@@ -4920,14 +5058,14 @@
     // ----------------------------------------------------------------------
 
 
-    var exludedNames = ['name', 'length', 'caller', 'callee', 'arguments', 'prototype'];
+    var exluded_names = ['name', 'length', 'caller', 'callee', 'arguments', 'prototype'];
 
-    function filterFnNames(name) {
-      return !exludedNames.includes(name);
+    function filter_fn_names(name) {
+      return !exluded_names.includes(name);
     } // ----------------------------------------------------------------------
 
 
-    function hiddenProp(obj, name, value) {
+    function hidden_prop(obj, name, value) {
       Object.defineProperty(obj, Symbol["for"](name), {
         get: function get() {
           return value;
@@ -5301,7 +5439,7 @@
         var name = unbox(arg);
 
         if (name === '__code__' && typeof object === 'function' && typeof object.__code__ === 'undefined') {
-          value = native_lambda.clone();
+          value = native_lambda;
         } else {
           value = object[name];
         }
@@ -7510,27 +7648,65 @@
         return port.read_char();
       }, "(read-char port)\n\n            Function read next character from input port."),
       // ------------------------------------------------------------------
-      read: doc(function read(arg) {
-        if (LString.isString(arg)) {
-          return parse(tokenize(arg.valueOf()))[0];
+      read: doc( /*#__PURE__*/function () {
+        var _read = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(arg) {
+          var port, result;
+          return regenerator.wrap(function _callee5$(_context5) {
+            while (1) {
+              switch (_context5.prev = _context5.next) {
+                case 0:
+                  if (!LString.isString(arg)) {
+                    _context5.next = 4;
+                    break;
+                  }
+
+                  _context5.next = 3;
+                  return parse(arg, this);
+
+                case 3:
+                  return _context5.abrupt("return", _context5.sent[0]);
+
+                case 4:
+                  if (arg instanceof InputPort) {
+                    port = arg;
+                  } else {
+                    port = this.get('stdin');
+                  }
+
+                  _context5.next = 7;
+                  return port.read();
+
+                case 7:
+                  result = _context5.sent;
+
+                  if (!(result === eof)) {
+                    _context5.next = 10;
+                    break;
+                  }
+
+                  return _context5.abrupt("return", eof);
+
+                case 10:
+                  _context5.next = 12;
+                  return parse(result, this);
+
+                case 12:
+                  return _context5.abrupt("return", _context5.sent[0]);
+
+                case 13:
+                case "end":
+                  return _context5.stop();
+              }
+            }
+          }, _callee5, this);
+        }));
+
+        function read(_x8) {
+          return _read.apply(this, arguments);
         }
 
-        var port;
-
-        if (arg instanceof InputPort) {
-          port = arg;
-        } else {
-          port = this.get('stdin');
-        }
-
-        return unpromise(port.read(), function (result) {
-          if (result === eof) {
-            return eof;
-          }
-
-          return parse(result)[0];
-        });
-      }, "(read [string])\n\n            Function if used with string will parse the string and return\n            list structure of LIPS code. If called without an argument it\n            will read string from standard input (using browser prompt or\n            user defined way) and call itself with that string (parse is)\n            function can be used together with eval to evaluate code from\n            string"),
+        return read;
+      }(), "(read [string])\n\n            Function if used with string will parse the string and return\n            list structure of LIPS code. If called without an argument it\n            will read string from standard input (using browser prompt or\n            user defined way) and call itself with that string (parse is)\n            function can be used together with eval to evaluate code from\n            string"),
       // ------------------------------------------------------------------
       pprint: doc(function (arg) {
         if (arg instanceof Pair) {
@@ -7815,31 +7991,6 @@
         return typeof x === 'undefined' || x === nil;
       }, "(empty? object)\n\n            Function return true if value is undfined empty list."),
       // ------------------------------------------------------------------
-      assoc: doc(function (key, list) {
-        if (key instanceof Pair && !(list instanceof Pair)) {
-          throw new Error('First argument to assoc ned to be a key');
-        }
-
-        typecheck('assoc', list, 'pair');
-        var node = list;
-
-        while (true) {
-          if (!(node instanceof Pair) || this.get('empty?')(node)) {
-            break;
-          }
-
-          var car = node.car.car;
-
-          if (equal(car, key)) {
-            return node.car;
-          } else if (!node.haveCycles('cdr')) {
-            node = node.cdr;
-          }
-        }
-
-        return nil;
-      }, "(assoc key alist)\n\n            Function search Alist (list of pairs) until it find the one that\n            have head set equal to key, and return found pair."),
-      // ------------------------------------------------------------------
       gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
       // ------------------------------------------------------------------
       load: doc(function (file) {
@@ -7912,12 +8063,12 @@
       }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
       // ------------------------------------------------------------------
       'do': doc(new Macro('do', /*#__PURE__*/function () {
-        var _ref18 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(code, _ref19) {
+        var _ref18 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(code, _ref19) {
           var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _node3, next, _item, value;
 
-          return regenerator.wrap(function _callee3$(_context3) {
+          return regenerator.wrap(function _callee6$(_context6) {
             while (1) {
-              switch (_context3.prev = _context3.next) {
+              switch (_context6.prev = _context6.next) {
                 case 0:
                   dynamic_scope = _ref19.dynamic_scope, error = _ref19.error;
                   self = this;
@@ -7944,23 +8095,23 @@
 
                 case 10:
                   if (!(node !== nil)) {
-                    _context3.next = 21;
+                    _context6.next = 21;
                     break;
                   }
 
                   item = node.car;
-                  _context3.t0 = scope;
-                  _context3.t1 = item.car;
-                  _context3.next = 16;
+                  _context6.t0 = scope;
+                  _context6.t1 = item.car;
+                  _context6.next = 16;
                   return evaluate(item.cdr.car, eval_args);
 
                 case 16:
-                  _context3.t2 = _context3.sent;
+                  _context6.t2 = _context6.sent;
 
-                  _context3.t0.set.call(_context3.t0, _context3.t1, _context3.t2);
+                  _context6.t0.set.call(_context6.t0, _context6.t1, _context6.t2);
 
                   node = node.cdr;
-                  _context3.next = 10;
+                  _context6.next = 10;
                   break;
 
                 case 21:
@@ -7971,21 +8122,21 @@
                   };
 
                 case 22:
-                  _context3.next = 24;
+                  _context6.next = 24;
                   return evaluate(test.car, eval_args);
 
                 case 24:
-                  if (_context3.sent) {
-                    _context3.next = 43;
+                  if (_context6.sent) {
+                    _context6.next = 43;
                     break;
                   }
 
                   if (!(body !== nil)) {
-                    _context3.next = 28;
+                    _context6.next = 28;
                     break;
                   }
 
-                  _context3.next = 28;
+                  _context6.next = 28;
                   return lips.evaluate(body, eval_args);
 
                 case 28:
@@ -7994,27 +8145,27 @@
 
                 case 30:
                   if (!(_node3 !== nil)) {
-                    _context3.next = 40;
+                    _context6.next = 40;
                     break;
                   }
 
                   _item = _node3.car;
 
                   if (!(_item.cdr.cdr !== nil)) {
-                    _context3.next = 37;
+                    _context6.next = 37;
                     break;
                   }
 
-                  _context3.next = 35;
+                  _context6.next = 35;
                   return evaluate(_item.cdr.cdr.car, eval_args);
 
                 case 35:
-                  value = _context3.sent;
+                  value = _context6.sent;
                   next[_item.car.valueOf()] = value;
 
                 case 37:
                   _node3 = _node3.cdr;
-                  _context3.next = 30;
+                  _context6.next = 30;
                   break;
 
                 case 40:
@@ -8025,30 +8176,30 @@
 
                     scope.set(key, value);
                   });
-                  _context3.next = 22;
+                  _context6.next = 22;
                   break;
 
                 case 43:
                   if (!(test.cdr !== nil)) {
-                    _context3.next = 47;
+                    _context6.next = 47;
                     break;
                   }
 
-                  _context3.next = 46;
+                  _context6.next = 46;
                   return evaluate(test.cdr.car, eval_args);
 
                 case 46:
-                  return _context3.abrupt("return", _context3.sent);
+                  return _context6.abrupt("return", _context6.sent);
 
                 case 47:
                 case "end":
-                  return _context3.stop();
+                  return _context6.stop();
               }
             }
-          }, _callee3, this);
+          }, _callee6, this);
         }));
 
-        return function (_x6, _x7) {
+        return function (_x9, _x10) {
           return _ref18.apply(this, arguments);
         };
       }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
@@ -9024,7 +9175,7 @@
       // ------------------------------------------------------------------
       'unset-special!': doc(function (symbol) {
         typecheck('remove-special!', symbol, 'string');
-        delete specials[symbol.valueOf()];
+        delete specials.remove(symbol.valueOf());
       }, "(unset-special! name)\n\n            Function remove special symbol from parser. Added by `set-special!`,\n            name must be a string."),
       // ------------------------------------------------------------------
       'set-special!': doc(function (seq, name) {
@@ -10020,70 +10171,70 @@
         }
       }
 
-      function promise(_x8) {
+      function promise(_x11) {
         return _promise.apply(this, arguments);
       }
 
       function _promise() {
-        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(node) {
+        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(node) {
           var pair;
-          return regenerator.wrap(function _callee4$(_context4) {
+          return regenerator.wrap(function _callee7$(_context7) {
             while (1) {
-              switch (_context4.prev = _context4.next) {
+              switch (_context7.prev = _context7.next) {
                 case 0:
-                  _context4.t0 = Pair;
+                  _context7.t0 = Pair;
 
                   if (!node.haveCycles('car')) {
-                    _context4.next = 5;
+                    _context7.next = 5;
                     break;
                   }
 
-                  _context4.t1 = node.car;
-                  _context4.next = 8;
+                  _context7.t1 = node.car;
+                  _context7.next = 8;
                   break;
 
                 case 5:
-                  _context4.next = 7;
+                  _context7.next = 7;
                   return resolve(node.car);
 
                 case 7:
-                  _context4.t1 = _context4.sent;
+                  _context7.t1 = _context7.sent;
 
                 case 8:
-                  _context4.t2 = _context4.t1;
+                  _context7.t2 = _context7.t1;
 
                   if (!node.haveCycles('cdr')) {
-                    _context4.next = 13;
+                    _context7.next = 13;
                     break;
                   }
 
-                  _context4.t3 = node.cdr;
-                  _context4.next = 16;
+                  _context7.t3 = node.cdr;
+                  _context7.next = 16;
                   break;
 
                 case 13:
-                  _context4.next = 15;
+                  _context7.next = 15;
                   return resolve(node.cdr);
 
                 case 15:
-                  _context4.t3 = _context4.sent;
+                  _context7.t3 = _context7.sent;
 
                 case 16:
-                  _context4.t4 = _context4.t3;
-                  pair = new _context4.t0(_context4.t2, _context4.t4);
+                  _context7.t4 = _context7.t3;
+                  pair = new _context7.t0(_context7.t2, _context7.t4);
 
                   if (node.data) {
                     pair.data = true;
                   }
 
-                  return _context4.abrupt("return", pair);
+                  return _context7.abrupt("return", pair);
 
                 case 20:
                 case "end":
-                  return _context4.stop();
+                  return _context7.stop();
               }
             }
-          }, _callee4);
+          }, _callee7);
         }));
         return _promise.apply(this, arguments);
       }
@@ -10299,17 +10450,17 @@
     } // -------------------------------------------------------------------------
 
 
-    function exec(_x9, _x10, _x11) {
+    function exec(_x12, _x13, _x14) {
       return _exec.apply(this, arguments);
     } // -------------------------------------------------------------------------
 
 
     function _exec() {
-      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(string, env, dynamic_scope) {
+      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(string, env, dynamic_scope) {
         var list, results, code, result;
-        return regenerator.wrap(function _callee5$(_context5) {
+        return regenerator.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -10319,21 +10470,25 @@
                   env = env || user_env;
                 }
 
-                list = parse(string);
-                results = [];
+                _context9.next = 3;
+                return parse(string);
 
               case 3:
+                list = _context9.sent;
+                results = [];
+
+              case 5:
 
                 if (list.length) {
-                  _context5.next = 8;
+                  _context9.next = 10;
                   break;
                 }
 
-                return _context5.abrupt("return", results);
+                return _context9.abrupt("return", results);
 
-              case 8:
+              case 10:
                 code = list.shift();
-                _context5.next = 11;
+                _context9.next = 13;
                 return evaluate(code, {
                   env: env,
                   dynamic_scope: dynamic_scope,
@@ -10351,20 +10506,20 @@
                   }
                 });
 
-              case 11:
-                result = _context5.sent;
+              case 13:
+                result = _context9.sent;
                 results.push(result);
 
-              case 13:
-                _context5.next = 3;
+              case 15:
+                _context9.next = 5;
                 break;
 
-              case 15:
+              case 17:
               case "end":
-                return _context5.stop();
+                return _context9.stop();
             }
           }
-        }, _callee5);
+        }, _callee9);
       }));
       return _exec.apply(this, arguments);
     }
@@ -10654,10 +10809,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 06 Oct 2020 10:34:26 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 01 Nov 2020 12:27:24 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 06 Oct 2020 10:34:26 +0000').valueOf();
+      var date = LString('Sun, 01 Nov 2020 12:27:24 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10694,7 +10849,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 06 Oct 2020 10:34:26 +0000',
+      date: 'Sun, 01 Nov 2020 12:27:24 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

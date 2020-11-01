@@ -710,6 +710,9 @@
         get: function(name) {
             return this._specials[name];
         },
+        remove: function(name) {
+            delete this._specials[name];
+        },
         append: function(name, value, type) {
             this._specials[name] = {
                 seq: name,
@@ -729,191 +732,157 @@
         [',@', new LSymbol('unquote-splicing'), specials.LITERAL],
         [',', new LSymbol('unquote'), specials.LITERAL]
     ];
+    Object.defineProperty(specials, 'builtin', {
+        writable: false,
+        value: defined_specials.map(arr => arr[0])
+    });
     defined_specials.forEach(([seq, symbol, type]) => {
         specials.append(seq, symbol, type);
     });
     // ----------------------------------------------------------------------
-    // :: tokens are the array of strings from tokenizer
-    // :: the return value is array of lisp code created out of Pair class
+    // :: Parser inspired by BiwaScheme
+    // :: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
     // ----------------------------------------------------------------------
-    function parse(tokens) {
-        // usage in LIPS code
-        if (tokens instanceof LString) {
-            tokens = tokens.toString();
+    class Parser {
+        constructor(arg, env) {
+            if (arg instanceof LString) {
+                arg = arg.toString();
+            }
+            if (typeof arg === 'string') {
+                arg = tokenize(arg);
+            }
+            this.tokens = arg;
+            this.env = env;
+            this.i = 0;
+            this._specials = specials.names();
+            this._builtin = specials.builtin;
         }
-        if (typeof tokens === 'string') {
-            tokens = tokenize(tokens);
+        resolve(name) {
+            return this.env && this.env.get(name, { throwError: false });
         }
-
-        var stack = [];
-        var result = [];
-        var special = null;
-        var special_tokens = specials.names();
-        var special_forms = special_tokens.map(s => specials.get(s).symbol.name);
-        var parents = 0;
-        var first_value = false;
-        var specials_stack = [];
-        var single_list_specials = [];
-        var special_count = 0;
-        var __SPLICE__ = LSymbol(Symbol.for('__splice__'));
-        function is_open(token) {
+        peek() {
+            return this.tokens[this.i] || Parser.EOS;
+        }
+        skip() {
+            this.i++;
+        }
+        specials(token) {
+            return this._specials.includes(token);
+        }
+        builtin(token) {
+            return this._builtin.includes(token);
+        }
+        read() {
+            const token = this.peek();
+            this.skip();
+            return token;
+        }
+        is_open(token) {
             return token === '(' || token === '[';
         }
-        function is_close(token) {
+        is_close(token) {
             return token === ')' || token === ']';
         }
-        function pop_join() {
-            var top = stack[stack.length - 1];
-            if (top instanceof Array && top[0] instanceof LSymbol &&
-                special_forms.includes(top[0].name) &&
-                stack.length > 1 && !top[0].literal) {
-                stack.pop();
-                if (stack[stack.length - 1].length === 1 &&
-                    stack[stack.length - 1][0] instanceof LSymbol) {
-                    stack[stack.length - 1].push(top);
-                } else if (false && stack[stack.length - 1].length === 0) {
-                    stack[stack.length - 1] = top;
-                } else if (stack[stack.length - 1] instanceof Pair) {
-                    if (stack[stack.length - 1].cdr instanceof Pair) {
-                        stack[stack.length - 1] = new Pair(
-                            stack[stack.length - 1],
-                            Pair.fromArray(top)
-                        );
-                    } else {
-                        stack[stack.length - 1].cdr = Pair.fromArray(top);
-                    }
+        async read_list() {
+            let head = nil, prev = head;
+            var first = true;
+            while (this.i < this.tokens.length) {
+                const token = this.peek();
+                if (this.is_close(token)) {
+                    this.skip();
+                    break;
+                }
+                if (token === '.' && head !== nil) {
+                    this.skip();
+                    prev.cdr = await this.read_object();
                 } else {
-                    stack[stack.length - 1].push(top);
+                    const cur = new Pair(await this.read_object(), nil);
+                    if (head === nil) {
+                        head = cur;
+                    } else {
+                        prev.cdr = cur;
+                    }
+                    prev = cur;
+                }
+                if (first) {
+                    first = false;
                 }
             }
+            return head;
         }
-        tokens.forEach(function(token) {
-            var top = stack[stack.length - 1];
-            if (special_tokens.indexOf(token) !== -1) {
-                special_count++;
-                special = token;
-                stack.push([specials.get(special).symbol]);
-                if (!special) {
-                    single_list_specials = [];
+        read_value() {
+            var token = this.read();
+            return parse_argument(token);
+        }
+        async read_object() {
+            const token = this.peek();
+            if (token === Parser.EOS) {
+                return token;
+            }
+            if (this.specials(token)) {
+                const special = specials.get(token);
+                this.skip();
+                let expr;
+                const object = await this.read_object();
+                if (is_literal(token)) {
+                    expr = new Pair(
+                        special.symbol,
+                        new Pair(
+                            object,
+                            nil
+                        )
+                    );
+                } else {
+                    expr = new Pair(
+                        special.symbol,
+                        object
+                    );
                 }
-                single_list_specials.push(special);
+                if (this.builtin(token)) {
+                    return expr;
+                } else {
+                    var result = await evaluate(expr, { env: this.env, error: (e) => {
+                        throw e;
+                    } });
+                    return quote(result);
+                }
+            }
+            if (this.is_open(token)) {
+                this.skip();
+                return this.read_list();
             } else {
-                if (special) {
-                    specials_stack.push(single_list_specials);
-                    single_list_specials = [];
-                }
-                if (is_open(token)) {
-                    first_value = true;
-                    parents++;
-                    const arr = [];
-                    if (special && !is_literal(special)) {
-                        arr.push(__SPLICE__);
-                    }
-                    stack.push(arr);
-                    special = null;
-                    special_count = 0;
-                } else if (token === '.' && !first_value) {
-                    stack[stack.length - 1] = Pair.fromArray(top);
-                } else if (is_close(token)) {
-                    parents--;
-                    first_value = false;
-                    if (!stack.length) {
-                        throw new Error('Unbalanced parenthesis');
-                    }
-                    if (stack.length === 1) {
-                        var arg = stack.pop();
-                        if (arg instanceof Array && arg.length === 0) {
-                            arg = nil;
-                        }
-                        result.push(arg);
-                    } else if (stack.length > 1) {
-                        var list = stack.pop();
-                        top = stack[stack.length - 1];
-                        if (top instanceof Array) {
-                            if (list.length === 0) {
-                                top.push(nil);
-                            } else if (list instanceof Array &&
-                                       list[0] === __SPLICE__) {
-                                top.push(...list.slice(1));
-                            } else {
-                                top.push(list);
-                            }
-                        } else if (top instanceof Pair) {
-                            if (list.length === 0) {
-                                top.append(nil);
-                            } else {
-                                top.append(Pair.fromArray(list));
-                            }
-                        }
-                        if (specials_stack.length) {
-                            single_list_specials = specials_stack.pop();
-                            while (single_list_specials.length) {
-                                pop_join();
-                                single_list_specials.pop();
-                            }
-                        } else {
-                            pop_join();
-                        }
-                    }
-                    if (parents === 0 && stack.length) {
-                        result.push(stack.pop());
-                    }
-                } else {
-                    first_value = false;
-                    var value = parse_argument(token);
-                    if (special) {
-                        // special without list like ,foo
-                        while (special_count--) {
-                            stack[stack.length - 1].push(value);
-                            value = stack.pop();
-                        }
-                        specials_stack.pop();
-                        special_count = 0;
-                        special = false;
-                    } else if (value instanceof LSymbol &&
-                               special_forms.includes(value.name)) {
-                        // handle parsing os special forms as literal symbols
-                        // (values they expand into)
-                        value.literal = true;
-                    }
-                    top = stack[stack.length - 1];
-                    if (top instanceof Pair) {
-                        var node = top;
-                        while (true) {
-                            if (node.cdr === nil) {
-                                if (value instanceof Array) {
-                                    node.cdr = Pair.fromArray(value);
-                                } else {
-                                    node.cdr = value;
-                                }
-                                break;
-                            } else {
-                                node = node.cdr;
-                            }
-                        }
-                    } else if (!stack.length) {
-                        result.push(value);
-                    } else {
-                        top.push(value);
-                    }
-                }
+                return this.read_value();
             }
-        });
-        if (!tokens.filter(t => t.match(/^[[\]()]$/)).length && stack.length) {
-            // list of parser macros
-            result = result.concat(stack);
-            stack = [];
         }
-        if (stack.length) {
-            dump(result);
-            throw new Error('Unbalanced parenthesis 2');
-        }
-        return result.map((arg) => {
-            if (arg instanceof Array) {
-                return Pair.fromArray(arg);
+    }
+    Parser.EOS = Symbol.for('EOS');
+    // ----------------------------------------------------------------------
+    // :: tokens are the array of strings from tokenizer
+    // :: the return value is array of lisp code created out of Pair class
+    // :: env is needed for parser extensions that will invoke the function
+    // :: or macro assigned to symbol, this function is async because
+    // :: it evaluate the code, from parser extensions, that may return promise
+    // ----------------------------------------------------------------------
+    async function parse(arg, env) {
+        if (!env) {
+            if (global_env) {
+                env = global_env.get('**interaction-environment**', {
+                    throwError: false
+                });
+            } else {
+                env = user_env;
             }
-            return arg;
-        });
+        }
+        const parser = new Parser(arg, env);
+        const result = [];
+        while (true) {
+            const expr = await parser.read_object();
+            if (expr === Parser.EOS) {
+                break;
+            }
+            result.push(expr);
+        }
+        return result;
     }
     // ----------------------------------------------------------------------
     function unpromise(value, fn = x => x, error = null) {
@@ -963,18 +932,6 @@
         return string.split('\n').map(line => {
             return line.trim();
         }).join('\n');
-    }
-    // ----------------------------------------------------------------------
-    /* istanbul ignore next */
-    function dump(arr) {
-        if (false) {
-            console.log(arr.map((arg) => {
-                if (arg instanceof Array) {
-                    return Pair.fromArray(arg);
-                }
-                return arg;
-            }).toString());
-        }
     }
     // ----------------------------------------------------------------------
     // return last S-Expression
@@ -1535,6 +1492,9 @@
     Nil.prototype.valueOf = function() {
         return undefined;
     };
+    Nil.prototype.toObject = function() {
+        return {};
+    };
     Nil.prototype.append = function(x) {
         return new Pair(x, nil);
     };
@@ -1645,8 +1605,8 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.fromArray = function(array, deep = true) {
-        if (array instanceof Pair) {
+    Pair.fromArray = function(array, deep = true, quote = false) {
+        if (array instanceof Pair || quote && array instanceof Array && array.data) {
             return array;
         }
         if (deep === false) {
@@ -1664,7 +1624,7 @@
         while (i--) {
             let car = array[i];
             if (car instanceof Array) {
-                car = Pair.fromArray(car);
+                car = Pair.fromArray(car, deep, quote);
             } else if (typeof car === 'string') {
                 car = LString(car);
             } else if (typeof car === 'number' && !Number.isNaN(car)) {
@@ -3102,7 +3062,7 @@
         });
         hidden_prop(bound, '__fn__', fn);
         hidden_prop(bound, '__context__', context);
-        hidden_Prop(bound, '__bound__', true);
+        hidden_prop(bound, '__bound__', true);
         if (isNativeFunction(fn)) {
             hidden_prop(bound, '__native__', true);
         }
@@ -3425,7 +3385,7 @@
             var name = unbox(arg);
             if (name === '__code__' && typeof object === 'function' &&
                         typeof object.__code__ === 'undefined') {
-                value = native_lambda.clone();
+                value = native_lambda;
             } else {
                 value = object[name];
             }
@@ -5136,9 +5096,9 @@
 
             Function read next character from input port.`),
         // ------------------------------------------------------------------
-        read: doc(function read(arg) {
+        read: doc(async function read(arg) {
             if (LString.isString(arg)) {
-                return parse(tokenize(arg.valueOf()))[0];
+                return (await parse(arg, this))[0];
             }
             var port;
             if (arg instanceof InputPort) {
@@ -5146,12 +5106,11 @@
             } else {
                 port = this.get('stdin');
             }
-            return unpromise(port.read(), function(result) {
-                if (result === eof) {
-                    return eof;
-                }
-                return parse(result)[0];
-            });
+            var result = await port.read();
+            if (result === eof) {
+                return eof;
+            }
+            return (await parse(result, this))[0];
         }, `(read [string])
 
             Function if used with string will parse the string and return
@@ -6472,7 +6431,7 @@
         // ------------------------------------------------------------------
         'unset-special!': doc(function(symbol) {
             typecheck('remove-special!', symbol, 'string');
-            delete specials[symbol.valueOf()];
+            delete specials.remove(symbol.valueOf());
         }, `(unset-special! name)
 
             Function remove special symbol from parser. Added by \`set-special!\`,
@@ -7660,7 +7619,7 @@
         } else {
             env = env || user_env;
         }
-        var list = parse(string);
+        var list = await parse(string);
         var results = [];
         while (true) {
             if (!list.length) {
