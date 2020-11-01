@@ -8,11 +8,11 @@
    <img src="https://github.com/jcubic/lips/blob/master/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
 </a>
 
-[LIPS is Powerful Scheme based, Lisp language written in JavaScript](https://jcubic.github.io/lips).
-It's based on Scheme dialect and R5RS/R7RS specifications, it have extensions that make it easier
-to interact with JavaScript, it work in Browser and Node.js.
+[LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://jcubic.github.io/lips).
+It is based on the Scheme dialect and the R5RS/R7RS specifications. It has extensions to make it easier
+to interact with JavaScript. It work both in the browser and with Node.js.
 
-The name is recursive acronym which stands for LIPS Is Pretty Simple.
+The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Demo
 
@@ -23,25 +23,25 @@ The name is recursive acronym which stands for LIPS Is Pretty Simple.
 ## Features
 
 * Compatible with Scheme specification (R5RS and R7RS)
-* Allow to define of new syntax, using parser extensions.
-* Allow to create new data types, that fit nicely into reader and writer.
-* Introspection and modification of the functions code at runtime.
-* Syntax highlighting in NPM installed binaries and on the Web REPL.
-* Builtin auto formatting (pretty printing) of code.
+* Allows the definition of a new syntax, using parser extensions.
+* Allows the creation of new data types, that fit nicely into reader and writer.
+* Introspection and modification of function code at runtime.
+* Syntax highlighting in NPM-installed binaries and in the browser-based REPL.
+* Built-in auto formatting (pretty printing) of code.
 * Lips macros, Scheme hygienic macros with syntax-rules and macroexpand.
 * Auto unwrapping of JavaScript promises.
 * Almost no dependencies.
-* Builtin help system in REPL (functions and macros have doc strings).
+* Built-in help system in the REPL (functions and macros have doc strings).
 * Literal Regular Expressions.
 
 ## Integration with JavaScript
 
-* JavaScript like doted notation.
+* JavaScript-like doted notation.
 * Object literals with `&(:foo 10)` (created using parser extensions),
 * Direct access to JavaScript methods, functions and properties.
 * Access to internal implementation details.
-* Creating new JavaScript classes.
-* Modification of prototype of the objects.
+* Creation of new JavaScript classes.
+* Modification of object prototypes.
 
 ## Installation
 
@@ -63,7 +63,7 @@ To install 1.0.0 beta version use:
 npm install @jcubic/lips@beta
 ```
 
-then include the file in script tag, You can grab the version from unpkg.com
+then include the file in the script tag. You can grab the version from unpkg.com
 
 ```
 https://unpkg.com/@jcubic/lips
@@ -85,25 +85,25 @@ https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
 ## Bookmarklet REPL
 
 
-You can also run REPL on any page while you learn Scheme using bookmarklet:
+You can also run the REPL on any page while you learn Scheme using the bookmarklet:
 
 ```
 https://github.com/jcubic/lips/blob/master/lib/js/bookmark.js
 ```
 
 Create any link in your bookmarks, edit it and copy paste the content of that file.
-Affter you click on the link it will create REPL at the bottom of the page.
-(NOTE: it may don't work on every page because of content security policy, 
+Affter you click on the link it will create the REPL at the bottom of the page.
+(NOTE: It may not work on every page because of content security policy;
 e.g. google.com or gihub.com)
 
-If you have trouble with creating bookmarklet you can open
+If you have trouble with creating the bookmarklet you can open
 [LISP Scheme home page](https://jcubic.github.io/lips/#bookmark) where you can
-find link that you can drag to your bookmarks.
+find a link that you can drag to your bookmarks.
 
 ## Usage
 
 
-Simplest way is to include the lips code in script tag:
+The simplest way is to include the lips code in the script tag:
 
 ```html
 <script type="text/x-scheme">
@@ -113,7 +113,7 @@ Simplest way is to include the lips code in script tag:
 </script>
 ```
 
-or use `src` attribute:
+or use the `src` attribute:
 
 ```html
 <script type="text/x-scheme" src="example.scm"></script>
@@ -138,18 +138,18 @@ in [docs page](https://jcubic.github.io/lips/docs.html).
 
 ## Standalone executable
 
-if you install lips globally with:
+If you install lips globally with:
 
 ```
 npm install -g @jcubic/lips
 ```
 
-you can run interpreter from terminal:
+you can run the interpreter from the terminal:
 
 ![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
 
 
-You can also run code as string with:
+You can also run code in a string with:
 
 ```
 lips -c '(let ((what "World")) (display (string-append "Hello " what)))'
@@ -181,7 +181,7 @@ chmod a+x foo.scm
 ./foo.scm
 ```
 
-Executable also return S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
+Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
 ## Credits
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod)
