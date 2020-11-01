@@ -93,15 +93,13 @@ function parse_options(arg, options) {
 }
 
 // -----------------------------------------------------------------------------
-function run(code, interpreter, dynamic = false, env = null) {
+function run(code, interpreter, dynamic = false, env = null, stack = false) {
     if (typeof code !== 'string') {
         code = code.toString();
     }
     return interpreter.exec(code, dynamic, env).catch(function(e) {
         console.error(e.message);
         console.error('Call (stack-trace) to see the stack');
-        console.error('Thrown exception is in global exception variable, use ' +
-                      '(display exception.stack) to display JS stack trace');
         log_error(e.message);
         if (e.code) {
             strace = e.code.map((line, i) => {
@@ -112,6 +110,13 @@ function run(code, interpreter, dynamic = false, env = null) {
                 });
                 return prefix + output;
             }).join('\n');
+        }
+        if (stack) {
+            console.error(e.stack);
+            //console.error(strace);
+        } else {
+            console.error('Thrown exception is in global exception variable, use ' +
+                          '(display exception.stack) to display JS stack trace');
         }
         global.exception = e;
     });
@@ -145,7 +150,9 @@ function boostrap(interpreter) {
                 }
             }
             var data = fs.readFileSync(path);
-            return run(data, interpreter, false, env.parent).then(next);
+            return run(data, interpreter, false, env.parent, true).then(next);
+        } else {
+            return Promise.resolve();
         }
     })();
 }
@@ -215,7 +222,7 @@ var interp = Interpreter('repl', {
 });
 
 // -----------------------------------------------------------------------------
-const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version'];
+const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't'];
 const options = parse_options(process.argv.slice(2), { boolean });
 if (options.version || options.V) {
     // SRFI 176
@@ -262,7 +269,7 @@ if (options.version || options.V) {
         return boostrap(interp).then(() => {
             const code = data.toString().replace(/^#!.*\n/, '');
             const dynamic = options.d || options.dynamic;
-            return run(code, interp, dynamic);
+            return run(code, interp, dynamic, null, options.t || options.trace);
         });
     }).catch(err => {
         log_error(err.message || err);
@@ -273,12 +280,13 @@ if (options.version || options.V) {
 } else if (options.h || options.help) {
     var name = process.argv[1];
     var intro = banner.replace(/(me>\n)[\s\S]+$/, '$1');
-    console.log(format('%s\nusage:\n  %s -q | -h | -c <code> | <filename> | -d\n\n  [-h --help]\t\tthis' +
-                       ' help message\n  [-e --eval]\t\texecute code\n  [-V --version]\tdisplay version' +
-                       'information according to srfi-176\n  [-q --quiet]\t\tdon\'t display banner in R' +
-                       'EPL\n  [-d --dynamic]\trun interpreter with dynamic scope\n\nif called without ' +
-                       'arguments it will run REPL and if called with one argument\nit will treat it as' +
-                       ' filename and execute it.', intro, path.basename(name)));
+    console.log(format('%s\nusage:\n  %s -q | -h | -t | -c <code> | <filename> | -d\n\n  [-h --help]\t' +
+                       '\tthis help message\n  [-e --eval]\t\texecute code\n  [-V --version]\tdisplay ' +
+                       'version information according to srfi-176\n  [-q --quiet]\t\tdon\'t display ba' +
+                       'nner in REPL\n  [-d --dynamic]\trun interpreter with dynamic scope\n  [-t --tr' +
+                       'ace]\t\tprint JavaScript stack trace when extensions is thrown\n\nif called wi' +
+                       'thout arguments it will run REPL and if called with one argument\nit will trea' +
+                       't it as filename and execute it.', intro, path.basename(name)));
 } else {
     const dynamic = options.d || options.dynamic;
     const entry = '   ' + (dynamic ? 'dynamic' : 'lexical') + ' scope $1';

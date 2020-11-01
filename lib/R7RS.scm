@@ -68,16 +68,6 @@
 (define (truncate-remainder x y) (remainder x y))
 
 ;; -----------------------------------------------------------------------------
-(define (make-list n . rest)
-  (if (or (not (integer? n)) (<= n 0))
-      (throw (new Error "make-list: first argument need to be integer larger then 0"))
-      (let ((fill (if (null? rest) undefined (car rest))))
-        (let iter ((n n) (result '()))
-          (if (zero? n)
-              result
-              (iter (- n 1) (cons fill result)))))))
-
-;; -----------------------------------------------------------------------------
 (define-syntax case-lambda
   (syntax-rules ()
     ((case-lambda (params body0 ...) ...)
@@ -196,7 +186,7 @@
   (if (or (= (length rest) 0) (not (every vector? rest)))
       (error "vector-map: function require at least 1 vector")
       (let ((len (apply min (map vector-length rest)))
-            (result #()))
+            (result (vector)))
         (do ((i 0 (+ i 1)))
             ((= i len) result)
             (let* ((args (map (lambda (v) (vector-ref v i)) rest))

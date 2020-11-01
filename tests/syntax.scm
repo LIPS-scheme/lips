@@ -102,6 +102,18 @@
                          (when if (set! if 'now) if)))
         (t.is result 'now)))
 
+(test "syntax-rules: double splice"
+      (lambda (t)
+
+        (define-syntax foo
+          (syntax-rules ()
+            ((foo (f1 ...) (f2 ...) . body-forms)
+             '(f1 ... f2 ... . body-forms))))
+
+        (t.is (foo (a b c d) (1 2 3 4) moe larry curly)
+              '(a b c d 1 2 3 4 moe larry curly))))
+
+
 (test_ "syntax-rules: ellipsps"
       (lambda (t)
         (define result (let-syntax ((when (syntax-rules ()

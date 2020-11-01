@@ -160,7 +160,7 @@
 (define (plain-object? x)
   "(plain-object? x)
 
-   Function check if value is plain JavaScript object. Created using make-object macro."
+   Function check if value is plain JavaScript object. Created using object macro."
   ;; here we don't use string=? or equal? because it may not be defined
   (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
@@ -201,7 +201,7 @@
         (cons frame result)
         (if (null? frame)
             result
-            (let ((parent.frame (--> frame (get 'parent.frame (make-object :throwError false)))))
+            (let ((parent.frame (--> frame (get 'parent.frame (object :throwError false)))))
               (if (function? parent.frame)
                   (iter (cons frame result) (parent.frame 0))
                   result))))))
@@ -232,11 +232,11 @@
 
 
 ;; -----------------------------------------------------------------------------
-(define (object-expander expr)
+(define (object-expander expr . rest)
   "(object-expander '(:foo (:bar 10) (:baz (1 2 3))))
 
    Recursive function helper for defining LIPS code for create objects using key like syntax."
-  (let ((name (gensym)))
+  (let ((name (gensym)) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
@@ -247,17 +247,30 @@
                              (let ((prop (key->string key)))
                                (if (and (pair? value) (key? (car value)))
                                    `(set-obj! ,name ,prop ,(object-expander value))
-                                   `(set-obj! ,name ,prop ,value)))))
+                                    (if quot
+                                        `(set-obj! ,name ,prop ',value)
+                                        `(set-obj! ,name ,prop ,value))))))
                        expr)
            ,name))))
 
 ;; -----------------------------------------------------------------------------
-(define-macro (make-object . expr)
-  "(make-object :name value)
+(define-macro (object . expr)
+  "(object :name value)
 
    Macro that create JavaScript object using key like syntax."
   (try
     (object-expander expr)
+    (catch (e)
+      (error e.message))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (object-literal . expr)
+  "(object-literal :name value)
+
+   Macro that create JavaScript object using key like syntax. This is similar,
+   to object but all values are quoted. This macro is used with & object literal."
+  (try
+    (object-expander expr true)
     (catch (e)
       (error e.message))))
 
@@ -364,10 +377,69 @@
 
 
 ;; -----------------------------------------------------------------------------
+;; macro code taken from https://stackoverflow.com/a/27507779/387194
+;; which is based on https://srfi.schemers.org/srfi-61/srfi-61.html
+;; but with lowercase tokens
+;; NOTE: this code make everything really slow
+;;       unit tests run from 1min to 6min.
+;; TODO: test this when syntax macros are compiled before evaluation
+;; -----------------------------------------------------------------------------
+(define-syntax cond
+  (syntax-rules (=> else)
+
+    ((cond (else else1 else2 ...))
+     ;; The (if #t (begin ...)) wrapper ensures that there may be no
+     ;; internal definitions in the body of the clause.  R5RS mandates
+     ;; this in text (by referring to each subform of the clauses as
+     ;; <expression>) but not in its reference implementation of cond,
+     ;; which just expands to (begin ...) with no (if #t ...) wrapper.
+     (if #t (begin else1 else2 ...)))
+
+    ((cond (test => receiver) more-clause ...)
+     (let ((t test))
+       (cond/maybe-more t
+                        (receiver t)
+                        more-clause ...)))
+
+    ((cond (generator guard => receiver) more-clause ...)
+     (call-with-values (lambda () generator)
+       (lambda t
+         (cond/maybe-more (apply guard    t)
+                          (apply receiver t)
+                          more-clause ...))))
+
+    ((cond (test) more-clause ...)
+     (let ((t test))
+       (cond/maybe-more t t more-clause ...)))
+
+    ((cond (test body1 body2 ...) more-clause ...)
+     (cond/maybe-more test
+                      (begin body1 body2 ...)
+                      more-clause ...)))
+  "(cond (predicate? . body)
+         (predicate? . body)
+         (else . body))
+
+   Macro for condition checks. For usage instead of nested ifs.")
+
+;; -----------------------------------------------------------------------------
+(define-syntax cond/maybe-more
+  (syntax-rules ()
+    ((cond/maybe-more test consequent)
+     (if test
+         consequent))
+    ((cond/maybe-more test consequent clause ...)
+     (if test
+         consequent
+         (cond clause ...))))
+  "(cond/maybe-more test consequent ...)
+
+   Helper macro used by cond.")
+
+
 (define-macro (cond . list)
   "(cond (predicate? . body)
          (predicate? . body))
-
    Macro for condition check. For usage instead of nested ifs."
   (if (pair? list)
       (let* ((item (car list))
@@ -385,6 +457,7 @@
                   (if (not (null? rest))
                       `(cond ,@rest)))))
       nil))
+
 
 ;; -----------------------------------------------------------------------------
 ;; formatter rules for cond to break after each S-Expression
@@ -463,9 +536,9 @@
   (ignore (--> lips.repr (delete type))))
 
 ;; -----------------------------------------------------------------------------
-;; add syntax &(:foo 10) that's transformed into (make-object :foo 10)
+;; add syntax &(:foo 10) that evaluates (object :foo 10)
 ;; -----------------------------------------------------------------------------
-(set-special! "&" 'make-object lips.specials.SPLICE)
+(set-special! "&" 'object-literal lips.specials.SPLICE)
 ;; -----------------------------------------------------------------------------
 (set-repr! Object
            (lambda (x q)
@@ -636,8 +709,8 @@
     (if (null? lst)
         `(begin
            (define ,name ,(if (null? constructor) `(lambda ()) (%class-lambda constructor)))
-           (--> Object (defineProperty ,name "name" (make-object :value
-                                                                 ,(symbol->string name))))
+           (--> Object (defineProperty ,name "name" (object :value
+                                                            ,(symbol->string name))))
            ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
                 `(set-obj! ,name 'prototype (--> Object (create ,parent))))
            ,@(map (lambda (fn)
@@ -663,6 +736,55 @@
                                            (and (symbol? s) (eq? s 'list))))
                `(list->array (list ,@(map make-tags (cdaddr expr))))
                (caddr expr)))))
+
+;; ---------------------------------------------------------------------------------------
+(define (%sxml h expr)
+  "(%sxml h expr)
+
+   Helper function that render expression using create element function."
+  (let* ((have-attrs (and (not (null? (cdr expr)))
+                          (pair? (cadr expr))
+                          (eq? (caadr expr) '@)))
+         (attrs (if have-attrs
+                    (cdadr expr)
+                    nil))
+         (rest (if have-attrs
+                   (cddr expr)
+                   (cdr expr))))
+    `(,h ,(let* ((symbol (car expr))
+                 (name (symbol->string symbol)))
+            (if (char-lower-case? (car (string->list name)))
+                name
+                symbol))
+         (alist->object (,'quasiquote ,(map (lambda (pair)
+                                             (cons (symbol->string (car pair))
+                                                   (list 'unquote (cadr pair))))
+                                           attrs)))
+         ,@(if (null? rest)
+              nil
+              (let ((first (car rest)))
+                (if (pair? first)
+                    (map (lambda (expr)
+                           (%sxml h expr))
+                         rest)
+                    (list first)))))))
+
+;; ---------------------------------------------------------------------------------------
+(set-special! "<html>" 'sxml lips.specials.LITERAL)
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (sxml expr)
+  "(sxml expr)
+   <html>(expr)
+
+   Macro for JSX like syntax but with SXML.
+   e.g. usage:
+
+   <html>(div (@ (data-foo \"hello\")
+                 (id \"foo\"))
+              (span \"hello\")
+              (span \"world\"))"
+  (%sxml 'h expr))
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (with-tags expr)
@@ -770,5 +892,20 @@
              (--> env (list) (forEach (lambda (name)
                                         (if (not (--> defaults (includes name)))
                                             (--> env (unset name)))))))))
+
+;; ---------------------------------------------------------------------------------------
+(define (make-list n . rest)
+  (if (or (not (integer? n)) (<= n 0))
+      (throw (new Error "make-list: first argument need to be integer larger then 0"))
+      (let ((fill (if (null? rest) undefined (car rest))))
+        (array->list (--> (new Array n) (fill fill))))))
+
+;; ---------------------------------------------------------------------------------------
+(define (range n)
+  "(range n)
+
+   Function return list of n numbers from 0 to n - 1"
+  (typecheck "range" n "number")
+  (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
 
 ;; ---------------------------------------------------------------------------------------

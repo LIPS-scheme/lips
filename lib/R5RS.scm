@@ -42,21 +42,25 @@
 ;; -----------------------------------------------------------------------------
 ;; Vector literals syntax using parser symbol macros
 ;; -----------------------------------------------------------------------------
-(define-symbol-macro SPLICE (vector "#" . arg)
-  "(vector 1 2 3)
-   #(1 2 3)
-
-   Macro for defining vectors (arrays)."
-  `(list->array (list ,@arg)))
+(set-special! "#" 'vector-literal lips.specials.SPLICE)
 
 ;; -----------------------------------------------------------------------------
-(define-symbol-macro SPLICE (quote-vector "'#" . arg)
-  "(make-vector (1 2 3))
-   #(1 2 3)
+(define-macro (vector-literal . args)
+  (if (not (pair? args))
+      (throw (new Error (concat "Parse Error: vector require pair got "
+                                (type args) " in " (repr args))))
+      (list->array args)))
 
-   Macro for defining vectors (arrays)."
-  `(list->array (list ,@(map (lambda (object) `(quote ,object)) arg))))
+;; -----------------------------------------------------------------------------
+(define-syntax vector
+  (syntax-rules ()
+    ((_ arg ...) (list->array (list arg ...))))
+  "(vector 1 2 3 (+ 3 1))
+   #(1 2 3 (+ 3 1))
 
+   Macro for defining vectors (JavaScript arrays).")
+
+;; -----------------------------------------------------------------------------
 (set-repr! Array
            (lambda (x q)
              (let ((arr (--> x (map (lambda (x) (repr x q))))))
@@ -999,8 +1003,40 @@
   (length vec))
 
 ;; -----------------------------------------------------------------------------
-
-(define-macro (case val . list)
+;; case macro from R7RS spec https://small.r7rs.org/attachment/r7rs.pdf
+;; -----------------------------------------------------------------------------
+(define-syntax case
+  (syntax-rules (else =>)
+    ((case (key ...)
+       clauses ...)
+     (let ((atom-key (key ...)))
+       (case atom-key clauses ...)))
+    ((case key
+       (else => result))
+     (result key))
+    ((case key
+       (else result1 result2 ...))
+     (begin result1 result2 ...))
+    ((case key
+       ((atoms ...) result1 result2 ...))
+     (if (memv key '(atoms ...))
+         (begin result1 result2 ...)))
+    ((case key
+       ((atoms ...) => result))
+     (if (memv key '(atoms ...))
+         (result key)))
+    ((case key
+       ((atoms ...) => result)
+       clause clauses ...)
+     (if (memv key '(atoms ...))
+         (result key)
+         (case key clause clauses ...)))
+    ((case key
+       ((atoms ...) result1 result2 ...)
+       clause clauses ...)
+     (if (memv key '(atoms ...))
+         (begin result1 result2 ...)
+         (case key clause clauses ...))))
   "(case value
         ((<items>) result1)
         ((<items>) result2)
@@ -1008,25 +1044,7 @@
 
    Macro for switch case statement. It test if value is any of the item. If
    item match the value it will return coresponding result expression value.
-   If no value match and there is else it will return that result."
-  (let ((value (gensym))
-        (fn (gensym)))
-    `(let ((,value ,val))
-       ,(let iter ((list list))
-          (if (pair? list)
-              (let* ((item (car list))
-                     (first (car item))
-                     (result (cadr item))
-                     (rest (cdr list)))
-                 `(if (memv ,value ',first)
-                      ,result
-                      ,(if (and (pair? rest)
-                                (eq? (caar rest) 'else))
-                           `(let ((,fn ,(cadar rest)))
-                              (typecheck "case" ,fn "function")
-                              (,fn ,value))
-                           (if (not (null? rest))
-                               (iter rest))))))))))
+   If no value match and there is else it will return that result.")
 
 ;; -----------------------------------------------------------------------------
 (--> lips.Formatter.defaults.exceptions.specials (push "case")) ;; 2 indent
@@ -1101,5 +1119,20 @@
   (if (not (complex? x))
       (error "magnitude: number need to be complex")
       (sqrt (+ (* x.im x.im) (* x.re x.re)))))
+
+;; ---------------------------------------------------------------------------------------
+;; ref: https://stackoverflow.com/a/14675103/387194
+;; ---------------------------------------------------------------------------------------
+(define random
+  (let ((a 69069) (c 1) (m (expt 2 32)) (seed 19380110))
+    (lambda new-seed
+      "(random)
+       (random seed)
+
+       Function generate new random real number using Knuth algorithm."
+      (if (pair? new-seed)
+          (set! seed (car new-seed))
+          (set! seed (modulo (+ (* seed a) c) m)))
+      (exact->inexact (/ seed m)))))
 
 ;; -----------------------------------------------------------------------------

@@ -5,18 +5,16 @@
           (let ((str (--> (list->array (map symbol->string args)) (join "+"))))
             `(string-append "<" ,str "/>")))
 
-        (t.is (eval (read "<>(foo bar)") (current-environment)) "<foo+bar/>")
+        (t.is (read "<>(foo bar)") "<foo+bar/>")
         (unset-special! "<>")
 
         (set-special! "--" 'dash lips.specials.LITERAL)
+
         (define-macro (dash x)
-          `'(,(car x) . (,cadr x)))
+          `'(,(car x) . ,(cadr x)))
 
-        (t.is (eval (read "--(foo bar baz)") (current-environment)) '(foo . bar))
+        (t.is (read "--(foo bar baz)") '(foo . bar))
 
-        (t.is (read "(--)") '((dash)))
-        (t.is (read "(-- x)") '((dash x)))
-        (t.is (read "--x") '(dash x))
         (unset-special! "--")
         (t.is (read "(--)") '(--))))
 
@@ -33,6 +31,8 @@
           (t.is (and (string=? (type a) "character")
                      (string=? (type b) "character"))
                 true)
+          (t.is #\Space #\space)
+          (t.is #\SPACE #\SPace)
           (t.is (a.valueOf) "A")
           (t.is (b.valueOf) "\xFF;"))))
 
@@ -77,3 +77,9 @@
         (let ((str (make-string 10 #\ )))
           (t.is (string-length str) 10)
           (t.is (not (null? (--> str (match /^\s{10}$/)))) #t))))
+
+(test "parser: vector quoting"
+      (lambda (t)
+         (t.is `#(1 2 3) #(1 2 3))
+         (t.is `#(1 2 foo) #(1 2 foo))
+         (t.is '#(1 2 foo) #(1 2 foo))))

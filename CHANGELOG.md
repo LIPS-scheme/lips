@@ -1,3 +1,17 @@
+## 1.0.0-beta.7
+### Breaking
+* remove second argument from `filter` callback
+* change mapping `&` from `make-object` to `object`
+* parser is now async
+### Features
+* new `random` procedure
+* string repr of all procedures and macros in REPL now have name
+### Bugfix
+* fix write vs display of character atoms
+* fix mixed case of named characters (e.g.: `#\Space`)
+* fix `do` macro scope according to R7RS
+* fix vector literals inside quoted list [#79](https://github.com/jcubic/lips/issues/79)
+
 ## 1.0.0-beta.6
 ### Breaking
 * `real?` now return true on integers (bigInts)
