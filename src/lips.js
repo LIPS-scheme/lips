@@ -3092,7 +3092,7 @@
             return fn;
         }
         const bound = fn.bind(context);
-        const props = Object.getOwnPropertyNames(fn).filter(filterFnNames);
+        const props = Object.getOwnPropertyNames(fn).filter(filter_fn_names);
         props.forEach(prop => {
             try {
                 bound[prop] = fn[prop];
@@ -3100,11 +3100,11 @@
                 // ignore error from express.js while accessing bodyParser
             }
         });
-        hiddenProp(bound, '__fn__', fn);
-        hiddenProp(bound, '__context__', context);
-        hiddenProp(bound, '__bound__', true);
+        hidden_prop(bound, '__fn__', fn);
+        hidden_prop(bound, '__context__', context);
+        hidden_Prop(bound, '__bound__', true);
         if (isNativeFunction(fn)) {
-            hiddenProp(bound, '__native__', true);
+            hidden_prop(bound, '__native__', true);
         }
         bound.valueOf = function() {
             return fn;
@@ -3149,12 +3149,12 @@
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
     // ----------------------------------------------------------------------
-    var exludedNames = ['name', 'length', 'caller', 'callee', 'arguments', 'prototype'];
-    function filterFnNames(name) {
-        return !exludedNames.includes(name);
+    var exluded_names = ['name', 'length', 'caller', 'callee', 'arguments', 'prototype'];
+    function filter_fn_names(name) {
+        return !exluded_names.includes(name);
     }
     // ----------------------------------------------------------------------
-    function hiddenProp(obj, name, value) {
+    function hidden_prop(obj, name, value) {
         Object.defineProperty(obj, Symbol.for(name), {
             get: () => value,
             set: () => {},
