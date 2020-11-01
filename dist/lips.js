@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 01 Nov 2020 12:27:24 +0000
+ * build: Sun, 01 Nov 2020 12:49:12 +0000
  */
 (function () {
   'use strict';
@@ -2264,13 +2264,26 @@
     // ----------------------------------------------------------------------
 
 
-    function doc(fn, doc, dump) {
+    function doc(name, fn, doc, dump) {
+      if (typeof name !== 'string') {
+        fn = arguments[0];
+        doc = arguments[1];
+        dump = arguments[2];
+        name = null;
+      }
+
       if (doc) {
         if (dump) {
           fn.__doc__ = doc;
         } else {
           fn.__doc__ = trim_lines(doc);
         }
+      }
+
+      if (name) {
+        fn.__name__ = name;
+      } else if (fn.name) {
+        fn.__name__ = fn.name;
       }
 
       return fn;
@@ -3859,21 +3872,6 @@
     function is_atom(obj) {
       return obj instanceof LSymbol || LString.isString(obj) || obj instanceof LCharacter || obj instanceof LNumber || obj === true || obj === false;
     } // ----------------------------------------------------------------------
-
-
-    var truncate = function () {
-      if (Math.trunc) {
-        return Math.trunc;
-      } else {
-        return function (x) {
-          if (x < 0) {
-            return Math.ceil(x);
-          } else {
-            return Math.floor(x);
-          }
-        };
-      }
-    }(); // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
 
@@ -7341,7 +7339,7 @@
 
         var parent_frame = scope.get('parent.frame');
         return parent_frame(n - 1);
-      }, global_env.env['parent.frame'].__doc__));
+      }, global_env.env['parent.frame'].__doc__), 'parent.frame');
       args.callee = fn;
       frame.set('arguments', args);
       return frame;
@@ -7599,38 +7597,38 @@
         });
       }),
       // ------------------------------------------------------------------
-      'open-input-string': doc(function (string) {
+      'open-input-string': doc('open-input-string', function (string) {
         typecheck('open-input-string', string, 'string');
         return InputStringPort(string);
       }, "(open-input-string string)\n\n            Function create new string port as input that can be used to\n            read S-exressions from this port using `read` function."),
       // ------------------------------------------------------------------
-      'output-port?': doc(function (x) {
+      'output-port?': doc('output-port?', function (x) {
         return x instanceof OutputPort;
       }, "(output-port? arg)\n\n            Function return true if argument is output port."),
       // ------------------------------------------------------------------
-      'input-port?': doc(function (x) {
+      'input-port?': doc('input-port?', function (x) {
         return x instanceof InputPort;
       }, "(input-port? arg)\n\n            Function return true if argument is input port."),
       // ------------------------------------------------------------------
-      'open-output-string': doc(function () {
+      'open-output-string': doc('open-output-string', function () {
         return OutputStringPort(this.get('repr'));
       }, "(open-output-string)\n\n            Function create new output port that can used to write string into\n            and after finish get the whole string using `get-output-string`"),
       // ------------------------------------------------------------------
-      'get-output-string': doc(function (port) {
+      'get-output-string': doc('get-output-string', function (port) {
         typecheck('get-output-string', port, 'output-string-port');
         return port.getString();
       }, "(get-output-string port)\n\n            Function get full string from string port. If nothing was wrote\n            to given port it will return empty string."),
       // ------------------------------------------------------------------
-      'eof-object?': doc(function (x) {
+      'eof-object?': doc('eof-object?', function (x) {
         return x === eof;
       }, "(eof-object? arg)\n\n            Function check if value is eof object, returned from input string\n            port when there are no more data to read."),
       // ------------------------------------------------------------------
-      'peek-char': doc(function (port) {
+      'peek-char': doc('peek-char', function (port) {
         typecheck('peek-char', port, ['input-port', 'input-string-port']);
         return port.peek_char();
       }, "(peek-char port)\n\n            Function get character from string port or EOF object if no more\n            data in string port."),
       // ------------------------------------------------------------------
-      'read-line': doc(function (port) {
+      'read-line': doc('read-line', function (port) {
         if (typeof port === 'undefined') {
           port = this.get('stdin');
         }
@@ -7639,7 +7637,7 @@
         return port.read_line();
       }, "(read-char port)\n\n            Function read next character from input port."),
       // ------------------------------------------------------------------
-      'read-char': doc(function (port) {
+      'read-char': doc('read-char', function (port) {
         if (typeof port === 'undefined') {
           port = this.get('stdin');
         }
@@ -7708,7 +7706,7 @@
         return read;
       }(), "(read [string])\n\n            Function if used with string will parse the string and return\n            list structure of LIPS code. If called without an argument it\n            will read string from standard input (using browser prompt or\n            user defined way) and call itself with that string (parse is)\n            function can be used together with eval to evaluate code from\n            string"),
       // ------------------------------------------------------------------
-      pprint: doc(function (arg) {
+      pprint: doc(function pprint(arg) {
         if (arg instanceof Pair) {
           arg = new lips.Formatter(arg.toString(true))["break"]().format();
           this.get('display').call(this, arg);
@@ -7719,7 +7717,7 @@
         this.get('newline').call(this);
       }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
       // ------------------------------------------------------------------
-      print: doc(function () {
+      print: doc(function print() {
         var _this4 = this;
 
         var display = this.get('display');
@@ -7776,7 +7774,7 @@
         return str;
       }, "(format string n1 n2 ...)\n\n            Function accepts string template and replacing any escape sequences\n            by arguments:\n\n            * ~a value as if printed with display\n            * ~s value as if printed with write\n            * ~% newline character\n            * ~~ literal tilde '~' is inserted\n\n            if there missing arguments or other escape character it throw exception."),
       // ------------------------------------------------------------------
-      display: doc(function (arg) {
+      display: doc(function display(arg) {
         var port = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
 
         if (port === null) {
@@ -7786,7 +7784,7 @@
         port.write.call(this, this.get('repr')(arg));
       }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
       // ------------------------------------------------------------------
-      error: doc(function () {
+      error: doc(function error() {
         for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
           args[_key17] = arguments[_key17];
         }
@@ -7794,7 +7792,7 @@
         this.get('display').apply(this, args);
       }, "(error . args)\n\n            Display error message."),
       // ------------------------------------------------------------------
-      '%same-functions': doc(function (a, b) {
+      '%same-functions': doc('%same-functions', function (a, b) {
         if (typeof a !== 'function') {
           return false;
         }
@@ -7857,16 +7855,16 @@
         }
       }), "(help object)\n\n             Macro returns documentation for function or macros including parser\n             macros but only if called with parser macro symbol like (help `).\n             For normal functions and macros you can save the function in variable."),
       // ------------------------------------------------------------------
-      cons: doc(function (car, cdr) {
+      cons: doc(function cons(car, cdr) {
         return new Pair(car, cdr);
       }, "(cons left right)\n\n            Function return new Pair out of two arguments."),
       // ------------------------------------------------------------------
-      car: doc(function (list) {
+      car: doc(function car(list) {
         typecheck('car', list, 'pair');
         return list.car;
       }, "(car pair)\n\n            Function returns car (head) of the list/pair."),
       // ------------------------------------------------------------------
-      cdr: doc(function (list) {
+      cdr: doc(function cdr(list) {
         typecheck('cdr', list, 'pair');
         return list.cdr;
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
@@ -7977,23 +7975,23 @@
         }
       }), "(unset! name)\n\n            Function delete specified name from environment."),
       // ------------------------------------------------------------------
-      'set-car!': doc(function (slot, value) {
+      'set-car!': doc('set-car!', function (slot, value) {
         typecheck('set-car!', slot, 'pair');
         slot.car = value;
       }, "(set-car! obj value)\n\n            Function that set car (head) of the list/pair to specified value.\n            It can destroy the list. Old value is lost."),
       // ------------------------------------------------------------------
-      'set-cdr!': doc(function (slot, value) {
+      'set-cdr!': doc('set-cdr!', function (slot, value) {
         typecheck('set-cdr!', slot, 'pair');
         slot.cdr = value;
       }, "(set-cdr! obj value)\n\n            Function that set cdr (tail) of the list/pair to specified value.\n            It can destroy the list. Old value is lost."),
       // ------------------------------------------------------------------
-      'empty?': doc(function (x) {
+      'empty?': doc('empty?', function (x) {
         return typeof x === 'undefined' || x === nil;
       }, "(empty? object)\n\n            Function return true if value is undfined empty list."),
       // ------------------------------------------------------------------
-      gensym: doc(gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
+      gensym: doc('gensym', gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
       // ------------------------------------------------------------------
-      load: doc(function (file) {
+      load: doc(function load(file) {
         typecheck('load', file, 'string');
         var g_env = this;
 
@@ -8364,7 +8362,7 @@
         });
       }), "(define name expression)\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
       // ------------------------------------------------------------------
-      'set-obj!': doc(function (obj, key, value) {
+      'set-obj!': doc('set-obj!', function (obj, key, value) {
         var obj_type = _typeof_1(obj);
 
         if (isNull(obj) || obj_type !== 'object' && obj_type !== 'function') {
@@ -8387,11 +8385,11 @@
         }
       }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
       // ------------------------------------------------------------------
-      'null-environment': doc(function () {
+      'null-environment': doc('null-environment', function () {
         return global_env.inherit('null');
       }, "(null-environment)\n\n            Function return new base environment with std lib."),
       // ------------------------------------------------------------------
-      'values': doc(function () {
+      'values': doc(function values() {
         for (var _len18 = arguments.length, args = new Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
           args[_key18] = arguments[_key18];
         }
@@ -8399,7 +8397,7 @@
         return Values(args);
       }, "(values a1 a2 ...)\n\n            If called with more then one elment it will create special\n            Values object that can be used in call-with-values function"),
       // ------------------------------------------------------------------
-      'call-with-values': doc(function (producer, consumer) {
+      'call-with-values': doc('call-with-values', function (producer, consumer) {
         typecheck('call-with-values', producer, 'function', 1);
         typecheck('call-with-values', consumer, 'function', 2);
         var maybe = producer();
@@ -8411,7 +8409,7 @@
         return consumer(maybe);
       }, "(call-with-values producer consumer)\n\n            Calls its producer argument with no values and a continuation that,\n            when passed some values, calls the consumer procedure with those\n            values as arguments."),
       // ------------------------------------------------------------------
-      'current-environment': doc(function () {
+      'current-environment': doc('current-environment', function () {
         if (this.name === '__frame__') {
           return this.parent;
         }
@@ -8419,11 +8417,11 @@
         return this;
       }, "(current-environment)\n\n            Function return current environement."),
       // ------------------------------------------------------------------
-      'parent.frame': doc(function () {
+      'parent.frame': doc('parent.frame', function () {
         return user_env;
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
-      'eval': doc(function (code, env) {
+      'eval': doc('eval', function (code, env) {
         var _this6 = this;
 
         typecheck('eval', code, ['symbol', 'pair', 'array']);
@@ -8779,10 +8777,10 @@
       quote: doc(new Macro('quote', function (arg) {
         return quote(arg.car);
       }), "(quote expression)\n\n             Macro that return single lips expression as data (it don't evaluate its\n             argument). It will return list of pairs if put in front of lips code.\n             And if put in fron of symbol it will return that symbol not value\n             associated with that name."),
-      'unquote-splicing': doc(function () {
+      'unquote-splicing': doc('unquote-splicing', function () {
         throw new Error("You can't call `unquote-splicing` outside of quasiquote");
       }, "(unquote-splicing code)\n\n            Special form to be used in quasiquote macro, parser is processing special\n            characters ,@ and create call to this pseudo function. It can be used\n            to evalute expression inside and return the value without parenthesis.\n            the value will be joined to the output list structure."),
-      'unquote': doc(function () {
+      'unquote': doc('unquote', function () {
         throw new Error("You can't call `unquote` outside of quasiquote");
       }, "(unquote code)\n\n            Special form to be used in quasiquote macro, parser is processing special\n            characters , and create call to this pseudo function. It can be used\n            to evalute expression inside and return the value, the output is inserted\n            into list structure created by queasiquote."),
       // ------------------------------------------------------------------
@@ -8990,12 +8988,12 @@
         });
       }, "(quasiquote list ,value ,@value)\n\n            Similar macro to `quote` but inside it you can use special\n            expressions unquote abbreviated to , that will evaluate expresion inside\n            and return its value or unquote-splicing abbreviated to ,@ that will\n            evaluate expression but return value without parenthesis (it will join)\n            the list with its value. Best used with macros but it can be used outside"),
       // ------------------------------------------------------------------
-      clone: doc(function (list) {
+      clone: doc(function clone(list) {
         typecheck('clone', list, 'pair');
         return list.clone();
       }, "(clone list)\n\n            Function return clone of the list."),
       // ------------------------------------------------------------------
-      append: doc(function (list, item) {
+      append: doc(function append(list, item) {
         typecheck('append', list, ['nil', 'pair']);
 
         if (list instanceof Pair) {
@@ -9005,7 +9003,7 @@
         return this.get('append!').call(this, list, item);
       }, "(append list item)\n\n            Function will create new list with value appended to the end. It return\n            New list."),
       // ------------------------------------------------------------------
-      'append!': doc(function (list, item) {
+      'append!': doc('append!', function (list, item) {
         typecheck('append!', list, ['pair', 'nil']);
 
         if (!this.get('list?')(list)) {
@@ -9027,7 +9025,7 @@
         return list.append(item);
       }, "(append! name expression)\n\n             Destructive version of append, it modify the list in place. It return\n             original list."),
       // ------------------------------------------------------------------
-      reverse: doc(function (arg) {
+      reverse: doc(function reverse(arg) {
         typecheck('reverse', arg, ['array', 'pair', 'nil']);
 
         if (arg === nil) {
@@ -9044,7 +9042,7 @@
         }
       }, "(reverse list)\n\n            Function will reverse the list or array. If value is not a list\n            or array it will throw exception."),
       // ------------------------------------------------------------------
-      nth: doc(function (index, obj) {
+      nth: doc(function nth(index, obj) {
         typecheck('nth', index, 'number');
         typecheck('nth', obj, ['array', 'pair']);
 
@@ -9069,7 +9067,7 @@
         }
       }, "(nth index obj)\n\n            Function return nth element of the list or array. If used with different\n            value it will throw exception"),
       // ------------------------------------------------------------------
-      list: doc(function () {
+      list: doc(function list() {
         for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
           args[_key20] = arguments[_key20];
         }
@@ -9079,14 +9077,14 @@
         }, nil);
       }, "(list . args)\n\n            Function create new list out of its arguments."),
       // ------------------------------------------------------------------
-      substring: doc(function (string, start, end) {
+      substring: doc(function substring(string, start, end) {
         typecheck('substring', string, 'string');
         typecheck('substring', start, 'number');
         typecheck('substring', end, ['number', 'undefined']);
         return string.substring(start.valueOf(), end && end.valueOf());
       }, "(substring string start end)\n\n            Function return part of the string starting at start ending with end."),
       // ------------------------------------------------------------------
-      concat: doc(function () {
+      concat: doc(function concat() {
         for (var _len21 = arguments.length, args = new Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
           args[_key21] = arguments[_key21];
         }
@@ -9097,33 +9095,33 @@
         return args.join('');
       }, "(concat . strings)\n\n            Function create new string by joining its arguments"),
       // ------------------------------------------------------------------
-      join: doc(function (separator, list) {
+      join: doc(function join(separator, list) {
         typecheck('join', separator, 'string');
         typecheck('join', list, 'pair');
         return this.get('list->array')(list).join(separator);
       }, "(join separator list)\n\n            Function return string by joining elements of the list"),
       // ------------------------------------------------------------------
-      split: doc(function (separator, string) {
+      split: doc(function split(separator, string) {
         typecheck('split', separator, ['regex', 'string']);
         typecheck('split', string, 'string');
         return this.get('array->list')(string.split(separator));
       }, "(split separator string)\n\n            Function create list by splitting string by separatar that can\n            be a string or regular expression."),
       // ------------------------------------------------------------------
-      replace: doc(function (pattern, replacement, string) {
+      replace: doc(function replace(pattern, replacement, string) {
         typecheck('replace', pattern, ['regex', 'string']);
         typecheck('replace', replacement, ['string', 'function']);
         typecheck('replace', string, 'string');
         return string.replace(pattern, replacement);
       }, "(replace pattern replacement string)\n\n            Function change pattern to replacement inside string. Pattern can be string\n            or regex and replacement can be function or string."),
       // ------------------------------------------------------------------
-      match: doc(function (pattern, string) {
+      match: doc(function match(pattern, string) {
         typecheck('match', pattern, ['regex', 'string']);
         typecheck('match', string, 'string');
         var m = string.match(pattern);
         return m ? this.get('array->list')(m) : nil;
       }, "(match pattern string)\n\n            function return match object from JavaScript as list."),
       // ------------------------------------------------------------------
-      search: doc(function (pattern, string) {
+      search: doc(function search(pattern, string) {
         typecheck('search', pattern, ['regex', 'string']);
         typecheck('search', string, 'string');
         return string.search(pattern);
@@ -9133,7 +9131,7 @@
         return toString(obj, quote);
       }, "(repr obj)\n\n            Function return string LIPS representation of an object as string."),
       // ------------------------------------------------------------------
-      env: doc(function (env) {
+      env: doc(function env(env) {
         env = env || this;
         var names = Object.keys(env.env);
         var result;
@@ -9151,7 +9149,7 @@
         return result;
       }, "(env obj)\n\n            Function return list values (functions and variables) inside environment."),
       // ------------------------------------------------------------------
-      'new': doc(function (obj) {
+      'new': doc('new', function (obj) {
         for (var _len22 = arguments.length, args = new Array(_len22 > 1 ? _len22 - 1 : 0), _key22 = 1; _key22 < _len22; _key22++) {
           args[_key22 - 1] = arguments[_key22];
         }
@@ -9173,12 +9171,12 @@
       // ------------------------------------------------------------------
       'typecheck': doc(typecheck, "(typecheck label value type [position])\n\n             Function check type and throw exception if type don't match.\n             Type can be string or list of strings. Position optional argument\n             is used to created proper error message."),
       // ------------------------------------------------------------------
-      'unset-special!': doc(function (symbol) {
+      'unset-special!': doc('unset-special!', function (symbol) {
         typecheck('remove-special!', symbol, 'string');
         delete specials.remove(symbol.valueOf());
       }, "(unset-special! name)\n\n            Function remove special symbol from parser. Added by `set-special!`,\n            name must be a string."),
       // ------------------------------------------------------------------
-      'set-special!': doc(function (seq, name) {
+      'set-special!': doc('set-special!', function (seq, name) {
         var type = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : specials.LITERAL;
         typecheck('set-special!', seq, 'string', 1);
         typecheck('set-special!', name, 'symbol', 2);
@@ -9192,13 +9190,13 @@
       // ------------------------------------------------------------------
       type: doc(type, "(type object)\n\n             Function return type of an object as string."),
       // ------------------------------------------------------------------
-      'debugger': doc(function () {
+      'debugger': doc('debugger', function () {
         /* eslint-disable */
         debugger;
         /* eslint-enable */
       }, "(debugger)\n\n            Function stop JavaScript code in debugger."),
       // ------------------------------------------------------------------
-      'in': doc(function (a, b) {
+      'in': doc('in', function (a, b) {
         if (a instanceof LSymbol || a instanceof LString) {
           a = a.valueOf();
         }
@@ -9206,21 +9204,21 @@
         return a in b;
       }, "(in key value)\n\n            Function use is in operator to check if value is in object."),
       // ------------------------------------------------------------------
-      'instanceof': doc(function (type, obj) {
+      'instanceof': doc('instanceof', function (type, obj) {
         return obj instanceof unbind(type);
       }, "(instanceof type obj)\n\n            Function check of object is instance of object."),
       // ------------------------------------------------------------------
-      'prototype?': doc(is_prototype, "(prototype? obj)\n\n             Function check if value is JavaScript Object prototype."),
+      'prototype?': doc('prototype?', is_prototype, "(prototype? obj)\n\n             Function check if value is JavaScript Object prototype."),
       // ------------------------------------------------------------------
-      'macro?': doc(function (obj) {
+      'macro?': doc('macro?', function (obj) {
         return obj instanceof Macro;
       }, "(macro? expression)\n\n            Function check if value is a macro."),
       // ------------------------------------------------------------------
-      'function?': doc(function (obj) {
+      'function?': doc('function?', function (obj) {
         return typeof obj === 'function';
       }, "(function? expression)\n\n            Function check if value is a function."),
       // ------------------------------------------------------------------
-      'real?': doc(function (value) {
+      'real?': doc('real?', function (value) {
         if (type(value) !== 'number') {
           return false;
         }
@@ -9232,13 +9230,13 @@
         return LNumber.isFloat(value);
       }, "(real? number)\n\n            Function check if value is real number."),
       // ------------------------------------------------------------------
-      'number?': doc(LNumber.isNumber, "(number? expression)\n\n             Function check if value is a number"),
+      'number?': doc('number?', LNumber.isNumber, "(number? expression)\n\n             Function check if value is a number"),
       // ------------------------------------------------------------------
-      'string?': doc(function (obj) {
+      'string?': doc('string?', function (obj) {
         return LString.isString(obj);
       }, "(string? expression)\n\n            Function check if value is a string."),
       // ------------------------------------------------------------------
-      'pair?': doc(function (obj) {
+      'pair?': doc('pair?', function (obj) {
         return obj instanceof Pair;
       }, "(pair? expression)\n\n            Function check if value is a pair or list structure."),
       // ------------------------------------------------------------------
@@ -9246,41 +9244,41 @@
         return obj instanceof RegExp;
       }, "(regex? expression)\n\n            Function check if value is regular expression."),
       // ------------------------------------------------------------------
-      'null?': doc(function (obj) {
+      'null?': doc('null?', function (obj) {
         return isNull(obj);
       }, "(null? expression)\n\n            Function check if value is nulish."),
       // ------------------------------------------------------------------
-      'boolean?': doc(function (obj) {
+      'boolean?': doc('boolean?', function (obj) {
         return typeof obj === 'boolean';
       }, "(boolean? expression)\n\n            Function check if value is boolean."),
       // ------------------------------------------------------------------
-      'symbol?': doc(function (obj) {
+      'symbol?': doc('symbol?', function (obj) {
         return obj instanceof LSymbol;
       }, "(symbol? expression)\n\n            Function check if value is LIPS symbol"),
       // ------------------------------------------------------------------
-      'array?': doc(function (obj) {
+      'array?': doc('array?', function (obj) {
         return obj instanceof Array;
       }, "(array? expression)\n\n            Function check if value is an arrray."),
       // ------------------------------------------------------------------
-      'object?': doc(function (obj) {
+      'object?': doc('object?', function (obj) {
         return obj !== nil && obj !== null && !(obj instanceof LCharacter) && !(obj instanceof RegExp) && !(obj instanceof LString) && !(obj instanceof Pair) && !(obj instanceof LNumber) && _typeof_1(obj) === 'object' && !(obj instanceof Array);
       }, "(object? expression)\n\n            Function check if value is an plain object."),
       // ------------------------------------------------------------------
-      flatten: doc(function (list) {
+      flatten: doc(function flatten(list) {
         typecheck('flatten', list, 'pair');
         return list.flatten();
       }, "(flatten list)\n\n            Return shallow list from tree structure (pairs)."),
       // ------------------------------------------------------------------
-      'array->list': doc(function (array) {
+      'array->list': doc('array->list', function (array) {
         typecheck('array->list', array, 'array');
         return Pair.fromArray(array);
       }, "(array->list array)\n\n            Function convert JavaScript array to LIPS list."),
       // ------------------------------------------------------------------
-      'tree->array': doc(toArray$1('tree->array', true), "(tree->array list)\n\n             Function convert LIPS list structure into JavaScript array."),
+      'tree->array': doc('tree->array', toArray$1('tree->array', true), "(tree->array list)\n\n             Function convert LIPS list structure into JavaScript array."),
       // ------------------------------------------------------------------
-      'list->array': doc(toArray$1('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
+      'list->array': doc('list->array', toArray$1('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
       // ------------------------------------------------------------------
-      apply: doc(function (fn) {
+      apply: doc(function apply(fn) {
         for (var _len23 = arguments.length, list = new Array(_len23 > 1 ? _len23 - 1 : 0), _key23 = 1; _key23 < _len23; _key23++) {
           list[_key23 - 1] = arguments[_key23];
         }
@@ -9292,7 +9290,7 @@
         return fn.apply(this, list);
       }, "(apply fn list)\n\n            Function that call function with list of arguments."),
       // ------------------------------------------------------------------
-      'length': doc(function (obj) {
+      'length': doc(function length(obj) {
         if (!obj) {
           return LNumber(0);
         }
@@ -9306,7 +9304,7 @@
         }
       }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
       // ------------------------------------------------------------------
-      'string->number': doc(function (arg) {
+      'string->number': doc('string->number', function (arg) {
         var radix = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 10;
         typecheck('string->number', arg, 'string', 1);
         typecheck('string->number', radix, 'number', 2);
@@ -9373,7 +9371,7 @@
         });
       }), "(try expr (catch (e) code)"),
       // ------------------------------------------------------------------
-      'throw': doc(function (message) {
+      'throw': doc('throw', function (message) {
         throw new Error(message);
       }, "(throw string)\n\n            Throw new expection."),
       // ------------------------------------------------------------------
@@ -9395,7 +9393,7 @@
         });
       }, "(find fn list)\n            (find regex list)\n\n            Higher order Function find first value for which function return true.\n            If called with regex it will create matcher function."),
       // ------------------------------------------------------------------
-      'for-each': doc(function (fn) {
+      'for-each': doc('for-each', function (fn) {
         var _this$get;
 
         typecheck('for-each', fn, 'function');
@@ -9459,7 +9457,7 @@
         });
       }, "(map fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments. The return\n            values of the function call is acumulated in result list and\n            returned by the call to map."),
       // ------------------------------------------------------------------
-      'list?': doc(function (obj) {
+      'list?': doc('list?', function (obj) {
         var node = obj;
 
         while (true) {
@@ -9492,7 +9490,7 @@
         }
       }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If none of the values give true, the function return false"),
       // ------------------------------------------------------------------
-      fold: doc(fold('fold', function (fold, fn, init) {
+      fold: doc('fold', fold('fold', function (fold, fn, init) {
         for (var _len26 = arguments.length, lists = new Array(_len26 > 3 ? _len26 - 3 : 0), _key26 = 3; _key26 < _len26; _key26++) {
           lists[_key26 - 3] = arguments[_key26];
         }
@@ -9518,7 +9516,7 @@
         });
       }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements of the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist"),
       // ------------------------------------------------------------------
-      pluck: doc(function () {
+      pluck: doc(function pluck() {
         for (var _len27 = arguments.length, keys = new Array(_len27), _key27 = 0; _key27 < _len27; _key27++) {
           keys[_key27] = arguments[_key27];
         }
@@ -9546,7 +9544,7 @@
         };
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
-      reduce: doc(fold('reduce', function (reduce, fn, init) {
+      reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
         var _this9 = this;
 
         for (var _len28 = arguments.length, lists = new Array(_len28 > 3 ? _len28 - 3 : 0), _key29 = 3; _key29 < _len28; _key29++) {
@@ -9573,7 +9571,7 @@
         });
       }), "(reduce fn init list . lists)\n\n             Higher order function take each element of the list and call\n             the function with result of previous call or init and next element\n             on the list until each element is processed and return single value\n             as result of last call to `fn` function.\n             e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))\n             for (reduce fn init alist blist"),
       // ------------------------------------------------------------------
-      filter: doc(function (arg, list) {
+      filter: doc(function filter(arg, list) {
         typecheck('filter', arg, ['regex', 'function']);
         typecheck('filter', list, ['pair', 'nil']);
         var array = this.get('list->array')(list);
@@ -9600,7 +9598,7 @@
       compose: doc(compose, "(compose . fns)\n\n             Higher order function and create new function that apply all functions\n             From right to left and return it's value. Reverse of compose.\n             e.g.:\n             ((compose (curry + 2) (curry * 3)) 3)\n             11\n            "),
       pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
       curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (display (add12 3 4))"),
-      'gcd': doc(function GCD() {
+      'gcd': doc(function gcd() {
         for (var _len29 = arguments.length, args = new Array(_len29), _key30 = 0; _key30 < _len29; _key30++) {
           args[_key30] = arguments[_key30];
         }
@@ -9610,7 +9608,7 @@
         });
       }, "(gcd n1 n2 ...)\n\n            Function return the greatest common divisor of their arguments."),
       // ------------------------------------------------------------------
-      'lcm': doc(function () {
+      'lcm': doc(function lcm() {
         // implementation based on
         // https://rosettacode.org/wiki/Least_common_multiple#JavaScript
         var n = arguments.length,
@@ -9630,24 +9628,24 @@
         return LNumber(a);
       }, "(lcm n1 n2 ...)\n\n            Function return the least common multiple of their arguments."),
       // ------------------------------------------------------------------
-      'odd?': doc(singleMathOp(function (num) {
+      'odd?': doc('odd?', singleMathOp(function (num) {
         return LNumber(num).isOdd();
       }), "(odd? number)\n\n             Function check if number os odd."),
       // ------------------------------------------------------------------
-      'even?': doc(singleMathOp(function (num) {
+      'even?': doc('even?', singleMathOp(function (num) {
         return LNumber(num).isEven();
       }), "(even? number)\n\n             Function check if number is even."),
       // ------------------------------------------------------------------
       // math functions
-      '*': doc(reduceMathOp(function (a, b) {
+      '*': doc('*', reduceMathOp(function (a, b) {
         return LNumber(a).mul(b);
       }, LNumber(1)), "(* . numbers)\n\n        Multiplicate all numbers passed as arguments. If single value is passed\n        it will return that value."),
       // ------------------------------------------------------------------
-      '+': doc(reduceMathOp(function (a, b) {
+      '+': doc('+', reduceMathOp(function (a, b) {
         return LNumber(a).add(b);
       }, LNumber(0)), "(+ . numbers)\n\n        Sum all numbers passed as arguments. If single value is passed it will\n        return that value."),
       // ------------------------------------------------------------------
-      '-': doc(function () {
+      '-': doc('-', function () {
         for (var _len30 = arguments.length, args = new Array(_len30), _key31 = 0; _key31 < _len30; _key31++) {
           args[_key31] = arguments[_key31];
         }
@@ -9665,15 +9663,15 @@
         return LNumber(-1);
       }, "(- . numbers)\n            (- number)\n\n            Substract number passed as argument. If only one argument is passed\n            it will negate the value."),
       // ------------------------------------------------------------------
-      '/': doc(reduceMathOp(function (a, b) {
+      '/': doc('/', reduceMathOp(function (a, b) {
         return LNumber(a).div(b);
       }), "(/ . numbers)\n\n             Divide number passed as arguments one by one. If single argument\n             is passed it will return that value."),
       // ------------------------------------------------------------------
-      'abs': doc(singleMathOp(function (n) {
+      abs: doc('abs', singleMathOp(function (n) {
         return LNumber(n).abs();
       }), "(abs number)\n\n             Function create absolute value from number."),
       // ------------------------------------------------------------------
-      'truncate': doc(function (n) {
+      truncate: doc(function truncate(n) {
         if (LNumber.isFloat(n)) {
           if (n instanceof LNumber) {
             n = n.valueOf();
@@ -9685,15 +9683,15 @@
         return n;
       }, "(truncate n)\n\n            Function return integer value from real number."),
       // ------------------------------------------------------------------
-      'sqrt': doc(singleMathOp(function (n) {
+      sqrt: doc('sqrt', singleMathOp(function (n) {
         return LNumber(n).sqrt();
       }), "(sqrt number)\n\n             Function return square root of the number."),
       // ------------------------------------------------------------------
-      '**': doc(binaryMathOp(function (a, b) {
+      '**': doc('**', binaryMathOp(function (a, b) {
         return LNumber(a).pow(b);
       }), "(** a b)\n\n            Function calculate number a to to the power of b. It can throw\n            exception when ** native operator is not supported."),
       // ------------------------------------------------------------------
-      '1+': doc(singleMathOp(function (number) {
+      '1+': doc('1+', singleMathOp(function (number) {
         return LNumber(number).add(1);
       }), "(1+ number)\n\n             Function add 1 to the number and return result."),
       // ------------------------------------------------------------------
@@ -9701,12 +9699,12 @@
         return LNumber(number).sub(1);
       }), "(1- number)\n\n             Function substract 1 from the number and return result."),
       // ------------------------------------------------------------------
-      '%': doc(function (a, b) {
+      '%': doc('%', function (a, b) {
         return LNumber(a).rem(b);
       }, "(% n1 n2)\n\n             Function get reminder of it's arguments."),
       // ------------------------------------------------------------------
       // Booleans
-      '==': doc(function () {
+      '==': doc('==', function () {
         for (var _len31 = arguments.length, args = new Array(_len31), _key32 = 0; _key32 < _len31; _key32++) {
           args[_key32] = arguments[_key32];
         }
@@ -9716,7 +9714,7 @@
         }, args);
       }, "(== x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are equal"),
       // ------------------------------------------------------------------
-      '>': doc(function () {
+      '>': doc('>', function () {
         for (var _len32 = arguments.length, args = new Array(_len32), _key33 = 0; _key33 < _len32; _key33++) {
           args[_key33] = arguments[_key33];
         }
@@ -9726,7 +9724,7 @@
         }, args);
       }, "(> x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically increasing"),
       // ------------------------------------------------------------------
-      '<': doc(function () {
+      '<': doc('<', function () {
         for (var _len33 = arguments.length, args = new Array(_len33), _key34 = 0; _key34 < _len33; _key34++) {
           args[_key34] = arguments[_key34];
         }
@@ -9746,7 +9744,7 @@
         }, args);
       }, "(<= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nonincreasing"),
       // ------------------------------------------------------------------
-      '>=': doc(function () {
+      '>=': doc('>=', function () {
         for (var _len35 = arguments.length, args = new Array(_len35), _key36 = 0; _key36 < _len35; _key36++) {
           args[_key36] = arguments[_key36];
         }
@@ -9756,7 +9754,7 @@
         }, args);
       }, "(>= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nondecreasing"),
       // ------------------------------------------------------------------
-      'eq?': doc(equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
+      'eq?': doc('eq?', equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
       or: doc(new Macro('or', function (code, _ref30) {
         var dynamic_scope = _ref30.dynamic_scope,
@@ -9846,22 +9844,22 @@
         }();
       }), "(and . expressions)\n\n             Macro evalute each expression in sequence if any value return false it will\n             return false. If each value return true it will return the last value.\n             If it's called without arguments it will return true."),
       // bit operations
-      '|': doc(function (a, b) {
+      '|': doc('|', function (a, b) {
         return LNumber(a).or(b);
       }, "(& a b)\n\n            Function calculate or bit operation."),
-      '&': doc(function (a, b) {
+      '&': doc('&', function (a, b) {
         return LNumber(a).and(b);
       }, "(& a b)\n\n            Function calculate and bit operation."),
-      '~': doc(function (a) {
+      '~': doc('~', function (a) {
         return LNumber(a).neg();
       }, "(~ number)\n\n            Function negate the value."),
-      '>>': doc(function (a, b) {
+      '>>': doc('>>', function (a, b) {
         return LNumber(a).shr(b);
       }, "(>> a b)\n\n            Function right shit the value a by value b."),
       '<<': doc(function (a, b) {
         return LNumber(a).shl(b);
       }, "(<< a b)\n\n            Function left shit the value a by value b."),
-      not: doc(function (value) {
+      not: doc(function not(value) {
         if (isNull(value)) {
           return true;
         }
@@ -9878,7 +9876,7 @@
       };
       ['floor', 'round', 'ceil'].forEach(function (fn) {
         var name = map[fn] ? map[fn] : fn;
-        global_env.set(name, doc(function (value) {
+        global_env.set(name, doc(name, function (value) {
           typecheck(name, value, 'number');
 
           if (value instanceof LNumber) {
@@ -9934,7 +9932,7 @@
         return "(c".concat(c, "r");
       }).join(' ') + ' arg' + ')'.repeat(s.length);
       var name = 'c' + spec + 'r';
-      global_env.set(name, doc(function (arg) {
+      global_env.set(name, doc(name, function (arg) {
         return chars.reduce(function (list, type) {
           typecheck(name, list, 'pair');
 
@@ -9974,12 +9972,12 @@
 
       global_env.set('global', global); // ---------------------------------------------------------------------
 
-      global_env.set('require.resolve', doc(function (path) {
+      global_env.set('require.resolve', doc('require.resolve', function (path) {
         typecheck('require.resolve', path, 'string');
         return require.resolve(path.valueOf());
       }, "(require.resolve path)\n\n           Return path relative the current module.")); // ---------------------------------------------------------------------
 
-      global_env.set('require', doc(function (module) {
+      global_env.set('require', doc('require', function (module) {
         typecheck('require', module, 'string');
         module = module.valueOf();
         var root = process.cwd();
@@ -10809,10 +10807,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 01 Nov 2020 12:27:24 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 01 Nov 2020 12:49:12 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 01 Nov 2020 12:27:24 +0000').valueOf();
+      var date = LString('Sun, 01 Nov 2020 12:49:12 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10849,7 +10847,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 01 Nov 2020 12:27:24 +0000',
+      date: 'Sun, 01 Nov 2020 12:49:12 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

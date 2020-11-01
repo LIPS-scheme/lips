@@ -917,13 +917,24 @@
     // :: they are ignored (not trim) otherwise it trim so
     // :: so you can have indent in source code
     // ----------------------------------------------------------------------
-    function doc(fn, doc, dump) {
+    function doc(name, fn, doc, dump) {
+        if (typeof name !== 'string') {
+            fn = arguments[0];
+            doc = arguments[1];
+            dump = arguments[2];
+            name = null;
+        }
         if (doc) {
             if (dump) {
                 fn.__doc__ = doc;
             } else {
                 fn.__doc__ = trim_lines(doc);
             }
+        }
+        if (name) {
+            fn.__name__ = name;
+        } else if (fn.name) {
+            fn.__name__ = fn.name;
         }
         return fn;
     }
@@ -4815,7 +4826,7 @@
             }
             var parent_frame = scope.get('parent.frame');
             return parent_frame(n - 1);
-        }, global_env.env['parent.frame'].__doc__));
+        }, global_env.env['parent.frame'].__doc__), 'parent.frame');
         args.callee = fn;
         frame.set('arguments', args);
         return frame;
@@ -5026,7 +5037,7 @@
             });
         }),
         // ------------------------------------------------------------------
-        'open-input-string': doc(function(string) {
+        'open-input-string': doc('open-input-string', function(string) {
             typecheck('open-input-string', string, 'string');
             return InputStringPort(string);
         }, `(open-input-string string)
@@ -5034,26 +5045,26 @@
             Function create new string port as input that can be used to
             read S-exressions from this port using \`read\` function.`),
         // ------------------------------------------------------------------
-        'output-port?': doc(function(x) {
+        'output-port?': doc('output-port?', function(x) {
             return x instanceof OutputPort;
         }, `(output-port? arg)
 
             Function return true if argument is output port.`),
         // ------------------------------------------------------------------
-        'input-port?': doc(function(x) {
+        'input-port?': doc('input-port?', function(x) {
             return x instanceof InputPort;
         }, `(input-port? arg)
 
             Function return true if argument is input port.`),
         // ------------------------------------------------------------------
-        'open-output-string': doc(function() {
+        'open-output-string': doc('open-output-string', function() {
             return OutputStringPort(this.get('repr'));
         }, `(open-output-string)
 
             Function create new output port that can used to write string into
             and after finish get the whole string using \`get-output-string\``),
         // ------------------------------------------------------------------
-        'get-output-string': doc(function(port) {
+        'get-output-string': doc('get-output-string', function(port) {
             typecheck('get-output-string', port, 'output-string-port');
             return port.getString();
         }, `(get-output-string port)
@@ -5061,14 +5072,14 @@
             Function get full string from string port. If nothing was wrote
             to given port it will return empty string.`),
         // ------------------------------------------------------------------
-        'eof-object?': doc(function(x) {
+        'eof-object?': doc('eof-object?', function(x) {
             return x === eof;
         }, `(eof-object? arg)
 
             Function check if value is eof object, returned from input string
             port when there are no more data to read.`),
         // ------------------------------------------------------------------
-        'peek-char': doc(function(port) {
+        'peek-char': doc('peek-char', function(port) {
             typecheck('peek-char', port, ['input-port', 'input-string-port']);
             return port.peek_char();
         }, `(peek-char port)
@@ -5076,7 +5087,7 @@
             Function get character from string port or EOF object if no more
             data in string port.`),
         // ------------------------------------------------------------------
-        'read-line': doc(function(port) {
+        'read-line': doc('read-line', function(port) {
             if (typeof port === 'undefined') {
                 port = this.get('stdin');
             }
@@ -5086,7 +5097,7 @@
 
             Function read next character from input port.`),
         // ------------------------------------------------------------------
-        'read-char': doc(function(port) {
+        'read-char': doc('read-char', function(port) {
             if (typeof port === 'undefined') {
                 port = this.get('stdin');
             }
@@ -5120,7 +5131,7 @@
             function can be used together with eval to evaluate code from
             string`),
         // ------------------------------------------------------------------
-        pprint: doc(function(arg) {
+        pprint: doc(function pprint(arg) {
             if (arg instanceof Pair) {
                 arg = new lips.Formatter(arg.toString(true)).break().format();
                 this.get('display').call(this, arg);
@@ -5133,7 +5144,7 @@
            Pretty print list expression, if called with non-pair it just call
            print function with passed argument.`),
         // ------------------------------------------------------------------
-        print: doc(function(...args) {
+        print: doc(function print(...args) {
             const display = this.get('display');
             const newline = this.get('newline');
             args.forEach(arg => {
@@ -5187,7 +5198,7 @@
 
             if there missing arguments or other escape character it throw exception.`),
         // ------------------------------------------------------------------
-        display: doc(function(arg, port = null) {
+        display: doc(function display(arg, port = null) {
             if (port === null) {
                 port = this.get('stdout');
             }
@@ -5196,13 +5207,13 @@
 
             Function send string to standard output or provied port.`),
         // ------------------------------------------------------------------
-        error: doc(function(...args) {
+        error: doc(function error(...args) {
             this.get('display').apply(this, args);
         }, `(error . args)
 
             Display error message.`),
         // ------------------------------------------------------------------
-        '%same-functions': doc(function(a, b) {
+        '%same-functions': doc('%same-functions', function(a, b) {
             if (typeof a !== 'function') {
                 return false;
             }
@@ -5252,20 +5263,20 @@
              macros but only if called with parser macro symbol like (help \`).
              For normal functions and macros you can save the function in variable.`),
         // ------------------------------------------------------------------
-        cons: doc(function(car, cdr) {
+        cons: doc(function cons(car, cdr) {
             return new Pair(car, cdr);
         }, `(cons left right)
 
             Function return new Pair out of two arguments.`),
         // ------------------------------------------------------------------
-        car: doc(function(list) {
+        car: doc(function car(list) {
             typecheck('car', list, 'pair');
             return list.car;
         }, `(car pair)
 
             Function returns car (head) of the list/pair.`),
         // ------------------------------------------------------------------
-        cdr: doc(function(list) {
+        cdr: doc(function cdr(list) {
             typecheck('cdr', list, 'pair');
             return list.cdr;
         }, `(cdr pair)
@@ -5344,7 +5355,7 @@
 
             Function delete specified name from environment.`),
         // ------------------------------------------------------------------
-        'set-car!': doc(function(slot, value) {
+        'set-car!': doc('set-car!', function(slot, value) {
             typecheck('set-car!', slot, 'pair');
             slot.car = value;
         }, `(set-car! obj value)
@@ -5352,7 +5363,7 @@
             Function that set car (head) of the list/pair to specified value.
             It can destroy the list. Old value is lost.`),
         // ------------------------------------------------------------------
-        'set-cdr!': doc(function(slot, value) {
+        'set-cdr!': doc('set-cdr!', function(slot, value) {
             typecheck('set-cdr!', slot, 'pair');
             slot.cdr = value;
         }, `(set-cdr! obj value)
@@ -5360,19 +5371,20 @@
             Function that set cdr (tail) of the list/pair to specified value.
             It can destroy the list. Old value is lost.`),
         // ------------------------------------------------------------------
-        'empty?': doc(function(x) {
+        'empty?': doc('empty?', function(x) {
             return typeof x === 'undefined' || x === nil;
         }, `(empty? object)
 
             Function return true if value is undfined empty list.`),
         // ------------------------------------------------------------------
         gensym: doc(
+            'gensym',
             gensym,
             `(gensym)
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
-        load: doc(function(file) {
+        load: doc(function load(file) {
             typecheck('load', file, 'string');
             var g_env = this;
             if (g_env.name === '__frame__') {
@@ -5662,7 +5674,7 @@
              with name beeing first element of the list. The macro evalute
              code \`(define function (lambda args body))\``),
         // ------------------------------------------------------------------
-        'set-obj!': doc(function(obj, key, value) {
+        'set-obj!': doc('set-obj!', function(obj, key, value) {
             var obj_type = typeof obj;
             if (isNull(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
                 var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
@@ -5684,20 +5696,20 @@
 
             Function set property of JavaScript object`),
         // ------------------------------------------------------------------
-        'null-environment': doc(function() {
+        'null-environment': doc('null-environment', function() {
             return global_env.inherit('null');
         }, `(null-environment)
 
             Function return new base environment with std lib.`),
         // ------------------------------------------------------------------
-        'values': doc(function(...args) {
+        'values': doc(function values(...args) {
             return Values(args);
         }, `(values a1 a2 ...)
 
             If called with more then one elment it will create special
             Values object that can be used in call-with-values function`),
         // ------------------------------------------------------------------
-        'call-with-values': doc(function(producer, consumer) {
+        'call-with-values': doc('call-with-values', function(producer, consumer) {
             typecheck('call-with-values', producer, 'function', 1);
             typecheck('call-with-values', consumer, 'function', 2);
             var maybe = producer();
@@ -5711,7 +5723,7 @@
             when passed some values, calls the consumer procedure with those
             values as arguments.`),
         // ------------------------------------------------------------------
-        'current-environment': doc(function() {
+        'current-environment': doc('current-environment', function() {
             if (this.name === '__frame__') {
                 return this.parent;
             }
@@ -5720,14 +5732,14 @@
 
             Function return current environement.`),
         // ------------------------------------------------------------------
-        'parent.frame': doc(function() {
+        'parent.frame': doc('parent.frame', function() {
             return user_env;
         }, `(parent.frame)
 
             Return parent environment if called from inside function.
             If no parent frame found it return nil.`),
         // ------------------------------------------------------------------
-        'eval': doc(function(code, env) {
+        'eval': doc('eval', function(code, env) {
             typecheck('eval', code, ['symbol', 'pair', 'array']);
             env = env || this;
             if (code instanceof LSymbol) {
@@ -6024,7 +6036,7 @@
              argument). It will return list of pairs if put in front of lips code.
              And if put in fron of symbol it will return that symbol not value
              associated with that name.`),
-        'unquote-splicing': doc(function() {
+        'unquote-splicing': doc('unquote-splicing', function() {
             throw new Error(`You can't call \`unquote-splicing\` outside of quasiquote`);
         }, `(unquote-splicing code)
 
@@ -6032,7 +6044,7 @@
             characters ,@ and create call to this pseudo function. It can be used
             to evalute expression inside and return the value without parenthesis.
             the value will be joined to the output list structure.`),
-        'unquote': doc(function() {
+        'unquote': doc('unquote', function() {
             throw new Error(`You can't call \`unquote\` outside of quasiquote`);
         }, `(unquote code)
 
@@ -6239,14 +6251,14 @@
             evaluate expression but return value without parenthesis (it will join)
             the list with its value. Best used with macros but it can be used outside`),
         // ------------------------------------------------------------------
-        clone: doc(function(list) {
+        clone: doc(function clone(list) {
             typecheck('clone', list, 'pair');
             return list.clone();
         }, `(clone list)
 
             Function return clone of the list.`),
         // ------------------------------------------------------------------
-        append: doc(function(list, item) {
+        append: doc(function append(list, item) {
             typecheck('append', list, ['nil', 'pair']);
             if (list instanceof Pair) {
                 list = list.clone();
@@ -6257,7 +6269,7 @@
             Function will create new list with value appended to the end. It return
             New list.`),
         // ------------------------------------------------------------------
-        'append!': doc(function(list, item) {
+        'append!': doc('append!', function(list, item) {
             typecheck('append!', list, ['pair', 'nil']);
             if (!this.get('list?')(list)) {
                 throw new Error('append!: Invalid argument, value is not a list');
@@ -6277,7 +6289,7 @@
              Destructive version of append, it modify the list in place. It return
              original list.`),
         // ------------------------------------------------------------------
-        reverse: doc(function(arg) {
+        reverse: doc(function reverse(arg) {
             typecheck('reverse', arg, ['array', 'pair', 'nil']);
             if (arg === nil) {
                 return nil;
@@ -6295,7 +6307,7 @@
             Function will reverse the list or array. If value is not a list
             or array it will throw exception.`),
         // ------------------------------------------------------------------
-        nth: doc(function(index, obj) {
+        nth: doc(function nth(index, obj) {
             typecheck('nth', index, 'number');
             typecheck('nth', obj, ['array', 'pair']);
             if (obj instanceof Pair) {
@@ -6319,13 +6331,13 @@
             Function return nth element of the list or array. If used with different
             value it will throw exception`),
         // ------------------------------------------------------------------
-        list: doc(function(...args) {
+        list: doc(function list(...args) {
             return args.reverse().reduce((list, item) => new Pair(item, list), nil);
         }, `(list . args)
 
             Function create new list out of its arguments.`),
         // ------------------------------------------------------------------
-        substring: doc(function(string, start, end) {
+        substring: doc(function substring(string, start, end) {
             typecheck('substring', string, 'string');
             typecheck('substring', start, 'number');
             typecheck('substring', end, ['number', 'undefined']);
@@ -6334,14 +6346,14 @@
 
             Function return part of the string starting at start ending with end.`),
         // ------------------------------------------------------------------
-        concat: doc(function(...args) {
+        concat: doc(function concat(...args) {
             args.forEach((arg, i) => typecheck('concat', arg, 'string', i + 1));
             return args.join('');
         }, `(concat . strings)
 
             Function create new string by joining its arguments`),
         // ------------------------------------------------------------------
-        join: doc(function(separator, list) {
+        join: doc(function join(separator, list) {
             typecheck('join', separator, 'string');
             typecheck('join', list, 'pair');
             return this.get('list->array')(list).join(separator);
@@ -6349,7 +6361,7 @@
 
             Function return string by joining elements of the list`),
         // ------------------------------------------------------------------
-        split: doc(function(separator, string) {
+        split: doc(function split(separator, string) {
             typecheck('split', separator, ['regex', 'string']);
             typecheck('split', string, 'string');
             return this.get('array->list')(string.split(separator));
@@ -6358,7 +6370,7 @@
             Function create list by splitting string by separatar that can
             be a string or regular expression.`),
         // ------------------------------------------------------------------
-        replace: doc(function(pattern, replacement, string) {
+        replace: doc(function replace(pattern, replacement, string) {
             typecheck('replace', pattern, ['regex', 'string']);
             typecheck('replace', replacement, ['string', 'function']);
             typecheck('replace', string, 'string');
@@ -6368,7 +6380,7 @@
             Function change pattern to replacement inside string. Pattern can be string
             or regex and replacement can be function or string.`),
         // ------------------------------------------------------------------
-        match: doc(function(pattern, string) {
+        match: doc(function match(pattern, string) {
             typecheck('match', pattern, ['regex', 'string']);
             typecheck('match', string, 'string');
             var m = string.match(pattern);
@@ -6377,7 +6389,7 @@
 
             function return match object from JavaScript as list.`),
         // ------------------------------------------------------------------
-        search: doc(function(pattern, string) {
+        search: doc(function search(pattern, string) {
             typecheck('search', pattern, ['regex', 'string']);
             typecheck('search', string, 'string');
             return string.search(pattern);
@@ -6391,7 +6403,7 @@
 
             Function return string LIPS representation of an object as string.`),
         // ------------------------------------------------------------------
-        env: doc(function(env) {
+        env: doc(function env(env) {
             env = env || this;
             var names = Object.keys(env.env);
             var result;
@@ -6408,7 +6420,7 @@
 
             Function return list values (functions and variables) inside environment.`),
         // ------------------------------------------------------------------
-        'new': doc(function(obj, ...args) {
+        'new': doc('new', function(obj, ...args) {
             var instance = new (unbind(obj))(...args.map(x => unbox(x)));
             Object.defineProperty(instance, '__instance__', {
                 enumerable: false,
@@ -6429,7 +6441,7 @@
              Type can be string or list of strings. Position optional argument
              is used to created proper error message.`),
         // ------------------------------------------------------------------
-        'unset-special!': doc(function(symbol) {
+        'unset-special!': doc('unset-special!', function(symbol) {
             typecheck('remove-special!', symbol, 'string');
             delete specials.remove(symbol.valueOf());
         }, `(unset-special! name)
@@ -6437,7 +6449,7 @@
             Function remove special symbol from parser. Added by \`set-special!\`,
             name must be a string.`),
         // ------------------------------------------------------------------
-        'set-special!': doc(function(seq, name, type = specials.LITERAL) {
+        'set-special!': doc('set-special!', function(seq, name, type = specials.LITERAL) {
             typecheck('set-special!', seq, 'string', 1);
             typecheck('set-special!', name, 'symbol', 2);
             lips.specials.append(seq.valueOf(), name, type);
@@ -6465,7 +6477,7 @@
 
              Function return type of an object as string.`),
         // ------------------------------------------------------------------
-        'debugger': doc(function() {
+        'debugger': doc('debugger', function() {
             /* eslint-disable */
             debugger;
             /* eslint-enable */
@@ -6473,7 +6485,7 @@
 
             Function stop JavaScript code in debugger.`),
         // ------------------------------------------------------------------
-        'in': doc(function(a, b) {
+        'in': doc('in', function(a, b) {
             if (a instanceof LSymbol || a instanceof LString) {
                 a = a.valueOf();
             }
@@ -6482,31 +6494,32 @@
 
             Function use is in operator to check if value is in object.`),
         // ------------------------------------------------------------------
-        'instanceof': doc(function(type, obj) {
+        'instanceof': doc('instanceof', function(type, obj) {
             return obj instanceof unbind(type);
         }, `(instanceof type obj)
 
             Function check of object is instance of object.`),
         // ------------------------------------------------------------------
         'prototype?': doc(
+            'prototype?',
             is_prototype,
             `(prototype? obj)
 
              Function check if value is JavaScript Object prototype.`),
         // ------------------------------------------------------------------
-        'macro?': doc(function(obj) {
+        'macro?': doc('macro?', function(obj) {
             return obj instanceof Macro;
         }, `(macro? expression)
 
             Function check if value is a macro.`),
         // ------------------------------------------------------------------
-        'function?': doc(function(obj) {
+        'function?': doc('function?', function(obj) {
             return typeof obj === 'function';
         }, `(function? expression)
 
             Function check if value is a function.`),
         // ------------------------------------------------------------------
-        'real?': doc(function(value) {
+        'real?': doc('real?', function(value) {
             if (type(value) !== 'number') {
                 return false;
             }
@@ -6519,18 +6532,19 @@
             Function check if value is real number.`),
         // ------------------------------------------------------------------
         'number?': doc(
+            'number?',
             LNumber.isNumber,
             `(number? expression)
 
              Function check if value is a number`),
         // ------------------------------------------------------------------
-        'string?': doc(function(obj) {
+        'string?': doc('string?', function(obj) {
             return LString.isString(obj);
         }, `(string? expression)
 
             Function check if value is a string.`),
         // ------------------------------------------------------------------
-        'pair?': doc(function(obj) {
+        'pair?': doc('pair?', function(obj) {
             return obj instanceof Pair;
         }, `(pair? expression)
 
@@ -6542,31 +6556,31 @@
 
             Function check if value is regular expression.`),
         // ------------------------------------------------------------------
-        'null?': doc(function(obj) {
+        'null?': doc('null?', function(obj) {
             return isNull(obj);
         }, `(null? expression)
 
             Function check if value is nulish.`),
         // ------------------------------------------------------------------
-        'boolean?': doc(function(obj) {
+        'boolean?': doc('boolean?', function(obj) {
             return typeof obj === 'boolean';
         }, `(boolean? expression)
 
             Function check if value is boolean.`),
         // ------------------------------------------------------------------
-        'symbol?': doc(function(obj) {
+        'symbol?': doc('symbol?', function(obj) {
             return obj instanceof LSymbol;
         }, `(symbol? expression)
 
             Function check if value is LIPS symbol`),
         // ------------------------------------------------------------------
-        'array?': doc(function(obj) {
+        'array?': doc('array?', function(obj) {
             return obj instanceof Array;
         }, `(array? expression)
 
             Function check if value is an arrray.`),
         // ------------------------------------------------------------------
-        'object?': doc(function(obj) {
+        'object?': doc('object?', function(obj) {
             return obj !== nil && obj !== null &&
                 !(obj instanceof LCharacter) &&
                 !(obj instanceof RegExp) &&
@@ -6579,14 +6593,14 @@
 
             Function check if value is an plain object.`),
         // ------------------------------------------------------------------
-        flatten: doc(function(list) {
+        flatten: doc(function flatten(list) {
             typecheck('flatten', list, 'pair');
             return list.flatten();
         }, `(flatten list)
 
             Return shallow list from tree structure (pairs).`),
         // ------------------------------------------------------------------
-        'array->list': doc(function(array) {
+        'array->list': doc('array->list', function(array) {
             typecheck('array->list', array, 'array');
             return Pair.fromArray(array);
         }, `(array->list array)
@@ -6594,18 +6608,20 @@
             Function convert JavaScript array to LIPS list.`),
         // ------------------------------------------------------------------
         'tree->array': doc(
+            'tree->array',
             toArray('tree->array', true),
             `(tree->array list)
 
              Function convert LIPS list structure into JavaScript array.`),
         // ------------------------------------------------------------------
         'list->array': doc(
+            'list->array',
             toArray('list->array'),
             `(list->array list)
 
              Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
-        apply: doc(function(fn, ...list) {
+        apply: doc(function apply(fn, ...list) {
             typecheck('apply', fn, 'function', 1);
             var last = list.pop();
             typecheck('apply', last, ['pair', 'nil'], list.length + 2);
@@ -6615,7 +6631,7 @@
 
             Function that call function with list of arguments.`),
         // ------------------------------------------------------------------
-        'length': doc(function(obj) {
+        'length': doc(function length(obj) {
             if (!obj) {
                 return LNumber(0);
             }
@@ -6630,7 +6646,7 @@
             Function return length of the object, the object can be list
             or any object that have length property.`),
         // ------------------------------------------------------------------
-        'string->number': doc(function(arg, radix = 10) {
+        'string->number': doc('string->number', function(arg, radix = 10) {
             typecheck('string->number', arg, 'string', 1);
             typecheck('string->number', radix, 'number', 2);
             arg = arg.valueOf();
@@ -6687,7 +6703,7 @@
             });
         }), `(try expr (catch (e) code)`),
         // ------------------------------------------------------------------
-        'throw': doc(function(message) {
+        'throw': doc('throw', function(message) {
             throw new Error(message);
         }, `(throw string)
 
@@ -6712,7 +6728,7 @@
             Higher order Function find first value for which function return true.
             If called with regex it will create matcher function.`),
         // ------------------------------------------------------------------
-        'for-each': doc(function(fn, ...lists) {
+        'for-each': doc('for-each', function(fn, ...lists) {
             typecheck('for-each', fn, 'function');
             lists.forEach((arg, i) => {
                 typecheck('for-each', arg, ['pair', 'nil'], i + 1);
@@ -6765,7 +6781,7 @@
             values of the function call is acumulated in result list and
             returned by the call to map.`),
         // ------------------------------------------------------------------
-        'list?': doc(function(obj) {
+        'list?': doc('list?', function(obj) {
             var node = obj;
             while (true) {
                 if (node === nil) {
@@ -6800,7 +6816,7 @@
             It stops when function fn return true for a value if so it will
             return true. If none of the values give true, the function return false`),
         // ------------------------------------------------------------------
-        fold: doc(fold('fold', function(fold, fn, init, ...lists) {
+        fold: doc('fold', fold('fold', function(fold, fn, init, ...lists) {
             typecheck('fold', fn, 'function');
             lists.forEach((arg, i) => {
                 typecheck('fold', arg, ['pair', 'nil'], i + 1);
@@ -6819,7 +6835,7 @@
              e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))
              for: (fold fn '() alist blist`),
         // ------------------------------------------------------------------
-        pluck: doc(function(...keys) {
+        pluck: doc(function pluck(...keys) {
             return function(obj) {
                 keys = keys.map(x => x instanceof LSymbol ? x.name : x);
                 if (keys.length === 0) {
@@ -6840,7 +6856,7 @@
             key from object. If called with more then one argument function will
             return new object by taking all properties from given object.`),
         // ------------------------------------------------------------------
-        reduce: doc(fold('reduce', function(reduce, fn, init, ...lists) {
+        reduce: doc('reduce', fold('reduce', function(reduce, fn, init, ...lists) {
             typecheck('reduce', fn, 'function');
             lists.forEach((arg, i) => {
                 typecheck('reduce', arg, ['pair', 'nil'], i + 1);
@@ -6860,7 +6876,7 @@
              e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))
              for (reduce fn init alist blist`),
         // ------------------------------------------------------------------
-        filter: doc(function(arg, list) {
+        filter: doc(function filter(arg, list) {
             typecheck('filter', arg, ['regex', 'function']);
             typecheck('filter', list, ['pair', 'nil']);
             var array = this.get('list->array')(list);
@@ -6918,7 +6934,7 @@
              (define add1 (curry add 1))
              (define add12 (add 2))
              (display (add12 3 4))`),
-        'gcd': doc(function GCD(...args) {
+        'gcd': doc(function gcd(...args) {
             return args.reduce(function(result, item) {
                 return result.gcd(item);
             });
@@ -6926,7 +6942,7 @@
 
             Function return the greatest common divisor of their arguments.`),
         // ------------------------------------------------------------------
-        'lcm': doc(function(...args) {
+        'lcm': doc(function lcm(...args) {
             // implementation based on
             // https://rosettacode.org/wiki/Least_common_multiple#JavaScript
             var n = args.length, a = abs(args[0]);
@@ -6942,34 +6958,34 @@
 
             Function return the least common multiple of their arguments.`),
         // ------------------------------------------------------------------
-        'odd?': doc(singleMathOp(function(num) {
+        'odd?': doc('odd?', singleMathOp(function(num) {
             return LNumber(num).isOdd();
         }), `(odd? number)
 
              Function check if number os odd.`),
         // ------------------------------------------------------------------
-        'even?': doc(singleMathOp(function(num) {
+        'even?': doc('even?', singleMathOp(function(num) {
             return LNumber(num).isEven();
         }), `(even? number)
 
              Function check if number is even.`),
         // ------------------------------------------------------------------
         // math functions
-        '*': doc(reduceMathOp(function(a, b) {
+        '*': doc('*', reduceMathOp(function(a, b) {
             return LNumber(a).mul(b);
         }, LNumber(1)), `(* . numbers)
 
         Multiplicate all numbers passed as arguments. If single value is passed
         it will return that value.`),
         // ------------------------------------------------------------------
-        '+': doc(reduceMathOp(function(a, b) {
+        '+': doc('+', reduceMathOp(function(a, b) {
             return LNumber(a).add(b);
         }, LNumber(0)), `(+ . numbers)
 
         Sum all numbers passed as arguments. If single value is passed it will
         return that value.`),
         // ------------------------------------------------------------------
-        '-': doc(function(...args) {
+        '-': doc('-', function(...args) {
             if (args.length === 1) {
                 return LNumber(args[0]).sub();
             }
@@ -6985,20 +7001,20 @@
             Substract number passed as argument. If only one argument is passed
             it will negate the value.`),
         // ------------------------------------------------------------------
-        '/': doc(reduceMathOp(function(a, b) {
+        '/': doc('/', reduceMathOp(function(a, b) {
             return LNumber(a).div(b);
         }), `(/ . numbers)
 
              Divide number passed as arguments one by one. If single argument
              is passed it will return that value.`),
         // ------------------------------------------------------------------
-        'abs': doc(singleMathOp(function(n) {
+        abs: doc('abs', singleMathOp(function(n) {
             return LNumber(n).abs();
         }), `(abs number)
 
              Function create absolute value from number.`),
         // ------------------------------------------------------------------
-        'truncate': doc(function(n) {
+        truncate: doc(function truncate(n) {
             if (LNumber.isFloat(n)) {
                 if (n instanceof LNumber) {
                     n = n.valueOf();
@@ -7010,20 +7026,20 @@
 
             Function return integer value from real number.`),
         // ------------------------------------------------------------------
-        'sqrt': doc(singleMathOp(function(n) {
+        sqrt: doc('sqrt', singleMathOp(function(n) {
             return LNumber(n).sqrt();
         }), `(sqrt number)
 
              Function return square root of the number.`),
         // ------------------------------------------------------------------
-        '**': doc(binaryMathOp(function(a, b) {
+        '**': doc('**', binaryMathOp(function(a, b) {
             return LNumber(a).pow(b);
         }), `(** a b)
 
             Function calculate number a to to the power of b. It can throw
             exception when ** native operator is not supported.`),
         // ------------------------------------------------------------------
-        '1+': doc(singleMathOp(function(number) {
+        '1+': doc('1+', singleMathOp(function(number) {
             return LNumber(number).add(1);
         }), `(1+ number)
 
@@ -7035,27 +7051,27 @@
 
              Function substract 1 from the number and return result.`),
         // ------------------------------------------------------------------
-        '%': doc(function(a, b) {
+        '%': doc('%', function(a, b) {
             return LNumber(a).rem(b);
         }, `(% n1 n2)
 
              Function get reminder of it's arguments.`),
         // ------------------------------------------------------------------
         // Booleans
-        '==': doc(function(...args) {
+        '==': doc('==', function(...args) {
             return seq_compare((a, b) => LNumber(a).cmp(b) === 0, args);
         }, `(== x1 x2 x3 ...)
 
             Function compare its numerical arguments and check if they are equal`),
         // ------------------------------------------------------------------
-        '>': doc(function(...args) {
+        '>': doc('>', function(...args) {
             return seq_compare((a, b) => LNumber(a).cmp(b) === 1, args);
         }, `(> x1 x2 x3 ...)
 
             Function compare its numerical arguments and check if they are
             monotonically increasing`),
         // ------------------------------------------------------------------
-        '<': doc(function(...args) {
+        '<': doc('<', function(...args) {
             return seq_compare((a, b) => LNumber(a).cmp(b) === -1, args);
         }, `(< x1 x2 x3 ...)
 
@@ -7069,7 +7085,7 @@
             Function compare its numerical arguments and check if they are
             monotonically nonincreasing`),
         // ------------------------------------------------------------------
-        '>=': doc(function(...args) {
+        '>=': doc('>=', function(...args) {
             return seq_compare((a, b) => [0, 1].includes(LNumber(a).cmp(b)), args);
         }, `(>= x1 x2 x3 ...)
 
@@ -7077,6 +7093,7 @@
             monotonically nondecreasing`),
         // ------------------------------------------------------------------
         'eq?': doc(
+            'eq?',
             equal,
             `(eq? a b)
 
@@ -7152,22 +7169,22 @@
              return false. If each value return true it will return the last value.
              If it's called without arguments it will return true.`),
         // bit operations
-        '|': doc(function(a, b) {
+        '|': doc('|', function(a, b) {
             return LNumber(a).or(b);
         }, `(& a b)
 
             Function calculate or bit operation.`),
-        '&': doc(function(a, b) {
+        '&': doc('&', function(a, b) {
             return LNumber(a).and(b);
         }, `(& a b)
 
             Function calculate and bit operation.`),
-        '~': doc(function(a) {
+        '~': doc('~', function(a) {
             return LNumber(a).neg();
         }, `(~ number)
 
             Function negate the value.`),
-        '>>': doc(function(a, b) {
+        '>>': doc('>>', function(a, b) {
             return LNumber(a).shr(b);
         }, `(>> a b)
 
@@ -7177,7 +7194,7 @@
         }, `(<< a b)
 
             Function left shit the value a by value b.`),
-        not: doc(function(value) {
+        not: doc(function not(value) {
             if (isNull(value)) {
                 return true;
             }
@@ -7193,7 +7210,7 @@
         var map = { ceil: 'ceiling' };
         ['floor', 'round', 'ceil'].forEach(fn => {
             var name = map[fn] ? map[fn] : fn;
-            global_env.set(name, doc(function(value) {
+            global_env.set(name, doc(name, function(value) {
                 typecheck(name, value, 'number');
                 if (value instanceof LNumber) {
                     return value[fn]();
@@ -7241,7 +7258,7 @@
         const chars = s.slice().reverse();
         const code = s.map(c => `(c${c}r`).join(' ') + ' arg' + ')'.repeat(s.length);
         const name = 'c' + spec + 'r';
-        global_env.set(name, doc(function(arg) {
+        global_env.set(name, doc(name, function(arg) {
             return chars.reduce(function(list, type) {
                 typecheck(name, list, 'pair');
                 if (type === 'a') {
@@ -7278,14 +7295,14 @@
         var path = require('path');
         global_env.set('global', global);
         // ---------------------------------------------------------------------
-        global_env.set('require.resolve', doc(function(path) {
+        global_env.set('require.resolve', doc('require.resolve', function(path) {
             typecheck('require.resolve', path, 'string');
             return require.resolve(path.valueOf());
         }, `(require.resolve path)
 
            Return path relative the current module.`));
         // ---------------------------------------------------------------------
-        global_env.set('require', doc(function(module) {
+        global_env.set('require', doc('require', function(module) {
             typecheck('require', module, 'string');
             module = module.valueOf();
             var root = process.cwd();
