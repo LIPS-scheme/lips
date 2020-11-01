@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 01 Nov 2020 13:03:22 +0000
+ * build: Sun, 01 Nov 2020 14:54:22 +0000
  */
 (function () {
   'use strict';
@@ -3872,6 +3872,21 @@
     function is_atom(obj) {
       return obj instanceof LSymbol || LString.isString(obj) || obj instanceof LCharacter || obj instanceof LNumber || obj === true || obj === false;
     } // ----------------------------------------------------------------------
+
+
+    var truncate = function () {
+      if (Math.trunc) {
+        return Math.trunc;
+      } else {
+        return function (x) {
+          if (x < 0) {
+            return Math.ceil(x);
+          } else {
+            return Math.floor(x);
+          }
+        };
+      }
+    }(); // ----------------------------------------------------------------------
     // :: Macro constructor
     // ----------------------------------------------------------------------
 
@@ -9671,7 +9686,7 @@
         return LNumber(n).abs();
       }), "(abs number)\n\n             Function create absolute value from number."),
       // ------------------------------------------------------------------
-      truncate: doc(function truncate(n) {
+      truncate: doc('truncate', function (n) {
         if (LNumber.isFloat(n)) {
           if (n instanceof LNumber) {
             n = n.valueOf();
@@ -10807,10 +10822,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 01 Nov 2020 13:03:22 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 01 Nov 2020 14:54:22 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 01 Nov 2020 13:03:22 +0000').valueOf();
+      var date = LString('Sun, 01 Nov 2020 14:54:22 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10847,7 +10862,7 @@
     var lips = {
       version: '1.0.0-beta.7',
       banner: banner,
-      date: 'Sun, 01 Nov 2020 13:03:22 +0000',
+      date: 'Sun, 01 Nov 2020 14:54:22 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

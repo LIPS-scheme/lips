@@ -7014,7 +7014,7 @@
 
              Function create absolute value from number.`),
         // ------------------------------------------------------------------
-        truncate: doc(function truncate(n) {
+        truncate: doc('truncate', function(n) {
             if (LNumber.isFloat(n)) {
                 if (n instanceof LNumber) {
                     n = n.valueOf();
