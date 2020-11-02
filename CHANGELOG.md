@@ -2,6 +2,7 @@
 ### Bugfix
 * fix truncate core function
 * fix splice nil in quasiquote inside list [#68](https://github.com/jcubic/lips/issues/68)
+* fix do macro inside syntax-rules [#81](https://github.com/jcubic/lips/issues/81)
 
 ## 1.0.0-beta.7
 ### Breaking

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 02 Nov 2020 09:27:17 +0000
+ * build: Mon, 02 Nov 2020 11:34:33 +0000
  */
 (function () {
   'use strict';
@@ -2164,11 +2164,11 @@
 
 
     function _parse() {
-      _parse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(arg, env) {
+      _parse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(arg, env) {
         var parser, result, expr;
-        return regenerator.wrap(function _callee8$(_context8) {
+        return regenerator.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context8.prev = _context8.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
                 if (!env) {
                   if (global_env) {
@@ -2185,33 +2185,33 @@
 
               case 3:
 
-                _context8.next = 6;
+                _context9.next = 6;
                 return parser.read_object();
 
               case 6:
-                expr = _context8.sent;
+                expr = _context9.sent;
 
                 if (!(expr === Parser.EOS)) {
-                  _context8.next = 9;
+                  _context9.next = 9;
                   break;
                 }
 
-                return _context8.abrupt("break", 12);
+                return _context9.abrupt("break", 12);
 
               case 9:
                 result.push(expr);
-                _context8.next = 3;
+                _context9.next = 3;
                 break;
 
               case 12:
-                return _context8.abrupt("return", result);
+                return _context9.abrupt("return", result);
 
               case 13:
               case "end":
-                return _context8.stop();
+                return _context9.stop();
             }
           }
-        }, _callee8);
+        }, _callee9);
       }));
       return _parse.apply(this, arguments);
     }
@@ -8074,12 +8074,12 @@
       }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
       // ------------------------------------------------------------------
       'do': doc(new Macro('do', /*#__PURE__*/function () {
-        var _ref18 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(code, _ref19) {
-          var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _node3, next, _item, value;
+        var _ref18 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(code, _ref19) {
+          var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _loop3;
 
-          return regenerator.wrap(function _callee6$(_context6) {
+          return regenerator.wrap(function _callee7$(_context7) {
             while (1) {
-              switch (_context6.prev = _context6.next) {
+              switch (_context7.prev = _context7.next) {
                 case 0:
                   dynamic_scope = _ref19.dynamic_scope, error = _ref19.error;
                   self = this;
@@ -8106,23 +8106,23 @@
 
                 case 10:
                   if (!(node !== nil)) {
-                    _context6.next = 21;
+                    _context7.next = 21;
                     break;
                   }
 
                   item = node.car;
-                  _context6.t0 = scope;
-                  _context6.t1 = item.car;
-                  _context6.next = 16;
+                  _context7.t0 = scope;
+                  _context7.t1 = item.car;
+                  _context7.next = 16;
                   return evaluate(item.cdr.car, eval_args);
 
                 case 16:
-                  _context6.t2 = _context6.sent;
+                  _context7.t2 = _context7.sent;
 
-                  _context6.t0.set.call(_context6.t0, _context6.t1, _context6.t2);
+                  _context7.t0.set.call(_context7.t0, _context7.t1, _context7.t2);
 
                   node = node.cdr;
-                  _context6.next = 10;
+                  _context7.next = 10;
                   break;
 
                 case 21:
@@ -8131,83 +8131,97 @@
                     dynamic_scope: dynamic_scope,
                     error: error
                   };
+                  _loop3 = /*#__PURE__*/regenerator.mark(function _callee6() {
+                    var node, next, _item, value;
 
-                case 22:
-                  _context6.next = 24;
+                    return regenerator.wrap(function _callee6$(_context6) {
+                      while (1) {
+                        switch (_context6.prev = _context6.next) {
+                          case 0:
+                            if (!(body !== nil)) {
+                              _context6.next = 3;
+                              break;
+                            }
+
+                            _context6.next = 3;
+                            return lips.evaluate(body, eval_args);
+
+                          case 3:
+                            node = vars;
+                            next = {};
+
+                          case 5:
+                            if (!(node !== nil)) {
+                              _context6.next = 15;
+                              break;
+                            }
+
+                            _item = node.car;
+
+                            if (!(_item.cdr.cdr !== nil)) {
+                              _context6.next = 12;
+                              break;
+                            }
+
+                            _context6.next = 10;
+                            return evaluate(_item.cdr.cdr.car, eval_args);
+
+                          case 10:
+                            value = _context6.sent;
+                            next[_item.car.valueOf()] = value;
+
+                          case 12:
+                            node = node.cdr;
+                            _context6.next = 5;
+                            break;
+
+                          case 15:
+                            Object.keys(next).concat(Object.getOwnPropertySymbols(next)).forEach(function (key) {
+                              scope.set(key, next[key]);
+                            });
+
+                          case 16:
+                          case "end":
+                            return _context6.stop();
+                        }
+                      }
+                    }, _callee6);
+                  });
+
+                case 23:
+                  _context7.next = 25;
                   return evaluate(test.car, eval_args);
 
-                case 24:
-                  if (_context6.sent) {
-                    _context6.next = 43;
+                case 25:
+                  if (_context7.sent) {
+                    _context7.next = 29;
                     break;
                   }
 
-                  if (!(body !== nil)) {
-                    _context6.next = 28;
-                    break;
-                  }
+                  return _context7.delegateYield(_loop3(), "t3", 27);
 
-                  _context6.next = 28;
-                  return lips.evaluate(body, eval_args);
-
-                case 28:
-                  _node3 = vars;
-                  next = {};
-
-                case 30:
-                  if (!(_node3 !== nil)) {
-                    _context6.next = 40;
-                    break;
-                  }
-
-                  _item = _node3.car;
-
-                  if (!(_item.cdr.cdr !== nil)) {
-                    _context6.next = 37;
-                    break;
-                  }
-
-                  _context6.next = 35;
-                  return evaluate(_item.cdr.cdr.car, eval_args);
-
-                case 35:
-                  value = _context6.sent;
-                  next[_item.car.valueOf()] = value;
-
-                case 37:
-                  _node3 = _node3.cdr;
-                  _context6.next = 30;
+                case 27:
+                  _context7.next = 23;
                   break;
 
-                case 40:
-                  Object.entries(next).forEach(function (_ref20) {
-                    var _ref21 = slicedToArray(_ref20, 2),
-                        key = _ref21[0],
-                        value = _ref21[1];
-
-                    scope.set(key, value);
-                  });
-                  _context6.next = 22;
-                  break;
-
-                case 43:
+                case 29:
                   if (!(test.cdr !== nil)) {
-                    _context6.next = 47;
+                    _context7.next = 33;
                     break;
                   }
 
-                  _context6.next = 46;
+                  _context7.next = 32;
                   return evaluate(test.cdr.car, eval_args);
 
-                case 46:
-                  return _context6.abrupt("return", _context6.sent);
+                case 32:
+                  return _context7.abrupt("return", _context7.sent);
 
-                case 47:
+                case 33:
                 case "end":
-                  return _context6.stop();
+                  return _context7.stop();
               }
             }
-          }, _callee6, this);
+          }, _callee7, this);
         }));
 
         return function (_x9, _x10) {
@@ -8215,9 +8229,9 @@
         };
       }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
       // ------------------------------------------------------------------
-      'if': doc(new Macro('if', function (code, _ref22) {
-        var dynamic_scope = _ref22.dynamic_scope,
-            error = _ref22.error;
+      'if': doc(new Macro('if', function (code, _ref20) {
+        var dynamic_scope = _ref20.dynamic_scope,
+            error = _ref20.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -8310,9 +8324,9 @@
         }();
       }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
       // ------------------------------------------------------------------
-      'ignore': new Macro('ignore', function (code, _ref23) {
-        var dynamic_scope = _ref23.dynamic_scope,
-            error = _ref23.error;
+      'ignore': new Macro('ignore', function (code, _ref21) {
+        var dynamic_scope = _ref21.dynamic_scope,
+            error = _ref21.error;
         var args = {
           env: this,
           error: error
@@ -8472,9 +8486,9 @@
       }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
       // ------------------------------------------------------------------
       lambda: new Macro('lambda', function (code) {
-        var _ref24 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref24.dynamic_scope,
-            error = _ref24.error;
+        var _ref22 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref22.dynamic_scope,
+            error = _ref22.error;
 
         var self = this;
 
@@ -8577,9 +8591,9 @@
       'macroexpand': new Macro('macroexpand', macro_expand()),
       'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
       // ------------------------------------------------------------------
-      'define-macro': doc(new Macro(macro, function (macro, _ref25) {
-        var dynamic_scope = _ref25.dynamic_scope,
-            error = _ref25.error;
+      'define-macro': doc(new Macro(macro, function (macro, _ref23) {
+        var dynamic_scope = _ref23.dynamic_scope,
+            error = _ref23.error;
 
         if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
           var name = macro.car.car.name;
@@ -8691,8 +8705,8 @@
           validate_identifiers(macro.car);
         }
 
-        var syntax = new Syntax(function (code, _ref26) {
-          var macro_expand = _ref26.macro_expand;
+        var syntax = new Syntax(function (code, _ref24) {
+          var macro_expand = _ref24.macro_expand;
           var scope = env.inherit('syntax');
 
           if (dynamic_scope) {
@@ -8826,10 +8840,10 @@
             }
 
             if (isPromise(car) || isPromise(cdr)) {
-              return Promise.all([car, cdr]).then(function (_ref27) {
-                var _ref28 = slicedToArray(_ref27, 2),
-                    car = _ref28[0],
-                    cdr = _ref28[1];
+              return Promise.all([car, cdr]).then(function (_ref25) {
+                var _ref26 = slicedToArray(_ref25, 2),
+                    car = _ref26[0],
+                    cdr = _ref26[1];
 
                 return new Pair(car, cdr);
               });
@@ -9349,11 +9363,11 @@
         return false;
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
-      'try': doc(new Macro('try', function (code, _ref29) {
+      'try': doc(new Macro('try', function (code, _ref27) {
         var _this7 = this;
 
-        var dynamic_scope = _ref29.dynamic_scope,
-            _error = _ref29.error;
+        var dynamic_scope = _ref27.dynamic_scope,
+            _error = _ref27.error;
         return new Promise(function (resolve) {
           var args = {
             env: _this7,
@@ -9775,9 +9789,9 @@
       // ------------------------------------------------------------------
       'eq?': doc('eq?', equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
-      or: doc(new Macro('or', function (code, _ref30) {
-        var dynamic_scope = _ref30.dynamic_scope,
-            error = _ref30.error;
+      or: doc(new Macro('or', function (code, _ref28) {
+        var dynamic_scope = _ref28.dynamic_scope,
+            error = _ref28.error;
         var args = this.get('list->array')(code);
         var self = this;
 
@@ -9817,9 +9831,9 @@
       }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
       // ------------------------------------------------------------------
       and: doc(new Macro('and', function (code) {
-        var _ref31 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref31.dynamic_scope,
-            error = _ref31.error;
+        var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref29.dynamic_scope,
+            error = _ref29.error;
 
         var args = this.get('list->array')(code);
         var self = this;
@@ -10193,65 +10207,65 @@
       }
 
       function _promise() {
-        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(node) {
+        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(node) {
           var pair;
-          return regenerator.wrap(function _callee7$(_context7) {
+          return regenerator.wrap(function _callee8$(_context8) {
             while (1) {
-              switch (_context7.prev = _context7.next) {
+              switch (_context8.prev = _context8.next) {
                 case 0:
-                  _context7.t0 = Pair;
+                  _context8.t0 = Pair;
 
                   if (!node.haveCycles('car')) {
-                    _context7.next = 5;
+                    _context8.next = 5;
                     break;
                   }
 
-                  _context7.t1 = node.car;
-                  _context7.next = 8;
+                  _context8.t1 = node.car;
+                  _context8.next = 8;
                   break;
 
                 case 5:
-                  _context7.next = 7;
+                  _context8.next = 7;
                   return resolve(node.car);
 
                 case 7:
-                  _context7.t1 = _context7.sent;
+                  _context8.t1 = _context8.sent;
 
                 case 8:
-                  _context7.t2 = _context7.t1;
+                  _context8.t2 = _context8.t1;
 
                   if (!node.haveCycles('cdr')) {
-                    _context7.next = 13;
+                    _context8.next = 13;
                     break;
                   }
 
-                  _context7.t3 = node.cdr;
-                  _context7.next = 16;
+                  _context8.t3 = node.cdr;
+                  _context8.next = 16;
                   break;
 
                 case 13:
-                  _context7.next = 15;
+                  _context8.next = 15;
                   return resolve(node.cdr);
 
                 case 15:
-                  _context7.t3 = _context7.sent;
+                  _context8.t3 = _context8.sent;
 
                 case 16:
-                  _context7.t4 = _context7.t3;
-                  pair = new _context7.t0(_context7.t2, _context7.t4);
+                  _context8.t4 = _context8.t3;
+                  pair = new _context8.t0(_context8.t2, _context8.t4);
 
                   if (node.data) {
                     pair.data = true;
                   }
 
-                  return _context7.abrupt("return", pair);
+                  return _context8.abrupt("return", pair);
 
                 case 20:
                 case "end":
-                  return _context7.stop();
+                  return _context8.stop();
               }
             }
-          }, _callee7);
+          }, _callee8);
         }));
         return _promise.apply(this, arguments);
       }
@@ -10269,10 +10283,10 @@
       }
     }
 
-    function getFunctionArgs(rest, _ref32) {
-      var env = _ref32.env,
-          dynamic_scope = _ref32.dynamic_scope,
-          error = _ref32.error;
+    function getFunctionArgs(rest, _ref30) {
+      var env = _ref30.env,
+          dynamic_scope = _ref30.dynamic_scope,
+          error = _ref30.error;
       var args = [];
       var node = rest;
       markCycles(node);
@@ -10345,11 +10359,11 @@
 
 
     function evaluate(code) {
-      var _ref33 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          env = _ref33.env,
-          dynamic_scope = _ref33.dynamic_scope,
-          _ref33$error = _ref33.error,
-          error = _ref33$error === void 0 ? function () {} : _ref33$error;
+      var _ref31 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          env = _ref31.env,
+          dynamic_scope = _ref31.dynamic_scope,
+          _ref31$error = _ref31.error,
+          error = _ref31$error === void 0 ? function () {} : _ref31$error;
 
       try {
         if (dynamic_scope === true) {
@@ -10473,11 +10487,11 @@
 
 
     function _exec() {
-      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(string, env, dynamic_scope) {
+      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(string, env, dynamic_scope) {
         var list, results, code, result;
-        return regenerator.wrap(function _callee9$(_context9) {
+        return regenerator.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -10487,25 +10501,25 @@
                   env = env || user_env;
                 }
 
-                _context9.next = 3;
+                _context10.next = 3;
                 return parse(string);
 
               case 3:
-                list = _context9.sent;
+                list = _context10.sent;
                 results = [];
 
               case 5:
 
                 if (list.length) {
-                  _context9.next = 10;
+                  _context10.next = 10;
                   break;
                 }
 
-                return _context9.abrupt("return", results);
+                return _context10.abrupt("return", results);
 
               case 10:
                 code = list.shift();
-                _context9.next = 13;
+                _context10.next = 13;
                 return evaluate(code, {
                   env: env,
                   dynamic_scope: dynamic_scope,
@@ -10524,19 +10538,19 @@
                 });
 
               case 13:
-                result = _context9.sent;
+                result = _context10.sent;
                 results.push(result);
 
               case 15:
-                _context9.next = 5;
+                _context10.next = 5;
                 break;
 
               case 17:
               case "end":
-                return _context9.stop();
+                return _context10.stop();
             }
           }
-        }, _callee9);
+        }, _callee10);
       }));
       return _exec.apply(this, arguments);
     }
@@ -10826,10 +10840,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 02 Nov 2020 09:27:17 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 02 Nov 2020 11:34:33 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 02 Nov 2020 09:27:17 +0000').valueOf();
+      var date = LString('Mon, 02 Nov 2020 11:34:33 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10866,7 +10880,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 02 Nov 2020 09:27:17 +0000',
+      date: 'Mon, 02 Nov 2020 11:34:33 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

@@ -5470,8 +5470,8 @@
                     }
                     node = node.cdr;
                 }
-                Object.entries(next).forEach(([key, value]) => {
-                    scope.set(key, value);
+                Object.keys(next).concat(Object.getOwnPropertySymbols(next)).forEach(key => {
+                    scope.set(key, next[key]);
                 });
             }
             if (test.cdr !== nil) {
