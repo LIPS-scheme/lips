@@ -1,3 +1,43 @@
+(test "quasiquote: it should splice nil"
+      (lambda (t)
+        (t.is `(x ,@nil x) '(x x))))
+
+(test "quasiquote: it should splice nil as body in do macro"
+      (lambda (t)
+        (define-macro (do vars test . body)
+          "(do ((<var> <init> <next>)) (test expression) . body)
+
+           Iteration macro that evaluate the expression body in scope of the variables.
+           On Eeach loop it increase the variables according to next expression and run
+           test to check if the loop should continue. If test is signle call the macro
+           will not return anything. If the test is pair of expression and value the
+           macro will return that value after finish."
+          (let ((return? (eq? (length test) 2)) (loop (gensym)))
+            `(let ,loop (,@(map (lambda (spec)
+                                  `(,(car spec) ,(cadr spec)))
+                                vars))
+                  (if (not ,(car test))
+                      (begin
+                        ,@body
+                        (,loop ,@(map (lambda (spec)
+                                        (if (null? (cddr spec))
+                                            (car spec)
+                                            (caddr spec)))
+                                      vars)))
+                      ,(if return? (cadr test))))))
+
+        ;; nil as body
+        (t.is (let ((x '(1 3 5 7 9)))
+                (do ((x x (cdr x))
+                     (sum 0 (+ sum (car x))))
+                  ((null? x) sum))) 25)
+
+        ;; ignored body
+        (t.is (let ((x '(1 3 5 7 9)))
+                (do ((x x (cdr x))
+                     (sum 0 (+ sum (car x))))
+                  ((null? x) sum) 10)) 25)))
+
 (test_ "quasiquote: it should double splice the list"
        (lambda (t)
          (define result (eval (let ((x '((list 1 2 3) (list 1 2 3) (list 1 2 3))))

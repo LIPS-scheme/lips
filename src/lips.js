@@ -754,8 +754,6 @@
             this.tokens = arg;
             this.env = env;
             this.i = 0;
-            this._specials = specials.names();
-            this._builtin = specials.builtin;
         }
         resolve(name) {
             return this.env && this.env.get(name, { throwError: false });
@@ -766,11 +764,11 @@
         skip() {
             this.i++;
         }
-        specials(token) {
-            return this._specials.includes(token);
+        special(token) {
+            return specials.names().includes(token);
         }
         builtin(token) {
-            return this._builtin.includes(token);
+            return specials.builtin.includes(token);
         }
         read() {
             const token = this.peek();
@@ -819,7 +817,7 @@
             if (token === Parser.EOS) {
                 return token;
             }
-            if (this.specials(token)) {
+            if (this.special(token)) {
                 const special = specials.get(token);
                 this.skip();
                 let expr;
@@ -6122,11 +6120,13 @@
                             pair.cdr.cdr.cdr === nil) {
                             return pair.cdr.cdr.car;
                         }
-                        if (pair.cdr !== nil) {
+                        if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
                             const msg = "You can't splice atom inside list";
                             throw new Error(msg);
                         }
-                        return eval_pair;
+                        if (!(pair.cdr instanceof Pair && eval_pair === nil)) {
+                            return eval_pair;
+                        }
                     }
                     // don't create Cycles
                     if (splices.has(eval_pair)) {
@@ -6138,7 +6138,12 @@
                     if (value === nil && eval_pair === nil) {
                         return undefined;
                     }
-                    return unpromise(value, value => join(eval_pair, value));
+                    return unpromise(value, value => {
+                        if (eval_pair === nil) {
+                            return value;
+                        }
+                        return join(eval_pair, value);
+                    });
                 });
             }
             var splices = new Set();

@@ -1,3 +1,8 @@
+## 1.0.0-beta.8
+### Bugfix
+* fix truncate core function
+* fix splice nil in quasiquote inside list [#68](https://github.com/jcubic/lips/issues/68)
+
 ## 1.0.0-beta.7
 ### Breaking
 * remove second argument from `filter` callback
