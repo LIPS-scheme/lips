@@ -103,9 +103,9 @@
    inside let and get let variables in closure, Useful for universal macros."
   (if (pair? first)
       (let ((name (car first)))
-        `(--> (. lips 'env)
+        `(--> lips.env
               (set ,(symbol->string name) (lambda ,(cdr first) ,@rest))))
-      `(--> (. lips 'env) (set ,(symbol->string first) ,(car rest)))))
+      `(--> lips.env (set ,(symbol->string first) ,(car rest)))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (globalize expr . rest)
@@ -170,7 +170,7 @@
 
    Function convert LIPS symbol to string."
   (if (symbol? s)
-      (let ((name (. s "name")))
+      (let ((name s.__name__))
         (if (string? name)
             name
             (--> name (toString))))))

@@ -751,18 +751,18 @@
             if (typeof arg === 'string') {
                 arg = tokenize(arg);
             }
-            this.tokens = arg;
-            this.env = env;
-            this.i = 0;
+            this.__tokens__ = arg;
+            this.__env__ = env;
+            this.__i__ = 0;
         }
         resolve(name) {
-            return this.env && this.env.get(name, { throwError: false });
+            return this.__env__ && this.__env__.get(name, { throwError: false });
         }
         peek() {
-            return this.tokens[this.i] || Parser.EOS;
+            return this.__tokens__[this.__i__] || Parser.EOS;
         }
         skip() {
-            this.i++;
+            this.__i__++;
         }
         special(token) {
             return specials.names().includes(token);
@@ -784,7 +784,7 @@
         async read_list() {
             let head = nil, prev = head;
             var first = true;
-            while (this.i < this.tokens.length) {
+            while (this.__i__ < this.__tokens__.length) {
                 const token = this.peek();
                 if (this.is_close(token)) {
                     this.skip();
@@ -839,7 +839,7 @@
                 if (this.builtin(token)) {
                     return expr;
                 } else {
-                    var result = await evaluate(expr, { env: this.env, error: (e) => {
+                    var result = await evaluate(expr, { env: this.__env__, error: (e) => {
                         throw e;
                     } });
                     return quote(result);
@@ -1441,29 +1441,29 @@
             typeof this === 'undefined') {
             return new LSymbol(name);
         }
-        this.name = name;
+        this.__name__ = name;
     }
     // ----------------------------------------------------------------------
     LSymbol.is = function(symbol, name) {
         return symbol instanceof LSymbol &&
-            ((name instanceof LSymbol && symbol.name === name.name) ||
-             (typeof name === 'string' && symbol.name === name) ||
-             (name instanceof RegExp && name.test(symbol.name)));
+            ((name instanceof LSymbol && symbol.__name__ === name.__name__) ||
+             (typeof name === 'string' && symbol.__name__ === name) ||
+             (name instanceof RegExp && name.test(symbol.__name__)));
     };
     // ----------------------------------------------------------------------
     LSymbol.prototype.toJSON = LSymbol.prototype.toString = function() {
         //return '#<symbol \'' + this.name + '\'>';
-        if (isSymbol(this.name)) {
-            return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
+        if (isSymbol(this.__name__)) {
+            return this.__name__.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
         }
         return this.valueOf();
     };
     LSymbol.prototype.valueOf = function() {
-        return this.name.valueOf();
+        return this.__name__.valueOf();
     };
     // -------------------------------------------------------------------------
     LSymbol.prototype.is_gensym = function() {
-        return is_gensym(this.name);
+        return is_gensym(this.__name__);
     };
     // -------------------------------------------------------------------------
     function is_gensym(symbol) {
@@ -1657,7 +1657,7 @@
                 var pair = node.car;
                 var name = pair.car;
                 if (name instanceof LSymbol) {
-                    name = name.name;
+                    name = name.__name__;
                 }
                 if (name instanceof String) {
                     name = name.valueOf();
@@ -1892,8 +1892,8 @@
                 constructor = Object;
             }
             var name;
-            if (typeof constructor.__className === 'string') {
-                name = constructor.__className;
+            if (typeof constructor.__class__ === 'string') {
+                name = constructor.__class__;
             } else {
                 if (is_prototype(obj)) {
                     return '#<prototype>';
@@ -2181,10 +2181,10 @@
             return unbind(x) === unbind(y);
         } else if (x instanceof LNumber && y instanceof LNumber) {
             let type;
-            if (x.type === y.type) {
-                if (x.type === 'complex') {
-                    type = x.im.type === y.im.type &&
-                        x.re.type === y.re.type;
+            if (x.__type__ === y.__type__) {
+                if (x.__type__ === 'complex') {
+                    type = x.im.__type__ === y.im.__type__ &&
+                        x.re.__type__ === y.re.__type__;
                 } else {
                     type = true;
                 }
@@ -2194,11 +2194,11 @@
         } else if (typeof x === 'number' || typeof y === 'number') {
             x = LNumber(x);
             y = LNumber(y);
-            return x.type === y.type && x.cmp(y) === 0;
+            return x.__type__ === y.__type__ && x.cmp(y) === 0;
         } else if (x instanceof LCharacter && y instanceof LCharacter) {
-            return x.char === y.char;
+            return x.__char__ === y.__char__;
         } else if (x instanceof LSymbol && y instanceof LSymbol) {
-            return x.name === y.name;
+            return x.__name__ === y.__name__;
         } else {
             return x === y;
         }
@@ -2265,7 +2265,7 @@
     // ----------------------------------------------------------------------
     Macro.defmacro = function(name, fn, doc, dump) {
         var macro = new Macro(name, fn, doc, dump);
-        macro.defmacro = true;
+        macro.__defmacro__ = true;
         return macro;
     };
     // ----------------------------------------------------------------------
@@ -2296,7 +2296,7 @@
                         return node;
                     }
                     var value = env.get(node.car, { throwError: false });
-                    if (value instanceof Macro && value.defmacro) {
+                    if (value instanceof Macro && value.__defmacro__) {
                         var code = value instanceof Syntax ? node : node.cdr;
                         var result = await value.invoke(code, args, true);
                         if (value instanceof Syntax) {
@@ -2346,19 +2346,19 @@
     // TODO: Don't put Syntax as Macro they are not runtime
     // ----------------------------------------------------------------------
     function Syntax(fn, env) {
-        this.env = env;
+        this.__env__ = env;
         this.__fn__ = fn;
         // allow macroexpand
-        this.defmacro = true;
+        this.__defmacro__ = true;
     }
-    Syntax.merge_env = Symbol.for('merge');
+    Syntax.__merge_env__ = Symbol.for('merge');
     // ----------------------------------------------------------------------
     Syntax.prototype = Object.create(Macro.prototype);
     Syntax.prototype.invoke = function(code, { error, env }, macro_expand) {
         var args = {
             error,
             env,
-            dynamic_scope: this.env,
+            dynamic_scope: this.__env__,
             macro_expand
         };
         return this.__fn__.call(env, code, args, this.__name__ || 'syntax');
@@ -2467,7 +2467,7 @@
                     }
                 }
                 if (pattern.car instanceof LSymbol) {
-                    let name = pattern.car.name;
+                    let name = pattern.car.__name__;
                     if (bindings['...'].symbols[name] &&
                         !pattern_names.includes(name) && !ellipsis) {
                         throw new Error('syntax: named ellipsis can only appear onces');
@@ -2549,7 +2549,7 @@
                     throw new Error('syntax: invalid usage of ellipsis');
                 }
                 log('>> 11');
-                const name = pattern.name;
+                const name = pattern.__name__;
                 if (symbols.includes(name)) {
                     return true;
                 }
@@ -2688,7 +2688,7 @@
                     return gensym.gensym === node;
                 });
                 if (replacement) {
-                    return LSymbol(replacement.name);
+                    return LSymbol(replacement.__name__);
                 }
                 return node;
             } else {
@@ -2924,7 +2924,7 @@
                     } else if (expr.car instanceof LSymbol) {
                         log('>> 4');
                         // case: (x ...)
-                        let name = expr.car.name;
+                        let name = expr.car.__name__;
                         let bind = { [name]: symbols[name] };
                         const is_null = symbols[name] === null;
                         let result = nil;
@@ -3090,7 +3090,7 @@
             var context = obj[__context__];
             if (context && (context === lips ||
                             (context.constructor &&
-                             context.constructor.__className))) {
+                             context.constructor.__class__))) {
                 return true;
             }
         }
@@ -3438,39 +3438,39 @@
         if (chr.length > 1) {
             // this is name
             chr = chr.toLowerCase();
-            if (LCharacter.names[chr]) {
-                this.name = chr;
-                this.char = LCharacter.names[chr];
+            if (LCharacter.__names__[chr]) {
+                this.__name__ = chr;
+                this.__char__ = LCharacter.__names__[chr];
             } else {
                 // this should never happen
                 // parser don't alow not defined named characters
                 throw new Error('Internal: Unknown named character');
             }
         } else {
-            this.char = chr;
-            const name = LCharacter.rev_names[chr];
+            this.__char__ = chr;
+            const name = LCharacter.__rev_names__[chr];
             if (name) {
-                this.name = name;
+                this.__name__ = name;
             }
         }
     }
-    LCharacter.names = characters;
-    LCharacter.rev_names = {};
-    Object.keys(LCharacter.names).forEach(key => {
-        var value = LCharacter.names[key];
-        LCharacter.rev_names[value] = key;
+    LCharacter.__names__ = characters;
+    LCharacter.__rev_names__ = {};
+    Object.keys(LCharacter.__names__).forEach(key => {
+        var value = LCharacter.__names__[key];
+        LCharacter.__rev_names__[value] = key;
     });
     LCharacter.prototype.toUpperCase = function() {
-        return LCharacter(this.char.toUpperCase());
+        return LCharacter(this.__char__.toUpperCase());
     };
     LCharacter.prototype.toLowerCase = function() {
-        return LCharacter(this.char.toLowerCase());
+        return LCharacter(this.__char__.toLowerCase());
     };
     LCharacter.prototype.toString = function() {
-        return '#\\' + (this.name || this.char);
+        return '#\\' + (this.__name__ || this.__char__);
     };
     LCharacter.prototype.valueOf = function() {
-        return this.char;
+        return this.__char__;
     };
     // -------------------------------------------------------------------------
     // :: String wrapper that handle copy and in place change
@@ -3527,7 +3527,7 @@
     };
     LString.prototype.set = function(n, char) {
         if (char instanceof LCharacter) {
-            char = char.char;
+            char = char.__char__;
         }
         var string = [];
         if (n > 0) {
@@ -3693,7 +3693,7 @@
         }
         this.im = im;
         this.re = re;
-        this.type = 'complex';
+        this.__type__ = 'complex';
     }
     // -------------------------------------------------------------------------
     LComplex.prototype = Object.create(LNumber.prototype);
@@ -3874,7 +3874,7 @@
         }
         if (typeof n === 'number') {
             this.value = n;
-            this.type = 'float';
+            this.__type__ = 'float';
         }
     }
     // -------------------------------------------------------------------------
@@ -3980,7 +3980,7 @@
         }
         this.num = num;
         this.denom = denom;
-        this.type = 'rational';
+        this.__type__ = 'rational';
     }
     // -------------------------------------------------------------------------
     LRational.prototype = Object.create(LNumber.prototype);
@@ -4165,7 +4165,7 @@
         }
         this.value = n;
         this._native = native;
-        this.type = 'bigint';
+        this.__type__ = 'bigint';
     }
     // -------------------------------------------------------------------------
     LBigInteger.prototype = Object.create(LNumber.prototype);
@@ -4356,12 +4356,12 @@
                 complex: (a, b) => {
                     return [
                         {
-                            im: coerce(a.type, b.im.type, 0),
-                            re: coerce(a.type, b.re.type, a)
+                            im: coerce(a.__type__, b.im.__type__, 0),
+                            re: coerce(a.__type__, b.re.__type__, a)
                         },
                         {
-                            im: coerce(a.type, b.im.type, b.im),
-                            re: coerce(a.type, b.re.type, b.re)
+                            im: coerce(a.__type__, b.im.__type__, b.im),
+                            re: coerce(a.__type__, b.re.__type__, b.re)
                         }
                     ];
                 }
@@ -4371,12 +4371,12 @@
             return (a, b) => {
                 return [
                     {
-                        im: coerce(type, a.im.type, a.im),
-                        re: coerce(type, a.re.type, a.re)
+                        im: coerce(type, a.im.__type__, a.im),
+                        re: coerce(type, a.re.__type__, a.re)
                     },
                     {
-                        im: coerce(type, a.im.type, 0),
-                        re: coerce(type, b.type, b)
+                        im: coerce(type, a.im.__type__, 0),
+                        re: coerce(type, b.__type__, b)
                     }
                 ];
             };
@@ -4416,7 +4416,7 @@
     // -------------------------------------------------------------------------
     LNumber.getType = function(n) {
         if (n instanceof LNumber) {
-            return n.type;
+            return n.__type__;
         }
         if (LNumber.isFloat(n)) {
             return 'float';
@@ -4581,7 +4581,7 @@
                 return 1;
             }
         }
-        if (a.type === 'bigint') {
+        if (a.__type__ === 'bigint') {
             if (LNumber.isNative(a.value)) {
                 return cmp(a, b);
             } else if (LNumber.isBN(a.value)) {
@@ -4721,9 +4721,9 @@
         if (typeof name === 'undefined') {
             name = 'anonymous';
         }
-        this.env = user_env.inherit(name, obj);
+        this.__env__ = user_env.inherit(name, obj);
         const defaults_name = '**interaction-environment-defaults**';
-        this.env.set(defaults_name, get_props(obj).concat(defaults_name));
+        this.__env__.set(defaults_name, get_props(obj).concat(defaults_name));
     }
     // -------------------------------------------------------------------------
     Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
@@ -4731,19 +4731,23 @@
         typecheck('Intepreter::exec', dynamic, 'boolean', 2);
         // simple solution to overwrite this variable in each interpreter
         // before evaluation of user code
-        global_env.set('**interaction-environment**', this.env);
+        global_env.set('**interaction-environment**', this.__env__);
         if (env === null) {
-            env = this.env;
+            env = this.__env__;
         }
         return exec(code, env, dynamic ? env : false);
     };
     // -------------------------------------------------------------------------
     Interpreter.prototype.get = function(value) {
-        return this.env.get(value).bind(this.env);
+        const result = this.__env__.get(value);
+        if (typeof result === 'function') {
+            return result.bind(this.__env__);
+        }
+        return result;
     };
     // -------------------------------------------------------------------------
     Interpreter.prototype.set = function(name, value) {
-        return this.env.set(name, value);
+        return this.__env__.set(name, value);
     };
     // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
@@ -4752,21 +4756,21 @@
         if (arguments.length === 1) {
             if (typeof arguments[0] === 'object') {
                 obj = arguments[0];
-                this.parent = null;
+                parent = null;
             } else if (typeof arguments[0] === 'string') {
                 obj = {};
                 parent = {};
                 name = arguments[0];
             }
         }
-        this.docs = new Map();
-        this.env = obj;
-        this.parent = parent;
-        this.name = name || 'anonymous';
+        this.__docs__ = new Map();
+        this.__env__ = obj;
+        this.__parent__ = parent;
+        this.__name__ = name || 'anonymous';
     }
     // -------------------------------------------------------------------------
     Environment.prototype.list = function() {
-        return get_props(this.env);
+        return get_props(this.__env__);
     };
     // -------------------------------------------------------------------------
     Environment.prototype.unset = function(name) {
@@ -4776,7 +4780,7 @@
         if (name instanceof LString) {
             name = name.valueOf();
         }
-        delete this.env[name];
+        delete this.__env__[name];
     };
     // -------------------------------------------------------------------------
     Environment.prototype.inherit = function(name, obj = {}) {
@@ -4784,7 +4788,7 @@
             obj = name;
         }
         if (!name || typeof name === "object") {
-            name = 'child of ' + (this.name || 'unknown');
+            name = 'child of ' + (this.__name__ || 'unknown');
         }
         return new Environment(obj || {}, this, name);
     };
@@ -4793,29 +4797,32 @@
     // -------------------------------------------------------------------------
     Environment.prototype.doc = function(name, value = null) {
         if (name instanceof LSymbol) {
-            name = name.name;
+            name = name.__name__;
         }
         if (name instanceof LString) {
             name = name.valueOf();
         }
         if (value) {
-            this.docs.set(name, value);
+            this.__docs__.set(name, value);
             return this;
         }
-        if (this.docs.has(name)) {
-            return this.docs.get(name);
+        if (this.__docs__.has(name)) {
+            return this.__docs__.get(name);
         }
-        if (this.parent) {
-            return this.parent.doc(name);
+        if (this.__parent__) {
+            return this.__parent__.doc(name);
         }
     };
     // -------------------------------------------------------------------------
     // :: function create frame environment for usage in functions
+    // :: frames are used to it's easier to find environments of the functions
+    // :: in scope chain, they are dummy environments just for lookup
     // -------------------------------------------------------------------------
     Environment.prototype.newFrame = function(fn, args) {
         var frame = this.inherit('__frame__');
-        frame.set('parent.frame', doc(function(n = 1) {
-            var scope = frame.parent;
+        frame.set('parent.frame', doc('parent.frame', function(n = 1) {
+            n = n.valueOf();
+            var scope = frame.__parent__;
             if (!(scope instanceof Environment)) {
                 return nil;
             }
@@ -4824,7 +4831,7 @@
             }
             var parent_frame = scope.get('parent.frame');
             return parent_frame(n - 1);
-        }, global_env.env['parent.frame'].__doc__), 'parent.frame');
+        }, global_env.__env__['parent.frame'].__doc__));
         args.callee = fn;
         frame.set('arguments', args);
         return frame;
@@ -4832,34 +4839,36 @@
     // -------------------------------------------------------------------------
     Environment.prototype._lookup = function(symbol) {
         if (symbol instanceof LSymbol) {
-            symbol = symbol.name;
+            symbol = symbol.__name__;
         }
         if (symbol instanceof LString) {
             symbol = symbol.valueOf();
         }
-        if (this.env.hasOwnProperty(symbol)) {
-            return Value(this.env[symbol]);
+        if (this.__env__.hasOwnProperty(symbol)) {
+            return Value(this.__env__[symbol]);
         }
-        if (this.parent) {
-            return this.parent._lookup(symbol);
+        if (this.__parent__) {
+            return this.__parent__._lookup(symbol);
         }
     };
     // -------------------------------------------------------------------------
     Environment.prototype.toString = function() {
-        return '#<env:' + this.name + '>';
+        return '#<env:' + this.__name__ + '>';
     };
     // -------------------------------------------------------------------------
     Environment.prototype.clone = function() {
         // duplicate refs
         var env = {};
-        Object.keys(this.env).forEach(key => {
-            env[key] = this.env[key];
+        // TODO: duplicated Symbols
+        Object.keys(this.__env__).forEach(key => {
+            env[key] = this.__env__[key];
         });
-        return new Environment(env, this.parent, this.name);
+        return new Environment(env, this.__parent__, this.__name__);
     };
+    // -------------------------------------------------------------------------
     Environment.prototype.merge = function(env, name = 'merge') {
         typecheck('Environment::merge', env, 'environment');
-        return this.inherit(name, env.env);
+        return this.inherit(name, env.__env__);
     };
     // -------------------------------------------------------------------------
     // value returned in lookup if found value in env
@@ -4892,13 +4901,13 @@
             typeof this === 'undefined') {
             return new Values(values);
         }
-        this.values = values;
+        this.__values__ = values;
     }
     Values.prototype.toString = function() {
-        return this.values.map(x => toString(x)).join('\n');
+        return this.__values__.map(x => toString(x)).join('\n');
     };
     Values.prototype.valueOf = function() {
-        return this.values;
+        return this.__values__;
     };
     // -------------------------------------------------------------------------
     Environment.prototype.get = function(symbol, options = {}) {
@@ -4955,12 +4964,12 @@
             value = LNumber(value);
         }
         if (name instanceof LSymbol) {
-            name = name.name;
+            name = name.__name__;
         }
         if (name instanceof LString) {
             name = name.valueOf();
         }
-        this.env[name] = value;
+        this.__env__[name] = value;
         if (doc) {
             this.doc(name, doc);
         }
@@ -4968,7 +4977,7 @@
     };
     // -------------------------------------------------------------------------
     Environment.prototype.has = function(name) {
-        return this.env.hasOwnProperty(name);
+        return this.__env__.hasOwnProperty(name);
     };
     // -------------------------------------------------------------------------
     Environment.prototype.ref = function(name) {
@@ -4980,7 +4989,7 @@
             if (env.has(name)) {
                 return env;
             }
-            env = env.parent;
+            env = env.__parent__;
         }
     };
     // -------------------------------------------------------------------------
@@ -4989,7 +4998,7 @@
         var result = [];
         while (env) {
             result.unshift(env);
-            env = env.parent;
+            env = env.__parent__;
         }
         return result;
     };
@@ -5314,7 +5323,7 @@
                                 'dot accessor that evaluate to object.');
             }
             var symbol = code.car.valueOf();
-            ref = this.ref(code.car.name);
+            ref = this.ref(code.car.__name__);
             // we don't return value because we only care about sync of set value
             // when value is a promise
             return unpromise(value, value => {
@@ -5347,7 +5356,7 @@
             const symbol = code.car;
             var ref = this.ref(symbol);
             if (ref) {
-                delete ref.env[symbol.name];
+                delete ref.__env__[symbol.__name__];
             }
         }), `(unset! name)
 
@@ -5385,8 +5394,8 @@
         load: doc(function load(file) {
             typecheck('load', file, 'string');
             var g_env = this;
-            if (g_env.name === '__frame__') {
-                g_env = g_env.parent;
+            if (g_env.__name__ === '__frame__') {
+                g_env = g_env.__parent__;
             }
             var env;
             if (g_env === global_env) {
@@ -5647,8 +5656,8 @@
             }
             typecheck('define', code.car, 'symbol');
             return unpromise(value, value => {
-                if (env.name === Syntax.merge_env) {
-                    env = env.parent;
+                if (env.__name__ === Syntax.__merge_env__) {
+                    env = env.__parent__;
                 }
                 if (new_expr &&
                     ((typeof value === 'function' && value.__lambda__) ||
@@ -5723,8 +5732,8 @@
             values as arguments.`),
         // ------------------------------------------------------------------
         'current-environment': doc('current-environment', function() {
-            if (this.name === '__frame__') {
-                return this.parent;
+            if (this.__name__ === '__frame__') {
+                return this.__parent__;
             }
             return this;
         }, `(current-environment)
@@ -5815,11 +5824,11 @@
                             if (name instanceof LSymbol) {
                                 // rest argument,  can also be first argument
                                 value = quote(Pair.fromArray(args.slice(i), false));
-                                env.env[name.name] = value;
+                                env.__env__[name.__name__] = value;
                                 break;
                             } else {
                                 value = args[i];
-                                env.env[name.car.name] = value;
+                                env.__env__[name.car.__name__] = value;
                             }
                         }
                         if (name.cdr === nil) {
@@ -5856,7 +5865,7 @@
         // ------------------------------------------------------------------
         'define-macro': doc(new Macro(macro, function(macro, { dynamic_scope, error }) {
             if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
-                var name = macro.car.car.name;
+                var name = macro.car.car.__name__;
                 var __doc__;
                 if (LString.isString(macro.cdr.car) && macro.cdr.cdr instanceof Pair) {
                     __doc__ = macro.cdr.car.valueOf();
@@ -5870,16 +5879,16 @@
                             break;
                         }
                         if (name instanceof LSymbol) {
-                            env.env[name.name] = arg;
+                            env.__env__[name.__name__] = arg;
                             break;
                         } else if (name.car !== nil) {
                             if (arg === nil) {
-                                env.env[name.car.name] = nil;
+                                env.__env__[name.car.__name__] = nil;
                             } else {
                                 if (arg.car instanceof Pair) {
                                     arg.car.data = true;
                                 }
-                                env.env[name.car.name] = arg.car;
+                                env.__env__[name.car.__name__] = arg.car;
                             }
                         }
                         if (name.cdr === nil) {
@@ -5958,13 +5967,13 @@
                 }
                 var var_scope = this;
                 // for macros that define variables used in macro (2 levels nestting)
-                if (var_scope.name === Syntax.merge_env) {
+                if (var_scope.__name__ === Syntax.__merge_env__) {
                     // copy refs for defined gynsyms
-                    const props = Object.getOwnPropertySymbols(var_scope.env);
+                    const props = Object.getOwnPropertySymbols(var_scope.__env__);
                     props.forEach(symbol => {
-                        var_scope.parent.set(symbol, var_scope.env[symbol]);
+                        var_scope.__parent__.set(symbol, var_scope.__env__[symbol]);
                     });
-                    var_scope = var_scope.parent;
+                    var_scope = var_scope.__parent__;
                 }
                 var eval_args = { env: scope, dynamic_scope, error };
                 let ellipsis, rules, symbols;
@@ -6005,7 +6014,7 @@
                         if (new_expr) {
                             expr = new_expr;
                         }
-                        var new_env = var_scope.merge(scope, Syntax.merge_env);
+                        var new_env = var_scope.merge(scope, Syntax.__merge_env__);
                         if (macro_expand) {
                             return { expr, scope: new_env };
                         }
@@ -6411,15 +6420,16 @@
         // ------------------------------------------------------------------
         env: doc(function env(env) {
             env = env || this;
-            var names = Object.keys(env.env);
+            var names = Object.keys(env.__env__);
+            // TODO: get symbols
             var result;
             if (names.length) {
                 result = Pair.fromArray(names);
             } else {
                 result = nil;
             }
-            if (env.parent !== undefined) {
-                return this.get('env').call(this, env.parent).append(result);
+            if (env.__parent__ !== undefined) {
+                return this.get('env').call(this, env.__parent__).append(result);
             }
             return result;
         }, `(env obj)
@@ -6843,7 +6853,7 @@
         // ------------------------------------------------------------------
         pluck: doc(function pluck(...keys) {
             return function(obj) {
-                keys = keys.map(x => x instanceof LSymbol ? x.name : x);
+                keys = keys.map(x => x instanceof LSymbol ? x.__name__ : x);
                 if (keys.length === 0) {
                     return nil;
                 } else if (keys.length === 1) {
@@ -7425,8 +7435,8 @@
                 }
             }
             if (obj.constructor) {
-                if (obj.constructor.__className) {
-                    return obj.constructor.__className;
+                if (obj.constructor.__class__) {
+                    return obj.constructor.__class__;
                 }
                 if (obj.constructor === Object &&
                     typeof obj[Symbol.iterator] === 'function') {
@@ -7620,7 +7630,7 @@
             } else if (code instanceof LSymbol) {
                 value = env.get(code);
                 if (value === 'undefined') {
-                    throw new Error('Unbound variable `' + code.name + '\'');
+                    //throw new Error('Unbound variable `' + code.__name__ + '\'');
                 }
                 return value;
             } else if (code instanceof Pair) {
@@ -7764,9 +7774,9 @@
                     if (typeof url !== 'string') {
                         send_error('Worker RPC: url is not a string');
                     } else {
-                        importScripts(`${url}/dist/lips.min.js`);
+                        importScripts(`${url}/src/lips.js`);
                         interpreter = new lips.Interpreter('worker');
-                        bootstrap = interpreter.exec(`(let-env lips.env.parent
+                        bootstrap = interpreter.exec(`(let-env lips.env.__parent__
                                                         (load "${url}/lib/bootstrap.scm")
                                                         (load "${url}/lib/R5RS.scm")
                                                         (load "${url}/lib/R7RS.scm"))`);
@@ -7833,12 +7843,12 @@
     LSymbol.prototype.toDry = function() {
         return {
             value: {
-                name: this.name
+                name: this.__name__
             }
         };
     };
     LSymbol.unDry = function(value) {
-        return new LSymbol(value.name);
+        return new LSymbol(value.__name__);
     };
     // -------------------------------------------------------------------------
     function execError(e) {
@@ -7923,20 +7933,20 @@ You can also use (help name) to display help for specic function or macro.
     // -------------------------------------------------------------------------
     // to be used with string function when code is minified
     // -------------------------------------------------------------------------
-    Ahead.__className = 'ahead';
-    Pattern.__className = 'pattern';
-    Formatter.__className = 'formatter';
-    Macro.__className = 'macro';
-    Syntax.__className = 'syntax';
-    Environment.__className = 'environment';
-    InputPort.__className = 'input-port';
-    OutputPort.__className = 'output-port';
-    OutputStringPort.__className = 'output-string-port';
-    InputStringPort.__className = 'input-string-port';
+    Ahead.__class__ = 'ahead';
+    Pattern.__class__ = 'pattern';
+    Formatter.__class__ = 'formatter';
+    Macro.__class__ = 'macro';
+    Syntax.__class__ = 'syntax';
+    Environment.__class__ = 'environment';
+    InputPort.__class__ = 'input-port';
+    OutputPort.__class__ = 'output-port';
+    OutputStringPort.__class__ = 'output-string-port';
+    InputStringPort.__class__ = 'input-string-port';
     // types used for detect lips objects
-    LNumber.__className = 'number';
-    LCharacter.__className = 'character';
-    LString.__className = 'string';
+    LNumber.__class__ = 'number';
+    LCharacter.__class__ = 'character';
+    LString.__class__ = 'string';
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',

@@ -293,7 +293,7 @@
 ;; -----------------------------------------------------------------------------
 (define (real? n)
   "(real? n)"
-  (and (number? n) (let ((type n.type))
+  (and (number? n) (let ((type n.__type__))
                      (or (string=? type "float")
                          (string=? type "bigint")))))
 
@@ -301,7 +301,7 @@
 (define (exact? n)
   "(exact? n)"
   (typecheck "exact?" n "number")
-  (let ((type n.type))
+  (let ((type n.__type__))
     (or (string=? type "bigint")
         (string=? type "rational")
         (and (string=? type "complex")
@@ -728,7 +728,7 @@
 
    Function return codepoint of Unicode character."
   (typecheck "char->integer" chr "character")
-  (--> chr.char (codePointAt 0)))
+  (--> chr.__char__ (codePointAt 0)))
 
 ;; -----------------------------------------------------------------------------
 (define (integer->char n)

@@ -150,7 +150,7 @@ function boostrap(interpreter) {
                 }
             }
             var data = fs.readFileSync(path);
-            return run(data, interpreter, false, env.parent, true).then(next);
+            return run(data, interpreter, false, env.__parent__, true).then(next);
         } else {
             return Promise.resolve();
         }

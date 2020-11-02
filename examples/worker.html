@@ -13,7 +13,7 @@
     // worker example - included code is little bit slower because LIPS url
     // is sent to worker using RPC system, but vanila JavaScript example use url
     // directly in function that is converted to Blob so it load faster
-    var worker = new lips.Worker("https://cdn.jsdelivr.net/gh/jcubic/lips@devel");
+    var worker = new lips.Worker("http://localhost/projects/jcubic/lips");
     (async function() {
       const [ result ] = await worker.rpc('eval', [`(let* ((what "hello")
                                                            (who "world")
@@ -45,12 +45,12 @@
       }
 
       var worker = fworker(function() {
-          importScripts("https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js");
+          importScripts("http://localhost/projects/jcubic/lips/src/lips.js");
           var i = new lips.Interpreter('worker');
-          var bootstrap = i.exec(`(let-env lips.env.parent
-                                     (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/bootstrap.scm")
-                                     (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/R5RS.scm")
-                                     (load "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/R7RS.scm"))`);
+          var bootstrap = i.exec(`(let-env lips.env.__parent__
+                                     (load "http://localhost/projects/jcubic/lips/lib/bootstrap.scm")
+                                     (load "http://localhost/projects/jcubic/lips/lib/R5RS.scm")
+                                     (load "http://localhost/projects/jcubic/lips/lib/R7RS.scm"))`);
           // string, numbers, booleans
           self.addEventListener('message', function(response) {
               var data = response.data;
