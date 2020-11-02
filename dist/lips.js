@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 02 Nov 2020 11:34:33 +0000
+ * build: Mon, 02 Nov 2020 12:37:18 +0000
  */
 (function () {
   'use strict';
@@ -8132,7 +8132,7 @@
                     error: error
                   };
                   _loop3 = /*#__PURE__*/regenerator.mark(function _callee6() {
-                    var node, next, _item, value;
+                    var node, next, _item, value, symbols;
 
                     return regenerator.wrap(function _callee6$(_context6) {
                       while (1) {
@@ -8176,11 +8176,12 @@
                             break;
 
                           case 15:
-                            Object.keys(next).concat(Object.getOwnPropertySymbols(next)).forEach(function (key) {
+                            symbols = Object.getOwnPropertySymbols(next);
+                            Object.keys(next).concat(symbols).forEach(function (key) {
                               scope.set(key, next[key]);
                             });
 
-                          case 16:
+                          case 17:
                           case "end":
                             return _context6.stop();
                         }
@@ -10840,10 +10841,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 02 Nov 2020 11:34:33 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 02 Nov 2020 12:37:18 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 02 Nov 2020 11:34:33 +0000').valueOf();
+      var date = LString('Mon, 02 Nov 2020 12:37:18 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10880,7 +10881,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 02 Nov 2020 11:34:33 +0000',
+      date: 'Mon, 02 Nov 2020 12:37:18 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

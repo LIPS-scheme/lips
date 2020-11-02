@@ -5470,7 +5470,8 @@
                     }
                     node = node.cdr;
                 }
-                Object.keys(next).concat(Object.getOwnPropertySymbols(next)).forEach(key => {
+                const symbols = Object.getOwnPropertySymbols(next);
+                Object.keys(next).concat(symbols).forEach(key => {
                     scope.set(key, next[key]);
                 });
             }
