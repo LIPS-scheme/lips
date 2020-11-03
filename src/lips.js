@@ -1659,16 +1659,14 @@
                 if (name instanceof LSymbol) {
                     name = name.__name__;
                 }
-                if (name instanceof String) {
+                if (name instanceof LString) {
                     name = name.valueOf();
                 }
                 var cdr = pair.cdr;
                 if (cdr instanceof Pair) {
                     cdr = cdr.toObject(literal);
                 }
-                if (cdr instanceof LNumber ||
-                    cdr instanceof LString ||
-                    cdr instanceof LCharacter) {
+                if (is_native(cdr)) {
                     if (!literal) {
                         cdr = cdr.valueOf();
                     }
@@ -3486,7 +3484,7 @@
                 return x.toString();
             }).join('');
         } else {
-            this._string = string;
+            this._string = string.valueOf();
         }
     }
     {
@@ -5695,7 +5693,7 @@
             } else if (is_prototype(obj) && typeof value === 'function') {
                 obj[key] = unbind(value);
                 obj[key].__prototype__ = true;
-            } else if (typeof value === 'function') {
+            } else if (typeof value === 'function' || is_native(value)) {
                 obj[key] = value;
             } else {
                 obj[key] = value ? value.valueOf() : value;
@@ -7390,7 +7388,14 @@
         return ['string', 'function'].includes(type) ||
             obj instanceof LSymbol ||
             obj instanceof LNumber ||
+            obj instanceof LString ||
             obj instanceof RegExp;
+    }
+    // -------------------------------------------------------------------------
+    function is_native(obj) {
+        return obj instanceof LNumber ||
+            obj instanceof LString ||
+            obj instanceof LCharacter;
     }
     // -------------------------------------------------------------------------
     function type(obj) {

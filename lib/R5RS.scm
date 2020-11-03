@@ -561,8 +561,12 @@
   n)
 
 ;; -----------------------------------------------------------------------------
-;; in JavaScript strings are not mutable not need to copy
-(define string-copy identity)
+(define (string-copy x)
+  "(string-copy x)
+
+   Create new string based of given argument."
+  (typecheck "string-copy" x "string")
+  (lips.LString x))
 
 ;; -----------------------------------------------------------------------------
 (define (list->string _list)
