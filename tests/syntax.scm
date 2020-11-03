@@ -114,7 +114,7 @@
               '(a b c d 1 2 3 4 moe larry curly))))
 
 
-(test_ "syntax-rules: ellipsps"
+(test "syntax-rules: when syntax hygiene"
       (lambda (t)
         (define result (let-syntax ((when (syntax-rules ()
                                             ((when test stmt1 stmt2 ...)
@@ -750,3 +750,42 @@
         (t.is (def hello 10) 10)
         (def hello 10)
         (t.is hello 10)))
+
+(test "syntax: it should pass body from macro to function"
+      (lambda (t)
+
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ . bar) (baz . bar))))
+
+        (define (baz . args) args)
+
+        (t.is (foo 1 2 3) '(1 2 3))))
+
+(test "syntax: it should find last item in list"
+      (lambda (t)
+
+        (define-syntax last
+          (syntax-rules ()
+            ((_ ()) ())
+            ((_ (x)) x)
+            ((_ (x ... y)) y)))
+
+        (t.is (last (1 2 3 4 5 6)) 6)
+        (t.is (last (1)) 1)
+        (t.is (last ()) ())
+        (t.is (to.throw (last)) true))
+
+(test "syntax: it should find last item in argument list"
+      (lambda (t)
+
+        (define-syntax last-arg
+          (syntax-rules ()
+            ((_) ())
+            ((_ x) x)
+            ((_ x ... y) y)))
+
+        (t.is (last-arg 1 2 3 4 5 6) 6)
+        (t.is (last-arg 1) 1)
+        (t.is (last-arg) ())
+        (t.is (to.throw (last)) true))
