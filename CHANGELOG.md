@@ -1,6 +1,6 @@
 ## 1.0.0-beta.8
 ### Breaking
-* internal properties like `name` are not `__name__`
+* internal properties like `name` are now `__name__`
 ### Bugfix
 * fix truncate core function
 * fix splice nil in quasiquote inside list [#68](https://github.com/jcubic/lips/issues/68)
