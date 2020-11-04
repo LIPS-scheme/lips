@@ -22,26 +22,14 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Features
 
-* Compatible with Scheme specification (R5RS and R7RS)
-* Allows the definition of a new syntax, using parser extensions.
-* Allows the creation of new data types, that fit nicely into reader and writer.
-* Introspection and modification of function code at runtime.
-* Syntax highlighting in NPM-installed binaries and in the browser-based REPL.
-* Built-in auto formatting (pretty printing) of code.
-* Lips macros, Scheme hygienic macros with syntax-rules and macroexpand.
-* Auto unwrapping of JavaScript promises.
-* Almost no dependencies.
-* Built-in help system in the REPL (functions and macros have doc strings).
-* Literal Regular Expressions.
-
-## Integration with JavaScript
-
-* JavaScript-like doted notation.
-* Object literals with `&(:foo 10)` (created using parser extensions),
-* Direct access to JavaScript methods, functions and properties.
-* Access to internal implementation details.
-* Creation of new JavaScript classes.
-* Modification of object prototypes.
+* Literal regular expression.
+* Asynchronous execution.
+* Possibility to add new syntax (similar to vectors and object).
+* Powerful introspection.
+* Great integration with JavaScript.
+* Auto formatting lisp of code (pretty print)
+* Lisp and hygienic Scheme macros and macroexpand.
+* Builtin help system.
 
 ## Installation
 
