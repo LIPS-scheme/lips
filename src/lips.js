@@ -2299,14 +2299,16 @@
                     var value = env.get(node.car, { throwError: false });
                     if (value instanceof Macro && value.__defmacro__) {
                         var code = value instanceof Syntax ? node : node.cdr;
-                        var result = await value.invoke(code, args, true);
+                        var result = await value.invoke(code, { ...args, env }, true);
                         if (value instanceof Syntax) {
                             const { expr, scope } = result;
                             if (expr instanceof Pair) {
                                 if (n !== -1 && n <= 1 || n < recur_guard) {
                                     return expr;
                                 }
-                                n = n - 1;
+                                if (n !== -1) {
+                                    n = n - 1;
+                                }
                                 return traverse(expr, n, scope);
                             }
                             result = expr;
@@ -2318,7 +2320,9 @@
                             if (n !== -1 && n <= 1 || n < recur_guard) {
                                 return result;
                             }
-                            n = n - 1;
+                            if (n !== -1) {
+                                n = n - 1;
+                            }
                             return traverse(result, n, env);
                         }
                     }

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 04 Nov 2020 17:48:52 +0000
+ * build: Wed, 04 Nov 2020 18:23:58 +0000
  */
 (function () {
   'use strict';
@@ -4006,7 +4006,9 @@
 
                               code = value instanceof Syntax ? node : node.cdr;
                               _context3.next = 8;
-                              return value.invoke(code, args, true);
+                              return value.invoke(code, _objectSpread(_objectSpread({}, args), {}, {
+                                env: env
+                              }), true);
 
                             case 8:
                               result = _context3.sent;
@@ -4031,7 +4033,10 @@
                               return _context3.abrupt("return", expr);
 
                             case 14:
-                              n = n - 1;
+                              if (n !== -1) {
+                                n = n - 1;
+                              }
+
                               return _context3.abrupt("return", traverse(expr, n, scope));
 
                             case 16:
@@ -4059,7 +4064,10 @@
                               return _context3.abrupt("return", result);
 
                             case 22:
-                              n = n - 1;
+                              if (n !== -1) {
+                                n = n - 1;
+                              }
+
                               return _context3.abrupt("return", traverse(result, n, env));
 
                             case 24:
@@ -10883,10 +10891,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 04 Nov 2020 17:48:52 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 04 Nov 2020 18:23:58 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 04 Nov 2020 17:48:52 +0000').valueOf();
+      var date = LString('Wed, 04 Nov 2020 18:23:58 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10923,7 +10931,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 04 Nov 2020 17:48:52 +0000',
+      date: 'Wed, 04 Nov 2020 18:23:58 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
