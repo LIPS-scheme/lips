@@ -1441,6 +1441,9 @@
             typeof this === 'undefined') {
             return new LSymbol(name);
         }
+        if (name === undefined) {
+            console.trace();
+        }
         this.__name__ = name;
     }
     // ----------------------------------------------------------------------
@@ -2686,7 +2689,7 @@
                     return gensym.gensym === node;
                 });
                 if (replacement) {
-                    return LSymbol(replacement.__name__);
+                    return LSymbol(replacement.name);
                 }
                 return node;
             } else {
@@ -5207,7 +5210,8 @@
             if (port === null) {
                 port = this.get('stdout');
             }
-            port.write.call(this, this.get('repr')(arg));
+            const value = this.get('repr')(arg);
+            port.write.call(this, value);
         }, `(display arg [port])
 
             Function send string to standard output or provied port.`),
