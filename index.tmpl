@@ -43,7 +43,7 @@
   </section>
   <section id="beta">
     <header><h2>1.0.0 Beta version</h2></header>
-    <p>To test latest beta version of the language, check <a href="/lips/beta.html">LIPS Beta Demo</a>. Documentation (WIP) for version 1.0.0 can be found on <a href="https://github.com/jcubic/lips/wiki/v1.0-draft">Wiki</a>.</p>
+    <p>To test latest beta version of the language, check <a href="/beta.html">LIPS Beta Demo</a>. Documentation (WIP) for version 1.0.0 can be found on <a href="https://github.com/jcubic/lips/wiki/v1.0-draft">Wiki</a>.</p>
   </section>
   <section id="bookmark">
     <header><h2>Bookmarklet</h2></header>
@@ -132,17 +132,11 @@ lips.exec("(let ((a 10) (b 20)) (* a b))").then(result => {
   {{FOOTER}}
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-  <script src="https://unpkg.com/@jcubic/lips@x.x.x"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips/dist/lips.min.js"></script>
   <!-- <script src="./src/lips.js"></script> -->
-  <script src="https://unpkg.com/jquery.terminal@x.x.x/js/jquery.terminal.min.js"></script>
-  <!-- <script src="../terminal/repo/js/jquery.terminal-src.js"></script> -->
-  <script src="https://cdn.rawgit.com/inexorabletash/polyfill/master/keyboard.js"></script>
-  <script src="https://unpkg.com/prismjs/prism.js"></script>
-  <script src="https://unpkg.com/jquery.terminal/js/prism.js"></script>
-  <script src="https://unpkg.com/prismjs/components/prism-scheme.min.js"></script>
-  <script src="https://unpkg.com/prismjs/components/prism-javascript.min.js"></script>
-  <script src="https://unpkg.com/prismjs/components/prism-markup.min.js"></script>
-  <script src="https://unpkg.com/prismjs/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js,npm/prismjs/components/prism-javascript.min.js,npm/prismjs/components/prism-markup.min.js,npm/prismjs/components/prism-bash.min.js"></script>
+  <!-- use after 1.0
+       npm/@jcubic/lips@beta/lib/js/terminal.js,npm/@jcubic/lips@beta/lib/js/prism.js -->
   <script src="./examples/terminal.js"></script>
   <script src="./examples/prism.js"></script>
   <style>
