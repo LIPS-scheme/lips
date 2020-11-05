@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 05 Nov 2020 13:28:47 +0000
+ * build: Thu, 05 Nov 2020 22:45:47 +0000
  */
 (function () {
   'use strict';
@@ -3321,9 +3321,14 @@
 
     var repr = new Map(); // ----------------------------------------------------------------------
 
+    function is_plain_object(object) {
+      return object && _typeof_1(object) === 'object' && object.constructor === Object;
+    } // ----------------------------------------------------------------------
+
+
     function user_repr(obj) {
       var constructor = obj.constructor || Object;
-      var plain_object = _typeof_1(obj) === 'object' && constructor === Object;
+      var plain_object = is_plain_object(obj);
       var fn;
 
       if (repr.has(constructor)) {
@@ -4990,6 +4995,8 @@
 
 
     function box(object) {
+      // we only need to box lips data, arrays and object don't need
+      // to be boxed, values from objects will be boxed when accessed
       switch (_typeof_1(object)) {
         case 'string':
           return LString(object);
@@ -5005,16 +5012,41 @@
     } // ----------------------------------------------------------------------
 
 
-    function unbox(obj) {
+    function map_object(object, fn) {
+      var props = Object.getOwnPropertyNames(object);
+      var symbols = Object.getOwnPropertySymbols(object);
+      props.concat(symbols).forEach(function (key) {
+        var value = fn(object[key]); // check if property is read only, happen with webpack
+        // and __esModule, it can happen for other properties as well
+
+        var descriptor = Object.getOwnPropertyDescriptor(object, key);
+
+        if (!descriptor || descriptor.writable && object[key] !== value) {
+          object[key] = value;
+        }
+      });
+      return object;
+    } // ----------------------------------------------------------------------
+
+
+    function unbox(object) {
       var lips_type = [LString, LCharacter, LNumber].some(function (x) {
-        return obj instanceof x;
+        return object instanceof x;
       });
 
       if (lips_type) {
-        return obj.valueOf();
+        return object.valueOf();
       }
 
-      return obj;
+      if (object instanceof Array) {
+        return object.map(unbox);
+      }
+
+      if (is_plain_object(object)) {
+        return map_object(object, unbox);
+      }
+
+      return object;
     } // ----------------------------------------------------------------------
 
 
@@ -10915,10 +10947,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 05 Nov 2020 13:28:47 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 05 Nov 2020 22:45:47 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 05 Nov 2020 13:28:47 +0000').valueOf();
+      var date = LString('Thu, 05 Nov 2020 22:45:47 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10955,7 +10987,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 05 Nov 2020 13:28:47 +0000',
+      date: 'Thu, 05 Nov 2020 22:45:47 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

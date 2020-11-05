@@ -10,6 +10,7 @@
 * fix `string-copy` and `string-set!`
 * fix `error` function to work like R7RS spec
 * fix edge case in `syntax-rules` found when executing SRFI-26 cut macro
+* fix unboxing of LIPS values when calling native functions
 
 ## 1.0.0-beta.7
 ### Breaking

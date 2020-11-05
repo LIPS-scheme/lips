@@ -1769,9 +1769,13 @@
     };
     var repr = new Map();
     // ----------------------------------------------------------------------
+    function is_plain_object(object) {
+        return object && typeof object === 'object' && object.constructor === Object;
+    }
+    // ----------------------------------------------------------------------
     function user_repr(obj) {
         var constructor = obj.constructor || Object;
-        var plain_object = typeof obj === 'object' && constructor === Object;
+        var plain_object = is_plain_object(obj);
         var fn;
         if (repr.has(constructor)) {
             fn = repr.get(constructor);
@@ -3025,6 +3029,8 @@
     // :: Function utilities
     // ----------------------------------------------------------------------
     function box(object) {
+        // we only need to box lips data, arrays and object don't need
+        // to be boxed, values from objects will be boxed when accessed
         switch (typeof object) {
             case 'string':
                 return LString(object);
@@ -3036,12 +3042,33 @@
         return object;
     }
     // ----------------------------------------------------------------------
-    function unbox(obj) {
-        var lips_type = [LString, LCharacter, LNumber].some(x => obj instanceof x);
+    function map_object(object, fn) {
+        const props = Object.getOwnPropertyNames(object);
+        const symbols = Object.getOwnPropertySymbols(object);
+        props.concat(symbols).forEach(key => {
+            const value = fn(object[key]);
+            // check if property is read only, happen with webpack
+            // and __esModule, it can happen for other properties as well
+            const descriptor = Object.getOwnPropertyDescriptor(object, key);
+            if (!descriptor || descriptor.writable && object[key] !== value) {
+                object[key] = value;
+            }
+        });
+        return object;
+    }
+    // ----------------------------------------------------------------------
+    function unbox(object) {
+        var lips_type = [LString, LCharacter, LNumber].some(x => object instanceof x);
         if (lips_type) {
-            return obj.valueOf();
+            return object.valueOf();
         }
-        return obj;
+        if (object instanceof Array) {
+            return object.map(unbox);
+        }
+        if (is_plain_object(object)) {
+            return map_object(object, unbox);
+        }
+        return object;
     }
     // ----------------------------------------------------------------------
     function patchValue(value, context) {
