@@ -1840,6 +1840,9 @@
         if (str_mapping.has(obj)) {
             return str_mapping.get(obj);
         }
+        if (obj instanceof Error) {
+            return obj.message;
+        }
         if (obj instanceof Pair) {
             // make sure that repr directly after update set the cycle ref
             if (!skip_cycles) {
@@ -5221,7 +5224,7 @@
             Function send string to standard output or provied port.`),
         // ------------------------------------------------------------------
         error: doc(function error(...args) {
-            this.get('display').apply(this, args);
+            this.get('display').call(this, args.map(toString).join(''));
         }, `(error . args)
 
             Display error message.`),

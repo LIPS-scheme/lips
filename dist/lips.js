@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 04 Nov 2020 18:23:58 +0000
+ * build: Thu, 05 Nov 2020 11:11:19 +0000
  */
 (function () {
   'use strict';
@@ -3397,6 +3397,10 @@
 
       if (str_mapping.has(obj)) {
         return str_mapping.get(obj);
+      }
+
+      if (obj instanceof Error) {
+        return obj.message;
       }
 
       if (obj instanceof Pair) {
@@ -7847,7 +7851,7 @@
           args[_key17] = arguments[_key17];
         }
 
-        this.get('display').apply(this, args);
+        this.get('display').call(this, args.map(toString).join(''));
       }, "(error . args)\n\n            Display error message."),
       // ------------------------------------------------------------------
       '%same-functions': doc('%same-functions', function (a, b) {
@@ -10891,10 +10895,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 04 Nov 2020 18:23:58 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 05 Nov 2020 11:11:19 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 04 Nov 2020 18:23:58 +0000').valueOf();
+      var date = LString('Thu, 05 Nov 2020 11:11:19 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10931,7 +10935,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 04 Nov 2020 18:23:58 +0000',
+      date: 'Thu, 05 Nov 2020 11:11:19 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

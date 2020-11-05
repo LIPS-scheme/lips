@@ -6,6 +6,7 @@
 * fix splice nil in quasiquote inside list [#68](https://github.com/jcubic/lips/issues/68)
 * fix do macro inside syntax-rules [#81](https://github.com/jcubic/lips/issues/81)
 * fix `string-copy` and `string-set!`
+* fix `error` function to work like R7RS spec
 
 ## 1.0.0-beta.7
 ### Breaking
