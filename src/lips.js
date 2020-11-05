@@ -1817,7 +1817,7 @@
             const props = Object.getOwnPropertyNames(obj);
             props.forEach(key => {
                 const o = obj[key];
-                if (typeof o === 'object' && o.constructor === Object) {
+                if (o && typeof o === 'object' && o.constructor === Object) {
                     result[key] = symbolize(o);
                 } else {
                     result[key] = toString(o);
@@ -2343,11 +2343,13 @@
                 return pair;
             }
             //var new_code = code;
+            if (code.cdr instanceof Pair && LNumber.isNumber(code.cdr.car)) {
+                return quote((await traverse(code, code.cdr.car.valueOf(), env)).car);
+            }
             if (single) {
                 return quote((await traverse(code, 1, env)).car);
-            } else {
-                return quote((await traverse(code, -1, env)).car);
             }
+            return quote((await traverse(code, -1, env)).car);
         };
     }
     // ----------------------------------------------------------------------
@@ -2585,6 +2587,11 @@
                     var rest_pattern = pattern.car instanceof LSymbol &&
                         pattern.cdr instanceof LSymbol;
                     if (rest_pattern) {
+                        // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
+                        // where <> is symbol
+                        if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
+                            return false;
+                        }
                         log('>> 12 | 1');
                         let name = pattern.cdr.valueOf();
                         if (!bindings[name]) {

@@ -788,4 +788,15 @@
         (t.is (last-arg 1 2 3 4 5 6) 6)
         (t.is (last-arg 1) 1)
         (t.is (last-arg) ())
-        (t.is (to.throw (last)) true))
+        (t.is (to.throw (last)) true)))
+
+
+(test "syntax: it should skip cons with identifier"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules (<>)
+            ((_ <> . b) nil)
+            ((_ a . b) (cons a b))))
+
+        (t.is (foo 1) '(1))
+        (t.is (foo 1 . 2) '(1 . 2))))

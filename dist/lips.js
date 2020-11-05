@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 05 Nov 2020 11:11:19 +0000
+ * build: Thu, 05 Nov 2020 13:28:47 +0000
  */
 (function () {
   'use strict';
@@ -3372,7 +3372,7 @@
         props.forEach(function (key) {
           var o = obj[key];
 
-          if (_typeof_1(o) === 'object' && o.constructor === Object) {
+          if (o && _typeof_1(o) === 'object' && o.constructor === Object) {
             result[key] = symbolize(o);
           } else {
             result[key] = toString(o);
@@ -4123,29 +4123,43 @@
 
                   env = args['env'] = this;
 
-                  if (!single) {
-                    _context4.next = 11;
+                  if (!(code.cdr instanceof Pair && LNumber.isNumber(code.cdr.car))) {
+                    _context4.next = 9;
                     break;
                   }
 
                   _context4.t0 = quote;
                   _context4.next = 7;
-                  return traverse(code, 1, env);
+                  return traverse(code, code.cdr.car.valueOf(), env);
 
                 case 7:
                   _context4.t1 = _context4.sent.car;
                   return _context4.abrupt("return", (0, _context4.t0)(_context4.t1));
 
-                case 11:
-                  _context4.t2 = quote;
-                  _context4.next = 14;
-                  return traverse(code, -1, env);
+                case 9:
+                  if (!single) {
+                    _context4.next = 15;
+                    break;
+                  }
 
-                case 14:
+                  _context4.t2 = quote;
+                  _context4.next = 13;
+                  return traverse(code, 1, env);
+
+                case 13:
                   _context4.t3 = _context4.sent.car;
                   return _context4.abrupt("return", (0, _context4.t2)(_context4.t3));
 
-                case 16:
+                case 15:
+                  _context4.t4 = quote;
+                  _context4.next = 18;
+                  return traverse(code, -1, env);
+
+                case 18:
+                  _context4.t5 = _context4.sent.car;
+                  return _context4.abrupt("return", (0, _context4.t4)(_context4.t5));
+
+                case 20:
                 case "end":
                   return _context4.stop();
               }
@@ -4437,6 +4451,12 @@
             var rest_pattern = pattern.car instanceof LSymbol && pattern.cdr instanceof LSymbol;
 
             if (rest_pattern) {
+              // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
+              // where <> is symbol
+              if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
+                return false;
+              }
+
               log('>> 12 | 1');
 
               var _name4 = pattern.cdr.valueOf();
@@ -10895,10 +10915,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 05 Nov 2020 11:11:19 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 05 Nov 2020 13:28:47 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 05 Nov 2020 11:11:19 +0000').valueOf();
+      var date = LString('Thu, 05 Nov 2020 13:28:47 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10935,7 +10955,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 05 Nov 2020 11:11:19 +0000',
+      date: 'Thu, 05 Nov 2020 13:28:47 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
