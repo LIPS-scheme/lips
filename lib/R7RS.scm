@@ -217,3 +217,15 @@
     result))
 
 ;; -----------------------------------------------------------------------------
+(define (with-exception-handler handler thunk)
+  "(with-exception-handler thunk handler)
+
+   Procedure call and return value of thunk function, if exception happen
+   it call handler procedure."
+  (try (thunk)
+       (catch (e)
+              (handler e))))
+;; -----------------------------------------------------------------------------
+(define raise throw)
+
+;; -----------------------------------------------------------------------------

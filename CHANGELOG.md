@@ -1,6 +1,8 @@
 ## 1.0.0-beta.8
 ### Breaking
 * internal properties like `name` are now `__name__`
+### Features
+* add `raise` (alias for `throw`) and `with-exception-handler` (that wraps `throw..catch`)
 ### Bugfix
 * fix truncate core function
 * fix splice nil in quasiquote inside list [#68](https://github.com/jcubic/lips/issues/68)
