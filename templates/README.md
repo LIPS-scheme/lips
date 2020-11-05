@@ -10,7 +10,7 @@
 
 [![LIPS at Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=273619&theme=dark)](https://www.producthunt.com/posts/lips)
 
-[LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://jcubic.github.io/lips).
+[LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://lips.js.org).
 It is based on the Scheme dialect and the R5RS/R7RS specifications. It has extensions to make it easier
 to interact with JavaScript. It work both in the browser and with Node.js.
 
@@ -18,9 +18,9 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Demo
 
-[Demo](https://jcubic.github.io/lips/#demo)
+[Demo](https://lips.js.org/#demo)
 
-[1.0 Beta demo](https://jcubic.github.io/lips/beta.html)
+[1.0 Beta demo](https://lips.js.org/beta.html)
 
 ## Features
 
@@ -87,7 +87,7 @@ Affter you click on the link it will create the REPL at the bottom of the page.
 e.g. google.com or gihub.com)
 
 If you have trouble with creating the bookmarklet you can open
-[LISP Scheme home page](https://jcubic.github.io/lips/#bookmark) where you can
+[LISP Scheme home page](https://lips.js.org/#bookmark) where you can
 find a link that you can drag to your bookmarks.
 
 ## Usage
@@ -109,6 +109,38 @@ or use the `src` attribute:
 <script type="text/x-scheme" src="example.scm"></script>
 ```
 
+## Boostraping Scheme system
+
+To have fully working Scheme environment, you need to bootstrap the language and load
+all scheme code written in LIPS. To do that you can use this:
+
+```
+(let-env lips.env.__parent__
+    (load "./lib/bootstrap.scm")
+    (load "./lib/R5RS.scm")
+    (load "./lib/R7RS.scm"))
+```
+
+you need to use path to lib files, you can host them yourself or use CDN.
+
+```
+(let-env lips.env.__parent__
+  (let ((path "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/"))
+    (load (concat path "bootstrap.scm"))
+    (load (concat path "R5RS.scm"))
+    (load (concat path "R7RS.scm"))))
+```
+
+If you use server you will need to enable CORS if your website is on different domain,
+because load will use AJAX to get the files.
+
+**NOTE:** as of now there is other solution, but it may change new version 1.0 is out.
+Because the files use syntax extensions that modify the parser you can't combine those
+files into one bigger file. Here is issue
+[Make parser ES generator #80](https://github.com/jcubic/lips/issues/80)
+that will make this possible. Other idea is to add data-path="" attribute on script that
+that will bootstrap the system from that path.
+
 Running programmatically:
 
 ```javascript
@@ -123,10 +155,14 @@ exec(string).then(function(results) {
 });
 ```
 
+When running exec you will also need to bootstrap the language and loaded files from `/lib/` directory.
+
 More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
-in [docs page](https://jcubic.github.io/lips/docs.html).
+in [docs page](https://lips.js.org/docs.html).
 
 ## Standalone executable
+
+**NOTE:** Executable don't require bootstrapping lib files.
 
 If you install lips globally with:
 
