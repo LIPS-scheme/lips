@@ -10,10 +10,16 @@
     <!--[if IE]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
     <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/css/jquery.terminal.min.css,npm/terminal-prism/css/prism-coy.css" rel="stylesheet"/>
     <link href="./examples/common.css" rel="stylesheet"/>
     <link href="style.css" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Play" rel="stylesheet"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Crimson+Text|Play&display=swap"/>
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Play&display=swap"
+          media="print"
+          onload="this.media='all'"
+          rel="stylesheet"/>
     <meta property="og:locale" content="en_US"/>
     <meta property="og:type" content="website"/>
     <meta property="og:title" content="LIPS Is Pretty Simple"/>
