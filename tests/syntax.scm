@@ -369,6 +369,7 @@
                                             '((??x) ?e (??y) :::)))))
                                    (g (1 2) (3 4)))))))
                         (f :::)))
+
         (t.is result '((1) 2 (3) (4)))))
 
 (test "syntax-rules: tail of ellipsis (srfi-46)"
