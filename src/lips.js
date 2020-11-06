@@ -5276,6 +5276,7 @@
         // ------------------------------------------------------------------
         error: doc(function error(...args) {
             this.get('display').call(this, args.map(toString).join(''));
+            this.get('newline').call(this);
         }, `(error . args)
 
             Display error message.`),

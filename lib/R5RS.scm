@@ -96,7 +96,7 @@
          (and (equal? (car a) (car b))
               (equal? (cdr a) (cdr b))))
         ((and (symbol? a) (symbol? b))
-         (equal? (. a 'name) (. b 'name)))
+         (equal? a.__name__ b.__name__))
         ((and (regex? a) (regex? b))
          (equal? (. a 'source) (. b 'source)))
         ((and (vector? a) (vector? b))
