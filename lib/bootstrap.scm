@@ -1,4 +1,12 @@
-;; -*- scheme -*-
+;;   __ __                          __
+;;  / / \ \       _    _  ___  ___  \ \
+;; | |   \ \     | |  | || . \/ __>  | |
+;; | |    > \    | |_ | ||  _/\__ \  | |
+;; | |   / ^ \   |___||_||_|  <___/  | |
+;;  \_\ /_/ \_\                     /_/
+;;
+;; <https://lips.js.org>
+;;
 ;; This file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript

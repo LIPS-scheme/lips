@@ -6,6 +6,8 @@
  * | |   / ^ \   |___||_||_|  <___/  | |
  *  \_\ /_/ \_\                     /_/
  *
+ * <https://lips.js.org>
+ *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
  * Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>

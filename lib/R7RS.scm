@@ -1,4 +1,12 @@
-;; -*- scheme -*-
+;;   __ __                          __
+;;  / / \ \       _    _  ___  ___  \ \
+;; | |   \ \     | |  | || . \/ __>  | |
+;; | |    > \    | |_ | ||  _/\__ \  | |
+;; | |   / ^ \   |___||_||_|  <___/  | |
+;;  \_\ /_/ \_\                     /_/
+;;
+;; <https://lips.js.org>
+;;
 ;; Attempt to add missing R7RS small standard functions and macros
 ;;
 ;; Reference:
