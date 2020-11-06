@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 05 Nov 2020 22:45:47 +0000
+ * build: Fri, 06 Nov 2020 00:44:08 +0000
  */
 (function () {
   'use strict';
@@ -3326,6 +3326,23 @@
     } // ----------------------------------------------------------------------
 
 
+    var props = Object.getOwnPropertyNames(Array.prototype);
+    var array_methods = [];
+    props.forEach(function (x) {
+      array_methods.push(Array[x], Array.prototype[x]);
+    }); // ----------------------------------------------------------------------
+
+    function is_array_method(x) {
+      x = unbind(x);
+      return array_methods.includes(x);
+    } // ----------------------------------------------------------------------
+
+
+    function lips_function(x) {
+      return typeof x === 'function' && (x.__lambda__ || x.__doc__);
+    } // ----------------------------------------------------------------------
+
+
     function user_repr(obj) {
       var constructor = obj.constructor || Object;
       var plain_object = is_plain_object(obj);
@@ -3373,8 +3390,9 @@
           result[name] = toString(obj[key]);
         });
 
-        var props = Object.getOwnPropertyNames(obj);
-        props.forEach(function (key) {
+        var _props = Object.getOwnPropertyNames(obj);
+
+        _props.forEach(function (key) {
           var o = obj[key];
 
           if (o && _typeof_1(o) === 'object' && o.constructor === Object) {
@@ -3383,6 +3401,7 @@
             result[key] = toString(o);
           }
         });
+
         return result;
       }
 
@@ -8819,10 +8838,12 @@
 
           if (var_scope.__name__ === Syntax.__merge_env__) {
             // copy refs for defined gynsyms
-            var props = Object.getOwnPropertySymbols(var_scope.__env__);
-            props.forEach(function (symbol) {
+            var _props2 = Object.getOwnPropertySymbols(var_scope.__env__);
+
+            _props2.forEach(function (symbol) {
               var_scope.__parent__.set(symbol, var_scope.__env__[symbol]);
             });
+
             var_scope = var_scope.__parent__;
           }
 
@@ -10542,6 +10563,22 @@
               // lambda need environment as context
               // normal functions are bound to their contexts
               value = unbind(value);
+            } else if (args.some(lips_function) && !lips_function(value) && !is_array_method(value)) {
+              // we unbox values from callback functions #76
+              // calling map on array should not unbox the value
+              args = args.map(function (arg) {
+                if (lips_function(arg)) {
+                  return function () {
+                    for (var _len36 = arguments.length, args = new Array(_len36), _key38 = 0; _key38 < _len36; _key38++) {
+                      args[_key38] = arguments[_key38];
+                    }
+
+                    return unpromise(arg.apply(this, args), unbox);
+                  };
+                }
+
+                return arg;
+              });
             }
 
             var _args = args.slice();
@@ -10947,10 +10984,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 05 Nov 2020 22:45:47 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 06 Nov 2020 00:44:08 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 05 Nov 2020 22:45:47 +0000').valueOf();
+      var date = LString('Fri, 06 Nov 2020 00:44:08 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10987,7 +11024,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 05 Nov 2020 22:45:47 +0000',
+      date: 'Fri, 06 Nov 2020 00:44:08 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

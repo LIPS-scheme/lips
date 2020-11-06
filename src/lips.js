@@ -1773,6 +1773,21 @@
         return object && typeof object === 'object' && object.constructor === Object;
     }
     // ----------------------------------------------------------------------
+    var props = Object.getOwnPropertyNames(Array.prototype);
+    var array_methods = [];
+    props.forEach(x => {
+        array_methods.push(Array[x], Array.prototype[x]);
+    });
+    // ----------------------------------------------------------------------
+    function is_array_method(x) {
+        x = unbind(x);
+        return array_methods.includes(x);
+    }
+    // ----------------------------------------------------------------------
+    function lips_function(x) {
+        return typeof x === 'function' && (x.__lambda__ || x.__doc__);
+    }
+    // ----------------------------------------------------------------------
     function user_repr(obj) {
         var constructor = obj.constructor || Object;
         var plain_object = is_plain_object(obj);
@@ -7656,6 +7671,19 @@
                         // lambda need environment as context
                         // normal functions are bound to their contexts
                         value = unbind(value);
+                    } else if (args.some(lips_function) &&
+                               !lips_function(value) &&
+                               !is_array_method(value)) {
+                        // we unbox values from callback functions #76
+                        // calling map on array should not unbox the value
+                        args = args.map(arg => {
+                            if (lips_function(arg)) {
+                                return function(...args) {
+                                    return unpromise(arg.apply(this, args), unbox);
+                                };
+                            }
+                            return arg;
+                        });
                     }
                     var _args = args.slice();
                     var scope = (dynamic_scope || env).newFrame(value, _args);

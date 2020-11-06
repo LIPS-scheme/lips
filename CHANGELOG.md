@@ -10,7 +10,8 @@
 * fix `string-copy` and `string-set!`
 * fix `error` function to work like R7RS spec
 * fix edge case in `syntax-rules` found when executing SRFI-26 cut macro
-* fix unboxing of LIPS values when calling native functions
+* fix unboxing of LIPS values when calling native JavaScript functions
+* fix unboxing of callback functions [#76](https://github.com/jcubic/lips/issues/76)
 
 ## 1.0.0-beta.7
 ### Breaking
