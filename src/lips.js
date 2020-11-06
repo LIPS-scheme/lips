@@ -8000,7 +8000,7 @@
 | |   / ^ \\   |___||_||_|  <___/  | |
  \\_\\ /_/ \\_\\                     /_/
 
-LIPS Interpreter {{VER}} (${_build}) <https://git.io/lips-scheme>
+LIPS Interpreter {{VER}} (${_build}) <https://lips.js.org>
 Copyright (c) 2018-${_year} Jakub T. Jankiewicz
 
 Type (env) to see environment with functions macros and variables.

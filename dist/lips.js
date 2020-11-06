@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 06 Nov 2020 00:44:08 +0000
+ * build: Fri, 06 Nov 2020 11:21:14 +0000
  */
 (function () {
   'use strict';
@@ -10984,10 +10984,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 06 Nov 2020 00:44:08 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 06 Nov 2020 11:21:14 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 06 Nov 2020 00:44:08 +0000').valueOf();
+      var date = LString('Fri, 06 Nov 2020 11:21:14 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10999,7 +10999,7 @@
 
       var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://git.io/lips-scheme>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
       return banner;
     }(); // -------------------------------------------------------------------------
     // to be used with string function when code is minified
@@ -11024,7 +11024,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 06 Nov 2020 00:44:08 +0000',
+      date: 'Fri, 06 Nov 2020 11:21:14 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
