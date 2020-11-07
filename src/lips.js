@@ -2053,7 +2053,7 @@
         };
         const postfix = (pair, nested) => {
             if (is_debug()) {
-                console.log({ ref: pair.ref, nested });
+                //sconsole.log({ ref: pair.ref, nested });
             }
             if (!nested || pair.ref) {
                 return [')'];
@@ -2788,6 +2788,7 @@
         function transform_ellipsis_expr(expr, bindings, state, next = () => {}) {
             const { nested } = state;
             log(' ==> ' + expr.toString());
+            log(bindings);
             if (expr instanceof LSymbol) {
                 const name = expr.valueOf();
                 log('[t 1');
@@ -2819,6 +2820,7 @@
                     log('[t 2');
                     const name = expr.car.valueOf();
                     const item = bindings[name];
+                    log({ name, bindings, item });
                     if (item === null) {
                         return;
                     } else if (item) {
@@ -2829,13 +2831,17 @@
                             const { car, cdr } = item;
                             if (nested) {
                                 if (cdr !== nil) {
+                                    log('|| next 1');
                                     next(name, cdr);
                                 }
+                                log({ car: car.toString() });
                                 return car;
                             } else {
                                 if (car.cdr !== nil) {
+                                    log('|| next 2');
                                     next(name, new Pair(car.cdr, cdr));
                                 }
+                                log({ car: car.car.toString() });
                                 return car.car;
                             }
                         } else if (item instanceof Array) {
@@ -2882,8 +2888,9 @@
         function get_names(object) {
             return Object.keys(object).concat(Object.getOwnPropertySymbols(object));
         }
+        /* eslint-disable complexity */
         function traverse(expr, { disabled } = {}) {
-            log('>> ' + expr.toString());
+            log('traverse>> ' + expr.toString());
             if (expr instanceof Pair) {
                 // escape ellispsis from R7RS e.g. (... ...)
                 if (!disabled && expr.car instanceof Pair &&
@@ -2895,18 +2902,28 @@
                     log('>> 1');
                     const symbols = bindings['...'].symbols;
                     var keys = get_names(symbols);
-                    // case of list as first argument ((x . y) ...)
+                    // case of list as first argument ((x . y) ...) or (x ... ...)
                     // we need to recursively process the list
                     // if we have pattern (_ (x y z ...) ...) and code (foo (1 2) (1 2))
                     // x an y will be arrays of [1 1] and [2 2] and z will be array
                     // of rest, x will also have it's own mapping to 1 and y to 2
                     // in case of usage outside of ellipsis list e.g.: (x y)
-                    if (expr.car instanceof Pair) {
+                    var is_spread = expr.car instanceof LSymbol &&
+                        LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol);
+                    if (expr.car instanceof Pair || is_spread) {
                         // lists is free ellipsis on pairs ((???) ...)
                         // TODO: will this work in every case? Do we need to handle
                         // nesting here?
                         if (bindings['...'].lists[0] === nil) {
                             return nil;
+                        }
+                        var new_expr = expr.car;
+                        if (is_spread) {
+                            new_expr = new Pair(
+                                expr.car,
+                                new Pair(
+                                    expr.cdr.car,
+                                    nil));
                         }
                         log('>> 2');
                         let result;
@@ -2923,9 +2940,11 @@
                                     // ellipsis decide it what should be the next value
                                     // there are two cases ((a . b) ...) and (a ...)
                                     new_bind[key] = value;
+                                    log('NEXT CALLED');
+                                    log(new_bind);
                                 };
                                 const car = transform_ellipsis_expr(
-                                    expr.car,
+                                    new_expr,
                                     bind,
                                     { nested: true },
                                     next
@@ -2933,14 +2952,22 @@
                                 // undefined can be null caused by null binding
                                 // on empty ellipsis
                                 if (car !== undefined) {
-                                    result = new Pair(
-                                        car,
-                                        result
-                                    );
+                                    if (is_spread) {
+                                        if (result === nil) {
+                                            result = car;
+                                        } else {
+                                            result = result.append(car);
+                                        }
+                                    } else {
+                                        result = new Pair(
+                                            car,
+                                            result
+                                        );
+                                    }
                                 }
                                 bind = new_bind;
                             }
-                            if (result !== nil) {
+                            if (result !== nil && !is_spread) {
                                 result = result.reverse();
                             }
                             return result;
@@ -2959,6 +2986,12 @@
                         }
                     } else if (expr.car instanceof LSymbol) {
                         log('>> 4');
+                        if (LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
+                            // case (x ... ...)
+                            log('>> 4 (a)');
+                        } else {
+                            log('>> 4 (b)');
+                        }
                         // case: (x ...)
                         let name = expr.car.__name__;
                         let bind = { [name]: symbols[name] };
@@ -2972,6 +3005,9 @@
                             const new_bind = {};
                             const next = (key, value) => {
                                 new_bind[key] = value;
+                                if (is_debug()) {
+                                    console.log({ NEWBIND: new_bind[key].toString() });
+                                }
                             };
                             const value = transform_ellipsis_expr(
                                 expr,
@@ -7446,7 +7482,7 @@
         }
     }
     // -------------------------------------------------------------------------
-    function selfEvaluated(obj) {
+    function self_evaluated(obj) {
         var type = typeof obj;
         return ['string', 'function'].includes(type) ||
             obj instanceof LSymbol ||
@@ -7607,7 +7643,7 @@
         }
         var value = macro.invoke(code, eval_args);
         return unpromise(resolvePromises(value), function ret(value) {
-            if (value && value.data || !value || selfEvaluated(value)) {
+            if (value && value.data || !value || self_evaluated(value)) {
                 return value;
             } else {
                 return unpromise(evaluate(value, eval_args), finalize);

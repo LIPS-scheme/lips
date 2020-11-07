@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 07 Nov 2020 08:38:53 +0000
+ * build: Sat, 07 Nov 2020 10:28:33 +0000
  */
 (function () {
   'use strict';
@@ -3666,12 +3666,7 @@
       };
 
       var postfix = function postfix(pair, nested) {
-        if (is_debug()) {
-          console.log({
-            ref: pair.ref,
-            nested: nested
-          });
-        }
+        if (is_debug()) ;
 
         if (!nested || pair.ref) {
           return [')'];
@@ -4685,6 +4680,7 @@
         var next = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : function () {};
         var nested = state.nested;
         log(' ==> ' + expr.toString());
+        log(bindings);
 
         if (expr instanceof LSymbol) {
           var name = expr.valueOf();
@@ -4728,6 +4724,11 @@
             var _name5 = expr.car.valueOf();
 
             var item = bindings[_name5];
+            log({
+              name: _name5,
+              bindings: bindings,
+              item: item
+            });
 
             if (item === null) {
               return;
@@ -4746,15 +4747,23 @@
 
                 if (nested) {
                   if (_cdr !== nil) {
+                    log('|| next 1');
                     next(_name5, _cdr);
                   }
 
+                  log({
+                    car: _car.toString()
+                  });
                   return _car;
                 } else {
                   if (_car.cdr !== nil) {
+                    log('|| next 2');
                     next(_name5, new Pair(_car.cdr, _cdr));
                   }
 
+                  log({
+                    car: _car.car.toString()
+                  });
                   return _car.car;
                 }
               } else if (item instanceof Array) {
@@ -4809,12 +4818,14 @@
       function get_names(object) {
         return Object.keys(object).concat(Object.getOwnPropertySymbols(object));
       }
+      /* eslint-disable complexity */
+
 
       function traverse(expr) {
         var _ref13 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             disabled = _ref13.disabled;
 
-        log('>> ' + expr.toString());
+        log('traverse>> ' + expr.toString());
 
         if (expr instanceof Pair) {
           // escape ellispsis from R7RS e.g. (... ...)
@@ -4827,19 +4838,27 @@
           if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
             log('>> 1');
             var _symbols2 = bindings['...'].symbols;
-            var keys = get_names(_symbols2); // case of list as first argument ((x . y) ...)
+            var keys = get_names(_symbols2); // case of list as first argument ((x . y) ...) or (x ... ...)
             // we need to recursively process the list
             // if we have pattern (_ (x y z ...) ...) and code (foo (1 2) (1 2))
             // x an y will be arrays of [1 1] and [2 2] and z will be array
             // of rest, x will also have it's own mapping to 1 and y to 2
             // in case of usage outside of ellipsis list e.g.: (x y)
 
-            if (expr.car instanceof Pair) {
+            var is_spread = expr.car instanceof LSymbol && LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol);
+
+            if (expr.car instanceof Pair || is_spread) {
               // lists is free ellipsis on pairs ((???) ...)
               // TODO: will this work in every case? Do we need to handle
               // nesting here?
               if (bindings['...'].lists[0] === nil) {
                 return nil;
+              }
+
+              var new_expr = expr.car;
+
+              if (is_spread) {
+                new_expr = new Pair(expr.car, new Pair(expr.cdr.car, nil));
               }
 
               log('>> 2');
@@ -4863,15 +4882,25 @@
                     // ellipsis decide it what should be the next value
                     // there are two cases ((a . b) ...) and (a ...)
                     new_bind[key] = value;
+                    log('NEXT CALLED');
+                    log(new_bind);
                   };
 
-                  var car = transform_ellipsis_expr(expr.car, _bind, {
+                  var car = transform_ellipsis_expr(new_expr, _bind, {
                     nested: true
                   }, next); // undefined can be null caused by null binding
                   // on empty ellipsis
 
                   if (car !== undefined$1) {
-                    result = new Pair(car, result);
+                    if (is_spread) {
+                      if (result === nil) {
+                        result = car;
+                      } else {
+                        result = result.append(car);
+                      }
+                    } else {
+                      result = new Pair(car, result);
+                    }
                   }
 
                   _bind = new_bind;
@@ -4883,7 +4912,7 @@
                   if (_ret === "break") break;
                 }
 
-                if (result !== nil) {
+                if (result !== nil && !is_spread) {
                   result = result.reverse();
                 }
 
@@ -4901,7 +4930,15 @@
                 return nil;
               }
             } else if (expr.car instanceof LSymbol) {
-              log('>> 4'); // case: (x ...)
+              log('>> 4');
+
+              if (LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
+                // case (x ... ...)
+                log('>> 4 (a)');
+              } else {
+                log('>> 4 (b)');
+              } // case: (x ...)
+
 
               var name = expr.car.__name__;
 
@@ -4922,6 +4959,12 @@
 
                 var next = function next(key, value) {
                   new_bind[key] = value;
+
+                  if (is_debug()) {
+                    console.log({
+                      NEWBIND: new_bind[key].toString()
+                    });
+                  }
                 };
 
                 var value = transform_ellipsis_expr(expr, _bind2, {
@@ -10219,7 +10262,7 @@
     } // -------------------------------------------------------------------------
 
 
-    function selfEvaluated(obj) {
+    function self_evaluated(obj) {
       var type = _typeof_1(obj);
 
       return ['string', 'function'].includes(type) || obj instanceof LSymbol || obj instanceof LNumber || obj instanceof LString || obj instanceof RegExp;
@@ -10479,7 +10522,7 @@
 
       var value = macro.invoke(code, eval_args);
       return unpromise(resolvePromises(value), function ret(value) {
-        if (value && value.data || !value || selfEvaluated(value)) {
+        if (value && value.data || !value || self_evaluated(value)) {
           return value;
         } else {
           return unpromise(evaluate(value, eval_args), finalize);
@@ -10985,10 +11028,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 07 Nov 2020 08:38:53 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 07 Nov 2020 10:28:33 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 07 Nov 2020 08:38:53 +0000').valueOf();
+      var date = LString('Sat, 07 Nov 2020 10:28:33 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11025,7 +11068,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 07 Nov 2020 08:38:53 +0000',
+      date: 'Sat, 07 Nov 2020 10:28:33 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

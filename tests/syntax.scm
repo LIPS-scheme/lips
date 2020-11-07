@@ -428,7 +428,7 @@
         (t.is (join_2 (1 2 3) 4) '(1 2 3 4))
         (t.is (to.throw (join_2 (1 2 3) 4 5)) #t)))
 
-(test_ "syntax-rules: double ellipsis"
+(test "syntax-rules: double ellipsis"
       (lambda (t)
 
         (define result (let-syntax
