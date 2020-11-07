@@ -1,4 +1,12 @@
-;; -*- scheme -*-
+;;   __ __                          __
+;;  / / \ \       _    _  ___  ___  \ \
+;; | |   \ \     | |  | || . \/ __>  | |
+;; | |    > \    | |_ | ||  _/\__ \  | |
+;; | |   / ^ \   |___||_||_|  <___/  | |
+;;  \_\ /_/ \_\                     /_/
+;;
+;; <https://lips.js.org>
+;;
 ;; This file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
@@ -103,9 +111,9 @@
    inside let and get let variables in closure, Useful for universal macros."
   (if (pair? first)
       (let ((name (car first)))
-        `(--> (. lips 'env)
+        `(--> lips.env
               (set ,(symbol->string name) (lambda ,(cdr first) ,@rest))))
-      `(--> (. lips 'env) (set ,(symbol->string first) ,(car rest)))))
+      `(--> lips.env (set ,(symbol->string first) ,(car rest)))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (globalize expr . rest)
@@ -170,7 +178,7 @@
 
    Function convert LIPS symbol to string."
   (if (symbol? s)
-      (let ((name (. s "name")))
+      (let ((name s.__name__))
         (if (string? name)
             name
             (--> name (toString))))))
@@ -324,8 +332,9 @@
    Function return all props on the object including those in prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
       nil
-      (append (array->list (Object.getOwnPropertyNames obj))
-              (dir (Object.getPrototypeOf obj)))))
+      (let ((names (Object.getOwnPropertyNames obj))
+            (proto (Object.getPrototypeOf obj)))
+        (append (array->list names) (dir proto)))))
 
 
 ;; ---------------------------------------------------------------------------------------

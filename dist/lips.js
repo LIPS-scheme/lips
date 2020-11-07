@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.7
+ *  \_\ /_/ \_\                     /_/ v. DEV
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 01 Nov 2020 14:54:22 +0000
+ * build: Sat, 07 Nov 2020 15:32:06 +0000
  */
 (function () {
   'use strict';
@@ -172,6 +172,24 @@
     var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
     var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
 
+    function define(obj, key, value) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+      return obj[key];
+    }
+    try {
+      // IE 8 has a broken Object.defineProperty that only works on DOM objects.
+      define({}, "");
+    } catch (err) {
+      define = function(obj, key, value) {
+        return obj[key] = value;
+      };
+    }
+
     function wrap(innerFn, outerFn, self, tryLocsList) {
       // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
       var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
@@ -242,16 +260,19 @@
       Generator.prototype = Object.create(IteratorPrototype);
     GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
     GeneratorFunctionPrototype.constructor = GeneratorFunction;
-    GeneratorFunctionPrototype[toStringTagSymbol] =
-      GeneratorFunction.displayName = "GeneratorFunction";
+    GeneratorFunction.displayName = define(
+      GeneratorFunctionPrototype,
+      toStringTagSymbol,
+      "GeneratorFunction"
+    );
 
     // Helper for defining the .next, .throw, and .return methods of the
     // Iterator interface in terms of a single ._invoke method.
     function defineIteratorMethods(prototype) {
       ["next", "throw", "return"].forEach(function(method) {
-        prototype[method] = function(arg) {
+        define(prototype, method, function(arg) {
           return this._invoke(method, arg);
-        };
+        });
       });
     }
 
@@ -270,9 +291,7 @@
         Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
       } else {
         genFun.__proto__ = GeneratorFunctionPrototype;
-        if (!(toStringTagSymbol in genFun)) {
-          genFun[toStringTagSymbol] = "GeneratorFunction";
-        }
+        define(genFun, toStringTagSymbol, "GeneratorFunction");
       }
       genFun.prototype = Object.create(Gp);
       return genFun;
@@ -542,7 +561,7 @@
     // unified ._invoke helper method.
     defineIteratorMethods(Gp);
 
-    Gp[toStringTagSymbol] = "Generator";
+    define(Gp, toStringTagSymbol, "Generator");
 
     // A Generator should always return itself as the iterator object when the
     // @@iterator function is called on it. Some browsers' implementations of the
@@ -1061,7 +1080,7 @@
   module.exports = _typeof;
   });
 
-  function _createForOfIteratorHelper(o) { if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray$1(o))) { var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var it, normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+  function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$1(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
   function _unsupportedIterableToArray$1(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$1(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen); }
 
@@ -1924,39 +1943,37 @@
           arg = tokenize(arg);
         }
 
-        this.tokens = arg;
-        this.env = env;
-        this.i = 0;
-        this._specials = specials.names();
-        this._builtin = specials.builtin;
+        this.__tokens__ = arg;
+        this.__env__ = env;
+        this.__i__ = 0;
       }
 
       createClass(Parser, [{
         key: "resolve",
         value: function resolve(name) {
-          return this.env && this.env.get(name, {
+          return this.__env__ && this.__env__.get(name, {
             throwError: false
           });
         }
       }, {
         key: "peek",
         value: function peek() {
-          return this.tokens[this.i] || Parser.EOS;
+          return this.__tokens__[this.__i__] || Parser.EOS;
         }
       }, {
         key: "skip",
         value: function skip() {
-          this.i++;
+          this.__i__++;
         }
       }, {
-        key: "specials",
-        value: function specials(token) {
-          return this._specials.includes(token);
+        key: "special",
+        value: function special(token) {
+          return specials.names().includes(token);
         }
       }, {
         key: "builtin",
         value: function builtin(token) {
-          return this._builtin.includes(token);
+          return specials.builtin.includes(token);
         }
       }, {
         key: "read",
@@ -1987,7 +2004,7 @@
                     head = nil, prev = head;
 
                   case 2:
-                    if (!(this.i < this.tokens.length)) {
+                    if (!(this.__i__ < this.__tokens__.length)) {
                       _context.next = 25;
                       break;
                     }
@@ -2082,7 +2099,7 @@
                     return _context2.abrupt("return", token);
 
                   case 3:
-                    if (!this.specials(token)) {
+                    if (!this.special(token)) {
                       _context2.next = 18;
                       break;
                     }
@@ -2111,7 +2128,7 @@
                   case 14:
                     _context2.next = 16;
                     return evaluate(expr, {
-                      env: this.env,
+                      env: this.__env__,
                       error: function error(e) {
                         throw e;
                       }
@@ -2166,11 +2183,11 @@
 
 
     function _parse() {
-      _parse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(arg, env) {
+      _parse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(arg, env) {
         var parser, result, expr;
-        return regenerator.wrap(function _callee8$(_context8) {
+        return regenerator.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context8.prev = _context8.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
                 if (!env) {
                   if (global_env) {
@@ -2187,33 +2204,33 @@
 
               case 3:
 
-                _context8.next = 6;
+                _context9.next = 6;
                 return parser.read_object();
 
               case 6:
-                expr = _context8.sent;
+                expr = _context9.sent;
 
                 if (!(expr === Parser.EOS)) {
-                  _context8.next = 9;
+                  _context9.next = 9;
                   break;
                 }
 
-                return _context8.abrupt("break", 12);
+                return _context9.abrupt("break", 12);
 
               case 9:
                 result.push(expr);
-                _context8.next = 3;
+                _context9.next = 3;
                 break;
 
               case 12:
-                return _context8.abrupt("return", result);
+                return _context9.abrupt("return", result);
 
               case 13:
               case "end":
-                return _context8.stop();
+                return _context9.stop();
             }
           }
-        }, _callee8);
+        }, _callee9);
       }));
       return _parse.apply(this, arguments);
     }
@@ -2909,31 +2926,35 @@
         return new LSymbol(name);
       }
 
-      this.name = name;
+      if (name === undefined$1) {
+        console.trace();
+      }
+
+      this.__name__ = name;
     } // ----------------------------------------------------------------------
 
 
     LSymbol.is = function (symbol, name) {
-      return symbol instanceof LSymbol && (name instanceof LSymbol && symbol.name === name.name || typeof name === 'string' && symbol.name === name || name instanceof RegExp && name.test(symbol.name));
+      return symbol instanceof LSymbol && (name instanceof LSymbol && symbol.__name__ === name.__name__ || typeof name === 'string' && symbol.__name__ === name || name instanceof RegExp && name.test(symbol.__name__));
     }; // ----------------------------------------------------------------------
 
 
     LSymbol.prototype.toJSON = LSymbol.prototype.toString = function () {
       //return '#<symbol \'' + this.name + '\'>';
-      if (isSymbol(this.name)) {
-        return this.name.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
+      if (isSymbol(this.__name__)) {
+        return this.__name__.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
       }
 
       return this.valueOf();
     };
 
     LSymbol.prototype.valueOf = function () {
-      return this.name.valueOf();
+      return this.__name__.valueOf();
     }; // -------------------------------------------------------------------------
 
 
     LSymbol.prototype.is_gensym = function () {
-      return is_gensym(this.name);
+      return is_gensym(this.__name__);
     }; // -------------------------------------------------------------------------
 
 
@@ -3178,10 +3199,10 @@
           var name = pair.car;
 
           if (name instanceof LSymbol) {
-            name = name.name;
+            name = name.__name__;
           }
 
-          if (name instanceof String) {
+          if (name instanceof LString) {
             name = name.valueOf();
           }
 
@@ -3191,7 +3212,7 @@
             cdr = cdr.toObject(literal);
           }
 
-          if (cdr instanceof LNumber || cdr instanceof LString || cdr instanceof LCharacter) {
+          if (is_native(cdr)) {
             if (!literal) {
               cdr = cdr.valueOf();
             }
@@ -3300,9 +3321,31 @@
 
     var repr = new Map(); // ----------------------------------------------------------------------
 
+    function is_plain_object(object) {
+      return object && _typeof_1(object) === 'object' && object.constructor === Object;
+    } // ----------------------------------------------------------------------
+
+
+    var props = Object.getOwnPropertyNames(Array.prototype);
+    var array_methods = [];
+    props.forEach(function (x) {
+      array_methods.push(Array[x], Array.prototype[x]);
+    }); // ----------------------------------------------------------------------
+
+    function is_array_method(x) {
+      x = unbind(x);
+      return array_methods.includes(x);
+    } // ----------------------------------------------------------------------
+
+
+    function lips_function(x) {
+      return typeof x === 'function' && (x.__lambda__ || x.__doc__);
+    } // ----------------------------------------------------------------------
+
+
     function user_repr(obj) {
       var constructor = obj.constructor || Object;
-      var plain_object = _typeof_1(obj) === 'object' && constructor === Object;
+      var plain_object = is_plain_object(obj);
       var fn;
 
       if (repr.has(constructor)) {
@@ -3347,16 +3390,18 @@
           result[name] = toString(obj[key]);
         });
 
-        var props = Object.getOwnPropertyNames(obj);
-        props.forEach(function (key) {
+        var _props = Object.getOwnPropertyNames(obj);
+
+        _props.forEach(function (key) {
           var o = obj[key];
 
-          if (_typeof_1(o) === 'object' && o.constructor === Object) {
+          if (o && _typeof_1(o) === 'object' && o.constructor === Object) {
             result[key] = symbolize(o);
           } else {
             result[key] = toString(o);
           }
         });
+
         return result;
       }
 
@@ -3376,6 +3421,10 @@
 
       if (str_mapping.has(obj)) {
         return str_mapping.get(obj);
+      }
+
+      if (obj instanceof Error) {
+        return obj.message;
       }
 
       if (obj instanceof Pair) {
@@ -3455,8 +3504,8 @@
 
         var name;
 
-        if (typeof constructor.__className === 'string') {
-          name = constructor.__className;
+        if (typeof constructor.__class__ === 'string') {
+          name = constructor.__class__;
         } else {
           if (is_prototype(obj)) {
             return '#<prototype>';
@@ -3617,12 +3666,7 @@
       };
 
       var postfix = function postfix(pair, nested) {
-        if (is_debug()) {
-          console.log({
-            ref: pair.ref,
-            nested: nested
-          });
-        }
+        if (is_debug()) ;
 
         if (!nested || pair.ref) {
           return [')'];
@@ -3823,9 +3867,9 @@
       } else if (x instanceof LNumber && y instanceof LNumber) {
         var _type3;
 
-        if (x.type === y.type) {
-          if (x.type === 'complex') {
-            _type3 = x.im.type === y.im.type && x.re.type === y.re.type;
+        if (x.__type__ === y.__type__) {
+          if (x.__type__ === 'complex') {
+            _type3 = x.im.__type__ === y.im.__type__ && x.re.__type__ === y.re.__type__;
           } else {
             _type3 = true;
           }
@@ -3837,11 +3881,11 @@
       } else if (typeof x === 'number' || typeof y === 'number') {
         x = LNumber(x);
         y = LNumber(y);
-        return x.type === y.type && x.cmp(y) === 0;
+        return x.__type__ === y.__type__ && x.cmp(y) === 0;
       } else if (x instanceof LCharacter && y instanceof LCharacter) {
-        return x["char"] === y["char"];
+        return x.__char__ === y.__char__;
       } else if (x instanceof LSymbol && y instanceof LSymbol) {
-        return x.name === y.name;
+        return x.__name__ === y.__name__;
       } else {
         return x === y;
       }
@@ -3914,7 +3958,7 @@
 
     Macro.defmacro = function (name, fn, doc, dump) {
       var macro = new Macro(name, fn, doc, dump);
-      macro.defmacro = true;
+      macro.__defmacro__ = true;
       return macro;
     }; // ----------------------------------------------------------------------
 
@@ -3978,14 +4022,16 @@
                                 throwError: false
                               });
 
-                              if (!(value instanceof Macro && value.defmacro)) {
+                              if (!(value instanceof Macro && value.__defmacro__)) {
                                 _context3.next = 24;
                                 break;
                               }
 
                               code = value instanceof Syntax ? node : node.cdr;
                               _context3.next = 8;
-                              return value.invoke(code, args, true);
+                              return value.invoke(code, _objectSpread(_objectSpread({}, args), {}, {
+                                env: env
+                              }), true);
 
                             case 8:
                               result = _context3.sent;
@@ -4010,7 +4056,10 @@
                               return _context3.abrupt("return", expr);
 
                             case 14:
-                              n = n - 1;
+                              if (n !== -1) {
+                                n = n - 1;
+                              }
+
                               return _context3.abrupt("return", traverse(expr, n, scope));
 
                             case 16:
@@ -4038,7 +4087,10 @@
                               return _context3.abrupt("return", result);
 
                             case 22:
-                              n = n - 1;
+                              if (n !== -1) {
+                                n = n - 1;
+                              }
+
                               return _context3.abrupt("return", traverse(result, n, env));
 
                             case 24:
@@ -4090,29 +4142,43 @@
 
                   env = args['env'] = this;
 
-                  if (!single) {
-                    _context4.next = 11;
+                  if (!(code.cdr instanceof Pair && LNumber.isNumber(code.cdr.car))) {
+                    _context4.next = 9;
                     break;
                   }
 
                   _context4.t0 = quote;
                   _context4.next = 7;
-                  return traverse(code, 1, env);
+                  return traverse(code, code.cdr.car.valueOf(), env);
 
                 case 7:
                   _context4.t1 = _context4.sent.car;
                   return _context4.abrupt("return", (0, _context4.t0)(_context4.t1));
 
-                case 11:
-                  _context4.t2 = quote;
-                  _context4.next = 14;
-                  return traverse(code, -1, env);
+                case 9:
+                  if (!single) {
+                    _context4.next = 15;
+                    break;
+                  }
 
-                case 14:
+                  _context4.t2 = quote;
+                  _context4.next = 13;
+                  return traverse(code, 1, env);
+
+                case 13:
                   _context4.t3 = _context4.sent.car;
                   return _context4.abrupt("return", (0, _context4.t2)(_context4.t3));
 
-                case 16:
+                case 15:
+                  _context4.t4 = quote;
+                  _context4.next = 18;
+                  return traverse(code, -1, env);
+
+                case 18:
+                  _context4.t5 = _context4.sent.car;
+                  return _context4.abrupt("return", (0, _context4.t4)(_context4.t5));
+
+                case 20:
                 case "end":
                   return _context4.stop();
               }
@@ -4130,13 +4196,13 @@
 
 
     function Syntax(fn, env) {
-      this.env = env;
+      this.__env__ = env;
       this.__fn__ = fn; // allow macroexpand
 
-      this.defmacro = true;
+      this.__defmacro__ = true;
     }
 
-    Syntax.merge_env = Symbol["for"]('merge'); // ----------------------------------------------------------------------
+    Syntax.__merge_env__ = Symbol["for"]('merge'); // ----------------------------------------------------------------------
 
     Syntax.prototype = Object.create(Macro.prototype);
 
@@ -4146,7 +4212,7 @@
       var args = {
         error: error,
         env: env,
-        dynamic_scope: this.env,
+        dynamic_scope: this.__env__,
         macro_expand: macro_expand
       };
       return this.__fn__.call(env, code, args, this.__name__ || 'syntax');
@@ -4277,7 +4343,7 @@
           }
 
           if (pattern.car instanceof LSymbol) {
-            var _name2 = pattern.car.name;
+            var _name2 = pattern.car.__name__;
 
             if (bindings['...'].symbols[_name2] && !pattern_names.includes(_name2) && !ellipsis) {
               throw new Error('syntax: named ellipsis can only appear onces');
@@ -4365,7 +4431,7 @@
           }
 
           log('>> 11');
-          var _name3 = pattern.name;
+          var _name3 = pattern.__name__;
 
           if (symbols.includes(_name3)) {
             return true;
@@ -4404,6 +4470,12 @@
             var rest_pattern = pattern.car instanceof LSymbol && pattern.cdr instanceof LSymbol;
 
             if (rest_pattern) {
+              // fix for SRFI-26 in recursive call of (b) ==> (<> . x)
+              // where <> is symbol
+              if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
+                return false;
+              }
+
               log('>> 12 | 1');
 
               var _name4 = pattern.cdr.valueOf();
@@ -4608,6 +4680,7 @@
         var next = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : function () {};
         var nested = state.nested;
         log(' ==> ' + expr.toString());
+        log(bindings);
 
         if (expr instanceof LSymbol) {
           var name = expr.valueOf();
@@ -4651,6 +4724,11 @@
             var _name5 = expr.car.valueOf();
 
             var item = bindings[_name5];
+            log({
+              name: _name5,
+              bindings: bindings,
+              item: item
+            });
 
             if (item === null) {
               return;
@@ -4669,15 +4747,23 @@
 
                 if (nested) {
                   if (_cdr !== nil) {
+                    log('|| next 1');
                     next(_name5, _cdr);
                   }
 
+                  log({
+                    car: _car.toString()
+                  });
                   return _car;
                 } else {
                   if (_car.cdr !== nil) {
+                    log('|| next 2');
                     next(_name5, new Pair(_car.cdr, _cdr));
                   }
 
+                  log({
+                    car: _car.car.toString()
+                  });
                   return _car.car;
                 }
               } else if (item instanceof Array) {
@@ -4732,12 +4818,14 @@
       function get_names(object) {
         return Object.keys(object).concat(Object.getOwnPropertySymbols(object));
       }
+      /* eslint-disable complexity */
+
 
       function traverse(expr) {
         var _ref13 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             disabled = _ref13.disabled;
 
-        log('>> ' + expr.toString());
+        log('traverse>> ' + expr.toString());
 
         if (expr instanceof Pair) {
           // escape ellispsis from R7RS e.g. (... ...)
@@ -4750,19 +4838,27 @@
           if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
             log('>> 1');
             var _symbols2 = bindings['...'].symbols;
-            var keys = get_names(_symbols2); // case of list as first argument ((x . y) ...)
+            var keys = get_names(_symbols2); // case of list as first argument ((x . y) ...) or (x ... ...)
             // we need to recursively process the list
             // if we have pattern (_ (x y z ...) ...) and code (foo (1 2) (1 2))
             // x an y will be arrays of [1 1] and [2 2] and z will be array
             // of rest, x will also have it's own mapping to 1 and y to 2
             // in case of usage outside of ellipsis list e.g.: (x y)
 
-            if (expr.car instanceof Pair) {
+            var is_spread = expr.car instanceof LSymbol && LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol);
+
+            if (expr.car instanceof Pair || is_spread) {
               // lists is free ellipsis on pairs ((???) ...)
               // TODO: will this work in every case? Do we need to handle
               // nesting here?
               if (bindings['...'].lists[0] === nil) {
                 return nil;
+              }
+
+              var new_expr = expr.car;
+
+              if (is_spread) {
+                new_expr = new Pair(expr.car, new Pair(expr.cdr.car, nil));
               }
 
               log('>> 2');
@@ -4786,15 +4882,25 @@
                     // ellipsis decide it what should be the next value
                     // there are two cases ((a . b) ...) and (a ...)
                     new_bind[key] = value;
+                    log('NEXT CALLED');
+                    log(new_bind);
                   };
 
-                  var car = transform_ellipsis_expr(expr.car, _bind, {
+                  var car = transform_ellipsis_expr(new_expr, _bind, {
                     nested: true
                   }, next); // undefined can be null caused by null binding
                   // on empty ellipsis
 
                   if (car !== undefined$1) {
-                    result = new Pair(car, result);
+                    if (is_spread) {
+                      if (result === nil) {
+                        result = car;
+                      } else {
+                        result = result.append(car);
+                      }
+                    } else {
+                      result = new Pair(car, result);
+                    }
                   }
 
                   _bind = new_bind;
@@ -4806,7 +4912,7 @@
                   if (_ret === "break") break;
                 }
 
-                if (result !== nil) {
+                if (result !== nil && !is_spread) {
                   result = result.reverse();
                 }
 
@@ -4824,9 +4930,17 @@
                 return nil;
               }
             } else if (expr.car instanceof LSymbol) {
-              log('>> 4'); // case: (x ...)
+              log('>> 4');
 
-              var name = expr.car.name;
+              if (LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
+                // case (x ... ...)
+                log('>> 4 (a)');
+              } else {
+                log('>> 4 (b)');
+              } // case: (x ...)
+
+
+              var name = expr.car.__name__;
 
               var _bind2 = defineProperty({}, name, _symbols2[name]);
 
@@ -4845,6 +4959,12 @@
 
                 var next = function next(key, value) {
                   new_bind[key] = value;
+
+                  if (is_debug()) {
+                    console.log({
+                      NEWBIND: new_bind[key].toString()
+                    });
+                  }
                 };
 
                 var value = transform_ellipsis_expr(expr, _bind2, {
@@ -4937,6 +5057,8 @@
 
 
     function box(object) {
+      // we only need to box lips data, arrays and object don't need
+      // to be boxed, values from objects will be boxed when accessed
       switch (_typeof_1(object)) {
         case 'string':
           return LString(object);
@@ -4952,16 +5074,41 @@
     } // ----------------------------------------------------------------------
 
 
-    function unbox(obj) {
+    function map_object(object, fn) {
+      var props = Object.getOwnPropertyNames(object);
+      var symbols = Object.getOwnPropertySymbols(object);
+      props.concat(symbols).forEach(function (key) {
+        var value = fn(object[key]); // check if property is read only, happen with webpack
+        // and __esModule, it can happen for other properties as well
+
+        var descriptor = Object.getOwnPropertyDescriptor(object, key);
+
+        if (!descriptor || descriptor.writable && object[key] !== value) {
+          object[key] = value;
+        }
+      });
+      return object;
+    } // ----------------------------------------------------------------------
+
+
+    function unbox(object) {
       var lips_type = [LString, LCharacter, LNumber].some(function (x) {
-        return obj instanceof x;
+        return object instanceof x;
       });
 
       if (lips_type) {
-        return obj.valueOf();
+        return object.valueOf();
       }
 
-      return obj;
+      if (object instanceof Array) {
+        return object.map(unbox);
+      }
+
+      if (is_plain_object(object)) {
+        return map_object(object, unbox);
+      }
+
+      return object;
     } // ----------------------------------------------------------------------
 
 
@@ -5024,6 +5171,15 @@
 
       return bound;
     } // ----------------------------------------------------------------------
+    // function used to check if function should not get unboxed arguments,
+    // so you can call Object.getPrototypeOf for lips data types
+    // this is case, see dir function and #73
+    // ----------------------------------------------------------------------
+
+
+    function is_object_bound(obj) {
+      return is_bound(obj) && obj[Symbol["for"]('__context__')] === Object;
+    } // ----------------------------------------------------------------------
 
 
     function is_bound(obj) {
@@ -5035,7 +5191,7 @@
       if (typeof obj === 'function') {
         var context = obj[__context__];
 
-        if (context && (context === lips || context.constructor && context.constructor.__className)) {
+        if (context && (context === lips || context.constructor && context.constructor.__class__)) {
           return true;
         }
       }
@@ -5494,45 +5650,45 @@
         // this is name
         chr = chr.toLowerCase();
 
-        if (LCharacter.names[chr]) {
-          this.name = chr;
-          this["char"] = LCharacter.names[chr];
+        if (LCharacter.__names__[chr]) {
+          this.__name__ = chr;
+          this.__char__ = LCharacter.__names__[chr];
         } else {
           // this should never happen
           // parser don't alow not defined named characters
           throw new Error('Internal: Unknown named character');
         }
       } else {
-        this["char"] = chr;
-        var name = LCharacter.rev_names[chr];
+        this.__char__ = chr;
+        var name = LCharacter.__rev_names__[chr];
 
         if (name) {
-          this.name = name;
+          this.__name__ = name;
         }
       }
     }
 
-    LCharacter.names = characters;
-    LCharacter.rev_names = {};
-    Object.keys(LCharacter.names).forEach(function (key) {
-      var value = LCharacter.names[key];
-      LCharacter.rev_names[value] = key;
+    LCharacter.__names__ = characters;
+    LCharacter.__rev_names__ = {};
+    Object.keys(LCharacter.__names__).forEach(function (key) {
+      var value = LCharacter.__names__[key];
+      LCharacter.__rev_names__[value] = key;
     });
 
     LCharacter.prototype.toUpperCase = function () {
-      return LCharacter(this["char"].toUpperCase());
+      return LCharacter(this.__char__.toUpperCase());
     };
 
     LCharacter.prototype.toLowerCase = function () {
-      return LCharacter(this["char"].toLowerCase());
+      return LCharacter(this.__char__.toLowerCase());
     };
 
     LCharacter.prototype.toString = function () {
-      return '#\\' + (this.name || this["char"]);
+      return '#\\' + (this.__name__ || this.__char__);
     };
 
     LCharacter.prototype.valueOf = function () {
-      return this["char"];
+      return this.__char__;
     }; // -------------------------------------------------------------------------
     // :: String wrapper that handle copy and in place change
     // -------------------------------------------------------------------------
@@ -5549,7 +5705,7 @@
           return x.toString();
         }).join('');
       } else {
-        this._string = string;
+        this._string = string.valueOf();
       }
     }
 
@@ -5617,7 +5773,7 @@
 
     LString.prototype.set = function (n, _char2) {
       if (_char2 instanceof LCharacter) {
-        _char2 = _char2["char"];
+        _char2 = _char2.__char__;
       }
 
       var string = [];
@@ -5846,7 +6002,7 @@
 
       this.im = im;
       this.re = re;
-      this.type = 'complex';
+      this.__type__ = 'complex';
     } // -------------------------------------------------------------------------
 
 
@@ -6094,7 +6250,7 @@
 
       if (typeof n === 'number') {
         this.value = n;
-        this.type = 'float';
+        this.__type__ = 'float';
       }
     } // -------------------------------------------------------------------------
 
@@ -6233,7 +6389,7 @@
 
       this.num = num;
       this.denom = denom;
-      this.type = 'rational';
+      this.__type__ = 'rational';
     } // -------------------------------------------------------------------------
 
 
@@ -6503,7 +6659,7 @@
 
       this.value = n;
       this._native = _native2;
-      this.type = 'bigint';
+      this.__type__ = 'bigint';
     } // -------------------------------------------------------------------------
 
 
@@ -6771,11 +6927,11 @@
           rational: i,
           complex: function complex(a, b) {
             return [{
-              im: coerce(a.type, b.im.type, 0),
-              re: coerce(a.type, b.re.type, a)
+              im: coerce(a.__type__, b.im.__type__, 0),
+              re: coerce(a.__type__, b.re.__type__, a)
             }, {
-              im: coerce(a.type, b.im.type, b.im),
-              re: coerce(a.type, b.re.type, b.re)
+              im: coerce(a.__type__, b.im.__type__, b.im),
+              re: coerce(a.__type__, b.re.__type__, b.re)
             }];
           }
         }
@@ -6784,11 +6940,11 @@
       function complex(type) {
         return function (a, b) {
           return [{
-            im: coerce(type, a.im.type, a.im),
-            re: coerce(type, a.re.type, a.re)
+            im: coerce(type, a.im.__type__, a.im),
+            re: coerce(type, a.re.__type__, a.re)
           }, {
-            im: coerce(type, a.im.type, 0),
-            re: coerce(type, b.type, b)
+            im: coerce(type, a.im.__type__, 0),
+            re: coerce(type, b.__type__, b)
           }];
         };
       }
@@ -6839,7 +6995,7 @@
 
     LNumber.getType = function (n) {
       if (n instanceof LNumber) {
-        return n.type;
+        return n.__type__;
       }
 
       if (LNumber.isFloat(n)) {
@@ -7040,7 +7196,7 @@
         }
       }
 
-      if (a.type === 'bigint') {
+      if (a.__type__ === 'bigint') {
         if (LNumber.isNative(a.value)) {
           return cmp(a, b);
         } else if (LNumber.isBN(a.value)) {
@@ -7221,9 +7377,10 @@
         name = 'anonymous';
       }
 
-      this.env = user_env.inherit(name, obj);
+      this.__env__ = user_env.inherit(name, obj);
       var defaults_name = '**interaction-environment-defaults**';
-      this.env.set(defaults_name, get_props(obj).concat(defaults_name));
+
+      this.__env__.set(defaults_name, get_props(obj).concat(defaults_name));
     } // -------------------------------------------------------------------------
 
 
@@ -7234,10 +7391,10 @@
       typecheck('Intepreter::exec', dynamic, 'boolean', 2); // simple solution to overwrite this variable in each interpreter
       // before evaluation of user code
 
-      global_env.set('**interaction-environment**', this.env);
+      global_env.set('**interaction-environment**', this.__env__);
 
       if (env === null) {
-        env = this.env;
+        env = this.__env__;
       }
 
       return exec(code, env, dynamic ? env : false);
@@ -7245,12 +7402,18 @@
 
 
     Interpreter.prototype.get = function (value) {
-      return this.env.get(value).bind(this.env);
+      var result = this.__env__.get(value);
+
+      if (typeof result === 'function') {
+        return result.bind(this.__env__);
+      }
+
+      return result;
     }; // -------------------------------------------------------------------------
 
 
     Interpreter.prototype.set = function (name, value) {
-      return this.env.set(name, value);
+      return this.__env__.set(name, value);
     }; // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
     // -------------------------------------------------------------------------
@@ -7260,7 +7423,7 @@
       if (arguments.length === 1) {
         if (_typeof_1(arguments[0]) === 'object') {
           obj = arguments[0];
-          this.parent = null;
+          parent = null;
         } else if (typeof arguments[0] === 'string') {
           obj = {};
           parent = {};
@@ -7268,15 +7431,15 @@
         }
       }
 
-      this.docs = new Map();
-      this.env = obj;
-      this.parent = parent;
-      this.name = name || 'anonymous';
+      this.__docs__ = new Map();
+      this.__env__ = obj;
+      this.__parent__ = parent;
+      this.__name__ = name || 'anonymous';
     } // -------------------------------------------------------------------------
 
 
     Environment.prototype.list = function () {
-      return get_props(this.env);
+      return get_props(this.__env__);
     }; // -------------------------------------------------------------------------
 
 
@@ -7289,7 +7452,7 @@
         name = name.valueOf();
       }
 
-      delete this.env[name];
+      delete this.__env__[name];
     }; // -------------------------------------------------------------------------
 
 
@@ -7301,7 +7464,7 @@
       }
 
       if (!name || _typeof_1(name) === "object") {
-        name = 'child of ' + (this.name || 'unknown');
+        name = 'child of ' + (this.__name__ || 'unknown');
       }
 
       return new Environment(obj || {}, this, name);
@@ -7314,7 +7477,7 @@
       var value = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
 
       if (name instanceof LSymbol) {
-        name = name.name;
+        name = name.__name__;
       }
 
       if (name instanceof LString) {
@@ -7322,27 +7485,31 @@
       }
 
       if (value) {
-        this.docs.set(name, value);
+        this.__docs__.set(name, value);
+
         return this;
       }
 
-      if (this.docs.has(name)) {
-        return this.docs.get(name);
+      if (this.__docs__.has(name)) {
+        return this.__docs__.get(name);
       }
 
-      if (this.parent) {
-        return this.parent.doc(name);
+      if (this.__parent__) {
+        return this.__parent__.doc(name);
       }
     }; // -------------------------------------------------------------------------
     // :: function create frame environment for usage in functions
+    // :: frames are used to it's easier to find environments of the functions
+    // :: in scope chain, they are dummy environments just for lookup
     // -------------------------------------------------------------------------
 
 
     Environment.prototype.newFrame = function (fn, args) {
       var frame = this.inherit('__frame__');
-      frame.set('parent.frame', doc(function () {
+      frame.set('parent.frame', doc('parent.frame', function () {
         var n = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : 1;
-        var scope = frame.parent;
+        n = n.valueOf();
+        var scope = frame.__parent__;
 
         if (!(scope instanceof Environment)) {
           return nil;
@@ -7354,7 +7521,7 @@
 
         var parent_frame = scope.get('parent.frame');
         return parent_frame(n - 1);
-      }, global_env.env['parent.frame'].__doc__), 'parent.frame');
+      }, global_env.__env__['parent.frame'].__doc__));
       args.callee = fn;
       frame.set('arguments', args);
       return frame;
@@ -7363,25 +7530,25 @@
 
     Environment.prototype._lookup = function (symbol) {
       if (symbol instanceof LSymbol) {
-        symbol = symbol.name;
+        symbol = symbol.__name__;
       }
 
       if (symbol instanceof LString) {
         symbol = symbol.valueOf();
       }
 
-      if (this.env.hasOwnProperty(symbol)) {
-        return Value(this.env[symbol]);
+      if (this.__env__.hasOwnProperty(symbol)) {
+        return Value(this.__env__[symbol]);
       }
 
-      if (this.parent) {
-        return this.parent._lookup(symbol);
+      if (this.__parent__) {
+        return this.__parent__._lookup(symbol);
       }
     }; // -------------------------------------------------------------------------
 
 
     Environment.prototype.toString = function () {
-      return '#<env:' + this.name + '>';
+      return '#<env:' + this.__name__ + '>';
     }; // -------------------------------------------------------------------------
 
 
@@ -7389,17 +7556,19 @@
       var _this3 = this;
 
       // duplicate refs
-      var env = {};
-      Object.keys(this.env).forEach(function (key) {
-        env[key] = _this3.env[key];
+      var env = {}; // TODO: duplicated Symbols
+
+      Object.keys(this.__env__).forEach(function (key) {
+        env[key] = _this3.__env__[key];
       });
-      return new Environment(env, this.parent, this.name);
-    };
+      return new Environment(env, this.__parent__, this.__name__);
+    }; // -------------------------------------------------------------------------
+
 
     Environment.prototype.merge = function (env) {
       var name = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : 'merge';
       typecheck('Environment::merge', env, 'environment');
-      return this.inherit(name, env.env);
+      return this.inherit(name, env.__env__);
     }; // -------------------------------------------------------------------------
     // value returned in lookup if found value in env
     // -------------------------------------------------------------------------
@@ -7437,17 +7606,17 @@
         return new Values(values);
       }
 
-      this.values = values;
+      this.__values__ = values;
     }
 
     Values.prototype.toString = function () {
-      return this.values.map(function (x) {
+      return this.__values__.map(function (x) {
         return toString(x);
       }).join('\n');
     };
 
     Values.prototype.valueOf = function () {
-      return this.values;
+      return this.__values__;
     }; // -------------------------------------------------------------------------
 
 
@@ -7525,14 +7694,14 @@
       }
 
       if (name instanceof LSymbol) {
-        name = name.name;
+        name = name.__name__;
       }
 
       if (name instanceof LString) {
         name = name.valueOf();
       }
 
-      this.env[name] = value;
+      this.__env__[name] = value;
 
       if (doc) {
         this.doc(name, doc);
@@ -7543,7 +7712,7 @@
 
 
     Environment.prototype.has = function (name) {
-      return this.env.hasOwnProperty(name);
+      return this.__env__.hasOwnProperty(name);
     }; // -------------------------------------------------------------------------
 
 
@@ -7559,7 +7728,7 @@
           return env;
         }
 
-        env = env.parent;
+        env = env.__parent__;
       }
     }; // -------------------------------------------------------------------------
 
@@ -7570,7 +7739,7 @@
 
       while (env) {
         result.unshift(env);
-        env = env.parent;
+        env = env.__parent__;
       }
 
       return result;
@@ -7796,7 +7965,8 @@
           port = this.get('stdout');
         }
 
-        port.write.call(this, this.get('repr')(arg));
+        var value = this.get('repr')(arg);
+        port.write.call(this, value);
       }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
       // ------------------------------------------------------------------
       error: doc(function error() {
@@ -7804,7 +7974,8 @@
           args[_key17] = arguments[_key17];
         }
 
-        this.get('display').apply(this, args);
+        this.get('display').call(this, args.map(toString).join(''));
+        this.get('newline').call(this);
       }, "(error . args)\n\n            Display error message."),
       // ------------------------------------------------------------------
       '%same-functions': doc('%same-functions', function (a, b) {
@@ -7948,7 +8119,7 @@
         }
 
         var symbol = code.car.valueOf();
-        ref = this.ref(code.car.name); // we don't return value because we only care about sync of set value
+        ref = this.ref(code.car.__name__); // we don't return value because we only care about sync of set value
         // when value is a promise
 
         return unpromise(value, function (value) {
@@ -7986,7 +8157,7 @@
         var ref = this.ref(symbol);
 
         if (ref) {
-          delete ref.env[symbol.name];
+          delete ref.__env__[symbol.__name__];
         }
       }), "(unset! name)\n\n            Function delete specified name from environment."),
       // ------------------------------------------------------------------
@@ -8010,8 +8181,8 @@
         typecheck('load', file, 'string');
         var g_env = this;
 
-        if (g_env.name === '__frame__') {
-          g_env = g_env.parent;
+        if (g_env.__name__ === '__frame__') {
+          g_env = g_env.__parent__;
         }
 
         var env;
@@ -8076,12 +8247,12 @@
       }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
       // ------------------------------------------------------------------
       'do': doc(new Macro('do', /*#__PURE__*/function () {
-        var _ref18 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(code, _ref19) {
-          var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _node3, next, _item, value;
+        var _ref18 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(code, _ref19) {
+          var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _loop3;
 
-          return regenerator.wrap(function _callee6$(_context6) {
+          return regenerator.wrap(function _callee7$(_context7) {
             while (1) {
-              switch (_context6.prev = _context6.next) {
+              switch (_context7.prev = _context7.next) {
                 case 0:
                   dynamic_scope = _ref19.dynamic_scope, error = _ref19.error;
                   self = this;
@@ -8108,23 +8279,23 @@
 
                 case 10:
                   if (!(node !== nil)) {
-                    _context6.next = 21;
+                    _context7.next = 21;
                     break;
                   }
 
                   item = node.car;
-                  _context6.t0 = scope;
-                  _context6.t1 = item.car;
-                  _context6.next = 16;
+                  _context7.t0 = scope;
+                  _context7.t1 = item.car;
+                  _context7.next = 16;
                   return evaluate(item.cdr.car, eval_args);
 
                 case 16:
-                  _context6.t2 = _context6.sent;
+                  _context7.t2 = _context7.sent;
 
-                  _context6.t0.set.call(_context6.t0, _context6.t1, _context6.t2);
+                  _context7.t0.set.call(_context7.t0, _context7.t1, _context7.t2);
 
                   node = node.cdr;
-                  _context6.next = 10;
+                  _context7.next = 10;
                   break;
 
                 case 21:
@@ -8133,83 +8304,98 @@
                     dynamic_scope: dynamic_scope,
                     error: error
                   };
+                  _loop3 = /*#__PURE__*/regenerator.mark(function _callee6() {
+                    var node, next, _item, value, symbols;
 
-                case 22:
-                  _context6.next = 24;
+                    return regenerator.wrap(function _callee6$(_context6) {
+                      while (1) {
+                        switch (_context6.prev = _context6.next) {
+                          case 0:
+                            if (!(body !== nil)) {
+                              _context6.next = 3;
+                              break;
+                            }
+
+                            _context6.next = 3;
+                            return lips.evaluate(body, eval_args);
+
+                          case 3:
+                            node = vars;
+                            next = {};
+
+                          case 5:
+                            if (!(node !== nil)) {
+                              _context6.next = 15;
+                              break;
+                            }
+
+                            _item = node.car;
+
+                            if (!(_item.cdr.cdr !== nil)) {
+                              _context6.next = 12;
+                              break;
+                            }
+
+                            _context6.next = 10;
+                            return evaluate(_item.cdr.cdr.car, eval_args);
+
+                          case 10:
+                            value = _context6.sent;
+                            next[_item.car.valueOf()] = value;
+
+                          case 12:
+                            node = node.cdr;
+                            _context6.next = 5;
+                            break;
+
+                          case 15:
+                            symbols = Object.getOwnPropertySymbols(next);
+                            Object.keys(next).concat(symbols).forEach(function (key) {
+                              scope.set(key, next[key]);
+                            });
+
+                          case 17:
+                          case "end":
+                            return _context6.stop();
+                        }
+                      }
+                    }, _callee6);
+                  });
+
+                case 23:
+                  _context7.next = 25;
                   return evaluate(test.car, eval_args);
 
-                case 24:
-                  if (_context6.sent) {
-                    _context6.next = 43;
+                case 25:
+                  if (_context7.sent) {
+                    _context7.next = 29;
                     break;
                   }
 
-                  if (!(body !== nil)) {
-                    _context6.next = 28;
-                    break;
-                  }
+                  return _context7.delegateYield(_loop3(), "t3", 27);
 
-                  _context6.next = 28;
-                  return lips.evaluate(body, eval_args);
-
-                case 28:
-                  _node3 = vars;
-                  next = {};
-
-                case 30:
-                  if (!(_node3 !== nil)) {
-                    _context6.next = 40;
-                    break;
-                  }
-
-                  _item = _node3.car;
-
-                  if (!(_item.cdr.cdr !== nil)) {
-                    _context6.next = 37;
-                    break;
-                  }
-
-                  _context6.next = 35;
-                  return evaluate(_item.cdr.cdr.car, eval_args);
-
-                case 35:
-                  value = _context6.sent;
-                  next[_item.car.valueOf()] = value;
-
-                case 37:
-                  _node3 = _node3.cdr;
-                  _context6.next = 30;
+                case 27:
+                  _context7.next = 23;
                   break;
 
-                case 40:
-                  Object.entries(next).forEach(function (_ref20) {
-                    var _ref21 = slicedToArray(_ref20, 2),
-                        key = _ref21[0],
-                        value = _ref21[1];
-
-                    scope.set(key, value);
-                  });
-                  _context6.next = 22;
-                  break;
-
-                case 43:
+                case 29:
                   if (!(test.cdr !== nil)) {
-                    _context6.next = 47;
+                    _context7.next = 33;
                     break;
                   }
 
-                  _context6.next = 46;
+                  _context7.next = 32;
                   return evaluate(test.cdr.car, eval_args);
 
-                case 46:
-                  return _context6.abrupt("return", _context6.sent);
+                case 32:
+                  return _context7.abrupt("return", _context7.sent);
 
-                case 47:
+                case 33:
                 case "end":
-                  return _context6.stop();
+                  return _context7.stop();
               }
             }
-          }, _callee6, this);
+          }, _callee7, this);
         }));
 
         return function (_x9, _x10) {
@@ -8217,9 +8403,9 @@
         };
       }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
       // ------------------------------------------------------------------
-      'if': doc(new Macro('if', function (code, _ref22) {
-        var dynamic_scope = _ref22.dynamic_scope,
-            error = _ref22.error;
+      'if': doc(new Macro('if', function (code, _ref20) {
+        var dynamic_scope = _ref20.dynamic_scope,
+            error = _ref20.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -8312,9 +8498,9 @@
         }();
       }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
       // ------------------------------------------------------------------
-      'ignore': new Macro('ignore', function (code, _ref23) {
-        var dynamic_scope = _ref23.dynamic_scope,
-            error = _ref23.error;
+      'ignore': new Macro('ignore', function (code, _ref21) {
+        var dynamic_scope = _ref21.dynamic_scope,
+            error = _ref21.error;
         var args = {
           env: this,
           error: error
@@ -8355,8 +8541,8 @@
 
         typecheck('define', code.car, 'symbol');
         return unpromise(value, function (value) {
-          if (env.name === Syntax.merge_env) {
-            env = env.parent;
+          if (env.__name__ === Syntax.__merge_env__) {
+            env = env.__parent__;
           }
 
           if (new_expr && (typeof value === 'function' && value.__lambda__ || value instanceof Syntax)) {
@@ -8393,7 +8579,7 @@
         } else if (is_prototype(obj) && typeof value === 'function') {
           obj[key] = unbind(value);
           obj[key].__prototype__ = true;
-        } else if (typeof value === 'function') {
+        } else if (typeof value === 'function' || is_native(value)) {
           obj[key] = value;
         } else {
           obj[key] = value ? value.valueOf() : value;
@@ -8425,8 +8611,8 @@
       }, "(call-with-values producer consumer)\n\n            Calls its producer argument with no values and a continuation that,\n            when passed some values, calls the consumer procedure with those\n            values as arguments."),
       // ------------------------------------------------------------------
       'current-environment': doc('current-environment', function () {
-        if (this.name === '__frame__') {
-          return this.parent;
+        if (this.__name__ === '__frame__') {
+          return this.__parent__;
         }
 
         return this;
@@ -8474,9 +8660,9 @@
       }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
       // ------------------------------------------------------------------
       lambda: new Macro('lambda', function (code) {
-        var _ref24 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref24.dynamic_scope,
-            error = _ref24.error;
+        var _ref22 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref22.dynamic_scope,
+            error = _ref22.error;
 
         var self = this;
 
@@ -8535,11 +8721,11 @@
                 if (name instanceof LSymbol) {
                   // rest argument,  can also be first argument
                   value = quote(Pair.fromArray(args.slice(i), false));
-                  env.env[name.name] = value;
+                  env.__env__[name.__name__] = value;
                   break;
                 } else {
                   value = args[i];
-                  env.env[name.car.name] = value;
+                  env.__env__[name.car.__name__] = value;
                 }
               }
 
@@ -8579,12 +8765,12 @@
       'macroexpand': new Macro('macroexpand', macro_expand()),
       'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
       // ------------------------------------------------------------------
-      'define-macro': doc(new Macro(macro, function (macro, _ref25) {
-        var dynamic_scope = _ref25.dynamic_scope,
-            error = _ref25.error;
+      'define-macro': doc(new Macro(macro, function (macro, _ref23) {
+        var dynamic_scope = _ref23.dynamic_scope,
+            error = _ref23.error;
 
         if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
-          var name = macro.car.car.name;
+          var name = macro.car.car.__name__;
 
           var __doc__;
 
@@ -8603,17 +8789,17 @@
               }
 
               if (name instanceof LSymbol) {
-                env.env[name.name] = arg;
+                env.__env__[name.__name__] = arg;
                 break;
               } else if (name.car !== nil) {
                 if (arg === nil) {
-                  env.env[name.car.name] = nil;
+                  env.__env__[name.car.__name__] = nil;
                 } else {
                   if (arg.car instanceof Pair) {
                     arg.car.data = true;
                   }
 
-                  env.env[name.car.name] = arg.car;
+                  env.__env__[name.car.__name__] = arg.car;
                 }
               }
 
@@ -8693,8 +8879,8 @@
           validate_identifiers(macro.car);
         }
 
-        var syntax = new Syntax(function (code, _ref26) {
-          var macro_expand = _ref26.macro_expand;
+        var syntax = new Syntax(function (code, _ref24) {
+          var macro_expand = _ref24.macro_expand;
           var scope = env.inherit('syntax');
 
           if (dynamic_scope) {
@@ -8703,13 +8889,15 @@
 
           var var_scope = this; // for macros that define variables used in macro (2 levels nestting)
 
-          if (var_scope.name === Syntax.merge_env) {
+          if (var_scope.__name__ === Syntax.__merge_env__) {
             // copy refs for defined gynsyms
-            var props = Object.getOwnPropertySymbols(var_scope.env);
-            props.forEach(function (symbol) {
-              var_scope.parent.set(symbol, var_scope.env[symbol]);
+            var _props2 = Object.getOwnPropertySymbols(var_scope.__env__);
+
+            _props2.forEach(function (symbol) {
+              var_scope.__parent__.set(symbol, var_scope.__env__[symbol]);
             });
-            var_scope = var_scope.parent;
+
+            var_scope = var_scope.__parent__;
           }
 
           var eval_args = {
@@ -8761,7 +8949,7 @@
                 expr = new_expr;
               }
 
-              var new_env = var_scope.merge(scope, Syntax.merge_env);
+              var new_env = var_scope.merge(scope, Syntax.__merge_env__);
 
               if (macro_expand) {
                 return {
@@ -8828,10 +9016,10 @@
             }
 
             if (isPromise(car) || isPromise(cdr)) {
-              return Promise.all([car, cdr]).then(function (_ref27) {
-                var _ref28 = slicedToArray(_ref27, 2),
-                    car = _ref28[0],
-                    cdr = _ref28[1];
+              return Promise.all([car, cdr]).then(function (_ref25) {
+                var _ref26 = slicedToArray(_ref25, 2),
+                    car = _ref26[0],
+                    cdr = _ref26[1];
 
                 return new Pair(car, cdr);
               });
@@ -8872,12 +9060,14 @@
                 return pair.cdr.cdr.car;
               }
 
-              if (pair.cdr !== nil) {
+              if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
                 var msg = "You can't splice atom inside list";
                 throw new Error(msg);
               }
 
-              return eval_pair;
+              if (!(pair.cdr instanceof Pair && eval_pair === nil)) {
+                return eval_pair;
+              }
             } // don't create Cycles
 
 
@@ -8894,6 +9084,10 @@
             }
 
             return unpromise(value, function (value) {
+              if (eval_pair === nil) {
+                return value;
+              }
+
               return join(eval_pair, value);
             });
           });
@@ -9148,7 +9342,8 @@
       // ------------------------------------------------------------------
       env: doc(function env(env) {
         env = env || this;
-        var names = Object.keys(env.env);
+        var names = Object.keys(env.__env__); // TODO: get symbols
+
         var result;
 
         if (names.length) {
@@ -9157,8 +9352,8 @@
           result = nil;
         }
 
-        if (env.parent !== undefined$1) {
-          return this.get('env').call(this, env.parent).append(result);
+        if (env.__parent__ !== undefined$1) {
+          return this.get('env').call(this, env.__parent__).append(result);
         }
 
         return result;
@@ -9345,11 +9540,11 @@
         return false;
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
-      'try': doc(new Macro('try', function (code, _ref29) {
+      'try': doc(new Macro('try', function (code, _ref27) {
         var _this7 = this;
 
-        var dynamic_scope = _ref29.dynamic_scope,
-            _error = _ref29.error;
+        var dynamic_scope = _ref27.dynamic_scope,
+            _error = _ref27.error;
         return new Promise(function (resolve) {
           var args = {
             env: _this7,
@@ -9538,7 +9733,7 @@
 
         return function (obj) {
           keys = keys.map(function (x) {
-            return x instanceof LSymbol ? x.name : x;
+            return x instanceof LSymbol ? x.__name__ : x;
           });
 
           if (keys.length === 0) {
@@ -9771,9 +9966,9 @@
       // ------------------------------------------------------------------
       'eq?': doc('eq?', equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
-      or: doc(new Macro('or', function (code, _ref30) {
-        var dynamic_scope = _ref30.dynamic_scope,
-            error = _ref30.error;
+      or: doc(new Macro('or', function (code, _ref28) {
+        var dynamic_scope = _ref28.dynamic_scope,
+            error = _ref28.error;
         var args = this.get('list->array')(code);
         var self = this;
 
@@ -9813,9 +10008,9 @@
       }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
       // ------------------------------------------------------------------
       and: doc(new Macro('and', function (code) {
-        var _ref31 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref31.dynamic_scope,
-            error = _ref31.error;
+        var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref29.dynamic_scope,
+            error = _ref29.error;
 
         var args = this.get('list->array')(code);
         var self = this;
@@ -10076,10 +10271,15 @@
     } // -------------------------------------------------------------------------
 
 
-    function selfEvaluated(obj) {
+    function self_evaluated(obj) {
       var type = _typeof_1(obj);
 
-      return ['string', 'function'].includes(type) || obj instanceof LSymbol || obj instanceof LNumber || obj instanceof RegExp;
+      return ['string', 'function'].includes(type) || obj instanceof LSymbol || obj instanceof LNumber || obj instanceof LString || obj instanceof RegExp;
+    } // -------------------------------------------------------------------------
+
+
+    function is_native(obj) {
+      return obj instanceof LNumber || obj instanceof LString || obj instanceof LCharacter;
     } // -------------------------------------------------------------------------
 
 
@@ -10139,8 +10339,8 @@
         }
 
         if (obj.constructor) {
-          if (obj.constructor.__className) {
-            return obj.constructor.__className;
+          if (obj.constructor.__class__) {
+            return obj.constructor.__class__;
           }
 
           if (obj.constructor === Object && typeof obj[Symbol.iterator] === 'function') {
@@ -10189,65 +10389,65 @@
       }
 
       function _promise() {
-        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(node) {
+        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(node) {
           var pair;
-          return regenerator.wrap(function _callee7$(_context7) {
+          return regenerator.wrap(function _callee8$(_context8) {
             while (1) {
-              switch (_context7.prev = _context7.next) {
+              switch (_context8.prev = _context8.next) {
                 case 0:
-                  _context7.t0 = Pair;
+                  _context8.t0 = Pair;
 
                   if (!node.haveCycles('car')) {
-                    _context7.next = 5;
+                    _context8.next = 5;
                     break;
                   }
 
-                  _context7.t1 = node.car;
-                  _context7.next = 8;
+                  _context8.t1 = node.car;
+                  _context8.next = 8;
                   break;
 
                 case 5:
-                  _context7.next = 7;
+                  _context8.next = 7;
                   return resolve(node.car);
 
                 case 7:
-                  _context7.t1 = _context7.sent;
+                  _context8.t1 = _context8.sent;
 
                 case 8:
-                  _context7.t2 = _context7.t1;
+                  _context8.t2 = _context8.t1;
 
                   if (!node.haveCycles('cdr')) {
-                    _context7.next = 13;
+                    _context8.next = 13;
                     break;
                   }
 
-                  _context7.t3 = node.cdr;
-                  _context7.next = 16;
+                  _context8.t3 = node.cdr;
+                  _context8.next = 16;
                   break;
 
                 case 13:
-                  _context7.next = 15;
+                  _context8.next = 15;
                   return resolve(node.cdr);
 
                 case 15:
-                  _context7.t3 = _context7.sent;
+                  _context8.t3 = _context8.sent;
 
                 case 16:
-                  _context7.t4 = _context7.t3;
-                  pair = new _context7.t0(_context7.t2, _context7.t4);
+                  _context8.t4 = _context8.t3;
+                  pair = new _context8.t0(_context8.t2, _context8.t4);
 
                   if (node.data) {
                     pair.data = true;
                   }
 
-                  return _context7.abrupt("return", pair);
+                  return _context8.abrupt("return", pair);
 
                 case 20:
                 case "end":
-                  return _context7.stop();
+                  return _context8.stop();
               }
             }
-          }, _callee7);
+          }, _callee8);
         }));
         return _promise.apply(this, arguments);
       }
@@ -10265,10 +10465,10 @@
       }
     }
 
-    function getFunctionArgs(rest, _ref32) {
-      var env = _ref32.env,
-          dynamic_scope = _ref32.dynamic_scope,
-          error = _ref32.error;
+    function getFunctionArgs(rest, _ref30) {
+      var env = _ref30.env,
+          dynamic_scope = _ref30.dynamic_scope,
+          error = _ref30.error;
       var args = [];
       var node = rest;
       markCycles(node);
@@ -10331,7 +10531,7 @@
 
       var value = macro.invoke(code, eval_args);
       return unpromise(resolvePromises(value), function ret(value) {
-        if (value && value.data || !value || selfEvaluated(value)) {
+        if (value && value.data || !value || self_evaluated(value)) {
           return value;
         } else {
           return unpromise(evaluate(value, eval_args), finalize);
@@ -10341,11 +10541,11 @@
 
 
     function evaluate(code) {
-      var _ref33 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          env = _ref33.env,
-          dynamic_scope = _ref33.dynamic_scope,
-          _ref33$error = _ref33.error,
-          error = _ref33$error === void 0 ? function () {} : _ref33$error;
+      var _ref31 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          env = _ref31.env,
+          dynamic_scope = _ref31.dynamic_scope,
+          _ref31$error = _ref31.error,
+          error = _ref31$error === void 0 ? function () {} : _ref31$error;
 
       try {
         if (dynamic_scope === true) {
@@ -10408,7 +10608,7 @@
         if (typeof value === 'function') {
           var args = getFunctionArgs(rest, eval_args);
           return unpromise(args, function (args) {
-            if (is_bound(value) && (!lips_context(value) || is_port(value))) {
+            if (is_bound(value) && !is_object_bound(value) && (!lips_context(value) || is_port(value))) {
               args = args.map(unbox);
             }
 
@@ -10416,6 +10616,22 @@
               // lambda need environment as context
               // normal functions are bound to their contexts
               value = unbind(value);
+            } else if (args.some(lips_function) && !lips_function(value) && !is_array_method(value)) {
+              // we unbox values from callback functions #76
+              // calling map on array should not unbox the value
+              args = args.map(function (arg) {
+                if (lips_function(arg)) {
+                  return function () {
+                    for (var _len36 = arguments.length, args = new Array(_len36), _key38 = 0; _key38 < _len36; _key38++) {
+                      args[_key38] = arguments[_key38];
+                    }
+
+                    return unpromise(arg.apply(this, args), unbox);
+                  };
+                }
+
+                return arg;
+              });
             }
 
             var _args = args.slice();
@@ -10446,8 +10662,7 @@
         } else if (code instanceof LSymbol) {
           value = env.get(code);
 
-          if (value === 'undefined') {
-            throw new Error('Unbound variable `' + code.name + '\'');
+          if (value === 'undefined') {//throw new Error('Unbound variable `' + code.__name__ + '\'');
           }
 
           return value;
@@ -10469,11 +10684,11 @@
 
 
     function _exec() {
-      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(string, env, dynamic_scope) {
+      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(string, env, dynamic_scope) {
         var list, results, code, result;
-        return regenerator.wrap(function _callee9$(_context9) {
+        return regenerator.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -10483,25 +10698,25 @@
                   env = env || user_env;
                 }
 
-                _context9.next = 3;
+                _context10.next = 3;
                 return parse(string);
 
               case 3:
-                list = _context9.sent;
+                list = _context10.sent;
                 results = [];
 
               case 5:
 
                 if (list.length) {
-                  _context9.next = 10;
+                  _context10.next = 10;
                   break;
                 }
 
-                return _context9.abrupt("return", results);
+                return _context10.abrupt("return", results);
 
               case 10:
                 code = list.shift();
-                _context9.next = 13;
+                _context10.next = 13;
                 return evaluate(code, {
                   env: env,
                   dynamic_scope: dynamic_scope,
@@ -10520,19 +10735,19 @@
                 });
 
               case 13:
-                result = _context9.sent;
+                result = _context10.sent;
                 results.push(result);
 
               case 15:
-                _context9.next = 5;
+                _context10.next = 5;
                 break;
 
               case 17:
               case "end":
-                return _context9.stop();
+                return _context10.stop();
             }
           }
-        }, _callee9);
+        }, _callee10);
       }));
       return _exec.apply(this, arguments);
     }
@@ -10673,9 +10888,9 @@
             if (typeof _url !== 'string') {
               send_error('Worker RPC: url is not a string');
             } else {
-              importScripts("".concat(_url, "/dist/lips.min.js"));
+              importScripts("".concat(_url, "/src/lips.js"));
               interpreter = new lips.Interpreter('worker');
-              bootstrap = interpreter.exec("(let-env lips.env.parent\n                                                        (load \"".concat(_url, "/lib/bootstrap.scm\")\n                                                        (load \"").concat(_url, "/lib/R5RS.scm\")\n                                                        (load \"").concat(_url, "/lib/R7RS.scm\"))"));
+              bootstrap = interpreter.exec("(let-env lips.env.__parent__\n                                                        (load \"".concat(_url, "/lib/bootstrap.scm\")\n                                                        (load \"").concat(_url, "/lib/R5RS.scm\")\n                                                        (load \"").concat(_url, "/lib/R7RS.scm\"))"));
               bootstrap.then(function () {
                 send_result(true);
               });
@@ -10750,13 +10965,13 @@
     LSymbol.prototype.toDry = function () {
       return {
         value: {
-          name: this.name
+          name: this.__name__
         }
       };
     };
 
     LSymbol.unDry = function (value) {
-      return new LSymbol(value.name);
+      return new LSymbol(value.__name__);
     }; // -------------------------------------------------------------------------
 
 
@@ -10822,10 +11037,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 01 Nov 2020 14:54:22 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 07 Nov 2020 15:32:06 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 01 Nov 2020 14:54:22 +0000').valueOf();
+      var date = LString('Sat, 07 Nov 2020 15:32:06 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -10837,32 +11052,32 @@
 
       var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.7 (".concat(_build, ") <https://git.io/lips-scheme>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
       return banner;
     }(); // -------------------------------------------------------------------------
     // to be used with string function when code is minified
     // -------------------------------------------------------------------------
 
 
-    Ahead.__className = 'ahead';
-    Pattern.__className = 'pattern';
-    Formatter.__className = 'formatter';
-    Macro.__className = 'macro';
-    Syntax.__className = 'syntax';
-    Environment.__className = 'environment';
-    InputPort.__className = 'input-port';
-    OutputPort.__className = 'output-port';
-    OutputStringPort.__className = 'output-string-port';
-    InputStringPort.__className = 'input-string-port'; // types used for detect lips objects
+    Ahead.__class__ = 'ahead';
+    Pattern.__class__ = 'pattern';
+    Formatter.__class__ = 'formatter';
+    Macro.__class__ = 'macro';
+    Syntax.__class__ = 'syntax';
+    Environment.__class__ = 'environment';
+    InputPort.__class__ = 'input-port';
+    OutputPort.__class__ = 'output-port';
+    OutputStringPort.__class__ = 'output-string-port';
+    InputStringPort.__class__ = 'input-string-port'; // types used for detect lips objects
 
-    LNumber.__className = 'number';
-    LCharacter.__className = 'character';
-    LString.__className = 'string'; // -------------------------------------------------------------------------
+    LNumber.__class__ = 'number';
+    LCharacter.__class__ = 'character';
+    LString.__class__ = 'string'; // -------------------------------------------------------------------------
 
     var lips = {
-      version: '1.0.0-beta.7',
+      version: 'DEV',
       banner: banner,
-      date: 'Sun, 01 Nov 2020 14:54:22 +0000',
+      date: 'Sat, 07 Nov 2020 15:32:06 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

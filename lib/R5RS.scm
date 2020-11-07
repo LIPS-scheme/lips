@@ -1,4 +1,12 @@
-;; -*- scheme -*-
+;;   __ __                          __
+;;  / / \ \       _    _  ___  ___  \ \
+;; | |   \ \     | |  | || . \/ __>  | |
+;; | |    > \    | |_ | ||  _/\__ \  | |
+;; | |   / ^ \   |___||_||_|  <___/  | |
+;;  \_\ /_/ \_\                     /_/
+;;
+;; <https://lips.js.org>
+;;
 ;; Attempt to implement R5RS standard on top of LIPS
 ;;
 ;; Reference:
@@ -88,7 +96,7 @@
          (and (equal? (car a) (car b))
               (equal? (cdr a) (cdr b))))
         ((and (symbol? a) (symbol? b))
-         (equal? (. a 'name) (. b 'name)))
+         (equal? a.__name__ b.__name__))
         ((and (regex? a) (regex? b))
          (equal? (. a 'source) (. b 'source)))
         ((and (vector? a) (vector? b))
@@ -293,7 +301,7 @@
 ;; -----------------------------------------------------------------------------
 (define (real? n)
   "(real? n)"
-  (and (number? n) (let ((type n.type))
+  (and (number? n) (let ((type n.__type__))
                      (or (string=? type "float")
                          (string=? type "bigint")))))
 
@@ -301,7 +309,7 @@
 (define (exact? n)
   "(exact? n)"
   (typecheck "exact?" n "number")
-  (let ((type n.type))
+  (let ((type n.__type__))
     (or (string=? type "bigint")
         (string=? type "rational")
         (and (string=? type "complex")
@@ -561,8 +569,12 @@
   n)
 
 ;; -----------------------------------------------------------------------------
-;; in JavaScript strings are not mutable not need to copy
-(define string-copy identity)
+(define (string-copy x)
+  "(string-copy x)
+
+   Create new string based of given argument."
+  (typecheck "string-copy" x "string")
+  (lips.LString x))
 
 ;; -----------------------------------------------------------------------------
 (define (list->string _list)
@@ -728,7 +740,7 @@
 
    Function return codepoint of Unicode character."
   (typecheck "char->integer" chr "character")
-  (--> chr.char (codePointAt 0)))
+  (--> chr.__char__ (codePointAt 0)))
 
 ;; -----------------------------------------------------------------------------
 (define (integer->char n)

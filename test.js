@@ -24,7 +24,7 @@ readDir('./tests/').then(function(filenames) {
     return readFile(`tests/${file}`).then(d => d.toString());
   })).then(async function (files) {
       await lips.exec(`
-        (let-env lips.env.parent
+        (let-env lips.env.__parent__
           (load "./lib/bootstrap.scm")
           (load "./lib/R5RS.scm")
           (load "./lib/R7RS.scm")

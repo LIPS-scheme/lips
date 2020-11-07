@@ -1,14 +1,16 @@
-![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
+![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.7-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&455ef39c1a6512da05cd37190c53ef5bf50c141c)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&a0b47a154a6fa16d2b78af7a811a02bb03dc47e7)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
-<a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20make%20programmer%20live%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript,%20lisp%20and%20npm%20to%20create%20your%20applications.&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
-   <img src="https://github.com/jcubic/lips/blob/master/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
+<a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20makes%20life%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript%2C%20lisp%20and%20npm%20to%20create%20your%20applications%20via%20@jcubic&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
+   <img src="https://github.com/jcubic/lips/blob/devel/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
 </a>
 
-[LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://jcubic.github.io/lips).
+[![LIPS at Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=273619&theme=dark)](https://www.producthunt.com/posts/lips)
+
+[LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://lips.js.org).
 It is based on the Scheme dialect and the R5RS/R7RS specifications. It has extensions to make it easier
 to interact with JavaScript. It work both in the browser and with Node.js.
 
@@ -16,32 +18,20 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Demo
 
-[Demo](https://jcubic.github.io/lips/#demo)
+[Demo](https://lips.js.org/#demo)
 
-[1.0 Beta demo](https://jcubic.github.io/lips/beta.html)
+[1.0 Beta demo](https://lips.js.org/beta.html)
 
 ## Features
 
-* Compatible with Scheme specification (R5RS and R7RS)
-* Allows the definition of a new syntax, using parser extensions.
-* Allows the creation of new data types, that fit nicely into reader and writer.
-* Introspection and modification of function code at runtime.
-* Syntax highlighting in NPM-installed binaries and in the browser-based REPL.
-* Built-in auto formatting (pretty printing) of code.
-* Lips macros, Scheme hygienic macros with syntax-rules and macroexpand.
-* Auto unwrapping of JavaScript promises.
-* Almost no dependencies.
-* Built-in help system in the REPL (functions and macros have doc strings).
-* Literal Regular Expressions.
-
-## Integration with JavaScript
-
-* JavaScript-like doted notation.
-* Object literals with `&(:foo 10)` (created using parser extensions),
-* Direct access to JavaScript methods, functions and properties.
-* Access to internal implementation details.
-* Creation of new JavaScript classes.
-* Modification of object prototypes.
+* Literal regular expression.
+* Asynchronous execution.
+* Possibility to add new syntax (similar to vectors and object).
+* Powerful introspection.
+* Great integration with JavaScript.
+* Auto formatting lisp of code (pretty print)
+* Lisp and hygienic Scheme macros and macroexpand.
+* Builtin help system.
 
 ## Installation
 
@@ -97,7 +87,7 @@ Affter you click on the link it will create the REPL at the bottom of the page.
 e.g. google.com or gihub.com)
 
 If you have trouble with creating the bookmarklet you can open
-[LISP Scheme home page](https://jcubic.github.io/lips/#bookmark) where you can
+[LISP Scheme home page](https://lips.js.org/#bookmark) where you can
 find a link that you can drag to your bookmarks.
 
 ## Usage
@@ -119,6 +109,38 @@ or use the `src` attribute:
 <script type="text/x-scheme" src="example.scm"></script>
 ```
 
+## Boostraping Scheme system
+
+To have fully working Scheme environment, you need to bootstrap the language and load
+all scheme code written in LIPS. To do that you can use this:
+
+```
+(let-env lips.env.__parent__
+    (load "./lib/bootstrap.scm")
+    (load "./lib/R5RS.scm")
+    (load "./lib/R7RS.scm"))
+```
+
+you need to use path to lib files, you can host them yourself or use CDN.
+
+```
+(let-env lips.env.__parent__
+  (let ((path "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/"))
+    (load (concat path "bootstrap.scm"))
+    (load (concat path "R5RS.scm"))
+    (load (concat path "R7RS.scm"))))
+```
+
+If you use server you will need to enable CORS if your website is on different domain,
+because load will use AJAX to get the files.
+
+**NOTE:** as of now there is other solution, but it may change new version 1.0 is out.
+Because the files use syntax extensions that modify the parser you can't combine those
+files into one bigger file. Here is issue
+[Make parser ES generator #80](https://github.com/jcubic/lips/issues/80)
+that will make this possible. Other idea is to add data-path="" attribute on script that
+that will bootstrap the system from that path.
+
 Running programmatically:
 
 ```javascript
@@ -133,10 +155,14 @@ exec(string).then(function(results) {
 });
 ```
 
+When running exec you will also need to bootstrap the language and loaded files from `/lib/` directory.
+
 More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
-in [docs page](https://jcubic.github.io/lips/docs.html).
+in [docs page](https://lips.js.org/docs.html).
 
 ## Standalone executable
+
+**NOTE:** Executable don't require bootstrapping lib files.
 
 If you install lips globally with:
 
@@ -146,7 +172,7 @@ npm install -g @jcubic/lips
 
 you can run the interpreter from the terminal:
 
-![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
 
 
 You can also run code in a string with:

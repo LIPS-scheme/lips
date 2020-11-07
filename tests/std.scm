@@ -47,9 +47,9 @@
 
 (test "std: pluck"
       (lambda (t)
-        (let ((name (pluck 'name)))
+        (let ((name (pluck '__name__)))
           (t.is (name 'foo) "foo"))
-        (let ((name (pluck "name")))
+        (let ((name (pluck "__name__")))
           (t.is (name 'foo) "foo"))
         (let ((none (pluck)))
           (t.is (none 'foo) nil))

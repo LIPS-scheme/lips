@@ -1,3 +1,18 @@
+## 1.0.0-beta.8
+### Breaking
+* internal properties like `name` are now `__name__`
+### Features
+* add `raise` (alias for `throw`) and `with-exception-handler` (that wraps `throw..catch`)
+### Bugfix
+* fix truncate core function
+* fix splice nil in quasiquote inside list [#68](https://github.com/jcubic/lips/issues/68)
+* fix do macro inside syntax-rules [#81](https://github.com/jcubic/lips/issues/81)
+* fix `string-copy` and `string-set!`
+* fix `error` function to work like R7RS spec
+* fix edge case in `syntax-rules` found when executing SRFI-26 cut macro
+* fix unboxing of LIPS values when calling native JavaScript functions
+* fix unboxing of callback functions [#76](https://github.com/jcubic/lips/issues/76)
+
 ## 1.0.0-beta.7
 ### Breaking
 * remove second argument from `filter` callback

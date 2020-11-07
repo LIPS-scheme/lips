@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --no-deprecation
+#!/usr/bin/env node
 
 const {
     exec,
@@ -150,7 +150,7 @@ function boostrap(interpreter) {
                 }
             }
             var data = fs.readFileSync(path);
-            return run(data, interpreter, false, env.parent, true).then(next);
+            return run(data, interpreter, false, env.__parent__, true).then(next);
         } else {
             return Promise.resolve();
         }
@@ -228,7 +228,7 @@ if (options.version || options.V) {
     // SRFI 176
     global.output = Pair.fromArray([
         ["command", "lips"],
-        ["website", "https://jcubic.github.io/lips/"],
+        ["website", "https://lips.js.org"],
         ['languages', 'scheme', 'r5rs', 'r7rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
         ["scheme.srfi", 4, 6, 22, 23, 46, 176],
