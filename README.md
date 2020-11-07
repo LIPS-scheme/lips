@@ -1,7 +1,7 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.8-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&16815d02bd6f51574ce92a918de1103d0a3ce6ad)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&05e687b3b11c4b0953080129e39640cc3ad20949)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&2c48907438a7265935a7b21e6931008d)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 <a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20makes%20life%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript%2C%20lisp%20and%20npm%20to%20create%20your%20applications%20via%20@jcubic&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
@@ -134,12 +134,12 @@ you need to use path to lib files, you can host them yourself or use CDN.
 If you use server you will need to enable CORS if your website is on different domain,
 because load will use AJAX to get the files.
 
-**NOTE:** as of now there is other solution, but it may change new version 1.0 is out.
+**NOTE:** as of now there is not other solution, but it may change when version 1.0 is out.
 Because the files use syntax extensions that modify the parser you can't combine those
 files into one bigger file. Here is issue
 [Make parser ES generator #80](https://github.com/jcubic/lips/issues/80)
-that will make this possible. Other idea is to add data-path="" attribute on script that
-that will bootstrap the system from that path.
+that will make this possible. Other idea is to add `data-path=""` attribute on script tag
+that will bootstrap the system from given path.
 
 Running programmatically:
 
@@ -157,8 +157,12 @@ exec(string).then(function(results) {
 
 When running exec you will also need to bootstrap the language and loaded files from `/lib/` directory.
 
-More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
+More documentation about stable version in
+[Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
 in [docs page](https://lips.js.org/docs.html).
+
+Documentation about beta version can be found in
+[v1.0 draft document](https://github.com/jcubic/lips/wiki/v1.0-draft).
 
 ## Standalone executable
 

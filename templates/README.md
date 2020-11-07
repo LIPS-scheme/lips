@@ -134,12 +134,12 @@ you need to use path to lib files, you can host them yourself or use CDN.
 If you use server you will need to enable CORS if your website is on different domain,
 because load will use AJAX to get the files.
 
-**NOTE:** as of now there is other solution, but it may change new version 1.0 is out.
+**NOTE:** as of now there is not other solution, but it may change when version 1.0 is out.
 Because the files use syntax extensions that modify the parser you can't combine those
 files into one bigger file. Here is issue
 [Make parser ES generator #80](https://github.com/jcubic/lips/issues/80)
-that will make this possible. Other idea is to add data-path="" attribute on script that
-that will bootstrap the system from that path.
+that will make this possible. Other idea is to add `data-path=""` attribute on script tag
+that will bootstrap the system from given path.
 
 Running programmatically:
 
@@ -157,8 +157,12 @@ exec(string).then(function(results) {
 
 When running exec you will also need to bootstrap the language and loaded files from `/lib/` directory.
 
-More documentation in [Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
+More documentation about stable version in
+[Getting Started Guide](https://github.com/jcubic/lips/wiki/Getting-Started) and
 in [docs page](https://lips.js.org/docs.html).
+
+Documentation about beta version can be found in
+[v1.0 draft document](https://github.com/jcubic/lips/wiki/v1.0-draft).
 
 ## Standalone executable
 
