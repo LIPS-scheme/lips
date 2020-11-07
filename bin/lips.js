@@ -228,7 +228,7 @@ if (options.version || options.V) {
     // SRFI 176
     global.output = Pair.fromArray([
         ["command", "lips"],
-        ["website", "https://jcubic.github.io/lips/"],
+        ["website", "https://lips.js.org"],
         ['languages', 'scheme', 'r5rs', 'r7rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
         ["scheme.srfi", 4, 6, 22, 23, 46, 176],
