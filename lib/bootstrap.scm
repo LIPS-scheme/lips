@@ -332,8 +332,9 @@
    Function return all props on the object including those in prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
       nil
-      (append (array->list (Object.getOwnPropertyNames obj))
-              (dir (Object.getPrototypeOf obj)))))
+      (let ((names (Object.getOwnPropertyNames obj))
+            (proto (Object.getPrototypeOf obj)))
+        (append (array->list names) (dir proto)))))
 
 
 ;; ---------------------------------------------------------------------------------------

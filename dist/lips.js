@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 07 Nov 2020 10:28:33 +0000
+ * build: Sat, 07 Nov 2020 15:32:06 +0000
  */
 (function () {
   'use strict';
@@ -5170,6 +5170,15 @@
       };
 
       return bound;
+    } // ----------------------------------------------------------------------
+    // function used to check if function should not get unboxed arguments,
+    // so you can call Object.getPrototypeOf for lips data types
+    // this is case, see dir function and #73
+    // ----------------------------------------------------------------------
+
+
+    function is_object_bound(obj) {
+      return is_bound(obj) && obj[Symbol["for"]('__context__')] === Object;
     } // ----------------------------------------------------------------------
 
 
@@ -10599,7 +10608,7 @@
         if (typeof value === 'function') {
           var args = getFunctionArgs(rest, eval_args);
           return unpromise(args, function (args) {
-            if (is_bound(value) && (!lips_context(value) || is_port(value))) {
+            if (is_bound(value) && !is_object_bound(value) && (!lips_context(value) || is_port(value))) {
               args = args.map(unbox);
             }
 
@@ -11028,10 +11037,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 07 Nov 2020 10:28:33 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 07 Nov 2020 15:32:06 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 07 Nov 2020 10:28:33 +0000').valueOf();
+      var date = LString('Sat, 07 Nov 2020 15:32:06 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11068,7 +11077,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 07 Nov 2020 10:28:33 +0000',
+      date: 'Sat, 07 Nov 2020 15:32:06 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

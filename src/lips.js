@@ -3176,6 +3176,14 @@
         return bound;
     }
     // ----------------------------------------------------------------------
+    // function used to check if function should not get unboxed arguments,
+    // so you can call Object.getPrototypeOf for lips data types
+    // this is case, see dir function and #73
+    // ----------------------------------------------------------------------
+    function is_object_bound(obj) {
+        return is_bound(obj) && obj[Symbol.for('__context__')] === Object;
+    }
+    // ----------------------------------------------------------------------
     function is_bound(obj) {
         return !!(typeof obj === 'function' && obj[__fn__]);
     }
@@ -7703,7 +7711,8 @@
             if (typeof value === 'function') {
                 var args = getFunctionArgs(rest, eval_args);
                 return unpromise(args, function(args) {
-                    if (is_bound(value) && (!lips_context(value) || is_port(value))) {
+                    if (is_bound(value) && !is_object_bound(value) &&
+                        (!lips_context(value) || is_port(value))) {
                         args = args.map(unbox);
                     }
                     if (value.__lambda__ && !value.__prototype__ || is_port(value)) {
