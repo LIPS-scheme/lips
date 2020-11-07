@@ -35,7 +35,7 @@ var term = (function() {
     // load Standard libraries (only first two are required by Scheme)
     var path = 'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/';
     term.exec([
-        '(let-env lips.env.parent',
+        '(let-env lips.env.__parent__',
            '(load "' + path + 'lib/bootstrap.scm")',
            '(load "' + path + 'lib/R5RS.scm")',
            '(load "' + path + 'lib/R7RS.scm"))'
