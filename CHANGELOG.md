@@ -1,4 +1,8 @@
 ## 1.0.0-beta.8
+### Bugfix
+* fix empty vector literal
+
+## 1.0.0-beta.8
 ### Breaking
 * internal properties like `name` are now `__name__`
 ### Features
