@@ -80,3 +80,15 @@
               "Expecting string, got number in expression `test` (argument 0)")
         (t.is (try (typecheck "test" 10 (list "string" "character") 0) (catch (e) e.message))
               "Expecting string or character, got number in expression `test` (argument 0)")))
+
+(test "std: let-values and let*-values"
+      (lambda (t)
+
+        (let ((a 10) (b 20) (c 30))
+          (let*-values (((a b c) (values 1 2 3)) ((x y z) (values a b c)))
+            (t.is (+ a b c x y z) 12)))
+
+        (let ((a 10) (b 20) (c 30))
+          (let-values (((a b c) (values 1 2 3)) ((x y z) (values a b c)))
+            (t.is (+ x y z) 60)
+            (t.is (+ a b c) 6)))))

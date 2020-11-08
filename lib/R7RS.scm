@@ -52,6 +52,43 @@
   (typecheck "values-ref" values "values" 1)
   (typecheck "values-ref" n "number" 1)
   (--> values (valueOf) n))
+
+;; -----------------------------------------------------------------------------
+(define-syntax let-values
+  (syntax-rules ()
+    ((_ ()) nil)
+    ((_ () body ...) (begin body ...))
+    ((_ (((x ...) values) ...) body ...)
+     (apply (lambda (x ... ...)
+              body ...)
+            (vector->list (apply %vector-concat (map (lambda (x) ((. x "valueOf")))
+                                                     (list values ...)))))))
+  "(let-values binding body ...)
+
+   The macro work similar to let but variable is list of values and value
+   need to evaluate to result of calling values.")
+
+;; -----------------------------------------------------------------------------
+(define (%vector-concat . args)
+  (if (null? args)
+      #()
+      (begin
+        (typecheck "%vector-concat" (car args) "array")
+        (--> (car args) (concat (apply %vector-concat (cdr args)))))))
+
+;; -----------------------------------------------------------------------------
+(define-syntax let*-values
+  (syntax-rules ()
+    ((_ ()) nil)
+    ((_ () body ...) (begin body ...))
+    ((_ ((bind values) rest ...) . body)
+     (apply (lambda bind
+              (let*-values (rest ...) . body))
+            (vector->list ((. values "valueOf"))))))
+  "(let*-values binding body ...)
+
+   The macro work similar to let* but variable is list of values and value
+   need to evaluate to result of calling values.")
 ;; -----------------------------------------------------------------------------
 ;; R7RS division operators (Gauche Scheme) BSD license
 ;; Copyright (c) 2000-2020  Shiro Kawai  <shiro@acm.org>
@@ -237,3 +274,4 @@
 (define raise throw)
 
 ;; -----------------------------------------------------------------------------
+

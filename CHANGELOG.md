@@ -1,6 +1,9 @@
 ## 1.0.0-beta.8
+### Features
+* `let-values` and `let*-values` syntax macros
 ### Bugfix
 * fix empty vector literal
+* fix edge case in nested syntax-rules when variable in parent got expanded into identifier
 
 ## 1.0.0-beta.8
 ### Breaking
