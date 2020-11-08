@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 08 Nov 2020 11:23:14 +0000
+ * build: Sun, 08 Nov 2020 12:52:24 +0000
  */
 (function () {
   'use strict';
@@ -4241,7 +4241,8 @@
           symbols: {},
           // symbols ellipsis (x ...)
           lists: []
-        }
+        },
+        symbols: {}
       };
       var expansion = scope.expansion,
           define = scope.define; // pattern_names parameter is used to distinguish
@@ -4448,8 +4449,8 @@
             bindings['...'].symbols[_name3].push(code);
           }
 
-          if (!bindings[_name3]) {
-            bindings[_name3] = code;
+          if (!bindings.symbols[_name3]) {
+            bindings.symbols[_name3] = code;
           }
 
           return true;
@@ -4480,14 +4481,14 @@
 
               var _name4 = pattern.cdr.valueOf();
 
-              if (!bindings[_name4]) {
-                bindings[_name4] = nil;
+              if (!(_name4 in bindings.symbols)) {
+                bindings.symbols[_name4] = nil;
               }
 
               _name4 = pattern.car.valueOf();
 
-              if (!bindings[_name4]) {
-                bindings[_name4] = code.car;
+              if (!(_name4 in bindings.symbols)) {
+                bindings.symbols[_name4] = code.car;
               }
 
               return true;
@@ -4622,8 +4623,10 @@
       var gensyms = {};
 
       function transform(symbol) {
-        if (!(symbol instanceof LSymbol || typeof symbol === 'string')) {
-          throw new Error('syntax: internal error, rename neeed to be symbol');
+        if (!(symbol instanceof LSymbol || ['string', 'symbol'].includes(_typeof_1(symbol)))) {
+          //typeof symbol === 'string')) {
+          var t = type(symbol);
+          throw new Error("syntax: internal error, need symbol got ".concat(t));
         }
 
         var name = symbol.valueOf();
@@ -4633,10 +4636,10 @@
         } // symbols are gensyms from nested syntax-rules
 
 
-        var type = _typeof_1(name);
+        var n_type = _typeof_1(name);
 
-        if (['string', 'symbol'].includes(type) && name in bindings) {
-          return bindings[name];
+        if (['string', 'symbol'].includes(n_type) && name in bindings.symbols) {
+          return bindings.symbols[name];
         }
 
         if (symbols.includes(name)) {
@@ -4882,8 +4885,6 @@
                     // ellipsis decide it what should be the next value
                     // there are two cases ((a . b) ...) and (a ...)
                     new_bind[key] = value;
-                    log('NEXT CALLED');
-                    log(new_bind);
                   };
 
                   var car = transform_ellipsis_expr(new_expr, _bind, {
@@ -11060,10 +11061,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 08 Nov 2020 11:23:14 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 08 Nov 2020 12:52:24 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 08 Nov 2020 11:23:14 +0000').valueOf();
+      var date = LString('Sun, 08 Nov 2020 12:52:24 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11100,7 +11101,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 08 Nov 2020 11:23:14 +0000',
+      date: 'Sun, 08 Nov 2020 12:52:24 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

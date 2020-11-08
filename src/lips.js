@@ -2412,7 +2412,8 @@
             '...': {
                 symbols: { }, // symbols ellipsis (x ...)
                 lists: [ ]
-            }
+            },
+            symbols: { }
         };
         const { expansion, define } = scope;
         // pattern_names parameter is used to distinguish
@@ -2589,8 +2590,8 @@
                     bindings['...'].symbols[name] = bindings['...'].symbols[name] || [];
                     bindings['...'].symbols[name].push(code);
                 }
-                if (!bindings[name]) {
-                    bindings[name] = code;
+                if (!bindings.symbols[name]) {
+                    bindings.symbols[name] = code;
                 }
                 return true;
             }
@@ -2615,12 +2616,12 @@
                         }
                         log('>> 12 | 1');
                         let name = pattern.cdr.valueOf();
-                        if (!bindings[name]) {
-                            bindings[name] = nil;
+                        if (!(name in bindings.symbols)) {
+                            bindings.symbols[name] = nil;
                         }
                         name = pattern.car.valueOf();
-                        if (!bindings[name]) {
-                            bindings[name] = code.car;
+                        if (!(name in bindings.symbols)) {
+                            bindings.symbols[name] = code.car;
                         }
                         return true;
                     }
@@ -2743,18 +2744,25 @@
             names,
             ellipsis: ellipsis_symbol } = options;
         var gensyms = {};
+        function valid_symbol(symbol) {
+            if (symbol instanceof LSymbol) {
+                return true;
+            }
+            return ['string', 'symbol'].includes(typeof symbol);
+        }
         function transform(symbol) {
-            if (!(symbol instanceof LSymbol || typeof symbol === 'string')) {
-                throw new Error('syntax: internal error, rename neeed to be symbol');
+            if (!valid_symbol(symbol)) {
+                const t = type(symbol);
+                throw new Error(`syntax: internal error, need symbol got ${t}`);
             }
             const name = symbol.valueOf();
             if (name === ellipsis_symbol) {
                 throw new Error('syntax: internal error, ellipis not transformed');
             }
             // symbols are gensyms from nested syntax-rules
-            var type = typeof name;
-            if (['string', 'symbol'].includes(type) && name in bindings) {
-                return bindings[name];
+            var n_type = typeof name;
+            if (['string', 'symbol'].includes(n_type) && name in bindings.symbols) {
+                return bindings.symbols[name];
             }
             if (symbols.includes(name)) {
                 return LSymbol(name);
@@ -2940,8 +2948,6 @@
                                     // ellipsis decide it what should be the next value
                                     // there are two cases ((a . b) ...) and (a ...)
                                     new_bind[key] = value;
-                                    log('NEXT CALLED');
-                                    log(new_bind);
                                 };
                                 const car = transform_ellipsis_expr(
                                     new_expr,
@@ -3044,7 +3050,7 @@
                 }
                 const value = scope.get(expr.car, { throwError: false });
                 var is_syntax = value instanceof Macro &&
-                    value.__name__ == 'syntax-rules';
+                    value.__name__ === 'syntax-rules';
                 const head = traverse(expr.car, { disabled });
                 let rest;
                 if (is_syntax) {

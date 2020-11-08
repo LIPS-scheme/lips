@@ -826,3 +826,29 @@
                         (baz bar)))))
 
         (t.is (foo 1 "hello") '("hello"))))
+
+(test "syntax: it should expand nested macro with ellipsis as identifier from parent"
+      (lambda (t)
+
+        (define-syntax foo (syntax-rules (ellipsis)
+                             ((_)
+                              (let ()
+                                (define-syntax foo
+                                  (syntax-rules ellipsis ()
+                                    ((_ x ellipsis) (list x ellipsis))))
+                                (foo 1 2 3)))))
+
+        (t.is (foo) '(1 2 3))
+
+        ;; recursive case
+        (define-syntax foo (syntax-rules (ellipsis)
+                     ((_)
+                      (let ()
+                        (define-syntax foo
+                          (syntax-rules ellipsis ()
+                                        ((_) ())
+                                        ((_ x) (list x))
+                                        ((_ x ellipsis) (list (foo x) ellipsis))))
+                        (foo 1 2 3)))))
+
+        (t.is (foo) '((1) (2) (3)))))
