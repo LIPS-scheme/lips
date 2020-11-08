@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.8
+ *  \_\ /_/ \_\                     /_/ v. DEV
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 07 Nov 2020 16:51:35 +0000
+ * build: Sun, 08 Nov 2020 11:23:14 +0000
  */
 (function () {
   'use strict';
@@ -5009,14 +5009,37 @@
             }
           }
 
+          var value = scope.get(expr.car, {
+            throwError: false
+          });
+          var is_syntax = value instanceof Macro && value.__name__ == 'syntax-rules';
           var head = traverse(expr.car, {
             disabled: disabled
           });
-          var rest = traverse(expr.cdr, {
-            disabled: disabled
-          });
+          var rest;
+
+          if (is_syntax) {
+            if (expr.cdr.car instanceof LSymbol) {
+              rest = new Pair(traverse(expr.cdr.car, {
+                disabled: disabled
+              }), new Pair(expr.cdr.cdr.car, traverse(expr.cdr.cdr.cdr, {
+                disabled: disabled
+              })));
+            } else {
+              rest = new Pair(expr.cdr.car, traverse(expr.cdr.cdr, {
+                disabled: disabled
+              }));
+            }
+          } else {
+            rest = traverse(expr.cdr, {
+              disabled: disabled
+            });
+          }
+
           log({
             a: true,
+            car: expr.car.toString(),
+            cdr: expr.cdr.toString(),
             head: head && head.toString(),
             rest: rest && rest.toString()
           });
@@ -5028,10 +5051,10 @@
             return expr;
           }
 
-          var value = transform(expr);
+          var _value = transform(expr);
 
-          if (typeof value !== 'undefined') {
-            return value;
+          if (typeof _value !== 'undefined') {
+            return _value;
           }
         }
 
@@ -11037,10 +11060,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 07 Nov 2020 16:51:35 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 08 Nov 2020 11:23:14 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 07 Nov 2020 16:51:35 +0000').valueOf();
+      var date = LString('Sun, 08 Nov 2020 11:23:14 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11052,7 +11075,7 @@
 
       var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.8 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
+      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro.\n").replace(/^.*\n/, '');
       return banner;
     }(); // -------------------------------------------------------------------------
     // to be used with string function when code is minified
@@ -11075,9 +11098,9 @@
     LString.__class__ = 'string'; // -------------------------------------------------------------------------
 
     var lips = {
-      version: '1.0.0-beta.8',
+      version: 'DEV',
       banner: banner,
-      date: 'Sat, 07 Nov 2020 16:51:35 +0000',
+      date: 'Sun, 08 Nov 2020 11:23:14 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
@@ -11092,6 +11115,7 @@
       Macro: Macro,
       Syntax: Syntax,
       Pair: Pair,
+      Values: Values,
       quote: quote,
       InputPort: InputPort,
       OutputPort: OutputPort,

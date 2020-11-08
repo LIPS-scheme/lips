@@ -801,3 +801,28 @@
 
         (t.is (foo 1) '(1))
         (t.is (foo 1 . 2) '(1 . 2))))
+
+(test "syntax: it should define nested syntax with variable from outside as identifier"
+      (lambda (t)
+
+        (define-syntax foo (syntax-rules ()
+                     ((_ bar)
+                      (let ()
+                        (define-syntax baz
+                          (syntax-rules (bar)
+                            ((_ x) nil)))
+                        (baz bar)))))
+
+        (t.is (foo 10) nil)))
+
+(test "syntax: it should expand in nested syntax into variable from parent syntax"
+      (lambda (t)
+        (define-syntax foo (syntax-rules ()
+                     ((_ bar quux)
+                      (let ()
+                        (define-syntax baz
+                          (syntax-rules (bar)
+                            ((_ x) (list quux))))
+                        (baz bar)))))
+
+        (t.is (foo 1 "hello") '("hello"))))

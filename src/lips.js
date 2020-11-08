@@ -3042,10 +3042,33 @@
                         return result;
                     }
                 }
+                const value = scope.get(expr.car, { throwError: false });
+                var is_syntax = value instanceof Macro &&
+                    value.__name__ == 'syntax-rules';
                 const head = traverse(expr.car, { disabled });
-                const rest = traverse(expr.cdr, { disabled });
+                let rest;
+                if (is_syntax) {
+                    if (expr.cdr.car instanceof LSymbol) {
+                        rest = new Pair(
+                            traverse(expr.cdr.car, { disabled }),
+                            new Pair(
+                                expr.cdr.cdr.car,
+                                traverse(expr.cdr.cdr.cdr, { disabled })
+                            )
+                        );
+                    } else {
+                        rest = new Pair(
+                            expr.cdr.car,
+                            traverse(expr.cdr.cdr, { disabled })
+                        );
+                    }
+                } else {
+                    rest = traverse(expr.cdr, { disabled });
+                }
                 log({
                     a: true,
+                    car: expr.car.toString(),
+                    cdr: expr.cdr.toString(),
                     head: head && head.toString(),
                     rest: rest && rest.toString()
                 });
@@ -8096,6 +8119,7 @@ You can also use (help name) to display help for specic function or macro.
         Macro,
         Syntax,
         Pair,
+        Values,
 
         quote,
 
