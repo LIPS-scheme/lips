@@ -238,7 +238,7 @@
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)
   (typecheck "%number-type" type (vector "string" "pair"))
-  (let* ((t (. x 'type))
+  (let* ((t x.__type__)
          (typeof (lambda (type) (string=? t type))))
     (and (number? x)
          (if (pair? type)

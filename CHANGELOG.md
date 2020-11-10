@@ -1,4 +1,4 @@
-## 1.0.0-beta.8
+## 1.0.0-beta.9
 ### Features
 * `let-values` and `let*-values` syntax macros
 ### Bugfix
@@ -7,6 +7,7 @@
 * fix nesting unquote in quasiquote [#53](https://github.com/jcubic/lips/issues/53)
 * fix order of evaluation in `,,@x`
 * fix name collision while catching DOM exceptions [#84](https://github.com/jcubic/lips/issues/84)
+* fix integer? and other number type checks
 
 ## 1.0.0-beta.8
 ### Breaking
