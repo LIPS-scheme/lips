@@ -4,6 +4,8 @@
 ### Bugfix
 * fix empty vector literal
 * fix edge case in nested syntax-rules when variable in parent got expanded into identifier
+* fix nesting unquote in quasiquote [#53](https://github.com/jcubic/lips/issues/53)
+* fix order of evaluation in `,,@x`
 
 ## 1.0.0-beta.8
 ### Breaking

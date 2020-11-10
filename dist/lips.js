@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 08 Nov 2020 12:52:24 +0000
+ * build: Tue, 10 Nov 2020 16:39:38 +0000
  */
 (function () {
   'use strict';
@@ -4622,9 +4622,16 @@
           ellipsis_symbol = options.ellipsis;
       var gensyms = {};
 
+      function valid_symbol(symbol) {
+        if (symbol instanceof LSymbol) {
+          return true;
+        }
+
+        return ['string', 'symbol'].includes(_typeof_1(symbol));
+      }
+
       function transform(symbol) {
-        if (!(symbol instanceof LSymbol || ['string', 'symbol'].includes(_typeof_1(symbol)))) {
-          //typeof symbol === 'string')) {
+        if (!valid_symbol(symbol)) {
           var t = type(symbol);
           throw new Error("syntax: internal error, need symbol got ".concat(t));
         }
@@ -5013,7 +5020,7 @@
           var value = scope.get(expr.car, {
             throwError: false
           });
-          var is_syntax = value instanceof Macro && value.__name__ == 'syntax-rules';
+          var is_syntax = value instanceof Macro && value.__name__ === 'syntax-rules';
           var head = traverse(expr.car, {
             disabled: disabled
           });
@@ -9133,12 +9140,32 @@
             if (LSymbol.is(pair.car.car, 'unquote')) {
               // + 2 - one for unquote and one for unquote splicing
               if (unquote_cnt + 2 === max_unq && pair.car.cdr instanceof Pair && pair.car.cdr.car instanceof Pair && LSymbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
-                return new Pair(new LSymbol('unquote'), unquote_splice(pair.car.cdr, unquote_cnt + 2, max_unq));
-              } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== nil && !(pair.car.cdr.car instanceof Pair)) {
-                // same as in guile if (unquote 1 2 3) it should be
-                // spliced - scheme spec say it's unspecify but it
-                // work like in CL
-                return pair.car.cdr;
+                var rest = pair.car.cdr;
+                return new Pair(new Pair(new LSymbol('unquote'), unquote_splice(rest, unquote_cnt + 2, max_unq)), nil);
+              } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== nil) {
+                if (pair.car.cdr.car instanceof Pair) {
+                  // values inside unquote are lists
+                  var result = [];
+                  return function recur(node) {
+                    if (node === nil) {
+                      return Pair.fromArray(result);
+                    }
+
+                    return unpromise(evaluate(node.car, {
+                      env: self,
+                      dynamic_scope: dynamic_scope,
+                      error: error
+                    }), function (next) {
+                      result.push(next);
+                      return recur(node.cdr);
+                    });
+                  }(pair.car.cdr);
+                } else {
+                  // same as in guile if (unquote 1 2 3) it should be
+                  // spliced - scheme spec say it's unspecify but it
+                  // work like in CL
+                  return pair.car.cdr;
+                }
               }
             }
 
@@ -9160,11 +9187,15 @@
               if (pair.cdr instanceof Pair) {
                 if (pair.cdr.cdr !== nil) {
                   if (pair.cdr.car instanceof Pair) {
-                    var list = nil; // evaluate all values in unquote
+                    // TODO: test if this part is needed
+                    // this part was duplicated in previous section
+                    // if (LSymbol.is(pair.car.car, 'unquote')) {
+                    // so this probably can be removed
+                    var _result3 = []; // evaluate all values in unquote
 
                     return function recur(node) {
                       if (node === nil) {
-                        return list;
+                        return Pair.fromArray(_result3);
                       }
 
                       return unpromise(evaluate(node.car, {
@@ -9172,7 +9203,8 @@
                         dynamic_scope: dynamic_scope,
                         error: error
                       }), function (next) {
-                        list = new Pair(next, list);
+                        _result3.push(next);
+
                         return recur(node.cdr);
                       });
                     }(pair.cdr);
@@ -11061,10 +11093,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 08 Nov 2020 12:52:24 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 10 Nov 2020 16:39:38 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 08 Nov 2020 12:52:24 +0000').valueOf();
+      var date = LString('Tue, 10 Nov 2020 16:39:38 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11101,7 +11133,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 08 Nov 2020 12:52:24 +0000',
+      date: 'Tue, 10 Nov 2020 16:39:38 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
