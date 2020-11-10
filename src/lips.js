@@ -5257,6 +5257,7 @@
                 port = this.get('stdin');
             }
             var result = await port.read();
+            console.log(result);
             if (result === eof) {
                 return eof;
             }
@@ -7845,10 +7846,10 @@
                     error: (e, code) => {
                         if (code) {
                             // LIPS stack trace
-                            if (!(e.code instanceof Array)) {
-                                e.code = [];
+                            if (!(e.__code__ instanceof Array)) {
+                                e.__code__ = [];
                             }
-                            e.code.push(code.toString(true));
+                            e.__code__.push(code.toString(true));
                         }
                         throw e;
                     }

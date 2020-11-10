@@ -101,8 +101,8 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
         console.error(e.message);
         console.error('Call (stack-trace) to see the stack');
         log_error(e.message);
-        if (e.code) {
-            strace = e.code.map((line, i) => {
+        if (e.__code__) {
+            strace = e.__code__.map((line, i) => {
                 var prefix = `[${i+1}]: `;
                 var formatter = new Formatter(line);
                 var output = formatter.break().format({
