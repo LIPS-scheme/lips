@@ -113,7 +113,7 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
         }
         if (stack) {
             console.error(e.stack);
-            console.error(strace);
+            //console.error(strace);
         } else {
             console.error('Thrown exception is in global exception variable, use ' +
                           '(display exception.stack) to display JS stack trace');

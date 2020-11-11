@@ -94,6 +94,9 @@
     function log(x, regex = null) {
         var literal = arguments[1] === true;
         function msg(x) {
+            if (!is_debug()) {
+                return;
+            }
             var value = global_env.get('repr')(x);
             if (regex === null || regex instanceof RegExp && regex.test(value)) {
                 console.log(global_env.get('type')(x) + ": " + value);
@@ -6252,44 +6255,64 @@
                         nil
                     );
                 }
-                var eval_pair = evaluate(pair.car.cdr.car, {
-                    env: self,
-                    dynamic_scope,
-                    error
-                });
-                return unpromise(eval_pair, function(eval_pair) {
-                    if (!(eval_pair instanceof Pair)) {
-                        if (pair.cdr instanceof Pair &&
-                            LSymbol.is(pair.cdr.car, '.') &&
-                            pair.cdr.cdr instanceof Pair &&
-                            pair.cdr.cdr.cdr === nil) {
-                            return pair.cdr.cdr.car;
-                        }
-                        if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
-                            const msg = "You can't splice atom inside list";
-                            throw new Error(msg);
-                        }
-                        if (!(pair.cdr instanceof Pair && eval_pair === nil)) {
-                            return eval_pair;
-                        }
-                    }
-                    // don't create Cycles
-                    if (splices.has(eval_pair)) {
-                        eval_pair = eval_pair.clone();
-                    } else {
-                        splices.add(eval_pair);
-                    }
-                    const value = recur(pair.cdr, 0, 1);
-                    if (value === nil && eval_pair === nil) {
-                        return undefined;
-                    }
-                    return unpromise(value, value => {
-                        if (eval_pair === nil) {
-                            return value;
-                        }
-                        return join(eval_pair, value);
+                var lists = [];
+                return (function next(node) {
+                    var value = evaluate(node.car, {
+                        env: self,
+                        dynamic_scope,
+                        error
                     });
-                });
+                    lists.push(value);
+                    if (node.cdr instanceof Pair) {
+                        return next(node.cdr);
+                    }
+                    return unpromise(lists, function(arr) {
+                        if (arr.some(x => !(x instanceof Pair))) {
+                            if (pair.cdr instanceof Pair &&
+                                LSymbol.is(pair.cdr.car, '.') &&
+                                pair.cdr.cdr instanceof Pair &&
+                                pair.cdr.cdr.cdr === nil) {
+                                return pair.cdr.cdr.car;
+                            }
+                            if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
+                                const msg = "You can't splice atom inside list";
+                                throw new Error(msg);
+                            }
+                            if (arr.length > 1) {
+                                const msg = "You can't splice multiple atoms inside list";
+                                throw new Error(msg);
+                            }
+                            if (!(pair.cdr instanceof Pair && arr[0] === nil)) {
+                                return arr[0];
+                            }
+                        }
+                        // don't create Cycles
+                        arr = arr.map(eval_pair => {
+                            if (splices.has(eval_pair)) {
+                                return eval_pair.clone();
+                            } else {
+                                splices.add(eval_pair);
+                                return eval_pair;
+                            }
+                        });
+                        const value = recur(pair.cdr, 0, 1);
+                        if (value === nil && arr[0] === nil) {
+                            return undefined;
+                        }
+                        return unpromise(value, value => {
+                            if (arr[0] === nil) {
+                                return value;
+                            }
+                            if (arr.length === 1) {
+                                return join(arr[0], value);
+                            }
+                            var result = arr.reduce((result, eval_pair) => {
+                                return join(result, eval_pair);
+                            });
+                            return join(result, value);
+                        });
+                    });
+                })(pair.car.cdr);
             }
             var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {

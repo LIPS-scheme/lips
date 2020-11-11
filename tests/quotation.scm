@@ -38,13 +38,18 @@
                      (sum 0 (+ sum (car x))))
                   ((null? x) sum) 10)) 25)))
 
-(test_ "quasiquote: it should double splice the list"
+(test "quasiquote: it should double splice the list"
        (lambda (t)
-         (define result (eval (let ((x '((list 1 2 3) (list 1 2 3) (list 1 2 3))))
-            ``(list `(,@,@x)))
-             (interaction-environment)))
 
-         (t.is result '((1 2 3 1 2 3 1 2 3)))))
+         (define expr (let ((x '((list 1 2 3) (list 4 5 6) (list 7 8 9))))
+                                `(list `(,@,@x))))
+
+         (t.is expr '(list (quasiquote ((unquote-splicing (list 1 2 3)
+                                                          (list 4 5 6)
+                                                          (list 7 8 9))))))
+         (define result (eval expr (interaction-environment)))
+
+         (t.is result '((1 2 3 4 5 6 7 8 9)))))
 
 (test "quasiquote: it should backquote & unquote multiple times"
       (lambda (t)

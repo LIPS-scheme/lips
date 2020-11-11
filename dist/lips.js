@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Nov 2020 10:28:16 +0000
+ * build: Wed, 11 Nov 2020 11:21:50 +0000
  */
 (function () {
   'use strict';
@@ -9080,48 +9080,73 @@
             return new Pair(new Pair(pair.car.car, recur(pair.car.cdr, unquote_cnt, max_unq)), nil);
           }
 
-          var eval_pair = evaluate(pair.car.cdr.car, {
-            env: self,
-            dynamic_scope: dynamic_scope,
-            error: error
-          });
-          return unpromise(eval_pair, function (eval_pair) {
-            if (!(eval_pair instanceof Pair)) {
-              if (pair.cdr instanceof Pair && LSymbol.is(pair.cdr.car, '.') && pair.cdr.cdr instanceof Pair && pair.cdr.cdr.cdr === nil) {
-                return pair.cdr.cdr.car;
-              }
-
-              if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
-                var msg = "You can't splice atom inside list";
-                throw new Error(msg);
-              }
-
-              if (!(pair.cdr instanceof Pair && eval_pair === nil)) {
-                return eval_pair;
-              }
-            } // don't create Cycles
-
-
-            if (splices.has(eval_pair)) {
-              eval_pair = eval_pair.clone();
-            } else {
-              splices.add(eval_pair);
-            }
-
-            var value = recur(pair.cdr, 0, 1);
-
-            if (value === nil && eval_pair === nil) {
-              return undefined$1;
-            }
-
-            return unpromise(value, function (value) {
-              if (eval_pair === nil) {
-                return value;
-              }
-
-              return join(eval_pair, value);
+          var lists = [];
+          return function next(node) {
+            var value = evaluate(node.car, {
+              env: self,
+              dynamic_scope: dynamic_scope,
+              error: error
             });
-          });
+            lists.push(value);
+
+            if (node.cdr instanceof Pair) {
+              return next(node.cdr);
+            }
+
+            return unpromise(lists, function (arr) {
+              if (arr.some(function (x) {
+                return !(x instanceof Pair);
+              })) {
+                if (pair.cdr instanceof Pair && LSymbol.is(pair.cdr.car, '.') && pair.cdr.cdr instanceof Pair && pair.cdr.cdr.cdr === nil) {
+                  return pair.cdr.cdr.car;
+                }
+
+                if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
+                  var msg = "You can't splice atom inside list";
+                  throw new Error(msg);
+                }
+
+                if (arr.length > 1) {
+                  var _msg = "You can't splice multiple atoms inside list";
+                  throw new Error(_msg);
+                }
+
+                if (!(pair.cdr instanceof Pair && arr[0] === nil)) {
+                  return arr[0];
+                }
+              } // don't create Cycles
+
+
+              arr = arr.map(function (eval_pair) {
+                if (splices.has(eval_pair)) {
+                  return eval_pair.clone();
+                } else {
+                  splices.add(eval_pair);
+                  return eval_pair;
+                }
+              });
+              var value = recur(pair.cdr, 0, 1);
+
+              if (value === nil && arr[0] === nil) {
+                return undefined$1;
+              }
+
+              return unpromise(value, function (value) {
+                if (arr[0] === nil) {
+                  return value;
+                }
+
+                if (arr.length === 1) {
+                  return join(arr[0], value);
+                }
+
+                var result = arr.reduce(function (result, eval_pair) {
+                  return join(result, eval_pair);
+                });
+                return join(result, value);
+              });
+            });
+          }(pair.car.cdr);
         }
 
         var splices = new Set();
@@ -11098,10 +11123,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 11 Nov 2020 10:28:16 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 11 Nov 2020 11:21:50 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 11 Nov 2020 10:28:16 +0000').valueOf();
+      var date = LString('Wed, 11 Nov 2020 11:21:50 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11138,7 +11163,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 11 Nov 2020 10:28:16 +0000',
+      date: 'Wed, 11 Nov 2020 11:21:50 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

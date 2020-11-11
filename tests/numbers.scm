@@ -2,7 +2,7 @@
       (lambda (t)
         (t.is (+) 0)
         (t.is (*) 1)
-        (t.is (-) -1)))
+        (t.is (to.throw (-)) true)))
 
 (test "numbers: rational"
       (lambda (t)
