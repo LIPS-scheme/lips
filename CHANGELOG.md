@@ -3,6 +3,7 @@
 * throw exception when calling `(-)`
 ### Features
 * add `let-values`, `let*-values` and `define-values` syntax macros
+* add `exact-integer?` function
 ### Bugfix
 * fix empty vector literal
 * fix edge case in nested syntax-rules when variable in parent got expanded into identifier

@@ -207,6 +207,14 @@
 (define exact inexact->exact)
 
 ;; -----------------------------------------------------------------------------
+(define (exact-integer? n)
+  "(exact-integer? n)
+
+   Function returns #t if z is both exact and an integer; otherwise
+   returns #f."
+  (and (integer? n) (exact? n)))
+
+;; -----------------------------------------------------------------------------
 (define (string->vector s)
   "(string->vector string)
 
