@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 10 Nov 2020 16:55:57 +0000
+ * build: Wed, 11 Nov 2020 00:53:02 +0000
  */
 (function () {
   'use strict';
@@ -8239,7 +8239,7 @@
           throwError: false
         }) !== 'undefined') {
           return new Promise(function (resolve, reject) {
-            var path = require('path');
+            var path = nodeRequire('path');
 
             if (module_path) {
               module_path = module_path.valueOf();
@@ -8247,8 +8247,7 @@
             }
 
             global_env.set(PATH, path.dirname(file));
-
-            require('fs').readFile(file, function (err, data) {
+            nodeRequire('fs').readFile(file, function (err, data) {
               if (err) {
                 console.log(err);
                 reject(err);
@@ -10233,15 +10232,18 @@
 
 
     if (typeof global !== 'undefined') {
-      var fs = require('fs');
+      /* eslint-disable no-eval */
+      var nodeRequire = eval('require');
+      /* eslint-enable */
 
-      var path = require('path');
-
+      var fs = nodeRequire('fs');
+      var path = nodeRequire('path');
       global_env.set('global', global); // ---------------------------------------------------------------------
 
       global_env.set('require.resolve', doc('require.resolve', function (path) {
         typecheck('require.resolve', path, 'string');
-        return require.resolve(path.valueOf());
+        var name = path.valueOf();
+        return nodeRequire.resolve(name);
       }, "(require.resolve path)\n\n           Return path relative the current module.")); // ---------------------------------------------------------------------
 
       global_env.set('require', doc('require', function (module) {
@@ -10252,18 +10254,18 @@
 
         try {
           if (module.match(/^\s*\./)) {
-            value = require(path.join(root, module));
+            value = nodeRequire(path.join(root, module));
           } else {
             var dir = nodeModuleFind(root);
 
             if (dir) {
-              value = require(path.join(dir, 'node_modules', module));
+              value = nodeRequire(path.join(dir, 'node_modules', module));
             } else {
-              value = require(module);
+              value = nodeRequire(module);
             }
           }
         } catch (e) {
-          value = require(module);
+          value = nodeRequire(module);
         }
 
         return patchValue(value, global);
@@ -11094,10 +11096,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 10 Nov 2020 16:55:57 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 11 Nov 2020 00:53:02 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 10 Nov 2020 16:55:57 +0000').valueOf();
+      var date = LString('Wed, 11 Nov 2020 00:53:02 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11134,7 +11136,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 10 Nov 2020 16:55:57 +0000',
+      date: 'Wed, 11 Nov 2020 00:53:02 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

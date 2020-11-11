@@ -8,6 +8,7 @@
 * fix order of evaluation in `,,@x`
 * fix name collision while catching DOM exceptions [#84](https://github.com/jcubic/lips/issues/84)
 * fix integer? and other number type checks
+* fix warnings about require while loading from Webpack
 
 ## 1.0.0-beta.8
 ### Breaking

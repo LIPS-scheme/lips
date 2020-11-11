@@ -5546,13 +5546,13 @@
             }
             if (typeof this.get('global', { throwError: false }) !== 'undefined') {
                 return new Promise((resolve, reject) => {
-                    var path = require('path');
+                    var path = nodeRequire('path');
                     if (module_path) {
                         module_path = module_path.valueOf();
                         file = path.join(module_path, file);
                     }
                     global_env.set(PATH, path.dirname(file));
-                    require('fs').readFile(file, function(err, data) {
+                    nodeRequire('fs').readFile(file, function(err, data) {
                         if (err) {
                             console.log(err);
                             reject(err);
@@ -7467,13 +7467,17 @@
 
     // -------------------------------------------------------------------------
     if (typeof global !== 'undefined') {
-        var fs = require('fs');
-        var path = require('path');
+        /* eslint-disable no-eval */
+        var nodeRequire = eval('require');
+        /* eslint-enable */
+        var fs = nodeRequire('fs');
+        var path = nodeRequire('path');
         global_env.set('global', global);
         // ---------------------------------------------------------------------
         global_env.set('require.resolve', doc('require.resolve', function(path) {
             typecheck('require.resolve', path, 'string');
-            return require.resolve(path.valueOf());
+            var name = path.valueOf();
+            return nodeRequire.resolve(name);
         }, `(require.resolve path)
 
            Return path relative the current module.`));
@@ -7485,17 +7489,17 @@
             var value;
             try {
                 if (module.match(/^\s*\./)) {
-                    value = require(path.join(root, module));
+                    value = nodeRequire(path.join(root, module));
                 } else {
                     var dir = nodeModuleFind(root);
                     if (dir) {
-                        value = require(path.join(dir, 'node_modules', module));
+                        value = nodeRequire(path.join(dir, 'node_modules', module));
                     } else {
-                        value = require(module);
+                        value = nodeRequire(module);
                     }
                 }
             } catch (e) {
-                value = require(module);
+                value = nodeRequire(module);
             }
             return patchValue(value, global);
         }, `(require module)
