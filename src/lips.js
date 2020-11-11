@@ -7162,6 +7162,9 @@
         return that value.`),
         // ------------------------------------------------------------------
         '-': doc('-', function(...args) {
+            if (args.length === 0) {
+                throw new Error('-: procedure require at least one argument');
+            }
             if (args.length === 1) {
                 return LNumber(args[0]).sub();
             }
@@ -7170,9 +7173,8 @@
                     return LNumber(a).sub(b);
                 }));
             }
-            return LNumber(-1);
-        }, `(- . numbers)
-            (- number)
+        }, `(- n1 n2 ...)
+            (- n1)
 
             Substract number passed as argument. If only one argument is passed
             it will negate the value.`),

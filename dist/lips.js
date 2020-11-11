@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Nov 2020 00:53:02 +0000
+ * build: Wed, 11 Nov 2020 10:28:16 +0000
  */
 (function () {
   'use strict';
@@ -9916,6 +9916,10 @@
           args[_key31] = arguments[_key31];
         }
 
+        if (args.length === 0) {
+          throw new Error('-: procedure require at least one argument');
+        }
+
         if (args.length === 1) {
           return LNumber(args[0]).sub();
         }
@@ -9925,9 +9929,7 @@
             return LNumber(a).sub(b);
           }));
         }
-
-        return LNumber(-1);
-      }, "(- . numbers)\n            (- number)\n\n            Substract number passed as argument. If only one argument is passed\n            it will negate the value."),
+      }, "(- n1 n2 ...)\n            (- n1)\n\n            Substract number passed as argument. If only one argument is passed\n            it will negate the value."),
       // ------------------------------------------------------------------
       '/': doc('/', reduceMathOp(function (a, b) {
         return LNumber(a).div(b);
@@ -11096,10 +11098,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 11 Nov 2020 00:53:02 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 11 Nov 2020 10:28:16 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 11 Nov 2020 00:53:02 +0000').valueOf();
+      var date = LString('Wed, 11 Nov 2020 10:28:16 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11136,7 +11138,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 11 Nov 2020 00:53:02 +0000',
+      date: 'Wed, 11 Nov 2020 10:28:16 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

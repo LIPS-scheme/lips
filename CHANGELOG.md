@@ -1,4 +1,6 @@
 ## 1.0.0-beta.9
+### Breaking
+* throw exception when calling `(-)`
 ### Features
 * `let-values` and `let*-values` syntax macros
 ### Bugfix
