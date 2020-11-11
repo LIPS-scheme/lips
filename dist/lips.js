@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Nov 2020 11:21:50 +0000
+ * build: Wed, 11 Nov 2020 11:37:22 +0000
  */
 (function () {
   'use strict';
@@ -1290,7 +1290,40 @@
       'null': '\x00',
       'return': '\r',
       'space': ' ',
-      'tab': '\t'
+      'tab': '\t',
+      // new symbols from ASCII table in SRFI-175
+      'dle': '\x10',
+      'soh': '\x01',
+      'dc1': '\x11',
+      'stx': '\x02',
+      'dc2': '\x12',
+      'etx': '\x03',
+      'dc3': '\x13',
+      'eot': '\x04',
+      'dc4': '\x14',
+      'enq': '\x05',
+      'nak': '\x15',
+      'ack': '\x06',
+      'syn': '\x16',
+      'bel': '\x07',
+      'etb': '\x17',
+      'bs': '\x08',
+      'can': '\x18',
+      'ht': '\x09',
+      'em': '\x19',
+      'lf': '\x0a',
+      'sub': '\x1a',
+      'vt': '\x0b',
+      'esc': '\x1b',
+      'ff': '\x0c',
+      'fs': '\x1c',
+      'cr': '\x0d',
+      'gs': '\x1d',
+      'so': '\x0e',
+      'rs': '\x1e',
+      'si': '\x0f',
+      'us': '\x1f',
+      'del': '\x7f'
     };
     var character_symbols = Object.keys(characters).join('|');
     var char_sre_re = "#\\\\(?:x[0-9a-f]+|".concat(character_symbols, "|[\\s\\S])");
@@ -11123,10 +11156,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 11 Nov 2020 11:21:50 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 11 Nov 2020 11:37:22 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 11 Nov 2020 11:21:50 +0000').valueOf();
+      var date = LString('Wed, 11 Nov 2020 11:37:22 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11163,7 +11196,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 11 Nov 2020 11:21:50 +0000',
+      date: 'Wed, 11 Nov 2020 11:37:22 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
