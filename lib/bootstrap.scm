@@ -507,6 +507,14 @@
      stdout))
 
 ;; -----------------------------------------------------------------------------
+(define (current-error-port)
+  "(current-output-port)
+
+   Function return default stdout port."
+  (let-env (interaction-environment)
+     stderr))
+
+;; -----------------------------------------------------------------------------
 (define (current-input-port)
   "current-input-port)
 
@@ -514,6 +522,7 @@
   (let-env (interaction-environment)
      stdin))
 
+;; -----------------------------------------------------------------------------
 (define (regex? x)
   "(regex? x)
 

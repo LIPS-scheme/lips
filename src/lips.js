@@ -5247,6 +5247,10 @@
             console.log(...args);
         }),
         // ------------------------------------------------------------------
+        stderr: new OutputPort(function(...args) {
+            console.error(...args);
+        }),
+        // ------------------------------------------------------------------
         stdin: InputPort(function() {
             return new Promise((resolve) => {
                 resolve(prompt(''));
@@ -5426,8 +5430,11 @@
             Function send string to standard output or provied port.`),
         // ------------------------------------------------------------------
         error: doc(function error(...args) {
-            this.get('display').call(this, args.map(toString).join(''));
-            this.get('newline').call(this);
+            const port = this.get('stderr');
+            const repr = this.get('repr');
+            const value = args.map(arg => repr.call(this, arg)).join(' ');
+            port.write.call(this, value);
+            this.get('newline').call(this, port);
         }, `(error . args)
 
             Display error message.`),

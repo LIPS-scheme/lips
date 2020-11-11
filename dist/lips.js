@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Nov 2020 17:52:59 +0000
+ * build: Wed, 11 Nov 2020 18:38:41 +0000
  */
 (function () {
   'use strict';
@@ -7921,6 +7921,12 @@
         (_console = console).log.apply(_console, arguments);
       }),
       // ------------------------------------------------------------------
+      stderr: new OutputPort(function () {
+        var _console2;
+
+        (_console2 = console).error.apply(_console2, arguments);
+      }),
+      // ------------------------------------------------------------------
       stdin: InputPort(function () {
         return new Promise(function (resolve) {
           resolve(prompt(''));
@@ -8117,12 +8123,20 @@
       }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
       // ------------------------------------------------------------------
       error: doc(function error() {
+        var _this5 = this;
+
+        var port = this.get('stderr');
+        var repr = this.get('repr');
+
         for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
           args[_key17] = arguments[_key17];
         }
 
-        this.get('display').call(this, args.map(toString).join(''));
-        this.get('newline').call(this);
+        var value = args.map(function (arg) {
+          return repr.call(_this5, arg);
+        }).join(' ');
+        port.write.call(this, value);
+        this.get('newline').call(this, port);
       }, "(error . args)\n\n            Display error message."),
       // ------------------------------------------------------------------
       '%same-functions': doc('%same-functions', function (a, b) {
@@ -8203,7 +8217,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this5 = this;
+        var _this6 = this;
 
         var _ref17 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref17.dynamic_scope,
@@ -8278,7 +8292,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this5.get(name, {
+              var obj = _this6.get(name, {
                 throwError: false
               });
 
@@ -8769,7 +8783,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this6 = this;
+        var _this7 = this;
 
         typecheck('eval', code, ['symbol', 'pair', 'array']);
         env = env || this;
@@ -8783,14 +8797,14 @@
             env: env,
             //dynamic_scope: this,
             error: function error(e) {
-              _this6.get('error').call(_this6, e.message);
+              _this7.get('error').call(_this7, e.message);
 
               if (e.code) {
                 var stack = e.code.map(function (line, i) {
                   return "[".concat(i + 1, "]: ").concat(line);
                 }).join('\n');
 
-                _this6.get('error').call(_this6, stack);
+                _this7.get('error').call(_this7, stack);
               }
             }
           });
@@ -9743,15 +9757,15 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref27) {
-        var _this7 = this;
+        var _this8 = this;
 
         var dynamic_scope = _ref27.dynamic_scope,
             _error = _ref27.error;
         return new Promise(function (resolve) {
           var args = {
-            env: _this7,
+            env: _this8,
             error: function error(e) {
-              var env = _this7.inherit('try');
+              var env = _this8.inherit('try');
 
               env.set(code.cdr.car.cdr.car.car, e);
               var args = {
@@ -9760,7 +9774,7 @@
               };
 
               if (dynamic_scope) {
-                args.dynamic_scope = _this7;
+                args.dynamic_scope = _this8;
               }
 
               unpromise(evaluate(new Pair(new LSymbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
@@ -9770,7 +9784,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this7;
+            args.dynamic_scope = _this8;
           }
 
           var ret = evaluate(code.car, args);
@@ -9828,7 +9842,7 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this8 = this;
+        var _this9 = this;
 
         for (var _len25 = arguments.length, lists = new Array(_len25 > 1 ? _len25 - 1 : 0), _key25 = 1; _key25 < _len25; _key25++) {
           lists[_key25 - 1] = arguments[_key25];
@@ -9839,7 +9853,7 @@
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this8, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this9, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -9861,7 +9875,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this8, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this9, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -9957,7 +9971,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this9 = this;
+        var _this10 = this;
 
         for (var _len28 = arguments.length, lists = new Array(_len28 > 3 ? _len28 - 3 : 0), _key29 = 3; _key29 < _len28; _key29++) {
           lists[_key29 - 3] = arguments[_key29];
@@ -9977,7 +9991,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this9, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this10, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -11244,10 +11258,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 11 Nov 2020 17:52:59 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 11 Nov 2020 18:38:41 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 11 Nov 2020 17:52:59 +0000').valueOf();
+      var date = LString('Wed, 11 Nov 2020 18:38:41 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11284,7 +11298,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 11 Nov 2020 17:52:59 +0000',
+      date: 'Wed, 11 Nov 2020 18:38:41 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
