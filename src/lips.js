@@ -5610,17 +5610,22 @@
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
-        load: doc(function load(file) {
+        // TODO: (load filename environment-specifier)
+        // ------------------------------------------------------------------
+        load: doc(function load(file, env) {
             typecheck('load', file, 'string');
             var g_env = this;
             if (g_env.__name__ === '__frame__') {
                 g_env = g_env.__parent__;
             }
-            var env;
-            if (g_env === global_env) {
-                env = g_env;
-            } else {
-                env = this.get('**interaction-environment**');
+            if (!(env instanceof Environment)) {
+                if (g_env === global_env) {
+                    // this is used for let-env + load
+                    // this may be obsolete when there is env arg
+                    env = g_env;
+                } else {
+                    env = this.get('**interaction-environment**');
+                }
             }
             const PATH = '**module-path**';
             var module_path = global_env.get(PATH, { throwError: false });
@@ -5661,8 +5666,11 @@
                 global_env.set(PATH, module_path);
             });
         }, `(load filename)
+            (load filename environment)
 
-            Function fetch the file and evaluate its content as LIPS code.`),
+            Function fetch the file and evaluate its content as LIPS code,
+            If second argument is provided and it's environment the evaluation
+            will happen in that environment.`),
         // ------------------------------------------------------------------
         'do': doc(new Macro('do', async function(code, { dynamic_scope, error }) {
             var self = this;

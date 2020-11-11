@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Nov 2020 18:38:41 +0000
+ * build: Wed, 11 Nov 2020 18:44:26 +0000
  */
 (function () {
   'use strict';
@@ -8338,7 +8338,9 @@
       // ------------------------------------------------------------------
       gensym: doc('gensym', gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
       // ------------------------------------------------------------------
-      load: doc(function load(file) {
+      // TODO: (load filename environment-specifier)
+      // ------------------------------------------------------------------
+      load: doc(function load(file, env) {
         typecheck('load', file, 'string');
         var g_env = this;
 
@@ -8346,12 +8348,14 @@
           g_env = g_env.__parent__;
         }
 
-        var env;
-
-        if (g_env === global_env) {
-          env = g_env;
-        } else {
-          env = this.get('**interaction-environment**');
+        if (!(env instanceof Environment)) {
+          if (g_env === global_env) {
+            // this is used for let-env + load
+            // this may be obsolete when there is env arg
+            env = g_env;
+          } else {
+            env = this.get('**interaction-environment**');
+          }
         }
 
         var PATH = '**module-path**';
@@ -8404,7 +8408,7 @@
         }).then(function () {})["finally"](function () {
           global_env.set(PATH, module_path);
         });
-      }, "(load filename)\n\n            Function fetch the file and evaluate its content as LIPS code."),
+      }, "(load filename)\n            (load filename environment)\n\n            Function fetch the file and evaluate its content as LIPS code,\n            If second argument is provided and it's environment the evaluation\n            will happen in that environment."),
       // ------------------------------------------------------------------
       'do': doc(new Macro('do', /*#__PURE__*/function () {
         var _ref18 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(code, _ref19) {
@@ -11258,10 +11262,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 11 Nov 2020 18:38:41 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 11 Nov 2020 18:44:26 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 11 Nov 2020 18:38:41 +0000').valueOf();
+      var date = LString('Wed, 11 Nov 2020 18:44:26 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11298,7 +11302,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 11 Nov 2020 18:38:41 +0000',
+      date: 'Wed, 11 Nov 2020 18:44:26 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

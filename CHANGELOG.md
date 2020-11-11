@@ -5,6 +5,7 @@
 * add `let-values`, `let*-values` and `define-values` syntax macros
 * add `exact-integer?` function
 * add `stderr` port and `current-error-port` function
+* add environment as second argument to load (according to R7RS spec)
 ### Bugfix
 * fix empty vector literal
 * fix edge case in nested syntax-rules when variable in parent got expanded into identifier
