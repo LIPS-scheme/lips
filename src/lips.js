@@ -2626,8 +2626,8 @@
                     bindings['...'].symbols[name] = bindings['...'].symbols[name] || [];
                     bindings['...'].symbols[name].push(code);
                 }
+                bindings.symbols[name] = code;
                 if (!bindings.symbols[name]) {
-                    bindings.symbols[name] = code;
                 }
                 return true;
             }
@@ -2661,6 +2661,32 @@
                         }
                         return true;
                     }
+                }
+                log({
+                    pattern: pattern.toString(),
+                    code: code.toString()
+                });
+                // case (x y) ===> (var0 var1 ... varn) where var1 match nil
+                if (pattern.cdr instanceof Pair &&
+                    pattern.car instanceof LSymbol &&
+                    pattern.cdr.cdr instanceof Pair &&
+                    pattern.cdr.car instanceof LSymbol &&
+                    LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) &&
+                    pattern.cdr.cdr.cdr instanceof Pair &&
+                    !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) &&
+                    traverse(pattern.car, code.car, pattern_names, ellipsis) &&
+                    traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
+                    const name = pattern.cdr.car.__name__;
+                    log({
+                        pattern: pattern.car.toString(),
+                        code: code.car.toString(),
+                        name
+                    });
+                    if (symbols.includes(name)) {
+                        return true;
+                    }
+                    bindings['...'].symbols[name] = null;
+                    return true;
                 }
                 log('recur');
                 if (traverse(pattern.car, code.car, pattern_names, ellipsis) &&
@@ -2945,6 +2971,12 @@
                     LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
                     log('>> 1');
                     const symbols = bindings['...'].symbols;
+                    // skip expand list of pattern was (x y ... z)
+                    // and code was (x z) so y == null
+                    const values = Object.values(symbols);
+                    if (values.length && values.every(x => x === null)) {
+                        return traverse(expr.cdr.cdr, { disabled });
+                    }
                     var keys = get_names(symbols);
                     // case of list as first argument ((x . y) ...) or (x ... ...)
                     // we need to recursively process the list
@@ -3012,6 +3044,12 @@
                             if (result !== nil && !is_spread) {
                                 result = result.reverse();
                             }
+                            // case of (list) ... (rest code)
+                            if (expr.cdr.cdr !== nil &&
+                                !LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
+                                const rest = traverse(expr.cdr.cdr, { disabled });
+                                return result.append(rest);
+                            }
                             return result;
                         } else {
                             log('>> 3');
@@ -3057,6 +3095,7 @@
                                 { nested: false },
                                 next
                             );
+                            log({ value: value.toString() });
                             if (typeof value !== 'undefined') {
                                 result = new Pair(
                                     value,
@@ -3078,9 +3117,11 @@
                                 if (is_null) {
                                     return node;
                                 }
+                                log('<<<< 1');
                                 result.append(node);
                             }
                         }
+                        log('<<<< 2');
                         return result;
                     }
                 }
@@ -6160,7 +6201,10 @@
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-
+                    if (is_debug()) {
+                        console.log('--------------------------------');
+                    }
+                    log(rule);
                     var bindings = extract_patterns(rule, code, symbols, ellipsis, {
                         expansion: this, define: env
                     });

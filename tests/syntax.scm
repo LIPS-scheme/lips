@@ -852,3 +852,20 @@
                         (foo 1 2 3)))))
 
         (t.is (foo) '((1) (2) (3)))))
+
+(test "syntax-rules: it should ignore ellipsis in middle for 2 elements"
+      (lambda (t)
+        ;; code for define-values from R7RS spec
+        ;; macro defined in lib/R7RS.scm
+
+        (let ()
+          (define-values (x y) (values 1 2))
+          (t.is (+ x y) 3))
+
+        (let ()
+          (define-values (x y z) (values 1 2 3))
+          (t.is (+ x y z) 6))
+
+        (let ()
+          (define-values (x) (values 1))
+          (t.is x 1))))

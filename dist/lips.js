@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Nov 2020 11:37:22 +0000
+ * build: Wed, 11 Nov 2020 17:52:59 +0000
  */
 (function () {
   'use strict';
@@ -1152,6 +1152,40 @@
         win[add](pre + 'load', init, false);
       }
     } // -------------------------------------------------------------------------
+
+    /* eslint-disable */
+
+    /* istanbul ignore next */
+
+
+    function log(x) {
+      var regex = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
+      var literal = arguments[1] === true;
+
+      function msg(x) {
+        if (!is_debug()) {
+          return;
+        }
+
+        var value = global_env.get('repr')(x);
+
+        if (regex === null || regex instanceof RegExp && regex.test(value)) {
+          console.log(global_env.get('type')(x) + ": " + value);
+        }
+
+        if (literal) {
+          console.log(x);
+        }
+      }
+
+      if (isPromise(x)) {
+        x.then(msg);
+      } else {
+        msg(x);
+      }
+
+      return x;
+    } // ----------------------------------------------------------------------
 
     /* istanbul ignore next */
 
@@ -4482,9 +4516,9 @@
             bindings['...'].symbols[_name3].push(code);
           }
 
-          if (!bindings.symbols[_name3]) {
-            bindings.symbols[_name3] = code;
-          }
+          bindings.symbols[_name3] = code;
+
+          if (!bindings.symbols[_name3]) ;
 
           return true;
         }
@@ -4526,6 +4560,27 @@
 
               return true;
             }
+          }
+
+          log({
+            pattern: pattern.toString(),
+            code: code.toString()
+          }); // case (x y) ===> (var0 var1 ... varn) where var1 match nil
+
+          if (pattern.cdr instanceof Pair && pattern.car instanceof LSymbol && pattern.cdr.cdr instanceof Pair && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && pattern.cdr.cdr.cdr instanceof Pair && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
+            var _name5 = pattern.cdr.car.__name__;
+            log({
+              pattern: pattern.car.toString(),
+              code: code.car.toString(),
+              name: _name5
+            });
+
+            if (symbols.includes(_name5)) {
+              return true;
+            }
+
+            bindings['...'].symbols[_name5] = null;
+            return true;
           }
 
           log('recur');
@@ -4764,11 +4819,11 @@
           if (expr.car instanceof LSymbol && expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
             log('[t 2');
 
-            var _name5 = expr.car.valueOf();
+            var _name6 = expr.car.valueOf();
 
-            var item = bindings[_name5];
+            var item = bindings[_name6];
             log({
-              name: _name5,
+              name: _name6,
               bindings: bindings,
               item: item
             });
@@ -4777,7 +4832,7 @@
               return;
             } else if (item) {
               log({
-                b: bindings[_name5].toString()
+                b: bindings[_name6].toString()
               });
 
               if (item instanceof Pair) {
@@ -4791,7 +4846,7 @@
                 if (nested) {
                   if (_cdr !== nil) {
                     log('|| next 1');
-                    next(_name5, _cdr);
+                    next(_name6, _cdr);
                   }
 
                   log({
@@ -4801,7 +4856,7 @@
                 } else {
                   if (_car.cdr !== nil) {
                     log('|| next 2');
-                    next(_name5, new Pair(_car.cdr, _cdr));
+                    next(_name6, new Pair(_car.cdr, _cdr));
                   }
 
                   log({
@@ -4813,13 +4868,13 @@
                 log('[t 2 Array ' + nested);
 
                 if (nested) {
-                  next(_name5, item.slice(1));
+                  next(_name6, item.slice(1));
                   return Pair.fromArray(item);
                 } else {
                   var _rest5 = item.slice(1);
 
                   if (_rest5.length) {
-                    next(_name5, _rest5);
+                    next(_name6, _rest5);
                   }
 
                   return item[0];
@@ -4880,7 +4935,19 @@
 
           if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
             log('>> 1');
-            var _symbols2 = bindings['...'].symbols;
+            var _symbols2 = bindings['...'].symbols; // skip expand list of pattern was (x y ... z)
+            // and code was (x z) so y == null
+
+            var values = Object.values(_symbols2);
+
+            if (values.length && values.every(function (x) {
+              return x === null;
+            })) {
+              return traverse(expr.cdr.cdr, {
+                disabled: disabled
+              });
+            }
+
             var keys = get_names(_symbols2); // case of list as first argument ((x . y) ...) or (x ... ...)
             // we need to recursively process the list
             // if we have pattern (_ (x y z ...) ...) and code (foo (1 2) (1 2))
@@ -4955,6 +5022,15 @@
 
                 if (result !== nil && !is_spread) {
                   result = result.reverse();
+                } // case of (list) ... (rest code)
+
+
+                if (expr.cdr.cdr !== nil && !LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
+                  var _rest6 = traverse(expr.cdr.cdr, {
+                    disabled: disabled
+                  });
+
+                  return result.append(_rest6);
                 }
 
                 return result;
@@ -5011,6 +5087,9 @@
                 var value = transform_ellipsis_expr(expr, _bind2, {
                   nested: false
                 }, next);
+                log({
+                  value: value.toString()
+                });
 
                 if (typeof value !== 'undefined') {
                   _result2 = new Pair(value, _result2);
@@ -5042,10 +5121,13 @@
                     return node;
                   }
 
+                  log('<<<< 1');
+
                   _result2.append(node);
                 }
               }
 
+              log('<<<< 2');
               return _result2;
             }
           }
@@ -8984,6 +9066,12 @@
           while (rules !== nil) {
             var rule = rules.car.car;
             var expr = rules.car.cdr.car;
+
+            if (is_debug()) {
+              console.log('--------------------------------');
+            }
+
+            log(rule);
             var bindings = extract_patterns(rule, code, symbols, ellipsis, {
               expansion: this,
               define: env
@@ -11156,10 +11244,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 11 Nov 2020 11:37:22 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 11 Nov 2020 17:52:59 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 11 Nov 2020 11:37:22 +0000').valueOf();
+      var date = LString('Wed, 11 Nov 2020 17:52:59 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11196,7 +11284,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 11 Nov 2020 11:37:22 +0000',
+      date: 'Wed, 11 Nov 2020 17:52:59 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
