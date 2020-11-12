@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 12 Nov 2020 12:23:37 +0000
+ * build: Thu, 12 Nov 2020 17:57:38 +0000
  */
 (function () {
   'use strict';
@@ -8586,14 +8586,14 @@
         var env = this;
 
         var resolve = function resolve(cond) {
-          if (cond) {
-            return evaluate(code.cdr.car, {
+          if (cond === false) {
+            return evaluate(code.cdr.cdr.car, {
               env: env,
               dynamic_scope: dynamic_scope,
               error: error
             });
           } else {
-            return evaluate(code.cdr.cdr.car, {
+            return evaluate(code.cdr.car, {
               env: env,
               dynamic_scope: dynamic_scope,
               error: error
@@ -11270,10 +11270,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 12 Nov 2020 12:23:37 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 12 Nov 2020 17:57:38 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 12 Nov 2020 12:23:37 +0000').valueOf();
+      var date = LString('Thu, 12 Nov 2020 17:57:38 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11310,7 +11310,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 12 Nov 2020 12:23:37 +0000',
+      date: 'Thu, 12 Nov 2020 17:57:38 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

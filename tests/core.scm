@@ -51,3 +51,11 @@
         (t.is '|\s| 's)
         (t.is '|\x3BB;| 'λ)
         (t.is '|\x9;\x9;| '|\t\t|)))
+
+(test "if"
+      (lambda (t)
+        (t.is (if (newline) 1 2) 1)
+        (t.is (if 0 1 2) 1)
+        (t.is (if null 1 2) 1)
+        (t.is (if () 1 2) 1)
+        (t.is (if #f 1 2) 2)))

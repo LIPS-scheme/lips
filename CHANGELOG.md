@@ -1,6 +1,7 @@
 ## 1.0.0-beta.9
 ### Breaking
 * throw exception when calling `(-)`
+* `if` it now see #f the only falsy value to match Scheme spec
 ### Features
 * add `let-values`, `let*-values` and `define-values` syntax macros
 * add `exact-integer?` function

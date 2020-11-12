@@ -5733,14 +5733,14 @@
             }
             var env = this;
             var resolve = (cond) => {
-                if (cond) {
-                    return evaluate(code.cdr.car, {
+                if (cond === false) {
+                    return evaluate(code.cdr.cdr.car, {
                         env,
                         dynamic_scope,
                         error
                     });
                 } else {
-                    return evaluate(code.cdr.cdr.car, {
+                    return evaluate(code.cdr.car, {
                         env,
                         dynamic_scope,
                         error
