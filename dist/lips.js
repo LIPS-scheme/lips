@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 11 Nov 2020 18:44:26 +0000
+ * build: Thu, 12 Nov 2020 12:23:37 +0000
  */
 (function () {
   'use strict';
@@ -3981,7 +3981,7 @@
 
 
     function is_atom(obj) {
-      return obj instanceof LSymbol || LString.isString(obj) || obj instanceof LCharacter || obj instanceof LNumber || obj === true || obj === false;
+      return obj instanceof LSymbol || LString.isString(obj) || obj === nil || obj === null || obj instanceof LCharacter || obj instanceof LNumber || obj === true || obj === false;
     } // ----------------------------------------------------------------------
 
 
@@ -4073,7 +4073,7 @@
                           switch (_context3.prev = _context3.next) {
                             case 0:
                               if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-                                _context3.next = 24;
+                                _context3.next = 26;
                                 break;
                               }
 
@@ -4090,7 +4090,7 @@
                               });
 
                               if (!(value instanceof Macro && value.__defmacro__)) {
-                                _context3.next = 24;
+                                _context3.next = 26;
                                 break;
                               }
 
@@ -4161,39 +4161,47 @@
                               return _context3.abrupt("return", traverse(result, n, env));
 
                             case 24:
+                              if (!is_atom(result)) {
+                                _context3.next = 26;
+                                break;
+                              }
+
+                              return _context3.abrupt("return", result);
+
+                            case 26:
                               // TODO: CYCLE DETECT
                               car = node.car;
 
                               if (!(car instanceof Pair)) {
-                                _context3.next = 29;
+                                _context3.next = 31;
                                 break;
                               }
 
-                              _context3.next = 28;
+                              _context3.next = 30;
                               return traverse(car, n, env);
 
-                            case 28:
+                            case 30:
                               car = _context3.sent;
 
-                            case 29:
+                            case 31:
                               cdr = node.cdr;
 
                               if (!(cdr instanceof Pair)) {
-                                _context3.next = 34;
+                                _context3.next = 36;
                                 break;
                               }
 
-                              _context3.next = 33;
+                              _context3.next = 35;
                               return traverse(cdr, n, env);
 
-                            case 33:
+                            case 35:
                               cdr = _context3.sent;
 
-                            case 34:
+                            case 36:
                               pair = new Pair(car, cdr);
                               return _context3.abrupt("return", pair);
 
-                            case 36:
+                            case 38:
                             case "end":
                               return _context3.stop();
                           }
@@ -11262,10 +11270,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 11 Nov 2020 18:44:26 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 12 Nov 2020 12:23:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 11 Nov 2020 18:44:26 +0000').valueOf();
+      var date = LString('Thu, 12 Nov 2020 12:23:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11302,7 +11310,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 11 Nov 2020 18:44:26 +0000',
+      date: 'Thu, 12 Nov 2020 12:23:37 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

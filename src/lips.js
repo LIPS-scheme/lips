@@ -2284,6 +2284,8 @@
     function is_atom(obj) {
         return obj instanceof LSymbol ||
             LString.isString(obj) ||
+            obj === nil ||
+            obj === null ||
             obj instanceof LCharacter ||
             obj instanceof LNumber ||
             obj === true ||
@@ -2384,6 +2386,9 @@
                                 n = n - 1;
                             }
                             return traverse(result, n, env);
+                        }
+                        if (is_atom(result)) {
+                            return result;
                         }
                     }
                 }
