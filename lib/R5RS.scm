@@ -605,7 +605,7 @@
    string and replace old value. Object need to be symbol that point to variable
    that hold the string."
   (typecheck "string-set!" object "symbol")
-  (let ((chars (gensym)))
+  (let ((chars (gensym "chars")))
     `(begin
        (typecheck "string-set!" ,object "string")
        (typecheck "string-set!" ,index "number")
