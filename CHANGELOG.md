@@ -16,6 +16,7 @@
 * fix integer? and other number type checks
 * fix warnings about require while loading from Webpack
 * fix unquote-splice multiple lists
+* fix syntax highlighting (prism scheme syntax patching)
 
 ## 1.0.0-beta.8
 ### Breaking
