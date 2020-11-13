@@ -61,7 +61,7 @@
     ((_ (((x ...) values) ...) body ...)
      (apply (lambda (x ... ...)
               body ...)
-            (vector->list (apply %vector-concat (map (lambda (x) ((. x "valueOf")))
+            (vector->list (apply vector-append (map (lambda (x) ((. x "valueOf")))
                                                      (list values ...)))))))
   "(let-values binding body ...)
 
@@ -69,12 +69,15 @@
    need to evaluate to result of calling values.")
 
 ;; -----------------------------------------------------------------------------
-(define (%vector-concat . args)
+(define (vector-append . args)
+  "(vector-append v1 v2 ...)
+
+   Function return new vector by combining it's arguments that should be vectors."
   (if (null? args)
       #()
       (begin
-        (typecheck "%vector-concat" (car args) "array")
-        (--> (car args) (concat (apply %vector-concat (cdr args)))))))
+        (typecheck "vector-append" (car args) "array")
+        (--> (car args) (concat (apply vector-append (cdr args)))))))
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let*-values
