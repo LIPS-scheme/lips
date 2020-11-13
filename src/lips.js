@@ -5638,7 +5638,7 @@
             if (!file.match(/.[^.]+$/)) {
                 file += '.scm';
             }
-            if (typeof this.get('global', { throwError: false }) !== 'undefined') {
+            if (typeof global !== 'undefined' && global === root) {
                 return new Promise((resolve, reject) => {
                     var path = nodeRequire('path');
                     if (module_path) {

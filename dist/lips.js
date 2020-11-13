@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 12 Nov 2020 17:57:38 +0000
+ * build: Fri, 13 Nov 2020 20:09:36 +0000
  */
 (function () {
   'use strict';
@@ -8376,9 +8376,7 @@
           file += '.scm';
         }
 
-        if (typeof this.get('global', {
-          throwError: false
-        }) !== 'undefined') {
+        if (typeof global !== 'undefined' && global === root) {
           return new Promise(function (resolve, reject) {
             var path = nodeRequire('path');
 
@@ -11270,10 +11268,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 12 Nov 2020 17:57:38 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 13 Nov 2020 20:09:36 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 12 Nov 2020 17:57:38 +0000').valueOf();
+      var date = LString('Fri, 13 Nov 2020 20:09:36 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11310,7 +11308,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 12 Nov 2020 17:57:38 +0000',
+      date: 'Fri, 13 Nov 2020 20:09:36 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
