@@ -15,6 +15,52 @@
           (t.is (bar.square 10) 100)
           (t.is (bar.sum 5) 15))))
 
+(test "core: let/letrect/let*"
+      (lambda (t)
+        ;; tests based on book Sketchy Scheme by Nils M Holm
+        (t.is (to.throw (let ((down (lambda (x)
+                                      (if (zero? x)
+                                          0
+                                          (down (- x 1))))))
+                          (down 5)))
+              true)
+
+         (t.is (letrec ((down (lambda (x)
+                                (if (zero? x)
+                                    0
+                                    (down (- x 1))))))
+                 (down 5))
+               0)
+
+         (let ((a '(outer-a))
+               (b '(outer-b)))
+           (let ((a '(0))
+                 (b (cons 1 a))
+                 (c (cons 2 b)))
+             (t.is c '(2 outer-b))))
+
+         (let ((a '(outer-a))
+               (b '(outer-b)))
+           (let* ((a '(0))
+                  (b (cons 1 a))
+                  (c (cons 2 b)))
+             (t.is c '(2 1 0))))
+
+         (t.is (letrec ((a 10)
+                        (b 20))
+                 (+ a b))
+               30)
+
+         (t.is (letrec ((a 10)
+                        (b a))
+                  (+ a b))
+               20)
+
+         (t.is (to.throw (let ((a 10)
+                               (b a))
+                           (+ a b)))
+               true)))
+
 (test "core: it should throw on set! with undefined variable"
       (lambda (t)
         (t.is (to.throw (set! foo.bar 10)) true)
@@ -29,20 +75,20 @@
                                (x.foo.toUpperCase))
                 "HEY JO"))))
 
-(test "timing test"
+(test "core: timing test"
       (lambda (t)
         (--> t (is (function? (.. Date.now)) true))
         (define start (--> Date (now)))
         (wait 100 (--> t (is (>= (- (--> Date (now)) start) 100) true)))))
 
-(test "values"
+(test "core: values"
       (lambda (t)
         (t.is (call-with-values * -) -1)
         (t.is (call-with-values (lambda () (values 4 5))
                 (lambda (a b) b)) 5)
         (t.is (call-with-values (lambda () (values 4 5)) +) 9)))
 
-(test "symbols"
+(test "core: symbols"
       (lambda (t)
         (t.is '|foo\x20;bar| (string->symbol "foo bar"))
         (t.is '|\n| (string->symbol "\n"))
@@ -52,7 +98,7 @@
         (t.is '|\x3BB;| 'λ)
         (t.is '|\x9;\x9;| '|\t\t|)))
 
-(test "if"
+(test "core: if"
       (lambda (t)
         (t.is (if (newline) 1 2) 1)
         (t.is (if 0 1 2) 1)
