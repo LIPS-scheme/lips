@@ -82,10 +82,16 @@
                (on \"click\" (lambda () (display \"click\"))))
 
           (--> document (querySelectorAll \"div\"))
-          (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\\/title>/) 1)
-          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")
+          (--> (fetch \"https://jcubic.pl\")
+               (text)
+               (match /<title>([^<]+)<\\/title>/)
+               1)
+          (--> document
+               (querySelectorAll \".cmd-prompt\")
+               0
+               \"innerText\")
           (--> document.body
-               (style.setProperty \"--animation\" \"terminal-underline\"))"
+               (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
     `(let* ((,obj ,expr))
        ,@(map (lambda (code)
@@ -841,7 +847,7 @@
 (define (gensym? value)
   "(gensym? value)
 
-   Function return #t if value is symbol and it's gensym it return #f otherwise."
+   Function return #t if value is symbol and it's gensym. It returns #f otherwise."
   (and (symbol? value) (--> value (is_gensym))))
 
 ;; ---------------------------------------------------------------------------------------

@@ -3630,14 +3630,14 @@
     }, `(. obj . args)
         (get obj . args)
 
-        Function use object as based and keep using arguments to get the
+        Function use object as base and keep using arguments to get the
         property of JavaScript object. Arguments need to be a strings.
         e.g. \`(. console "log")\` if you use any function inside LIPS is
         will be weakly bind (can be rebind), so you can call this log function
         without problem unlike in JavaScript when you use
        \`var log = console.log\`.
-       \`get\` is an alias because . don't work in every place, you can't
-        pass it as argument`);
+       \`get\` is an alias because . don't work in every place, e.g. you can't
+        pass it as argument.`);
     // -------------------------------------------------------------------------
     // :: character object representation
     // -------------------------------------------------------------------------

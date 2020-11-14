@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 13 Nov 2020 20:09:36 +0000
+ * build: Sat, 14 Nov 2020 09:09:53 +0000
  */
 (function () {
   'use strict';
@@ -5787,7 +5787,7 @@
       }
 
       return value;
-    }, "(. obj . args)\n        (get obj . args)\n\n        Function use object as based and keep using arguments to get the\n        property of JavaScript object. Arguments need to be a strings.\n        e.g. `(. console \"log\")` if you use any function inside LIPS is\n        will be weakly bind (can be rebind), so you can call this log function\n        without problem unlike in JavaScript when you use\n       `var log = console.log`.\n       `get` is an alias because . don't work in every place, you can't\n        pass it as argument"); // -------------------------------------------------------------------------
+    }, "(. obj . args)\n        (get obj . args)\n\n        Function use object as base and keep using arguments to get the\n        property of JavaScript object. Arguments need to be a strings.\n        e.g. `(. console \"log\")` if you use any function inside LIPS is\n        will be weakly bind (can be rebind), so you can call this log function\n        without problem unlike in JavaScript when you use\n       `var log = console.log`.\n       `get` is an alias because . don't work in every place, e.g. you can't\n        pass it as argument."); // -------------------------------------------------------------------------
     // :: character object representation
     // -------------------------------------------------------------------------
 
@@ -11268,10 +11268,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 13 Nov 2020 20:09:36 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 14 Nov 2020 09:09:53 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 13 Nov 2020 20:09:36 +0000').valueOf();
+      var date = LString('Sat, 14 Nov 2020 09:09:53 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11308,7 +11308,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 13 Nov 2020 20:09:36 +0000',
+      date: 'Sat, 14 Nov 2020 09:09:53 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
