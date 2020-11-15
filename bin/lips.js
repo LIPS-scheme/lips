@@ -208,9 +208,10 @@ var interp = Interpreter('repl', {
     }, `(stack-trace)
 
         Function display stack trace of last error`),
-    exit: doc(function() {
-        process.exit();
+    exit: doc(function(code) {
+        process.exit(code);
     }, `(exit)
+        (exit error-code)
 
         Function exits LIPS script or the REPL.`),
     help: doc(new Macro('help', function(code, { error }) {
