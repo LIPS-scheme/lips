@@ -1,3 +1,25 @@
+## 1.0.0-beta.9
+### Breaking
+* throw exception when calling `(-)`
+* `if` it now see #f the only falsy value to match Scheme spec
+### Features
+* add `let-values`, `let*-values` and `define-values` syntax macros
+* add `exact-integer?` and `vector-append` functions
+* add `stderr` port and `current-error-port` function
+* add environment as second argument to load (according to R7RS spec)
+### Bugfix
+* fix empty vector literal
+* fix edge case in nested syntax-rules when variable in parent got expanded into identifier
+* fix nesting unquote in quasiquote [#53](https://github.com/jcubic/lips/issues/53)
+* fix order of evaluation in `,,@x`
+* fix name collision while catching DOM exceptions [#84](https://github.com/jcubic/lips/issues/84)
+* fix integer? and other number type checks
+* fix warnings about require while loading from Webpack
+* fix unquote-splice multiple lists
+* fix syntax highlighting (prism scheme syntax patching)
+* fix load inside let that have global variable defined that was not undefined
+* fix creating LIPS classes from SXML
+
 ## 1.0.0-beta.8
 ### Breaking
 * internal properties like `name` are now `__name__`
@@ -17,10 +39,11 @@
 ### Breaking
 * remove second argument from `filter` callback
 * change mapping `&` from `make-object` to `object`
-* parser is now async
+* parser is now async and parser extensions are evaluated in parse time
 ### Features
 * new `random` procedure
 * string repr of all procedures and macros in REPL now have name
+* add `sxml` macro
 ### Bugfix
 * fix write vs display of character atoms
 * fix mixed case of named characters (e.g.: `#\Space`)

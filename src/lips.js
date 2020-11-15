@@ -94,6 +94,9 @@
     function log(x, regex = null) {
         var literal = arguments[1] === true;
         function msg(x) {
+            if (!is_debug()) {
+                return;
+            }
             var value = global_env.get('repr')(x);
             if (regex === null || regex instanceof RegExp && regex.test(value)) {
                 console.log(global_env.get('type')(x) + ": " + value);
@@ -220,7 +223,40 @@
         'null': '\x00',
         'return': '\r',
         'space': ' ',
-        'tab': '\t'
+        'tab': '\t',
+        // new symbols from ASCII table in SRFI-175
+        'dle': '\x10',
+        'soh': '\x01',
+        'dc1': '\x11',
+        'stx': '\x02',
+        'dc2': '\x12',
+        'etx': '\x03',
+        'dc3': '\x13',
+        'eot': '\x04',
+        'dc4': '\x14',
+        'enq': '\x05',
+        'nak': '\x15',
+        'ack': '\x06',
+        'syn': '\x16',
+        'bel': '\x07',
+        'etb': '\x17',
+        'bs': '\x08',
+        'can': '\x18',
+        'ht': '\x09',
+        'em': '\x19',
+        'lf': '\x0a',
+        'sub': '\x1a',
+        'vt': '\x0b',
+        'esc': '\x1b',
+        'ff': '\x0c',
+        'fs': '\x1c',
+        'cr': '\x0d',
+        'gs': '\x1d',
+        'so': '\x0e',
+        'rs': '\x1e',
+        'si': '\x0f',
+        'us': '\x1f',
+        'del': '\x7f'
     };
     const character_symbols = Object.keys(characters).join('|');
     const char_sre_re = `#\\\\(?:x[0-9a-f]+|${character_symbols}|[\\s\\S])`;
@@ -2248,6 +2284,8 @@
     function is_atom(obj) {
         return obj instanceof LSymbol ||
             LString.isString(obj) ||
+            obj === nil ||
+            obj === null ||
             obj instanceof LCharacter ||
             obj instanceof LNumber ||
             obj === true ||
@@ -2349,6 +2387,9 @@
                             }
                             return traverse(result, n, env);
                         }
+                        if (is_atom(result)) {
+                            return result;
+                        }
                     }
                 }
                 // TODO: CYCLE DETECT
@@ -2412,7 +2453,8 @@
             '...': {
                 symbols: { }, // symbols ellipsis (x ...)
                 lists: [ ]
-            }
+            },
+            symbols: { }
         };
         const { expansion, define } = scope;
         // pattern_names parameter is used to distinguish
@@ -2589,8 +2631,8 @@
                     bindings['...'].symbols[name] = bindings['...'].symbols[name] || [];
                     bindings['...'].symbols[name].push(code);
                 }
-                if (!bindings[name]) {
-                    bindings[name] = code;
+                bindings.symbols[name] = code;
+                if (!bindings.symbols[name]) {
                 }
                 return true;
             }
@@ -2615,15 +2657,41 @@
                         }
                         log('>> 12 | 1');
                         let name = pattern.cdr.valueOf();
-                        if (!bindings[name]) {
-                            bindings[name] = nil;
+                        if (!(name in bindings.symbols)) {
+                            bindings.symbols[name] = nil;
                         }
                         name = pattern.car.valueOf();
-                        if (!bindings[name]) {
-                            bindings[name] = code.car;
+                        if (!(name in bindings.symbols)) {
+                            bindings.symbols[name] = code.car;
                         }
                         return true;
                     }
+                }
+                log({
+                    pattern: pattern.toString(),
+                    code: code.toString()
+                });
+                // case (x y) ===> (var0 var1 ... varn) where var1 match nil
+                if (pattern.cdr instanceof Pair &&
+                    pattern.car instanceof LSymbol &&
+                    pattern.cdr.cdr instanceof Pair &&
+                    pattern.cdr.car instanceof LSymbol &&
+                    LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) &&
+                    pattern.cdr.cdr.cdr instanceof Pair &&
+                    !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) &&
+                    traverse(pattern.car, code.car, pattern_names, ellipsis) &&
+                    traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
+                    const name = pattern.cdr.car.__name__;
+                    log({
+                        pattern: pattern.car.toString(),
+                        code: code.car.toString(),
+                        name
+                    });
+                    if (symbols.includes(name)) {
+                        return true;
+                    }
+                    bindings['...'].symbols[name] = null;
+                    return true;
                 }
                 log('recur');
                 if (traverse(pattern.car, code.car, pattern_names, ellipsis) &&
@@ -2743,18 +2811,25 @@
             names,
             ellipsis: ellipsis_symbol } = options;
         var gensyms = {};
+        function valid_symbol(symbol) {
+            if (symbol instanceof LSymbol) {
+                return true;
+            }
+            return ['string', 'symbol'].includes(typeof symbol);
+        }
         function transform(symbol) {
-            if (!(symbol instanceof LSymbol || typeof symbol === 'string')) {
-                throw new Error('syntax: internal error, rename neeed to be symbol');
+            if (!valid_symbol(symbol)) {
+                const t = type(symbol);
+                throw new Error(`syntax: internal error, need symbol got ${t}`);
             }
             const name = symbol.valueOf();
             if (name === ellipsis_symbol) {
                 throw new Error('syntax: internal error, ellipis not transformed');
             }
             // symbols are gensyms from nested syntax-rules
-            var type = typeof name;
-            if (['string', 'symbol'].includes(type) && name in bindings) {
-                return bindings[name];
+            var n_type = typeof name;
+            if (['string', 'symbol'].includes(n_type) && name in bindings.symbols) {
+                return bindings.symbols[name];
             }
             if (symbols.includes(name)) {
                 return LSymbol(name);
@@ -2901,6 +2976,12 @@
                     LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
                     log('>> 1');
                     const symbols = bindings['...'].symbols;
+                    // skip expand list of pattern was (x y ... z)
+                    // and code was (x z) so y == null
+                    const values = Object.values(symbols);
+                    if (values.length && values.every(x => x === null)) {
+                        return traverse(expr.cdr.cdr, { disabled });
+                    }
                     var keys = get_names(symbols);
                     // case of list as first argument ((x . y) ...) or (x ... ...)
                     // we need to recursively process the list
@@ -2940,8 +3021,6 @@
                                     // ellipsis decide it what should be the next value
                                     // there are two cases ((a . b) ...) and (a ...)
                                     new_bind[key] = value;
-                                    log('NEXT CALLED');
-                                    log(new_bind);
                                 };
                                 const car = transform_ellipsis_expr(
                                     new_expr,
@@ -2969,6 +3048,12 @@
                             }
                             if (result !== nil && !is_spread) {
                                 result = result.reverse();
+                            }
+                            // case of (list) ... (rest code)
+                            if (expr.cdr.cdr !== nil &&
+                                !LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
+                                const rest = traverse(expr.cdr.cdr, { disabled });
+                                return result.append(rest);
                             }
                             return result;
                         } else {
@@ -3015,6 +3100,7 @@
                                 { nested: false },
                                 next
                             );
+                            log({ value: value.toString() });
                             if (typeof value !== 'undefined') {
                                 result = new Pair(
                                     value,
@@ -3036,16 +3122,41 @@
                                 if (is_null) {
                                     return node;
                                 }
+                                log('<<<< 1');
                                 result.append(node);
                             }
                         }
+                        log('<<<< 2');
                         return result;
                     }
                 }
+                const value = scope.get(expr.car, { throwError: false });
+                var is_syntax = value instanceof Macro &&
+                    value.__name__ === 'syntax-rules';
                 const head = traverse(expr.car, { disabled });
-                const rest = traverse(expr.cdr, { disabled });
+                let rest;
+                if (is_syntax) {
+                    if (expr.cdr.car instanceof LSymbol) {
+                        rest = new Pair(
+                            traverse(expr.cdr.car, { disabled }),
+                            new Pair(
+                                expr.cdr.cdr.car,
+                                traverse(expr.cdr.cdr.cdr, { disabled })
+                            )
+                        );
+                    } else {
+                        rest = new Pair(
+                            expr.cdr.car,
+                            traverse(expr.cdr.cdr, { disabled })
+                        );
+                    }
+                } else {
+                    rest = traverse(expr.cdr, { disabled });
+                }
                 log({
                     a: true,
+                    car: expr.car.toString(),
+                    cdr: expr.cdr.toString(),
                     head: head && head.toString(),
                     rest: rest && rest.toString()
                 });
@@ -3519,14 +3630,14 @@
     }, `(. obj . args)
         (get obj . args)
 
-        Function use object as based and keep using arguments to get the
+        Function use object as base and keep using arguments to get the
         property of JavaScript object. Arguments need to be a strings.
         e.g. \`(. console "log")\` if you use any function inside LIPS is
         will be weakly bind (can be rebind), so you can call this log function
         without problem unlike in JavaScript when you use
        \`var log = console.log\`.
-       \`get\` is an alias because . don't work in every place, you can't
-        pass it as argument`);
+       \`get\` is an alias because . don't work in every place, e.g. you can't
+        pass it as argument.`);
     // -------------------------------------------------------------------------
     // :: character object representation
     // -------------------------------------------------------------------------
@@ -5141,6 +5252,10 @@
             console.log(...args);
         }),
         // ------------------------------------------------------------------
+        stderr: new OutputPort(function(...args) {
+            console.error(...args);
+        }),
+        // ------------------------------------------------------------------
         stdin: InputPort(function() {
             return new Promise((resolve) => {
                 resolve(prompt(''));
@@ -5228,6 +5343,7 @@
                 port = this.get('stdin');
             }
             var result = await port.read();
+            console.log(result);
             if (result === eof) {
                 return eof;
             }
@@ -5319,8 +5435,11 @@
             Function send string to standard output or provied port.`),
         // ------------------------------------------------------------------
         error: doc(function error(...args) {
-            this.get('display').call(this, args.map(toString).join(''));
-            this.get('newline').call(this);
+            const port = this.get('stderr');
+            const repr = this.get('repr');
+            const value = args.map(arg => repr.call(this, arg)).join(' ');
+            port.write.call(this, value);
+            this.get('newline').call(this, port);
         }, `(error . args)
 
             Display error message.`),
@@ -5496,17 +5615,22 @@
 
              Function generate unique symbol, to use with macros as meta name.`),
         // ------------------------------------------------------------------
-        load: doc(function load(file) {
+        // TODO: (load filename environment-specifier)
+        // ------------------------------------------------------------------
+        load: doc(function load(file, env) {
             typecheck('load', file, 'string');
             var g_env = this;
             if (g_env.__name__ === '__frame__') {
                 g_env = g_env.__parent__;
             }
-            var env;
-            if (g_env === global_env) {
-                env = g_env;
-            } else {
-                env = this.get('**interaction-environment**');
+            if (!(env instanceof Environment)) {
+                if (g_env === global_env) {
+                    // this is used for let-env + load
+                    // this may be obsolete when there is env arg
+                    env = g_env;
+                } else {
+                    env = this.get('**interaction-environment**');
+                }
             }
             const PATH = '**module-path**';
             var module_path = global_env.get(PATH, { throwError: false });
@@ -5514,15 +5638,15 @@
             if (!file.match(/.[^.]+$/)) {
                 file += '.scm';
             }
-            if (typeof this.get('global', { throwError: false }) !== 'undefined') {
+            if (typeof global !== 'undefined' && global === root) {
                 return new Promise((resolve, reject) => {
-                    var path = require('path');
+                    var path = nodeRequire('path');
                     if (module_path) {
                         module_path = module_path.valueOf();
                         file = path.join(module_path, file);
                     }
                     global_env.set(PATH, path.dirname(file));
-                    require('fs').readFile(file, function(err, data) {
+                    nodeRequire('fs').readFile(file, function(err, data) {
                         if (err) {
                             console.log(err);
                             reject(err);
@@ -5547,8 +5671,11 @@
                 global_env.set(PATH, module_path);
             });
         }, `(load filename)
+            (load filename environment)
 
-            Function fetch the file and evaluate its content as LIPS code.`),
+            Function fetch the file and evaluate its content as LIPS code,
+            If second argument is provided and it's environment the evaluation
+            will happen in that environment.`),
         // ------------------------------------------------------------------
         'do': doc(new Macro('do', async function(code, { dynamic_scope, error }) {
             var self = this;
@@ -5606,14 +5733,14 @@
             }
             var env = this;
             var resolve = (cond) => {
-                if (cond) {
-                    return evaluate(code.cdr.car, {
+                if (cond === false) {
+                    return evaluate(code.cdr.cdr.car, {
                         env,
                         dynamic_scope,
                         error
                     });
                 } else {
-                    return evaluate(code.cdr.cdr.car, {
+                    return evaluate(code.cdr.car, {
                         env,
                         dynamic_scope,
                         error
@@ -6094,7 +6221,10 @@
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-
+                    if (is_debug()) {
+                        console.log('--------------------------------');
+                    }
+                    log(rule);
                     var bindings = extract_patterns(rule, code, symbols, ellipsis, {
                         expansion: this, define: env
                     });
@@ -6222,44 +6352,64 @@
                         nil
                     );
                 }
-                var eval_pair = evaluate(pair.car.cdr.car, {
-                    env: self,
-                    dynamic_scope,
-                    error
-                });
-                return unpromise(eval_pair, function(eval_pair) {
-                    if (!(eval_pair instanceof Pair)) {
-                        if (pair.cdr instanceof Pair &&
-                            LSymbol.is(pair.cdr.car, '.') &&
-                            pair.cdr.cdr instanceof Pair &&
-                            pair.cdr.cdr.cdr === nil) {
-                            return pair.cdr.cdr.car;
-                        }
-                        if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
-                            const msg = "You can't splice atom inside list";
-                            throw new Error(msg);
-                        }
-                        if (!(pair.cdr instanceof Pair && eval_pair === nil)) {
-                            return eval_pair;
-                        }
-                    }
-                    // don't create Cycles
-                    if (splices.has(eval_pair)) {
-                        eval_pair = eval_pair.clone();
-                    } else {
-                        splices.add(eval_pair);
-                    }
-                    const value = recur(pair.cdr, 0, 1);
-                    if (value === nil && eval_pair === nil) {
-                        return undefined;
-                    }
-                    return unpromise(value, value => {
-                        if (eval_pair === nil) {
-                            return value;
-                        }
-                        return join(eval_pair, value);
+                var lists = [];
+                return (function next(node) {
+                    var value = evaluate(node.car, {
+                        env: self,
+                        dynamic_scope,
+                        error
                     });
-                });
+                    lists.push(value);
+                    if (node.cdr instanceof Pair) {
+                        return next(node.cdr);
+                    }
+                    return unpromise(lists, function(arr) {
+                        if (arr.some(x => !(x instanceof Pair))) {
+                            if (pair.cdr instanceof Pair &&
+                                LSymbol.is(pair.cdr.car, '.') &&
+                                pair.cdr.cdr instanceof Pair &&
+                                pair.cdr.cdr.cdr === nil) {
+                                return pair.cdr.cdr.car;
+                            }
+                            if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
+                                const msg = "You can't splice atom inside list";
+                                throw new Error(msg);
+                            }
+                            if (arr.length > 1) {
+                                const msg = "You can't splice multiple atoms inside list";
+                                throw new Error(msg);
+                            }
+                            if (!(pair.cdr instanceof Pair && arr[0] === nil)) {
+                                return arr[0];
+                            }
+                        }
+                        // don't create Cycles
+                        arr = arr.map(eval_pair => {
+                            if (splices.has(eval_pair)) {
+                                return eval_pair.clone();
+                            } else {
+                                splices.add(eval_pair);
+                                return eval_pair;
+                            }
+                        });
+                        const value = recur(pair.cdr, 0, 1);
+                        if (value === nil && arr[0] === nil) {
+                            return undefined;
+                        }
+                        return unpromise(value, value => {
+                            if (arr[0] === nil) {
+                                return value;
+                            }
+                            if (arr.length === 1) {
+                                return join(arr[0], value);
+                            }
+                            var result = arr.reduce((result, eval_pair) => {
+                                return join(result, eval_pair);
+                            });
+                            return join(result, value);
+                        });
+                    });
+                })(pair.car.cdr);
             }
             var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {
@@ -6277,17 +6427,38 @@
                             pair.car.cdr instanceof Pair &&
                             pair.car.cdr.car instanceof Pair &&
                             LSymbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
+                            const rest = pair.car.cdr;
                             return new Pair(
-                                new LSymbol('unquote'),
-                                unquote_splice(pair.car.cdr, unquote_cnt + 2, max_unq)
+                                new Pair(
+                                    new LSymbol('unquote'),
+                                    unquote_splice(rest, unquote_cnt + 2, max_unq)
+                                ),
+                                nil
                             );
                         } else if (pair.car.cdr instanceof Pair &&
-                                   pair.car.cdr.cdr !== nil &&
-                                   !(pair.car.cdr.car instanceof Pair)) {
-                            // same as in guile if (unquote 1 2 3) it should be
-                            // spliced - scheme spec say it's unspecify but it
-                            // work like in CL
-                            return pair.car.cdr;
+                                   pair.car.cdr.cdr !== nil) {
+                            if (pair.car.cdr.car instanceof Pair) {
+                                // values inside unquote are lists
+                                const result = [];
+                                return (function recur(node) {
+                                    if (node === nil) {
+                                        return Pair.fromArray(result);
+                                    }
+                                    return unpromise(evaluate(node.car, {
+                                        env: self,
+                                        dynamic_scope,
+                                        error
+                                    }), function(next) {
+                                        result.push(next);
+                                        return recur(node.cdr);
+                                    });
+                                })(pair.car.cdr);
+                            } else {
+                                // same as in guile if (unquote 1 2 3) it should be
+                                // spliced - scheme spec say it's unspecify but it
+                                // work like in CL
+                                return pair.car.cdr;
+                            }
                         }
                     }
                     if (LSymbol.is(pair.car, 'quote')) {
@@ -6311,18 +6482,22 @@
                         if (pair.cdr instanceof Pair) {
                             if (pair.cdr.cdr !== nil) {
                                 if (pair.cdr.car instanceof Pair) {
-                                    let list = nil;
+                                    // TODO: test if this part is needed
+                                    // this part was duplicated in previous section
+                                    // if (LSymbol.is(pair.car.car, 'unquote')) {
+                                    // so this probably can be removed
+                                    const result = [];
                                     // evaluate all values in unquote
                                     return (function recur(node) {
                                         if (node === nil) {
-                                            return list;
+                                            return Pair.fromArray(result);
                                         }
                                         return unpromise(evaluate(node.car, {
                                             env: self,
                                             dynamic_scope,
                                             error
                                         }), function(next) {
-                                            list = new Pair(next, list);
+                                            result.push(next);
                                             return recur(node.cdr);
                                         });
                                     })(pair.cdr);
@@ -7107,6 +7282,9 @@
         return that value.`),
         // ------------------------------------------------------------------
         '-': doc('-', function(...args) {
+            if (args.length === 0) {
+                throw new Error('-: procedure require at least one argument');
+            }
             if (args.length === 1) {
                 return LNumber(args[0]).sub();
             }
@@ -7115,9 +7293,8 @@
                     return LNumber(a).sub(b);
                 }));
             }
-            return LNumber(-1);
-        }, `(- . numbers)
-            (- number)
+        }, `(- n1 n2 ...)
+            (- n1)
 
             Substract number passed as argument. If only one argument is passed
             it will negate the value.`),
@@ -7412,13 +7589,17 @@
 
     // -------------------------------------------------------------------------
     if (typeof global !== 'undefined') {
-        var fs = require('fs');
-        var path = require('path');
+        /* eslint-disable no-eval */
+        var nodeRequire = eval('require');
+        /* eslint-enable */
+        var fs = nodeRequire('fs');
+        var path = nodeRequire('path');
         global_env.set('global', global);
         // ---------------------------------------------------------------------
         global_env.set('require.resolve', doc('require.resolve', function(path) {
             typecheck('require.resolve', path, 'string');
-            return require.resolve(path.valueOf());
+            var name = path.valueOf();
+            return nodeRequire.resolve(name);
         }, `(require.resolve path)
 
            Return path relative the current module.`));
@@ -7430,17 +7611,17 @@
             var value;
             try {
                 if (module.match(/^\s*\./)) {
-                    value = require(path.join(root, module));
+                    value = nodeRequire(path.join(root, module));
                 } else {
                     var dir = nodeModuleFind(root);
                     if (dir) {
-                        value = require(path.join(dir, 'node_modules', module));
+                        value = nodeRequire(path.join(dir, 'node_modules', module));
                     } else {
-                        value = require(module);
+                        value = nodeRequire(module);
                     }
                 }
             } catch (e) {
-                value = require(module);
+                value = nodeRequire(module);
             }
             return patchValue(value, global);
         }, `(require module)
@@ -7726,9 +7907,15 @@
                         // calling map on array should not unbox the value
                         args = args.map(arg => {
                             if (lips_function(arg)) {
-                                return function(...args) {
+                                var wrapper = function(...args) {
                                     return unpromise(arg.apply(this, args), unbox);
                                 };
+                                // copy prototype from function to wrapper
+                                // so this work when calling new from JavaScript
+                                // case of Preact that pass LIPS class as argument
+                                // to h function
+                                wrapper.prototype = arg.prototype;
+                                return wrapper;
                             }
                             return arg;
                         });
@@ -7791,10 +7978,10 @@
                     error: (e, code) => {
                         if (code) {
                             // LIPS stack trace
-                            if (!(e.code instanceof Array)) {
-                                e.code = [];
+                            if (!(e.__code__ instanceof Array)) {
+                                e.__code__ = [];
                             }
-                            e.code.push(code.toString(true));
+                            e.__code__.push(code.toString(true));
                         }
                         throw e;
                     }
@@ -8096,6 +8283,7 @@ You can also use (help name) to display help for specic function or macro.
         Macro,
         Syntax,
         Pair,
+        Values,
 
         quote,
 

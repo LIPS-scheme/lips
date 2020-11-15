@@ -54,7 +54,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (vector-literal . args)
-  (if (not (pair? args))
+  (if (not (or (pair? args) (eq? args nil)))
       (throw (new Error (concat "Parse Error: vector require pair got "
                                 (type args) " in " (repr args))))
       (list->array args)))
@@ -238,7 +238,7 @@
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)
   (typecheck "%number-type" type (vector "string" "pair"))
-  (let* ((t (. x 'type))
+  (let* ((t x.__type__)
          (typeof (lambda (type) (string=? t type))))
     (and (number? x)
          (if (pair? type)
@@ -605,7 +605,7 @@
    string and replace old value. Object need to be symbol that point to variable
    that hold the string."
   (typecheck "string-set!" object "symbol")
-  (let ((chars (gensym)))
+  (let ((chars (gensym "chars")))
     `(begin
        (typecheck "string-set!" ,object "string")
        (typecheck "string-set!" ,index "number")

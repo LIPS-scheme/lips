@@ -52,6 +52,46 @@
   (typecheck "values-ref" values "values" 1)
   (typecheck "values-ref" n "number" 1)
   (--> values (valueOf) n))
+
+;; -----------------------------------------------------------------------------
+(define-syntax let-values
+  (syntax-rules ()
+    ((_ ()) nil)
+    ((_ () body ...) (begin body ...))
+    ((_ (((x ...) values) ...) body ...)
+     (apply (lambda (x ... ...)
+              body ...)
+            (vector->list (apply vector-append (map (lambda (x) ((. x "valueOf")))
+                                                     (list values ...)))))))
+  "(let-values binding body ...)
+
+   The macro work similar to let but variable is list of values and value
+   need to evaluate to result of calling values.")
+
+;; -----------------------------------------------------------------------------
+(define (vector-append . args)
+  "(vector-append v1 v2 ...)
+
+   Function return new vector by combining it's arguments that should be vectors."
+  (if (null? args)
+      #()
+      (begin
+        (typecheck "vector-append" (car args) "array")
+        (--> (car args) (concat (apply vector-append (cdr args)))))))
+
+;; -----------------------------------------------------------------------------
+(define-syntax let*-values
+  (syntax-rules ()
+    ((_ ()) nil)
+    ((_ () body ...) (begin body ...))
+    ((_ ((bind values) rest ...) . body)
+     (apply (lambda bind
+              (let*-values (rest ...) . body))
+            (vector->list ((. values "valueOf"))))))
+  "(let*-values binding body ...)
+
+   The macro work similar to let* but variable is list of values and value
+   need to evaluate to result of calling values.")
 ;; -----------------------------------------------------------------------------
 ;; R7RS division operators (Gauche Scheme) BSD license
 ;; Copyright (c) 2000-2020  Shiro Kawai  <shiro@acm.org>
@@ -170,6 +210,14 @@
 (define exact inexact->exact)
 
 ;; -----------------------------------------------------------------------------
+(define (exact-integer? n)
+  "(exact-integer? n)
+
+   Function returns #t if z is both exact and an integer; otherwise
+   returns #f."
+  (and (integer? n) (exact? n)))
+
+;; -----------------------------------------------------------------------------
 (define (string->vector s)
   "(string->vector string)
 
@@ -237,3 +285,47 @@
 (define raise throw)
 
 ;; -----------------------------------------------------------------------------
+;; macro definition taken from R7RS spec
+;; -----------------------------------------------------------------------------
+(define-syntax define-values
+  (syntax-rules ()
+    ((define-values () expr)
+     (define dummy
+       (call-with-values (lambda () expr)
+         (lambda args #f))))
+    ((define-values (var) expr)
+     (define var expr))
+    ((define-values (var0 var1 ... varn) expr)
+     (begin
+       (define var0
+         (call-with-values (lambda () expr)
+           list))
+       (define var1
+         (let ((v (cadr var0)))
+           (set-cdr! var0 (cddr var0))
+           v)) ...
+           (define varn
+             (let ((v (cadr var0)))
+               (set! var0 (car var0))
+               v))))
+    ((define-values (var0 var1 ... . varn) expr)
+     (begin
+       (define var0
+         (call-with-values (lambda () expr)
+           list))
+       (define var1
+         (let ((v (cadr var0)))
+           (set-cdr! var0 (cddr var0))
+           v)) ...
+           (define varn
+             (let ((v (cdr var0)))
+               (set! var0 (car var0))
+               v))))
+    ((define-values var expr)
+     (define var
+       (call-with-values (lambda () expr)
+         list))))
+  "(define-values (a b ...) expr)
+
+   Function evaluate expression expr and if it evaluates to result of values
+   then it will defined each value as variable like with define.")

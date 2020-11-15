@@ -12,6 +12,13 @@ export default {
             "@babel/runtime/regenerator": "regeneratorRuntime"
         }
     },
+    onwarn: (warning, next) => {
+        const str = warning.toString();
+        if (/Use of eval is strongly discouraged/.test(str)) {
+            return;
+        }
+        next(warning);
+    },
     plugins: [
         babel({
             "babelrc": false,

@@ -801,3 +801,71 @@
 
         (t.is (foo 1) '(1))
         (t.is (foo 1 . 2) '(1 . 2))))
+
+(test "syntax: it should define nested syntax with variable from outside as identifier"
+      (lambda (t)
+
+        (define-syntax foo (syntax-rules ()
+                     ((_ bar)
+                      (let ()
+                        (define-syntax baz
+                          (syntax-rules (bar)
+                            ((_ x) nil)))
+                        (baz bar)))))
+
+        (t.is (foo 10) nil)))
+
+(test "syntax: it should expand in nested syntax into variable from parent syntax"
+      (lambda (t)
+        (define-syntax foo (syntax-rules ()
+                     ((_ bar quux)
+                      (let ()
+                        (define-syntax baz
+                          (syntax-rules (bar)
+                            ((_ x) (list quux))))
+                        (baz bar)))))
+
+        (t.is (foo 1 "hello") '("hello"))))
+
+(test "syntax: it should expand nested macro with ellipsis as identifier from parent"
+      (lambda (t)
+
+        (define-syntax foo (syntax-rules (ellipsis)
+                             ((_)
+                              (let ()
+                                (define-syntax foo
+                                  (syntax-rules ellipsis ()
+                                    ((_ x ellipsis) (list x ellipsis))))
+                                (foo 1 2 3)))))
+
+        (t.is (foo) '(1 2 3))
+
+        ;; recursive case
+        (define-syntax foo (syntax-rules (ellipsis)
+                     ((_)
+                      (let ()
+                        (define-syntax foo
+                          (syntax-rules ellipsis ()
+                                        ((_) ())
+                                        ((_ x) (list x))
+                                        ((_ x ellipsis) (list (foo x) ellipsis))))
+                        (foo 1 2 3)))))
+
+        (t.is (foo) '((1) (2) (3)))))
+
+(test "syntax-rules: it should ignore ellipsis in middle for 2 elements"
+      (lambda (t)
+        ;; code for define-values from R7RS spec
+        ;; macro defined in lib/R7RS.scm
+
+        (let ()
+          (define-values (x y) (values 1 2))
+          (t.is (+ x y) 3))
+
+        (let ()
+          (define-values (x y z) (values 1 2 3))
+          (t.is (+ x y z) 6))
+
+        (let ()
+          (define-values (x) (values 1))
+          (t.is x 1))))

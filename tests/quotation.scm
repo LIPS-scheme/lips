@@ -38,18 +38,32 @@
                      (sum 0 (+ sum (car x))))
                   ((null? x) sum) 10)) 25)))
 
-(test_ "quasiquote: it should double splice the list"
+(test "quasiquote: it should double splice the list"
        (lambda (t)
-         (define result (eval (let ((x '((list 1 2 3) (list 1 2 3) (list 1 2 3))))
-            `(list `(,@,@x)))
-             (interaction-environment)))
 
-         (t.is result '((1 2 3 1 2 3 1 2 3)))))
+         (define expr (let ((x '((list 1 2 3) (list 4 5 6) (list 7 8 9))))
+                                `(list `(,@,@x))))
 
-(test_ "quasiquote: it should backquote & unquote multiple times"
-       (lambda (t)
-         (define result `(```,,,,@(list 1 2)))
-         (t.is result '((quasiquote (quasiquote (quasiquote (unquote (unquote (unquote 1 2))))))))))
+         (t.is expr '(list (quasiquote ((unquote-splicing (list 1 2 3)
+                                                          (list 4 5 6)
+                                                          (list 7 8 9))))))
+         (define result (eval expr (interaction-environment)))
+
+         (t.is result '((1 2 3 4 5 6 7 8 9)))))
+
+(test "quasiquote: it should backquote & unquote multiple times"
+      (lambda (t)
+        (define result `(```,,,,@(list 1 2)))
+        (t.is result '((quasiquote (quasiquote (quasiquote (unquote (unquote (unquote 1 2))))))))))
+
+(test "quasiquote: it should quasiquote unquote-splice"
+      (lambda (t)
+
+        (t.is `(1 ```,,@,,@(list (+ 1 2)) 4)
+              '(1 (quasiquote (quasiquote (quasiquote (unquote (unquote-splicing (unquote 3)))))) 4))
+
+        (t.is `(1 `,@(list (+ 1 2)) 4)
+              '(1 (quasiquote (unquote-splicing (list (+ 1 2)))) 4))))
 
 (test "quasiquote: it should return list"
       (lambda (t)
@@ -68,10 +82,11 @@
 
 (test "quasiquote: double backquote and unquote on list"
       (lambda (t)
-        (define result (eval (let ((x '((list 1 2 3) (list 1 2 3) (list 1 2 3))))
-                               `(list `(,,@x)))))
+        (define result (eval (let ((x '((list 1 2 3) (list 4 5 6) (list 7 8 9))))
+                               `(list `(,,@x)))
+                             (interaction-environment)))
 
-        (t.is result '(((1 2 3) (1 2 3) (1 2 3))))))
+        (t.is result '(((1 2 3) (4 5 6) (7 8 9))))))
 
 (test "quasiquote: quaisquote quoted unquoted function"
       (lambda (t)

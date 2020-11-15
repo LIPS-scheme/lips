@@ -50,7 +50,7 @@
   "(define-syntax name expression [__doc__])
 
    Macro define new hygienic macro using syntax-rules with optional documentation"
-  (let ((expr-name (gensym)))
+  (let ((expr-name (gensym "expr-name")))
     `(define ,name
        (let ((,expr-name ,expr))
          (typecheck "define-syntax" ,expr-name "syntax")
@@ -82,14 +82,20 @@
                (on \"click\" (lambda () (display \"click\"))))
 
           (--> document (querySelectorAll \"div\"))
-          (--> (fetch \"https://jcubic.pl\") (text) (match /<title>([^<]+)<\\/title>/) 1)
-          (--> document (querySelectorAll \".cmd-prompt\") 0 \"innerText\")
+          (--> (fetch \"https://jcubic.pl\")
+               (text)
+               (match /<title>([^<]+)<\\/title>/)
+               1)
+          (--> document
+               (querySelectorAll \".cmd-prompt\")
+               0
+               \"innerText\")
           (--> document.body
-               (style.setProperty \"--animation\" \"terminal-underline\"))"
-  (let ((obj (gensym)))
+               (style.setProperty \"--color\" \"red\"))"
+  (let ((obj (gensym "obj")))
     `(let* ((,obj ,expr))
        ,@(map (lambda (code)
-                (let ((value (gensym)))
+                (let ((value (gensym "value")))
                   `(let* ((,value ,(let ((name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
                                                      ((pair? code) (symbol->string (car code)))
                                                      (true code))))
@@ -123,8 +129,8 @@
     scope."
   (let* ((env (current-environment))
          (obj (eval expr env))
-         (name (gensym))
-         (env-name (gensym))
+         (name (gensym "name"))
+         (env-name (gensym "env-name"))
          (make-name (if (pair? rest)
                         (let ((pre (symbol->string (car rest))))
                           (lambda (name) (string->symbol (concat pre name))))
@@ -133,7 +139,7 @@
        ,@(filter pair?
                  (map (lambda (key)
                         (if (and (not (match /^_/ key)) (function? (. obj key)))
-                            (let* ((args (gensym)))
+                            (let* ((args (gensym "args")))
                               `(define-global (,(make-name key) . ,args)
                                  (apply (. ,name ,key) ,args)))))
                         (array->list (--> Object (keys obj))))))))
@@ -244,7 +250,7 @@
   "(object-expander '(:foo (:bar 10) (:baz (1 2 3))))
 
    Recursive function helper for defining LIPS code for create objects using key like syntax."
-  (let ((name (gensym)) (quot (if (null? rest) false (car rest))))
+  (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
@@ -371,7 +377,7 @@
   "(rule-pattern pattern)
 
    Anaphoric Macro for defining patterns for formatter. With Ahead, Pattern and * defined values."
-  (let ((rules (gensym)))
+  (let ((rules (gensym "rules")))
     `(let ((,rules lips.Formatter.rules)
            (Ahead (lambda (pattern)
                     (let ((Ahead (.. lips.Formatter.Ahead)))
@@ -507,6 +513,14 @@
      stdout))
 
 ;; -----------------------------------------------------------------------------
+(define (current-error-port)
+  "(current-output-port)
+
+   Function return default stdout port."
+  (let-env (interaction-environment)
+     stderr))
+
+;; -----------------------------------------------------------------------------
 (define (current-input-port)
   "current-input-port)
 
@@ -514,6 +528,7 @@
   (let-env (interaction-environment)
      stdin))
 
+;; -----------------------------------------------------------------------------
 (define (regex? x)
   "(regex? x)
 
@@ -718,10 +733,10 @@
     (if (null? lst)
         `(begin
            (define ,name ,(if (null? constructor) `(lambda ()) (%class-lambda constructor)))
-           (--> Object (defineProperty ,name "name" (object :value
-                                                            ,(symbol->string name))))
            ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
-                `(set-obj! ,name 'prototype (--> Object (create ,parent))))
+                `(begin
+                   (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))
+                   (set-obj! (. ,name 'prototype) 'constructor ,name)))
            ,@(map (lambda (fn)
                     `(set-obj! (. ,name 'prototype) ',(car fn) ,(%class-lambda fn)))
                   functions))
@@ -779,20 +794,16 @@
                     (list first)))))))
 
 ;; ---------------------------------------------------------------------------------------
-(set-special! "<html>" 'sxml lips.specials.LITERAL)
-
-;; ---------------------------------------------------------------------------------------
 (define-macro (sxml expr)
   "(sxml expr)
-   <html>(expr)
 
    Macro for JSX like syntax but with SXML.
    e.g. usage:
 
-   <html>(div (@ (data-foo \"hello\")
+   (sxml (div (@ (data-foo \"hello\")
                  (id \"foo\"))
               (span \"hello\")
-              (span \"world\"))"
+              (span \"world\")))"
   (%sxml 'h expr))
 
 ;; ---------------------------------------------------------------------------------------
@@ -832,7 +843,7 @@
 (define (gensym? value)
   "(gensym? value)
 
-   Function return #t if value is symbol and it's gensym it return #f otherwise."
+   Function return #t if value is symbol and it's gensym. It returns #f otherwise."
   (and (symbol? value) (--> value (is_gensym))))
 
 ;; ---------------------------------------------------------------------------------------

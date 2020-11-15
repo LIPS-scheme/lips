@@ -101,8 +101,8 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
         console.error(e.message);
         console.error('Call (stack-trace) to see the stack');
         log_error(e.message);
-        if (e.code) {
-            strace = e.code.map((line, i) => {
+        if (e.__code__) {
+            strace = e.__code__.map((line, i) => {
                 var prefix = `[${i+1}]: `;
                 var formatter = new Formatter(line);
                 var output = formatter.break().format({
@@ -113,7 +113,7 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
         }
         if (stack) {
             console.error(e.stack);
-            //console.error(strace);
+            console.error(strace);
         } else {
             console.error('Thrown exception is in global exception variable, use ' +
                           '(display exception.stack) to display JS stack trace');
@@ -208,9 +208,10 @@ var interp = Interpreter('repl', {
     }, `(stack-trace)
 
         Function display stack trace of last error`),
-    exit: doc(function() {
-        process.exit();
+    exit: doc(function(code) {
+        process.exit(code);
     }, `(exit)
+        (exit error-code)
 
         Function exits LIPS script or the REPL.`),
     help: doc(new Macro('help', function(code, { error }) {
