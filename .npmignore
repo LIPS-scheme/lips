@@ -1,6 +1,7 @@
 spec
 *~
 coverage
+docs
 todo.html
 *.lips
 Makefile
