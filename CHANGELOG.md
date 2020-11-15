@@ -38,10 +38,11 @@
 ### Breaking
 * remove second argument from `filter` callback
 * change mapping `&` from `make-object` to `object`
-* parser is now async
+* parser is now async and parser extensions are evaluated in parse time
 ### Features
 * new `random` procedure
 * string repr of all procedures and macros in REPL now have name
+* add `sxml` macro
 ### Bugfix
 * fix write vs display of character atoms
 * fix mixed case of named characters (e.g.: `#\Space`)
