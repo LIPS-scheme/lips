@@ -92,3 +92,22 @@
           (let-values (((a b c) (values 1 2 3)) ((x y z) (values a b c)))
             (t.is (+ x y z) 60)
             (t.is (+ a b c) 6)))))
+
+(test "std: should render SXML string"
+      (lambda (t)
+        (define preact (require "preact"))
+        (define h preact.h)
+        (define jsx->string (require "preact-render-to-string"))
+
+        (define-class Button1 preact.Component
+          (render (lambda (self props state)
+                    (sxml (button (@ (id "btn1"))
+                                  props.label)))))
+
+        (define (Button2 props)
+          (sxml (button (@ (id "btn2") (onClick (lambda () (alert "hello world")))) props.label)))
+
+        (t.snapshot  (jsx->string (sxml (div (@ (data-foo "hello")
+                                                (id "foo"))
+                                             (Button1 (@ (label "me")))
+                                             (Button2 (@ (label "me")))))))))

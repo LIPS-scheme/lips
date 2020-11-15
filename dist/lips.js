@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 14 Nov 2020 09:09:53 +0000
+ * build: Sun, 15 Nov 2020 11:18:27 +0000
  */
 (function () {
   'use strict';
@@ -10852,13 +10852,20 @@
               // calling map on array should not unbox the value
               args = args.map(function (arg) {
                 if (lips_function(arg)) {
-                  return function () {
+                  var wrapper = function wrapper() {
                     for (var _len36 = arguments.length, args = new Array(_len36), _key38 = 0; _key38 < _len36; _key38++) {
                       args[_key38] = arguments[_key38];
                     }
 
                     return unpromise(arg.apply(this, args), unbox);
-                  };
+                  }; // copy prototype from function to wrapper
+                  // so this work when calling new from JavaScript
+                  // case of Preact that pass LIPS class as argument
+                  // to h function
+
+
+                  wrapper.prototype = arg.prototype;
+                  return wrapper;
                 }
 
                 return arg;
@@ -11268,10 +11275,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 14 Nov 2020 09:09:53 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 15 Nov 2020 11:18:27 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 14 Nov 2020 09:09:53 +0000').valueOf();
+      var date = LString('Sun, 15 Nov 2020 11:18:27 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11308,7 +11315,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 14 Nov 2020 09:09:53 +0000',
+      date: 'Sun, 15 Nov 2020 11:18:27 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,

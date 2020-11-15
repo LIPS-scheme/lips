@@ -18,6 +18,7 @@
 * fix unquote-splice multiple lists
 * fix syntax highlighting (prism scheme syntax patching)
 * fix load inside let that have global variable defined that was not undefined
+* fix creating LIPS classes from SXML
 
 ## 1.0.0-beta.8
 ### Breaking

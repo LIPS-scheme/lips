@@ -7907,9 +7907,15 @@
                         // calling map on array should not unbox the value
                         args = args.map(arg => {
                             if (lips_function(arg)) {
-                                return function(...args) {
+                                var wrapper = function(...args) {
                                     return unpromise(arg.apply(this, args), unbox);
                                 };
+                                // copy prototype from function to wrapper
+                                // so this work when calling new from JavaScript
+                                // case of Preact that pass LIPS class as argument
+                                // to h function
+                                wrapper.prototype = arg.prototype;
+                                return wrapper;
                             }
                             return arg;
                         });

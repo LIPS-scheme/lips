@@ -733,10 +733,10 @@
     (if (null? lst)
         `(begin
            (define ,name ,(if (null? constructor) `(lambda ()) (%class-lambda constructor)))
-           (--> Object (defineProperty ,name "name" (object :value
-                                                            ,(symbol->string name))))
            ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
-                `(set-obj! ,name 'prototype (--> Object (create ,parent))))
+                `(begin
+                   (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))
+                   (set-obj! (. ,name 'prototype) 'constructor ,name)))
            ,@(map (lambda (fn)
                     `(set-obj! (. ,name 'prototype) ',(car fn) ,(%class-lambda fn)))
                   functions))
@@ -794,20 +794,16 @@
                     (list first)))))))
 
 ;; ---------------------------------------------------------------------------------------
-(set-special! "<html>" 'sxml lips.specials.LITERAL)
-
-;; ---------------------------------------------------------------------------------------
 (define-macro (sxml expr)
   "(sxml expr)
-   <html>(expr)
 
    Macro for JSX like syntax but with SXML.
    e.g. usage:
 
-   <html>(div (@ (data-foo \"hello\")
+   (sxml (div (@ (data-foo \"hello\")
                  (id \"foo\"))
               (span \"hello\")
-              (span \"world\"))"
+              (span \"world\")))"
   (%sxml 'h expr))
 
 ;; ---------------------------------------------------------------------------------------
