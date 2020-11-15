@@ -211,6 +211,8 @@
     "eslint": "^6.8.0",
     "jest": "^24.8.0",
     "nyc": "^15.0.1",
+    "preact": "^10.5.7",
+    "preact-render-to-string": "^5.1.12",
     "rollup": "^1.32.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "^10.0.0",
