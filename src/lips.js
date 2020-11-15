@@ -7129,7 +7129,7 @@
              Function fold is reverse of the reduce. it call function \`fn\`
              on each elements of the list and return single value.
              e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))
-             for: (fold fn '() alist blist`),
+             for: (fold fn '() alist blist)`),
         // ------------------------------------------------------------------
         pluck: doc(function pluck(...keys) {
             return function(obj) {
@@ -7170,7 +7170,7 @@
              on the list until each element is processed and return single value
              as result of last call to \`fn\` function.
              e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))
-             for (reduce fn init alist blist`),
+             for (reduce fn init alist blist)`),
         // ------------------------------------------------------------------
         filter: doc(function filter(arg, list) {
             typecheck('filter', arg, ['regex', 'function']);

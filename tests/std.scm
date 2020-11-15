@@ -111,3 +111,20 @@
                                                 (id "foo"))
                                              (Button1 (@ (label "me")))
                                              (Button2 (@ (label "me")))))))))
+
+
+(test "std: fold/curry"
+      (lambda (t)
+
+        (define (fold-left proc knil list)
+          (fold (lambda (acc elt) (proc elt acc)) knil list))
+
+        (define (test fn)
+          (t.is (procedure? fn) true)
+          (t.is (fn 4) 10))
+
+        (let ((fn (curry (curry (curry + 1) 2) 3)))
+          (test fn))
+
+        (let ((fn (fold-left curry + '(1 2 3))))
+          (test fn))))
