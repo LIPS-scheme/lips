@@ -105,3 +105,10 @@
         (t.is (if null 1 2) 1)
         (t.is (if () 1 2) 1)
         (t.is (if #f 1 2) 2)))
+
+(test "core: scheme signature"
+      (lambda (t)
+        ;; we should know about changing of signature
+        (load "./examples/scheme-detect.scm")
+
+        (t.is (detect:name) 'lips)))
