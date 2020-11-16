@@ -1,22 +1,29 @@
-(test "parser: syntax extension"
-      (lambda (t)
-        (set-special! "<>" 'html lips.specials.SPLICE)
-        (define-macro (html . args)
+(set-special! "<>" 'html lips.specials.SPLICE)
+(define-macro (html . args)
           (let ((str (--> (list->array (map symbol->string args)) (join "+"))))
             `(string-append "<" ,str "/>")))
 
-        (t.is (read "<>(foo bar)") "<foo+bar/>")
-        (unset-special! "<>")
+(define parser/t1 <>(foo bar))
 
-        (set-special! "--" 'dash lips.specials.LITERAL)
+(unset-special! "<>")
 
-        (define-macro (dash x)
-          `'(,(car x) . ,(cadr x)))
+(set-special! "--" 'dash lips.specials.LITERAL)
 
-        (t.is (read "--(foo bar baz)") '(foo . bar))
+(define-macro (dash x)
+  `'(,(car x) . ,(cadr x)))
 
-        (unset-special! "--")
-        (t.is (read "(--)") '(--))))
+(define parser/t2 --(foo bar baz))
+
+(unset-special! "--")
+
+(define parser/t3 (read "(--)"))
+
+(test "parser: syntax extension"
+      (lambda (t)
+
+        (t.is parser/t1 "<foo+bar/>")
+        (t.is parser/t2 '(foo . bar))
+        (t.is parser/t3 '(--))))
 
 (test "parser: escape hex literals"
       (lambda (t)

@@ -874,13 +874,29 @@
                         object
                     );
                 }
+                // builtin parser extensions just expand into lists like 'x ==> (quote x)
                 if (this.builtin(token)) {
                     return expr;
                 } else {
+                    // evaluate parser extension at parse time
                     var result = await evaluate(expr, { env: this.__env__, error: (e) => {
                         throw e;
                     } });
-                    return quote(result);
+                    // we need literal quote to make macro that return pair works
+                    // because after parser return the value it will be evaluated again
+                    // by the interpreter, so we create quoted expression
+                    return unpromise(result, result => {
+                        if (result instanceof Pair) {
+                            return new Pair(
+                                LSymbol('quote'),
+                                new Pair(
+                                    result,
+                                    nil
+                                )
+                            );
+                        }
+                        return result;
+                    });
                 }
             }
             if (this.is_open(token)) {
@@ -899,7 +915,7 @@
     // :: or macro assigned to symbol, this function is async because
     // :: it evaluate the code, from parser extensions, that may return promise
     // ----------------------------------------------------------------------
-    async function parse(arg, env) {
+    async function* parse(arg, env) {
         if (!env) {
             if (global_env) {
                 env = global_env.get('**interaction-environment**', {
@@ -910,15 +926,13 @@
             }
         }
         const parser = new Parser(arg, env);
-        const result = [];
         while (true) {
             const expr = await parser.read_object();
             if (expr === Parser.EOS) {
                 break;
             }
-            result.push(expr);
+            yield expr;
         }
-        return result;
     }
     // ----------------------------------------------------------------------
     function unpromise(value, fn = x => x, error = null) {
@@ -938,6 +952,14 @@
             }
         }
         return fn(value);
+    }
+    // ----------------------------------------------------------------------
+    async function uniterate_async(object) {
+        const result = [];
+        for await (let item of object) {
+            result.push(item);
+        }
+        return result;
     }
     // ----------------------------------------------------------------------
     function matcher(name, arg) {
@@ -5334,7 +5356,9 @@
         // ------------------------------------------------------------------
         read: doc(async function read(arg) {
             if (LString.isString(arg)) {
-                return (await parse(arg, this))[0];
+                for await (let value of parse(arg, this)) {
+                    return value;
+                }
             }
             var port;
             if (arg instanceof InputPort) {
@@ -5343,11 +5367,12 @@
                 port = this.get('stdin');
             }
             var result = await port.read();
-            console.log(result);
             if (result === eof) {
                 return eof;
             }
-            return (await parse(result, this))[0];
+            for await (let value of parse(result, this)) {
+                return value;
+            }
         }, `(read [string])
 
             Function if used with string will parse the string and return
@@ -7863,6 +7888,9 @@
             if (code instanceof LSymbol) {
                 return env.get(code);
             }
+            if (!(code instanceof Pair)) {
+                return code;
+            }
             var first = code.car;
             var rest = code.cdr;
             if (first instanceof Pair) {
@@ -7971,30 +7999,25 @@
         } else {
             env = env || user_env;
         }
-        var list = await parse(string);
         var results = [];
-        while (true) {
-            if (!list.length) {
-                return results;
-            } else {
-                var code = list.shift();
-                var result = await evaluate(code, {
-                    env,
-                    dynamic_scope,
-                    error: (e, code) => {
-                        if (code) {
-                            // LIPS stack trace
-                            if (!(e.__code__ instanceof Array)) {
-                                e.__code__ = [];
-                            }
-                            e.__code__.push(code.toString(true));
+        for await (let code of parse(string)) {
+            var result = await evaluate(code, {
+                env,
+                dynamic_scope,
+                error: (e, code) => {
+                    if (code) {
+                        // LIPS stack trace
+                        if (!(e.__code__ instanceof Array)) {
+                            e.__code__ = [];
                         }
-                        throw e;
+                        e.__code__.push(code.toString(true));
                     }
-                });
-                results.push(result);
-            }
+                    throw e;
+                }
+            });
+            results.push(result);
         }
+        return results;
     }
     // -------------------------------------------------------------------------
     function balanced(code) {
@@ -8272,7 +8295,8 @@ You can also use (help name) to display help for specic function or macro.
         banner,
         date: '{{DATE}}',
         exec,
-        parse,
+        // unwrap async generator into Promise<Array>
+        parse: compose(uniterate_async, parse),
         tokenize,
         evaluate,
 
