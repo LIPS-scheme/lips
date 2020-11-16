@@ -1,3 +1,7 @@
+## 1.0.0-beta.10
+### Bugfix
+* fix load file that have shebang
+
 ## 1.0.0-beta.9
 ### Breaking
 * throw exception when calling `(-)`

@@ -5638,6 +5638,12 @@
             if (!file.match(/.[^.]+$/)) {
                 file += '.scm';
             }
+            function run(code) {
+                if (type(code) === 'buffer') {
+                    code = code.toString();
+                }
+                return exec(code.replace(/^#!.*/, ''), env);
+            }
             if (typeof global !== 'undefined' && global === root) {
                 return new Promise((resolve, reject) => {
                     var path = nodeRequire('path');
@@ -5652,7 +5658,7 @@
                             reject(err);
                             global_env.set(PATH, module_path);
                         } else {
-                            exec(data.toString(), env).then(() => {
+                            run(data).then(() => {
                                 resolve();
                                 global_env.set(PATH, module_path);
                             }).catch(reject);
@@ -5666,7 +5672,7 @@
             }
             return root.fetch(file).then(res => res.text()).then((code) => {
                 global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
-                return exec(code, env);
+                return run(code);
             }).then(() => {}).finally(() => {
                 global_env.set(PATH, module_path);
             });

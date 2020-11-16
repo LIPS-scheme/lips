@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 15 Nov 2020 18:12:43 +0000
+ * build: Mon, 16 Nov 2020 14:00:20 +0000
  */
 (function () {
   'use strict';
@@ -8376,6 +8376,14 @@
           file += '.scm';
         }
 
+        function run(code) {
+          if (type(code) === 'buffer') {
+            code = code.toString();
+          }
+
+          return exec(code.replace(/^#!.*/, ''), env);
+        }
+
         if (typeof global !== 'undefined' && global === root) {
           return new Promise(function (resolve, reject) {
             var path = nodeRequire('path');
@@ -8392,7 +8400,7 @@
                 reject(err);
                 global_env.set(PATH, module_path);
               } else {
-                exec(data.toString(), env).then(function () {
+                run(data).then(function () {
                   resolve();
                   global_env.set(PATH, module_path);
                 })["catch"](reject);
@@ -8410,7 +8418,7 @@
           return res.text();
         }).then(function (code) {
           global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
-          return exec(code, env);
+          return run(code);
         }).then(function () {})["finally"](function () {
           global_env.set(PATH, module_path);
         });
@@ -11275,10 +11283,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 15 Nov 2020 18:12:43 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 16 Nov 2020 14:00:20 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 15 Nov 2020 18:12:43 +0000').valueOf();
+      var date = LString('Mon, 16 Nov 2020 14:00:20 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11315,7 +11323,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 15 Nov 2020 18:12:43 +0000',
+      date: 'Mon, 16 Nov 2020 14:00:20 +0000',
       exec: exec,
       parse: parse,
       tokenize: tokenize,
