@@ -131,3 +131,12 @@
         (load "./examples/scheme-detect.scm")
 
         (t.is (detect:name) 'lips)))
+
+(test "core: input-string-port"
+      (lambda (t)
+
+        (let ((port (open-input-string "`(```,,,,@(list 1 2)) 10 /foo bar/")))
+          (t.is (read port) '(quasiquote ((quasiquote (quasiquote (quasiquote (unquote (unquote (unquote (unquote-splicing (list 1 2)))))))))))
+          (t.is (read port) 10)
+          (t.is (read port) /foo bar/)
+          (t.is (eof-object? (read port)) true))))

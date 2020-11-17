@@ -1955,7 +1955,11 @@
             }
             return obj.valueOf();
         }
-        var types = [RegExp, Nil, LSymbol, LNumber, Macro, Values];
+        // constants
+        if ([nil, eof].includes(obj)) {
+            return obj.toString();
+        }
+        var types = [RegExp, LSymbol, LString, LNumber, Macro, Values];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString();
@@ -1976,9 +1980,13 @@
         }
         if (obj instanceof LString) {
             obj = obj.toString();
+            if (quote) {
+                return JSON.stringify(obj);
+            }
+            return obj;
         }
-        if (obj === null || (typeof obj === 'string' && quote)) {
-            return JSON.stringify(obj);
+        if (obj === null) {
+            return 'null';
         }
         if (typeof obj === 'object') {
             // user defined representation
@@ -4942,8 +4950,16 @@
         this._string = string.valueOf();
         this._index = 0;
         this._in_char = 0;
-        this.read = () => {
-            return this.get_next_tokens();
+        var self = this;
+        this.read = async function() {
+            if (!self._parser) {
+                self._parser = new Parser(self._string, this);
+            }
+            var result = await self._parser.read_object();
+            if (result === Parser.EOS) {
+                return eof;
+            }
+            return result;
         };
     }
     InputStringPort.prototype = Object.create(InputPort.prototype);
@@ -5383,13 +5399,7 @@
             } else {
                 port = this.get('stdin');
             }
-            var result = await port.read();
-            if (result === eof) {
-                return eof;
-            }
-            for await (let value of parse(result, this)) {
-                return value;
-            }
+            return port.read.call(this);
         }, `(read [string])
 
             Function if used with string will parse the string and return

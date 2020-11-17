@@ -5,6 +5,8 @@
 * add `promise?` function
 ### Bugfix
 * fix load file that have shebang
+* fix repr of eof object
+* fix read from input-string-port [#85](https://github.com/jcubic/lips/issues/85)
 
 ## 1.0.0-beta.9
 ### Breaking
