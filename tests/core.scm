@@ -106,6 +106,25 @@
         (t.is (if () 1 2) 1)
         (t.is (if #f 1 2) 2)))
 
+(test "core: and/or"
+      (lambda (t)
+        (t.is (and) #t)
+        (t.is (or) #f)
+        ;; undefined and null should be true values
+        ;; according to spec #f should be the only fasly value
+        (t.is (and 1 undefined) undefined)
+        (t.is (and 1 null) null)
+        (t.is (or (begin) 1) undefined)
+        (t.is (or null 1) null)))
+
+(test "core: eq?/eqv?"
+      (lambda (t)
+        ;; TODO
+        ;;eq? bool nil symbol
+
+        ;;eqv? number char + eq?
+        (t.is true true)))
+
 (test "core: scheme signature"
       (lambda (t)
         ;; we should know about changing of signature

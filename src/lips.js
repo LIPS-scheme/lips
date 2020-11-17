@@ -7434,24 +7434,27 @@
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
+            if (!args.length) {
+                return false;
+            }
             var result;
             return (function loop() {
                 function next(value) {
                     result = value;
-                    if (result) {
+                    if (result !== false) {
                         return result;
                     } else {
                         return loop();
                     }
                 }
-                var arg = args.shift();
-                if (typeof arg === 'undefined') {
-                    if (result) {
+                if (!args.length) {
+                    if (result !== false) {
                         return result;
                     } else {
                         return false;
                     }
                 } else {
+                    var arg = args.shift();
                     var value = evaluate(arg, { env: self, dynamic_scope, error });
                     return unpromise(value, next);
                 }
@@ -7474,7 +7477,7 @@
             return (function loop() {
                 function next(value) {
                     result = value;
-                    if (!result) {
+                    if (result === false) {
                         return false;
                     } else {
                         return loop();
@@ -7482,7 +7485,7 @@
                 }
                 var arg = args.shift();
                 if (typeof arg === 'undefined') {
-                    if (result) {
+                    if (result !== false) {
                         return result;
                     } else {
                         return false;
@@ -7768,6 +7771,9 @@
                 }
                 return obj.constructor.name.toLowerCase();
             }
+        }
+        if (typeof obj === 'function' && obj[Symbol.for('promise')]) {
+            return 'promise';
         }
         return typeof obj;
     }

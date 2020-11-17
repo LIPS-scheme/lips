@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 16 Nov 2020 17:58:15 +0000
+ * build: Tue, 17 Nov 2020 08:59:13 +0000
  */
 (function () {
   'use strict';
@@ -10579,27 +10579,30 @@
           dynamic_scope = self;
         }
 
+        if (!args.length) {
+          return false;
+        }
+
         var result;
         return function loop() {
           function next(value) {
             result = value;
 
-            if (result) {
+            if (result !== false) {
               return result;
             } else {
               return loop();
             }
           }
 
-          var arg = args.shift();
-
-          if (typeof arg === 'undefined') {
-            if (result) {
+          if (!args.length) {
+            if (result !== false) {
               return result;
             } else {
               return false;
             }
           } else {
+            var arg = args.shift();
             var value = evaluate(arg, {
               env: self,
               dynamic_scope: dynamic_scope,
@@ -10631,7 +10634,7 @@
           function next(value) {
             result = value;
 
-            if (!result) {
+            if (result === false) {
               return false;
             } else {
               return loop();
@@ -10641,7 +10644,7 @@
           var arg = args.shift();
 
           if (typeof arg === 'undefined') {
-            if (result) {
+            if (result !== false) {
               return result;
             } else {
               return false;
@@ -10955,6 +10958,10 @@
 
           return obj.constructor.name.toLowerCase();
         }
+      }
+
+      if (typeof obj === 'function' && obj[Symbol["for"]('promise')]) {
+        return 'promise';
       }
 
       return _typeof_1(obj);
@@ -11704,10 +11711,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 16 Nov 2020 17:58:15 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 17 Nov 2020 08:59:13 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 16 Nov 2020 17:58:15 +0000').valueOf();
+      var date = LString('Tue, 17 Nov 2020 08:59:13 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11744,7 +11751,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 16 Nov 2020 17:58:15 +0000',
+      date: 'Tue, 17 Nov 2020 08:59:13 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
