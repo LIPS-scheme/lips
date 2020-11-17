@@ -1,6 +1,8 @@
 ## 1.0.0-beta.10
 ### Breaking
 * change behavior of `and` and `or` to work like `if` (`#f` only falsy value)
+### Features
+* add `promise?` function
 ### Bugfix
 * fix load file that have shebang
 

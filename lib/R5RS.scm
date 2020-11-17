@@ -137,20 +137,21 @@
                                  (begin (set! result-ready? #t)
                                         (set! result x)
                                         result)))))))
-        (set-obj! promise 'toString (lambda ()
-                                      (string-append "#<promise - "
-                                                     (if result-ready?
-                                                         (string-append "forced with "
-                                                                        (type result))
-                                                         "not forced")
-                                                     ">")))
+        (set-obj! promise (Symbol.for "promise") true)
+        (set! promise.toString (lambda ()
+                                 (string-append "#<promise - "
+                                                (if result-ready?
+                                                    (string-append "forced with "
+                                                                   (type result))
+                                                    "not forced")
+                                                ">")))
         promise))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (delay expression)
   "(delay expression)
 
-   Macro will create a promise from expression that can be forced with force."
+   Macro will create a promise from expression that can be forced with (force)."
   `(make-promise (lambda () ,expression)))
 
 ;; -----------------------------------------------------------------------------
@@ -159,6 +160,13 @@
 
    Function force the promise and evaluate delayed expression."
   (promise))
+
+;; -----------------------------------------------------------------------------
+(define (promise? obj)
+  "(promise? obj)
+
+   Function check if value is a promise created with delay or make-promise."
+  (string=? (type obj) "promise"))
 
 ;; -----------------------------------------------------------------------------
 (define (positive? x)
