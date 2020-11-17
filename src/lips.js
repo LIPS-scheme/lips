@@ -797,7 +797,7 @@
             return this.__env__ && this.__env__.get(name, { throwError: false });
         }
         peek() {
-            return this.__tokens__[this.__i__] || Parser.EOS;
+            return this.__tokens__[this.__i__] || eof;
         }
         skip() {
             this.__i__++;
@@ -866,7 +866,7 @@
         }
         async read_object() {
             const token = this.peek();
-            if (token === Parser.EOS) {
+            if (token === eof) {
                 return token;
             }
             // special case when code add special and it try to parse
@@ -924,7 +924,6 @@
             }
         }
     }
-    Parser.EOS = Symbol.for('EOS');
     // ----------------------------------------------------------------------
     // :: tokens are the array of strings from tokenizer
     // :: the return value is array of lisp code created out of Pair class
@@ -945,7 +944,7 @@
         const parser = new Parser(arg, env);
         while (true) {
             const expr = await parser.read_object();
-            if (expr === Parser.EOS) {
+            if (expr === eof) {
                 break;
             }
             yield expr;
@@ -1959,7 +1958,7 @@
         if ([nil, eof].includes(obj)) {
             return obj.toString();
         }
-        var types = [RegExp, LSymbol, LString, LNumber, Macro, Values];
+        var types = [RegExp, LSymbol, LNumber, Macro, Values];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString();

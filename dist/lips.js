@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 17 Nov 2020 15:35:03 +0000
+ * build: Tue, 17 Nov 2020 15:51:12 +0000
  */
 (function () {
   'use strict';
@@ -2164,7 +2164,7 @@
       }, {
         key: "peek",
         value: function peek() {
-          return this.__tokens__[this.__i__] || Parser.EOS;
+          return this.__tokens__[this.__i__] || eof;
         }
       }, {
         key: "skip",
@@ -2321,7 +2321,7 @@
                   case 0:
                     token = this.peek();
 
-                    if (!(token === Parser.EOS)) {
+                    if (!(token === eof)) {
                       _context2.next = 3;
                       break;
                     }
@@ -2422,15 +2422,14 @@
       }]);
 
       return Parser;
-    }();
-
-    Parser.EOS = Symbol["for"]('EOS'); // ----------------------------------------------------------------------
+    }(); // ----------------------------------------------------------------------
     // :: tokens are the array of strings from tokenizer
     // :: the return value is array of lisp code created out of Pair class
     // :: env is needed for parser extensions that will invoke the function
     // :: or macro assigned to symbol, this function is async because
     // :: it evaluate the code, from parser extensions, that may return promise
     // ----------------------------------------------------------------------
+
 
     function parse(_x, _x2) {
       return _parse.apply(this, arguments);
@@ -2464,7 +2463,7 @@
               case 5:
                 expr = _context3.sent;
 
-                if (!(expr === Parser.EOS)) {
+                if (!(expr === eof)) {
                   _context3.next = 8;
                   break;
                 }
@@ -3809,7 +3808,7 @@
         return obj.toString();
       }
 
-      var types = [RegExp, LSymbol, LString, LNumber, Macro, Values];
+      var types = [RegExp, LSymbol, LNumber, Macro, Values];
 
       for (var _i4 = 0, _types = types; _i4 < _types.length; _i4++) {
         var _type2 = _types[_i4];
@@ -11711,10 +11710,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 17 Nov 2020 15:35:03 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 17 Nov 2020 15:51:12 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 17 Nov 2020 15:35:03 +0000').valueOf();
+      var date = LString('Tue, 17 Nov 2020 15:51:12 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11751,7 +11750,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 17 Nov 2020 15:35:03 +0000',
+      date: 'Tue, 17 Nov 2020 15:51:12 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
