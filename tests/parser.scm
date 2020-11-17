@@ -18,12 +18,30 @@
 
 (define parser/t3 (read "(--)"))
 
+(set-special! ":" 'keyword lips.specials.LITERAL)
+
+(define-macro (keyword n)
+   `(string->symbol (string-append ":" (symbol->string ',n))))
+
+(define parser/t4 :foo)
+
+(set-special! ":" 'keyword lips.specials.SPLICE)
+
+(define-macro (keyword . n)
+   `(string->symbol (string-append ":" (symbol->string ',n))))
+
+(define parser/t5 :foo)
+
+(unset-special! ":")
+
 (test "parser: syntax extension"
       (lambda (t)
 
         (t.is parser/t1 "<foo+bar/>")
         (t.is parser/t2 '(foo . bar))
-        (t.is parser/t3 '(--))))
+        (t.is parser/t3 '(--))
+        (t.is parser/t4 ':foo)
+        (t.is parser/t5 ':foo)))
 
 (test "parser: escape hex literals"
       (lambda (t)

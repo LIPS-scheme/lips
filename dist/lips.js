@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 17 Nov 2020 08:59:13 +0000
+ * build: Tue, 17 Nov 2020 11:58:49 +0000
  */
 (function () {
   'use strict';
@@ -1832,7 +1832,7 @@
 
 
     function is_symbol_string(str) {
-      return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/^"[\s\S]+"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || ['#t', '#f', 'nil', 'true', 'false'].includes(str));
+      return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/^"[\s\S]+"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || str.match(char_re) || ['#t', '#f', 'nil', 'true', 'false'].includes(str));
     } // ----------------------------------------------------------------------
 
     /* eslint-disable */
@@ -2180,6 +2180,29 @@
         key: "builtin",
         value: function builtin(token) {
           return specials.builtin.includes(token);
+        } // split parser extension that is added inside single string
+        // (e.g. one file) - tokenizer parse them before parsing the expression
+        // this only happen on symbols that have special as prefix
+
+      }, {
+        key: "split_special",
+        value: function split_special(token) {
+          if (!is_symbol_string(token) || this.special(token)) {
+            return [];
+          }
+
+          var names = specials.names().filter(function (name) {
+            return !specials.builtin.includes(name);
+          });
+          var prefix = names.find(function (name) {
+            return token.startsWith(name);
+          });
+
+          if (!prefix) {
+            return [];
+          }
+
+          return [prefix, token.replace(new RegExp('^' + escape_regex(prefix)), '')];
         }
       }, {
         key: "read",
@@ -2290,7 +2313,8 @@
         key: "read_object",
         value: function () {
           var _read_object = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2() {
-            var token, special, expr, object, result;
+            var token, _this$split_special, _this$split_special2, prefix, rest, special, expr, object, result;
+
             return regenerator.wrap(function _callee2$(_context2) {
               while (1) {
                 switch (_context2.prev = _context2.next) {
@@ -2305,20 +2329,38 @@
                     return _context2.abrupt("return", token);
 
                   case 3:
-                    if (!this.special(token)) {
-                      _context2.next = 18;
+                    // special case when code add special and it try to parse
+                    // that special as prefix of a symbol
+                    _this$split_special = this.split_special(token), _this$split_special2 = slicedToArray(_this$split_special, 2), prefix = _this$split_special2[0], rest = _this$split_special2[1];
+
+                    if (!(this.special(token) || prefix && rest)) {
+                      _context2.next = 24;
                       break;
                     }
 
-                    special = specials.get(token);
+                    special = specials.get(prefix ? prefix : token);
                     this.skip();
-                    _context2.next = 8;
+
+                    if (!prefix) {
+                      _context2.next = 11;
+                      break;
+                    }
+
+                    _context2.t0 = parse_argument(rest);
+                    _context2.next = 14;
+                    break;
+
+                  case 11:
+                    _context2.next = 13;
                     return this.read_object();
 
-                  case 8:
-                    object = _context2.sent;
+                  case 13:
+                    _context2.t0 = _context2.sent;
 
-                    if (is_literal(token)) {
+                  case 14:
+                    object = _context2.t0;
+
+                    if (is_literal(prefix || token)) {
                       expr = new Pair(special.symbol, new Pair(object, nil));
                     } else {
                       expr = new Pair(special.symbol, object);
@@ -2326,14 +2368,14 @@
 
 
                     if (!this.builtin(token)) {
-                      _context2.next = 14;
+                      _context2.next = 20;
                       break;
                     }
 
                     return _context2.abrupt("return", expr);
 
-                  case 14:
-                    _context2.next = 16;
+                  case 20:
+                    _context2.next = 22;
                     return evaluate(expr, {
                       env: this.__env__,
                       error: function error(e) {
@@ -2341,29 +2383,29 @@
                       }
                     });
 
-                  case 16:
+                  case 22:
                     result = _context2.sent;
                     return _context2.abrupt("return", unpromise(result, function (result) {
-                      if (result instanceof Pair) {
+                      if (result instanceof Pair || result instanceof LSymbol) {
                         return new Pair(LSymbol('quote'), new Pair(result, nil));
                       }
 
                       return result;
                     }));
 
-                  case 18:
+                  case 24:
                     if (!this.is_open(token)) {
-                      _context2.next = 23;
+                      _context2.next = 29;
                       break;
                     }
 
                     this.skip();
                     return _context2.abrupt("return", this.read_list());
 
-                  case 23:
+                  case 29:
                     return _context2.abrupt("return", this.read_value());
 
-                  case 24:
+                  case 30:
                   case "end":
                     return _context2.stop();
                 }
@@ -9991,7 +10033,7 @@
         var type = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : specials.LITERAL;
         typecheck('set-special!', seq, 'string', 1);
         typecheck('set-special!', name, 'symbol', 2);
-        lips.specials.append(seq.valueOf(), name, type);
+        specials.append(seq.valueOf(), name, type);
       }, "(set-special! symbol name [type])\n\n            Add special symbol to the list of transforming operators by the parser.\n            e.g.: `(add-special! \"#\" 'x)` will allow to use `#(1 2 3)` and it will be\n            transformed into (x (1 2 3)) so you can write x macro that will process\n            the list. 3rd argument is optional and it can be constant value\n            lips.specials.SPLICE if this constant is used it will transform\n            `#(1 2 3)` into (x 1 2 3) that is required by # that define vectors."),
       // ------------------------------------------------------------------
       'get': get,
@@ -11711,10 +11753,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 17 Nov 2020 08:59:13 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 17 Nov 2020 11:58:49 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 17 Nov 2020 08:59:13 +0000').valueOf();
+      var date = LString('Tue, 17 Nov 2020 11:58:49 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11751,7 +11793,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 17 Nov 2020 08:59:13 +0000',
+      date: 'Tue, 17 Nov 2020 11:58:49 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

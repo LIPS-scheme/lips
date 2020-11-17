@@ -528,7 +528,7 @@
         return !(['(', ')'].includes(str) || str.match(re_re) ||
                  str.match(/^"[\s\S]+"$/) || str.match(int_re) ||
                  str.match(float_re) || str.match(complex_re) ||
-                 str.match(rational_re) ||
+                 str.match(rational_re) || str.match(char_re) ||
                  ['#t', '#f', 'nil', 'true', 'false'].includes(str));
     }
     // ----------------------------------------------------------------------
@@ -808,6 +808,20 @@
         builtin(token) {
             return specials.builtin.includes(token);
         }
+        // split parser extension that is added inside single string
+        // (e.g. one file) - tokenizer parse them before parsing the expression
+        // this only happen on symbols that have special as prefix
+        split_special(token) {
+            if (!is_symbol_string(token) || this.special(token)) {
+                return [];
+            }
+            var names = specials.names().filter(name => !specials.builtin.includes(name));
+            var prefix = names.find(name => token.startsWith(name));
+            if (!prefix) {
+                return [];
+            }
+            return [prefix, token.replace(new RegExp('^' + escape_regex(prefix)), '')];
+        }
         read() {
             const token = this.peek();
             this.skip();
@@ -855,12 +869,15 @@
             if (token === Parser.EOS) {
                 return token;
             }
-            if (this.special(token)) {
-                const special = specials.get(token);
+            // special case when code add special and it try to parse
+            // that special as prefix of a symbol
+            const [prefix, rest] = this.split_special(token);
+            if (this.special(token) || (prefix && rest)) {
+                const special = specials.get(prefix ? prefix : token);
                 this.skip();
                 let expr;
-                const object = await this.read_object();
-                if (is_literal(token)) {
+                const object = prefix ? parse_argument(rest) : await this.read_object();
+                if (is_literal(prefix || token)) {
                     expr = new Pair(
                         special.symbol,
                         new Pair(
@@ -886,7 +903,7 @@
                     // because after parser return the value it will be evaluated again
                     // by the interpreter, so we create quoted expression
                     return unpromise(result, result => {
-                        if (result instanceof Pair) {
+                        if (result instanceof Pair || result instanceof LSymbol) {
                             return new Pair(
                                 LSymbol('quote'),
                                 new Pair(
@@ -6779,7 +6796,7 @@
         'set-special!': doc('set-special!', function(seq, name, type = specials.LITERAL) {
             typecheck('set-special!', seq, 'string', 1);
             typecheck('set-special!', name, 'symbol', 2);
-            lips.specials.append(seq.valueOf(), name, type);
+            specials.append(seq.valueOf(), name, type);
         }, `(set-special! symbol name [type])
 
             Add special symbol to the list of transforming operators by the parser.
