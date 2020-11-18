@@ -6610,36 +6610,41 @@
 
             Function return clone of the list.`),
         // ------------------------------------------------------------------
-        append: doc(function append(list, item) {
-            typecheck('append', list, ['nil', 'pair']);
-            if (list instanceof Pair) {
-                list = list.clone();
-            }
-            return this.get('append!').call(this, list, item);
-        }, `(append list item)
-
-            Function will create new list with value appended to the end. It return
-            New list.`),
-        // ------------------------------------------------------------------
-        'append!': doc('append!', function(list, item) {
-            typecheck('append!', list, ['pair', 'nil']);
-            if (!this.get('list?')(list)) {
-                throw new Error('append!: Invalid argument, value is not a list');
-            }
-            if (isNull(item)) {
-                return list;
-            }
-            if (list === nil) {
-                if (item === nil) {
-                    return nil;
+        append: doc(function append(...items) {
+            items = items.map(item => {
+                if (item instanceof Pair) {
+                    return item.clone();
                 }
                 return item;
-            }
-            return list.append(item);
-        }, `(append! name expression)
+            });
+            return this.get('append!').call(this, ...items);
+        }, `(append item ...)
+
+            Function will create new list with eac argument appended to the end.
+            It will always return new list and not modify it's arguments.`),
+        // ------------------------------------------------------------------
+        'append!': doc('append!', function(...items) {
+            return items.reduce((acc, item) => {
+                typecheck('append!', acc, ['nil', 'pair']);
+                if ((item instanceof Pair || item === nil) && !this.get('list?')(item)) {
+                    throw new Error('append!: Invalid argument, value is not a list');
+                }
+                if (isNull(item)) {
+                    return acc;
+                }
+                if (acc === nil) {
+                    if (item === nil) {
+                        return nil;
+                    }
+                    return item;
+                }
+                return acc.append(item);
+            }, nil);
+        }, `(append! arg1 ...)
 
              Destructive version of append, it modify the list in place. It return
-             original list.`),
+             new list where each argument is appened to the end. It may modify
+             lists added as arguments.`),
         // ------------------------------------------------------------------
         reverse: doc(function reverse(arg) {
             typecheck('reverse', arg, ['array', 'pair', 'nil']);

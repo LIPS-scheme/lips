@@ -3,6 +3,7 @@
 * change behavior of `and` and `or` to work like `if` (`#f` only falsy value)
 ### Features
 * add `promise?` function
+* improve `append`/`append!` to work according to spec and accept multiple arguments
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object

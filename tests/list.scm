@@ -9,7 +9,11 @@
         (t.is (append '(1) ()) '(1))
         (t.is (append () '(1)) '(1))
         (t.is (append '(1 2 3) '()) '(1 2 3))
-        (t.is (append () '(1 2 3)) '(1 2 3))))
+        (t.is (append () '(1 2 3)) '(1 2 3))
+        (t.is (append nil nil nil) nil)
+        (t.is (append) nil)
+        (t.is (append nil '(foo) nil '(bar)) '(foo bar))))
+
 
 (test "list: cycles"
       (lambda (t)
