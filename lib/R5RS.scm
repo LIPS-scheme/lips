@@ -760,24 +760,6 @@
       (string-ref (String.fromCodePoint n) 0)
       (throw "argument to integer->char need to be integer.")))
 
-(define (char-upper-case? chr)
-  "(char-upper-case? chr)
-
-   Function return true if value is upper case character. It return false otherwise."
-  (typecheck "char-upper-case?" chr "character")
-  (let ((str (--> chr (toString))))
-    (string=? str (--> str (toUpperCase)))))
-
-;; -----------------------------------------------------------------------------
-
-(define (char-lower-case? chr)
-  "(char-lower-case? chr)
-
-   Function return true if value is lower case character. It return false otherwise."
-  (typecheck "char-lower-case?" chr "character")
-  (let ((str (--> chr (toString))))
-    (string=? str (--> str (toUpperCase)))))
-
 ;; -----------------------------------------------------------------------------
 (define-macro (%define-chr-re spec str re)
   "(%define-chr-re (name chr) sring re)
@@ -927,7 +909,8 @@
 
    Function check if character is upper case."
   (typecheck "char-upper-case?" char "character")
-  (char=? (char-upcase char) char))
+  (and (char-alphabetic? char)
+       (char=? (char-upcase char) char)))
 
 ;; -----------------------------------------------------------------------------
 (define (char-lower-case? char)
@@ -935,7 +918,8 @@
 
    Function check if character is lower case."
   (typecheck "char-lower-case?" char "character")
-  (char=? (char-downcase char) char))
+  (and (char-alphabetic? char)
+       (char=? (char-downcase char) char)))
 
 ;; -----------------------------------------------------------------------------
 (define (newline . rest)
