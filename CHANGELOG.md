@@ -4,6 +4,8 @@
 ### Features
 * add `promise?` function
 * improve `append`/`append!` to work according to spec and accept multiple arguments
+* set `global` and `window` to undefined when not in Node or Window respectively
+* add `self` as global context for Node, browser and worker
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object

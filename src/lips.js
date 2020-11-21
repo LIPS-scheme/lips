@@ -7653,13 +7653,15 @@
     }
 
     // -------------------------------------------------------------------------
-    if (typeof global !== 'undefined') {
+    if (typeof global !== 'undefined' && global === root) {
         /* eslint-disable no-eval */
         var nodeRequire = eval('require');
         /* eslint-enable */
         var fs = nodeRequire('fs');
         var path = nodeRequire('path');
         global_env.set('global', global);
+        global_env.set('self', global);
+        global_env.set('window', undefined);
         // ---------------------------------------------------------------------
         global_env.set('require.resolve', doc('require.resolve', function(path) {
             typecheck('require.resolve', path, 'string');
@@ -7693,8 +7695,14 @@
 
             Function to be used inside Node.js to import the module.`));
         // ---------------------------------------------------------------------
-    } else if (typeof window !== 'undefined') {
+    } else if (typeof window !== 'undefined' && window === root) {
         global_env.set('window', window);
+        global_env.set('global', undefined);
+        global_env.set('self', window);
+    } else if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined') {
+        global_env.set('self', self);
+        global_env.set('window', undefined);
+        global_env.set('global', undefined);
     }
     // -------------------------------------------------------------------------
     function typeErrorMessage(fn, got, expected, position = null) {
