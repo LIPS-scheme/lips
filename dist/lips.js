@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Nov 2020 12:27:12 +0000
+ * build: Sun, 22 Nov 2020 13:06:43 +0000
  */
 (function () {
   'use strict';
@@ -2648,7 +2648,7 @@
 
       if (name) {
         fn.__name__ = name;
-      } else if (fn.name) {
+      } else if (fn.name && !fn.__lambda__) {
         fn.__name__ = fn.name;
       }
 
@@ -3763,6 +3763,23 @@
     } // ----------------------------------------------------------------------
 
 
+    function function_to_string(fn) {
+      if (isNativeFunction(fn)) {
+        return '#<procedure(native)>';
+      }
+
+      if (isNativeFunction(fn.toString)) {
+        if (typeof fn.__name__ === 'string') {
+          return "#<procedure:".concat(fn.__name__, ">");
+        }
+
+        return '#<procedure>';
+      } else {
+        return fn.toString();
+      }
+    } // ----------------------------------------------------------------------
+
+
     function toString(obj, quote, skip_cycles) {
       if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
         return '#<jQuery(' + obj.length + ')>';
@@ -3819,19 +3836,7 @@
       }
 
       if (typeof obj === 'function') {
-        if (isNativeFunction(obj)) {
-          return '#<procedure(native)>';
-        }
-
-        if (isNativeFunction(obj.toString)) {
-          if (typeof obj.__name__ === 'string') {
-            return "#<procedure:".concat(obj.__name__, ">");
-          }
-
-          return '#<procedure>';
-        } else {
-          return obj.toString();
-        }
+        return function_to_string(obj);
       }
 
       if (obj instanceof LString) {
@@ -11735,10 +11740,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 22 Nov 2020 12:27:12 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 22 Nov 2020 13:06:43 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 22 Nov 2020 12:27:12 +0000').valueOf();
+      var date = LString('Sun, 22 Nov 2020 13:06:43 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11775,7 +11780,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 22 Nov 2020 12:27:12 +0000',
+      date: 'Sun, 22 Nov 2020 13:06:43 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

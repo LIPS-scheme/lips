@@ -1007,7 +1007,7 @@
         }
         if (name) {
             fn.__name__ = name;
-        } else if (fn.name) {
+        } else if (fn.name && !fn.__lambda__) {
             fn.__name__ = fn.name;
         }
         return fn;
@@ -1927,6 +1927,20 @@
         return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
     }
     // ----------------------------------------------------------------------
+    function function_to_string(fn) {
+        if (isNativeFunction(fn)) {
+            return '#<procedure(native)>';
+        }
+        if (isNativeFunction(fn.toString)) {
+            if (typeof fn.__name__ === 'string') {
+                return `#<procedure:${fn.__name__}>`;
+            }
+            return '#<procedure>';
+        } else {
+            return fn.toString();
+        }
+    }
+    // ----------------------------------------------------------------------
     function toString(obj, quote, skip_cycles, ...pair_args) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
@@ -1965,17 +1979,7 @@
             }
         }
         if (typeof obj === 'function') {
-            if (isNativeFunction(obj)) {
-                return '#<procedure(native)>';
-            }
-            if (isNativeFunction(obj.toString)) {
-                if (typeof obj.__name__ === 'string') {
-                    return `#<procedure:${obj.__name__}>`;
-                }
-                return '#<procedure>';
-            } else {
-                return obj.toString();
-            }
+            return function_to_string(obj);
         }
         if (obj instanceof LString) {
             obj = obj.toString();
