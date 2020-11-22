@@ -8,5 +8,5 @@ npm-debug.log
 .DEV
 .[0-9]*
 www
-_*
+/_*
 .nyc_output
