@@ -1984,6 +1984,9 @@
             }
             return obj;
         }
+        if (obj === root) {
+            return '#<js:global>';
+        }
         if (obj === null) {
             return 'null';
         }
@@ -8146,7 +8149,9 @@
                         return;
                     }
                     bootstrap.then(function() {
-                        const [ code, dynamic ] = data.params;
+                        // we can use ES6 inside function that's converted to blob
+                        var code = data.params[0];
+                        var dynamic = data.params[1];
                         interpreter.exec(code, dynamic).then(function(result) {
                             result = result.map(function(value) {
                                 return value && value.valueOf();
@@ -8157,7 +8162,7 @@
                         });
                     });
                 } else if (data.method === 'init') {
-                    const [ url ] = data.params;
+                    var url = data.params[0];
                     if (typeof url !== 'string') {
                         send_error('Worker RPC: url is not a string');
                     } else {

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Nov 2020 14:12:11 +0000
+ * build: Sun, 22 Nov 2020 12:27:12 +0000
  */
 (function () {
   'use strict';
@@ -3842,6 +3842,10 @@
         }
 
         return obj;
+      }
+
+      if (obj === root) {
+        return '#<js:global>';
       }
 
       if (obj === null) {
@@ -11564,10 +11568,9 @@
             }
 
             bootstrap.then(function () {
-              var _data$params = slicedToArray(data.params, 2),
-                  code = _data$params[0],
-                  dynamic = _data$params[1];
-
+              // we can use ES6 inside function that's converted to blob
+              var code = data.params[0];
+              var dynamic = data.params[1];
               interpreter.exec(code, dynamic).then(function (result) {
                 result = result.map(function (value) {
                   return value && value.valueOf();
@@ -11578,15 +11581,14 @@
               });
             });
           } else if (data.method === 'init') {
-            var _data$params2 = slicedToArray(data.params, 1),
-                _url = _data$params2[0];
+            var url = data.params[0];
 
-            if (typeof _url !== 'string') {
+            if (typeof url !== 'string') {
               send_error('Worker RPC: url is not a string');
             } else {
-              importScripts("".concat(_url, "/src/lips.js"));
+              importScripts("".concat(url, "/src/lips.js"));
               interpreter = new lips.Interpreter('worker');
-              bootstrap = interpreter.exec("(let-env lips.env.__parent__\n                                                        (load \"".concat(_url, "/lib/bootstrap.scm\")\n                                                        (load \"").concat(_url, "/lib/R5RS.scm\")\n                                                        (load \"").concat(_url, "/lib/R7RS.scm\"))"));
+              bootstrap = interpreter.exec("(let-env lips.env.__parent__\n                                                        (load \"".concat(url, "/lib/bootstrap.scm\")\n                                                        (load \"").concat(url, "/lib/R5RS.scm\")\n                                                        (load \"").concat(url, "/lib/R7RS.scm\"))"));
               bootstrap.then(function () {
                 send_result(true);
               });
@@ -11733,10 +11735,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 21 Nov 2020 14:12:11 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 22 Nov 2020 12:27:12 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 21 Nov 2020 14:12:11 +0000').valueOf();
+      var date = LString('Sun, 22 Nov 2020 12:27:12 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11773,7 +11775,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 21 Nov 2020 14:12:11 +0000',
+      date: 'Sun, 22 Nov 2020 12:27:12 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
