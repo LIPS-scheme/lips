@@ -173,6 +173,8 @@
             });
         };
     }
+    /* eslint-enable */
+    /* eslint-disable max-len */
     // functions generate regexes to match number rational, integer, complex, complex+ratioanl
     function num_mnemicic_re(mnemonic) {
         return mnemonic ? `(?:#${mnemonic}(?:#[ie])?|#[ie]#${mnemonic})` : '(?:#[ie])?';
@@ -200,7 +202,7 @@
         if (mnemonic === '') {
             fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))';
         }
-        return new RegExp(`^((?:${fl}|[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+${neg})?)(${fl}|[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i$`, 'i');
+        return new RegExp(`^((?:(?:${fl}|[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+)${neg})?)(${fl}|[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i$`, 'i');
     }
     var complex_list_re = (function() {
         var result = {};
@@ -290,7 +292,6 @@
 
     const complex_bare_match_re = make_complex_match_re('', '[0-9a-fA-F]');
 
-    const big_num_re = /^([+-]?[0-9]+)[eE]([+-]?[0-9]+)$/;
     const pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
     /* eslint-enable */
     function num_pre_parse(arg) {
@@ -371,7 +372,7 @@
                     denom: LNumber([parts[1], radix])
                 });
             } else if (n.match(float_re)) {
-                var float = LFloat(parseFloat(n));
+                var float = parse_float(n);
                 if (parse.exact) {
                     return float.toRational();
                 }
@@ -501,7 +502,7 @@
         var regex = arg.match(re_re);
         if (regex) {
             return new RegExp(regex[1], regex[2]);
-        } else if (arg.match(/^"/)) {
+        } else if (arg.match(/^"[\s\S]*"$/)) {
             return parse_string(arg);
         } else if (arg.match(char_re)) {
             return parse_character(arg);
@@ -526,7 +527,7 @@
     // ----------------------------------------------------------------------
     function is_symbol_string(str) {
         return !(['(', ')'].includes(str) || str.match(re_re) ||
-                 str.match(/^"[\s\S]+"$/) || str.match(int_re) ||
+                 str.match(/^"[\s\S]*"$/) || str.match(int_re) ||
                  str.match(float_re) || str.match(complex_re) ||
                  str.match(rational_re) || str.match(char_re) ||
                  ['#t', '#f', 'nil', 'true', 'false'].includes(str));
@@ -638,7 +639,7 @@
     // ----------------------------------------------------------------------
     function multiline_formatter(meta) {
         var { token, ...rest } = meta;
-        if (token.match(/^"[\s\S]+"$/) && token.match(/\n/)) {
+        if (token.match(/^"[\s\S]*"$/) && token.match(/\n/)) {
             var re = new RegExp('^ {1,' + (meta.col + 1) + '}', 'mg');
             token = token.replace(re, '');
         }
@@ -5531,8 +5532,6 @@
                 }
                 return;
             }
-            // TODO: print the string with display
-            //       remove monkey patches in REPL
             var __doc__;
             var value = this.get(symbol);
             __doc__ = value && value.__doc__;
@@ -5548,9 +5547,9 @@
             }
         }), `(help object)
 
-             Macro returns documentation for function or macros including parser
-             macros but only if called with parser macro symbol like (help \`).
-             For normal functions and macros you can save the function in variable.`),
+             Macro returns documentation for function or macro. You can save the function
+             or macro in variable and use it in context. But help for variable require
+             to pass the symbol itself.`),
         // ------------------------------------------------------------------
         cons: doc(function cons(car, cdr) {
             return new Pair(car, cdr);
