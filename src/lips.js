@@ -1534,7 +1534,7 @@
     LSymbol.prototype.toJSON = LSymbol.prototype.toString = function() {
         //return '#<symbol \'' + this.name + '\'>';
         if (isSymbol(this.__name__)) {
-            return this.__name__.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
+            return symbol_to_string(this.__name__);
         }
         return this.valueOf();
     };
@@ -1545,6 +1545,10 @@
     LSymbol.prototype.is_gensym = function() {
         return is_gensym(this.__name__);
     };
+    // -------------------------------------------------------------------------
+    function symbol_to_string(obj) {
+        return obj.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
+    }
     // -------------------------------------------------------------------------
     function is_gensym(symbol) {
         if (typeof symbol === 'symbol') {
@@ -1928,17 +1932,41 @@
         return Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
     }
     // ----------------------------------------------------------------------
+    function has_own_function(obj, name) {
+        return obj.hasOwnProperty(name) && typeof obj.toString === 'function';
+    }
+    // ----------------------------------------------------------------------
     function function_to_string(fn) {
         if (isNativeFunction(fn)) {
             return '#<procedure(native)>';
         }
-        if (isNativeFunction(fn.toString)) {
-            if (typeof fn.__name__ === 'string') {
-                return `#<procedure:${fn.__name__}>`;
+        const constructor = fn.prototype && fn.prototype.constructor;
+        if (typeof constructor === 'function' && constructor.__lambda__) {
+            if (constructor.hasOwnProperty('__name__')) {
+                let name = constructor.__name__;
+                if (LString.isString(name)) {
+                    name = name.toString();
+                    return `#<class:${name}>`;
+                }
+                return '#<class>';
             }
-            return '#<procedure>';
-        } else {
+        }
+        if (fn.hasOwnProperty('__name__')) {
+            let name = fn.__name__;
+            if (typeof name === 'symbol') {
+                name = symbol_to_string(name);
+            }
+            if (typeof name === 'string') {
+                return `#<procedure:${name}>`;
+            }
+        }
+        if (fn.hasOwnProperty('__name__')) {
+            console.log(fn.__name__);
+        }
+        if (has_own_function(fn, 'toString')) {
             return fn.toString();
+        } else {
+            return '#<procedure>';
         }
     }
     // ----------------------------------------------------------------------

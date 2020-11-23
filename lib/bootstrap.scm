@@ -745,6 +745,18 @@
               (iter functions item (cdr lst))
               (iter (cons item functions) constructor (cdr lst)))))))
 
+;; ---------------------------------------------------------------------------------------
+(define-syntax class
+  (syntax-rules ()
+    ((_)
+     (error "class: parent required"))
+    ((_ parent body ...)
+     (let ()
+       (define-class temp parent body ...)
+       temp)))
+  "(class <parent> body ...)
+
+   Macro allow to create anonymous classes. See define-class for details.")
 
 ;; ---------------------------------------------------------------------------------------
 (define (make-tags expr)

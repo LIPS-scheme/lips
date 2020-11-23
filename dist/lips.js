@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 23 Nov 2020 13:07:03 +0000
+ * build: Mon, 23 Nov 2020 15:50:02 +0000
  */
 (function () {
   'use strict';
@@ -3295,7 +3295,7 @@
     LSymbol.prototype.toJSON = LSymbol.prototype.toString = function () {
       //return '#<symbol \'' + this.name + '\'>';
       if (isSymbol(this.__name__)) {
-        return this.__name__.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
+        return symbol_to_string(this.__name__);
       }
 
       return this.valueOf();
@@ -3309,6 +3309,11 @@
     LSymbol.prototype.is_gensym = function () {
       return is_gensym(this.__name__);
     }; // -------------------------------------------------------------------------
+
+
+    function symbol_to_string(obj) {
+      return obj.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
+    } // -------------------------------------------------------------------------
 
 
     function is_gensym(symbol) {
@@ -3767,19 +3772,51 @@
     } // ----------------------------------------------------------------------
 
 
+    function has_own_function(obj, name) {
+      return obj.hasOwnProperty(name) && typeof obj.toString === 'function';
+    } // ----------------------------------------------------------------------
+
+
     function function_to_string(fn) {
       if (isNativeFunction(fn)) {
         return '#<procedure(native)>';
       }
 
-      if (isNativeFunction(fn.toString)) {
-        if (typeof fn.__name__ === 'string') {
-          return "#<procedure:".concat(fn.__name__, ">");
+      var constructor = fn.prototype && fn.prototype.constructor;
+
+      if (typeof constructor === 'function' && constructor.__lambda__) {
+        if (constructor.hasOwnProperty('__name__')) {
+          var name = constructor.__name__;
+
+          if (LString.isString(name)) {
+            name = name.toString();
+            return "#<class:".concat(name, ">");
+          }
+
+          return '#<class>';
+        }
+      }
+
+      if (fn.hasOwnProperty('__name__')) {
+        var _name = fn.__name__;
+
+        if (_typeof_1(_name) === 'symbol') {
+          _name = symbol_to_string(_name);
         }
 
-        return '#<procedure>';
-      } else {
+        if (typeof _name === 'string') {
+          return "#<procedure:".concat(_name, ">");
+        }
+      }
+
+      if (fn.hasOwnProperty('__name__')) {
+        console.log(fn.__name__);
+      }
+
+      if (has_own_function(fn, 'toString')) {
         return fn.toString();
+      } else {
+        return '#<procedure>';
       }
     } // ----------------------------------------------------------------------
 
@@ -4678,12 +4715,12 @@
 
             if (pattern.car.car instanceof LSymbol) {
               if (pattern.car.cdr instanceof Pair && LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
-                var _name = pattern.car.car.valueOf();
+                var _name2 = pattern.car.car.valueOf();
 
                 var last = pattern.lastPair();
 
                 if (LSymbol.is(last.car, ellipsis_symbol)) {
-                  bindings['...'].symbols[_name] = null;
+                  bindings['...'].symbols[_name2] = null;
                   return true;
                 } else {
                   return false;
@@ -4725,9 +4762,9 @@
           }
 
           if (pattern.car instanceof LSymbol) {
-            var _name2 = pattern.car.__name__;
+            var _name3 = pattern.car.__name__;
 
-            if (bindings['...'].symbols[_name2] && !pattern_names.includes(_name2) && !ellipsis) {
+            if (bindings['...'].symbols[_name3] && !pattern_names.includes(_name3) && !ellipsis) {
               throw new Error('syntax: named ellipsis can only appear onces');
             }
 
@@ -4738,41 +4775,41 @@
 
               if (ellipsis) {
                 log('NIL');
-                bindings['...'].symbols[_name2] = nil;
+                bindings['...'].symbols[_name3] = nil;
               } else {
                 log('NULL');
-                bindings['...'].symbols[_name2] = null;
+                bindings['...'].symbols[_name3] = null;
               }
             } else if (code instanceof Pair && (code.car instanceof Pair || code.car === nil)) {
               log('>> 3 ' + ellipsis);
 
               if (ellipsis) {
-                if (bindings['...'].symbols[_name2]) {
-                  var node = bindings['...'].symbols[_name2];
-                  bindings['...'].symbols[_name2] = node.append(new Pair(code, nil));
+                if (bindings['...'].symbols[_name3]) {
+                  var node = bindings['...'].symbols[_name3];
+                  bindings['...'].symbols[_name3] = node.append(new Pair(code, nil));
                 } else {
-                  bindings['...'].symbols[_name2] = new Pair(code, nil);
+                  bindings['...'].symbols[_name3] = new Pair(code, nil);
                 }
               } else {
                 log('>> 4');
-                bindings['...'].symbols[_name2] = new Pair(code, nil);
+                bindings['...'].symbols[_name3] = new Pair(code, nil);
               }
             } else {
               log('>> 6');
 
               if (code instanceof Pair) {
                 log('>> 7 ' + ellipsis);
-                pattern_names.push(_name2);
+                pattern_names.push(_name3);
 
-                if (!bindings['...'].symbols[_name2]) {
-                  bindings['...'].symbols[_name2] = new Pair(code, nil);
+                if (!bindings['...'].symbols[_name3]) {
+                  bindings['...'].symbols[_name3] = new Pair(code, nil);
                 } else {
-                  var _node = bindings['...'].symbols[_name2];
-                  bindings['...'].symbols[_name2] = _node.append(new Pair(code, nil));
+                  var _node = bindings['...'].symbols[_name3];
+                  bindings['...'].symbols[_name3] = _node.append(new Pair(code, nil));
                 }
 
                 log({
-                  IIIIII: bindings['...'].symbols[_name2].toString()
+                  IIIIII: bindings['...'].symbols[_name3].toString()
                 });
               } else {
                 log('>> 8');
@@ -4813,26 +4850,26 @@
           }
 
           log('>> 11');
-          var _name3 = pattern.__name__;
+          var _name4 = pattern.__name__;
 
-          if (symbols.includes(_name3)) {
+          if (symbols.includes(_name4)) {
             return true;
           }
 
           log({
-            name: _name3,
+            name: _name4,
             ellipsis: ellipsis
           });
 
           if (ellipsis) {
-            bindings['...'].symbols[_name3] = bindings['...'].symbols[_name3] || [];
+            bindings['...'].symbols[_name4] = bindings['...'].symbols[_name4] || [];
 
-            bindings['...'].symbols[_name3].push(code);
+            bindings['...'].symbols[_name4].push(code);
           }
 
-          bindings.symbols[_name3] = code;
+          bindings.symbols[_name4] = code;
 
-          if (!bindings.symbols[_name3]) ;
+          if (!bindings.symbols[_name4]) ;
 
           return true;
         }
@@ -4860,16 +4897,16 @@
 
               log('>> 12 | 1');
 
-              var _name4 = pattern.cdr.valueOf();
+              var _name5 = pattern.cdr.valueOf();
 
-              if (!(_name4 in bindings.symbols)) {
-                bindings.symbols[_name4] = nil;
+              if (!(_name5 in bindings.symbols)) {
+                bindings.symbols[_name5] = nil;
               }
 
-              _name4 = pattern.car.valueOf();
+              _name5 = pattern.car.valueOf();
 
-              if (!(_name4 in bindings.symbols)) {
-                bindings.symbols[_name4] = code.car;
+              if (!(_name5 in bindings.symbols)) {
+                bindings.symbols[_name5] = code.car;
               }
 
               return true;
@@ -4882,18 +4919,18 @@
           }); // case (x y) ===> (var0 var1 ... varn) where var1 match nil
 
           if (pattern.cdr instanceof Pair && pattern.car instanceof LSymbol && pattern.cdr.cdr instanceof Pair && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && pattern.cdr.cdr.cdr instanceof Pair && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
-            var _name5 = pattern.cdr.car.__name__;
+            var _name6 = pattern.cdr.car.__name__;
             log({
               pattern: pattern.car.toString(),
               code: code.car.toString(),
-              name: _name5
+              name: _name6
             });
 
-            if (symbols.includes(_name5)) {
+            if (symbols.includes(_name6)) {
               return true;
             }
 
-            bindings['...'].symbols[_name5] = null;
+            bindings['...'].symbols[_name6] = null;
             return true;
           }
 
@@ -5133,11 +5170,11 @@
           if (expr.car instanceof LSymbol && expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
             log('[t 2');
 
-            var _name6 = expr.car.valueOf();
+            var _name7 = expr.car.valueOf();
 
-            var item = bindings[_name6];
+            var item = bindings[_name7];
             log({
-              name: _name6,
+              name: _name7,
               bindings: bindings,
               item: item
             });
@@ -5146,7 +5183,7 @@
               return;
             } else if (item) {
               log({
-                b: bindings[_name6].toString()
+                b: bindings[_name7].toString()
               });
 
               if (item instanceof Pair) {
@@ -5160,7 +5197,7 @@
                 if (nested) {
                   if (_cdr !== nil) {
                     log('|| next 1');
-                    next(_name6, _cdr);
+                    next(_name7, _cdr);
                   }
 
                   log({
@@ -5170,7 +5207,7 @@
                 } else {
                   if (_car.cdr !== nil) {
                     log('|| next 2');
-                    next(_name6, new Pair(_car.cdr, _cdr));
+                    next(_name7, new Pair(_car.cdr, _cdr));
                   }
 
                   log({
@@ -5182,13 +5219,13 @@
                 log('[t 2 Array ' + nested);
 
                 if (nested) {
-                  next(_name6, item.slice(1));
+                  next(_name7, item.slice(1));
                   return Pair.fromArray(item);
                 } else {
                   var _rest5 = item.slice(1);
 
                   if (_rest5.length) {
-                    next(_name6, _rest5);
+                    next(_name7, _rest5);
                   }
 
                   return item[0];
@@ -11750,10 +11787,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 23 Nov 2020 13:07:03 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 23 Nov 2020 15:50:02 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 23 Nov 2020 13:07:03 +0000').valueOf();
+      var date = LString('Mon, 23 Nov 2020 15:50:02 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11790,7 +11827,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 23 Nov 2020 13:07:03 +0000',
+      date: 'Mon, 23 Nov 2020 15:50:02 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
