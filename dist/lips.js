@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 23 Nov 2020 11:50:58 +0000
+ * build: Mon, 23 Nov 2020 12:02:30 +0000
  */
 (function () {
   'use strict';
@@ -8928,30 +8928,32 @@
                   return evaluate(test.car, eval_args);
 
                 case 25:
-                  if (_context9.sent) {
-                    _context9.next = 29;
+                  _context9.t3 = _context9.sent;
+
+                  if (!(_context9.t3 !== false)) {
+                    _context9.next = 30;
                     break;
                   }
 
-                  return _context9.delegateYield(_loop3(), "t3", 27);
+                  return _context9.delegateYield(_loop3(), "t4", 28);
 
-                case 27:
+                case 28:
                   _context9.next = 23;
                   break;
 
-                case 29:
+                case 30:
                   if (!(test.cdr !== nil)) {
-                    _context9.next = 33;
+                    _context9.next = 34;
                     break;
                   }
 
-                  _context9.next = 32;
+                  _context9.next = 33;
                   return evaluate(test.cdr.car, eval_args);
 
-                case 32:
+                case 33:
                   return _context9.abrupt("return", _context9.sent);
 
-                case 33:
+                case 34:
                 case "end":
                   return _context9.stop();
               }
@@ -11748,10 +11750,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 23 Nov 2020 11:50:58 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 23 Nov 2020 12:02:30 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 23 Nov 2020 11:50:58 +0000').valueOf();
+      var date = LString('Mon, 23 Nov 2020 12:02:30 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11788,7 +11790,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 23 Nov 2020 11:50:58 +0000',
+      date: 'Mon, 23 Nov 2020 12:02:30 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
