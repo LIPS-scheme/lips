@@ -5763,7 +5763,7 @@
                 node = node.cdr;
             }
             eval_args = { env: scope, dynamic_scope, error };
-            while ((await evaluate(test.car, eval_args)) !== false) {
+            while ((await evaluate(test.car, eval_args)) === false) {
                 if (body !== nil) {
                     await lips.evaluate(body, eval_args);
                 }
