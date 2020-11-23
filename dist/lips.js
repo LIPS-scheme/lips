@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Nov 2020 14:43:37 +0000
+ * build: Mon, 23 Nov 2020 11:50:58 +0000
  */
 (function () {
   'use strict';
@@ -3453,7 +3453,7 @@
           visited.set(node, pair);
           pair.car = clone(node.car);
           pair.cdr = clone(node.cdr);
-          pair.cycles = node.cycles;
+          pair[__cycles__] = node[__cycles__];
           return pair;
         }
 
@@ -3498,7 +3498,7 @@
       var deep = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : true;
       var quote = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : false;
 
-      if (array instanceof Pair || quote && array instanceof Array && array.data) {
+      if (array instanceof Pair || quote && array instanceof Array && array[__data__]) {
         return array;
       }
 
@@ -3942,7 +3942,7 @@
         return this.haveCycles('car') || this.haveCycles('cdr');
       }
 
-      return !!(this.cycles && this.cycles[name]);
+      return !!(this[__cycles__] && this[__cycles__][name]);
     }; // ----------------------------------------------------------------------------
 
 
@@ -3964,11 +3964,11 @@
               refs.push(child);
             }
 
-            if (!node.cycles) {
-              node.cycles = {};
+            if (!node[__cycles__]) {
+              node[__cycles__] = {};
             }
 
-            node.cycles[type] = child;
+            node[__cycles__][type] = child;
 
             if (!cycles.includes(node)) {
               cycles.push(node);
@@ -3982,7 +3982,7 @@
       var detect = trampoline(function detect_thunk(pair, parents) {
         if (pair instanceof Pair) {
           delete pair.ref;
-          delete pair.cycles;
+          delete pair[__cycles__];
           visit(pair);
           parents.push(pair);
           var car = set(pair, 'car', pair.car, parents);
@@ -4001,9 +4001,9 @@
       });
 
       function mark_node(node, type) {
-        if (node.cycles[type] instanceof Pair) {
-          var count = ref_nodes.indexOf(node.cycles[type]);
-          node.cycles[type] = "#".concat(count, "#");
+        if (node[__cycles__][type] instanceof Pair) {
+          var count = ref_nodes.indexOf(node[__cycles__][type]);
+          node[__cycles__][type] = "#".concat(count, "#");
         }
       }
 
@@ -4012,7 +4012,7 @@
         return refs.includes(node);
       });
       ref_nodes.forEach(function (node, i) {
-        node.ref = "#".concat(i, "=");
+        node[__ref__] = "#".concat(i, "=");
       });
       cycles.forEach(function (node) {
         mark_node(node, 'car');
@@ -4029,8 +4029,8 @@
       var prefix = function prefix(pair, nested) {
         var result = [];
 
-        if (pair.ref) {
-          result.push(pair.ref + '(');
+        if (pair[__ref__]) {
+          result.push(pair[__ref__] + '(');
         } else if (!nested) {
           result.push('(');
         }
@@ -4041,7 +4041,7 @@
       var postfix = function postfix(pair, nested) {
         if (is_debug()) ;
 
-        if (!nested || pair.ref) {
+        if (!nested || pair[__ref__]) {
           return [')'];
         }
 
@@ -4061,8 +4061,8 @@
         result.push.apply(result, toConsumableArray(prefix(pair, nested)));
         var car;
 
-        if (pair.cycles && pair.cycles.car) {
-          car = pair.cycles.car;
+        if (pair[__cycles__] && pair[__cycles__].car) {
+          car = pair[__cycles__].car;
         } else {
           car = toString(pair.car, quote, true, {
             result: result,
@@ -4076,11 +4076,11 @@
 
         return new Thunk(function () {
           if (pair.cdr instanceof Pair) {
-            if (pair.cycles && pair.cycles.cdr) {
+            if (pair[__cycles__] && pair[__cycles__].cdr) {
               result.push(' . ');
-              result.push(pair.cycles.cdr);
+              result.push(pair[__cycles__].cdr);
             } else {
-              if (pair.cdr.ref) {
+              if (pair.cdr[__ref__]) {
                 result.push(' . ');
               } else {
                 result.push(' ');
@@ -4116,16 +4116,16 @@
 
       var arr = [];
 
-      if (this.ref) {
-        arr.push(this.ref + '(');
+      if (this[__ref__]) {
+        arr.push(this[__ref__] + '(');
       } else if (!nested) {
         arr.push('(');
       }
 
       var value;
 
-      if (this.cycles && this.cycles.car) {
-        value = this.cycles.car;
+      if (this[__cycles__] && this[__cycles__].car) {
+        value = this[__cycles__].car;
       } else {
         value = toString(this.car, quote, true);
       }
@@ -4135,11 +4135,11 @@
       }
 
       if (this.cdr instanceof Pair) {
-        if (this.cycles && this.cycles.cdr) {
+        if (this[__cycles__] && this[__cycles__].cdr) {
           arr.push(' . ');
-          arr.push(this.cycles.cdr);
+          arr.push(this[__cycles__].cdr);
         } else {
-          if (this.cdr.ref) {
+          if (this.cdr[__ref__]) {
             arr.push(' . ');
           } else {
             arr.push(' ');
@@ -4154,7 +4154,7 @@
         arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
       }
 
-      if (!nested || this.ref) {
+      if (!nested || this[__ref__]) {
         arr.push(')');
       }
 
@@ -4383,7 +4383,7 @@
                                 break;
                               }
 
-                              if (!node.data) {
+                              if (!node[__data__]) {
                                 _context4.next = 3;
                                 break;
                               }
@@ -5681,7 +5681,13 @@
 
     var __context__ = Symbol["for"]('__context__');
 
-    var __fn__ = Symbol["for"]('__fn__'); // ----------------------------------------------------------------------
+    var __fn__ = Symbol["for"]('__fn__');
+
+    var __data__ = Symbol["for"]('__data__');
+
+    var __ref__ = Symbol["for"]('__ref__');
+
+    var __cycles__ = Symbol["for"]('__cycles__'); // ----------------------------------------------------------------------
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
     // ----------------------------------------------------------------------
@@ -8242,7 +8248,7 @@
       }
 
       if (value instanceof Pair || value instanceof LSymbol) {
-        value.data = true;
+        value[__data__] = true;
       }
 
       return value;
@@ -9351,7 +9357,7 @@
                   env.__env__[name.car.__name__] = nil;
                 } else {
                   if (arg.car instanceof Pair) {
-                    arg.car.data = true;
+                    arg.car[__data__] = true;
                   }
 
                   env.__env__[name.car.__name__] = arg.car;
@@ -9387,7 +9393,7 @@
               });
               return unpromise(result, function (result) {
                 if (_typeof_1(result) === 'object') {
-                  delete result.data;
+                  delete result[__data__];
                 }
 
                 return result;
@@ -9788,7 +9794,7 @@
 
         function clear(node) {
           if (node instanceof Pair) {
-            delete node.data;
+            delete node[__data__];
 
             if (!node.haveCycles('car')) {
               clear(node.car);
@@ -11082,8 +11088,8 @@
                   _context10.t4 = _context10.t3;
                   pair = new _context10.t0(_context10.t2, _context10.t4);
 
-                  if (node.data) {
-                    pair.data = true;
+                  if (node[__data__]) {
+                    pair[__data__] = true;
                   }
 
                   return _context10.abrupt("return", pair);
@@ -11177,7 +11183,7 @@
 
       var value = macro.invoke(code, eval_args);
       return unpromise(resolvePromises(value), function ret(value) {
-        if (value && value.data || !value || self_evaluated(value)) {
+        if (value && value[__data__] || !value || self_evaluated(value)) {
           return value;
         } else {
           return unpromise(evaluate(value, eval_args), finalize);
@@ -11742,10 +11748,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 22 Nov 2020 14:43:37 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 23 Nov 2020 11:50:58 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 22 Nov 2020 14:43:37 +0000').valueOf();
+      var date = LString('Mon, 23 Nov 2020 11:50:58 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11782,7 +11788,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 22 Nov 2020 14:43:37 +0000',
+      date: 'Mon, 23 Nov 2020 11:50:58 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

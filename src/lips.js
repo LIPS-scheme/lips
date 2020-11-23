@@ -1660,7 +1660,7 @@
                 visited.set(node, pair);
                 pair.car = clone(node.car);
                 pair.cdr = clone(node.cdr);
-                pair.cycles = node.cycles;
+                pair[__cycles__] = node[__cycles__];
                 return pair;
             }
             return node;
@@ -1695,7 +1695,7 @@
 
     // ----------------------------------------------------------------------
     Pair.fromArray = function(array, deep = true, quote = false) {
-        if (array instanceof Pair || quote && array instanceof Array && array.data) {
+        if (array instanceof Pair || quote && array instanceof Array && array[__data__]) {
             return array;
         }
         if (deep === false) {
@@ -2062,7 +2062,7 @@
         if (!name) {
             return this.haveCycles('car') || this.haveCycles('cdr');
         }
-        return !!(this.cycles && this.cycles[name]);
+        return !!(this[__cycles__] && this[__cycles__][name]);
     };
 
     // ----------------------------------------------------------------------------
@@ -2081,10 +2081,10 @@
                     if (!refs.includes(child)) {
                         refs.push(child);
                     }
-                    if (!node.cycles) {
-                        node.cycles = {};
+                    if (!node[__cycles__]) {
+                        node[__cycles__] = {};
                     }
-                    node.cycles[type] = child;
+                    node[__cycles__][type] = child;
                     if (!cycles.includes(node)) {
                         cycles.push(node);
                     }
@@ -2095,7 +2095,7 @@
         const detect = trampoline(function detect_thunk(pair, parents) {
             if (pair instanceof Pair) {
                 delete pair.ref;
-                delete pair.cycles;
+                delete pair[__cycles__];
                 visit(pair);
                 parents.push(pair);
                 var car = set(pair, 'car', pair.car, parents);
@@ -2111,15 +2111,15 @@
             }
         });
         function mark_node(node, type) {
-            if (node.cycles[type] instanceof Pair) {
-                const count = ref_nodes.indexOf(node.cycles[type]);
-                node.cycles[type] = `#${count}#`;
+            if (node[__cycles__][type] instanceof Pair) {
+                const count = ref_nodes.indexOf(node[__cycles__][type]);
+                node[__cycles__][type] = `#${count}#`;
             }
         }
         detect(pair, []);
         var ref_nodes = seen_pairs.filter(node => refs.includes(node));
         ref_nodes.forEach((node, i) => {
-            node.ref = `#${i}=`;
+            node[__ref__] = `#${i}=`;
         });
         cycles.forEach(node => {
             mark_node(node, 'car');
@@ -2134,8 +2134,8 @@
     const pair_to_string = (function() {
         const prefix = (pair, nested) => {
             var result = [];
-            if (pair.ref) {
-                result.push(pair.ref + '(');
+            if (pair[__ref__]) {
+                result.push(pair[__ref__] + '(');
             } else if (!nested) {
                 result.push('(');
             }
@@ -2145,7 +2145,7 @@
             if (is_debug()) {
                 //sconsole.log({ ref: pair.ref, nested });
             }
-            if (!nested || pair.ref) {
+            if (!nested || pair[__ref__]) {
                 return [')'];
             }
             return [];
@@ -2160,8 +2160,8 @@
             } = extra;
             result.push(...prefix(pair, nested));
             let car;
-            if (pair.cycles && pair.cycles.car) {
-                car = pair.cycles.car;
+            if (pair[__cycles__] && pair[__cycles__].car) {
+                car = pair[__cycles__].car;
             } else {
                 car = toString(pair.car, quote, true, { result, cont });
             }
@@ -2170,11 +2170,11 @@
             }
             return new Thunk(() => {
                 if (pair.cdr instanceof Pair) {
-                    if (pair.cycles && pair.cycles.cdr) {
+                    if (pair[__cycles__] && pair[__cycles__].cdr) {
                         result.push(' . ');
-                        result.push(pair.cycles.cdr);
+                        result.push(pair[__cycles__].cdr);
                     } else {
-                        if (pair.cdr.ref) {
+                        if (pair.cdr[__ref__]) {
                             result.push(' . ');
                         } else {
                             result.push(' ');
@@ -2201,14 +2201,14 @@
             return result.join('');
         }
         var arr = [];
-        if (this.ref) {
-            arr.push(this.ref + '(');
+        if (this[__ref__]) {
+            arr.push(this[__ref__] + '(');
         } else if (!nested) {
             arr.push('(');
         }
         var value;
-        if (this.cycles && this.cycles.car) {
-            value = this.cycles.car;
+        if (this[__cycles__] && this[__cycles__].car) {
+            value = this[__cycles__].car;
         } else {
             value = toString(this.car, quote, true);
         }
@@ -2216,11 +2216,11 @@
             arr.push(value);
         }
         if (this.cdr instanceof Pair) {
-            if (this.cycles && this.cycles.cdr) {
+            if (this[__cycles__] && this[__cycles__].cdr) {
                 arr.push(' . ');
-                arr.push(this.cycles.cdr);
+                arr.push(this[__cycles__].cdr);
             } else {
-                if (this.cdr.ref) {
+                if (this.cdr[__ref__]) {
                     arr.push(' . ');
                 } else {
                     arr.push(' ');
@@ -2231,7 +2231,7 @@
         } else if (this.cdr !== nil) {
             arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
         }
-        if (!nested || this.ref) {
+        if (!nested || this[__ref__]) {
             arr.push(')');
         }
         return arr.join('');
@@ -2409,7 +2409,7 @@
             var env = args['env'] = this;
             async function traverse(node, n, env) {
                 if (node instanceof Pair && node.car instanceof LSymbol) {
-                    if (node.data) {
+                    if (node[__data__]) {
                         return node;
                     }
                     var value = env.get(node.car, { throwError: false });
@@ -3382,6 +3382,9 @@
     // ----------------------------------------------------------------------
     var __context__ = Symbol.for('__context__');
     var __fn__ = Symbol.for('__fn__');
+    var __data__ = Symbol.for('__data__');
+    var __ref__ = Symbol.for('__ref__');
+    var __cycles__ = Symbol.for('__cycles__');
     // ----------------------------------------------------------------------
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
@@ -5286,7 +5289,7 @@
             return value.then(quote);
         }
         if (value instanceof Pair || value instanceof LSymbol) {
-            value.data = true;
+            value[__data__] = true;
         }
         return value;
     }
@@ -6181,7 +6184,7 @@
                                 env.__env__[name.car.__name__] = nil;
                             } else {
                                 if (arg.car instanceof Pair) {
-                                    arg.car.data = true;
+                                    arg.car[__data__] = true;
                                 }
                                 env.__env__[name.car.__name__] = arg.car;
                             }
@@ -6211,7 +6214,7 @@
                         });
                         return unpromise(result, function(result) {
                             if (typeof result === 'object') {
-                                delete result.data;
+                                delete result[__data__];
                             }
                             return result;
                         });
@@ -6586,7 +6589,7 @@
             }
             function clear(node) {
                 if (node instanceof Pair) {
-                    delete node.data;
+                    delete node[__data__];
                     if (!node.haveCycles('car')) {
                         clear(node.car);
                     }
@@ -7852,8 +7855,8 @@
                 node.haveCycles('car') ? node.car : await resolve(node.car),
                 node.haveCycles('cdr') ? node.cdr : await resolve(node.cdr)
             );
-            if (node.data) {
-                pair.data = true;
+            if (node[__data__]) {
+                pair[__data__] = true;
             }
             return pair;
         }
@@ -7914,7 +7917,7 @@
         }
         var value = macro.invoke(code, eval_args);
         return unpromise(resolvePromises(value), function ret(value) {
-            if (value && value.data || !value || self_evaluated(value)) {
+            if (value && value[__data__] || !value || self_evaluated(value)) {
                 return value;
             } else {
                 return unpromise(evaluate(value, eval_args), finalize);
