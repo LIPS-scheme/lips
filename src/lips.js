@@ -1872,6 +1872,8 @@
     function user_repr(obj) {
         var constructor = obj.constructor || Object;
         var plain_object = is_plain_object(obj);
+        var iterator = typeof obj[Symbol.asyncIterator] === 'function' ||
+            typeof obj[Symbol.iterator] === 'function';
         var fn;
         if (repr.has(constructor)) {
             fn = repr.get(constructor);
@@ -1881,7 +1883,7 @@
                 // if key is Object it should only work for plain_object
                 // because otherwise it will match every object
                 if (obj instanceof key &&
-                    (key === Object && plain_object || key !== Object)) {
+                    (key === Object && plain_object && !iterator || key !== Object)) {
                     fn = value;
                 }
             });
@@ -2057,11 +2059,14 @@
             if (root.HTMLElement && obj instanceof root.HTMLElement) {
                 return `#<HTMLElement(${obj.tagName.toLowerCase()})>`;
             }
-            if (name !== '') {
-                return '#<' + name + '>';
-            }
             if (typeof obj[Symbol.iterator] === 'function') {
                 return '#<iterator>';
+            }
+            if (typeof obj[Symbol.asyncIterator] === 'function') {
+                return '#<asyncIterator>';
+            }
+            if (name !== '') {
+                return '#<' + name + '>';
             }
             return '#<Object>';
         }
@@ -7784,6 +7789,7 @@
     function self_evaluated(obj) {
         var type = typeof obj;
         return ['string', 'function'].includes(type) ||
+            typeof obj === 'symbol' ||
             obj instanceof LSymbol ||
             obj instanceof LNumber ||
             obj instanceof LString ||

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 23 Nov 2020 15:50:02 +0000
+ * build: Tue, 24 Nov 2020 12:27:29 +0000
  */
 (function () {
   'use strict';
@@ -3704,6 +3704,7 @@
     function user_repr(obj) {
       var constructor = obj.constructor || Object;
       var plain_object = is_plain_object(obj);
+      var iterator = typeof obj[Symbol.asyncIterator] === 'function' || typeof obj[Symbol.iterator] === 'function';
       var fn;
 
       if (repr.has(constructor)) {
@@ -3713,7 +3714,7 @@
           key = unbind(key); // if key is Object it should only work for plain_object
           // because otherwise it will match every object
 
-          if (obj instanceof key && (key === Object && plain_object || key !== Object)) {
+          if (obj instanceof key && (key === Object && plain_object && !iterator || key !== Object)) {
             fn = value;
           }
         });
@@ -3942,12 +3943,16 @@
           return "#<HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
         }
 
-        if (name !== '') {
-          return '#<' + name + '>';
-        }
-
         if (typeof obj[Symbol.iterator] === 'function') {
           return '#<iterator>';
+        }
+
+        if (typeof obj[Symbol.asyncIterator] === 'function') {
+          return '#<asyncIterator>';
+        }
+
+        if (name !== '') {
+          return '#<' + name + '>';
         }
 
         return '#<Object>';
@@ -10961,7 +10966,7 @@
     function self_evaluated(obj) {
       var type = _typeof_1(obj);
 
-      return ['string', 'function'].includes(type) || obj instanceof LSymbol || obj instanceof LNumber || obj instanceof LString || obj instanceof RegExp;
+      return ['string', 'function'].includes(type) || _typeof_1(obj) === 'symbol' || obj instanceof LSymbol || obj instanceof LNumber || obj instanceof LString || obj instanceof RegExp;
     } // -------------------------------------------------------------------------
 
 
@@ -11787,10 +11792,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 23 Nov 2020 15:50:02 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 24 Nov 2020 12:27:29 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 23 Nov 2020 15:50:02 +0000').valueOf();
+      var date = LString('Tue, 24 Nov 2020 12:27:29 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11827,7 +11832,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 23 Nov 2020 15:50:02 +0000',
+      date: 'Tue, 24 Nov 2020 12:27:29 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
