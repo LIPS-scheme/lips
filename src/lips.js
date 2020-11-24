@@ -3688,7 +3688,8 @@
                                           (throw "Invalid Invocation"))`))[0];
     // -------------------------------------------------------------------------------
     var get = doc(function get(object, ...args) {
-        if (typeof object === 'function') {
+        // if arg is symbol someone probably want to get __fn__ from binded function
+        if (typeof object === 'function' && typeof args[0] !== 'symbol') {
             object = unbind(object);
         }
         var value;

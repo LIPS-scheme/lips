@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 24 Nov 2020 12:27:29 +0000
+ * build: Tue, 24 Nov 2020 14:42:37 +0000
  */
 (function () {
   'use strict';
@@ -6099,16 +6099,16 @@
     var native_lambda = parse(tokenize("(lambda ()\n                                          \"[native code]\"\n                                          (throw \"Invalid Invocation\"))"))[0]; // -------------------------------------------------------------------------------
 
     var get = doc(function get(object) {
-      if (typeof object === 'function') {
-        object = unbind(object);
-      }
-
-      var value;
-
       for (var _len13 = arguments.length, args = new Array(_len13 > 1 ? _len13 - 1 : 0), _key13 = 1; _key13 < _len13; _key13++) {
         args[_key13 - 1] = arguments[_key13];
       }
 
+      // if arg is symbol someone probably want to get __fn__ from binded function
+      if (typeof object === 'function' && _typeof_1(args[0]) !== 'symbol') {
+        object = unbind(object);
+      }
+
+      var value;
       var len = args.length;
 
       while (args.length) {
@@ -11792,10 +11792,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 24 Nov 2020 12:27:29 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 24 Nov 2020 14:42:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 24 Nov 2020 12:27:29 +0000').valueOf();
+      var date = LString('Tue, 24 Nov 2020 14:42:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11832,7 +11832,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 24 Nov 2020 12:27:29 +0000',
+      date: 'Tue, 24 Nov 2020 14:42:37 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
