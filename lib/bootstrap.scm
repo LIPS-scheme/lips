@@ -941,3 +941,40 @@
   (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
 
 ;; ---------------------------------------------------------------------------------------
+(define-macro (do-generator spec cond . body)
+  "(do-generator (var expr) test body ...)
+
+   Macro iterate over iterators (e.g. create with JavaScript generator function)
+   it works with normal and async generators. You can iterate over infinite generators
+   and break the loop if you want using cond expression, long sync generators will block
+   main thread (you can't print 1000 numbers from inf generators because it will freeze
+   the browser), but if you use async generators you can process the value as they go."
+  (let ((gen (gensym "name"))
+        (name (car spec))
+        (async (gensym "async"))
+        (sync (gensym "sync"))
+        (iterator (gensym "iterator"))
+        (next (gensym "next"))
+        (stop (gensym "stop"))
+        (item (gensym "item")))
+    `(let* ((,gen ,(cadr spec))
+            (,sync (. ,gen Symbol.iterator))
+            (,async (. ,gen Symbol.asyncIterator))
+            (,iterator)
+            (,next (lambda ()
+                     ((. ,iterator "next")))))
+          (if (or (procedure? ,sync) (procedure? ,async))
+              (begin
+                 (set! ,iterator (if (procedure? ,sync) (,sync) (,async)))
+                 (let* ((,item (,next))
+                        (,stop #f)
+                        (,name (. ,item "value")))
+                   (while (not (or (eq? (. ,item "done") #t) ,stop))
+                      (if ,cond
+                           (set! ,stop #t)
+                           (begin
+                              ,@body))
+                      (set! ,item (,next))
+                      (set! ,name (. ,item "value")))))))))
+
+;; ---------------------------------------------------------------------------------------

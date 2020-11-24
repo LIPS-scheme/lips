@@ -8,6 +8,7 @@
 * add `self` as global context for Node, browser and worker
 * add repr of global object
 * repr of classes + allow to create anonymous classes
+* add `do-generator` macro
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object
@@ -16,6 +17,8 @@
 * fix repr of lambda function (no `:lambda` as name)
 * fix parse complex big num (e.g.: `100e+100i`)
 * fix repr of scheme functions if Function.prototype.toString was modified
+* fix repr of iterators
+* fix access symbol properties of binded functions (LIPS internals)
 
 ## 1.0.0-beta.9
 ### Breaking
