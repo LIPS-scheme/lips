@@ -942,7 +942,7 @@
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (do-generator spec cond . body)
-  "(do-generator (var expr) test body ...)
+  "(do-generator (var expr) (test) body ...)
 
    Macro iterate over iterators (e.g. create with JavaScript generator function)
    it works with normal and async generators. You can iterate over infinite generators
@@ -954,6 +954,7 @@
         (async (gensym "async"))
         (sync (gensym "sync"))
         (iterator (gensym "iterator"))
+        (test (if (null? cond) #f (car cond)))
         (next (gensym "next"))
         (stop (gensym "stop"))
         (item (gensym "item")))
@@ -970,7 +971,7 @@
                         (,stop #f)
                         (,name (. ,item "value")))
                    (while (not (or (eq? (. ,item "done") #t) ,stop))
-                      (if ,cond
+                      (if ,test
                            (set! ,stop #t)
                            (begin
                               ,@body))
