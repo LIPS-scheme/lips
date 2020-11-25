@@ -10,6 +10,7 @@
    <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
 </a>
 
+![Matomo trakcing piksel](https://piwik.jcubic.pl/matomo.php?idsite=7&rec=1&action_name=bookmark&url=https%3A%2F%2Fgithub.com%2Fjcubic%2Flips)
 [![LIPS at Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=273619&theme=dark)](https://www.producthunt.com/posts/lips)
 
 [LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://lips.js.org).
