@@ -869,3 +869,29 @@
         (let ()
           (define-values (x) (values 1))
           (t.is x 1))))
+
+(test "syntax: swap macro"
+      (lambda (t)
+        ;; example from book Sketchy Scheme by Nils M Holm
+        (define-syntax swap
+          (syntax-rules ()
+            ((_ (x y) ...)
+             (list (quote (y x)) ...))))
+
+        (t.is (swap) '())
+        (t.is (swap (1 2)) '((2 1)))
+        (t.is (swap (1 2) (3 4)) '((2 1) (4 3)))))
+
+(test "syntax: reverse-syntax macro"
+      (lambda (t)
+
+        (define-syntax reverse-syntax
+          (syntax-rules ()
+            ((_ lst)
+             (reverse-syntax lst ()))
+            ((_ () r) r)
+            ((_ (a . d) r)
+             (reverse-syntax d (a . r)))))
+
+        (t.is (reverse-syntax (1 2 cons)) '(2 . 1))
+        (t.is (reverse-syntax (1 2 3 4 5 list)) '(5 4 3 2 1))))
