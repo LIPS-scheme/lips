@@ -88,13 +88,15 @@
 
         (t.is result '(((1 2 3) (4 5 6) (7 8 9))))))
 
-(test "quasiquote: quaisquote quoted unquoted function"
+(test "quasiquote: quaisquote quote unquoted"
       (lambda (t)
 
         (define (foo) 'bar)
 
         ;; `',(foo) came from book "On Lips" by Paul Graham
-        (t.is `',(foo) '(quote bar))))
+        (t.is `',(foo) '(quote bar))
+        (let ((x 'foo))
+          (t.is `',x '(quote foo)))))
 
 (test "quasiquote: unquote simple and double unquote symbol"
       (lambda (t)
