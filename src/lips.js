@@ -2647,10 +2647,13 @@
                         log('>> 3 ' + ellipsis);
                         if (ellipsis) {
                             if (bindings['...'].symbols[name]) {
-                                const node = bindings['...'].symbols[name];
-                                bindings['...'].symbols[name] = node.append(
-                                    new Pair(code, nil)
-                                );
+                                let node = bindings['...'].symbols[name];
+                                if (node === nil) {
+                                    node = new Pair(nil, new Pair(code, nil));
+                                } else {
+                                    node = node.append(new Pair(code, nil));
+                                }
+                                bindings['...'].symbols[name] = node;
                             } else {
                                 bindings['...'].symbols[name] = new Pair(code, nil);
                             }
@@ -2949,7 +2952,7 @@
         }
         function transform_ellipsis_expr(expr, bindings, state, next = () => {}) {
             const { nested } = state;
-            log(' ==> ' + expr.toString());
+            log(' ==> ' + expr.toString(true));
             log(bindings);
             if (expr instanceof LSymbol) {
                 const name = expr.valueOf();
@@ -2982,7 +2985,7 @@
                     log('[t 2');
                     const name = expr.car.valueOf();
                     const item = bindings[name];
-                    log({ name, bindings, item });
+                    log({ expr: expr.toString(true), name, bindings, item });
                     if (item === null) {
                         return;
                     } else if (item) {

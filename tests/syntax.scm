@@ -450,7 +450,7 @@
         (t.is result '(((bar 1) (bar 2)) ((baz 3) (baz 4))))))
 
 
-(test_ "syntax-rules: R6RS do macro"
+(test "syntax-rules: R6RS do macro"
        (lambda (t)
          (define-syntax do
            (syntax-rules ()
