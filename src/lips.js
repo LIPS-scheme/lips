@@ -8167,13 +8167,37 @@
         }
         return new root.Worker(URL.createObjectURL(blob));
     }
-
+    // -------------------------------------------------------------------------
+    function is_dev() {
+        return lips.version.match(/^(\{\{VER\}\}|DEV)$/);
+    }
+    // -------------------------------------------------------------------------
+    async function bootstrap(url = '') {
+        if (url === '') {
+            if (is_dev()) {
+                url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
+            } else {
+                url = `https://cdn.jsdelivr.net/npm/@jcubic/lips@${lips.version}/`;
+            }
+        } else if (!url.match(/\/$/)) {
+            url += '/';
+        }
+        var load = global_env.get('load');
+        var files = [
+            'lib/bootstrap.scm',
+            'lib/R5RS.scm',
+            'lib/R7RS.scm'
+        ];
+        for (let file of files) {
+            await load.call(lips.env, url + file, global_env);
+        }
+    }
     // -------------------------------------------------------------------------
     function Worker(url) {
         this.url = url;
         const worker = this.worker = fworker(function() {
             var interpreter;
-            var bootstrap;
+            var init;
             // string, numbers, booleans
             self.addEventListener('message', function(response) {
                 var data = response.data;
@@ -8188,11 +8212,11 @@
                     self.postMessage({ id: id, type: 'RPC', error: message });
                 }
                 if (data.method === 'eval') {
-                    if (!bootstrap) {
+                    if (!init) {
                         send_error('Worker RPC: LIPS not initilized, call init first');
                         return;
                     }
-                    bootstrap.then(function() {
+                    init.then(function() {
                         // we can use ES6 inside function that's converted to blob
                         var code = data.params[0];
                         var dynamic = data.params[1];
@@ -8210,13 +8234,10 @@
                     if (typeof url !== 'string') {
                         send_error('Worker RPC: url is not a string');
                     } else {
-                        importScripts(`${url}/src/lips.js`);
+                        importScripts(`${url}/dist/lips.min.js`);
                         interpreter = new lips.Interpreter('worker');
-                        bootstrap = interpreter.exec(`(let-env lips.env.__parent__
-                                                        (load "${url}/lib/bootstrap.scm")
-                                                        (load "${url}/lib/R5RS.scm")
-                                                        (load "${url}/lib/R7RS.scm"))`);
-                        bootstrap.then(() => {
+                        init = bootstrap(url);
+                        init.then(() => {
                             send_result(true);
                         });
                     }
@@ -8296,6 +8317,23 @@
     // -------------------------------------------------------------------------
     function init() {
         var lips_mimes = ['text/x-lips', 'text/x-scheme'];
+        function load(script) {
+            return new Promise(function(resolve) {
+                var src = script.getAttribute('src');
+                if (src) {
+                    return fetch(src).then(res => res.text())
+                        .then(exec).then(resolve).catch((e) => {
+                            execError(e);
+                            resolve();
+                        });
+                } else {
+                    return exec(script.innerHTML).then(resolve).catch((e) => {
+                        execError(e);
+                        resolve();
+                    });
+                }
+            });
+        }
         if (!window.document) {
             return Promise.resolve();
         } else {
@@ -8308,18 +8346,17 @@
                     } else {
                         var type = script.getAttribute('type');
                         if (lips_mimes.includes(type)) {
-                            var src = script.getAttribute('src');
-                            if (src) {
-                                return root.fetch(src).then(res => res.text())
-                                    .then(exec).then(loop).catch((e) => {
-                                        execError(e);
-                                        loop();
+                            var bootstrap_attr = script.getAttribute('bootstrap');
+                            if (typeof bootstrap_attr === 'string') {
+                                bootstrap(bootstrap_attr).then(function() {
+                                    return load(script, function(e) {
+                                        console.error(e);
                                     });
+                                }).then(loop);
                             } else {
-                                return exec(script.innerHTML).then(loop).catch((e) => {
-                                    execError(e);
-                                    loop();
-                                });
+                                load(script, function(e) {
+                                    console.error(e);
+                                }).then(loop);
                             }
                         } else if (type && type.match(/lips|lisp/)) {
                             console.warn('Expecting ' + lips_mimes.join(' or ') +

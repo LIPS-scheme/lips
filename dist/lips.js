@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 27 Nov 2020 14:30:09 +0000
+ * build: Sat, 28 Nov 2020 16:46:52 +0000
  */
 (function () {
   'use strict';
@@ -11596,11 +11596,76 @@
     } // -------------------------------------------------------------------------
 
 
+    function is_dev() {
+      return lips.version.match(/^(\{\{VER\}\}|DEV)$/);
+    } // -------------------------------------------------------------------------
+
+
+    function bootstrap() {
+      return _bootstrap.apply(this, arguments);
+    } // -------------------------------------------------------------------------
+
+
+    function _bootstrap() {
+      _bootstrap = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13() {
+        var url,
+            load,
+            files,
+            _i6,
+            _files,
+            file,
+            _args15 = arguments;
+
+        return regenerator.wrap(function _callee13$(_context13) {
+          while (1) {
+            switch (_context13.prev = _context13.next) {
+              case 0:
+                url = _args15.length > 0 && _args15[0] !== undefined$1 ? _args15[0] : '';
+
+                if (url === '') {
+                  if (is_dev()) {
+                    url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
+                  } else {
+                    url = "https://cdn.jsdelivr.net/npm/@jcubic/lips@".concat(lips.version, "/");
+                  }
+                } else if (!url.match(/\/$/)) {
+                  url += '/';
+                }
+
+                load = global_env.get('load');
+                files = ['lib/bootstrap.scm', 'lib/R5RS.scm', 'lib/R7RS.scm'];
+                _i6 = 0, _files = files;
+
+              case 5:
+                if (!(_i6 < _files.length)) {
+                  _context13.next = 12;
+                  break;
+                }
+
+                file = _files[_i6];
+                _context13.next = 9;
+                return load.call(lips.env, url + file, global_env);
+
+              case 9:
+                _i6++;
+                _context13.next = 5;
+                break;
+
+              case 12:
+              case "end":
+                return _context13.stop();
+            }
+          }
+        }, _callee13);
+      }));
+      return _bootstrap.apply(this, arguments);
+    }
+
     function Worker(url) {
       this.url = url;
       var worker = this.worker = fworker(function () {
         var interpreter;
-        var bootstrap; // string, numbers, booleans
+        var init; // string, numbers, booleans
 
         self.addEventListener('message', function (response) {
           var data = response.data;
@@ -11627,12 +11692,12 @@
           }
 
           if (data.method === 'eval') {
-            if (!bootstrap) {
+            if (!init) {
               send_error('Worker RPC: LIPS not initilized, call init first');
               return;
             }
 
-            bootstrap.then(function () {
+            init.then(function () {
               // we can use ES6 inside function that's converted to blob
               var code = data.params[0];
               var dynamic = data.params[1];
@@ -11651,10 +11716,10 @@
             if (typeof url !== 'string') {
               send_error('Worker RPC: url is not a string');
             } else {
-              importScripts("".concat(url, "/src/lips.js"));
+              importScripts("".concat(url, "/dist/lips.min.js"));
               interpreter = new lips.Interpreter('worker');
-              bootstrap = interpreter.exec("(let-env lips.env.__parent__\n                                                        (load \"".concat(url, "/lib/bootstrap.scm\")\n                                                        (load \"").concat(url, "/lib/R5RS.scm\")\n                                                        (load \"").concat(url, "/lib/R7RS.scm\"))"));
-              bootstrap.then(function () {
+              init = bootstrap(url);
+              init.then(function () {
                 send_result(true);
               });
             }
@@ -11752,6 +11817,26 @@
     function init() {
       var lips_mimes = ['text/x-lips', 'text/x-scheme'];
 
+      function load(script) {
+        return new Promise(function (resolve) {
+          var src = script.getAttribute('src');
+
+          if (src) {
+            return fetch(src).then(function (res) {
+              return res.text();
+            }).then(exec).then(resolve)["catch"](function (e) {
+              execError(e);
+              resolve();
+            });
+          } else {
+            return exec(script.innerHTML).then(resolve)["catch"](function (e) {
+              execError(e);
+              resolve();
+            });
+          }
+        });
+      }
+
       if (!window.document) {
         return Promise.resolve();
       } else {
@@ -11766,20 +11851,14 @@
               var type = script.getAttribute('type');
 
               if (lips_mimes.includes(type)) {
-                var src = script.getAttribute('src');
+                var bootstrap_attr = script.getAttribute('bootstrap');
 
-                if (src) {
-                  return root.fetch(src).then(function (res) {
-                    return res.text();
-                  }).then(exec).then(loop)["catch"](function (e) {
-                    execError(e);
-                    loop();
-                  });
+                if (typeof bootstrap_attr === 'string') {
+                  bootstrap(bootstrap_attr).then(function () {
+                    return load(script);
+                  }).then(loop);
                 } else {
-                  return exec(script.innerHTML).then(loop)["catch"](function (e) {
-                    execError(e);
-                    loop();
-                  });
+                  load(script).then(loop);
                 }
               } else if (type && type.match(/lips|lisp/)) {
                 console.warn('Expecting ' + lips_mimes.join(' or ') + ' found ' + type);
@@ -11800,10 +11879,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 27 Nov 2020 14:30:09 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 28 Nov 2020 16:46:52 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 27 Nov 2020 14:30:09 +0000').valueOf();
+      var date = LString('Sat, 28 Nov 2020 16:46:52 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11840,7 +11919,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 27 Nov 2020 14:30:09 +0000',
+      date: 'Sat, 28 Nov 2020 16:46:52 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
