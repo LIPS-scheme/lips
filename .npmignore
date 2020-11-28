@@ -14,6 +14,5 @@ rollup.config.js
 .*
 src/banner.js
 tests/
-test.js*
 assets
 examples
