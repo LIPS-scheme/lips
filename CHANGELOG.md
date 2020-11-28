@@ -19,6 +19,7 @@
 * fix repr of scheme functions if Function.prototype.toString was modified
 * fix repr of iterators
 * fix access symbol properties of binded functions (LIPS internals)
+* fix duplicated line in executable [#89](https://github.com/jcubic/lips/issues/89)
 
 ## 1.0.0-beta.9
 ### Breaking
