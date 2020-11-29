@@ -1963,7 +1963,7 @@
             }
         }
         if (fn.hasOwnProperty('__name__')) {
-            console.log(fn.__name__);
+            //console.log(fn.__name__);
         }
         if (has_own_function(fn, 'toString')) {
             return fn.toString();
@@ -2176,7 +2176,7 @@
         };
         const postfix = (pair, nested) => {
             if (is_debug()) {
-                //sconsole.log({ ref: pair.ref, nested });
+                //console.log({ ref: pair.ref, nested });
             }
             if (!nested || pair[__ref__]) {
                 return [')'];
@@ -5751,7 +5751,6 @@
                     global_env.set(PATH, path.dirname(file));
                     nodeRequire('fs').readFile(file, function(err, data) {
                         if (err) {
-                            console.log(err);
                             reject(err);
                             global_env.set(PATH, module_path);
                         } else {
@@ -6324,9 +6323,6 @@
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
-                    if (is_debug()) {
-                        console.log('--------------------------------');
-                    }
                     log(rule);
                     var bindings = extract_patterns(rule, code, symbols, ellipsis, {
                         expansion: this, define: env

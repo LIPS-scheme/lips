@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 28 Nov 2020 16:46:52 +0000
+ * build: Sun, 29 Nov 2020 13:35:59 +0000
  */
 (function () {
   'use strict';
@@ -3810,9 +3810,7 @@
         }
       }
 
-      if (fn.hasOwnProperty('__name__')) {
-        console.log(fn.__name__);
-      }
+      if (fn.hasOwnProperty('__name__')) ;
 
       if (has_own_function(fn, 'toString')) {
         return fn.toString();
@@ -8829,7 +8827,6 @@
             global_env.set(PATH, path.dirname(file));
             nodeRequire('fs').readFile(file, function (err, data) {
               if (err) {
-                console.log(err);
                 reject(err);
                 global_env.set(PATH, module_path);
               } else {
@@ -9533,11 +9530,6 @@
           while (rules !== nil) {
             var rule = rules.car.car;
             var expr = rules.car.cdr.car;
-
-            if (is_debug()) {
-              console.log('--------------------------------');
-            }
-
             log(rule);
             var bindings = extract_patterns(rule, code, symbols, ellipsis, {
               expansion: this,
@@ -11879,10 +11871,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 28 Nov 2020 16:46:52 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 29 Nov 2020 13:35:59 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 28 Nov 2020 16:46:52 +0000').valueOf();
+      var date = LString('Sun, 29 Nov 2020 13:35:59 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11919,7 +11911,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 28 Nov 2020 16:46:52 +0000',
+      date: 'Sun, 29 Nov 2020 13:35:59 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
