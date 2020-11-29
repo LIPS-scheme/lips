@@ -9,6 +9,7 @@
 * add repr of global object
 * repr of classes + allow to create anonymous classes
 * add `do-generator` macro
+* repr of `Map` and `Set`
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object
