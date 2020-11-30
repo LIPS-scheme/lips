@@ -6,7 +6,7 @@ BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 YEAR=`date +%Y`
 DATE_SHORT=`date +%Y-%m-%d`
-TESTS_CHECKSUM=`cat test.js tests/*.scm | md5sum spec/lips.spec.js | cut -d' ' -f 1`
+TESTS_CHECKSUM=`cat tests/test.js tests/*.scm | md5sum | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
 

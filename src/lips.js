@@ -3743,7 +3743,7 @@
         if (chr instanceof LString) {
             chr = chr.valueOf();
         }
-        if (chr.length > 1) {
+        if (Array.from(chr).length > 1) {
             // this is name
             chr = chr.toLowerCase();
             if (LCharacter.__names__[chr]) {
@@ -3813,7 +3813,7 @@
         return x instanceof LString || typeof x === 'string';
     };
     LString.prototype.get = function(n) {
-        return this._string[n];
+        return Array.from(this._string)[n];
     };
     LString.prototype.cmp = function(string) {
         typecheck('LStrign::cmp', string, 'string');
