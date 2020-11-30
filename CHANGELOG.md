@@ -10,6 +10,7 @@
 * repr of classes + allow to create anonymous classes
 * add `do-generator` macro
 * repr of `Map` and `Set`
+* add `digit-value` function
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object
@@ -21,6 +22,7 @@
 * fix repr of iterators
 * fix access symbol properties of binded functions (LIPS internals)
 * fix duplicated line in executable [#89](https://github.com/jcubic/lips/issues/89)
+* fix `char-numeric?` and `char-alphabetic?` to handle all unicode
 
 ## 1.0.0-beta.9
 ### Breaking
