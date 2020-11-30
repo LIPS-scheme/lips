@@ -17,7 +17,7 @@ const {
     env,
     banner,
     InputPort,
-    OutputPort } = require('../src/lips');
+    OutputPort } = require('../dist/lips');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
