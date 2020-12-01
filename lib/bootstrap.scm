@@ -733,6 +733,7 @@
     (if (null? lst)
         `(begin
            (define ,name ,(if (null? constructor) `(lambda ()) (%class-lambda constructor)))
+           (set-obj! ,name (Symbol.for "__class__") true)
            ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
                 `(begin
                    (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))

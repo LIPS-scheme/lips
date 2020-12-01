@@ -1947,7 +1947,7 @@
         }
         const constructor = fn.prototype && fn.prototype.constructor;
         if (typeof constructor === 'function' && constructor.__lambda__) {
-            if (constructor.hasOwnProperty('__name__')) {
+            if (fn[__class__] && constructor.hasOwnProperty('__name__')) {
                 let name = constructor.__name__;
                 if (LString.isString(name)) {
                     name = name.toString();
@@ -3424,6 +3424,7 @@
     var __data__ = Symbol.for('__data__');
     var __ref__ = Symbol.for('__ref__');
     var __cycles__ = Symbol.for('__cycles__');
+    var __class__ = Symbol.for("__class__");
     // ----------------------------------------------------------------------
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
@@ -5355,7 +5356,7 @@
         // those will be compiled by babel regex plugin
         '*letter-unicode-regex*': /\p{L}/u,
         '*numeral-unicode-regex*': /\p{N}/u,
-        '*sppace-unicode-regex*': /\s/u,
+        '*space-unicode-regex*': /\s/u,
         // ------------------------------------------------------------------
         stdout: new OutputPort(function(...args) {
             console.log(...args);
