@@ -5352,6 +5352,10 @@
         'false': false,
         'null': null,
         'NaN': NaN,
+        // those will be compiled by babel regex plugin
+        '*letter-unicode-regex*': /\p{L}/u,
+        '*numeral-unicode-regex*': /\p{N}/u,
+        '*sppace-unicode-regex*': /\s/u,
         // ------------------------------------------------------------------
         stdout: new OutputPort(function(...args) {
             console.log(...args);

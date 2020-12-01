@@ -3,6 +3,7 @@ node_modules
 coverage
 .htaccess
 npm-debug.log
+error.log
 \#*
 .\#*
 .DEV
