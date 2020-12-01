@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 30 Nov 2020 19:30:08 +0000
+ * build: Tue, 01 Dec 2020 08:32:05 +0000
  */
 (function () {
   'use strict';
@@ -1507,7 +1507,7 @@
     var char_re = new RegExp("^".concat(char_sre_re, "$"), 'i'); // complex with (int) (float) (rational)
 
     function make_num_stre(fn) {
-      var ranges = [['o', '[0-7]'], ['x', '[0-9a-fA-F]'], ['b', '[01]'], ['', '[0-9]']]; // float exception that don't accept mnemonics
+      var ranges = [['o', '[0-7]'], ['x', '[0-9a-fA-F]'], ['b', '[01]'], ['d', '[0-9]'], ['', '[0-9]']]; // float exception that don't accept mnemonics
 
       var result = ranges.map(function (_ref3) {
         var _ref4 = slicedToArray(_ref3, 2),
@@ -1536,7 +1536,7 @@
     var rational_bare_re = new RegExp('^(?:' + gen_rational_re('', '[0-9a-f]') + ')$', 'i');
     var complex_bare_re = new RegExp('^(?:' + gen_complex_re('', '[0-9a-f]') + ')$', 'i');
     var complex_bare_match_re = make_complex_match_re('', '[0-9a-fA-F]');
-    var pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
+    var pre_num_parse_re = /((?:#[xodbie]){0,2})(.*)/i;
     /* eslint-enable */
 
     function num_pre_parse(arg) {
@@ -1552,6 +1552,8 @@
           options.radix = 8;
         } else if (type.includes('b')) {
           options.radix = 2;
+        } else if (type.includes('d')) {
+          options.radix = 10;
         }
 
         if (type.includes('i')) {
@@ -11871,10 +11873,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 30 Nov 2020 19:30:08 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 01 Dec 2020 08:32:05 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 30 Nov 2020 19:30:08 +0000').valueOf();
+      var date = LString('Tue, 01 Dec 2020 08:32:05 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11911,7 +11913,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 30 Nov 2020 19:30:08 +0000',
+      date: 'Tue, 01 Dec 2020 08:32:05 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

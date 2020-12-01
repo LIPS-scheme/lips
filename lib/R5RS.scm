@@ -19,7 +19,10 @@
 ;; (+ 1 (call-with-current-continuation
 ;;       (lambda (escape)
 ;;         (+ 2 (escape 3)))))
-
+;;
+;; Unicode support:
+;;    codepoints and regular expressions where generated at 30-11-2020
+;;    so it support Unicode 12.1 released on May 2019
 ;; -----------------------------------------------------------------------------
 (define string-append concat)
 (define = ==)

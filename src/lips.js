@@ -269,6 +269,7 @@
             ['o', '[0-7]'],
             ['x', '[0-9a-fA-F]'],
             ['b', '[01]'],
+            ['d', '[0-9]'],
             ['', '[0-9]']
         ];
         // float exception that don't accept mnemonics
@@ -292,7 +293,7 @@
 
     const complex_bare_match_re = make_complex_match_re('', '[0-9a-fA-F]');
 
-    const pre_num_parse_re = /((?:#[xobie]){0,2})(.*)/i;
+    const pre_num_parse_re = /((?:#[xodbie]){0,2})(.*)/i;
     /* eslint-enable */
     function num_pre_parse(arg) {
         var parts = arg.match(pre_num_parse_re);
@@ -305,6 +306,8 @@
                 options.radix = 8;
             } else if (type.includes('b')) {
                 options.radix = 2;
+            } else if (type.includes('d')) {
+                options.radix = 10;
             }
             if (type.includes('i')) {
                 options.inexact = true;

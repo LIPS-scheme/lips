@@ -11,6 +11,7 @@
 * add `do-generator` macro
 * repr of `Map` and `Set`
 * add `digit-value` function
+* add `#d` prefix for numbers
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object
