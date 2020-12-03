@@ -1,6 +1,7 @@
 ## 1.0.0-beta.10
 ### Breaking
 * change behavior of `and` and `or` to work like `if` (`#f` only falsy value)
+* vectors and object literals are immutable (to prevent weird sharing data bugs)
 ### Features
 * add `promise?` function
 * improve `append`/`append!` to work according to spec and accept multiple arguments

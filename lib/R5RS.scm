@@ -57,7 +57,9 @@
   (if (not (or (pair? args) (eq? args nil)))
       (throw (new Error (concat "Parse Error: vector require pair got "
                                 (type args) " in " (repr args))))
-      (list->array args)))
+      (let ((v (list->array args)))
+        (Object.freeze v)
+        v)))
 
 ;; -----------------------------------------------------------------------------
 (define-syntax vector

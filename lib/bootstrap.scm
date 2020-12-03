@@ -265,6 +265,7 @@
                                         `(set-obj! ,name ,prop ',value)
                                         `(set-obj! ,name ,prop ,value))))))
                        expr)
+           (Object.freeze ,name)
            ,name))))
 
 ;; -----------------------------------------------------------------------------
