@@ -1971,7 +1971,7 @@
         }
         if (has_own_function(fn, 'toString')) {
             return fn.toString();
-        } else if (false && fn.name && !fn.__lambda__) {
+        } else if (fn.name && !fn.__lambda__) {
             return `#<procedure:${fn.name}>`;
         } else {
             return '#<procedure>';
