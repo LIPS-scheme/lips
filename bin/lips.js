@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
+const lily = require('@jcubic/lily');
+
 const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug'];
-const options = parse_options(process.argv.slice(2), { boolean });
+const options = lily(process.argv.slice(2), { boolean });
 
 const {
     exec,
@@ -42,59 +44,10 @@ process.on('uncaughtException', function (err) {
 function log_error(message) {
     fs.appendFileSync('error.log', message + '\n');
 }
+// -----------------------------------------------------------------------------
 function debug(message) {
     console.log(message);
 }
-// -----------------------------------------------------------------------------
-// code taken from jQuery Terminal
-function parse_options(arg, options) {
-    var settings = Object.assign({}, {
-        boolean: []
-    }, options);
-    var result = {
-        _: []
-    };
-    function token(value) {
-        this.value = value;
-    }
-    var rest = arg.reduce(function(acc, arg) {
-        if (typeof arg !== 'string') {
-            arg = String(arg);
-        }
-        if (arg.match(/^-/) && acc instanceof token) {
-            result[acc.value] = true;
-        }
-        if (arg.match(/^--/)) {
-            var name = arg.replace(/^--/, '');
-            if (settings.boolean.indexOf(name) === -1) {
-                return new token(name);
-            } else {
-                result[name] = true;
-            }
-        } else if (arg.match(/^-/)) {
-            var single = arg.replace(/^-/, '').split('');
-            if (settings.boolean.indexOf(single.slice(-1)[0]) === -1) {
-                var last = single.pop();
-            }
-            single.forEach(function(single) {
-                result[single] = true;
-            });
-            if (last) {
-                return new token(last);
-            }
-        } else if (acc instanceof token) {
-            result[acc.value] = arg;
-        } else if (arg) {
-            result._.push(arg);
-        }
-        return null;
-    }, null);
-    if (rest instanceof token) {
-        result[rest.value] = true;
-    }
-    return result;
-}
-
 // -----------------------------------------------------------------------------
 function run(code, interpreter, dynamic = false, env = null, stack = false) {
     if (typeof code !== 'string') {
