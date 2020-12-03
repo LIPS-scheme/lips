@@ -329,3 +329,35 @@
 
    Function evaluate expression expr and if it evaluates to result of values
    then it will defined each value as variable like with define.")
+
+;; -----------------------------------------------------------------------------
+(define-macro (include . files)
+  "(include file ...)
+
+   Macro that load at least one file content and insert them into one,
+   body expression."
+  (if (null? files)
+      (throw (new Error "include: at least one file path required"))
+      (let ((result (vector)) (env (interaction-environment)))
+        (if (eq? self global)
+            (let* ((fs (require "fs"))
+                   (readFile (lambda (file)
+                               (new Promise (lambda (resolve reject)
+                                              (fs.readFile file
+                                                           (lambda (err data)
+                                                             (if (null? err)
+                                                                 (resolve (--> data
+                                                                               (toString)))
+                                                                 (reject err)))))))))
+              (for-each (lambda (file)
+                          (let* ((expr (lips.parse (readFile file) env)))
+                            (set! result (--> result (concat expr)))))
+                        files))
+            (for-each (lambda (file)
+                        (let* ((text (--> (fetch file) (text)))
+                               (expr (lips.parse text env)))
+                          (set! result (--> result (concat expr)))))
+                      files))
+        (if (> result.length 0)
+            `(begin
+              ,@(vector->list result))))))
