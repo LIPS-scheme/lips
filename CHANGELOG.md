@@ -28,6 +28,7 @@
 * fix duplicated line in executable [#89](https://github.com/jcubic/lips/issues/89)
 * fix `char-numeric?` and `char-alphabetic?` to handle all unicode
 * fix characters with more then one code point
+* fix `repr` of functions that are created by `self.eval`
 
 ## 1.0.0-beta.9
 ### Breaking

@@ -1965,11 +1965,10 @@
                 return `#<procedure:${name}>`;
             }
         }
-        if (fn.hasOwnProperty('__name__')) {
-            //console.log(fn.__name__);
-        }
         if (has_own_function(fn, 'toString')) {
             return fn.toString();
+        } else if (false && fn.name && !fn.__lambda__) {
+            return `#<procedure:${fn.name}>`;
         } else {
             return '#<procedure>';
         }
