@@ -66,14 +66,27 @@
         (t.is (to.throw (set! foo.bar 10)) true)
         (t.is (to.throw (set! foo 10)) true)))
 
-(test "core: it should set on object literals"
+(test "core: it should set object"
       (lambda (t)
-        (let ((x &(:foo "jo")))
+        (let ((x (object :foo "jo")))
           (set! x.bar "hey")
           (t.is (string-append (--> x.bar (toUpperCase))
                                " "
                                (x.foo.toUpperCase))
                 "HEY JO"))))
+
+(test "core: it should throw when set object literal"
+      (lambda (t)
+        (let ((x &(:foo "jo")))
+          (t.is (to.throw (set! x.foo "hey")) true)
+          (t.is (to.throw (set! x.bar "hey")) true))))
+
+
+(test "core: it should throw when set vector literal"
+      (lambda (t)
+        (let ((x #(0 1)))
+          (t.is (to.throw (set! x.0 2)) true)
+          (t.is (to.throw (x.push 3)) true))))
 
 (test "core: timing test"
       (lambda (t)

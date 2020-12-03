@@ -339,7 +339,7 @@
   (typecheck "exact->inexact" n "number")
   (if (complex? n)
       ;; make-object (&) will use valueOf so it will be float even if it was rational
-      (lips.LComplex &(:im (. n 'im) :re (. n 're)))
+      (lips.LComplex (object :im (. n 'im) :re (. n 're)))
       (if (or (rational? n) (integer? n))
           (lips.LFloat (--> n (valueOf)) true)
           n)))

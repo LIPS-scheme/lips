@@ -246,8 +246,8 @@
 
 
 ;; -----------------------------------------------------------------------------
-(define (object-expander expr . rest)
-  "(object-expander '(:foo (:bar 10) (:baz (1 2 3))))
+(define (object-expander readonly expr . rest)
+  "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
 
    Recursive function helper for defining LIPS code for create objects using key like syntax."
   (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
@@ -260,12 +260,13 @@
                                (throw msg))
                              (let ((prop (key->string key)))
                                (if (and (pair? value) (key? (car value)))
-                                   `(set-obj! ,name ,prop ,(object-expander value))
+                                   `(set-obj! ,name ,prop ,(object-expander readonly value))
                                     (if quot
                                         `(set-obj! ,name ,prop ',value)
                                         `(set-obj! ,name ,prop ,value))))))
                        expr)
-           (Object.freeze ,name)
+           ,(if readonly
+               `(Object.freeze ,name))
            ,name))))
 
 ;; -----------------------------------------------------------------------------
@@ -274,7 +275,7 @@
 
    Macro that create JavaScript object using key like syntax."
   (try
-    (object-expander expr)
+    (object-expander false expr)
     (catch (e)
       (error e.message))))
 
@@ -285,7 +286,7 @@
    Macro that create JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used with & object literal."
   (try
-    (object-expander expr true)
+    (object-expander true expr)
     (catch (e)
       (error e.message))))
 
