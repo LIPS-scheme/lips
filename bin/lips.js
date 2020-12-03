@@ -180,6 +180,14 @@ function scheme(str) {
 }
 
 // -----------------------------------------------------------------------------
+function log(message) {
+    if (typeof message !== 'string') {
+        message = message.toString();
+    }
+    fs.appendFile('out.log', message + '\n', (err) => { });
+}
+
+// -----------------------------------------------------------------------------
 var strace;
 var rl;
 var newline;
@@ -330,12 +338,6 @@ function run_repl(err, rl) {
         rl.prompt();
     }
     var prev_line;
-    function log(message) {
-        if (typeof message !== 'string') {
-            message = message.toString();
-        }
-        fs.appendFile('out.log', message, (err) => { });
-    }
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
             code += line + '\n';
@@ -365,6 +367,10 @@ function run_repl(err, rl) {
             }
             try {
                 if (balanced_parenthesis(code)) {
+                    // we need to clear the prompt because resume
+                    // is adding the prompt that was present when pause was called
+                    // https://github.com/nodejs/node/issues/11699
+                    rl.setPrompt('');
                     rl.pause();
                     prev_eval = prev_eval.then(function() {
                         var result = run(code, interp, dynamic);
@@ -374,17 +380,17 @@ function run_repl(err, rl) {
                         if (process.stdin.isTTY) {
                             print(result);
                             if (newline) {
-                                // readline don't work with not endend lines
-                                // it ignore those so we end then ourselfs
+                                // readline doesn't work with not ended lines
+                                // it ignore those, so we end them ourselves
                                 process.stdout.write("\n");
                                 newline = false;
                             }
                             if (multiline) {
-                                rl.setPrompt(prompt);
                                 multiline = false;
                             }
-                            rl.prompt();
                         }
+                        rl.setPrompt(prompt);
+                        rl.prompt();
                         rl.resume();
                     }).catch(function() {
                         if (process.stdin.isTTY) {
