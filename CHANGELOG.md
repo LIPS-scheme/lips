@@ -14,6 +14,7 @@
 * add `digit-value` function
 * add `#d` prefix for numbers
 * add `include` macro
+* add `--debug` option to executable (that load src file instead of dist)
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object

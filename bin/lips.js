@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug'];
+const options = parse_options(process.argv.slice(2), { boolean });
+
 const {
     exec,
     Formatter,
@@ -17,7 +20,7 @@ const {
     env,
     banner,
     InputPort,
-    OutputPort } = require('../dist/lips');
+    OutputPort } = require(options.debug ? '../src/lips' : '../dist/lips');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -231,8 +234,7 @@ var interp = Interpreter('repl', {
 });
 
 // -----------------------------------------------------------------------------
-const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't'];
-const options = parse_options(process.argv.slice(2), { boolean });
+
 if (options.version || options.V) {
     // SRFI 176
     global.output = Pair.fromArray([
