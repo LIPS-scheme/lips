@@ -84,7 +84,7 @@ function print(result) {
         var last = result.pop();
         if (last !== undefined) {
             var ret = env.get('repr')(last, true);
-            console.log(ret.toString());
+            console.log('\x1b[K' + ret.toString());
         }
     }
 }
