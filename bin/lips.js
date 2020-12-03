@@ -395,11 +395,12 @@ function run_repl(err, rl) {
                     }).catch(function() {
                         if (process.stdin.isTTY) {
                             if (multiline) {
-                                rl.setPrompt(prompt);
                                 multiline = false;
                             }
-                            rl.prompt();
                         }
+                        rl.setPrompt(prompt);
+                        rl.prompt();
+                        rl.resume();
                     });
                 } else {
                     multiline = true;
@@ -414,6 +415,7 @@ function run_repl(err, rl) {
             } catch (e) {
                 console.error(e.message);
                 code = '';
+                rl.setPrompt(prompt);
                 rl.prompt();
             }
         });
