@@ -132,7 +132,10 @@ function doc(fn, doc) {
 
 // -----------------------------------------------------------------------------
 function scheme(str) {
-    return highlight(str, 'scheme', { grammar: Prism.languages.scheme });
+    return highlight(str, 'scheme', {
+        grammar: Prism.languages.scheme,
+        newlines: true
+    });
 }
 
 // -----------------------------------------------------------------------------
@@ -296,28 +299,17 @@ function run_repl(err, rl) {
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
             code += line + '\n';
-            var format, spaces, stdout;
             const cols = process.stdout.columns;
-            var lines = code.split('\n');
-            // fix previous line
+            // fix formatting for previous lines that was echo
+            // ReadLine will not handle those
+            const lines = code.split('\n');
             if (terminal && lines.length > 1) {
-                prev_line = lines[lines.length - 2].replace(/^\s+/, '');
-                let prompt_len;
-                if (lines.length > 2) {
-                    var prev = lines.slice(0, -2).join('\n');
-                    var i = indent(prev, 2, prompt.length - continuePrompt.length);
-                    spaces = new Array(i + 1).join(' ');
-                    lines[lines.length - 2] = spaces + prev_line;
-                    code = lines.join('\n');
-                    stdout = continuePrompt + spaces;
-                    prompt_len = continuePrompt.length;
-                } else {
-                    stdout = prompt;
-                    prompt_len = prompt.length;
-                }
-                stdout += scheme(prev_line);
-                const num = prev_line.length > cols - prompt_len ? 2 : 1;
-                format = `\x1b[${num}F\x1b[K${stdout}\n`;
+                const stdout = scheme(code).split('\n').slice(0, -1).map((line, i) => {
+                    var prefix = i === 0 ? prompt : continuePrompt;
+                    return '\x1b[K' + prefix + line;
+                }).join('\n');
+                const num = lines.length;
+                const format = `\x1b[${num}F${stdout}\n`;
                 process.stdout.write(format);
             }
             try {
@@ -369,6 +361,7 @@ function run_repl(err, rl) {
                 }
             } catch (e) {
                 console.error(e.message);
+                console.error(e.stack);
                 code = '';
                 rl.setPrompt(prompt);
                 rl.prompt();

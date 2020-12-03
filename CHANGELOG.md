@@ -29,6 +29,7 @@
 * fix `char-numeric?` and `char-alphabetic?` to handle all unicode
 * fix characters with more then one code point
 * fix `repr` of functions that are created by `self.eval`
+* fix formatting strings in REPL
 
 ## 1.0.0-beta.9
 ### Breaking

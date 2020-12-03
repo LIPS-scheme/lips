@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 03 Dec 2020 20:25:26 +0000
+ * build: Thu, 03 Dec 2020 23:05:50 +0000
  */
 (function () {
   'use strict';
@@ -2978,6 +2978,11 @@
       var sexp = previousSexp(tokens); // one character before S-Expression
 
       var before_sexpr = tokens[tokens.length - sexp.length - 1];
+      var last = tokens[tokens.length - 1];
+
+      if (last.token.match(/^"[\S\s]+[^"]$/)) {
+        return spaces + settings.indent;
+      }
 
       if (sexp && sexp.length) {
         if (sexp[0].line > 0) {
@@ -3814,8 +3819,6 @@
 
       if (has_own_function(fn, 'toString')) {
         return fn.toString();
-      } else if (fn.name && !fn.__lambda__) {
-        return "#<procedure:".concat(fn.name, ">");
       } else {
         return '#<procedure>';
       }
@@ -11879,10 +11882,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 03 Dec 2020 20:25:26 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 03 Dec 2020 23:05:50 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 03 Dec 2020 20:25:26 +0000').valueOf();
+      var date = LString('Thu, 03 Dec 2020 23:05:50 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11919,7 +11922,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 03 Dec 2020 20:25:26 +0000',
+      date: 'Thu, 03 Dec 2020 23:05:50 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

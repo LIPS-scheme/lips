@@ -1270,6 +1270,10 @@
         var sexp = previousSexp(tokens);
         // one character before S-Expression
         var before_sexpr = tokens[tokens.length - sexp.length - 1];
+        var last = tokens[tokens.length - 1];
+        if (last.token.match(/^"[\S\s]+[^"]$/)) {
+            return spaces + settings.indent;
+        }
         if (sexp && sexp.length) {
             if (sexp[0].line > 0) {
                 settings.offset = 0;
