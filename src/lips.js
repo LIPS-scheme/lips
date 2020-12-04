@@ -1590,6 +1590,8 @@
         return '()';
     };
     Nil.prototype.valueOf = function() {
+        console.warn('\nNIL: LIPS just called valueOf on nil constant. ' +
+                     'This is probably not what you want.');
         return undefined;
     };
     Nil.prototype.toObject = function() {
@@ -6040,7 +6042,7 @@
             } else if (is_prototype(obj) && typeof value === 'function') {
                 obj[key] = unbind(value);
                 obj[key].__prototype__ = true;
-            } else if (typeof value === 'function' || is_native(value)) {
+            } else if (typeof value === 'function' || is_native(value) || value === nil) {
                 obj[key] = value;
             } else {
                 obj[key] = value ? value.valueOf() : value;

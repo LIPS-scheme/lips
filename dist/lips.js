@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 03 Dec 2020 23:46:45 +0000
+ * build: Fri, 04 Dec 2020 19:27:09 +0000
  */
 (function () {
   'use strict';
@@ -3366,6 +3366,7 @@
     };
 
     Nil.prototype.valueOf = function () {
+      console.warn('\nNIL: LIPS just called valueOf on nil constant. ' + 'This is probably not what you want.');
       return undefined$1;
     };
 
@@ -9202,7 +9203,7 @@
         } else if (is_prototype(obj) && typeof value === 'function') {
           obj[key] = unbind(value);
           obj[key].__prototype__ = true;
-        } else if (typeof value === 'function' || is_native(value)) {
+        } else if (typeof value === 'function' || is_native(value) || value === nil) {
           obj[key] = value;
         } else {
           obj[key] = value ? value.valueOf() : value;
@@ -11884,10 +11885,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 03 Dec 2020 23:46:45 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 04 Dec 2020 19:27:09 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 03 Dec 2020 23:46:45 +0000').valueOf();
+      var date = LString('Fri, 04 Dec 2020 19:27:09 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11924,7 +11925,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 03 Dec 2020 23:46:45 +0000',
+      date: 'Fri, 04 Dec 2020 19:27:09 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

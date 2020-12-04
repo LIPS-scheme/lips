@@ -12,7 +12,7 @@
 * add `do-generator` macro
 * repr of `Map` and `Set`
 * add `digit-value` function
-* add `#d` prefix for numbers
+* add `#d` prefix for decimal numbers
 * add `include` macro
 * add `--debug` option to executable (that load src file instead of dist)
 ### Bugfix
@@ -30,6 +30,7 @@
 * fix characters with more then one code point
 * fix `repr` of functions that are created by `self.eval`
 * fix formatting strings in REPL
+* fix `set!` `nil` to object field
 
 ## 1.0.0-beta.9
 ### Breaking
