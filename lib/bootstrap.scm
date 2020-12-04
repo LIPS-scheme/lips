@@ -711,6 +711,14 @@
   "(class-lambda expr)
 
    Return lambda expression where input expression lambda have `this` as first argument."
+  (let ((args (gensym 'args)))
+    `(lambda ,args
+       (apply ,(cadr expr) this ,args))))
+
+;; TODO: handle this broken case when arguments are improper list
+;;       Throw proper error
+;; (%class-lambda '(hello (lambda (x y . z) (print z))))
+#;(define (%class-lambda expr)
   (let ((args (cdadadr expr)))
     `(lambda (,@args)
        (,(cadr expr) this ,@args))))
@@ -734,7 +742,9 @@
   (let iter ((functions '()) (constructor '()) (lst body))
     (if (null? lst)
         `(begin
-           (define ,name ,(if (null? constructor) `(lambda ()) (%class-lambda constructor)))
+           (define ,name ,(if (null? constructor)
+                              `(lambda ())
+                              (%class-lambda constructor)))
            (set-obj! ,name (Symbol.for "__class__") true)
            ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
                 `(begin
