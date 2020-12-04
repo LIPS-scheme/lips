@@ -298,13 +298,13 @@ function run_repl(err, rl) {
     var prev_line;
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
-            code += line + '\n';
+            code += line;
+            const lines = code.split('\n');
             const cols = process.stdout.columns;
             // fix formatting for previous lines that was echo
             // ReadLine will not handle those
-            const lines = code.split('\n');
             if (terminal && lines.length > 1) {
-                const stdout = scheme(code).split('\n').slice(0, -1).map((line, i) => {
+                const stdout = scheme(code).split('\n').map((line, i) => {
                     var prefix = i === 0 ? prompt : continuePrompt;
                     return '\x1b[K' + prefix + line;
                 }).join('\n');
@@ -312,6 +312,7 @@ function run_repl(err, rl) {
                 const format = `\x1b[${num}F${stdout}\n`;
                 process.stdout.write(format);
             }
+            code += '\n';
             try {
                 if (balanced_parenthesis(code)) {
                     // we need to clear the prompt because resume
