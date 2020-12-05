@@ -575,6 +575,7 @@
 
 (test "syntax-rules: it should define nested syntax-rules"
       (lambda (t)
+        ;; be-like-begin from R7RS spec file
         (define-syntax be-like-begin
           (syntax-rules ()
             ((be-like-begin name)
@@ -895,3 +896,21 @@
 
         (t.is (reverse-syntax (1 2 cons)) '(2 . 1))
         (t.is (reverse-syntax (1 2 3 4 5 list)) '(5 4 3 2 1))))
+
+(test "syntax: R7RS multiple elipsis extensions"
+      (lambda (t)
+
+        ;; source https://practical-scheme.net/gauche/man/gauche-refe/Hygienic-macros.html
+        (define-syntax my-append
+          (syntax-rules ()
+            [(_ (a ...) ...)
+             '(a ... ...)]))
+
+        (t.is (my-append (1 2 3) (4) (5 6)) '(1 2 3 4 5 6))
+
+        (define-syntax my-append2
+          (syntax-rules ()
+            [(_ ((a ...) ...) ...)
+             '(a ... ... ...)]))
+
+        (t.is (my-append2 ((1 2) (3 4)) ((5) (6 7 8))) '(1 2 3 4 5 6 7 8))))
