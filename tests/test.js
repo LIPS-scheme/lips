@@ -35,6 +35,9 @@ readDir('./tests/').then(function(filenames) {
       `].concat(files).join('\n\n')).catch((e) => {
           console.log(e);
       });
+  }).catch(e => {
+      console.error(e.message);
+      console.error(e.stack);
   });
 });
 
