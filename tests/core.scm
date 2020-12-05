@@ -160,3 +160,7 @@
           (t.is (read port) 10)
           (t.is (read port) /foo bar/)
           (t.is (eof-object? (read port)) true))))
+
+(test "core: it should throw exception why calling with improper list"
+      (lambda (t)
+        (t.is (to.throw (let ((x '(1 2))) (+ 1 . x))) true)))

@@ -718,7 +718,8 @@
 ;; TODO: handle this broken case when arguments are improper list
 ;;       Throw proper error
 ;; (%class-lambda '(hello (lambda (x y . z) (print z))))
-#;(define (%class-lambda expr)
+
+(define (%class-lambda expr)
   (let ((args (cdadadr expr)))
     `(lambda (,@args)
        (,(cadr expr) this ,@args))))

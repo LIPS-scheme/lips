@@ -7922,7 +7922,7 @@
             return node;
         }
     }
-    function getFunctionArgs(rest, { env, dynamic_scope, error }) {
+    function evaluate_args(rest, { env, dynamic_scope, error }) {
         var args = [];
         var node = rest;
         markCycles(node);
@@ -7942,8 +7942,10 @@
                     break;
                 }
                 node = node.cdr;
-            } else {
+            } else if (node === nil) {
                 break;
+            } else {
+                throw new Error('Syntax Error: improper list found in apply');
             }
         }
         return resolvePromises(args);
@@ -7978,7 +7980,7 @@
     }
     // -------------------------------------------------------------------------
     function apply(fn, args, { env, dynamic_scope, error = () => {} } = {}) {
-        args = getFunctionArgs(args, { env, dynamic_scope, error });
+        args = evaluate_args(args, { env, dynamic_scope, error });
         return unpromise(args, function(args) {
             if (is_bound(fn) && !is_object_bound(fn) &&
                 (!lips_context(fn) || is_port(fn))) {

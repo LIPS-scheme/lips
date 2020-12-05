@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 05 Dec 2020 09:00:51 +0000
+ * build: Sat, 05 Dec 2020 09:12:21 +0000
  */
 (function () {
   'use strict';
@@ -11180,7 +11180,7 @@
       }
     }
 
-    function getFunctionArgs(rest, _ref31) {
+    function evaluate_args(rest, _ref31) {
       var env = _ref31.env,
           dynamic_scope = _ref31.dynamic_scope,
           error = _ref31.error;
@@ -11213,8 +11213,10 @@
           }
 
           node = node.cdr;
-        } else {
+        } else if (node === nil) {
           break;
+        } else {
+          throw new Error('Syntax Error: improper list found in apply');
         }
       }
 
@@ -11262,7 +11264,7 @@
           _ref32$error = _ref32.error,
           error = _ref32$error === void 0 ? function () {} : _ref32$error;
 
-      args = getFunctionArgs(args, {
+      args = evaluate_args(args, {
         env: env,
         dynamic_scope: dynamic_scope,
         error: error
@@ -11896,10 +11898,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 05 Dec 2020 09:00:51 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 05 Dec 2020 09:12:21 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 05 Dec 2020 09:00:51 +0000').valueOf();
+      var date = LString('Sat, 05 Dec 2020 09:12:21 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11936,7 +11938,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 05 Dec 2020 09:00:51 +0000',
+      date: 'Sat, 05 Dec 2020 09:12:21 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
