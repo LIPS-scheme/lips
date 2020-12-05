@@ -164,3 +164,8 @@
 (test "core: it should throw exception why calling with improper list"
       (lambda (t)
         (t.is (to.throw (let ((x '(1 2))) (+ 1 . x))) true)))
+
+(test "core: it should throw exception why applying function to improper list"
+      (lambda (t)
+        (t.is (to.throw (let ((x '(1 2 . 3))) (apply + x))) true)))
+
