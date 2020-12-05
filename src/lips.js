@@ -1635,8 +1635,10 @@
                     }
                     result.push(car);
                     node = node.cdr;
-                } else {
+                } else if (node === nil) {
                     break;
+                } else {
+                    throw new Error(`${name}: can't convert improper list`);
                 }
             }
             return result;

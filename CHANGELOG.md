@@ -31,6 +31,8 @@
 * fix `repr` of functions that are created by `self.eval`
 * fix formatting strings in REPL
 * fix `set!` `nil` to object field
+* fix `lambda` in `define-class` that have improper list as arguments
+* throw exception when applying function to improper list
 
 ## 1.0.0-beta.9
 ### Breaking
