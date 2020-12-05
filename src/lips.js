@@ -6769,7 +6769,7 @@
         // ------------------------------------------------------------------
         join: doc(function join(separator, list) {
             typecheck('join', separator, 'string');
-            typecheck('join', list, 'pair');
+            typecheck('join', list, ['pair', 'nil']);
             return this.get('list->array')(list).join(separator);
         }, `(join separator list)
 

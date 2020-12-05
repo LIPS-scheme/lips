@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 05 Dec 2020 09:55:14 +0000
+ * build: Sat, 05 Dec 2020 22:02:11 +0000
  */
 (function () {
   'use strict';
@@ -9998,7 +9998,7 @@
       // ------------------------------------------------------------------
       join: doc(function join(separator, list) {
         typecheck('join', separator, 'string');
-        typecheck('join', list, 'pair');
+        typecheck('join', list, ['pair', 'nil']);
         return this.get('list->array')(list).join(separator);
       }, "(join separator list)\n\n            Function return string by joining elements of the list"),
       // ------------------------------------------------------------------
@@ -11900,10 +11900,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 05 Dec 2020 09:55:14 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 05 Dec 2020 22:02:11 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 05 Dec 2020 09:55:14 +0000').valueOf();
+      var date = LString('Sat, 05 Dec 2020 22:02:11 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11940,7 +11940,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 05 Dec 2020 09:55:14 +0000',
+      date: 'Sat, 05 Dec 2020 22:02:11 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
