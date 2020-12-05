@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 05 Dec 2020 08:04:11 +0000
+ * build: Sat, 05 Dec 2020 09:00:51 +0000
  */
 (function () {
   'use strict';
@@ -10871,11 +10871,7 @@
 
 
     function is_node() {
-      if (typeof global !== 'undefined' && global === root) {
-        return typeof process.env.NODE_ENV === 'undefined';
-      }
-
-      return false;
+      return typeof global !== 'undefined' && global.global === global;
     } // -------------------------------------------------------------------------
 
 
@@ -11259,12 +11255,86 @@
     } // -------------------------------------------------------------------------
 
 
-    function evaluate(code) {
-      var _ref32 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+    function apply(fn, args) {
+      var _ref32 = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {},
           env = _ref32.env,
           dynamic_scope = _ref32.dynamic_scope,
           _ref32$error = _ref32.error,
           error = _ref32$error === void 0 ? function () {} : _ref32$error;
+
+      args = getFunctionArgs(args, {
+        env: env,
+        dynamic_scope: dynamic_scope,
+        error: error
+      });
+      return unpromise(args, function (args) {
+        if (is_bound(fn) && !is_object_bound(fn) && (!lips_context(fn) || is_port(fn))) {
+          args = args.map(unbox);
+        }
+
+        if (fn.__lambda__ && !fn.__prototype__ || is_port(fn)) {
+          // lambda need environment as context
+          // normal functions are bound to their contexts
+          fn = unbind(fn);
+        } else if (args.some(lips_function) && !lips_function(fn) && !is_array_method(fn)) {
+          // we unbox values from callback functions #76
+          // calling map on array should not unbox the value
+          args = args.map(function (arg) {
+            if (lips_function(arg)) {
+              var wrapper = function wrapper() {
+                for (var _len38 = arguments.length, args = new Array(_len38), _key40 = 0; _key40 < _len38; _key40++) {
+                  args[_key40] = arguments[_key40];
+                }
+
+                return unpromise(arg.apply(this, args), unbox);
+              }; // copy prototype from function to wrapper
+              // so this work when calling new from JavaScript
+              // case of Preact that pass LIPS class as argument
+              // to h function
+
+
+              wrapper.prototype = arg.prototype;
+              return wrapper;
+            }
+
+            return arg;
+          });
+        }
+
+        var _args = args.slice();
+
+        var scope = (dynamic_scope || env).newFrame(fn, _args);
+        var result = resolvePromises(fn.apply(scope, args));
+        return unpromise(result, function (result) {
+          if (result instanceof Pair) {
+            result.markCycles();
+            return quote(result);
+          }
+
+          if (Number.isNaN(result)) {
+            return result;
+          }
+
+          if (typeof result === 'number') {
+            return LNumber(result);
+          }
+
+          if (typeof result === 'string') {
+            return LString(result);
+          }
+
+          return result;
+        }, error);
+      });
+    } // -------------------------------------------------------------------------
+
+
+    function evaluate(code) {
+      var _ref33 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          env = _ref33.env,
+          dynamic_scope = _ref33.dynamic_scope,
+          _ref33$error = _ref33.error,
+          error = _ref33$error === void 0 ? function () {} : _ref33$error;
 
       try {
         if (dynamic_scope === true) {
@@ -11311,94 +11381,26 @@
 
         if (first instanceof LSymbol) {
           value = env.get(first);
-
-          if (value instanceof Syntax) {
-            return evaluateSyntax(value, code, eval_args);
-          } else if (value instanceof Macro) {
-            return evaluateMacro(value, rest, eval_args);
-          } else if (typeof value !== 'function') {
-            if (value) {
-              var msg = "".concat(type(value), " `").concat(value, "' is not a function");
-              throw new Error(msg);
-            }
-
-            throw new Error("Unknown function `".concat(first.toString(), "'"));
-          }
         } else if (typeof first === 'function') {
           value = first;
         }
 
-        if (typeof value === 'function') {
-          var args = getFunctionArgs(rest, eval_args);
-          return unpromise(args, function (args) {
-            if (is_bound(value) && !is_object_bound(value) && (!lips_context(value) || is_port(value))) {
-              args = args.map(unbox);
-            }
-
-            if (value.__lambda__ && !value.__prototype__ || is_port(value)) {
-              // lambda need environment as context
-              // normal functions are bound to their contexts
-              value = unbind(value);
-            } else if (args.some(lips_function) && !lips_function(value) && !is_array_method(value)) {
-              // we unbox values from callback functions #76
-              // calling map on array should not unbox the value
-              args = args.map(function (arg) {
-                if (lips_function(arg)) {
-                  var wrapper = function wrapper() {
-                    for (var _len38 = arguments.length, args = new Array(_len38), _key40 = 0; _key40 < _len38; _key40++) {
-                      args[_key40] = arguments[_key40];
-                    }
-
-                    return unpromise(arg.apply(this, args), unbox);
-                  }; // copy prototype from function to wrapper
-                  // so this work when calling new from JavaScript
-                  // case of Preact that pass LIPS class as argument
-                  // to h function
-
-
-                  wrapper.prototype = arg.prototype;
-                  return wrapper;
-                }
-
-                return arg;
-              });
-            }
-
-            var _args = args.slice();
-
-            var scope = (dynamic_scope || env).newFrame(value, _args);
-            var result = resolvePromises(value.apply(scope, args));
-            return unpromise(result, function (result) {
-              if (result instanceof Pair) {
-                result.markCycles();
-                return quote(result);
-              }
-
-              if (Number.isNaN(result)) {
-                return result;
-              }
-
-              if (typeof result === 'number') {
-                return LNumber(result);
-              }
-
-              if (typeof result === 'string') {
-                return LString(result);
-              }
-
-              return result;
-            }, error);
-          });
-        } else if (code instanceof LSymbol) {
-          value = env.get(code);
-
-          if (value === 'undefined') {//throw new Error('Unbound variable `' + code.__name__ + '\'');
-          }
-
-          return value;
+        if (value instanceof Syntax) {
+          return evaluateSyntax(value, code, eval_args);
+        } else if (value instanceof Macro) {
+          return evaluateMacro(value, rest, eval_args);
+        } else if (typeof value === 'function') {
+          return apply(value, rest, eval_args);
         } else if (code instanceof Pair) {
           value = first && first.toString();
           throw new Error("".concat(type(first), " ").concat(value, " is not a function"));
+        } else if (typeof value !== 'function') {
+          if (value) {
+            var msg = "".concat(type(value), " `").concat(value, "' is not a function");
+            throw new Error(msg);
+          }
+
+          throw new Error("Unknown function `".concat(first.toString(), "'"));
         } else {
           return code;
         }
@@ -11894,10 +11896,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 05 Dec 2020 08:04:11 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 05 Dec 2020 09:00:51 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 05 Dec 2020 08:04:11 +0000').valueOf();
+      var date = LString('Sat, 05 Dec 2020 09:00:51 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11934,7 +11936,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 05 Dec 2020 08:04:11 +0000',
+      date: 'Sat, 05 Dec 2020 09:00:51 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

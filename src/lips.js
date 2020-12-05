@@ -7709,10 +7709,7 @@
 
     // -------------------------------------------------------------------------
     function is_node() {
-        if (typeof global !== 'undefined' && global === root) {
-            return typeof process.env.NODE_ENV === 'undefined';
-        }
-        return false;
+        return typeof global !== 'undefined' && global.global === global;
     }
 
     // -------------------------------------------------------------------------
@@ -7980,6 +7977,59 @@
         });
     }
     // -------------------------------------------------------------------------
+    function apply(fn, args, { env, dynamic_scope, error = () => {} } = {}) {
+        args = getFunctionArgs(args, { env, dynamic_scope, error });
+        return unpromise(args, function(args) {
+            if (is_bound(fn) && !is_object_bound(fn) &&
+                (!lips_context(fn) || is_port(fn))) {
+                args = args.map(unbox);
+            }
+            if (fn.__lambda__ && !fn.__prototype__ || is_port(fn)) {
+                // lambda need environment as context
+                // normal functions are bound to their contexts
+                fn = unbind(fn);
+            } else if (args.some(lips_function) &&
+                       !lips_function(fn) &&
+                       !is_array_method(fn)) {
+                // we unbox values from callback functions #76
+                // calling map on array should not unbox the value
+                args = args.map(arg => {
+                    if (lips_function(arg)) {
+                        var wrapper = function(...args) {
+                            return unpromise(arg.apply(this, args), unbox);
+                        };
+                        // copy prototype from function to wrapper
+                        // so this work when calling new from JavaScript
+                        // case of Preact that pass LIPS class as argument
+                        // to h function
+                        wrapper.prototype = arg.prototype;
+                        return wrapper;
+                    }
+                    return arg;
+                });
+            }
+            var _args = args.slice();
+            var scope = (dynamic_scope || env).newFrame(fn, _args);
+            var result = resolvePromises(fn.apply(scope, args));
+            return unpromise(result, (result) => {
+                if (result instanceof Pair) {
+                    result.markCycles();
+                    return quote(result);
+                }
+                if (Number.isNaN(result)) {
+                    return result;
+                }
+                if (typeof result === 'number') {
+                    return LNumber(result);
+                }
+                if (typeof result === 'string') {
+                    return LString(result);
+                }
+                return result;
+            }, error);
+        });
+    }
+    // -------------------------------------------------------------------------
     function evaluate(code, { env, dynamic_scope, error = () => {} } = {}) {
         try {
             if (dynamic_scope === true) {
@@ -8018,80 +8068,24 @@
             }
             if (first instanceof LSymbol) {
                 value = env.get(first);
-                if (value instanceof Syntax) {
-                    return evaluateSyntax(value, code, eval_args);
-                } else if (value instanceof Macro) {
-                    return evaluateMacro(value, rest, eval_args);
-                } else if (typeof value !== 'function') {
-                    if (value) {
-                        var msg = `${type(value)} \`${value}' is not a function`;
-                        throw new Error(msg);
-                    }
-                    throw new Error(`Unknown function \`${first.toString()}'`);
-                }
             } else if (typeof first === 'function') {
                 value = first;
             }
-            if (typeof value === 'function') {
-                var args = getFunctionArgs(rest, eval_args);
-                return unpromise(args, function(args) {
-                    if (is_bound(value) && !is_object_bound(value) &&
-                        (!lips_context(value) || is_port(value))) {
-                        args = args.map(unbox);
-                    }
-                    if (value.__lambda__ && !value.__prototype__ || is_port(value)) {
-                        // lambda need environment as context
-                        // normal functions are bound to their contexts
-                        value = unbind(value);
-                    } else if (args.some(lips_function) &&
-                               !lips_function(value) &&
-                               !is_array_method(value)) {
-                        // we unbox values from callback functions #76
-                        // calling map on array should not unbox the value
-                        args = args.map(arg => {
-                            if (lips_function(arg)) {
-                                var wrapper = function(...args) {
-                                    return unpromise(arg.apply(this, args), unbox);
-                                };
-                                // copy prototype from function to wrapper
-                                // so this work when calling new from JavaScript
-                                // case of Preact that pass LIPS class as argument
-                                // to h function
-                                wrapper.prototype = arg.prototype;
-                                return wrapper;
-                            }
-                            return arg;
-                        });
-                    }
-                    var _args = args.slice();
-                    var scope = (dynamic_scope || env).newFrame(value, _args);
-                    var result = resolvePromises(value.apply(scope, args));
-                    return unpromise(result, (result) => {
-                        if (result instanceof Pair) {
-                            result.markCycles();
-                            return quote(result);
-                        }
-                        if (Number.isNaN(result)) {
-                            return result;
-                        }
-                        if (typeof result === 'number') {
-                            return LNumber(result);
-                        }
-                        if (typeof result === 'string') {
-                            return LString(result);
-                        }
-                        return result;
-                    }, error);
-                });
-            } else if (code instanceof LSymbol) {
-                value = env.get(code);
-                if (value === 'undefined') {
-                    //throw new Error('Unbound variable `' + code.__name__ + '\'');
-                }
-                return value;
+            if (value instanceof Syntax) {
+                return evaluateSyntax(value, code, eval_args);
+            } else if (value instanceof Macro) {
+                return evaluateMacro(value, rest, eval_args);
+            } else if (typeof value === 'function') {
+                return apply(value, rest, eval_args);
             } else if (code instanceof Pair) {
                 value = first && first.toString();
                 throw new Error(`${type(first)} ${value} is not a function`);
+            } else if (typeof value !== 'function') {
+                if (value) {
+                    var msg = `${type(value)} \`${value}' is not a function`;
+                    throw new Error(msg);
+                }
+                throw new Error(`Unknown function \`${first.toString()}'`);
             } else {
                 return code;
             }
