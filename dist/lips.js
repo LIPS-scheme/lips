@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 04 Dec 2020 19:27:09 +0000
+ * build: Sat, 05 Dec 2020 08:04:11 +0000
  */
 (function () {
   'use strict';
@@ -8829,7 +8829,7 @@
           return exec(code.replace(/^#!.*/, ''), env);
         }
 
-        if (typeof global !== 'undefined' && global === root) {
+        if (is_node()) {
           return new Promise(function (resolve, reject) {
             var path = nodeRequire('path');
 
@@ -10870,7 +10870,16 @@
     } // -------------------------------------------------------------------------
 
 
-    if (typeof global !== 'undefined' && global === root) {
+    function is_node() {
+      if (typeof global !== 'undefined' && global === root) {
+        return typeof process.env.NODE_ENV === 'undefined';
+      }
+
+      return false;
+    } // -------------------------------------------------------------------------
+
+
+    if (is_node()) {
       /* eslint-disable no-eval */
       var nodeRequire = eval('require');
       /* eslint-enable */
@@ -11885,10 +11894,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 04 Dec 2020 19:27:09 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 05 Dec 2020 08:04:11 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 04 Dec 2020 19:27:09 +0000').valueOf();
+      var date = LString('Sat, 05 Dec 2020 08:04:11 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11925,7 +11934,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 04 Dec 2020 19:27:09 +0000',
+      date: 'Sat, 05 Dec 2020 08:04:11 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

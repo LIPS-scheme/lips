@@ -5754,7 +5754,7 @@
                 }
                 return exec(code.replace(/^#!.*/, ''), env);
             }
-            if (typeof global !== 'undefined' && global === root) {
+            if (is_node()) {
                 return new Promise((resolve, reject) => {
                     var path = nodeRequire('path');
                     if (module_path) {
@@ -7708,7 +7708,15 @@
     }
 
     // -------------------------------------------------------------------------
-    if (typeof global !== 'undefined' && global === root) {
+    function is_node() {
+        if (typeof global !== 'undefined' && global === root) {
+            return typeof process.env.NODE_ENV === 'undefined';
+        }
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
+    if (is_node()) {
         /* eslint-disable no-eval */
         var nodeRequire = eval('require');
         /* eslint-enable */
