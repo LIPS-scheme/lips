@@ -1,6 +1,7 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-{{VER_DASH}}-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![travis](https://travis-ci.org/jcubic/lips.svg?branch={{BRANCH}}&{{COMMIT}})](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
@@ -9,6 +10,8 @@
 <a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20makes%20life%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript%2C%20lisp%20and%20npm%20to%20create%20your%20applications%20via%20@jcubic&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
    <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
 </a>
+![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
+![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
 
 ![Matomo trakcing piksel](https://piwik.jcubic.pl/matomo.php?idsite=7&rec=1&action_name=bookmark&url=https%3A%2F%2Fgithub.com%2Fjcubic%2Flips)
 [![LIPS at Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=273619&theme=dark)](https://www.producthunt.com/posts/lips)
