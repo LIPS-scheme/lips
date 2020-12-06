@@ -34,6 +34,7 @@
 * fix `lambda` in `define-class` that have improper list as arguments
 * throw exception when applying function to improper list
 * fix `join` with nil
+* fix accessing JavaScript objects in syntax-rules macros
 
 ## 1.0.0-beta.9
 ### Breaking

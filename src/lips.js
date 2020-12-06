@@ -2949,6 +2949,12 @@
                 if (ref) {
                     const value = scope.get(name);
                     scope.set(gensym_name, value);
+                } else {
+                    const value = scope.get(name, { throwError: false });
+                    // value is not in scope, but it's JavaScript object
+                    if (typeof value !== 'undefined') {
+                        scope.set(gensym_name, value);
+                    }
                 }
                 // keep names so they can be restored after evaluation
                 // if there are free symbols as output

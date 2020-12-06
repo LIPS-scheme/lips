@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 05 Dec 2020 22:02:11 +0000
+ * build: Sun, 06 Dec 2020 10:17:55 +0000
  */
 (function () {
   'use strict';
@@ -5130,6 +5130,15 @@
           if (ref) {
             var value = scope.get(name);
             scope.set(gensym_name, value);
+          } else {
+            var _value4 = scope.get(name, {
+              throwError: false
+            }); // value is not in scope, but it's JavaScript object
+
+
+            if (typeof _value4 !== 'undefined') {
+              scope.set(gensym_name, _value4);
+            }
           } // keep names so they can be restored after evaluation
           // if there are free symbols as output
           // kind of hack
@@ -5546,10 +5555,10 @@
             return expr;
           }
 
-          var _value4 = transform(expr);
+          var _value5 = transform(expr);
 
-          if (typeof _value4 !== 'undefined') {
-            return _value4;
+          if (typeof _value5 !== 'undefined') {
+            return _value5;
           }
         }
 
@@ -11900,10 +11909,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 05 Dec 2020 22:02:11 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 06 Dec 2020 10:17:55 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 05 Dec 2020 22:02:11 +0000').valueOf();
+      var date = LString('Sun, 06 Dec 2020 10:17:55 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11940,7 +11949,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 05 Dec 2020 22:02:11 +0000',
+      date: 'Sun, 06 Dec 2020 10:17:55 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
