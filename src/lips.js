@@ -1192,10 +1192,9 @@
         indent: 2,
         exceptions: {
             specials: [
-                /^(?:#:)?define/, /^(?:#:)?lambda/, /^(?:#:)?let*/,
-                /^(?:#:)?(let|letrec)(-syntax)?$/, /(?:#:)?let-env/,
-                /(?:#:)?syntax-rules/, /(?:#:)?try/, /(?:#:)?catch/,
-                /(?:#:)?while/
+                /* eslint-disable max-len */
+                /^(?:#:)?(?:define(?:-values|-syntax|-macro)?|lambda|let*|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax))$/
+                /* eslint-enable */
             ],
             shift: {
                 1: ['&', '#']

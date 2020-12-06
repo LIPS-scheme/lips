@@ -38,6 +38,7 @@
 * fix `join` with nil
 * fix accessing JavaScript objects in syntax-rules macros
 * fix write of strings with newline
+* fix indent of `when` and `unless`
 
 ## 1.0.0-beta.9
 ### Breaking
