@@ -35,6 +35,7 @@
 * throw exception when applying function to improper list
 * fix `join` with nil
 * fix accessing JavaScript objects in syntax-rules macros
+* fix write of strings with newline
 
 ## 1.0.0-beta.9
 ### Breaking

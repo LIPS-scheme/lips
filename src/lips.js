@@ -2025,7 +2025,7 @@
         if (obj instanceof LString) {
             obj = obj.toString();
             if (quote) {
-                return JSON.stringify(obj);
+                return JSON.stringify(obj).replace(/\\n/g, '\n');
             }
             return obj;
         }
