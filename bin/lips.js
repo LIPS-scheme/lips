@@ -285,6 +285,15 @@ if (options.version || options.V) {
     }
     setupHistory(rl, terminal ? env.LIPS_REPL_HISTORY : '', run_repl);
 }
+
+function unify_prompt(a, b) {
+    var result = a;
+    if (a.length < b.length) {
+        result += new Array((b.length - a.length) + 1).join(' ');
+    }
+    return result;
+}
+
 function run_repl(err, rl) {
     const dynamic = options.d || options.dynamic;
     var code = '';
@@ -304,8 +313,15 @@ function run_repl(err, rl) {
             // fix formatting for previous lines that was echo
             // ReadLine will not handle those
             if (terminal && lines.length > 1) {
+                var f = new Formatter(code);
+                code = f.format();
                 const stdout = scheme(code).split('\n').map((line, i) => {
-                    var prefix = i === 0 ? prompt : continuePrompt;
+                    var prefix;
+                    if (i === 0) {
+                        prefix = unify_prompt(prompt, continuePrompt);
+                    } else {
+                        prefix = unify_prompt(continuePrompt, prompt);
+                    }
                     return '\x1b[K' + prefix + line;
                 }).join('\n');
                 const num = lines.length;
