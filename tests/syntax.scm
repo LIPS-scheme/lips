@@ -897,6 +897,16 @@
         (t.is (reverse-syntax (1 2 cons)) '(2 . 1))
         (t.is (reverse-syntax (1 2 3 4 5 list)) '(5 4 3 2 1))))
 
+(test "syntax: duplicated expansion"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ (a ...) ...)
+             (list (list (list a ...) (list a ...)) ...))))
+
+        (t.is (foo (1 2 3) (4 5 6))
+              '(((1 2 3) (1 2 3)) ((4 5 6) (4 5 6))))))
+
 (test "syntax: R7RS multiple elipsis extensions"
       (lambda (t)
 
