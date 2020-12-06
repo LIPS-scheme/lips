@@ -8,13 +8,15 @@
 * set `global` and `window` to undefined when not in Node or Window respectively
 * add `self` as global context for Node, browser and worker
 * add repr of global object
-* repr of classes + allow to create anonymous classes
+* add repr of classes
+* add support for creating anonymous classes
 * add `do-generator` macro
-* repr of `Map` and `Set`
+* add repr of `Map` and `Set`
 * add `digit-value` function
 * add `#d` prefix for decimal numbers
 * add `include` macro
 * add `--debug` option to executable (that load src file instead of dist)
+* add `cond-expand` syntax macro
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object

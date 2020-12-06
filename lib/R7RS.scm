@@ -361,3 +361,63 @@
         (if (> result.length 0)
             `(begin
               ,@(vector->list result))))))
+
+;; -----------------------------------------------------------------------------
+;; create scope for JavaScript value for macro
+;; -----------------------------------------------------------------------------
+(define-syntax syntax-error
+  (syntax-rules ()
+    ((_ "step" arg ...)
+     (join " " (vector->list  (vector (repr arg) ...))))
+    ((_ message arg ...)
+     (raise (new Error (format "~a ~a" message (_ "step" arg ...)))))))
+
+;; -----------------------------------------------------------------------------
+;; based on https://srfi.schemers.org/srfi-0/srfi-0.html
+;; -----------------------------------------------------------------------------
+(define-syntax cond-expand
+  (syntax-rules (and or not else srfi-0 srfi-4 srfi-6 srfi-22
+                     srfi-23 srfi-46 srfi-176 lips)
+    ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
+    ((cond-expand (else body ...))
+     (begin body ...))
+    ((cond-expand ((and) body ...) more-clauses ...)
+     (begin body ...))
+    ((cond-expand ((and req1 req2 ...) body ...) more-clauses ...)
+     (cond-expand
+       (req1
+         (cond-expand
+           ((and req2 ...) body ...)
+           more-clauses ...))
+       more-clauses ...))
+    ((cond-expand ((or) body ...) more-clauses ...)
+     (cond-expand more-clauses ...))
+    ((cond-expand ((or req1 req2 ...) body ...) more-clauses ...)
+     (cond-expand
+       (req1
+        (begin body ...))
+       (else
+        (cond-expand
+           ((or req2 ...) body ...)
+           more-clauses ...))))
+    ((cond-expand ((not req) body ...) more-clauses ...)
+     (cond-expand
+       (req
+         (cond-expand more-clauses ...))
+       (else body ...)))
+    ((cond-expand (srfi-0  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-4  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-6  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-22  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-23  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-46  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-176  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (lips  body ...) more-clauses ...)
+       (begin body ...))))
