@@ -17,6 +17,7 @@
 * add `include` macro
 * add `--debug` option to executable (that load src file instead of dist)
 * add `cond-expand` syntax macro
+* add new `native-symbol?` function
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object

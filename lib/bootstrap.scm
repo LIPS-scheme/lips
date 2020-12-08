@@ -997,4 +997,8 @@
 (set-repr! Map (lambda () "#<Met>"))
 
 ;; ---------------------------------------------------------------------------------------
+(define (native-symbol? x)
+  "(native-symbol? object)
 
+   Function check if value is JavaScript symbol."
+  (and (string=? (type x) "symbol") (not (symbol? x))))
