@@ -421,3 +421,38 @@
        (begin body ...))
     ((cond-expand (lips  body ...) more-clauses ...)
        (begin body ...))))
+
+;; -----------------------------------------------------------------------------
+;; the numerals can be generated using `make unicode` to get latest version
+;; of the file use `make zero`
+;; -----------------------------------------------------------------------------
+(define *zero-number-chars* #(48 1632 1776 1984 2406 2534 2662 2790 2918 3046 3174 3302
+                              3430 3558 3664 3792 3872 4160 4240 6112 6160 6470 6608 6784
+                              6800 6992 7088 7232 7248 42528 43216 43264 43472 43504 43600
+                              44016 65296 66720 68912 69734 69872 69942 70096 70384 70736
+                              70864 71248 71360 71472 71904 72016 72784 73040 73120 92768
+                              93008 120782 120792 120802 120812 120822 123200 123632 125264
+                              130032))
+
+;; -----------------------------------------------------------------------------
+(define (digit-value chr)
+  "(digit-value chr)
+
+   Return digit number if character is numeral (as per char-numeric?)
+   or #f otherwise."
+  (typecheck "digit-value" chr "character")
+  (if (char-numeric? chr)
+      (let ((ord (char->integer chr)))
+        (do ((i (vector-length *zero-number-chars*) (- i 1))
+             (found #f)
+             (result #f))
+            ((or (zero? i) found) result)
+          (let* ((zero (vector-ref *zero-number-chars* (- i 1)))
+                 (diff (- ord zero)))
+            (if (and (>= diff 0) (<= diff 9))
+                (begin
+                 (set! result diff)
+                 (set! found #t))))))
+    #f))
+
+;; -----------------------------------------------------------------------------
