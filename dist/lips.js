@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 06 Dec 2020 13:19:29 +0000
+ * build: Tue, 08 Dec 2020 18:51:54 +0000
  */
 (function () {
   'use strict';
@@ -8191,6 +8191,7 @@
       var options = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
       // we keep original environment as context for bind
       // so print will get user stdout
+      typecheck('Environment::get', symbol, ['symbol', 'string']);
       var _options$throwError = options.throwError,
           throwError = _options$throwError === void 0 ? true : _options$throwError;
       var name = symbol;
@@ -8255,6 +8256,7 @@
 
     Environment.prototype.set = function (name, value) {
       var doc = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
+      typecheck('Environment::set', name, ['string', 'symbol']);
 
       if (LNumber.isNumber(value)) {
         value = LNumber(value);
@@ -11913,10 +11915,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 06 Dec 2020 13:19:29 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 08 Dec 2020 18:51:54 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 06 Dec 2020 13:19:29 +0000').valueOf();
+      var date = LString('Tue, 08 Dec 2020 18:51:54 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11953,7 +11955,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 06 Dec 2020 13:19:29 +0000',
+      date: 'Tue, 08 Dec 2020 18:51:54 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

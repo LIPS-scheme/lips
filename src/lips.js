@@ -5245,6 +5245,7 @@
     Environment.prototype.get = function(symbol, options = {}) {
         // we keep original environment as context for bind
         // so print will get user stdout
+        typecheck('Environment::get', symbol, ['symbol', 'string']);
         const { throwError = true } = options;
         var name = symbol;
         if (name instanceof LSymbol || name instanceof LString) {
@@ -5292,6 +5293,7 @@
     };
     // -------------------------------------------------------------------------
     Environment.prototype.set = function(name, value, doc = null) {
+        typecheck('Environment::set', name, ['string', 'symbol']);
         if (LNumber.isNumber(value)) {
             value = LNumber(value);
         }
