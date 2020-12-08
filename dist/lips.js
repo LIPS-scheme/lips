@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 08 Dec 2020 18:51:54 +0000
+ * build: Tue, 08 Dec 2020 20:28:10 +0000
  */
 (function () {
   'use strict';
@@ -5517,14 +5517,18 @@
             }
           }
 
-          var value = scope.get(expr.car, {
-            throwError: false
-          });
-          var is_syntax = value instanceof Macro && value.__name__ === 'syntax-rules';
           var head = traverse(expr.car, {
             disabled: disabled
           });
           var rest;
+          var is_syntax;
+
+          if (expr.car instanceof LSymbol) {
+            var value = scope.get(expr.car, {
+              throwError: false
+            });
+            is_syntax = value instanceof Macro && value.__name__ === 'syntax-rules';
+          }
 
           if (is_syntax) {
             if (expr.cdr.car instanceof LSymbol) {
@@ -11915,10 +11919,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 08 Dec 2020 18:51:54 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 08 Dec 2020 20:28:10 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 08 Dec 2020 18:51:54 +0000').valueOf();
+      var date = LString('Tue, 08 Dec 2020 20:28:10 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11955,7 +11959,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 08 Dec 2020 18:51:54 +0000',
+      date: 'Tue, 08 Dec 2020 20:28:10 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

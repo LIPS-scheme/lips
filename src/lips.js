@@ -3235,11 +3235,14 @@
                         return result;
                     }
                 }
-                const value = scope.get(expr.car, { throwError: false });
-                var is_syntax = value instanceof Macro &&
-                    value.__name__ === 'syntax-rules';
                 const head = traverse(expr.car, { disabled });
                 let rest;
+                let is_syntax;
+                if ((expr.car instanceof LSymbol)) {
+                    const value = scope.get(expr.car, { throwError: false });
+                    is_syntax = value instanceof Macro &&
+                        value.__name__ === 'syntax-rules';
+                }
                 if (is_syntax) {
                     if (expr.cdr.car instanceof LSymbol) {
                         rest = new Pair(
