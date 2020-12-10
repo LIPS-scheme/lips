@@ -924,3 +924,16 @@
              '(a ... ... ...)]))
 
         (t.is (my-append2 ((1 2) (3 4)) ((5) (6 7 8))) '(1 2 3 4 5 6 7 8))))
+
+(test "syntax: method on pattern symbol"
+      (lambda (t)
+        (define-syntax let*-values
+            (syntax-rules ()
+               ((_ ((bind values)) body ...)
+                (apply (lambda bind
+                         body ...)
+                       (vector->list (values.valueOf))))))
+
+        (t.is (let*-values (((a b c) (values 1 2 3)))
+                           (+ a b c))
+              6)))

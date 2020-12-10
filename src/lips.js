@@ -2927,8 +2927,20 @@
             }
             // symbols are gensyms from nested syntax-rules
             var n_type = typeof name;
-            if (['string', 'symbol'].includes(n_type) && name in bindings.symbols) {
-                return bindings.symbols[name];
+            if (['string', 'symbol'].includes(n_type)) {
+                if (name in bindings.symbols) {
+                    return bindings.symbols[name];
+                } else if (n_type === 'string' && name.match(/\./)) {
+                    // calling method on pattern symbol #83
+                    const parts = name.split('.');
+                    const first = parts[0];
+                    if (first in bindings.symbols) {
+                        return Pair.fromArray([
+                            LSymbol('.'),
+                            bindings.symbols[first]
+                        ].concat(parts.slice(1).map(x => LString(x))));
+                    }
+                }
             }
             if (symbols.includes(name)) {
                 return LSymbol(name);
@@ -3263,10 +3275,10 @@
                 }
                 log({
                     a: true,
-                    car: expr.car.toString(),
-                    cdr: expr.cdr.toString(),
-                    head: head && head.toString(),
-                    rest: rest && rest.toString()
+                    car: toString(expr.car),
+                    cdr: toString(expr.cdr),
+                    head: toString(head),
+                    rest: toString(rest)
                 });
                 return new Pair(
                     head,

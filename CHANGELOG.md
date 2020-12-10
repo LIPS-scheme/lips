@@ -18,6 +18,7 @@
 * add `--debug` option to executable (that load src file instead of dist)
 * add `cond-expand` syntax macro
 * add new `native-symbol?` function
+* add warning about using `’` quote, with code example to execute to enable it
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object
@@ -40,6 +41,8 @@
 * fix accessing JavaScript objects in syntax-rules macros
 * fix write of strings with newline
 * fix indent of `when` and `unless`
+* fix usage of Drag&Drop with bookmarklet on pdf files
+* fix accessing methods on pattern variables in syntax macros [#83](https://github.com/jcubic/lips/issues/83)
 
 ## 1.0.0-beta.9
 ### Breaking
