@@ -1002,3 +1002,12 @@
 
    Function check if value is JavaScript symbol."
   (and (string=? (type x) "symbol") (not (symbol? x))))
+
+;; ---------------------------------------------------------------------------------------
+(set-special! "’" 'warn-quote)
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (warn-quote)
+  (throw (new Error (string-append "You're using invalid quote character run: "
+                                   "(set-special! \"’\" 'quote)"
+                                   " to allow running this type of quote"))))
