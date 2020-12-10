@@ -4842,32 +4842,19 @@
         return new LNumber(Math.sqrt(value));
     };
     // -------------------------------------------------------------------------
-    // if browser doesn't support ** it will not parse the code so we use
-    // Function constructor for test
-    // -------------------------------------------------------------------------
-    var pow = new Function('a,b', 'return a**b;');
-    var power_operator_suported = (function() {
-        try {
-            pow(1, 1);
-            return true;
-        } catch (e) {
-            return false;
-        }
-    })();
+    var pow = function(a, b) {
+        var e = typeof a === 'bigint' ? BigInt(1) : 1;
+        return new Array(Number(b)).fill(0).reduce(x => x * a, e);
+    };
     // -------------------------------------------------------------------------
     LNumber.prototype.pow = function(n) {
-        if (LNumber.isNative(this.value)) {
-            if (power_operator_suported) {
-                n.value = pow(this.value, n.value);
-            } else {
-                throw new Error("Power operator not supported");
-            }
-        } else if (LNumber.isBN(this.value)) {
-            n.value = this.value.pow(n.value);
+        var value;
+        if (LNumber.isBN(this.value)) {
+            value = this.value.pow(n.value);
         } else {
-            n.value = Math.pow(this.value, n.value);
+            value = pow(this.value, n.value);
         }
-        return n;
+        return LNumber(value);
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.abs = function() {
