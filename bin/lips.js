@@ -307,12 +307,12 @@ function run_repl(err, rl) {
     var prev_line;
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
-            code += line + '\n';
+            code += line;
             const lines = code.split('\n');
             const cols = process.stdout.columns;
             // fix formatting for previous lines that was echo
             // ReadLine will not handle those
-            if (terminal && lines.length > 1) {
+            if (terminal && lines.length > 2) {
                 var count = 0;
                 // correction when line wrapps in original line
                 // that will be overwritten
@@ -332,10 +332,11 @@ function run_repl(err, rl) {
                     }
                     return '\x1b[K' + prefix + line;
                 }).join('\n');
-                let num = lines.length - 1 + count;
-                const format = `\x1b[${num}F${stdout}`;
+                let num = lines.length + count;
+                const format = `\x1b[${num}F${stdout}\n`;
                 process.stdout.write(format);
             }
+            code += '\n';
             try {
                 if (balanced_parenthesis(code)) {
                     // we need to clear the prompt because resume
