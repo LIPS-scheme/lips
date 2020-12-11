@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 11 Dec 2020 08:22:48 +0000
+ * build: Fri, 11 Dec 2020 14:00:49 +0000
  */
 (function () {
   'use strict';
@@ -2340,7 +2340,7 @@
                     _this$split_special = this.split_special(token), _this$split_special2 = slicedToArray(_this$split_special, 2), prefix = _this$split_special2[0], rest = _this$split_special2[1];
 
                     if (!(this.special(token) || prefix && rest)) {
-                      _context2.next = 24;
+                      _context2.next = 22;
                       break;
                     }
 
@@ -2374,14 +2374,14 @@
 
 
                     if (!this.builtin(token)) {
-                      _context2.next = 20;
+                      _context2.next = 18;
                       break;
                     }
 
                     return _context2.abrupt("return", expr);
 
-                  case 20:
-                    _context2.next = 22;
+                  case 18:
+                    _context2.next = 20;
                     return evaluate(expr, {
                       env: this.__env__,
                       error: function error(e) {
@@ -2389,7 +2389,7 @@
                       }
                     });
 
-                  case 22:
+                  case 20:
                     result = _context2.sent;
                     return _context2.abrupt("return", unpromise(result, function (result) {
                       if (result instanceof Pair || result instanceof LSymbol) {
@@ -2399,19 +2399,19 @@
                       return result;
                     }));
 
-                  case 24:
+                  case 22:
                     if (!this.is_open(token)) {
-                      _context2.next = 29;
+                      _context2.next = 27;
                       break;
                     }
 
                     this.skip();
                     return _context2.abrupt("return", this.read_list());
 
-                  case 29:
+                  case 27:
                     return _context2.abrupt("return", this.read_value());
 
-                  case 30:
+                  case 28:
                   case "end":
                     return _context2.stop();
                 }
@@ -11922,10 +11922,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 11 Dec 2020 08:22:48 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 11 Dec 2020 14:00:49 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 11 Dec 2020 08:22:48 +0000').valueOf();
+      var date = LString('Fri, 11 Dec 2020 14:00:49 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11962,7 +11962,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 11 Dec 2020 08:22:48 +0000',
+      date: 'Fri, 11 Dec 2020 14:00:49 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

@@ -898,27 +898,26 @@
                 // builtin parser extensions just expand into lists like 'x ==> (quote x)
                 if (this.builtin(token)) {
                     return expr;
-                } else {
-                    // evaluate parser extension at parse time
-                    var result = await evaluate(expr, { env: this.__env__, error: (e) => {
-                        throw e;
-                    } });
-                    // we need literal quote to make macro that return pair works
-                    // because after parser return the value it will be evaluated again
-                    // by the interpreter, so we create quoted expression
-                    return unpromise(result, result => {
-                        if (result instanceof Pair || result instanceof LSymbol) {
-                            return new Pair(
-                                LSymbol('quote'),
-                                new Pair(
-                                    result,
-                                    nil
-                                )
-                            );
-                        }
-                        return result;
-                    });
                 }
+                // evaluate parser extension at parse time
+                var result = await evaluate(expr, { env: this.__env__, error: (e) => {
+                    throw e;
+                } });
+                // we need literal quote to make macro that return pair works
+                // because after parser return the value it will be evaluated again
+                // by the interpreter, so we create quoted expression
+                return unpromise(result, result => {
+                    if (result instanceof Pair || result instanceof LSymbol) {
+                        return new Pair(
+                            LSymbol('quote'),
+                            new Pair(
+                                result,
+                                nil
+                            )
+                        );
+                    }
+                    return result;
+                });
             }
             if (this.is_open(token)) {
                 this.skip();
