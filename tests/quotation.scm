@@ -279,3 +279,31 @@
                     #e#o7
                     #\x
                     #\newline))))
+
+(test "quote: should be constant"
+      (lambda (t)
+
+        (define (foo)
+          '(1 2))
+
+        (t.is (eq? (foo) (foo)) true)))
+
+(test "quasiquote: should be constant"
+      (lambda (t)
+
+        (define (foo)
+          `(1 2))
+
+        (t.is (eq? (foo) (foo)) true)))
+
+(test "quasiquote: should create new pair"
+      (lambda (t)
+        (define (foo x)
+          `(1 2 ,@x))
+
+        (t.is (eq? (foo '(1)) (foo '(2))) false)
+
+        (define (foo x)
+          `(1 2 ,x))
+
+        (t.is (eq? (foo 10) (foo 20)) false)))

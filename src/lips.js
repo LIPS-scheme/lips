@@ -1662,6 +1662,26 @@
     };
 
     // ----------------------------------------------------------------------
+    Pair.prototype.find = function(item) {
+        var car;
+        if (this.car instanceof Pair && this.car.find(item)) {
+            car = true;
+        } else if (this.car instanceof LSymbol) {
+            car = LSymbol.is(this.car, item);
+        }
+        var cdr;
+        if (this.cdr instanceof Pair && this.cdr.find(item)) {
+            cdr = true;
+        } else if (this.cdr instanceof LSymbol) {
+            cdr = LSymbol.is(this.cdr, item);
+        }
+        if (cdr || car) {
+            return true;
+        }
+        return false;
+    };
+
+    // ----------------------------------------------------------------------
     Pair.prototype.clone = function() {
         var visited = new Map();
         function clone(node) {
@@ -6653,6 +6673,12 @@
                         clear(node.cdr);
                     }
                 }
+            }
+            if (arg.car instanceof Pair &&
+                !arg.car.find('unquote') &&
+                !arg.car.find('unquote-splicing') &&
+                !arg.car.find('quasiquote')) {
+                return quote(arg.car);
             }
             var x = recur(arg.car, 0, 1);
             return unpromise(x, value => {

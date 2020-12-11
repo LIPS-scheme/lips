@@ -44,6 +44,7 @@
 * fix indent of `when` and `unless`
 * fix usage of Drag&Drop with bookmarklet on pdf files
 * fix accessing methods on pattern variables in syntax macros [#83](https://github.com/jcubic/lips/issues/83)
+* fix quasiquote to work like quote if not unquotes (R7RS spec)
 
 ## 1.0.0-beta.9
 ### Breaking

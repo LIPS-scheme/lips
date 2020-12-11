@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 11 Dec 2020 14:00:49 +0000
+ * build: Fri, 11 Dec 2020 14:51:12 +0000
  */
 (function () {
   'use strict';
@@ -3456,6 +3456,31 @@
       }
 
       return len;
+    }; // ----------------------------------------------------------------------
+
+
+    Pair.prototype.find = function (item) {
+      var car;
+
+      if (this.car instanceof Pair && this.car.find(item)) {
+        car = true;
+      } else if (this.car instanceof LSymbol) {
+        car = LSymbol.is(this.car, item);
+      }
+
+      var cdr;
+
+      if (this.cdr instanceof Pair && this.cdr.find(item)) {
+        cdr = true;
+      } else if (this.cdr instanceof LSymbol) {
+        cdr = LSymbol.is(this.cdr, item);
+      }
+
+      if (cdr || car) {
+        return true;
+      }
+
+      return false;
     }; // ----------------------------------------------------------------------
 
 
@@ -9886,6 +9911,10 @@
           }
         }
 
+        if (arg.car instanceof Pair && !arg.car.find('unquote') && !arg.car.find('unquote-splicing') && !arg.car.find('quasiquote')) {
+          return quote(arg.car);
+        }
+
         var x = recur(arg.car, 0, 1);
         return unpromise(x, function (value) {
           // clear nested data for tests
@@ -11922,10 +11951,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 11 Dec 2020 14:00:49 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 11 Dec 2020 14:51:12 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 11 Dec 2020 14:00:49 +0000').valueOf();
+      var date = LString('Fri, 11 Dec 2020 14:51:12 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11962,7 +11991,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 11 Dec 2020 14:00:49 +0000',
+      date: 'Fri, 11 Dec 2020 14:51:12 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
