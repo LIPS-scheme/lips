@@ -19,6 +19,7 @@
 * add `cond-expand` syntax macro
 * add new `native-symbol?` function
 * add warning about using `’` quote, with code example to execute to enable it
+* add `__dirname` and `__filename` variables to Node
 ### Bugfix
 * fix load file that have shebang
 * fix repr of eof object

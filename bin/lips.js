@@ -163,6 +163,8 @@ var interp = Interpreter('repl', {
             });
         });
     }),
+    __dirname: __dirname,
+    __filename: __filename,
     stdout: OutputPort(function(x) {
         var repr = this.get('repr')(x);
         newline = !repr.match(/\n$/);

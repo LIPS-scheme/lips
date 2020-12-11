@@ -7733,6 +7733,8 @@
         global_env.set('global', global);
         global_env.set('self', global);
         global_env.set('window', undefined);
+        global_env.set('__dirname', __dirname);
+        global_env.set('__filename', __filename);
         // ---------------------------------------------------------------------
         global_env.set('require.resolve', doc('require.resolve', function(path) {
             typecheck('require.resolve', path, 'string');
