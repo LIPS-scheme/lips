@@ -976,14 +976,15 @@
   (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (do-generator spec cond . body)
-  "(do-generator (var expr) (test) body ...)
+(define-macro (do-iterator spec cond . body)
+  "(do-iterator (var expr) (test) body ...)
 
    Macro iterate over iterators (e.g. create with JavaScript generator function)
-   it works with normal and async generators. You can iterate over infinite generators
-   and break the loop if you want using cond expression, long sync generators will block
-   main thread (you can't print 1000 numbers from inf generators because it will freeze
-   the browser), but if you use async generators you can process the value as they go."
+   it works with normal and async iterators. You can loop over infinite iterators
+   and break the loop if you want, using expression like in do macro, long sync iterators
+   will block main thread (you can't print 1000 numbers from inf iterators,
+   because it will freeze the browser), but if you use async iterators you can process
+   the values as they are generated."
   (let ((gen (gensym "name"))
         (name (car spec))
         (async (gensym "async"))
