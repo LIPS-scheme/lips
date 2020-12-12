@@ -249,18 +249,24 @@
 (define (object-expander readonly expr . rest)
   "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
 
-   Recursive function helper for defining LIPS code for create objects using key like syntax."
+   Recursive function helper for defining LIPS code for create objects
+   using key like syntax."
   (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
            ,@(pair-map (lambda (key value)
                          (if (not (key? key))
-                             (let ((msg (string-append (type key) " " (repr key) " is not a symbol!")))
+                             (let ((msg (string-append (type key)
+                                                       " "
+                                                       (repr key)
+                                                       " is not a symbol!")))
                                (throw msg))
                              (let ((prop (key->string key)))
                                (if (and (pair? value) (key? (car value)))
-                                   `(set-obj! ,name ,prop ,(object-expander readonly value))
+                                   `(set-obj! ,name
+                                              ,prop
+                                              ,(object-expander readonly value))
                                     (if quot
                                         `(set-obj! ,name ,prop ',value)
                                         `(set-obj! ,name ,prop ,value))))))
@@ -720,9 +726,22 @@
 ;; (%class-lambda '(hello (lambda (x y . z) (print z))))
 
 (define (%class-lambda expr)
+  "(%class-lambda expr)
+
+  Define lambda that have self is first argument. The expr is in a form:
+  (constructor (lambda (self ...) . body)) as given by define-class macro."
   (let ((args (cdadadr expr)))
     `(lambda (,@args)
        (,(cadr expr) this ,@args))))
+
+;; ---------------------------------------------------------------------------------------
+(define (%class-method-name expr)
+  "(%class-method-name expr)
+
+   Helper function that allow to use [Symbol.asyncIterator] inside method name."
+  (if (pair? expr)
+      (car expr)
+      (list 'quote expr)))
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (define-class name parent . body)
@@ -752,7 +771,9 @@
                    (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))
                    (set-obj! (. ,name 'prototype) 'constructor ,name)))
            ,@(map (lambda (fn)
-                    `(set-obj! (. ,name 'prototype) ',(car fn) ,(%class-lambda fn)))
+                    `(set-obj! (. ,name 'prototype)
+                               ,(%class-method-name (car fn))
+                               ,(%class-lambda fn)))
                   functions))
         (let ((item (car lst)))
           (if (eq? (car item) 'constructor)
