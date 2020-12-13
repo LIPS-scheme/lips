@@ -10,7 +10,7 @@
 * add repr of global object
 * add repr of classes
 * add support for creating anonymous classes
-* add `do-generator` macro
+* add `do-iterator` macro
 * add repr of `Map` and `Set`
 * add `digit-value` function
 * add `#d` prefix for decimal numbers

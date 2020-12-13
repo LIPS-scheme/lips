@@ -973,6 +973,8 @@
         return fn(value);
     }
     // ----------------------------------------------------------------------
+    // :: Function similar to Array.from that work on async iterators
+    // ----------------------------------------------------------------------
     async function uniterate_async(object) {
         const result = [];
         for await (let item of object) {
@@ -980,6 +982,8 @@
         }
         return result;
     }
+    // ----------------------------------------------------------------------
+    // :: function that return mather function that match string against string
     // ----------------------------------------------------------------------
     function matcher(name, arg) {
         if (arg instanceof RegExp) {

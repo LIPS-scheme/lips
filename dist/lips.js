@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 11 Dec 2020 14:51:12 +0000
+ * build: Sun, 13 Dec 2020 10:26:22 +0000
  */
 (function () {
   'use strict';
@@ -2522,11 +2522,15 @@
 
       return fn(value);
     } // ----------------------------------------------------------------------
+    // :: Function similar to Array.from that work on async iterators
+    // ----------------------------------------------------------------------
 
 
     function uniterate_async(_x3) {
       return _uniterate_async.apply(this, arguments);
     } // ----------------------------------------------------------------------
+    // :: function that return mather function that match string against string
+    // ----------------------------------------------------------------------
 
 
     function _uniterate_async() {
@@ -11951,10 +11955,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 11 Dec 2020 14:51:12 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 13 Dec 2020 10:26:22 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 11 Dec 2020 14:51:12 +0000').valueOf();
+      var date = LString('Sun, 13 Dec 2020 10:26:22 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11991,7 +11995,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 11 Dec 2020 14:51:12 +0000',
+      date: 'Sun, 13 Dec 2020 10:26:22 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
