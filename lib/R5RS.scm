@@ -19,7 +19,7 @@
 ;; (+ 1 (call-with-current-continuation
 ;;       (lambda (escape)
 ;;         (+ 2 (escape 3)))))
-
+;;
 ;; -----------------------------------------------------------------------------
 (define string-append concat)
 (define = ==)
@@ -57,7 +57,9 @@
   (if (not (or (pair? args) (eq? args nil)))
       (throw (new Error (concat "Parse Error: vector require pair got "
                                 (type args) " in " (repr args))))
-      (list->array args)))
+      (let ((v (list->array args)))
+        (Object.freeze v)
+        v)))
 
 ;; -----------------------------------------------------------------------------
 (define-syntax vector
@@ -137,20 +139,21 @@
                                  (begin (set! result-ready? #t)
                                         (set! result x)
                                         result)))))))
-        (set-obj! promise 'toString (lambda ()
-                                      (string-append "#<promise - "
-                                                     (if result-ready?
-                                                         (string-append "forced with "
-                                                                        (type result))
-                                                         "not forced")
-                                                     ">")))
+        (set-obj! promise (Symbol.for "promise") true)
+        (set! promise.toString (lambda ()
+                                 (string-append "#<promise - "
+                                                (if result-ready?
+                                                    (string-append "forced with "
+                                                                   (type result))
+                                                    "not forced")
+                                                ">")))
         promise))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (delay expression)
   "(delay expression)
 
-   Macro will create a promise from expression that can be forced with force."
+   Macro will create a promise from expression that can be forced with (force)."
   `(make-promise (lambda () ,expression)))
 
 ;; -----------------------------------------------------------------------------
@@ -159,6 +162,13 @@
 
    Function force the promise and evaluate delayed expression."
   (promise))
+
+;; -----------------------------------------------------------------------------
+(define (promise? obj)
+  "(promise? obj)
+
+   Function check if value is a promise created with delay or make-promise."
+  (string=? (type obj) "promise"))
 
 ;; -----------------------------------------------------------------------------
 (define (positive? x)
@@ -329,7 +339,7 @@
   (typecheck "exact->inexact" n "number")
   (if (complex? n)
       ;; make-object (&) will use valueOf so it will be float even if it was rational
-      (lips.LComplex &(:im (. n 'im) :re (. n 're)))
+      (lips.LComplex (object :im (. n 'im) :re (. n 're)))
       (if (or (rational? n) (integer? n))
           (lips.LFloat (--> n (valueOf)) true)
           n)))
@@ -752,24 +762,6 @@
       (string-ref (String.fromCodePoint n) 0)
       (throw "argument to integer->char need to be integer.")))
 
-(define (char-upper-case? chr)
-  "(char-upper-case? chr)
-
-   Function return true if value is upper case character. It return false otherwise."
-  (typecheck "char-upper-case?" chr "character")
-  (let ((str (--> chr (toString))))
-    (string=? str (--> str (toUpperCase)))))
-
-;; -----------------------------------------------------------------------------
-
-(define (char-lower-case? chr)
-  "(char-lower-case? chr)
-
-   Function return true if value is lower case character. It return false otherwise."
-  (typecheck "char-lower-case?" chr "character")
-  (let ((str (--> chr (toString))))
-    (string=? str (--> str (toUpperCase)))))
-
 ;; -----------------------------------------------------------------------------
 (define-macro (%define-chr-re spec str re)
   "(%define-chr-re (name chr) sring re)
@@ -785,21 +777,21 @@
   "(char-whitespace? chr)
 
    Function return true if character is whitespace."
-  /\s/)
+  *space-unicode-regex*)
 
 ;; -----------------------------------------------------------------------------
 (%define-chr-re (char-numeric? chr)
   "(char-numeric? chr)
 
    Function return true if character is number."
-  /[0-9]/)
+  *numeral-unicode-regex*)
 
 ;; -----------------------------------------------------------------------------
 (%define-chr-re (char-alphabetic? chr)
   "(char-alphabetic? chr)
 
    Function return true if character is leter of the ASCII alphabet."
-  /[a-z]/i)
+  *letter-unicode-regex*)
 
 ;; -----------------------------------------------------------------------------
 (define (%char-cmp name chr1 chr2)
@@ -919,7 +911,8 @@
 
    Function check if character is upper case."
   (typecheck "char-upper-case?" char "character")
-  (char=? (char-upcase char) char))
+  (and (char-alphabetic? char)
+       (char=? (char-upcase char) char)))
 
 ;; -----------------------------------------------------------------------------
 (define (char-lower-case? char)
@@ -927,7 +920,8 @@
 
    Function check if character is lower case."
   (typecheck "char-lower-case?" char "character")
-  (char=? (char-downcase char) char))
+  (and (char-alphabetic? char)
+       (char=? (char-downcase char) char)))
 
 ;; -----------------------------------------------------------------------------
 (define (newline . rest)

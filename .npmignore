@@ -1,6 +1,7 @@
 spec
 *~
 coverage
+docs
 todo.html
 *.lips
 Makefile
@@ -12,7 +13,7 @@ rollup.config.js
 \#*#
 .*
 src/banner.js
-tests/
-test.js*
+tests
 assets
 examples
+scripts

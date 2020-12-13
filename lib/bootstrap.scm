@@ -246,25 +246,33 @@
 
 
 ;; -----------------------------------------------------------------------------
-(define (object-expander expr . rest)
-  "(object-expander '(:foo (:bar 10) (:baz (1 2 3))))
+(define (object-expander readonly expr . rest)
+  "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
 
-   Recursive function helper for defining LIPS code for create objects using key like syntax."
+   Recursive function helper for defining LIPS code for create objects
+   using key like syntax."
   (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
            ,@(pair-map (lambda (key value)
                          (if (not (key? key))
-                             (let ((msg (string-append (type key) " " (repr key) " is not a symbol!")))
+                             (let ((msg (string-append (type key)
+                                                       " "
+                                                       (repr key)
+                                                       " is not a symbol!")))
                                (throw msg))
                              (let ((prop (key->string key)))
                                (if (and (pair? value) (key? (car value)))
-                                   `(set-obj! ,name ,prop ,(object-expander value))
+                                   `(set-obj! ,name
+                                              ,prop
+                                              ,(object-expander readonly value))
                                     (if quot
                                         `(set-obj! ,name ,prop ',value)
                                         `(set-obj! ,name ,prop ,value))))))
                        expr)
+           ,(if readonly
+               `(Object.freeze ,name))
            ,name))))
 
 ;; -----------------------------------------------------------------------------
@@ -273,7 +281,7 @@
 
    Macro that create JavaScript object using key like syntax."
   (try
-    (object-expander expr)
+    (object-expander false expr)
     (catch (e)
       (error e.message))))
 
@@ -284,7 +292,7 @@
    Macro that create JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used with & object literal."
   (try
-    (object-expander expr true)
+    (object-expander true expr)
     (catch (e)
       (error e.message))))
 
@@ -709,9 +717,31 @@
   "(class-lambda expr)
 
    Return lambda expression where input expression lambda have `this` as first argument."
+  (let ((args (gensym 'args)))
+    `(lambda ,args
+       (apply ,(cadr expr) this ,args))))
+
+;; TODO: handle this broken case when arguments are improper list
+;;       Throw proper error
+;; (%class-lambda '(hello (lambda (x y . z) (print z))))
+
+(define (%class-lambda expr)
+  "(%class-lambda expr)
+
+  Define lambda that have self is first argument. The expr is in a form:
+  (constructor (lambda (self ...) . body)) as given by define-class macro."
   (let ((args (cdadadr expr)))
     `(lambda (,@args)
        (,(cadr expr) this ,@args))))
+
+;; ---------------------------------------------------------------------------------------
+(define (%class-method-name expr)
+  "(%class-method-name expr)
+
+   Helper function that allow to use [Symbol.asyncIterator] inside method name."
+  (if (pair? expr)
+      (car expr)
+      (list 'quote expr)))
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (define-class name parent . body)
@@ -732,19 +762,36 @@
   (let iter ((functions '()) (constructor '()) (lst body))
     (if (null? lst)
         `(begin
-           (define ,name ,(if (null? constructor) `(lambda ()) (%class-lambda constructor)))
+           (define ,name ,(if (null? constructor)
+                              `(lambda ())
+                              (%class-lambda constructor)))
+           (set-obj! ,name (Symbol.for "__class__") true)
            ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
                 `(begin
                    (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))
                    (set-obj! (. ,name 'prototype) 'constructor ,name)))
            ,@(map (lambda (fn)
-                    `(set-obj! (. ,name 'prototype) ',(car fn) ,(%class-lambda fn)))
+                    `(set-obj! (. ,name 'prototype)
+                               ,(%class-method-name (car fn))
+                               ,(%class-lambda fn)))
                   functions))
         (let ((item (car lst)))
           (if (eq? (car item) 'constructor)
               (iter functions item (cdr lst))
               (iter (cons item functions) constructor (cdr lst)))))))
 
+;; ---------------------------------------------------------------------------------------
+(define-syntax class
+  (syntax-rules ()
+    ((_)
+     (error "class: parent required"))
+    ((_ parent body ...)
+     (let ()
+       (define-class temp parent body ...)
+       temp)))
+  "(class <parent> body ...)
+
+   Macro allow to create anonymous classes. See define-class for details.")
 
 ;; ---------------------------------------------------------------------------------------
 (define (make-tags expr)
@@ -929,3 +976,60 @@
   (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
 
 ;; ---------------------------------------------------------------------------------------
+(define-macro (do-iterator spec cond . body)
+  "(do-iterator (var expr) (test) body ...)
+
+   Macro iterate over iterators (e.g. create with JavaScript generator function)
+   it works with normal and async iterators. You can loop over infinite iterators
+   and break the loop if you want, using expression like in do macro, long sync iterators
+   will block main thread (you can't print 1000 numbers from inf iterators,
+   because it will freeze the browser), but if you use async iterators you can process
+   the values as they are generated."
+  (let ((gen (gensym "name"))
+        (name (car spec))
+        (async (gensym "async"))
+        (sync (gensym "sync"))
+        (iterator (gensym "iterator"))
+        (test (if (null? cond) #f (car cond)))
+        (next (gensym "next"))
+        (stop (gensym "stop"))
+        (item (gensym "item")))
+    `(let* ((,gen ,(cadr spec))
+            (,sync (. ,gen Symbol.iterator))
+            (,async (. ,gen Symbol.asyncIterator))
+            (,iterator)
+            (,next (lambda ()
+                     ((. ,iterator "next")))))
+          (if (or (procedure? ,sync) (procedure? ,async))
+              (begin
+                 (set! ,iterator (if (procedure? ,sync) (,sync) (,async)))
+                 (let* ((,item (,next))
+                        (,stop #f)
+                        (,name (. ,item "value")))
+                   (while (not (or (eq? (. ,item "done") #t) ,stop))
+                      (if ,test
+                           (set! ,stop #t)
+                           (begin
+                              ,@body))
+                      (set! ,item (,next))
+                      (set! ,name (. ,item "value")))))))))
+
+;; ---------------------------------------------------------------------------------------
+(set-repr! Set (lambda () "#<Set>"))
+(set-repr! Map (lambda () "#<Met>"))
+
+;; ---------------------------------------------------------------------------------------
+(define (native-symbol? x)
+  "(native-symbol? object)
+
+   Function check if value is JavaScript symbol."
+  (and (string=? (type x) "symbol") (not (symbol? x))))
+
+;; ---------------------------------------------------------------------------------------
+(set-special! "’" 'warn-quote)
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (warn-quote)
+  (throw (new Error (string-append "You're using invalid quote character run: "
+                                   "(set-special! \"’\" 'quote)"
+                                   " to allow running this type of quote"))))

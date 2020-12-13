@@ -5,8 +5,8 @@
   "main": "src/lips.js",
   "unpkg": "dist/lips.min.js",
   "scripts": {
-    "test": "nyc ava --timeout 10m --verbose test.js",
-    "test-update": "nyc ava --update-snapshots --timeout 10m --verbose test.js",
+    "test": "nyc ava --timeout 10m --verbose tests/test.js",
+    "test-update": "nyc ava --update-snapshots --timeout 10m --verbose tests/test.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {
@@ -196,6 +196,7 @@
   "devDependencies": {
     "@babel/core": "^7.9.6",
     "@babel/plugin-external-helpers": "^7.8.3",
+    "@babel/plugin-proposal-unicode-property-regex": "^7.12.1",
     "@babel/plugin-transform-async-to-generator": "^7.8.3",
     "@babel/plugin-transform-regenerator": "^7.8.7",
     "@babel/plugin-transform-runtime": "^7.9.6",
@@ -220,6 +221,7 @@
     "uglify-js": "^3.9.1"
   },
   "dependencies": {
+    "@jcubic/lily": "^0.1.0",
     "bn.js": "^4.11.8",
     "prism-cli": "^0.5.0",
     "prismjs": "^1.22.0"

@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+const lily = require('@jcubic/lily');
+
+const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug'];
+const options = lily(process.argv.slice(2), { boolean });
+
 const {
     exec,
     Formatter,
@@ -17,7 +22,7 @@ const {
     env,
     banner,
     InputPort,
-    OutputPort } = require('../src/lips');
+    OutputPort } = require(options.debug ? '../src/lips' : '../dist/lips');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -39,59 +44,10 @@ process.on('uncaughtException', function (err) {
 function log_error(message) {
     fs.appendFileSync('error.log', message + '\n');
 }
+// -----------------------------------------------------------------------------
 function debug(message) {
     console.log(message);
 }
-// -----------------------------------------------------------------------------
-// code taken from jQuery Terminal
-function parse_options(arg, options) {
-    var settings = Object.assign({}, {
-        boolean: []
-    }, options);
-    var result = {
-        _: []
-    };
-    function token(value) {
-        this.value = value;
-    }
-    var rest = arg.reduce(function(acc, arg) {
-        if (typeof arg !== 'string') {
-            arg = String(arg);
-        }
-        if (arg.match(/^-/) && acc instanceof token) {
-            result[acc.value] = true;
-        }
-        if (arg.match(/^--/)) {
-            var name = arg.replace(/^--/, '');
-            if (settings.boolean.indexOf(name) === -1) {
-                return new token(name);
-            } else {
-                result[name] = true;
-            }
-        } else if (arg.match(/^-/)) {
-            var single = arg.replace(/^-/, '').split('');
-            if (settings.boolean.indexOf(single.slice(-1)[0]) === -1) {
-                var last = single.pop();
-            }
-            single.forEach(function(single) {
-                result[single] = true;
-            });
-            if (last) {
-                return new token(last);
-            }
-        } else if (acc instanceof token) {
-            result[acc.value] = arg;
-        } else if (arg) {
-            result._.push(arg);
-        }
-        return null;
-    }, null);
-    if (rest instanceof token) {
-        result[rest.value] = true;
-    }
-    return result;
-}
-
 // -----------------------------------------------------------------------------
 function run(code, interpreter, dynamic = false, env = null, stack = false) {
     if (typeof code !== 'string') {
@@ -128,7 +84,7 @@ function print(result) {
         var last = result.pop();
         if (last !== undefined) {
             var ret = env.get('repr')(last, true);
-            console.log(ret.toString());
+            console.log('\x1b[K' + ret.toString());
         }
     }
 }
@@ -176,7 +132,18 @@ function doc(fn, doc) {
 
 // -----------------------------------------------------------------------------
 function scheme(str) {
-    return highlight(str, 'scheme', { grammar: Prism.languages.scheme });
+    return highlight(str, 'scheme', {
+        grammar: Prism.languages.scheme,
+        newlines: true
+    });
+}
+
+// -----------------------------------------------------------------------------
+function log(message) {
+    if (typeof message !== 'string') {
+        message = message.toString();
+    }
+    fs.appendFile('out.log', message + '\n', (err) => { });
 }
 
 // -----------------------------------------------------------------------------
@@ -196,6 +163,8 @@ var interp = Interpreter('repl', {
             });
         });
     }),
+    __dirname: __dirname,
+    __filename: __filename,
     stdout: OutputPort(function(x) {
         var repr = this.get('repr')(x);
         newline = !repr.match(/\n$/);
@@ -217,14 +186,13 @@ var interp = Interpreter('repl', {
     help: doc(new Macro('help', function(code, { error }) {
         var new_code = new Pair(new LSymbol('__help'), code);
         var doc = evaluate(new_code, { env: this, error });
-        console.log(doc);
+        console.log(doc.toString());
     }), env.get('help').__doc__),
     '__help': env.get('help')
 });
 
 // -----------------------------------------------------------------------------
-const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't'];
-const options = parse_options(process.argv.slice(2), { boolean });
+
 if (options.version || options.V) {
     // SRFI 176
     global.output = Pair.fromArray([
@@ -232,7 +200,7 @@ if (options.version || options.V) {
         ["website", "https://lips.js.org"],
         ['languages', 'scheme', 'r5rs', 'r7rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
-        ["scheme.srfi", 4, 6, 22, 23, 46, 176],
+        ["scheme.srfi", 0, 4, 6, 22, 23, 46, 176],
         ["release", version],
         ["os.uname", os.platform(), os.release()],
         ["os.env.LANG", process.env.LANG],
@@ -319,6 +287,15 @@ if (options.version || options.V) {
     }
     setupHistory(rl, terminal ? env.LIPS_REPL_HISTORY : '', run_repl);
 }
+
+function unify_prompt(a, b) {
+    var result = a;
+    if (a.length < b.length) {
+        result += new Array((b.length - a.length) + 1).join(' ');
+    }
+    return result;
+}
+
 function run_repl(err, rl) {
     const dynamic = options.d || options.dynamic;
     var code = '';
@@ -332,28 +309,42 @@ function run_repl(err, rl) {
     var prev_line;
     boostrap(interp).then(function() {
         rl.on('line', function(line) {
-            code += line + '\n';
-            var format, spaces, stdout;
-            var lines = code.split('\n');
-            // fix previous line
-            if (terminal && lines.length > 1) {
-                prev_line = lines[lines.length - 2].replace(/^\s+/, '');
-                if (lines.length > 2) {
-                    var prev = lines.slice(0, -2).join('\n');
-                    var i = indent(prev, 2, prompt.length - continuePrompt.length);
-                    spaces = new Array(i + 1).join(' ');
-                    lines[lines.length - 2] = spaces + prev_line;
-                    code = lines.join('\n');
-                    stdout = continuePrompt + spaces;
-                } else {
-                    stdout = prompt;
-                }
-                stdout += scheme(prev_line);
-                format = '\x1b[1F\x1b[K' + stdout + '\n';
+            code += line;
+            const lines = code.split('\n');
+            const cols = process.stdout.columns;
+            // fix formatting for previous lines that was echo
+            // ReadLine will not handle those
+            if (terminal && lines.length > 2) {
+                var count = 0;
+                // correction when line wrapps in original line
+                // that will be overwritten
+                lines.map(line => {
+                    if (line.length > cols) {
+                        count += Math.ceil(line.length / cols) - 1;
+                    }
+                });
+                var f = new Formatter(code);
+                code = f.format();
+                const stdout = scheme(code).split('\n').map((line, i) => {
+                    var prefix;
+                    if (i === 0) {
+                        prefix = unify_prompt(prompt, continuePrompt);
+                    } else {
+                        prefix = unify_prompt(continuePrompt, prompt);
+                    }
+                    return '\x1b[K' + prefix + line;
+                }).join('\n');
+                let num = lines.length + count;
+                const format = `\x1b[${num}F${stdout}\n`;
                 process.stdout.write(format);
             }
+            code += '\n';
             try {
                 if (balanced_parenthesis(code)) {
+                    // we need to clear the prompt because resume
+                    // is adding the prompt that was present when pause was called
+                    // https://github.com/nodejs/node/issues/11699
+                    rl.setPrompt('');
                     rl.pause();
                     prev_eval = prev_eval.then(function() {
                         var result = run(code, interp, dynamic);
@@ -363,26 +354,27 @@ function run_repl(err, rl) {
                         if (process.stdin.isTTY) {
                             print(result);
                             if (newline) {
-                                // readline don't work with not endend lines
-                                // it ignore those so we end then ourselfs
+                                // readline doesn't work with not ended lines
+                                // it ignore those, so we end them ourselves
                                 process.stdout.write("\n");
                                 newline = false;
                             }
                             if (multiline) {
-                                rl.setPrompt(prompt);
                                 multiline = false;
                             }
-                            rl.prompt();
                         }
+                        rl.setPrompt(prompt);
+                        rl.prompt();
                         rl.resume();
                     }).catch(function() {
                         if (process.stdin.isTTY) {
                             if (multiline) {
-                                rl.setPrompt(prompt);
                                 multiline = false;
                             }
-                            rl.prompt();
                         }
+                        rl.setPrompt(prompt);
+                        rl.prompt();
+                        rl.resume();
                     });
                 } else {
                     multiline = true;
@@ -396,7 +388,9 @@ function run_repl(err, rl) {
                 }
             } catch (e) {
                 console.error(e.message);
+                console.error(e.stack);
                 code = '';
+                rl.setPrompt(prompt);
                 rl.prompt();
             }
         });

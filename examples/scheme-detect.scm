@@ -1,4 +1,4 @@
-#!/usr/bin/env lips
+#!/usr/bin/env -S lips -t
 
 ;; Source
 ;; http://www.willdonnelly.net/blog/runtime-scheme-detection/
@@ -64,7 +64,7 @@
   (ikarus     (#f #f #f #t #f #t #f #t #f #f #f #f #t #f #f #t #t #t #f #f))
   (scheme48   (#f #f #f #t #t #t #f #t #t #t #t #t #t #t #t #t #t #f #f #f))
   (mit-scheme (#t #t #t #t #t #f #t #t #t #f #t #f #f #f #f #t #t #f #t #f))
-  (lips       (#t #f #f #t #f #t #f #t #t #f #f #f #t #t #t #t #t #f #f #f))
+  (lips       (#t #f #f #t #f #t #f #t #t #f #f #f #t #t #t #t #t #t #t #f))
   (gauche     (#f #f #f #t #f #f #f #t #t #f #f #f #f #f #f #t #t #f #f #f))))
 
 ;; DETECT:MATCH-SIGNATURE
@@ -91,6 +91,3 @@
       (and (not memo)
            (set! memo (detect:match-signature)))
       memo)))
-
-(display (detect:name))
-(newline)

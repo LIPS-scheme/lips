@@ -74,7 +74,7 @@
 
    Function return new vector by combining it's arguments that should be vectors."
   (if (null? args)
-      #()
+      (vector)
       (begin
         (typecheck "vector-append" (car args) "array")
         (--> (car args) (concat (apply vector-append (cdr args)))))))
@@ -329,3 +329,130 @@
 
    Function evaluate expression expr and if it evaluates to result of values
    then it will defined each value as variable like with define.")
+
+;; -----------------------------------------------------------------------------
+(define-macro (include . files)
+  "(include file ...)
+
+   Macro that load at least one file content and insert them into one,
+   body expression."
+  (if (null? files)
+      (throw (new Error "include: at least one file path required"))
+      (let ((result (vector)) (env (interaction-environment)))
+        (if (eq? self global)
+            (let* ((fs (require "fs"))
+                   (readFile (lambda (file)
+                               (new Promise (lambda (resolve reject)
+                                              (fs.readFile file
+                                                           (lambda (err data)
+                                                             (if (null? err)
+                                                                 (resolve (--> data
+                                                                               (toString)))
+                                                                 (reject err)))))))))
+              (for-each (lambda (file)
+                          (let* ((expr (lips.parse (readFile file) env)))
+                            (set! result (--> result (concat expr)))))
+                        files))
+            (for-each (lambda (file)
+                        (let* ((text (--> (fetch file) (text)))
+                               (expr (lips.parse text env)))
+                          (set! result (--> result (concat expr)))))
+                      files))
+        (if (> result.length 0)
+            `(begin
+              ,@(vector->list result))))))
+
+;; -----------------------------------------------------------------------------
+;; create scope for JavaScript value for macro
+;; -----------------------------------------------------------------------------
+(define-syntax syntax-error
+  (syntax-rules ()
+    ((_ "step" arg ...)
+     (join " " (vector->list  (vector (repr arg) ...))))
+    ((_ message arg ...)
+     (raise (new Error (format "~a ~a" message (_ "step" arg ...)))))))
+
+;; -----------------------------------------------------------------------------
+;; based on https://srfi.schemers.org/srfi-0/srfi-0.html
+;; -----------------------------------------------------------------------------
+(define-syntax cond-expand
+  (syntax-rules (and or not else srfi-0 srfi-4 srfi-6 srfi-22
+                     srfi-23 srfi-46 srfi-176 lips)
+    ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
+    ((cond-expand (else body ...))
+     (begin body ...))
+    ((cond-expand ((and) body ...) more-clauses ...)
+     (begin body ...))
+    ((cond-expand ((and req1 req2 ...) body ...) more-clauses ...)
+     (cond-expand
+       (req1
+         (cond-expand
+           ((and req2 ...) body ...)
+           more-clauses ...))
+       more-clauses ...))
+    ((cond-expand ((or) body ...) more-clauses ...)
+     (cond-expand more-clauses ...))
+    ((cond-expand ((or req1 req2 ...) body ...) more-clauses ...)
+     (cond-expand
+       (req1
+        (begin body ...))
+       (else
+        (cond-expand
+           ((or req2 ...) body ...)
+           more-clauses ...))))
+    ((cond-expand ((not req) body ...) more-clauses ...)
+     (cond-expand
+       (req
+         (cond-expand more-clauses ...))
+       (else body ...)))
+    ((cond-expand (srfi-0  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-4  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-6  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-22  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-23  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-46  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-176  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (lips  body ...) more-clauses ...)
+       (begin body ...))))
+
+;; -----------------------------------------------------------------------------
+;; the numerals can be generated using `make unicode` to get latest version
+;; of the file use `make zero`
+;; -----------------------------------------------------------------------------
+(define *zero-number-chars* #(48 1632 1776 1984 2406 2534 2662 2790 2918 3046 3174 3302
+                              3430 3558 3664 3792 3872 4160 4240 6112 6160 6470 6608 6784
+                              6800 6992 7088 7232 7248 42528 43216 43264 43472 43504 43600
+                              44016 65296 66720 68912 69734 69872 69942 70096 70384 70736
+                              70864 71248 71360 71472 71904 72016 72784 73040 73120 92768
+                              93008 120782 120792 120802 120812 120822 123200 123632 125264
+                              130032))
+
+;; -----------------------------------------------------------------------------
+(define (digit-value chr)
+  "(digit-value chr)
+
+   Return digit number if character is numeral (as per char-numeric?)
+   or #f otherwise."
+  (typecheck "digit-value" chr "character")
+  (if (char-numeric? chr)
+      (let ((ord (char->integer chr)))
+        (do ((i (vector-length *zero-number-chars*) (- i 1))
+             (found #f)
+             (result #f))
+            ((or (zero? i) found) result)
+          (let* ((zero (vector-ref *zero-number-chars* (- i 1)))
+                 (diff (- ord zero)))
+            (if (and (>= diff 0) (<= diff 9))
+                (begin
+                 (set! result diff)
+                 (set! found #t))))))
+    #f))
+
+;; -----------------------------------------------------------------------------

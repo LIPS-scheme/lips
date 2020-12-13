@@ -1,13 +1,19 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-{{VER_DASH}}-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![travis](https://travis-ci.org/jcubic/lips.svg?branch={{BRANCH}}&{{COMMIT}})](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
+[![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/jcubic/lips.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/jcubic/lips/stargazers/)
 <a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20makes%20life%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript%2C%20lisp%20and%20npm%20to%20create%20your%20applications%20via%20@jcubic&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
    <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
 </a>
+![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
+![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
 
+![Matomo trakcing piksel](https://piwik.jcubic.pl/matomo.php?idsite=7&rec=1&action_name=bookmark&url=https%3A%2F%2Fgithub.com%2Fjcubic%2Flips)
 [![LIPS at Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=273619&theme=dark)](https://www.producthunt.com/posts/lips)
 
 [LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://lips.js.org).
@@ -92,11 +98,10 @@ find a link that you can drag to your bookmarks.
 
 ## Usage
 
-
 The simplest way is to include the lips code in the script tag:
 
 ```html
-<script type="text/x-scheme">
+<script type="text/x-scheme" bootstrap>
 (let ((what "world")
       (greet "hello"))
    (display (string-append "hello" " " what)))
@@ -106,42 +111,57 @@ The simplest way is to include the lips code in the script tag:
 or use the `src` attribute:
 
 ```html
-<script type="text/x-scheme" src="example.scm"></script>
+<script type="text/x-scheme" bootstrap src="example.scm"></script>
 ```
 
 ## Boostraping Scheme system
 
-To have fully working Scheme environment, you need to bootstrap the language and load
-all scheme code written in LIPS. To do that you can use this:
+Big part of LIPS is written in LIPS itself, but to use full power of LIPS you need
+to load those additional Scheme files. The easiest way is to add `bootstrap` attribute
+on first script tag with `text/x-scheme` type. By default it will use CDN from
+[jsdelivr](https://www.jsdelivr.com/). To load each file using builtin load function
+(that will fetch the file using ajax and evaluate it).
+
+Second option (before beta.10 it was the only option) you can bootstrap LIPS yourself.
+
+You can call this Scheme code:
 
 ```
-(let-env lips.env.__parent__
-    (load "./lib/bootstrap.scm")
-    (load "./lib/R5RS.scm")
-    (load "./lib/R7RS.scm"))
+(let ((e lips.env.__parent__))
+    (load "./lib/bootstrap.scm" e)
+    (load "./lib/R5RS.scm" e)
+    (load "./lib/R7RS.scm" e))
 ```
 
 you need to use path to lib files, you can host them yourself or use CDN.
 
 ```
-(let-env lips.env.__parent__
-  (let ((path "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/"))
-    (load (concat path "bootstrap.scm"))
-    (load (concat path "R5RS.scm"))
-    (load (concat path "R7RS.scm"))))
+(let ((e lips.env.__parent__)
+      (path "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/"))
+  (load (concat path "bootstrap.scm") e)
+  (load (concat path "R5RS.scm") e)
+  (load (concat path "R7RS.scm" e)))
 ```
 
-If you use server you will need to enable CORS if your website is on different domain,
-because load will use AJAX to get the files.
+The last option is to create one big file by concatenation of LIPS files and your own code:
 
-**NOTE:** as of now there is not other solution, but it may change when version 1.0 is out.
-Because the files use syntax extensions that modify the parser you can't combine those
-files into one bigger file. Here is issue
-[Make parser ES generator #80](https://github.com/jcubic/lips/issues/80)
-that will make this possible. Other idea is to add `data-path=""` attribute on script tag
-that will bootstrap the system from given path.
+```bash
+cat ./node_modules/@jcubic/lips/lib/*.scm app.scm > all.scm
+```
 
-Running programmatically:
+and load that in script tag:
+
+```
+<script src="all.scm" type="text/x-scheme"></script>
+```
+
+This is not ideal because if your project have multiple files you will not be able to use
+`load`.
+
+Solution may be to process the file like Webpack and create a one bundle, (replace load
+calls with the code itself).
+
+## Running LIPS programmatically
 
 ```javascript
 var {exec} = require('@jcubic/lips'); // node

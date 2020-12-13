@@ -66,14 +66,27 @@
         (t.is (to.throw (set! foo.bar 10)) true)
         (t.is (to.throw (set! foo 10)) true)))
 
-(test "core: it should set on object literals"
+(test "core: it should set object"
       (lambda (t)
-        (let ((x &(:foo "jo")))
+        (let ((x (object :foo "jo")))
           (set! x.bar "hey")
           (t.is (string-append (--> x.bar (toUpperCase))
                                " "
                                (x.foo.toUpperCase))
                 "HEY JO"))))
+
+(test "core: it should throw when set object literal"
+      (lambda (t)
+        (let ((x &(:foo "jo")))
+          (t.is (to.throw (set! x.foo "hey")) true)
+          (t.is (to.throw (set! x.bar "hey")) true))))
+
+
+(test "core: it should throw when set vector literal"
+      (lambda (t)
+        (let ((x #(0 1)))
+          (t.is (to.throw (set! x.0 2)) true)
+          (t.is (to.throw (x.push 3)) true))))
 
 (test "core: timing test"
       (lambda (t)
@@ -105,3 +118,54 @@
         (t.is (if null 1 2) 1)
         (t.is (if () 1 2) 1)
         (t.is (if #f 1 2) 2)))
+
+(test "core: and/or"
+      (lambda (t)
+        (t.is (and) #t)
+        (t.is (or) #f)
+        ;; undefined and null should be true values
+        ;; according to spec #f should be the only fasly value
+        (t.is (and 1 undefined) undefined)
+        (t.is (and 1 null) null)
+        (t.is (or (begin) 1) undefined)
+        (t.is (or null 1) null)))
+
+(test_ "core: do macro"
+      (lambda (t)
+        (t.is (do ((i 0) (j 10 (- j 1))) (i j)) 10)
+        (t.is (do ((i 0) (j 10 (- j 1))) (null j)) 10)
+        (t.is (do ((i 0) (j 10 (- j 1))) (undefined j)) 10)
+        (t.is (do ((i 0) (j 10 (- j 1))) ((zero? j) 10)) 10)))
+
+(test "core: eq?/eqv?"
+      (lambda (t)
+        ;; TODO
+        ;;eq? bool nil symbol
+
+        ;;eqv? number char + eq?
+        (t.is true true)))
+
+(test "core: scheme signature"
+      (lambda (t)
+        ;; we should know about changing of signature
+        (load "./examples/scheme-detect.scm")
+
+        (t.is (detect:name) 'lips)))
+
+(test "core: input-string-port"
+      (lambda (t)
+
+        (let ((port (open-input-string "`(```,,,,@(list 1 2)) 10 /foo bar/")))
+          (t.is (read port) '(quasiquote ((quasiquote (quasiquote (quasiquote (unquote (unquote (unquote (unquote-splicing (list 1 2)))))))))))
+          (t.is (read port) 10)
+          (t.is (read port) /foo bar/)
+          (t.is (eof-object? (read port)) true))))
+
+(test "core: it should throw exception why calling with improper list"
+      (lambda (t)
+        (t.is (to.throw (let ((x '(1 2))) (+ 1 . x))) true)))
+
+(test "core: it should throw exception why applying function to improper list"
+      (lambda (t)
+        (t.is (to.throw (let ((x '(1 2 . 3))) (apply + x))) true)))
+

@@ -450,7 +450,7 @@
         (t.is result '(((bar 1) (bar 2)) ((baz 3) (baz 4))))))
 
 
-(test_ "syntax-rules: R6RS do macro"
+(test "syntax-rules: R6RS do macro"
        (lambda (t)
          (define-syntax do
            (syntax-rules ()
@@ -575,6 +575,7 @@
 
 (test "syntax-rules: it should define nested syntax-rules"
       (lambda (t)
+        ;; be-like-begin from R7RS spec file
         (define-syntax be-like-begin
           (syntax-rules ()
             ((be-like-begin name)
@@ -869,3 +870,70 @@
         (let ()
           (define-values (x) (values 1))
           (t.is x 1))))
+
+(test "syntax: swap macro"
+      (lambda (t)
+        ;; example from book Sketchy Scheme by Nils M Holm
+        (define-syntax swap
+          (syntax-rules ()
+            ((_ (x y) ...)
+             (list (quote (y x)) ...))))
+
+        (t.is (swap) '())
+        (t.is (swap (1 2)) '((2 1)))
+        (t.is (swap (1 2) (3 4)) '((2 1) (4 3)))))
+
+(test "syntax: reverse-syntax macro"
+      (lambda (t)
+
+        (define-syntax reverse-syntax
+          (syntax-rules ()
+            ((_ lst)
+             (reverse-syntax lst ()))
+            ((_ () r) r)
+            ((_ (a . d) r)
+             (reverse-syntax d (a . r)))))
+
+        (t.is (reverse-syntax (1 2 cons)) '(2 . 1))
+        (t.is (reverse-syntax (1 2 3 4 5 list)) '(5 4 3 2 1))))
+
+(test "syntax: duplicated expansion"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ (a ...) ...)
+             (list (list (list a ...) (list a ...)) ...))))
+
+        (t.is (foo (1 2 3) (4 5 6))
+              '(((1 2 3) (1 2 3)) ((4 5 6) (4 5 6))))))
+
+(test "syntax: R7RS multiple elipsis extensions"
+      (lambda (t)
+
+        ;; source https://practical-scheme.net/gauche/man/gauche-refe/Hygienic-macros.html
+        (define-syntax my-append
+          (syntax-rules ()
+            [(_ (a ...) ...)
+             '(a ... ...)]))
+
+        (t.is (my-append (1 2 3) (4) (5 6)) '(1 2 3 4 5 6))
+
+        (define-syntax my-append2
+          (syntax-rules ()
+            [(_ ((a ...) ...) ...)
+             '(a ... ... ...)]))
+
+        (t.is (my-append2 ((1 2) (3 4)) ((5) (6 7 8))) '(1 2 3 4 5 6 7 8))))
+
+(test "syntax: method on pattern symbol"
+      (lambda (t)
+        (define-syntax let*-values
+            (syntax-rules ()
+               ((_ ((bind values)) body ...)
+                (apply (lambda bind
+                         body ...)
+                       (vector->list (values.valueOf))))))
+
+        (t.is (let*-values (((a b c) (values 1 2 3)))
+                           (+ a b c))
+              6)))

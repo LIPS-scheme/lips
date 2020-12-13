@@ -15,7 +15,7 @@ const fs = require('fs');
 const readFile = promisify(fs.readFile);
 const readDir = promisify(fs.readdir);
 
-const lips = require('./src/lips');
+const lips = require('../src/lips');
 
 readDir('./tests/').then(function(filenames) {
   return Promise.all(filenames.filter(function(file) {
@@ -35,6 +35,9 @@ readDir('./tests/').then(function(filenames) {
       `].concat(files).join('\n\n')).catch((e) => {
           console.log(e);
       });
+  }).catch(e => {
+      console.error(e.message);
+      console.error(e.stack);
   });
 });
 

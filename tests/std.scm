@@ -111,3 +111,41 @@
                                                 (id "foo"))
                                              (Button1 (@ (label "me")))
                                              (Button2 (@ (label "me")))))))))
+
+
+(test "std: fold/curry"
+      (lambda (t)
+
+        (define (fold-left proc knil list)
+          (fold (lambda (acc elt) (proc elt acc)) knil list))
+
+        (define (test fn)
+          (t.is (procedure? fn) true)
+          (t.is (fn 4) 10))
+
+        (let ((fn (curry (curry (curry + 1) 2) 3)))
+          (test fn))
+
+        (let ((fn (fold-left curry + '(1 2 3))))
+          (test fn))))
+
+(test "std: char properties"
+      (lambda (t)
+        ;; function taken from book Sketchy Scheme by Nils M Holm
+        (define (char-properties x)
+          (apply append
+                 (map (lambda (prop)
+                        (cond (((car prop) x)
+                               (cdr prop))
+                              (else '())))
+                      (list (cons char-alphabetic? '(alphabetic))
+                            (cons char-numeric? '(numeric))
+                            (cons char-upper-case? '(upper-case))
+                            (cons char-lower-case? '(lower-case))
+                            (cons char-whitespace? '(whitespace))))))
+
+        (t.is (map char-properties '(#\C #\c #\1 #\#))
+              '((alphabetic upper-case)
+                (alphabetic lower-case)
+                (numeric)
+                ()))))

@@ -1,4 +1,4 @@
-.PHONY: publish test coveralls lint
+.PHONY: publish test coveralls lint zero
 
 VERSION={{VERSION}}
 VERSION_DASH=`echo -n "{{VERSION}}" | sed "s/-/%E2%80%93/"`
@@ -6,9 +6,10 @@ BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 YEAR=`date +%Y`
 DATE_SHORT=`date +%Y-%m-%d`
-TESTS_CHECKSUM=`cat test.js tests/*.scm | md5sum spec/lips.spec.js | cut -d' ' -f 1`
+TESTS_CHECKSUM=`cat tests/test.js tests/*.scm | md5sum | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
+UNICODE=https://unicode.org/Public/UNIDATA/UnicodeData.txt
 
 MAKE=make
 GIT=git
@@ -19,6 +20,8 @@ RM=rm
 TEST=test
 CAT=cat
 NPM=npm
+NODE=node
+WGET=wget
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
@@ -74,6 +77,12 @@ jest-test: dist/lips.js
 
 test: dist/lips.js
 	@$(NPM) run test
+
+zero:
+	@$(WGET) $(UNICODE) -O ./assets/UnicodeData.txt
+
+unicode: assets/UnicodeData.txt
+	@$(NODE) ./scripts/numerals.js
 
 watch-test:
 	@inotifywait -m -e close_write src/lips.js tests/*.scm | while read even; do $(MAKE) --no-print-directory test; done
