@@ -23,16 +23,25 @@
 
 </head>
 <body>
+  <!-- cx -->
   <main>
-    <header>
-      {% include logo.html %}
-      {% if page.layout == 'post' %}
-      <p>{{ site.title }}</p>
-      {% else %}
-      <h1>{{ site.title }}</h1>
-      {% endif %}
-      {% include nav.html %}
-    </header>
+    <section id="head">
+      <header>
+        {% include logo.html %}
+        {% if page.layout == 'post' %}
+        <p>{{ site.title }}</p>
+        {% else %}
+        <h1>{{ site.title }}</h1>
+        {% endif %}
+      </header>
+      <div class="top-bar">
+        {% include nav.html %}
+        <ul class="icons">
+          <li class="twitter"><a href="https://twitter.com/lips_lang">Twitter</a></li>
+          <li class="github"><a href="https://github.com/jcubic/lips">GitHb</a></li>
+        </ul>
+      </div>
+    </section>
     <section id="content">
       {{ content }}
     </section>

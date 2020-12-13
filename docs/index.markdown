@@ -32,3 +32,8 @@ I suggest to install 1.0 beta version, standard version is pretty outdated.
 ```javascript
 var x = 10;
 ```
+
+```python
+if __name__ == '__main__':
+  print "hello"
+```
