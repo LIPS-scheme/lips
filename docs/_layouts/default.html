@@ -43,6 +43,22 @@
           </ul>
           <div class="term"></div>
           <div class="examples">
+            <ul class="list">
+              {% for example in site.data.examples %}
+              {% assign len = example.code.length  %}
+              {% assign code = example.code | remove_first: '"' | rstrip | append: "__" | remove: '"__'  | newline_to_br | split: "<br />" %}
+              <li>
+                <div class="example">
+                  <pre>{% for line in code %}{{ line | remove_first: " " }}{% endfor %}</pre>
+                </div>
+                <div class="description">
+                  {{ example.description }}
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+            <ul class="pagination">
+            </ul>
           </div>
         </div>
         {% endif %}

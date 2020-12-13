@@ -10,5 +10,5 @@ error.log
 .[0-9]*
 www
 /_*
-*/_*
+docs/_site
 .nyc_output

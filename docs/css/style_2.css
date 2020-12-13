@@ -1,0 +1,92 @@
+body {
+    margin: 0;
+    font-family: 'Crimson Text', serif;
+}
+section#head {
+    background: linear-gradient(127deg, rgba(43,148,215,1) 0%, rgba(19,75,123,1) 100%);
+}
+section#head > header {
+    padding-top: 70px;
+    position: relative;
+}
+section#head .terminal {
+    --background: #14232d;
+    --color: white;
+    max-width: 1000px;
+    width: 100%;
+    height: 200px;
+    margin: 0 auto;
+}
+section#head h1 {
+    color: white;
+    font-size: 34px;
+    position: absolute;
+    top: calc(70px + 55px);
+    left: 350px;
+    margin: 0;
+    transform: translateY(-50%);
+}
+h1, h2, main header nav, main header p, .top-bars {
+    font-family: 'Play', sans-serif;
+    font-weight: normal;
+}
+/* TOP BAR */
+.top-bar {
+    background: #4d4d4d;
+    left: 0;
+    right: 0;
+    position: absolute;
+    top: 10px;
+    height: 40px;
+    font-size: 20px;
+}
+.top-bar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+.top-bar a, .top-bar a:visited {
+    text-decoration: none;
+    color: white;
+}
+.top-bar nav, .top-bar nav ul, .top-bar nav li {
+    height: 100%;
+}
+.top-bar nav li a {
+    padding: 5px 10px;
+}
+.top-bar nav li {
+    display: flex;
+}
+.top-bar nav li::before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+}
+.top-bar nav li + li::before {
+    border-left: 1px solid black;
+    border-right: 1px solid #c0c0c0;
+}
+.top-bar .icons {
+    position: absolute;
+    right: 30px;
+    top: 0;
+}
+.top-bar .icons li {
+    margin: 0 5px;
+}
+.top-bar .icons a {
+    display: block;
+    text-indent: -99999999px;
+    height: 32px;
+    width: 32px;
+    margin: 4px 0;
+    background: url(/img/icons.svg);
+}
+.top-bar .twitter a {
+    background-position: -150px 0;
+}
+.top-bar .github a {
+    background-position: -182px 0;
+}

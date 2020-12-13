@@ -1,0 +1,15 @@
+-
+  description: "Scheme hygienic macro that creates assoc list, with macroexpand."
+  code: >
+    " (define-syntax alist
+       (syntax-rules ()
+          ((_) ())
+          ((_ x y z ...)
+           (cons (cons x y) (alist z ...)))))
+
+     (print (alist "foo" 10 "bar" 20 "baz" 30))
+     ;; ==> ((foo . 10) (bar . 20) (baz . 30))
+     (macroexpand (alist "foo" 10 "bar" 20))
+     ;; ==> (#:cons (#:cons "foo" 10)
+                    (#:cons (#:cons "bar" 20)
+                            ()))"
