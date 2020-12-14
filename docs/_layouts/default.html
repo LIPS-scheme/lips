@@ -32,37 +32,43 @@
         <p>{{ site.title }}</p>
         {% else %}
         <h1>{{ site.title }}</h1>
-        <div class="intro">
-          <ul class="actions">
-            <li class="full-screen">
-              <a href="#">Full Screen</a>
-            </li>
-            <li class="exit-full-screen">
-              <a href="#">Exit Full Screen</a>
-            </li>
-          </ul>
-          <div class="term"></div>
-          <div class="examples">
-            <ul class="list">
-              {% for example in site.data.examples %}
-              {% assign len = example.code.length  %}
-              {% assign code = example.code | remove_first: '"' | rstrip | append: "__" | remove: '"__'  | newline_to_br | split: "<br />" %}
-              <li>
-                <div class="example">
-                  <pre>{% for line in code %}{{ line | remove_first: " " }}{% endfor %}</pre>
-                </div>
-                <div class="description">
-                  {{ example.description }}
-                </div>
-              </li>
-              {% endfor %}
-            </ul>
-            <ul class="pagination">
-            </ul>
-          </div>
-        </div>
         {% endif %}
       </header>
+      {% if page.layout != 'post' %}
+      <div class="intro">
+        <ul class="actions">
+          <li class="full-screen">
+            <a href="#">Full Screen</a>
+          </li>
+          <li class="exit-full-screen">
+            <a href="#">Exit Full Screen</a>
+          </li>
+        </ul>
+        <div class="term"></div>
+        <div class="examples">
+          <button class="run">run</button>
+          <ul class="list">
+            {% for example in site.data.examples %}
+            {% assign code = example.code | remove_first: '"' | rstrip | append: "__" | remove: '"__'  | newline_to_br | split: "<br />" %}
+            <li>
+              <div class="example">
+                <pre>{% for line in code %}{{ line | remove_first: " " }}{% endfor %}</pre>
+              </div>
+              <div class="description">
+                {{ example.description }}
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% assign len = site.data.examples | size %}
+          <ul class="pagination">
+            {% for i in (1..len) %}
+            <li><a href="#">{{ i }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
       <div class="top-bar">
         {% include nav.html %}
         <ul class="icons">

@@ -12,10 +12,45 @@ section#head > header {
 section#head .terminal {
     --background: #14232d;
     --color: white;
+}
+section#head .terminal,
+section#head .intro > .actions,
+section#head .examples {
     max-width: 1000px;
     width: 100%;
-    height: 200px;
     margin: 0 auto;
+}
+
+section#head .intro > .actions {
+    padding: 0;
+    list-style: none;
+    position: relative;
+    z-index: 100;
+}
+section#head .intro > .actions > li {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin: 10px;
+    width: 52px;
+    height: 52px;
+    text-indent: -99999px;
+    overflow: hidden;
+}
+section#head .exit-full-screen, .full-screen section#head .full-screen {
+    display: none;
+}
+.full-screen section#head .exit-full-screen {
+    display: block;
+}
+section#head .intro > .actions > li.full-screen {
+    background-position: -52px 0;
+}
+section#head .intro > .actions > li, .top-bar .icons a {
+    background: url(/img/icons.svg);
+}
+section#head .terminal {
+    height: 200px;
 }
 section#head h1 {
     color: white;
@@ -82,11 +117,62 @@ h1, h2, main header nav, main header p, .top-bars {
     height: 32px;
     width: 32px;
     margin: 4px 0;
-    background: url(/img/icons.svg);
 }
 .top-bar .twitter a {
-    background-position: -150px 0;
+    background-position: -104px 0;
 }
 .top-bar .github a {
-    background-position: -182px 0;
+    background-position: -136px 0;
+}
+/* Examples */
+section#head .examples {
+    position: relative;
+}
+section#head .examples .run,
+section#head .examples {
+    background: #4d4d4d;
+}
+section#head .examples .run {
+    border: none;
+    border-radius: 3px;
+    padding: 5px 10px;
+    color: white;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-100%);
+    margin-top: 30px;
+    display: block;
+    font-size: 20px;
+    margin-left: -10px;
+    cursor: pointer;
+}
+section#head .examples .run:active {
+    margin-top: 31px;
+    margin-left: -9px;
+}
+section#head .examples ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+section#head .examples .list li {
+    padding: 20px;
+    display: flex;
+}
+section#head pre {
+    margin: 0;
+    padding: 5px;
+}
+section#head .example {
+    background: #eee;
+    border-radius: 5px;
+}
+section#head .example, section#head .description {
+    width: 50%;
+}
+section#head .description {
+    color: white;
+    font-size: 20px;
+    box-sizing: border-box;
+    padding: 0 20px;
 }

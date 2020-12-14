@@ -5,8 +5,7 @@
 {% if page.layout != 'post' %}
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
-        bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta"></script>
+<script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"></script>
 <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js"></script>
@@ -17,7 +16,21 @@
            ' [[!;;;;https://jcubic.pl/me]Jakub T. Jankiewicz]\n\n' +
            'Type [[b;#fff;](env)] to see environment with ' +
            'functions macros and variables\nYou can also use [[b;#fff;](help obj)]' +
-           ' to display help for specic function or macro.\n', { formatters: false });
+           ' to display help for specic function or macro.\n' +
+           'Use [[b;#fff;](dir object)] to get list of JavaScript methods.\n',
+           { formatters: false });
  $.terminal.syntax("scheme");
+ // bootstrap it will be method of lips
+ var path = 'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/';
+ term.exec([
+     '(let-env lips.env.__parent__',
+       '(load "' + path + 'lib/bootstrap.scm")',
+       '(load "' + path + 'lib/R5RS.scm")',
+       '(load "' + path + 'lib/R7RS.scm"))'
+ ].join('\n'), true);
+ $('section#head .examples .run').click(function() {
+     var code = $('section#head .example:visible').text();
+     term.exec(code.trim(), true);
+ });
 </script>
 {% endif %}
