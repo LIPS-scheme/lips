@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 15 Dec 2020 08:05:31 +0000
+ * build: Tue, 15 Dec 2020 08:46:30 +0000
  */
 (function () {
   'use strict';
@@ -9701,11 +9701,13 @@
 
         if (dynamic_scope) {
           dynamic_scope = self;
-        }
+        } // -----------------------------------------------------------------
+
 
         function isPair(value) {
           return value instanceof Pair;
-        }
+        } // -----------------------------------------------------------------
+
 
         function resolve_pair(pair, fn) {
           var test = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : isPair;
@@ -9736,7 +9738,8 @@
           }
 
           return pair;
-        }
+        } // -----------------------------------------------------------------
+
 
         function join(eval_pair, value) {
 
@@ -9749,7 +9752,46 @@
           }
 
           return eval_pair;
-        }
+        } // -----------------------------------------------------------------
+
+
+        function unquoted_arr(arr) {
+          return !!arr.filter(function (value) {
+            return value instanceof Pair && LSymbol.is(value.car, 'unquote');
+          }).length;
+        } // -----------------------------------------------------------------
+
+
+        function quote_vector(arr, unquote_cnt, max_unq) {
+          return arr.map(function (x) {
+            if (LSymbol.is(x.car, 'unquote-splicing')) {
+              throw new Error("You can't call `unquote-splicing` " + "inside vector");
+            }
+
+            return recur(x, unquote_cnt, max_unq);
+          });
+        } // -----------------------------------------------------------------
+
+
+        function quote_object(object, unquote_cnt, max_unq) {
+          var result = {};
+          Object.keys(object).forEach(function (key) {
+            var value = object[key];
+
+            if (LSymbol.is(value.car, 'unquote-splicing')) {
+              throw new Error("You can't call `unquote-splicing` " + "inside object");
+            }
+
+            result[key] = recur(value, unquote_cnt, max_unq);
+          });
+
+          if (Object.isFrozen(object)) {
+            Object.freeze(result);
+          }
+
+          return result;
+        } // -----------------------------------------------------------------
+
 
         function unquote_splice(pair, unquote_cnt, max_unq) {
           if (unquote_cnt < max_unq) {
@@ -9823,7 +9865,8 @@
               });
             });
           }(pair.car.cdr);
-        }
+        } // -----------------------------------------------------------------
+
 
         var splices = new Set();
 
@@ -9928,34 +9971,14 @@
               return recur(pair, unquote_cnt, max_unq);
             });
           } else if (is_plain_object(pair)) {
-            var _result4 = {};
-            Object.keys(pair).forEach(function (key) {
-              var value = pair[key];
-
-              if (LSymbol.is(value.car, 'unquote-splicing')) {
-                throw new Error("You can't call `unquote-splicing` " + "inside object");
-              }
-
-              _result4[key] = recur(value, unquote_cnt, max_unq);
-            });
-
-            if (Object.isFrozen(pair)) {
-              Object.freeze(_result4);
-            }
-
-            return _result4;
+            return quote_object(pair, unquote_cnt, max_unq);
           } else if (pair instanceof Array) {
-            return pair.map(function (x) {
-              if (LSymbol.is(x.car, 'unquote-splicing')) {
-                throw new Error("You can't call `unquote-splicing` " + "inside vector");
-              }
-
-              return recur(x, unquote_cnt, max_unq);
-            });
+            return quote_vector(pair, unquote_cnt, max_unq);
           }
 
           return pair;
-        }
+        } // -----------------------------------------------------------------
+
 
         function clear(node) {
           if (node instanceof Pair) {
@@ -9969,9 +9992,18 @@
               clear(node.cdr);
             }
           }
-        }
+        } // -----------------------------------------------------------------
+
 
         if (arg.car instanceof Pair && !arg.car.find('unquote') && !arg.car.find('unquote-splicing') && !arg.car.find('quasiquote')) {
+          return quote(arg.car);
+        }
+
+        if (is_plain_object(arg.car) && !unquoted_arr(Object.values(arg.car))) {
+          return quote(arg.car);
+        }
+
+        if (Array.isArray(arg.car) && !unquoted_arr(arg.car)) {
           return quote(arg.car);
         }
 
@@ -12011,10 +12043,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 15 Dec 2020 08:05:31 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 15 Dec 2020 08:46:30 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 15 Dec 2020 08:05:31 +0000').valueOf();
+      var date = LString('Tue, 15 Dec 2020 08:46:30 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12051,7 +12083,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 15 Dec 2020 08:05:31 +0000',
+      date: 'Tue, 15 Dec 2020 08:46:30 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

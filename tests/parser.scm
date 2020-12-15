@@ -108,3 +108,17 @@
          (t.is `#(1 2 3) #(1 2 3))
          (t.is `#(1 2 foo) #(1 2 foo))
          (t.is '#(1 2 foo) #(1 2 foo))))
+
+
+(test "parser: vector constants"
+      (lambda (t)
+
+        (define (v)
+          #(1 2 3))
+
+        (t.is (eq? (v) (v)) true)
+
+        (define (v)
+          `#(1 2 3))
+
+        (t.is (eq? (v) (v)) true)))

@@ -6472,9 +6472,11 @@
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
+            // -----------------------------------------------------------------
             function isPair(value) {
                 return value instanceof Pair;
             }
+            // -----------------------------------------------------------------
             function resolve_pair(pair, fn, test = isPair) {
                 if (pair instanceof Pair) {
                     var car = pair.car;
@@ -6495,6 +6497,7 @@
                 }
                 return pair;
             }
+            // -----------------------------------------------------------------
             function join(eval_pair, value) {
                 if (eval_pair === nil && value === nil) {
                     //return nil;
@@ -6511,6 +6514,40 @@
                 }
                 return eval_pair;
             }
+            // -----------------------------------------------------------------
+            function unquoted_arr(arr) {
+                return !!arr.filter(value => {
+                    return value instanceof Pair &&
+                        LSymbol.is(value.car, 'unquote');
+                }).length;
+            }
+            // -----------------------------------------------------------------
+            function quote_vector(arr, unquote_cnt, max_unq) {
+                return arr.map(x => {
+                    if (LSymbol.is(x.car, 'unquote-splicing')) {
+                        throw new Error("You can't call `unquote-splicing` " +
+                                        "inside vector");
+                    }
+                    return recur(x, unquote_cnt, max_unq);
+                });
+            }
+            // -----------------------------------------------------------------
+            function quote_object(object, unquote_cnt, max_unq) {
+                const result = {};
+                Object.keys(object).forEach(key => {
+                    const value = object[key];
+                    if (LSymbol.is(value.car, 'unquote-splicing')) {
+                        throw new Error("You can't call `unquote-splicing` " +
+                                        "inside object");
+                    }
+                    result[key] = recur(value, unquote_cnt, max_unq);
+                });
+                if (Object.isFrozen(object)) {
+                    Object.freeze(result);
+                }
+                return result;
+            }
+            // -----------------------------------------------------------------
             function unquote_splice(pair, unquote_cnt, max_unq) {
                 if (unquote_cnt < max_unq) {
                     return new Pair(
@@ -6580,6 +6617,7 @@
                     });
                 })(pair.car.cdr);
             }
+            // -----------------------------------------------------------------
             var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair) {
@@ -6688,30 +6726,13 @@
                         return recur(pair, unquote_cnt, max_unq);
                     });
                 } else if (is_plain_object(pair)) {
-                    const result = {};
-                    Object.keys(pair).forEach(key => {
-                        const value = pair[key];
-                        if (LSymbol.is(value.car, 'unquote-splicing')) {
-                            throw new Error("You can't call `unquote-splicing` " +
-                                            "inside object");
-                        }
-                        result[key] = recur(value, unquote_cnt, max_unq);
-                    });
-                    if (Object.isFrozen(pair)) {
-                        Object.freeze(result);
-                    }
-                    return result;
+                    return quote_object(pair, unquote_cnt, max_unq);
                 } else if (pair instanceof Array) {
-                    return pair.map(x => {
-                        if (LSymbol.is(x.car, 'unquote-splicing')) {
-                            throw new Error("You can't call `unquote-splicing` " +
-                                            "inside vector");
-                        }
-                        return recur(x, unquote_cnt, max_unq);
-                    });
+                    return quote_vector(pair, unquote_cnt, max_unq);
                 }
                 return pair;
             }
+            // -----------------------------------------------------------------
             function clear(node) {
                 if (node instanceof Pair) {
                     delete node[__data__];
@@ -6723,10 +6744,17 @@
                     }
                 }
             }
+            // -----------------------------------------------------------------
             if (arg.car instanceof Pair &&
                 !arg.car.find('unquote') &&
                 !arg.car.find('unquote-splicing') &&
                 !arg.car.find('quasiquote')) {
+                return quote(arg.car);
+            }
+            if (is_plain_object(arg.car) && !unquoted_arr(Object.values(arg.car))) {
+                return quote(arg.car);
+            }
+            if (Array.isArray(arg.car) && !unquoted_arr(arg.car)) {
                 return quote(arg.car);
             }
             var x = recur(arg.car, 0, 1);
