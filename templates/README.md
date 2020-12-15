@@ -236,6 +236,14 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ## Credits
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod)
 
+## Links
+* [Gitter Chat](https://gitter.im/jcubic/lips)
+* [Git Repository](https://github.com/jcubic/lips)
+* [Official Website](https://lips.js.org/)
+
+## Alternatives
+* [BiwaScheme](https://github.com/biwascheme/biwascheme)
+
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
