@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 15 Dec 2020 08:46:30 +0000
+ * build: Tue, 15 Dec 2020 12:33:49 +0000
  */
 (function () {
   'use strict';
@@ -6080,6 +6080,8 @@
 
 
     function pipe() {
+      var _this = this;
+
       for (var _len5 = arguments.length, fns = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
         fns[_key5] = arguments[_key5];
       }
@@ -6093,7 +6095,7 @@
         }
 
         return fns.reduce(function (args, f) {
-          return [f.apply(void 0, toConsumableArray(args))];
+          return [f.apply(_this, args)];
         }, args)[0];
       };
     } // -------------------------------------------------------------------------
@@ -7896,7 +7898,7 @@
 
 
     function OutputStringPort(toString) {
-      var _this = this;
+      var _this2 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
         return new OutputStringPort(toString);
@@ -7912,7 +7914,7 @@
           x = x.valueOf();
         }
 
-        _this._buffer.push(x);
+        _this2._buffer.push(x);
       };
     }
 
@@ -8185,13 +8187,13 @@
 
 
     Environment.prototype.clone = function () {
-      var _this2 = this;
+      var _this3 = this;
 
       // duplicate refs
       var env = {}; // TODO: duplicated Symbols
 
       Object.keys(this.__env__).forEach(function (key) {
-        env[key] = _this2.__env__[key];
+        env[key] = _this3.__env__[key];
       });
       return new Environment(env, this.__parent__, this.__name__);
     }; // -------------------------------------------------------------------------
@@ -8592,7 +8594,7 @@
       }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
       // ------------------------------------------------------------------
       print: doc(function print() {
-        var _this3 = this;
+        var _this4 = this;
 
         var display = this.get('display');
         var newline = this.get('newline');
@@ -8602,8 +8604,8 @@
         }
 
         args.forEach(function (arg) {
-          display.call(_this3, arg);
-          newline.call(_this3);
+          display.call(_this4, arg);
+          newline.call(_this4);
         });
       }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code), the function call newline after printing each arg."),
       // ------------------------------------------------------------------
@@ -8660,7 +8662,7 @@
       }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
       // ------------------------------------------------------------------
       error: doc(function error() {
-        var _this4 = this;
+        var _this5 = this;
 
         var port = this.get('stderr');
         var repr = this.get('repr');
@@ -8670,7 +8672,7 @@
         }
 
         var value = args.map(function (arg) {
-          return repr.call(_this4, arg);
+          return repr.call(_this5, arg);
         }).join(' ');
         port.write.call(this, value);
         this.get('newline').call(this, port);
@@ -8752,7 +8754,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this5 = this;
+        var _this6 = this;
 
         var _ref18 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref18.dynamic_scope,
@@ -8827,7 +8829,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this5.get(name, {
+              var obj = _this6.get(name, {
                 throwError: false
               });
 
@@ -9329,7 +9331,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this6 = this;
+        var _this7 = this;
 
         typecheck('eval', code, ['symbol', 'pair', 'array']);
         env = env || this;
@@ -9343,14 +9345,14 @@
             env: env,
             //dynamic_scope: this,
             error: function error(e) {
-              _this6.get('error').call(_this6, e.message);
+              _this7.get('error').call(_this7, e.message);
 
               if (e.code) {
                 var stack = e.code.map(function (line, i) {
                   return "[".concat(i + 1, "]: ").concat(line);
                 }).join('\n');
 
-                _this6.get('error').call(_this6, stack);
+                _this7.get('error').call(_this7, stack);
               }
             }
           });
@@ -10038,7 +10040,7 @@
       }, "(append item ...)\n\n            Function will create new list with eac argument appended to the end.\n            It will always return new list and not modify it's arguments."),
       // ------------------------------------------------------------------
       'append!': doc('append!', function () {
-        var _this7 = this;
+        var _this8 = this;
 
         for (var _len21 = arguments.length, items = new Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
           items[_key21] = arguments[_key21];
@@ -10047,7 +10049,7 @@
         return items.reduce(function (acc, item) {
           typecheck('append!', acc, ['nil', 'pair']);
 
-          if ((item instanceof Pair || item === nil) && !_this7.get('list?')(item)) {
+          if ((item instanceof Pair || item === nil) && !_this8.get('list?')(item)) {
             throw new Error('append!: Invalid argument, value is not a list');
           }
 
@@ -10374,15 +10376,15 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref28) {
-        var _this8 = this;
+        var _this9 = this;
 
         var dynamic_scope = _ref28.dynamic_scope,
             _error = _ref28.error;
         return new Promise(function (resolve) {
           var args = {
-            env: _this8,
+            env: _this9,
             error: function error(e) {
-              var env = _this8.inherit('try');
+              var env = _this9.inherit('try');
 
               env.set(code.cdr.car.cdr.car.car, e);
               var args = {
@@ -10391,7 +10393,7 @@
               };
 
               if (dynamic_scope) {
-                args.dynamic_scope = _this8;
+                args.dynamic_scope = _this9;
               }
 
               unpromise(evaluate(new Pair(new LSymbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
@@ -10401,7 +10403,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this8;
+            args.dynamic_scope = _this9;
           }
 
           var ret = evaluate(code.car, args);
@@ -10459,7 +10461,7 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this9 = this;
+        var _this10 = this;
 
         for (var _len27 = arguments.length, lists = new Array(_len27 > 1 ? _len27 - 1 : 0), _key27 = 1; _key27 < _len27; _key27++) {
           lists[_key27 - 1] = arguments[_key27];
@@ -10470,7 +10472,7 @@
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this9, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this10, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -10492,7 +10494,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this9, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this10, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -10588,7 +10590,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this10 = this;
+        var _this11 = this;
 
         for (var _len30 = arguments.length, lists = new Array(_len30 > 3 ? _len30 - 3 : 0), _key31 = 3; _key31 < _len30; _key31++) {
           lists[_key31 - 3] = arguments[_key31];
@@ -10608,7 +10610,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this10, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this11, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -12043,10 +12045,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 15 Dec 2020 08:46:30 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 15 Dec 2020 12:33:49 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 15 Dec 2020 08:46:30 +0000').valueOf();
+      var date = LString('Tue, 15 Dec 2020 12:33:49 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12083,7 +12085,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 15 Dec 2020 08:46:30 +0000',
+      date: 'Tue, 15 Dec 2020 12:33:49 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

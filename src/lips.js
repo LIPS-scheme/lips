@@ -3691,8 +3691,8 @@
         fns.forEach((fn, i) => {
             typecheck('pipe', fn, 'function', i + 1);
         });
-        return function(...args) {
-            return fns.reduce((args, f) => [f(...args)], args)[0];
+        return (...args) => {
+            return fns.reduce((args, f) => [f.apply(this, args)], args)[0];
         };
     }
     // -------------------------------------------------------------------------
