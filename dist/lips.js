@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 13 Dec 2020 16:16:33 +0000
+ * build: Tue, 15 Dec 2020 08:05:31 +0000
  */
 (function () {
   'use strict';
@@ -1317,7 +1317,7 @@
         }
       }
 
-      if (isPromise(x)) {
+      if (is_promise(x)) {
         x.then(msg);
       } else {
         msg(x);
@@ -2501,16 +2501,47 @@
       var error = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
 
       if (value instanceof Array) {
-        var anyPromise = value.filter(isPromise);
+        var anyPromise = value.filter(is_promise);
 
         if (anyPromise.length) {
-          return unpromise(Promise.all(anyPromise), fn, error);
+          return unpromise(Promise.all(value), function (arr) {
+            if (Object.isFrozen(value)) {
+              Object.freeze(arr);
+            }
+
+            return arr;
+          }, error);
         }
 
         return fn(value);
       }
 
-      if (isPromise(value)) {
+      if (is_plain_object(value)) {
+        var keys = Object.keys(value);
+        var values = keys.map(function (x) {
+          return value[x];
+        });
+
+        var _anyPromise = values.filter(is_promise);
+
+        if (_anyPromise.length) {
+          return unpromise(Promise.all(values), function (values) {
+            var result = {};
+            values.forEach(function (value, i) {
+              var key = keys[i];
+              result[key] = value;
+            });
+
+            if (Object.isFrozen(value)) {
+              Object.freeze(result);
+            }
+
+            return result;
+          }, error);
+        }
+      }
+
+      if (is_promise(value)) {
         var ret = value.then(fn);
 
         if (error === null) {
@@ -5625,7 +5656,7 @@
     } // ----------------------------------------------------------------------
 
 
-    function isPromise(o) {
+    function is_promise(o) {
       return o instanceof Promise || o && typeof o !== 'undefined' && typeof o.then === 'function';
     } // ----------------------------------------------------------------------
     // :: Function utilities
@@ -5948,7 +5979,7 @@
               var v = values.map(function (x) {
                 return x.value;
               });
-              var promises = v.filter(isPromise);
+              var promises = v.filter(is_promise);
 
               if (promises.length) {
                 return Promise.all(v).then(function (arr) {
@@ -6025,7 +6056,7 @@
           node = node.cdr;
         }
 
-        var havePromises = results.filter(isPromise).length;
+        var havePromises = results.filter(is_promise).length;
 
         if (havePromises) {
           return Promise.all(results).then(fn.bind(this));
@@ -8352,7 +8383,7 @@
 
 
     function quote(value) {
-      if (isPromise(value)) {
+      if (is_promise(value)) {
         return value.then(quote);
       }
 
@@ -8741,19 +8772,19 @@
         value = resolvePromises(value);
 
         function set(object, key, value) {
-          if (isPromise(object)) {
+          if (is_promise(object)) {
             return object.then(function (key) {
               return set(object, key, value);
             });
           }
 
-          if (isPromise(key)) {
+          if (is_promise(key)) {
             return key.then(function (key) {
               return set(object, key, value);
             });
           }
 
-          if (isPromise(value)) {
+          if (is_promise(value)) {
             return value.then(function (value) {
               return set(object, key, value);
             });
@@ -9691,7 +9722,7 @@
               cdr = fn(cdr);
             }
 
-            if (isPromise(car) || isPromise(cdr)) {
+            if (is_promise(car) || is_promise(cdr)) {
               return Promise.all([car, cdr]).then(function (_ref26) {
                 var _ref27 = slicedToArray(_ref26, 2),
                     car = _ref27[0],
@@ -9895,6 +9926,31 @@
 
             return resolve_pair(pair, function (pair) {
               return recur(pair, unquote_cnt, max_unq);
+            });
+          } else if (is_plain_object(pair)) {
+            var _result4 = {};
+            Object.keys(pair).forEach(function (key) {
+              var value = pair[key];
+
+              if (LSymbol.is(value.car, 'unquote-splicing')) {
+                throw new Error("You can't call `unquote-splicing` " + "inside object");
+              }
+
+              _result4[key] = recur(value, unquote_cnt, max_unq);
+            });
+
+            if (Object.isFrozen(pair)) {
+              Object.freeze(_result4);
+            }
+
+            return _result4;
+          } else if (pair instanceof Array) {
+            return pair.map(function (x) {
+              if (LSymbol.is(x.car, 'unquote-splicing')) {
+                throw new Error("You can't call `unquote-splicing` " + "inside vector");
+              }
+
+              return recur(x, unquote_cnt, max_unq);
             });
           }
 
@@ -10318,7 +10374,7 @@
 
           var ret = evaluate(code.car, args);
 
-          if (isPromise(ret)) {
+          if (is_promise(ret)) {
             ret.then(resolve)["catch"](args.error);
           } else {
             resolve(ret);
@@ -10365,7 +10421,7 @@
 
         var ret = (_this$get2 = this.get('map')).call.apply(_this$get2, [this, fn].concat(lists));
 
-        if (isPromise(ret)) {
+        if (is_promise(ret)) {
           return ret.then(function () {});
         }
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
@@ -11141,7 +11197,7 @@
       return arg;
 
       function traverse(node) {
-        if (isPromise(node)) {
+        if (is_promise(node)) {
           promises.push(node);
         } else if (node instanceof Pair) {
           if (!node.haveCycles('car')) {
@@ -11429,7 +11485,7 @@
         if (first instanceof Pair) {
           value = resolvePromises(evaluate(first, eval_args));
 
-          if (isPromise(value)) {
+          if (is_promise(value)) {
             return value.then(function (value) {
               return evaluate(new Pair(value, code.cdr), eval_args);
             }); // else is later in code
@@ -11955,10 +12011,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 13 Dec 2020 16:16:33 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 15 Dec 2020 08:05:31 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 13 Dec 2020 16:16:33 +0000').valueOf();
+      var date = LString('Tue, 15 Dec 2020 08:05:31 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -11995,12 +12051,13 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 13 Dec 2020 16:16:33 +0000',
+      date: 'Tue, 15 Dec 2020 08:05:31 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
       tokenize: tokenize,
       evaluate: evaluate,
+      bootstrap: bootstrap,
       Environment: Environment,
       env: user_env,
       Worker: Worker,

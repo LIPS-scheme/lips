@@ -292,7 +292,7 @@
    Macro that create JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used with & object literal."
   (try
-    (object-expander true expr)
+    (object-expander true expr true)
     (catch (e)
       (error e.message))))
 

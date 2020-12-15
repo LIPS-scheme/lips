@@ -307,3 +307,13 @@
           `(1 2 ,x))
 
         (t.is (eq? (foo 10) (foo 20)) false)))
+
+(test "quasiquote: should crete vector literal"
+      (lambda (t)
+        (t.is `#(,(+ 1 2) ,(+ 2 3) ,(Promise.resolve 7))
+              #(3 5 7))))
+
+(test "quasiquote: should crete object literal"
+      (lambda (t)
+        (t.is `&(:foo ,(+ 1 2) :bar ,(Promise.resolve 10))
+              &(:foo 3 :bar 10))))

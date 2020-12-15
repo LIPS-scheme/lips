@@ -105,7 +105,7 @@
                 console.log(x);
             }
         }
-        if (isPromise(x)) {
+        if (is_promise(x)) {
             x.then(msg);
         } else {
             msg(x);
@@ -956,13 +956,36 @@
     // ----------------------------------------------------------------------
     function unpromise(value, fn = x => x, error = null) {
         if (value instanceof Array) {
-            var anyPromise = value.filter(isPromise);
+            const anyPromise = value.filter(is_promise);
             if (anyPromise.length) {
-                return unpromise(Promise.all(anyPromise), fn, error);
+                return unpromise(Promise.all(value), (arr) => {
+                    if (Object.isFrozen(value)) {
+                        Object.freeze(arr);
+                    }
+                    return arr;
+                }, error);
             }
             return fn(value);
         }
-        if (isPromise(value)) {
+        if (is_plain_object(value)) {
+            const keys = Object.keys(value);
+            const values = keys.map(x => value[x]);
+            const anyPromise = values.filter(is_promise);
+            if (anyPromise.length) {
+                return unpromise(Promise.all(values), (values) => {
+                    const result = {};
+                    values.forEach((value, i) => {
+                        const key = keys[i];
+                        result[key] = value;
+                    });
+                    if (Object.isFrozen(value)) {
+                        Object.freeze(result);
+                    }
+                    return result;
+                }, error);
+            }
+        }
+        if (is_promise(value)) {
             var ret = value.then(fn);
             if (error === null) {
                 return ret;
@@ -3328,7 +3351,7 @@
         return typeof value === 'undefined' || value === nil || value === null;
     }
     // ----------------------------------------------------------------------
-    function isPromise(o) {
+    function is_promise(o) {
         return o instanceof Promise ||
             (o && typeof o !== 'undefined' && typeof o.then === 'function');
     }
@@ -3594,7 +3617,7 @@
                     // resolve all promises
                     if (values && values.length) {
                         var v = values.map(x => x.value);
-                        var promises = v.filter(isPromise);
+                        var promises = v.filter(is_promise);
                         if (promises.length) {
                             return Promise.all(v).then((arr) => {
                                 for (var i = 0, len = arr.length; i < len; ++i) {
@@ -3648,7 +3671,7 @@
                 results.push(evaluate(node.car, { env, dynamic_scope, error }));
                 node = node.cdr;
             }
-            var havePromises = results.filter(isPromise).length;
+            var havePromises = results.filter(is_promise).length;
             if (havePromises) {
                 return Promise.all(results).then(fn.bind(this));
             } else {
@@ -5365,7 +5388,7 @@
     // :: Quote funtion used to pause evaluation from Macro
     // -------------------------------------------------------------------------
     function quote(value) {
-        if (isPromise(value)) {
+        if (is_promise(value)) {
             return value.then(quote);
         }
         if (value instanceof Pair || value instanceof LSymbol) {
@@ -5667,13 +5690,13 @@
             var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
             value = resolvePromises(value);
             function set(object, key, value) {
-                if (isPromise(object)) {
+                if (is_promise(object)) {
                     return object.then(key => set(object, key, value));
                 }
-                if (isPromise(key)) {
+                if (is_promise(key)) {
                     return key.then(key => set(object, key, value));
                 }
-                if (isPromise(value)) {
+                if (is_promise(value)) {
                     return value.then(value => set(object, key, value));
                 }
                 env.get('set-obj!').call(env, object, key, value);
@@ -6462,7 +6485,7 @@
                     if (test(cdr)) {
                         cdr = fn(cdr);
                     }
-                    if (isPromise(car) || isPromise(cdr)) {
+                    if (is_promise(car) || is_promise(cdr)) {
                         return Promise.all([car, cdr]).then(([car, cdr]) => {
                             return new Pair(car, cdr);
                         });
@@ -6663,6 +6686,28 @@
                     }
                     return resolve_pair(pair, (pair) => {
                         return recur(pair, unquote_cnt, max_unq);
+                    });
+                } else if (is_plain_object(pair)) {
+                    const result = {};
+                    Object.keys(pair).forEach(key => {
+                        const value = pair[key];
+                        if (LSymbol.is(value.car, 'unquote-splicing')) {
+                            throw new Error("You can't call `unquote-splicing` " +
+                                            "inside object");
+                        }
+                        result[key] = recur(value, unquote_cnt, max_unq);
+                    });
+                    if (Object.isFrozen(pair)) {
+                        Object.freeze(result);
+                    }
+                    return result;
+                } else if (pair instanceof Array) {
+                    return pair.map(x => {
+                        if (LSymbol.is(x.car, 'unquote-splicing')) {
+                            throw new Error("You can't call `unquote-splicing` " +
+                                            "inside vector");
+                        }
+                        return recur(x, unquote_cnt, max_unq);
                     });
                 }
                 return pair;
@@ -7148,7 +7193,7 @@
                     args.dynamic_scope = this;
                 }
                 var ret = evaluate(code.car, args);
-                if (isPromise(ret)) {
+                if (is_promise(ret)) {
                     ret.then(resolve).catch(args.error);
                 } else {
                     resolve(ret);
@@ -7190,7 +7235,7 @@
             // var ret = map.apply(void 0, [fn].concat(lists));
             // it don't work with weakBind
             var ret = this.get('map').call(this, fn, ...lists);
-            if (isPromise(ret)) {
+            if (is_promise(ret)) {
                 return ret.then(() => {});
             }
         }, `(for-each fn . lists)
@@ -7931,7 +7976,7 @@
         }
         return arg;
         function traverse(node) {
-            if (isPromise(node)) {
+            if (is_promise(node)) {
                 promises.push(node);
             } else if (node instanceof Pair) {
                 if (!node.haveCycles('car')) {
@@ -8098,7 +8143,7 @@
             var rest = code.cdr;
             if (first instanceof Pair) {
                 value = resolvePromises(evaluate(first, eval_args));
-                if (isPromise(value)) {
+                if (is_promise(value)) {
                     return value.then((value) => {
                         return evaluate(new Pair(value, code.cdr), eval_args);
                     });
@@ -8485,6 +8530,8 @@ You can also use (help name) to display help for specic function or macro.
         parse: compose(uniterate_async, parse),
         tokenize,
         evaluate,
+
+        bootstrap,
 
         Environment,
         env: user_env,

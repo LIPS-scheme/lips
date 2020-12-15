@@ -1,3 +1,9 @@
+## 1.0.0-beta.11
+### Features
+* add support for quasiquote on objects and vectors
+### Bugfix
+* fix resolving promises on vectors and objects
+
 ## 1.0.0-beta.10
 ### Breaking
 * change behavior of `and` and `or` to work like `if` (`#f` only falsy value)
