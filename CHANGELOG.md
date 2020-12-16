@@ -1,6 +1,7 @@
 ## 1.0.0-beta.11
 ### Features
 * add support for quasiquote on objects and vectors
+* interning symbols mechanism [#106](https://github.com/jcubic/lips/issues/106)
 ### Bugfix
 * fix resolving promises on vectors and objects
 

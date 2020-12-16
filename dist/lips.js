@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 15 Dec 2020 12:33:49 +0000
+ * build: Wed, 16 Dec 2020 17:02:23 +0000
  */
 (function () {
   'use strict';
@@ -2090,6 +2090,104 @@
 
       return tokens;
     } // ----------------------------------------------------------------------
+    // detect if object is ES6 Symbol that work with polyfills
+    // ----------------------------------------------------------------------
+
+
+    function isSymbol(x) {
+      return _typeof_1(x) === 'symbol' || _typeof_1(x) === 'object' && Object.prototype.toString.call(x) === '[object Symbol]';
+    } // ----------------------------------------------------------------------
+    // :: LSymbol constructor
+    // ----------------------------------------------------------------------
+
+
+    function LSymbol(name) {
+      if (typeof this !== 'undefined' && this.constructor !== LSymbol || typeof this === 'undefined') {
+        return new LSymbol(name);
+      }
+
+      if (name instanceof LString) {
+        name = name.valueOf();
+      }
+
+      if (LSymbol.list[name] instanceof LSymbol) {
+        return LSymbol.list[name];
+      }
+
+      if (name === undefined$1) {
+        console.trace();
+      }
+
+      this.__name__ = name;
+
+      if (typeof name === 'string') {
+        LSymbol.list[name] = this;
+      }
+    }
+
+    LSymbol.list = {}; // ----------------------------------------------------------------------
+
+    LSymbol.is = function (symbol, name) {
+      return symbol instanceof LSymbol && (name instanceof LSymbol && symbol.__name__ === name.__name__ || typeof name === 'string' && symbol.__name__ === name || name instanceof RegExp && name.test(symbol.__name__));
+    }; // ----------------------------------------------------------------------
+
+
+    LSymbol.prototype.toJSON = LSymbol.prototype.toString = function () {
+      //return '#<symbol \'' + this.name + '\'>';
+      if (isSymbol(this.__name__)) {
+        return symbol_to_string(this.__name__);
+      }
+
+      return this.valueOf();
+    };
+
+    LSymbol.prototype.valueOf = function () {
+      return this.__name__.valueOf();
+    }; // -------------------------------------------------------------------------
+
+
+    LSymbol.prototype.is_gensym = function () {
+      return is_gensym(this.__name__);
+    }; // -------------------------------------------------------------------------
+
+
+    function symbol_to_string(obj) {
+      return obj.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
+    } // -------------------------------------------------------------------------
+
+
+    function is_gensym(symbol) {
+      if (_typeof_1(symbol) === 'symbol') {
+        return !!symbol.toString().match(/^Symbol\(#:/);
+      }
+
+      return false;
+    } // -------------------------------------------------------------------------
+
+
+    var gensym = function () {
+      var count = 0;
+      return function () {
+        var name = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
+
+        if (name instanceof LSymbol) {
+          name = name.valueOf();
+        }
+
+        if (is_gensym(name)) {
+          // don't do double gynsyms in nested syntax-rules
+          return LSymbol(name);
+        } // use ES6 symbol as name for lips symbol (they are unique)
+
+
+        if (name !== null) {
+          return new LSymbol(Symbol("#:".concat(name)));
+        }
+
+        count++;
+        return new LSymbol(Symbol("#:g".concat(count)));
+      };
+    }(); // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
 
@@ -3309,91 +3407,6 @@
 
       return result;
     } // ----------------------------------------------------------------------
-    // detect if object is ES6 Symbol that work with polyfills
-    // ----------------------------------------------------------------------
-
-
-    function isSymbol(x) {
-      return _typeof_1(x) === 'symbol' || _typeof_1(x) === 'object' && Object.prototype.toString.call(x) === '[object Symbol]';
-    } // ----------------------------------------------------------------------
-    // :: LSymbol constructor
-    // ----------------------------------------------------------------------
-
-
-    function LSymbol(name) {
-      if (typeof this !== 'undefined' && this.constructor !== LSymbol || typeof this === 'undefined') {
-        return new LSymbol(name);
-      }
-
-      if (name === undefined$1) {
-        console.trace();
-      }
-
-      this.__name__ = name;
-    } // ----------------------------------------------------------------------
-
-
-    LSymbol.is = function (symbol, name) {
-      return symbol instanceof LSymbol && (name instanceof LSymbol && symbol.__name__ === name.__name__ || typeof name === 'string' && symbol.__name__ === name || name instanceof RegExp && name.test(symbol.__name__));
-    }; // ----------------------------------------------------------------------
-
-
-    LSymbol.prototype.toJSON = LSymbol.prototype.toString = function () {
-      //return '#<symbol \'' + this.name + '\'>';
-      if (isSymbol(this.__name__)) {
-        return symbol_to_string(this.__name__);
-      }
-
-      return this.valueOf();
-    };
-
-    LSymbol.prototype.valueOf = function () {
-      return this.__name__.valueOf();
-    }; // -------------------------------------------------------------------------
-
-
-    LSymbol.prototype.is_gensym = function () {
-      return is_gensym(this.__name__);
-    }; // -------------------------------------------------------------------------
-
-
-    function symbol_to_string(obj) {
-      return obj.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
-    } // -------------------------------------------------------------------------
-
-
-    function is_gensym(symbol) {
-      if (_typeof_1(symbol) === 'symbol') {
-        return !!symbol.toString().match(/^Symbol\(#:/);
-      }
-
-      return false;
-    } // -------------------------------------------------------------------------
-
-
-    var gensym = function () {
-      var count = 0;
-      return function () {
-        var name = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
-
-        if (name instanceof LSymbol) {
-          name = name.valueOf();
-        }
-
-        if (is_gensym(name)) {
-          // don't do double gynsyms in nested syntax-rules
-          return LSymbol(name);
-        } // use ES6 symbol as name for lips symbol (they are unique)
-
-
-        if (name !== null) {
-          return new LSymbol(Symbol("#:".concat(name)));
-        }
-
-        count++;
-        return new LSymbol(Symbol("#:g".concat(count)));
-      };
-    }(); // ----------------------------------------------------------------------
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
 
@@ -4371,8 +4384,6 @@
         return x.__type__ === y.__type__ && x.cmp(y) === 0;
       } else if (x instanceof LCharacter && y instanceof LCharacter) {
         return x.__char__ === y.__char__;
-      } else if (x instanceof LSymbol && y instanceof LSymbol) {
-        return x.__name__ === y.__name__;
       } else {
         return x === y;
       }
@@ -10203,6 +10214,10 @@
           return unbox(x);
         })));
 
+        if (instance instanceof LSymbol && instance.__instance__) {
+          return instance;
+        }
+
         Object.defineProperty(instance, '__instance__', {
           enumerable: false,
           get: function get() {
@@ -12045,10 +12060,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 15 Dec 2020 12:33:49 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 16 Dec 2020 17:02:23 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 15 Dec 2020 12:33:49 +0000').valueOf();
+      var date = LString('Wed, 16 Dec 2020 17:02:23 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12085,7 +12100,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 15 Dec 2020 12:33:49 +0000',
+      date: 'Wed, 16 Dec 2020 17:02:23 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
