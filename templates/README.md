@@ -133,7 +133,7 @@ You can call this Scheme code:
     (load "./lib/R7RS.scm" e))
 ```
 
-you need to use path to lib files, you can host them yourself or use CDN.
+if you need to use path to lib files, you can host them yourself or use CDN.
 
 ```
 (let ((e lips.env.__parent__)
