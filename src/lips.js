@@ -6223,7 +6223,15 @@
                 var name = code.car;
                 var i = 0;
                 var value;
-                if (typeof this !== 'undefined') {
+                if (!(this instanceof Environment)) {
+                    if (this && !this.__instance__) {
+                        Object.defineProperty(this, '__instance__', {
+                            enumerable: false,
+                            get: () => true,
+                            set: () => {},
+                            configurable: false
+                        });
+                    }
                     env.set('this', this);
                 }
                 // arguments and arguments.callee inside lambda function
@@ -6964,15 +6972,6 @@
         // ------------------------------------------------------------------
         'new': doc('new', function(obj, ...args) {
             var instance = new (unbind(obj))(...args.map(x => unbox(x)));
-            if (instance instanceof LSymbol && instance.__instance__) {
-                return instance;
-            }
-            Object.defineProperty(instance, '__instance__', {
-                enumerable: false,
-                get: () => true,
-                set: () => {},
-                configurable: false
-            });
             return instance;
         }, `(new obj . args)
 
