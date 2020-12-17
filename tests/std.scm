@@ -149,3 +149,24 @@
                 (alphabetic lower-case)
                 (numeric)
                 ()))))
+
+(test "std: context in class instance"
+      (lambda (t)
+        (let ((result (vector)))
+          (define-class Foo Object
+            (constructor (lambda (self)
+                           (set! self.x 10)))
+            (closure (lambda (self)
+                       (--> result (push (eq? this self)))
+                       (lambda ()
+                         ;; function will not have this like in JavaScript
+                         ;; but get it from closure (parent scope)
+                         ;; like with arrow function in ES6
+                         (--> result (push (eq? this self)))
+                         (--> result (push this.x))
+                         this))))
+          (let* ((x (new Foo))
+                 (closure (x.closure))
+                 (v (closure)))
+            (t.is v.x 10)
+            (t.is result #(true true 10))))))

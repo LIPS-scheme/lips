@@ -6223,7 +6223,7 @@
                 var name = code.car;
                 var i = 0;
                 var value;
-                if (!(this instanceof Environment)) {
+                if (typeof this !== 'undefined' && !(this instanceof Environment)) {
                     if (this && !this.__instance__) {
                         Object.defineProperty(this, '__instance__', {
                             enumerable: false,
