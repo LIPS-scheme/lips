@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 16 Dec 2020 17:02:23 +0000
+ * build: Thu, 17 Dec 2020 10:49:02 +0000
  */
 (function () {
   'use strict';
@@ -2787,7 +2787,7 @@
 
       if (name) {
         fn.__name__ = name;
-      } else if (fn.name && !fn.__lambda__) {
+      } else if (fn.name && !fn[__lambda__]) {
         fn.__name__ = fn.name;
       }
 
@@ -3784,7 +3784,7 @@
 
 
     function lips_function(x) {
-      return typeof x === 'function' && (x.__lambda__ || x.__doc__);
+      return typeof x === 'function' && (x[__lambda__] || x.__doc__);
     } // ----------------------------------------------------------------------
 
 
@@ -3866,13 +3866,13 @@
 
 
     function function_to_string(fn) {
-      if (isNativeFunction(fn)) {
+      if (is_native_function(fn)) {
         return '#<procedure(native)>';
       }
 
       var constructor = fn.prototype && fn.prototype.constructor;
 
-      if (typeof constructor === 'function' && constructor.__lambda__) {
+      if (typeof constructor === 'function' && constructor[__lambda__]) {
         if (fn[__class__] && constructor.hasOwnProperty('__name__')) {
           var name = constructor.__name__;
 
@@ -3899,7 +3899,7 @@
 
       if (has_own_function(fn, 'toString')) {
         return fn.toString();
-      } else if (fn.name && !fn.__lambda__) {
+      } else if (fn.name && !fn[__lambda__]) {
         return "#<procedure:".concat(fn.name, ">");
       } else {
         return '#<procedure>';
@@ -3986,7 +3986,7 @@
 
       if (_typeof_1(obj) === 'object') {
         // user defined representation
-        if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
+        if (typeof obj.toString === 'function' && obj.toString[__lambda__]) {
           return obj.toString().valueOf();
         }
 
@@ -4020,7 +4020,7 @@
           name = constructor.name;
         }
 
-        if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
+        if (type(obj) === 'instance' && !is_native_function(constructor)) {
           name = 'instance';
         }
 
@@ -5730,7 +5730,7 @@
     } // ----------------------------------------------------------------------
 
 
-    function patchValue(value, context) {
+    function patch_value(value, context) {
       if (value instanceof Pair) {
         value.markCycles();
         return quote(value);
@@ -5779,8 +5779,12 @@
       hidden_prop(bound, '__context__', context);
       hidden_prop(bound, '__bound__', true);
 
-      if (isNativeFunction(fn)) {
+      if (is_native_function(fn)) {
         hidden_prop(bound, '__native__', true);
+      }
+
+      if (is_plain_object(context) && fn[__lambda__]) {
+        hidden_prop(bound, '__method__', true);
       }
 
       bound.valueOf = function () {
@@ -5835,6 +5839,8 @@
 
       return false;
     } // ----------------------------------------------------------------------
+    // hidden props
+    // ----------------------------------------------------------------------
 
 
     var __context__ = Symbol["for"]('__context__');
@@ -5847,7 +5853,13 @@
 
     var __cycles__ = Symbol["for"]('__cycles__');
 
-    var __class__ = Symbol["for"]("__class__"); // ----------------------------------------------------------------------
+    var __class__ = Symbol["for"]('__class__');
+
+    var __method__ = Symbol["for"]('__method__');
+
+    var __prototype__ = Symbol["for"]('__prototype__');
+
+    var __lambda__ = Symbol["for"]('__lambda__'); // ----------------------------------------------------------------------
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
     // ----------------------------------------------------------------------
@@ -5892,7 +5904,7 @@
     } // ----------------------------------------------------------------------
 
 
-    function isNativeFunction(fn) {
+    function is_native_function(fn) {
       var _native = Symbol["for"]('__native__');
 
       return typeof fn === 'function' && fn.toString().match(/\{\s*\[native code\]\s*\}/) && (fn.name.match(/^bound /) && fn[_native] === true || !fn.name.match(/^bound /) && !fn[_native]);
@@ -6254,7 +6266,7 @@
             context = object;
           }
 
-          value = patchValue(value, context);
+          value = patch_value(value, context);
         }
 
         object = value;
@@ -8285,7 +8297,7 @@
           return undefined$1;
         }
 
-        return patchValue(value.valueOf());
+        return patch_value(value.valueOf());
       }
 
       if (typeof name === 'string') {
@@ -8315,7 +8327,7 @@
               // property access e.g. %as.data
             }
           } else if (value instanceof Value) {
-            return patchValue(value.valueOf());
+            return patch_value(value.valueOf());
           }
         }
 
@@ -9264,7 +9276,7 @@
             env = env.__parent__;
           }
 
-          if (new_expr && (typeof value === 'function' && value.__lambda__ || value instanceof Syntax)) {
+          if (new_expr && (typeof value === 'function' && value[__lambda__] || value instanceof Syntax)) {
             value.__name__ = code.car.valueOf();
 
             if (value.__name__ instanceof LString) {
@@ -9297,7 +9309,7 @@
           delete obj[key];
         } else if (is_prototype(obj) && typeof value === 'function') {
           obj[key] = unbind(value);
-          obj[key].__prototype__ = true;
+          obj[key][__prototype__] = true;
         } else if (typeof value === 'function' || is_native(value) || value === nil) {
           obj[key] = value;
         } else {
@@ -9472,7 +9484,7 @@
 
         var length = code.car instanceof Pair ? code.car.length() : null;
         lambda.__code__ = new Pair(new LSymbol('lambda'), code);
-        lambda.__lambda__ = true;
+        lambda[__lambda__] = true;
 
         if (!(code.car instanceof Pair)) {
           return doc(lambda, __doc__, true); // variable arguments
@@ -11076,7 +11088,7 @@
           value = nodeRequire(module);
         }
 
-        return patchValue(value, global);
+        return patch_value(value, global);
       }, "(require module)\n\n            Function to be used inside Node.js to import the module.")); // ---------------------------------------------------------------------
     } else if (typeof window !== 'undefined' && window === root) {
       global_env.set('window', window);
@@ -11360,7 +11372,7 @@
 
           if (dynamic_scope) {
             arg = unpromise(arg, function (arg) {
-              if (typeof arg === 'function' && isNativeFunction(arg)) {
+              if (typeof arg === 'function' && is_native_function(arg)) {
                 return arg.bind(dynamic_scope);
               }
 
@@ -11436,7 +11448,7 @@
           args = args.map(unbox);
         }
 
-        if (fn.__lambda__ && !fn.__prototype__ || is_port(fn)) {
+        if (fn[__lambda__] && !fn[__prototype__] && !fn[__method__] || is_port(fn)) {
           // lambda need environment as context
           // normal functions are bound to their contexts
           fn = unbind(fn);
@@ -12060,10 +12072,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 16 Dec 2020 17:02:23 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 17 Dec 2020 10:49:02 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 16 Dec 2020 17:02:23 +0000').valueOf();
+      var date = LString('Thu, 17 Dec 2020 10:49:02 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12100,7 +12112,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 16 Dec 2020 17:02:23 +0000',
+      date: 'Thu, 17 Dec 2020 10:49:02 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

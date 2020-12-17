@@ -190,3 +190,18 @@
             (let ((end (Date.now)))
               (t.is (>= (- end start) (* (+ count 1) time)) true))
             (t.is result (--> #(0) (concat (list->vector numbers) (vector (+ count 1))))))))
+
+(test "core: access this in method"
+      (lambda (t)
+        (let* ((x (object :foo (lambda () this.bar) :bar 10)))
+          (t.is (x.foo) 10))))
+
+(test "core: access env in called function inside method"
+      (lambda (t)
+        (let* ((result (vector))
+               (x (object :foo (lambda ()
+                                 (for-each (lambda (x)
+                                             (--> result (push x)))
+                                           '(1 2 3))))))
+          (x.foo)
+          (t.is result #(1 2 3)))))

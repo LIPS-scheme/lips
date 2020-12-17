@@ -1120,7 +1120,7 @@
         }
         if (name) {
             fn.__name__ = name;
-        } else if (fn.name && !fn.__lambda__) {
+        } else if (fn.name && !fn[__lambda__]) {
             fn.__name__ = fn.name;
         }
         return fn;
@@ -1932,7 +1932,7 @@
     }
     // ----------------------------------------------------------------------
     function lips_function(x) {
-        return typeof x === 'function' && (x.__lambda__ || x.__doc__);
+        return typeof x === 'function' && (x[__lambda__] || x.__doc__);
     }
     // ----------------------------------------------------------------------
     function user_repr(obj) {
@@ -2005,11 +2005,11 @@
     }
     // ----------------------------------------------------------------------
     function function_to_string(fn) {
-        if (isNativeFunction(fn)) {
+        if (is_native_function(fn)) {
             return '#<procedure(native)>';
         }
         const constructor = fn.prototype && fn.prototype.constructor;
-        if (typeof constructor === 'function' && constructor.__lambda__) {
+        if (typeof constructor === 'function' && constructor[__lambda__]) {
             if (fn[__class__] && constructor.hasOwnProperty('__name__')) {
                 let name = constructor.__name__;
                 if (LString.isString(name)) {
@@ -2030,7 +2030,7 @@
         }
         if (has_own_function(fn, 'toString')) {
             return fn.toString();
-        } else if (fn.name && !fn.__lambda__) {
+        } else if (fn.name && !fn[__lambda__]) {
             return `#<procedure:${fn.name}>`;
         } else {
             return '#<procedure>';
@@ -2092,7 +2092,7 @@
         }
         if (typeof obj === 'object') {
             // user defined representation
-            if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
+            if (typeof obj.toString === 'function' && obj.toString[__lambda__]) {
                 return obj.toString().valueOf();
             }
             var constructor = obj.constructor;
@@ -2118,7 +2118,7 @@
                 }
                 name = constructor.name;
             }
-            if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
+            if (type(obj) === 'instance' && !is_native_function(constructor)) {
                 name = 'instance';
             }
             if (root.HTMLElement && obj instanceof root.HTMLElement) {
@@ -3409,7 +3409,7 @@
         return object;
     }
     // ----------------------------------------------------------------------
-    function patchValue(value, context) {
+    function patch_value(value, context) {
         if (value instanceof Pair) {
             value.markCycles();
             return quote(value);
@@ -3452,8 +3452,11 @@
         hidden_prop(bound, '__fn__', fn);
         hidden_prop(bound, '__context__', context);
         hidden_prop(bound, '__bound__', true);
-        if (isNativeFunction(fn)) {
+        if (is_native_function(fn)) {
             hidden_prop(bound, '__native__', true);
+        }
+        if (is_plain_object(context) && fn[__lambda__]) {
+            hidden_prop(bound, '__method__', true);
         }
         bound.valueOf = function() {
             return fn;
@@ -3500,12 +3503,17 @@
         return false;
     }
     // ----------------------------------------------------------------------
+    // hidden props
+    // ----------------------------------------------------------------------
     var __context__ = Symbol.for('__context__');
     var __fn__ = Symbol.for('__fn__');
     var __data__ = Symbol.for('__data__');
     var __ref__ = Symbol.for('__ref__');
     var __cycles__ = Symbol.for('__cycles__');
-    var __class__ = Symbol.for("__class__");
+    var __class__ = Symbol.for('__class__');
+    var __method__ = Symbol.for('__method__');
+    var __prototype__ = Symbol.for('__prototype__');
+    var __lambda__ = Symbol.for('__lambda__');
     // ----------------------------------------------------------------------
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
@@ -3543,7 +3551,7 @@
         }
     }
     // ----------------------------------------------------------------------
-    function isNativeFunction(fn) {
+    function is_native_function(fn) {
         var native = Symbol.for('__native__');
         return typeof fn === 'function' &&
             fn.toString().match(/\{\s*\[native code\]\s*\}/) &&
@@ -3801,7 +3809,7 @@
                 if (args.length - 1 < len) {
                     context = object;
                 }
-                value = patchValue(value, context);
+                value = patch_value(value, context);
             }
             object = value;
         }
@@ -5312,7 +5320,7 @@
             if (Value.isUndefined(value)) {
                 return undefined;
             }
-            return patchValue(value.valueOf());
+            return patch_value(value.valueOf());
         }
         if (typeof name === 'string') {
             var parts = name.split('.').filter(Boolean);
@@ -5335,7 +5343,7 @@
                         // property access e.g. %as.data
                     }
                 } else if (value instanceof Value) {
-                    return patchValue(value.valueOf());
+                    return patch_value(value.valueOf());
                 }
             }
             value = get(root, name);
@@ -6072,7 +6080,7 @@
                     env = env.__parent__;
                 }
                 if (new_expr &&
-                    ((typeof value === 'function' && value.__lambda__) ||
+                    ((typeof value === 'function' && value[__lambda__]) ||
                      (value instanceof Syntax))) {
                     value.__name__ = code.car.valueOf();
                     if (value.__name__ instanceof LString) {
@@ -6106,7 +6114,7 @@
                 delete obj[key];
             } else if (is_prototype(obj) && typeof value === 'function') {
                 obj[key] = unbind(value);
-                obj[key].__prototype__ = true;
+                obj[key][__prototype__] = true;
             } else if (typeof value === 'function' || is_native(value) || value === nil) {
                 obj[key] = value;
             } else {
@@ -6259,7 +6267,7 @@
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
             lambda.__code__ = new Pair(new LSymbol('lambda'), code);
-            lambda.__lambda__ = true;
+            lambda[__lambda__] = true;
             if (!(code.car instanceof Pair)) {
                 return doc(lambda, __doc__, true); // variable arguments
             }
@@ -7876,7 +7884,7 @@
             } catch (e) {
                 value = nodeRequire(module);
             }
-            return patchValue(value, global);
+            return patch_value(value, global);
         }, `(require module)
 
             Function to be used inside Node.js to import the module.`));
@@ -8057,7 +8065,7 @@
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
                 if (dynamic_scope) {
                     arg = unpromise(arg, arg => {
-                        if (typeof arg === 'function' && isNativeFunction(arg)) {
+                        if (typeof arg === 'function' && is_native_function(arg)) {
                             return arg.bind(dynamic_scope);
                         }
                         return arg;
@@ -8112,7 +8120,7 @@
                 (!lips_context(fn) || is_port(fn))) {
                 args = args.map(unbox);
             }
-            if (fn.__lambda__ && !fn.__prototype__ || is_port(fn)) {
+            if (fn[__lambda__] && !fn[__prototype__] && !fn[__method__] || is_port(fn)) {
                 // lambda need environment as context
                 // normal functions are bound to their contexts
                 fn = unbind(fn);

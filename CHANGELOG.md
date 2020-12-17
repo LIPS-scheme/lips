@@ -4,6 +4,7 @@
 * interning symbols mechanism [#106](https://github.com/jcubic/lips/issues/106)
 ### Bugfix
 * fix resolving promises on vectors and objects
+* fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)
 
 ## 1.0.0-beta.10
 ### Breaking
