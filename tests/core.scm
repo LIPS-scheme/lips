@@ -205,3 +205,13 @@
                                            '(1 2 3))))))
           (x.foo)
           (t.is result #(1 2 3)))))
+
+(test "core: access this in closure returned from method"
+      (lambda (t)
+        (let* ((x (object :foo (lambda ()
+                         (lambda (x)
+                           (+ x this.bar)))
+                          :bar 1))
+               (fn (x.foo)))
+          (t.is (fn 2) 3))))
+
