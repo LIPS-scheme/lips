@@ -215,3 +215,17 @@
                (fn (x.foo)))
           (t.is (fn 2) 3))))
 
+
+
+(test "core: quoted promise"
+      (lambda (t)
+        (let ((result (vector))
+              (p '>(new Promise (lambda (resolve)
+                                  (setTimeout (lambda ()
+                                                (resolve 10))
+                                              100)))))
+          (p.then (lambda (x)
+                    (result.push x)))
+          (t.is result #())
+          (await p)
+          (t.is result #(10)))))
