@@ -233,16 +233,28 @@ chmod a+x foo.scm
 
 Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
-## Credits
-* Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod)
-
 ## Links
 * [Gitter Chat](https://gitter.im/jcubic/lips)
 * [Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 
-## Alternatives
-* [BiwaScheme](https://github.com/biwascheme/biwascheme)
+## Acknowledgments
+* Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
+* Current parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
+* `fetch` polyfill use [unfetch](https://github.com/developit/unfetch) by Jason Miller.
+* Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
+* The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley
+* [Rosetta Code](https://rosettacode.org/) is used for:
+  * [gdc](https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript),
+  * [lcm](https://rosettacode.org/wiki/Least_common_multiple#JavaScript),
+  * [LFloat::toRational](https://rosettacode.org/wiki/Convert_decimal_number_to_rational).
+* [StackOverlow](https://stackoverflow.com) code was used for functions:
+  * [fworker](https://stackoverflow.com/a/10372280/387194),
+  * [flatten](https://stackoverflow.com/a/27282907/387194),
+  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
+* Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
+
+
 
 ## License
 

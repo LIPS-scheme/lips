@@ -2,8 +2,8 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.10-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&86792ae94aa92faff11981e5dc81c6c51d473312)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&d1bc174a6336e07104d3a21bc784eeae)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&f321f969f2e68a1b27d926d0b39374662f943429)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&b39d76d39366242afae4b854e33859dd)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/jcubic/lips.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/jcubic/lips/stargazers/)
@@ -233,16 +233,28 @@ chmod a+x foo.scm
 
 Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
-## Credits
-* Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod)
-
 ## Links
 * [Gitter Chat](https://gitter.im/jcubic/lips)
 * [Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 
-## Alternatives
-* [BiwaScheme](https://github.com/biwascheme/biwascheme)
+## Acknowledgments
+* Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
+* Current parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
+* `fetch` polyfill use [unfetch](https://github.com/developit/unfetch) by Jason Miller.
+* Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
+* The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley
+* [Rosetta Code](https://rosettacode.org/) is used for:
+  * [gdc](https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript),
+  * [lcm](https://rosettacode.org/wiki/Least_common_multiple#JavaScript),
+  * [LFloat::toRational](https://rosettacode.org/wiki/Convert_decimal_number_to_rational).
+* [StackOverlow](https://stackoverflow.com) code was used for functions:
+  * [fworker](https://stackoverflow.com/a/10372280/387194),
+  * [flatten](https://stackoverflow.com/a/27282907/387194),
+  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
+* Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
+
+
 
 ## License
 
