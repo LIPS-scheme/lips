@@ -824,6 +824,9 @@
     // class used to escape promises feature #54
     // ----------------------------------------------------------------------
     function QuotedPromise(promise) {
+        // prevent exception on unhandled rejecting when using
+        // '>(Promise.reject (new Error "zonk")) in REPL
+        promise.catch(() => {});
         this._promise = promise;
     }
     // ----------------------------------------------------------------------

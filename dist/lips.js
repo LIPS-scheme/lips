@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 19 Dec 2020 12:04:10 +0000
+ * build: Sat, 19 Dec 2020 13:00:37 +0000
  */
 (function () {
   'use strict';
@@ -2193,6 +2193,9 @@
 
 
     function QuotedPromise(promise) {
+      // prevent exception on unhandled rejecting when using
+      // '>(Promise.reject (new Error "zonk")) in REPL
+      promise["catch"](function () {});
       this._promise = promise;
     } // ----------------------------------------------------------------------
 
@@ -12129,10 +12132,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 19 Dec 2020 12:04:10 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 19 Dec 2020 13:00:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 19 Dec 2020 12:04:10 +0000').valueOf();
+      var date = LString('Sat, 19 Dec 2020 13:00:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12169,7 +12172,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 19 Dec 2020 12:04:10 +0000',
+      date: 'Sat, 19 Dec 2020 13:00:37 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
