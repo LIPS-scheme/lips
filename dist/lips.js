@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 19 Dec 2020 13:00:37 +0000
+ * build: Sat, 19 Dec 2020 15:58:20 +0000
  */
 (function () {
   'use strict';
@@ -2263,7 +2263,7 @@
       specials.append(seq, symbol, type);
     }); // ----------------------------------------------------------------------
     // :: Parser inspired by BiwaScheme
-    // :: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
+    // :: ref: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
     // ----------------------------------------------------------------------
 
     var Parser = /*#__PURE__*/function () {
@@ -3403,7 +3403,7 @@
       }).join('');
     }; // ----------------------------------------------------------------------
     // :: flatten nested arrays
-    // :: source: https://stackoverflow.com/a/27282907/387194
+    // :: ref: https://stackoverflow.com/a/27282907/387194
     // ----------------------------------------------------------------------
 
 
@@ -6967,7 +6967,7 @@
 
       return approxRatio(n.valueOf())(this.value.valueOf());
     }; // -------------------------------------------------------------------------
-    // based on https://rosettacode.org/wiki/Convert_decimal_number_to_rational
+    // ref: https://rosettacode.org/wiki/Convert_decimal_number_to_rational
     // -------------------------------------------------------------------------
 
 
@@ -10713,8 +10713,7 @@
       }, "(gcd n1 n2 ...)\n\n            Function return the greatest common divisor of their arguments."),
       // ------------------------------------------------------------------
       'lcm': doc(function lcm() {
-        // implementation based on
-        // https://rosettacode.org/wiki/Least_common_multiple#JavaScript
+        // ref: https://rosettacode.org/wiki/Least_common_multiple#JavaScript
         var n = arguments.length,
             a = abs(arguments.length <= 0 ? undefined$1 : arguments[0]);
 
@@ -10994,7 +10993,7 @@
         }, "(".concat(name, " number)\n\n                Function calculate ").concat(name, " of a number.")));
       });
     })(); // -------------------------------------------------------------------------
-    // source: https://stackoverflow.com/a/4331218/387194
+    // ref: https://stackoverflow.com/a/4331218/387194
 
 
     function allPossibleCases(arr) {
@@ -12132,10 +12131,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 19 Dec 2020 13:00:37 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 19 Dec 2020 15:58:20 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 19 Dec 2020 13:00:37 +0000').valueOf();
+      var date = LString('Sat, 19 Dec 2020 15:58:20 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12172,7 +12171,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 19 Dec 2020 13:00:37 +0000',
+      date: 'Sat, 19 Dec 2020 15:58:20 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

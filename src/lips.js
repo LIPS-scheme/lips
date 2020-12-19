@@ -888,7 +888,7 @@
     });
     // ----------------------------------------------------------------------
     // :: Parser inspired by BiwaScheme
-    // :: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
+    // :: ref: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
     // ----------------------------------------------------------------------
     class Parser {
         constructor(arg, env) {
@@ -1612,7 +1612,7 @@
     };
     // ----------------------------------------------------------------------
     // :: flatten nested arrays
-    // :: source: https://stackoverflow.com/a/27282907/387194
+    // :: ref: https://stackoverflow.com/a/27282907/387194
     // ----------------------------------------------------------------------
     function flatten(array, mutable) {
         var toString = Object.prototype.toString;
@@ -4336,7 +4336,7 @@
         return approxRatio(n.valueOf())(this.value.valueOf());
     };
     // -------------------------------------------------------------------------
-    // based on https://rosettacode.org/wiki/Convert_decimal_number_to_rational
+    // ref: https://rosettacode.org/wiki/Convert_decimal_number_to_rational
     // -------------------------------------------------------------------------
     var toRational = approxRatio(1e-10);
     function approxRatio(eps) {
@@ -7514,8 +7514,7 @@
             Function return the greatest common divisor of their arguments.`),
         // ------------------------------------------------------------------
         'lcm': doc(function lcm(...args) {
-            // implementation based on
-            // https://rosettacode.org/wiki/Least_common_multiple#JavaScript
+            // ref: https://rosettacode.org/wiki/Least_common_multiple#JavaScript
             var n = args.length, a = abs(args[0]);
             for (var i = 1; i < n; i++) {
                 var b = abs(args[i]), c = a;
@@ -7797,7 +7796,7 @@
         });
     })();
     // -------------------------------------------------------------------------
-    // source: https://stackoverflow.com/a/4331218/387194
+    // ref: https://stackoverflow.com/a/4331218/387194
     function allPossibleCases(arr) {
         if (arr.length === 1) {
             return arr[0];
