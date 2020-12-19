@@ -122,3 +122,13 @@
           `#(1 2 3))
 
         (t.is (eq? (v) (v)) true)))
+
+
+(test "parser: escaping in strings"
+      (lambda (t)
+        ;; testing #48 - when writing code with string in Scheme
+        ;; we need to double escape to get slash
+        (define code (lips.parse "(--> \"<title>hello-world<\\/title>\"
+                                       (match /<title>([^<]+)<\\/title>/)
+                                       1)"))
+        (t.is (eval (. code 0)) "hello-world")))
