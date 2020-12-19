@@ -821,6 +821,24 @@
         };
     })();
     // ----------------------------------------------------------------------
+    // class used to escape promises feature #54
+    // ----------------------------------------------------------------------
+    function QuotedPromise(promise) {
+        this._promise = promise;
+    }
+    // ----------------------------------------------------------------------
+    QuotedPromise.prototype.then = function(fn) {
+        return new QuotedPromise(this._promise.then(fn));
+    };
+    // ----------------------------------------------------------------------
+    QuotedPromise.prototype.catch = function(fn) {
+        return new QuotedPromise(this._promise.catch(fn));
+    };
+    // ----------------------------------------------------------------------
+    QuotedPromise.prototype.valueOf = function() {
+        return this._promise;
+    };
+    // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
     var specials = {
@@ -855,7 +873,8 @@
         ["'", new LSymbol('quote'), specials.LITERAL],
         ['`', new LSymbol('quasiquote'), specials.LITERAL],
         [',@', new LSymbol('unquote-splicing'), specials.LITERAL],
-        [',', new LSymbol('unquote'), specials.LITERAL]
+        [',', new LSymbol('unquote'), specials.LITERAL],
+        ["'>", new LSymbol('quote-promise'), specials.LITERAL]
     ];
     Object.defineProperty(specials, 'builtin', {
         writable: false,
@@ -3360,8 +3379,13 @@
     }
     // ----------------------------------------------------------------------
     function is_promise(o) {
-        return o instanceof Promise ||
-            (o && typeof o !== 'undefined' && typeof o.then === 'function');
+        if (o instanceof QuotedPromise) {
+            return false;
+        }
+        if (o instanceof Promise) {
+            return true;
+        }
+        return o && typeof o !== 'undefined' && typeof o.then === 'function';
     }
     // ----------------------------------------------------------------------
     // :: Function utilities
@@ -5704,7 +5728,7 @@
             var env = this;
             var ref;
             var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
-            value = resolvePromises(value);
+            value = resolve_promises(value);
             function set(object, key, value) {
                 if (is_promise(object)) {
                     return object.then(key => set(object, key, value));
@@ -8014,7 +8038,7 @@
     // :; wrap tree of Promises with single Promise or return argument as is
     // :: if tree have no Promises
     // -------------------------------------------------------------------------
-    function resolvePromises(arg) {
+    function resolve_promises(arg) {
         var promises = [];
         traverse(arg);
         if (promises.length) {
@@ -8055,6 +8079,7 @@
             return node;
         }
     }
+    // -------------------------------------------------------------------------
     function evaluate_args(rest, { env, dynamic_scope, error }) {
         var args = [];
         var node = rest;
@@ -8081,12 +8106,12 @@
                 throw new Error('Syntax Error: improper list found in apply');
             }
         }
-        return resolvePromises(args);
+        return resolve_promises(args);
     }
     // -------------------------------------------------------------------------
-    function evaluateSyntax(macro, code, eval_args) {
+    function evaluate_syntax(macro, code, eval_args) {
         var value = macro.invoke(code, eval_args);
-        return unpromise(resolvePromises(value), function(value) {
+        return unpromise(resolve_promises(value), function(value) {
             if (value instanceof Pair) {
                 value.markCycles();
             }
@@ -8094,7 +8119,7 @@
         });
     }
     // -------------------------------------------------------------------------
-    function evaluateMacro(macro, code, eval_args) {
+    function evaluate_macro(macro, code, eval_args) {
         function finalize(result) {
             if (result instanceof Pair) {
                 result.markCycles();
@@ -8103,7 +8128,7 @@
             return quote(result);
         }
         var value = macro.invoke(code, eval_args);
-        return unpromise(resolvePromises(value), function ret(value) {
+        return unpromise(resolve_promises(value), function ret(value) {
             if (value && value[__data__] || !value || self_evaluated(value)) {
                 return value;
             } else {
@@ -8145,7 +8170,7 @@
             }
             var _args = args.slice();
             var scope = (dynamic_scope || env).newFrame(fn, _args);
-            var result = resolvePromises(fn.apply(scope, args));
+            var result = resolve_promises(fn.apply(scope, args));
             return unpromise(result, (result) => {
                 if (result instanceof Pair) {
                     result.markCycles();
@@ -8188,7 +8213,7 @@
             var first = code.car;
             var rest = code.cdr;
             if (first instanceof Pair) {
-                value = resolvePromises(evaluate(first, eval_args));
+                value = resolve_promises(evaluate(first, eval_args));
                 if (is_promise(value)) {
                     return value.then((value) => {
                         return evaluate(new Pair(value, code.cdr), eval_args);
@@ -8206,12 +8231,13 @@
             } else if (typeof first === 'function') {
                 value = first;
             }
+            var result;
             if (value instanceof Syntax) {
-                return evaluateSyntax(value, code, eval_args);
+                result = evaluate_syntax(value, code, eval_args);
             } else if (value instanceof Macro) {
-                return evaluateMacro(value, rest, eval_args);
+                result = evaluate_macro(value, rest, eval_args);
             } else if (typeof value === 'function') {
-                return apply(value, rest, eval_args);
+                result = apply(value, rest, eval_args);
             } else if (code instanceof Pair) {
                 value = first && first.toString();
                 throw new Error(`${type(first)} ${value} is not a function`);
@@ -8224,6 +8250,12 @@
             } else {
                 return code;
             }
+            // escape promise feature #54
+            var __promise__ = env.get(Symbol.for('__promise__'), { throwError: false });
+            if (__promise__ === true && is_promise(result)) {
+                return new QuotedPromise(result);
+            }
+            return result;
         } catch (e) {
             error && error.call(env, e, code);
         }
@@ -8239,7 +8271,7 @@
         }
         var results = [];
         for await (let code of parse(string)) {
-            var result = await evaluate(code, {
+            const value = evaluate(code, {
                 env,
                 dynamic_scope,
                 error: (e, code) => {
@@ -8253,7 +8285,11 @@
                     throw e;
                 }
             });
-            results.push(result);
+            if (!is_promise(value)) {
+                results.push(value);
+            } else {
+                results.push(await value);
+            }
         }
         return results;
     }
@@ -8593,6 +8629,7 @@ You can also use (help name) to display help for specic function or macro.
         Syntax,
         Pair,
         Values,
+        QuotedPromise,
 
         quote,
 

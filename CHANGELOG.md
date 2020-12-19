@@ -2,6 +2,8 @@
 ### Features
 * add support for quasiquote on objects and vectors
 * interning symbols mechanism [#106](https://github.com/jcubic/lips/issues/106)
+* new macro `quoted-promise` and syntax `'>` [#54](https://github.com/jcubic/lips/issues/54)
+* new function await that return original promise from QuotedPromise
 ### Bugfix
 * fix resolving promises on vectors and objects
 * fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)

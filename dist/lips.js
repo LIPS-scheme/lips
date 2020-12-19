@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 17 Dec 2020 12:05:00 +0000
+ * build: Sat, 19 Dec 2020 12:04:10 +0000
  */
 (function () {
   'use strict';
@@ -2188,6 +2188,28 @@
         return new LSymbol(Symbol("#:g".concat(count)));
       };
     }(); // ----------------------------------------------------------------------
+    // class used to escape promises feature #54
+    // ----------------------------------------------------------------------
+
+
+    function QuotedPromise(promise) {
+      this._promise = promise;
+    } // ----------------------------------------------------------------------
+
+
+    QuotedPromise.prototype.then = function (fn) {
+      return new QuotedPromise(this._promise.then(fn));
+    }; // ----------------------------------------------------------------------
+
+
+    QuotedPromise.prototype["catch"] = function (fn) {
+      return new QuotedPromise(this._promise["catch"](fn));
+    }; // ----------------------------------------------------------------------
+
+
+    QuotedPromise.prototype.valueOf = function () {
+      return this._promise;
+    }; // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
 
@@ -2222,7 +2244,7 @@
     } // ----------------------------------------------------------------------
 
 
-    var defined_specials = [["'", new LSymbol('quote'), specials.LITERAL], ['`', new LSymbol('quasiquote'), specials.LITERAL], [',@', new LSymbol('unquote-splicing'), specials.LITERAL], [',', new LSymbol('unquote'), specials.LITERAL]];
+    var defined_specials = [["'", new LSymbol('quote'), specials.LITERAL], ['`', new LSymbol('quasiquote'), specials.LITERAL], [',@', new LSymbol('unquote-splicing'), specials.LITERAL], [',', new LSymbol('unquote'), specials.LITERAL], ["'>", new LSymbol('quote-promise'), specials.LITERAL]];
     Object.defineProperty(specials, 'builtin', {
       writable: false,
       value: defined_specials.map(function (arr) {
@@ -5668,7 +5690,15 @@
 
 
     function is_promise(o) {
-      return o instanceof Promise || o && typeof o !== 'undefined' && typeof o.then === 'function';
+      if (o instanceof QuotedPromise) {
+        return false;
+      }
+
+      if (o instanceof Promise) {
+        return true;
+      }
+
+      return o && typeof o !== 'undefined' && typeof o.then === 'function';
     } // ----------------------------------------------------------------------
     // :: Function utilities
     // ----------------------------------------------------------------------
@@ -8794,7 +8824,7 @@
           dynamic_scope: dynamic_scope,
           error: error
         });
-        value = resolvePromises(value);
+        value = resolve_promises(value);
 
         function set(object, key, value) {
           if (is_promise(object)) {
@@ -11246,7 +11276,7 @@
     // -------------------------------------------------------------------------
 
 
-    function resolvePromises(arg) {
+    function resolve_promises(arg) {
       var promises = [];
       traverse(arg);
 
@@ -11351,7 +11381,8 @@
 
         return node;
       }
-    }
+    } // -------------------------------------------------------------------------
+
 
     function evaluate_args(rest, _ref31) {
       var env = _ref31.env,
@@ -11393,13 +11424,13 @@
         }
       }
 
-      return resolvePromises(args);
+      return resolve_promises(args);
     } // -------------------------------------------------------------------------
 
 
-    function evaluateSyntax(macro, code, eval_args) {
+    function evaluate_syntax(macro, code, eval_args) {
       var value = macro.invoke(code, eval_args);
-      return unpromise(resolvePromises(value), function (value) {
+      return unpromise(resolve_promises(value), function (value) {
         if (value instanceof Pair) {
           value.markCycles();
         }
@@ -11409,7 +11440,7 @@
     } // -------------------------------------------------------------------------
 
 
-    function evaluateMacro(macro, code, eval_args) {
+    function evaluate_macro(macro, code, eval_args) {
       function finalize(result) {
         if (result instanceof Pair) {
           result.markCycles();
@@ -11420,7 +11451,7 @@
       }
 
       var value = macro.invoke(code, eval_args);
-      return unpromise(resolvePromises(value), function ret(value) {
+      return unpromise(resolve_promises(value), function ret(value) {
         if (value && value[__data__] || !value || self_evaluated(value)) {
           return value;
         } else {
@@ -11479,7 +11510,7 @@
         var _args = args.slice();
 
         var scope = (dynamic_scope || env).newFrame(fn, _args);
-        var result = resolvePromises(fn.apply(scope, args));
+        var result = resolve_promises(fn.apply(scope, args));
         return unpromise(result, function (result) {
           if (result instanceof Pair) {
             result.markCycles();
@@ -11543,7 +11574,7 @@
         var rest = code.cdr;
 
         if (first instanceof Pair) {
-          value = resolvePromises(evaluate(first, eval_args));
+          value = resolve_promises(evaluate(first, eval_args));
 
           if (is_promise(value)) {
             return value.then(function (value) {
@@ -11560,12 +11591,14 @@
           value = first;
         }
 
+        var result;
+
         if (value instanceof Syntax) {
-          return evaluateSyntax(value, code, eval_args);
+          result = evaluate_syntax(value, code, eval_args);
         } else if (value instanceof Macro) {
-          return evaluateMacro(value, rest, eval_args);
+          result = evaluate_macro(value, rest, eval_args);
         } else if (typeof value === 'function') {
-          return apply(value, rest, eval_args);
+          result = apply(value, rest, eval_args);
         } else if (code instanceof Pair) {
           value = first && first.toString();
           throw new Error("".concat(type(first), " ").concat(value, " is not a function"));
@@ -11578,7 +11611,18 @@
           throw new Error("Unknown function `".concat(first.toString(), "'"));
         } else {
           return code;
+        } // escape promise feature #54
+
+
+        var __promise__ = env.get(Symbol["for"]('__promise__'), {
+          throwError: false
+        });
+
+        if (__promise__ === true && is_promise(result)) {
+          return new QuotedPromise(result);
         }
+
+        return result;
       } catch (e) {
         error && error.call(env, e, code);
       }
@@ -11592,7 +11636,7 @@
 
     function _exec() {
       _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(string, env, dynamic_scope) {
-        var results, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, result;
+        var results, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
 
         return regenerator.wrap(function _callee12$(_context12) {
           while (1) {
@@ -11626,13 +11670,12 @@
                 _value3 = _context12.sent;
 
                 if (_iteratorNormalCompletion3) {
-                  _context12.next = 22;
+                  _context12.next = 28;
                   break;
                 }
 
                 code = _value3;
-                _context12.next = 17;
-                return evaluate(code, {
+                value = evaluate(code, {
                   env: env,
                   dynamic_scope: dynamic_scope,
                   error: function error(e, code) {
@@ -11649,62 +11692,77 @@
                   }
                 });
 
-              case 17:
-                result = _context12.sent;
-                results.push(result);
+                if (is_promise(value)) {
+                  _context12.next = 20;
+                  break;
+                }
 
-              case 19:
+                results.push(value);
+                _context12.next = 25;
+                break;
+
+              case 20:
+                _context12.t0 = results;
+                _context12.next = 23;
+                return value;
+
+              case 23:
+                _context12.t1 = _context12.sent;
+
+                _context12.t0.push.call(_context12.t0, _context12.t1);
+
+              case 25:
                 _iteratorNormalCompletion3 = true;
                 _context12.next = 6;
                 break;
 
-              case 22:
-                _context12.next = 28;
+              case 28:
+                _context12.next = 34;
                 break;
 
-              case 24:
-                _context12.prev = 24;
-                _context12.t0 = _context12["catch"](4);
+              case 30:
+                _context12.prev = 30;
+                _context12.t2 = _context12["catch"](4);
                 _didIteratorError3 = true;
-                _iteratorError3 = _context12.t0;
+                _iteratorError3 = _context12.t2;
 
-              case 28:
-                _context12.prev = 28;
-                _context12.prev = 29;
+              case 34:
+                _context12.prev = 34;
+                _context12.prev = 35;
 
                 if (!(!_iteratorNormalCompletion3 && _iterator3["return"] != null)) {
-                  _context12.next = 33;
+                  _context12.next = 39;
                   break;
                 }
 
-                _context12.next = 33;
+                _context12.next = 39;
                 return _iterator3["return"]();
 
-              case 33:
-                _context12.prev = 33;
+              case 39:
+                _context12.prev = 39;
 
                 if (!_didIteratorError3) {
-                  _context12.next = 36;
+                  _context12.next = 42;
                   break;
                 }
 
                 throw _iteratorError3;
 
-              case 36:
-                return _context12.finish(33);
+              case 42:
+                return _context12.finish(39);
 
-              case 37:
-                return _context12.finish(28);
+              case 43:
+                return _context12.finish(34);
 
-              case 38:
+              case 44:
                 return _context12.abrupt("return", results);
 
-              case 39:
+              case 45:
               case "end":
                 return _context12.stop();
             }
           }
-        }, _callee12, null, [[4, 24, 28, 38], [29,, 33, 37]]);
+        }, _callee12, null, [[4, 30, 34, 44], [35,, 39, 43]]);
       }));
       return _exec.apply(this, arguments);
     }
@@ -12071,10 +12129,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 17 Dec 2020 12:05:00 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 19 Dec 2020 12:04:10 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 17 Dec 2020 12:05:00 +0000').valueOf();
+      var date = LString('Sat, 19 Dec 2020 12:04:10 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12111,7 +12169,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 17 Dec 2020 12:05:00 +0000',
+      date: 'Sat, 19 Dec 2020 12:04:10 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
@@ -12129,6 +12187,7 @@
       Syntax: Syntax,
       Pair: Pair,
       Values: Values,
+      QuotedPromise: QuotedPromise,
       quote: quote,
       InputPort: InputPort,
       OutputPort: OutputPort,

@@ -1030,6 +1030,30 @@
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (warn-quote)
+  "(warn-quote)
+
+   Simple macro that throw error, when you try to use ’ symbol as quote in code"
   (throw (new Error (string-append "You're using invalid quote character run: "
                                    "(set-special! \"’\" 'quote)"
                                    " to allow running this type of quote"))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (quote-promise expr)
+  "(quote-promise expr)
+   '>expr
+
+  Macro used to escape promise the whole expression, will be wrapped
+  with JavaScript class that behave like Promise but will not
+  auto resolve like normal promise."
+  `(let ((env))
+      (set! env (current-environment))
+      (env.set (Symbol.for "__promise__") true)
+      ,expr))
+
+;; ---------------------------------------------------------------------------------------
+(define (await value)
+  (if (instanceof lips.QuotedPromise value)
+      (value.valueOf)
+      value))
+
+;; ---------------------------------------------------------------------------------------
