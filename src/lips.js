@@ -1204,12 +1204,28 @@
     // ----------------------------------------------------------------------
     // :: token based pattern matching (used by formatter)
     // ----------------------------------------------------------------------
+    function nested_pattern(pattern) {
+        return pattern instanceof Array ||
+                pattern instanceof Pattern;
+    }
+    // ----------------------------------------------------------------------
     function match(pattern, input) {
         return inner_match(pattern, input) === input.length;
         function inner_match(pattern, input) {
             function empty_match() {
-                return p > 0 && i > 0 && pattern[p - 1] === input[i - 1] &&
-                    pattern[p + 1] === input[i];
+                if (p <= 0 && i <= 0) {
+                    return false;
+                }
+                var prev_pattern = pattern[p - 1];
+                if (!nested_pattern(prev_pattern)) {
+                    prev_pattern = [prev_pattern];
+                }
+                var next_pattern = pattern[p + 1];
+                if (next_pattern && !nested_pattern(next_pattern)) {
+                    next_pattern = [next_pattern];
+                }
+                return match(prev_pattern, [input[i - 1]]) &&
+                    (!next_pattern || match(next_pattern, [input[i]]));
             }
             function not_symbol_match() {
                 return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
@@ -1228,39 +1244,30 @@
                     return i;
                 }
                 if (pattern[p] instanceof Pattern) {
-                    if (pattern[p].flag === '+') {
-                        var m;
+                    var m;
+                    if (['+', '*'].includes(pattern[p].flag)) {
+                        var found;
                         while (i < input.length) {
                             m = inner_match(pattern[p].pattern, input.slice(i));
                             if (m === -1) {
                                 break;
                             }
                             i += m;
+                            found = true;
                         }
-                        if (m === -1 && (input[i] && !pattern[p + 1])) {
-                            return -1;
-                        }
-                        p++;
                         i -= 1;
+                        p++;
                         continue;
                     } else if (pattern[p].flag === '?') {
                         m = inner_match(pattern[p].pattern, input.slice(i));
                         if (m === -1) {
-                            i -= 2; // if not found use same test same input again
+                            i -= 2; // if not found use same test on same input again
                         } else {
                             p++;
                         }
                         continue;
-                    } else if (pattern[p].flag === '*') {
-                        m = inner_match(pattern[p].pattern, input.slice(i));
-                        if (m === -1) {
-                            i -= 1;
-                            p++;
-                            continue;
-                        }
                     }
-                }
-                if (pattern[p] instanceof RegExp) {
+                } else if (pattern[p] instanceof RegExp) {
                     if (!input[i].match(pattern[p])) {
                         return -1;
                     }
@@ -1272,12 +1279,13 @@
                     if (pattern[p] === Symbol.for('*')) {
                         // ignore S-expressions inside for case when next pattern is )
                         glob[p] = glob[p] || 0;
+                        var zero_match = empty_match();
                         if (['(', '['].includes(input[i])) {
                             glob[p]++;
-                        } else if ([')', ']'].includes(input[i])) {
+                        } else if ([')', ']'].includes(input[i]) && !zero_match) {
                             glob[p]--;
                         }
-                        if (empty_match()) {
+                        if (zero_match) {
                             i -= 1;
                         } else if ((typeof pattern[p + 1] !== 'undefined' &&
                                     glob[p] === 0 && match_next() === -1) ||
@@ -1497,30 +1505,17 @@
     // line breaking rules
     Formatter.rules = [
         [[p_o, keywords_re('begin')], 1],
-        //[[p_o, keywords_re('begin'), sexp], 1, not_close],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
+        [[p_o, let_re, p_o, let_value, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
-        [[p_o, keywords_re('syntax-rules'), symbol, identifiers], 1],
-        [[p_o, keywords_re('syntax-rules'), symbol, identifiers, sexp], 1, not_close],
-        //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
-        //[[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
         [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
-        //[[p_o, p_o, non_def, sexp, p_e], 1, open],
         [[p_o, sexp], 1, open],
-        //[[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
-        [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
-        [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
         [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
-        //[[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close],
         [[p_o, keywords_re('if'), not_p, glob], 1],
-        //[[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1],
-        //[[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1],
-        //[[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
-        //[[p_o, [p_o, glob, p_e], string_re], 1],
-        [[p_o, def_lambda_re, p_o, glob, p_e], 1, not_close],
-        [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close],
-        [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]
+        [[p_o, def_lambda_re, identifiers], 1, not_close],
+        [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close],
+        [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {

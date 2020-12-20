@@ -78,6 +78,9 @@ jest-test: dist/lips.js
 test: dist/lips.js
 	@$(NPM) run test
 
+test-update: dist/lips.js
+	@$(NPM) run test-update
+
 zero:
 	@$(WGET) $(UNICODE) -O ./assets/UnicodeData.txt
 
