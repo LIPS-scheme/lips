@@ -1246,14 +1246,12 @@
                 if (pattern[p] instanceof Pattern) {
                     var m;
                     if (['+', '*'].includes(pattern[p].flag)) {
-                        var found;
                         while (i < input.length) {
                             m = inner_match(pattern[p].pattern, input.slice(i));
                             if (m === -1) {
                                 break;
                             }
                             i += m;
-                            found = true;
                         }
                         i -= 1;
                         p++;
@@ -1514,6 +1512,7 @@
         [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
         [[p_o, keywords_re('if'), not_p, glob], 1],
         [[p_o, def_lambda_re, identifiers], 1, not_close],
+        [[p_o, def_lambda_re, identifiers, string_re], 1, not_close],
         [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close],
         [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]
     ];

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 20 Dec 2020 13:35:28 +0000
+ * build: Sun, 20 Dec 2020 14:05:17 +0000
  */
 (function () {
   'use strict';
@@ -2946,7 +2946,6 @@
             var m;
 
             if (['+', '*'].includes(pattern[p].flag)) {
-
               while (i < input.length) {
                 m = inner_match(pattern[p].pattern, input.slice(i));
 
@@ -3269,7 +3268,7 @@
     } // line breaking rules
 
 
-    Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, p_o, let_value, p_e, sexp], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, open], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close], [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]]; // ----------------------------------------------------------------------
+    Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, p_o, let_value, p_e, sexp], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, open], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close], [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]]; // ----------------------------------------------------------------------
 
     Formatter.prototype["break"] = function () {
       var code = this._code.replace(/\n[ \t]*/g, '\n ');
@@ -12129,10 +12128,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 20 Dec 2020 13:35:28 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 20 Dec 2020 14:05:17 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 20 Dec 2020 13:35:28 +0000').valueOf();
+      var date = LString('Sun, 20 Dec 2020 14:05:17 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12169,7 +12168,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 20 Dec 2020 13:35:28 +0000',
+      date: 'Sun, 20 Dec 2020 14:05:17 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
