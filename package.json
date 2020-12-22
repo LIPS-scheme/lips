@@ -210,7 +210,6 @@
     "babel-preset-stage-0": "^6.24.1",
     "coveralls": "^3.1.0",
     "eslint": "^6.8.0",
-    "jest": "^24.8.0",
     "nyc": "^15.0.1",
     "preact": "^10.5.7",
     "preact-render-to-string": "^5.1.12",
