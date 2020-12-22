@@ -481,11 +481,6 @@
                       `(cond ,@rest)))))
       nil))
 
-
-;; -----------------------------------------------------------------------------
-;; formatter rules for cond to break after each S-Expression
-;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro
-;; use RegExp constructor
 ;; -----------------------------------------------------------------------------
 (define (%r re . rest)
   "(%r re)
