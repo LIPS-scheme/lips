@@ -317,3 +317,13 @@
       (lambda (t)
         (t.is `&(:foo ,(+ 1 2) :bar ,(Promise.resolve 10))
               &(:foo 3 :bar 10))))
+
+(test "quasiquote: should create vector inside list"
+      (lambda (t)
+        (t.is `(foo #(10 ,@(list 1 2 3)))
+              '(foo #(10 1 2 3)))))
+
+(test "quasiquote: should create object inside list"
+      (lambda (t)
+        (t.is `(foo &(:foo ,(+ 1 2) :bar 10))
+              (list 'foo &(:foo 3 :bar 10)))))

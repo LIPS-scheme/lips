@@ -1713,25 +1713,26 @@
         }
         return len;
     };
-
     // ----------------------------------------------------------------------
-    Pair.prototype.find = function(item) {
-        var car;
-        if (this.car instanceof Pair && this.car.find(item)) {
-            car = true;
-        } else if (this.car instanceof LSymbol) {
-            car = LSymbol.is(this.car, item);
-        }
-        var cdr;
-        if (this.cdr instanceof Pair && this.cdr.find(item)) {
-            cdr = true;
-        } else if (this.cdr instanceof LSymbol) {
-            cdr = LSymbol.is(this.cdr, item);
-        }
-        if (cdr || car) {
-            return true;
+    Pair.match = function(obj, item) {
+        if (obj instanceof LSymbol) {
+            return LSymbol.is(obj, item);
+        } else if (obj instanceof Pair) {
+            return Pair.match(obj.car, item) || Pair.match(obj.cdr, item);
+        } else if (Array.isArray(obj)) {
+            return obj.some(x => {
+                return Pair.match(x, item);
+            });
+        } else if (is_plain_object(obj)) {
+            return Object.values(obj).some(x => {
+                return Pair.match(x, item);
+            });
         }
         return false;
+    };
+    // ----------------------------------------------------------------------
+    Pair.prototype.find = function(item) {
+        return Pair.match(this, item);
     };
 
     // ----------------------------------------------------------------------
@@ -6518,11 +6519,13 @@
                 dynamic_scope = self;
             }
             // -----------------------------------------------------------------
-            function isPair(value) {
-                return value instanceof Pair;
+            function is_struct(value) {
+                return value instanceof Pair ||
+                    is_plain_object(value) ||
+                    Array.isArray(value);
             }
             // -----------------------------------------------------------------
-            function resolve_pair(pair, fn, test = isPair) {
+            function resolve_pair(pair, fn, test = is_struct) {
                 if (pair instanceof Pair) {
                     var car = pair.car;
                     var cdr = pair.cdr;
@@ -6568,24 +6571,56 @@
             }
             // -----------------------------------------------------------------
             function quote_vector(arr, unquote_cnt, max_unq) {
-                return arr.map(x => {
-                    if (LSymbol.is(x.car, 'unquote-splicing')) {
-                        throw new Error("You can't call `unquote-splicing` " +
-                                        "inside vector");
+                return arr.reduce((acc, x) => {
+                    if (!(x instanceof Pair)) {
+                        acc.push(x);
+                        return acc;
                     }
-                    return recur(x, unquote_cnt, max_unq);
-                });
+                    if (LSymbol.is(x.car, 'unquote-splicing')) {
+                        let result;
+                        if (unquote_cnt + 1 < max_unq) {
+                            result = recur(x.cdr, unquote_cnt + 1, max_unq);
+                        } else {
+                            result = evaluate(x.cdr.car, {
+                                env: self,
+                                dynamic_scope,
+                                error
+                            });
+                        }
+                        if (!(result instanceof Pair)) {
+                            throw new Error(`Expecting list ${type(x)} found`);
+                        }
+                        return acc.concat(result.toArray());
+                    }
+                    acc.push(recur(x, unquote_cnt, max_unq));
+                    return acc;
+                }, []);
             }
             // -----------------------------------------------------------------
             function quote_object(object, unquote_cnt, max_unq) {
                 const result = {};
+                unquote_cnt++;
                 Object.keys(object).forEach(key => {
                     const value = object[key];
-                    if (LSymbol.is(value.car, 'unquote-splicing')) {
-                        throw new Error("You can't call `unquote-splicing` " +
-                                        "inside object");
+                    if (value instanceof Pair) {
+                        if (LSymbol.is(value.car, 'unquote-splicing')) {
+                            throw new Error("You can't call `unquote-splicing` " +
+                                            "inside object");
+                        }
+                        let output;
+                        if (unquote_cnt < max_unq) {
+                            output = recur(value.cdr.car, unquote_cnt, max_unq);
+                        } else {
+                            output = evaluate(value.cdr.car, {
+                                env: self,
+                                dynamic_scope,
+                                error
+                            });
+                        }
+                        result[key] = output;
+                    } else {
+                        result[key] = value;
                     }
-                    result[key] = recur(value, unquote_cnt, max_unq);
                 });
                 if (Object.isFrozen(object)) {
                     Object.freeze(result);
@@ -6790,16 +6825,16 @@
                 }
             }
             // -----------------------------------------------------------------
-            if (arg.car instanceof Pair &&
-                !arg.car.find('unquote') &&
-                !arg.car.find('unquote-splicing') &&
-                !arg.car.find('quasiquote')) {
-                return quote(arg.car);
-            }
             if (is_plain_object(arg.car) && !unquoted_arr(Object.values(arg.car))) {
                 return quote(arg.car);
             }
             if (Array.isArray(arg.car) && !unquoted_arr(arg.car)) {
+                return quote(arg.car);
+            }
+            if (arg.car instanceof Pair &&
+                !arg.car.find('unquote') &&
+                !arg.car.find('unquote-splicing') &&
+                !arg.car.find('quasiquote')) {
                 return quote(arg.car);
             }
             var x = recur(arg.car, 0, 1);
