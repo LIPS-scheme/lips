@@ -519,3 +519,25 @@
         (set! j (+ j 1))))))
 
 ;; -----------------------------------------------------------------------------
+(define string->utf8
+  (let ((encoder (new TextEncoder "utf-8")))
+    (lambda (string . rest)
+      (if (null? rest)
+          (encoder.encode string)
+          (let* ((start (car rest))
+                 (len (--> (Array.from string) 'length))
+                 (end (if (null? (cdr rest)) len (cadr rest))))
+            (encoder.encode (substring string start end)))))))
+
+;; -----------------------------------------------------------------------------
+(define utf8->string
+  (let ((decoder (new TextDecoder "utf-8")))
+    (lambda (v . rest)
+      (if (null? rest)
+          (decoder.decode v)
+          (let* ((start (car rest))
+                 (len (--> (Array.from string) 'length))
+                 (end (if (null? (cdr rest)) len (cadr rest))))
+            (decoder.decode (v.slice start end)))))))
+
+;; -----------------------------------------------------------------------------

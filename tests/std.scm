@@ -170,3 +170,46 @@
                  (v (closure)))
             (t.is v.x 10)
             (t.is result #(true true 10))))))
+
+;; bytevector tests from R7RS spec
+(test "std: bytevector-u8-ref"
+      (lambda (t)
+        (define result (bytevector-u8-ref '#u8(1 1 2 3 5 8 13 21)
+                                          5))
+        (t.is result 8)))
+
+(test "std: bytevector-u8-set!"
+      (lambda (t)
+        (define result (let ((bv (bytevector 1 2 3 4)))
+                         (bytevector-u8-set! bv 1 3)
+                         bv))
+        (t.is result #u8(1 3 3 4))))
+
+(test "std: bytevector-u8-copy"
+      (lambda (t)
+        (define a #u8(1 2 3 4 5))
+        (t.is (bytevector-copy a 2 4) #u8(3 4))))
+
+(test "std: bytevector-copy!"
+      (lambda (t)
+        (define a (bytevector 1 2 3 4 5))
+        (define b (bytevector 10 20 30 40 50))
+        (bytevector-copy! b 1 a 0 2)
+        (t.is a #u8(1 2 3 4 5))
+        (t.is b #u8(10 1 2 40 50))))
+
+(test "std: utf8->string"
+      (lambda (t)
+        (t.is (utf8->string #u8(#xCE #xBB)) "λ")
+        (let ((v #u8(#xCE #xBB #x41 #x41 #x41)))
+           (t.is (utf8->string v 0 2) "λ")
+           (t.is (utf8->string v 0 4) "λAA")
+           (t.is (utf8->string v 2 4) "AA"))))
+
+(test "std: string->utf8"
+      (lambda (t)
+        (t.is (string->utf8 "λ") #u8(#xCE #xBB))
+        (let ((str "λAA"))
+          (t.is (string->utf8 str 0 1) #u8(#xCE #xBB))
+          (t.is (string->utf8 str 0 2) #u8(#xCE #xBB #x41))
+          (t.is (string->utf8 str 1 3) #u8(#x41 #x41)))))

@@ -1052,6 +1052,15 @@
       value))
 
 ;; ---------------------------------------------------------------------------------------
+(define typed-array?
+  (let ((TypedArray (Object.getPrototypeOf Uint8Array)))
+    (lambda (o)
+      "(typed-array? o)
+
+      Function test if argumnet is JavaScript typed array (Scheme byte vector)."
+      (instanceof TypedArray o))))
+
+;; ---------------------------------------------------------------------------------------
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
@@ -1148,31 +1157,46 @@
 
    Function check if values are equal if both are pair or array
    it compares the their elements recursivly."
-  (cond ((and (pair? a) (pair? b))
-         (and (equal? (car a) (car b))
+  (cond ((and (pair? a))
+         (and (pair? b)
+              (equal? (car a) (car b))
               (equal? (cdr a) (cdr b))))
-        ((and (symbol? a) (symbol? b))
-         (equal? a.__name__ b.__name__))
-        ((and (regex? a) (regex? b))
-         (equal? (. a 'source) (. b 'source)))
-        ((and (vector? a) (vector? b))
-         (and (= (length a) (length b))
+        ((symbol? a)
+         (and (symbol? b)
+              (equal? a.__name__ b.__name__)))
+        ((regex? a)
+         (and (regex? b)
+              (equal? (. a 'source) (. b 'source))))
+        ((typed-array? a)
+         (and (typed-array? b)
+              (equal? (Array.from a) (Array.from b))))
+        ((vector? a)
+         (and (vector? b)
+              (= (length a) (length b))
               (--> a (every (lambda (item i)
                               (equal? item (vector-ref b i)))))))
-        ((and (string? a) (string? b))
-         (string=? a b))
-        ((and (function? a) (function? b))
-         (%same-functions a b))
-        ((and (array? a) (array? b) (eq? (length a) (length b)))
-         (= (--> a (filter (lambda (item i) (equal? item (. b i)))) 'length) (length a)))
-        ((and (plain-object? a) (plain-object? b))
-         (let ((keys_a (--> (Object.keys a) (sort)))
-               (keys_b (--> (Object.keys b) (sort))))
-           (and (= (length keys_a)
-                   (length keys_b))
-                (equal? keys_a keys_b)
-                (equal? (--> keys_a (map (lambda (key) (. a key))))
-                        (--> keys_b (map (lambda (key) (. b key))))))))
+        ((string? a)
+         (and (string? b)
+              (string=? a b)))
+        ((function? a)
+         (and (function? b)
+              (%same-functions a b)))
+        ((array? a)
+         (and (array? b)
+              (eq? (length a) (length b))
+              (= (--> a (filter (lambda (item i)
+                                  (equal? item (. b i))))
+                      'length)
+                 (length a))))
+        ((plain-object? a)
+         (and (plain-object? b)
+              (let ((keys_a (--> (Object.keys a) (sort)))
+                    (keys_b (--> (Object.keys b) (sort))))
+                (and (= (length keys_a)
+                        (length keys_b))
+                     (equal? keys_a keys_b)
+                     (equal? (--> keys_a (map (lambda (key) (. a key))))
+                             (--> keys_b (map (lambda (key) (. b key)))))))))
         (else (eqv? a b))))
 
 ;; -----------------------------------------------------------------------------
@@ -2851,5 +2875,27 @@
         (bytevector-u8-set! to i (bytevector-u8-ref from j))
         (set! i (+ i 1))
         (set! j (+ j 1))))))
+
+;; -----------------------------------------------------------------------------
+(define string->utf8
+  (let ((encoder (new TextEncoder "utf-8")))
+    (lambda (string . rest)
+      (if (null? rest)
+          (encoder.encode string)
+          (let* ((start (car rest))
+                 (len (--> (Array.from string) 'length))
+                 (end (if (null? (cdr rest)) len (cadr rest))))
+            (encoder.encode (substring string start end)))))))
+
+;; -----------------------------------------------------------------------------
+(define utf8->string
+  (let ((decoder (new TextDecoder "utf-8")))
+    (lambda (v . rest)
+      (if (null? rest)
+          (decoder.decode v)
+          (let* ((start (car rest))
+                 (len (--> (Array.from string) 'length))
+                 (end (if (null? (cdr rest)) len (cadr rest))))
+            (decoder.decode (v.slice start end)))))))
 
 ;; -----------------------------------------------------------------------------
