@@ -178,6 +178,15 @@
   ;; here we don't use string=? or equal? because it may not be defined
   (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
+;; ---------------------------------------------------------------------------------------
+(define typed-array?
+  (let ((TypedArray (Object.getPrototypeOf Uint8Array)))
+    (lambda (o)
+      "(typed-array? o)
+
+      Function test if argumnet is JavaScript typed array (Scheme byte vector)."
+      (instanceof TypedArray o))))
+
 ;; -----------------------------------------------------------------------------
 (define (symbol->string s)
   "(symbol->string symbol)
