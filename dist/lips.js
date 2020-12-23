@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 23 Dec 2020 14:34:45 +0000
+ * build: Wed, 23 Dec 2020 17:47:56 +0000
  */
 (function () {
   'use strict';
@@ -12061,6 +12061,7 @@
 
     function init() {
       var lips_mimes = ['text/x-lips', 'text/x-scheme'];
+      var bootstraped;
 
       function load(script) {
         return new Promise(function (resolve) {
@@ -12082,9 +12083,7 @@
         });
       }
 
-      if (!window.document) {
-        return Promise.resolve();
-      } else {
+      function loop() {
         return new Promise(function (resolve) {
           var scripts = Array.from(document.querySelectorAll('script'));
           return function loop() {
@@ -12098,7 +12097,7 @@
               if (lips_mimes.includes(type)) {
                 var bootstrap_attr = script.getAttribute('bootstrap');
 
-                if (typeof bootstrap_attr === 'string') {
+                if (!bootstraped && typeof bootstrap_attr === 'string') {
                   bootstrap(bootstrap_attr).then(function () {
                     return load(script);
                   }).then(loop);
@@ -12114,8 +12113,26 @@
           }();
         });
       }
-    } // -------------------------------------------------------------------------
 
+      if (!window.document) {
+        return Promise.resolve();
+      } else if (currentScript) {
+        var script = currentScript;
+        var bootstrap_attr = script.getAttribute('bootstrap');
+
+        if (typeof bootstrap_attr === 'string') {
+          return bootstrap(bootstrap_attr).then(function () {
+            bootstraped = true;
+            return loop();
+          });
+        }
+      }
+
+      return loop();
+    } // this can't be in init function, because it need to be in script context
+
+
+    var currentScript = window.document && document.currentScript; // -------------------------------------------------------------------------
 
     if (typeof window !== 'undefined') {
       contentLoaded(window, init);
@@ -12124,10 +12141,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 23 Dec 2020 14:34:45 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 23 Dec 2020 17:47:56 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 23 Dec 2020 14:34:45 +0000').valueOf();
+      var date = LString('Wed, 23 Dec 2020 17:47:56 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12164,7 +12181,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 23 Dec 2020 14:34:45 +0000',
+      date: 'Wed, 23 Dec 2020 17:47:56 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

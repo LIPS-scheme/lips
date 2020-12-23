@@ -8523,6 +8523,7 @@
     // -------------------------------------------------------------------------
     function init() {
         var lips_mimes = ['text/x-lips', 'text/x-scheme'];
+        var bootstraped;
         function load(script) {
             return new Promise(function(resolve) {
                 var src = script.getAttribute('src');
@@ -8540,9 +8541,8 @@
                 }
             });
         }
-        if (!window.document) {
-            return Promise.resolve();
-        } else {
+        
+        function loop() {
             return new Promise(function(resolve) {
                 var scripts = Array.from(document.querySelectorAll('script'));
                 return (function loop() {
@@ -8553,7 +8553,7 @@
                         var type = script.getAttribute('type');
                         if (lips_mimes.includes(type)) {
                             var bootstrap_attr = script.getAttribute('bootstrap');
-                            if (typeof bootstrap_attr === 'string') {
+                            if (!bootstraped && typeof bootstrap_attr === 'string') {
                                 bootstrap(bootstrap_attr).then(function() {
                                     return load(script, function(e) {
                                         console.error(e);
@@ -8573,7 +8573,22 @@
                 })();
             });
         }
+        if (!window.document) {
+            return Promise.resolve();
+        } else if (currentScript) {
+            var script = currentScript;
+            var bootstrap_attr = script.getAttribute('bootstrap');
+            if (typeof bootstrap_attr === 'string') {
+                return bootstrap(bootstrap_attr).then(function() {
+                    bootstraped = true;
+                    return loop();
+                });
+            }
+        }
+        return loop();
     }
+    // this can't be in init function, because it need to be in script context
+    const currentScript = window.document && document.currentScript;
     // -------------------------------------------------------------------------
     if (typeof window !== 'undefined') {
         contentLoaded(window, init);
