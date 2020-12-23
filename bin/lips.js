@@ -90,8 +90,8 @@ function print(result) {
 }
 // -----------------------------------------------------------------------------
 
-function boostrap(interpreter) {
-    var list = ['./lib/bootstrap.scm', './lib/R5RS.scm', './lib/R7RS.scm'];
+function bootstrap(interpreter) {
+    var list = ['./dist/std.scm'];
     return (function next() {
         var name = list.shift();
         if (name) {
@@ -209,12 +209,12 @@ if (options.version || options.V) {
     ].map(([key, ...values]) => {
         return [LSymbol(key), ...values];
     }));
-    boostrap(interp).then(function() {
+    bootstrap(interp).then(function() {
         return run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
     });
 } else if (options.e || options.eval || options.c || options.code) {
     // from 1.0 documentation should use -e but it's not breaking change
-    boostrap(interp).then(function() {
+    bootstrap(interp).then(function() {
         const code = options.e || options.eval || options.c || options.code;
         const dynamic = options.d || options.dynamic;
         return run(code, interp, dynamic).then(print);
@@ -235,7 +235,7 @@ if (options.version || options.V) {
         process.exit();
     });
     fs.promises.readFile(options._[0]).then(function(data) {
-        return boostrap(interp).then(() => {
+        return bootstrap(interp).then(() => {
             const code = data.toString().replace(/^#!.*\n/, '');
             const dynamic = options.d || options.dynamic;
             return run(code, interp, dynamic, null, options.t || options.trace);
@@ -307,7 +307,7 @@ function run_repl(err, rl) {
         rl.prompt();
     }
     var prev_line;
-    boostrap(interp).then(function() {
+    bootstrap(interp).then(function() {
         rl.on('line', function(line) {
             code += line;
             const lines = code.split('\n');
@@ -395,9 +395,9 @@ function run_repl(err, rl) {
             }
         });
     }).catch(function(e) {
-        log_error('Internal Error: boostrap filed');
+        log_error('Internal Error: bootstrap filed');
         log_error(e.message || e);
-        console.error('Internal Error: boostrap filed');
+        console.error('Internal Error: bootstrap filed');
     });
 }
 

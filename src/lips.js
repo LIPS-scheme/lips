@@ -8385,7 +8385,7 @@
         return lips.version.match(/^(\{\{VER\}\}|DEV)$/);
     }
     // -------------------------------------------------------------------------
-    async function bootstrap(url = '') {
+    function bootstrap(url = '') {
         if (url === '') {
             if (is_dev()) {
                 url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
@@ -8396,14 +8396,7 @@
             url += '/';
         }
         var load = global_env.get('load');
-        var files = [
-            'lib/bootstrap.scm',
-            'lib/R5RS.scm',
-            'lib/R7RS.scm'
-        ];
-        for (let file of files) {
-            await load.call(lips.env, url + file, global_env);
-        }
+        return load.call(lips.env, `${url}dist/std.scm`, global_env);
     }
     // -------------------------------------------------------------------------
     function Worker(url) {

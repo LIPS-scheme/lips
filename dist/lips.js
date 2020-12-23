@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 22 Dec 2020 17:04:58 +0000
+ * build: Wed, 23 Dec 2020 13:19:40 +0000
  */
 (function () {
   'use strict';
@@ -11889,64 +11889,22 @@
 
 
     function bootstrap() {
-      return _bootstrap.apply(this, arguments);
+      var url = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : '';
+
+      if (url === '') {
+        if (is_dev()) {
+          url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
+        } else {
+          url = "https://cdn.jsdelivr.net/npm/@jcubic/lips@".concat(lips.version, "/");
+        }
+      } else if (!url.match(/\/$/)) {
+        url += '/';
+      }
+
+      var load = global_env.get('load');
+      return load.call(lips.env, "".concat(url, "dist/std.scm"), global_env);
     } // -------------------------------------------------------------------------
 
-
-    function _bootstrap() {
-      _bootstrap = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13() {
-        var url,
-            load,
-            files,
-            _i6,
-            _files,
-            file,
-            _args15 = arguments;
-
-        return regenerator.wrap(function _callee13$(_context13) {
-          while (1) {
-            switch (_context13.prev = _context13.next) {
-              case 0:
-                url = _args15.length > 0 && _args15[0] !== undefined$1 ? _args15[0] : '';
-
-                if (url === '') {
-                  if (is_dev()) {
-                    url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
-                  } else {
-                    url = "https://cdn.jsdelivr.net/npm/@jcubic/lips@".concat(lips.version, "/");
-                  }
-                } else if (!url.match(/\/$/)) {
-                  url += '/';
-                }
-
-                load = global_env.get('load');
-                files = ['lib/bootstrap.scm', 'lib/R5RS.scm', 'lib/R7RS.scm'];
-                _i6 = 0, _files = files;
-
-              case 5:
-                if (!(_i6 < _files.length)) {
-                  _context13.next = 12;
-                  break;
-                }
-
-                file = _files[_i6];
-                _context13.next = 9;
-                return load.call(lips.env, url + file, global_env);
-
-              case 9:
-                _i6++;
-                _context13.next = 5;
-                break;
-
-              case 12:
-              case "end":
-                return _context13.stop();
-            }
-          }
-        }, _callee13);
-      }));
-      return _bootstrap.apply(this, arguments);
-    }
 
     function Worker(url) {
       this.url = url;
@@ -12166,10 +12124,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 22 Dec 2020 17:04:58 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 23 Dec 2020 13:19:40 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 22 Dec 2020 17:04:58 +0000').valueOf();
+      var date = LString('Wed, 23 Dec 2020 13:19:40 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12206,7 +12164,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 22 Dec 2020 17:04:58 +0000',
+      date: 'Wed, 23 Dec 2020 13:19:40 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

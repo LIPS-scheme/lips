@@ -2812,6 +2812,12 @@
 
 ;; -----------------------------------------------------------------------------
 (define (bytevector-copy v . rest)
+  "(bytevector-copy v)
+   (bytevector-copy v start)
+   (bytevector-copy v start end)
+
+   Function and return new vector from start to end. If no start and end is provided
+   whole vector is copied and returned."
   (if (null? rest)
       (new Uint8Array v)
       (let ((start (car rest)))
@@ -2821,6 +2827,12 @@
 
 ;; -----------------------------------------------------------------------------
 (define (bytevector-copy! to at from . rest)
+  "(bytevector-copy! to at from)
+   (bytevector-copy! to at from start)
+   (bytevector-copy! to at from start end)
+
+   Copies the bytes of bytevector from between start and end to bytevector to,
+   starting at at."
   (typecheck "bytevector-copy!" to "uint8array")
   (typecheck "bytevector-copy!" from "uint8array")
   (cond ((< at 0)
@@ -2839,3 +2851,5 @@
         (bytevector-u8-set! to i (bytevector-u8-ref from j))
         (set! i (+ i 1))
         (set! j (+ j 1))))))
+
+;; -----------------------------------------------------------------------------
