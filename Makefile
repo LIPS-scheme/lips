@@ -29,7 +29,7 @@ NPM=npm
 UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 
-ALL: Makefile  package.json .$(VERSION) dist/lips.js dist/lips.min.js README.md
+ALL: Makefile  package.json .$(VERSION) dist/lips.js dist/lips.min.js README.md dist/std.scm
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
@@ -43,6 +43,9 @@ dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
+
+dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm
+	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm > dist/std.scm
 
 Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/g" templates/Makefile > Makefile

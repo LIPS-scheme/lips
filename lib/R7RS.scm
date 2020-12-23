@@ -456,3 +456,66 @@
     #f))
 
 ;; -----------------------------------------------------------------------------
+(define make-bytevector make-u8vector)
+(define bytevector u8vector)
+(define bytevector? u8vector?)
+(define bytevector-length u8vector-length)
+(define bytevector-u8-ref u8vector-ref)
+(define bytevector-u8-set! u8vector-set!)
+
+;; -----------------------------------------------------------------------------
+(define (bytevector-append v1 . rest)
+  "(bytevector-append v1 ...)
+
+   Create new bytevector u8vector that is created from joining each argument."
+  (typecheck "bytevector-append" v1 "uint8array" 1)
+  (map (lambda (arg)
+         (typecheck "bytevector-append" arg "uint8array"))
+       rest)
+  (if (null? rest)
+      v1
+     (new Uint8Array (apply vector-append (Array.from v1) (map Array.from rest)))))
+
+;; -----------------------------------------------------------------------------
+(define (bytevector-copy v . rest)
+  "(bytevector-copy v)
+   (bytevector-copy v start)
+   (bytevector-copy v start end)
+
+   Function and return new vector from start to end. If no start and end is provided
+   whole vector is copied and returned."
+  (if (null? rest)
+      (new Uint8Array v)
+      (let ((start (car rest)))
+        (if (null? (cdr rest))
+            (v.slice start)
+            (v.slice start (cadr rest))))))
+
+;; -----------------------------------------------------------------------------
+(define (bytevector-copy! to at from . rest)
+  "(bytevector-copy! to at from)
+   (bytevector-copy! to at from start)
+   (bytevector-copy! to at from start end)
+
+   Copies the bytes of bytevector from between start and end to bytevector to,
+   starting at at."
+  (typecheck "bytevector-copy!" to "uint8array")
+  (typecheck "bytevector-copy!" from "uint8array")
+  (cond ((< at 0)
+         (throw (new Error "bytevector-copy! `at` need to be positive")))
+        ((> at (bytevector-length to))
+         (throw (new Error
+                     "bytevector-copy! `at` need to be less then byte vector length"))))
+  (let* ((start (if (null? rest) 0 (car rest)))
+         (end (if (or (null? rest) (null? (cdr rest)))
+                  (- (bytevector-length from) start)
+                  (cadr rest))))
+    (let ((i at) (j start))
+      (while (and (< i (bytevector-length to))
+                  (< i (bytevector-length from))
+                  (< j (+ start end)))
+        (bytevector-u8-set! to i (bytevector-u8-ref from j))
+        (set! i (+ i 1))
+        (set! j (+ j 1))))))
+
+;; -----------------------------------------------------------------------------
