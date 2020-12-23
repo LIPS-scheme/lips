@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 23 Dec 2020 13:19:40 +0000
+ * build: Wed, 23 Dec 2020 14:34:45 +0000
  */
 (function () {
   'use strict';
@@ -12124,10 +12124,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 23 Dec 2020 13:19:40 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 23 Dec 2020 14:34:45 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 23 Dec 2020 13:19:40 +0000').valueOf();
+      var date = LString('Wed, 23 Dec 2020 14:34:45 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12164,7 +12164,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 23 Dec 2020 13:19:40 +0000',
+      date: 'Wed, 23 Dec 2020 14:34:45 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

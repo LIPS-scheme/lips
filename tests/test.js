@@ -25,9 +25,7 @@ readDir('./tests/').then(function(filenames) {
   })).then(async function (files) {
       await lips.exec(`
         (let-env lips.env.__parent__
-          (load "./lib/bootstrap.scm")
-          (load "./lib/R5RS.scm")
-          (load "./lib/R7RS.scm")
+          (load "./dist/std.scm")
           (load "./tests/helpers/helpers.scm"))
       `);
       return lips.exec([`

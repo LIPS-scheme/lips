@@ -78,10 +78,10 @@ publish:
 jest-test: dist/lips.js
 	@$(JEST) --coverage spec/*.spec.js
 
-test: dist/lips.js
+test: dist/lips.js dist/std.scm
 	@$(NPM) run test
 
-test-update: dist/lips.js
+test-update: dist/lips.js dist/std.scm
 	@$(NPM) run test-update
 
 zero:
