@@ -8588,7 +8588,8 @@
         return loop();
     }
     // this can't be in init function, because it need to be in script context
-    const currentScript = window.document && document.currentScript;
+    const currentScript = typeof window !== 'undefined' &&
+          window.document && document.currentScript;
     // -------------------------------------------------------------------------
     if (typeof window !== 'undefined') {
         contentLoaded(window, init);
