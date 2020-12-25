@@ -522,7 +522,7 @@
 
    Function return default stdout port."
   (let-env (interaction-environment)
-     stdout))
+           (--> **internal-env** (get 'stdout))))
 
 ;; -----------------------------------------------------------------------------
 (define (current-error-port)
@@ -530,7 +530,7 @@
 
    Function return default stdout port."
   (let-env (interaction-environment)
-     stderr))
+     (--> **internal-env** (get 'stderr))))
 
 ;; -----------------------------------------------------------------------------
 (define (current-input-port)
@@ -538,7 +538,7 @@
 
    Function return default stdin port."
   (let-env (interaction-environment)
-     stdin))
+     (--> **internal-env** (get 'stdin))))
 
 ;; -----------------------------------------------------------------------------
 (define (regex? x)

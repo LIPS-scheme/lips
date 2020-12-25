@@ -792,21 +792,24 @@
   "(char-whitespace? chr)
 
    Function return true if character is whitespace."
-  *space-unicode-regex*)
+  (let-env (interaction-environment)
+           (--> **internal-env** (get 'space-unicode-regex))))
 
 ;; -----------------------------------------------------------------------------
 (%define-chr-re (char-numeric? chr)
   "(char-numeric? chr)
 
    Function return true if character is number."
-  *numeral-unicode-regex*)
+  (let-env (interaction-environment)
+           (--> **internal-env** (get 'numeral-unicode-regex))))
 
 ;; -----------------------------------------------------------------------------
 (%define-chr-re (char-alphabetic? chr)
   "(char-alphabetic? chr)
 
    Function return true if character is leter of the ASCII alphabet."
-  *letter-unicode-regex*)
+  (let-env (interaction-environment)
+           (--> **internal-env** (get 'letter-unicode-regex))))
 
 ;; -----------------------------------------------------------------------------
 (define (%char-cmp name chr1 chr2)
@@ -953,7 +956,7 @@
    Write object to standard output or give port. For strings it will include
    wrap in quotes."
   (let ((port (if (null? rest) (current-output-port) (car rest))))
-    (port.write (repr obj true))))
+    (display (repr obj true) port)))
 
 ;; -----------------------------------------------------------------------------
 (define (write-char char . rest)

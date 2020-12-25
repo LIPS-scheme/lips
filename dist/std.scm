@@ -522,7 +522,7 @@
 
    Function return default stdout port."
   (let-env (interaction-environment)
-     stdout))
+           (--> **internal-env** (get 'stdout))))
 
 ;; -----------------------------------------------------------------------------
 (define (current-error-port)
@@ -530,7 +530,7 @@
 
    Function return default stdout port."
   (let-env (interaction-environment)
-     stderr))
+     (--> **internal-env** (get 'stderr))))
 
 ;; -----------------------------------------------------------------------------
 (define (current-input-port)
@@ -538,7 +538,7 @@
 
    Function return default stdin port."
   (let-env (interaction-environment)
-     stdin))
+     (--> **internal-env** (get 'stdin))))
 
 ;; -----------------------------------------------------------------------------
 (define (regex? x)
@@ -1059,6 +1059,29 @@
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)
       value))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (let-env-values env spec . body)
+  "(let-env-values env ((name var)) . body)
+
+   Macro add mapping for variables var from specified env,
+   Macro work similar to let-env but lexical scope is working with it."
+  (let ((env-name (gensym 'env)))
+    `(let ((,env-name ,env))
+       (let ,(map (lambda (pair)
+                    `(,(car pair) (--> ,env-name (get ',(cadr pair)))))
+                  spec)
+         ,@body))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (let-std spec . body)
+  "(let-std ((name var)) . body)
+
+   Macro that create aliases for variables in global environment.
+   This is needed so user don't change constants like stdin or stdout
+   that use taken from lexical scope. The function still can use those
+   from interaction-environment."
+  `(let-env-values lips.env.__parent__ ,spec ,@body))
 
 ;; ---------------------------------------------------------------------------------------
 ;;   __ __                          __
@@ -1855,21 +1878,24 @@
   "(char-whitespace? chr)
 
    Function return true if character is whitespace."
-  *space-unicode-regex*)
+  (let-env (interaction-environment)
+           (--> **internal-env** (get 'space-unicode-regex))))
 
 ;; -----------------------------------------------------------------------------
 (%define-chr-re (char-numeric? chr)
   "(char-numeric? chr)
 
    Function return true if character is number."
-  *numeral-unicode-regex*)
+  (let-env (interaction-environment)
+           (--> **internal-env** (get 'numeral-unicode-regex))))
 
 ;; -----------------------------------------------------------------------------
 (%define-chr-re (char-alphabetic? chr)
   "(char-alphabetic? chr)
 
    Function return true if character is leter of the ASCII alphabet."
-  *letter-unicode-regex*)
+  (let-env (interaction-environment)
+           (--> **internal-env** (get 'letter-unicode-regex))))
 
 ;; -----------------------------------------------------------------------------
 (define (%char-cmp name chr1 chr2)
@@ -2016,7 +2042,7 @@
    Write object to standard output or give port. For strings it will include
    wrap in quotes."
   (let ((port (if (null? rest) (current-output-port) (car rest))))
-    (port.write (repr obj true))))
+    (display (repr obj true) port)))
 
 ;; -----------------------------------------------------------------------------
 (define (write-char char . rest)

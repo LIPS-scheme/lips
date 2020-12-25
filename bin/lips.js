@@ -55,7 +55,6 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
     }
     return interpreter.exec(code, dynamic, env).catch(function(e) {
         console.error(e.message);
-        console.error('Call (stack-trace) to see the stack');
         log_error(e.message);
         if (e.__code__) {
             strace = e.__code__.map((line, i) => {
@@ -71,6 +70,7 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
             console.error(e.stack);
             console.error(strace);
         } else {
+            console.error('Call (stack-trace) to see the stack');
             console.error('Thrown exception is in global exception variable, use ' +
                           '(display exception.stack) to display JS stack trace');
         }

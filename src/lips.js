@@ -3511,14 +3511,12 @@
     }
     // ----------------------------------------------------------------------
     function is_port(obj) {
-        function port(obj) {
-            return obj instanceof InputPort || obj instanceof OutputPort;
-        }
+        return obj instanceof InputPort || obj instanceof OutputPort;
+    }
+    // ----------------------------------------------------------------------
+    function is_port_method(obj) {
         if (typeof obj === 'function') {
-            if (port(obj)) {
-                return true;
-            }
-            if (port(obj[__context__])) {
+            if (is_port(obj[__context__])) {
                 return true;
             }
         }
@@ -5104,11 +5102,7 @@
             if (!self._parser) {
                 self._parser = new Parser(self._string, this);
             }
-            var result = await self._parser.read_object();
-            if (result === Parser.EOS) {
-                return eof;
-            }
-            return result;
+            return await self._parser.read_object();
         };
     }
     InputStringPort.prototype = Object.create(InputPort.prototype);
@@ -5131,17 +5125,28 @@
     // -------------------------------------------------------------------------
     // simpler way to create interpreter with interaction-environment
     // -------------------------------------------------------------------------
-    function Interpreter(name, obj = {}) {
+    function Interpreter(name, { stderr, stdin, stdout, ...obj } = {}) {
         if (typeof this !== 'undefined' && !(this instanceof Interpreter) ||
             typeof this === 'undefined') {
-            return new Interpreter(name, obj);
+            return new Interpreter(name, { stdin, stdout, stderr, ...obj });
         }
         if (typeof name === 'undefined') {
             name = 'anonymous';
         }
         this.__env__ = user_env.inherit(name, obj);
         const defaults_name = '**interaction-environment-defaults**';
-        this.__env__.set(defaults_name, get_props(obj).concat(defaults_name));
+        this.set(defaults_name, get_props(obj).concat(defaults_name));
+        var inter = internal_env.inherit(`internal-${name}`);
+        if (is_port(stdin)) {
+            inter.set('stdin', stdin);
+        }
+        if (is_port(stderr)) {
+            inter.set('stderr', stderr);
+        }
+        if (is_port(stdout)) {
+            inter.set('stdout', stdout);
+        }
+        this.constant('**internal-env**', inter);
     }
     // -------------------------------------------------------------------------
     Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
@@ -5166,6 +5171,10 @@
     // -------------------------------------------------------------------------
     Interpreter.prototype.set = function(name, value) {
         return this.__env__.set(name, value);
+    };
+    // -------------------------------------------------------------------------
+    Interpreter.prototype.constant = function(name, value) {
+        return this.__env__.constant(name, value);
     };
     // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
@@ -5396,6 +5405,26 @@
         return this;
     };
     // -------------------------------------------------------------------------
+    // for internal use only
+    // -------------------------------------------------------------------------
+    Environment.prototype.constant = function(name, value) {
+        if (name in this.__env__) {
+            throw new Error(`Environment::constant: ${name} already exists`);
+        }
+        if (arguments.length === 1 && is_plain_object(arguments[0])) {
+            var obj = arguments[0];
+            Object.keys(obj).forEach(key => {
+                this.constant(name, obj[key]);
+            });
+        } else {
+            Object.defineProperty(this.__env__, name, {
+                value,
+                enumerable: true
+            });
+        }
+        return this;
+    };
+    // -------------------------------------------------------------------------
     Environment.prototype.has = function(name) {
         return this.__env__.hasOwnProperty(name);
     };
@@ -5446,18 +5475,7 @@
         return '#<unquote[' + this.count + '] ' + this.value + '>';
     };
     // -------------------------------------------------------------------------
-    var global_env = new Environment({
-        nil: nil,
-        'undefined': undefined,
-        'true': true,
-        'false': false,
-        'null': null,
-        'NaN': NaN,
-        // those will be compiled by babel regex plugin
-        '*letter-unicode-regex*': /\p{L}/u,
-        '*numeral-unicode-regex*': /\p{N}/u,
-        '*space-unicode-regex*': /\s/u,
-        // ------------------------------------------------------------------
+    var internal_env = new Environment({
         stdout: new OutputPort(function(...args) {
             console.log(...args);
         }),
@@ -5471,6 +5489,19 @@
                 resolve(prompt(''));
             });
         }),
+        // those will be compiled by babel regex plugin
+        'letter-unicode-regex': /\p{L}/u,
+        'numeral-unicode-regex': /\p{N}/u,
+        'space-unicode-regex': /\s/u
+    });
+    // -------------------------------------------------------------------------
+    var global_env = new Environment({
+        nil: nil,
+        'undefined': undefined,
+        'true': true,
+        'false': false,
+        'null': null,
+        'NaN': NaN,
         // ------------------------------------------------------------------
         'open-input-string': doc('open-input-string', function(string) {
             typecheck('open-input-string', string, 'string');
@@ -5633,7 +5664,8 @@
         // ------------------------------------------------------------------
         display: doc(function display(arg, port = null) {
             if (port === null) {
-                port = this.get('stdout');
+                var internal_env = this.get('**internal-env**');
+                port = internal_env.get('stdout');
             }
             const value = this.get('repr')(arg);
             port.write.call(this, value);
@@ -5642,7 +5674,8 @@
             Function send string to standard output or provied port.`),
         // ------------------------------------------------------------------
         error: doc(function error(...args) {
-            const port = this.get('stderr');
+            var internal_env = this.get('**internal-env**');
+            const port = internal_env.get('stderr');
             const repr = this.get('repr');
             const value = args.map(arg => repr.call(this, arg)).join(' ');
             port.write.call(this, value);
@@ -7809,6 +7842,7 @@
     }, undefined, 'global');
     var user_env = global_env.inherit('user-env');
     global_env.set('**interaction-environment**', user_env);
+    global_env.constant('**internal-env**', internal_env);
     // -------------------------------------------------------------------------
     (function() {
         var map = { ceil: 'ceiling' };
@@ -8172,10 +8206,13 @@
         args = evaluate_args(args, { env, dynamic_scope, error });
         return unpromise(args, function(args) {
             if (is_bound(fn) && !is_object_bound(fn) &&
-                (!lips_context(fn) || is_port(fn))) {
+                (!lips_context(fn) || is_port_method(fn))) {
                 args = args.map(unbox);
             }
-            if (fn[__lambda__] && !fn[__prototype__] && !fn[__method__] || is_port(fn)) {
+            if (fn[__lambda__] &&
+                !fn[__prototype__] &&
+                !fn[__method__] ||
+                is_port_method(fn)) {
                 // lambda need environment as context
                 // normal functions are bound to their contexts
                 fn = unbind(fn);
@@ -8679,6 +8716,7 @@ You can also use (help name) to display help for specic function or macro.
         OutputStringPort,
 
         Formatter,
+        Parser,
         specials,
         repr,
         nil,
