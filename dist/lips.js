@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 25 Dec 2020 13:59:36 +0000
+ * build: Fri, 25 Dec 2020 14:59:20 +0000
  */
 (function () {
   'use strict';
@@ -5994,7 +5994,7 @@
         }
 
         var self = this;
-        args = this.get('list->array')(code.car);
+        args = global_env.get('list->array')(code.car);
         var env = self.inherit(name);
         var values, var_body_env;
 
@@ -8485,6 +8485,22 @@
 
       return value;
     } // -------------------------------------------------------------------------
+    // function get internal protected data
+    // -------------------------------------------------------------------------
+
+
+    function internal(env, name) {
+      var internal_env = interaction(env, '**internal-env**');
+      return internal_env.get(name);
+    } // -------------------------------------------------------------------------
+    // get variable from interaction environment
+    // -------------------------------------------------------------------------
+
+
+    function interaction(env, name) {
+      var interaction_env = env.get('interaction-environment').call(env);
+      return interaction_env.get(name);
+    } // -------------------------------------------------------------------------
 
 
     var internal_env = new Environment({
@@ -8533,7 +8549,7 @@
       }, "(input-port? arg)\n\n            Function return true if argument is input port."),
       // ------------------------------------------------------------------
       'open-output-string': doc('open-output-string', function () {
-        return OutputStringPort(this.get('repr'));
+        return OutputStringPort(global_env.get('repr'));
       }, "(open-output-string)\n\n            Function create new output port that can used to write string into\n            and after finish get the whole string using `get-output-string`"),
       // ------------------------------------------------------------------
       'get-output-string': doc('get-output-string', function (port) {
@@ -8552,7 +8568,7 @@
       // ------------------------------------------------------------------
       'read-line': doc('read-line', function (port) {
         if (typeof port === 'undefined') {
-          port = this.get('stdin');
+          port = internal(this, 'stdin');
         }
 
         typecheck('read-line', port, ['input-port', 'input-string-port']);
@@ -8561,7 +8577,7 @@
       // ------------------------------------------------------------------
       'read-char': doc('read-char', function (port) {
         if (typeof port === 'undefined') {
-          port = this.get('stdin');
+          port = internal(this, 'stdin');
         }
 
         typecheck('read-char', port, ['input-port', 'input-string-port']);
@@ -8654,7 +8670,7 @@
                   if (arg instanceof InputPort) {
                     port = arg;
                   } else {
-                    port = this.get('stdin');
+                    port = internal(this, 'stdin');
                   }
 
                   return _context7.abrupt("return", port.read.call(this));
@@ -8677,27 +8693,25 @@
       pprint: doc(function pprint(arg) {
         if (arg instanceof Pair) {
           arg = new lips.Formatter(arg.toString(true))["break"]().format();
-          this.get('display').call(this, arg);
+          global_env.get('display')(arg);
         } else {
-          this.get('write').call(this, arg);
+          global_env.get('write')(arg);
         }
 
-        this.get('newline').call(this);
+        global_env.get('newline')();
       }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
       // ------------------------------------------------------------------
       print: doc(function print() {
-        var _this5 = this;
-
-        var display = this.get('display');
-        var newline = this.get('newline');
+        var display = global_env.get('display');
+        var newline = global_env.get('newline');
 
         for (var _len15 = arguments.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
           args[_key15] = arguments[_key15];
         }
 
         args.forEach(function (arg) {
-          display.call(_this5, arg);
-          newline.call(_this5);
+          display.call(global_env, arg);
+          newline.call(global_env);
         });
       }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code), the function call newline after printing each arg."),
       // ------------------------------------------------------------------
@@ -8715,7 +8729,7 @@
         }
 
         var i = 0;
-        var repr = this.get('repr');
+        var repr = global_env.get('repr');
         str = str.replace(re, function (x) {
           var chr = x[1];
 
@@ -8746,30 +8760,24 @@
         var port = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
 
         if (port === null) {
-          var internal_env = this.get('**internal-env**');
-          port = internal_env.get('stdout');
+          port = internal(this, 'stdout');
         }
 
-        var value = this.get('repr')(arg);
-        port.write.call(this, value);
+        var value = global_env.get('repr')(arg);
+        port.write.call(global_env, value);
       }, "(display arg [port])\n\n            Function send string to standard output or provied port."),
       // ------------------------------------------------------------------
       error: doc(function error() {
-        var _this6 = this;
-
-        var internal_env = this.get('**internal-env**');
-        var port = internal_env.get('stderr');
-        var repr = this.get('repr');
+        var port = internal(this, 'stderr');
+        var repr = global_env.get('repr');
 
         for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
           args[_key17] = arguments[_key17];
         }
 
-        var value = args.map(function (arg) {
-          return repr.call(_this6, arg);
-        }).join(' ');
-        port.write.call(this, value);
-        this.get('newline').call(this, port);
+        var value = args.map(repr).join(' ');
+        port.write.call(global_env, value);
+        global_env.get('newline')(port);
       }, "(error . args)\n\n            Display error message."),
       // ------------------------------------------------------------------
       '%same-functions': doc('%same-functions', function (a, b) {
@@ -8848,7 +8856,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this7 = this;
+        var _this5 = this;
 
         var _ref19 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref19.dynamic_scope,
@@ -8923,7 +8931,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this7.get(name, {
+              var obj = _this5.get(name, {
                 throwError: false
               });
 
@@ -9278,7 +9286,7 @@
       // ------------------------------------------------------------------
       'begin': doc(new Macro('begin', function (code, options) {
         var args = Object.assign({}, options);
-        var arr = this.get('list->array')(code);
+        var arr = global_env.get('list->array')(code);
 
         if (args.dynamic_scope) {
           args.dynamic_scope = this;
@@ -9425,7 +9433,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this8 = this;
+        var _this6 = this;
 
         typecheck('eval', code, ['symbol', 'pair', 'array']);
         env = env || this;
@@ -9439,21 +9447,21 @@
             env: env,
             //dynamic_scope: this,
             error: function error(e) {
-              _this8.get('error').call(_this8, e.message);
+              var error = global_env.get('error');
+              error.call(_this6, e.message);
 
               if (e.code) {
                 var stack = e.code.map(function (line, i) {
                   return "[".concat(i + 1, "]: ").concat(line);
                 }).join('\n');
-
-                _this8.get('error').call(_this8, stack);
+                error.call(_this6, stack);
               }
             }
           });
         }
 
         if (code instanceof Array) {
-          var _eval = this.get('eval');
+          var _eval = global_env.get('eval');
 
           return code.reduce(function (_, code) {
             return _eval(code, env);
@@ -10167,7 +10175,7 @@
       }, "(clone list)\n\n            Function return clone of the list."),
       // ------------------------------------------------------------------
       append: doc(function append() {
-        var _this$get;
+        var _global_env$get;
 
         for (var _len20 = arguments.length, items = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
           items[_key20] = arguments[_key20];
@@ -10180,11 +10188,11 @@
 
           return item;
         });
-        return (_this$get = this.get('append!')).call.apply(_this$get, [this].concat(toConsumableArray(items)));
+        return (_global_env$get = global_env.get('append!')).call.apply(_global_env$get, [this].concat(toConsumableArray(items)));
       }, "(append item ...)\n\n            Function will create new list with eac argument appended to the end.\n            It will always return new list and not modify it's arguments."),
       // ------------------------------------------------------------------
       'append!': doc('append!', function () {
-        var _this9 = this;
+        var is_list = global_env.get('list?');
 
         for (var _len21 = arguments.length, items = new Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
           items[_key21] = arguments[_key21];
@@ -10193,7 +10201,7 @@
         return items.reduce(function (acc, item) {
           typecheck('append!', acc, ['nil', 'pair']);
 
-          if ((item instanceof Pair || item === nil) && !_this9.get('list?')(item)) {
+          if ((item instanceof Pair || item === nil) && !is_list(item)) {
             throw new Error('append!: Invalid argument, value is not a list');
           }
 
@@ -10221,8 +10229,8 @@
         }
 
         if (arg instanceof Pair) {
-          var arr = this.get('list->array')(arg).reverse();
-          return this.get('array->list')(arr);
+          var arr = global_env.get('list->array')(arg).reverse();
+          return global_env.get('array->list')(arr);
         } else if (!(arg instanceof Array)) {
           throw new Error(typeErrorMessage('reverse', type(arg), 'array or pair'));
         } else {
@@ -10286,13 +10294,13 @@
       join: doc(function join(separator, list) {
         typecheck('join', separator, 'string');
         typecheck('join', list, ['pair', 'nil']);
-        return this.get('list->array')(list).join(separator);
+        return global_env.get('list->array')(list).join(separator);
       }, "(join separator list)\n\n            Function return string by joining elements of the list"),
       // ------------------------------------------------------------------
       split: doc(function split(separator, string) {
         typecheck('split', separator, ['regex', 'string']);
         typecheck('split', string, 'string');
-        return this.get('array->list')(string.split(separator));
+        return global_env.get('array->list')(string.split(separator));
       }, "(split separator string)\n\n            Function create list by splitting string by separatar that can\n            be a string or regular expression."),
       // ------------------------------------------------------------------
       replace: doc(function replace(pattern, replacement, string) {
@@ -10306,7 +10314,7 @@
         typecheck('match', pattern, ['regex', 'string']);
         typecheck('match', string, 'string');
         var m = string.match(pattern);
-        return m ? this.get('array->list')(m) : nil;
+        return m ? global_env.get('array->list')(m) : nil;
       }, "(match pattern string)\n\n            function return match object from JavaScript as list."),
       // ------------------------------------------------------------------
       search: doc(function search(pattern, string) {
@@ -10332,7 +10340,7 @@
         }
 
         if (env.__parent__ !== undefined$1) {
-          return this.get('env').call(this, env.__parent__).append(result);
+          return global_env.get('env')(env.__parent__).append(result);
         }
 
         return result;
@@ -10467,7 +10475,7 @@
         typecheck('apply', fn, 'function', 1);
         var last = list.pop();
         typecheck('apply', last, ['pair', 'nil'], list.length + 2);
-        list = list.concat(this.get('list->array').call(this, last));
+        list = list.concat(global_env.get('list->array').call(this, last));
         return fn.apply(this, list);
       }, "(apply fn list)\n\n            Function that call function with list of arguments."),
       // ------------------------------------------------------------------
@@ -10512,15 +10520,15 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref29) {
-        var _this10 = this;
+        var _this7 = this;
 
         var dynamic_scope = _ref29.dynamic_scope,
             _error = _ref29.error;
         return new Promise(function (resolve) {
           var args = {
-            env: _this10,
+            env: _this7,
             error: function error(e) {
-              var env = _this10.inherit('try');
+              var env = _this7.inherit('try');
 
               env.set(code.cdr.car.cdr.car.car, e);
               var args = {
@@ -10529,7 +10537,7 @@
               };
 
               if (dynamic_scope) {
-                args.dynamic_scope = _this10;
+                args.dynamic_scope = _this7;
               }
 
               unpromise(evaluate(new Pair(new LSymbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
@@ -10539,7 +10547,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this10;
+            args.dynamic_scope = _this7;
           }
 
           var ret = evaluate(code.car, args);
@@ -10575,7 +10583,7 @@
       }, "(find fn list)\n            (find regex list)\n\n            Higher order Function find first value for which function return true.\n            If called with regex it will create matcher function."),
       // ------------------------------------------------------------------
       'for-each': doc('for-each', function (fn) {
-        var _this$get2;
+        var _global_env$get2;
 
         typecheck('for-each', fn, 'function');
 
@@ -10589,7 +10597,7 @@
         // var ret = map.apply(void 0, [fn].concat(lists));
         // it don't work with weakBind
 
-        var ret = (_this$get2 = this.get('map')).call.apply(_this$get2, [this, fn].concat(lists));
+        var ret = (_global_env$get2 = global_env.get('map')).call.apply(_global_env$get2, [this, fn].concat(lists));
 
         if (is_promise(ret)) {
           return ret.then(function () {});
@@ -10597,18 +10605,18 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this11 = this;
+        var _this8 = this;
 
         for (var _len27 = arguments.length, lists = new Array(_len27 > 1 ? _len27 - 1 : 0), _key27 = 1; _key27 < _len27; _key27++) {
           lists[_key27 - 1] = arguments[_key27];
         }
 
         typecheck('map', fn, 'function');
-        var is_list = this.get('list?');
+        var is_list = global_env.get('list?');
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this11, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this8, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -10630,7 +10638,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this11, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this8, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -10726,7 +10734,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this12 = this;
+        var _this9 = this;
 
         for (var _len30 = arguments.length, lists = new Array(_len30 > 3 ? _len30 - 3 : 0), _key31 = 3; _key31 < _len30; _key31++) {
           lists[_key31 - 3] = arguments[_key31];
@@ -10746,7 +10754,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this12, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this9, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -10755,7 +10763,7 @@
       filter: doc(function filter(arg, list) {
         typecheck('filter', arg, ['regex', 'function']);
         typecheck('filter', list, ['pair', 'nil']);
-        var array = this.get('list->array')(list);
+        var array = global_env.get('list->array')(list);
         var result = [];
         var fn = matcher('filter', arg);
         return function loop(i) {
@@ -10941,7 +10949,7 @@
       or: doc(new Macro('or', function (code, _ref30) {
         var dynamic_scope = _ref30.dynamic_scope,
             error = _ref30.error;
-        var args = this.get('list->array')(code);
+        var args = global_env.get('list->array')(code);
         var self = this;
 
         if (dynamic_scope) {
@@ -10987,7 +10995,7 @@
             dynamic_scope = _ref31.dynamic_scope,
             error = _ref31.error;
 
-        var args = this.get('list->array')(code);
+        var args = global_env.get('list->array')(code);
         var self = this;
 
         if (dynamic_scope) {
@@ -12184,10 +12192,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 25 Dec 2020 13:59:36 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 25 Dec 2020 14:59:20 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 25 Dec 2020 13:59:36 +0000').valueOf();
+      var date = LString('Fri, 25 Dec 2020 14:59:20 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12224,7 +12232,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 25 Dec 2020 13:59:36 +0000',
+      date: 'Fri, 25 Dec 2020 14:59:20 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

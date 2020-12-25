@@ -3627,7 +3627,7 @@
                 return;
             }
             var self = this;
-            args = this.get('list->array')(code.car);
+            args = global_env.get('list->array')(code.car);
             var env = self.inherit(name);
             var values, var_body_env;
             if (name === 'let*') {
@@ -5475,6 +5475,20 @@
         return '#<unquote[' + this.count + '] ' + this.value + '>';
     };
     // -------------------------------------------------------------------------
+    // function get internal protected data
+    // -------------------------------------------------------------------------
+    function internal(env, name) {
+        var internal_env = interaction(env, '**internal-env**');
+        return internal_env.get(name);
+    }
+    // -------------------------------------------------------------------------
+    // get variable from interaction environment
+    // -------------------------------------------------------------------------
+    function interaction(env, name) {
+        var interaction_env = env.get('interaction-environment').call(env);
+        return interaction_env.get(name);
+    }
+    // -------------------------------------------------------------------------
     var internal_env = new Environment({
         stdout: new OutputPort(function(...args) {
             console.log(...args);
@@ -5524,7 +5538,7 @@
             Function return true if argument is input port.`),
         // ------------------------------------------------------------------
         'open-output-string': doc('open-output-string', function() {
-            return OutputStringPort(this.get('repr'));
+            return OutputStringPort(global_env.get('repr'));
         }, `(open-output-string)
 
             Function create new output port that can used to write string into
@@ -5555,7 +5569,7 @@
         // ------------------------------------------------------------------
         'read-line': doc('read-line', function(port) {
             if (typeof port === 'undefined') {
-                port = this.get('stdin');
+                port = internal(this, 'stdin');
             }
             typecheck('read-line', port, ['input-port', 'input-string-port']);
             return port.read_line();
@@ -5565,7 +5579,7 @@
         // ------------------------------------------------------------------
         'read-char': doc('read-char', function(port) {
             if (typeof port === 'undefined') {
-                port = this.get('stdin');
+                port = internal(this, 'stdin');
             }
             typecheck('read-char', port, ['input-port', 'input-string-port']);
             return port.read_char();
@@ -5583,7 +5597,7 @@
             if (arg instanceof InputPort) {
                 port = arg;
             } else {
-                port = this.get('stdin');
+                port = internal(this, 'stdin');
             }
             return port.read.call(this);
         }, `(read [string])
@@ -5598,22 +5612,22 @@
         pprint: doc(function pprint(arg) {
             if (arg instanceof Pair) {
                 arg = new lips.Formatter(arg.toString(true)).break().format();
-                this.get('display').call(this, arg);
+                global_env.get('display')(arg);
             } else {
-                this.get('write').call(this, arg);
+                global_env.get('write')(arg);
             }
-            this.get('newline').call(this);
+            global_env.get('newline')();
         }, `(pprint expression)
 
            Pretty print list expression, if called with non-pair it just call
            print function with passed argument.`),
         // ------------------------------------------------------------------
         print: doc(function print(...args) {
-            const display = this.get('display');
-            const newline = this.get('newline');
+            const display = global_env.get('display');
+            const newline = global_env.get('newline');
             args.forEach(arg => {
-                display.call(this, arg);
-                newline.call(this);
+                display.call(global_env, arg);
+                newline.call(global_env);
             });
         }, `(print . args)
 
@@ -5629,7 +5643,7 @@
                 throw new Error('Not enough arguments');
             }
             var i = 0;
-            var repr = this.get('repr');
+            var repr = global_env.get('repr');
             str = str.replace(re, (x) => {
                 const chr = x[1];
                 if (chr === '~') {
@@ -5664,22 +5678,20 @@
         // ------------------------------------------------------------------
         display: doc(function display(arg, port = null) {
             if (port === null) {
-                var internal_env = this.get('**internal-env**');
-                port = internal_env.get('stdout');
+                port = internal(this, 'stdout');
             }
-            const value = this.get('repr')(arg);
-            port.write.call(this, value);
+            const value = global_env.get('repr')(arg);
+            port.write.call(global_env, value);
         }, `(display arg [port])
 
             Function send string to standard output or provied port.`),
         // ------------------------------------------------------------------
         error: doc(function error(...args) {
-            var internal_env = this.get('**internal-env**');
-            const port = internal_env.get('stderr');
-            const repr = this.get('repr');
-            const value = args.map(arg => repr.call(this, arg)).join(' ');
-            port.write.call(this, value);
-            this.get('newline').call(this, port);
+            const port = internal(this, 'stderr');
+            const repr = global_env.get('repr');
+            const value = args.map(repr).join(' ');
+            port.write.call(global_env, value);
+            global_env.get('newline')(port);
         }, `(error . args)
 
             Display error message.`),
@@ -6056,7 +6068,7 @@
         // ------------------------------------------------------------------
         'begin': doc(new Macro('begin', function(code, options) {
             var args = Object.assign({ }, options);
-            var arr = this.get('list->array')(code);
+            var arr = global_env.get('list->array')(code);
             if (args.dynamic_scope) {
                 args.dynamic_scope = this;
             }
@@ -6233,18 +6245,19 @@
                     env,
                     //dynamic_scope: this,
                     error: e => {
-                        this.get('error').call(this, e.message);
+                        var error = global_env.get('error');
+                        error.call(this, e.message);
                         if (e.code) {
                             var stack = e.code.map((line, i) => {
                                 return `[${i + 1}]: ${line}`;
                             }).join('\n');
-                            this.get('error').call(this, stack);
+                            error.call(this, stack);
                         }
                     }
                 });
             }
             if (code instanceof Array) {
-                var _eval = this.get('eval');
+                var _eval = global_env.get('eval');
                 return code.reduce((_, code) => {
                     return _eval(code, env);
                 });
@@ -6898,16 +6911,17 @@
                 }
                 return item;
             });
-            return this.get('append!').call(this, ...items);
+            return global_env.get('append!').call(this, ...items);
         }, `(append item ...)
 
             Function will create new list with eac argument appended to the end.
             It will always return new list and not modify it's arguments.`),
         // ------------------------------------------------------------------
         'append!': doc('append!', function(...items) {
+            var is_list = global_env.get('list?');
             return items.reduce((acc, item) => {
                 typecheck('append!', acc, ['nil', 'pair']);
-                if ((item instanceof Pair || item === nil) && !this.get('list?')(item)) {
+                if ((item instanceof Pair || item === nil) && !is_list(item)) {
                     throw new Error('append!: Invalid argument, value is not a list');
                 }
                 if (isNull(item)) {
@@ -6933,8 +6947,8 @@
                 return nil;
             }
             if (arg instanceof Pair) {
-                var arr = this.get('list->array')(arg).reverse();
-                return this.get('array->list')(arr);
+                var arr = global_env.get('list->array')(arg).reverse();
+                return global_env.get('array->list')(arr);
             } else if (!(arg instanceof Array)) {
                 throw new Error(typeErrorMessage('reverse', type(arg), 'array or pair'));
             } else {
@@ -6994,7 +7008,7 @@
         join: doc(function join(separator, list) {
             typecheck('join', separator, 'string');
             typecheck('join', list, ['pair', 'nil']);
-            return this.get('list->array')(list).join(separator);
+            return global_env.get('list->array')(list).join(separator);
         }, `(join separator list)
 
             Function return string by joining elements of the list`),
@@ -7002,7 +7016,7 @@
         split: doc(function split(separator, string) {
             typecheck('split', separator, ['regex', 'string']);
             typecheck('split', string, 'string');
-            return this.get('array->list')(string.split(separator));
+            return global_env.get('array->list')(string.split(separator));
         }, `(split separator string)
 
             Function create list by splitting string by separatar that can
@@ -7022,7 +7036,7 @@
             typecheck('match', pattern, ['regex', 'string']);
             typecheck('match', string, 'string');
             var m = string.match(pattern);
-            return m ? this.get('array->list')(m) : nil;
+            return m ? global_env.get('array->list')(m) : nil;
         }, `(match pattern string)
 
             function return match object from JavaScript as list.`),
@@ -7052,7 +7066,7 @@
                 result = nil;
             }
             if (env.__parent__ !== undefined) {
-                return this.get('env').call(this, env.__parent__).append(result);
+                return global_env.get('env')(env.__parent__).append(result);
             }
             return result;
         }, `(env obj)
@@ -7258,7 +7272,7 @@
             typecheck('apply', fn, 'function', 1);
             var last = list.pop();
             typecheck('apply', last, ['pair', 'nil'], list.length + 2);
-            list = list.concat(this.get('list->array').call(this, last));
+            list = list.concat(global_env.get('list->array').call(this, last));
             return fn.apply(this, list);
         }, `(apply fn list)
 
@@ -7369,7 +7383,7 @@
             // we need to use call(this because babel transpile this code into:
             // var ret = map.apply(void 0, [fn].concat(lists));
             // it don't work with weakBind
-            var ret = this.get('map').call(this, fn, ...lists);
+            var ret = global_env.get('map').call(this, fn, ...lists);
             if (is_promise(ret)) {
                 return ret.then(() => {});
             }
@@ -7382,7 +7396,7 @@
         // ------------------------------------------------------------------
         map: doc(function map(fn, ...lists) {
             typecheck('map', fn, 'function');
-            var is_list = this.get('list?');
+            var is_list = global_env.get('list?');
             lists.forEach((arg, i) => {
                 typecheck('map', arg, ['pair', 'nil'], i + 1);
                 // detect cycles
@@ -7512,7 +7526,7 @@
         filter: doc(function filter(arg, list) {
             typecheck('filter', arg, ['regex', 'function']);
             typecheck('filter', list, ['pair', 'nil']);
-            var array = this.get('list->array')(list);
+            var array = global_env.get('list->array')(list);
             var result = [];
             var fn = matcher('filter', arg);
             return (function loop(i) {
@@ -7734,7 +7748,7 @@
              Function compare two values if they are identical.`),
         // ------------------------------------------------------------------
         or: doc(new Macro('or', function(code, { dynamic_scope, error }) {
-            var args = this.get('list->array')(code);
+            var args = global_env.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
                 dynamic_scope = self;
@@ -7770,7 +7784,7 @@
              If there are no expression that evaluate to true it return false.`),
         // ------------------------------------------------------------------
         and: doc(new Macro('and', function(code, { dynamic_scope, error } = {}) {
-            var args = this.get('list->array')(code);
+            var args = global_env.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
                 dynamic_scope = self;

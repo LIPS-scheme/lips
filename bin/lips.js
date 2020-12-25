@@ -166,9 +166,11 @@ var interp = Interpreter('repl', {
     __dirname: __dirname,
     __filename: __filename,
     stdout: OutputPort(function(x) {
-        var repr = this.get('repr')(x);
-        newline = !repr.match(/\n$/);
-        process.stdout.write(repr);
+        if (typeof x !== 'string') {
+            x = this.get('repr')(x);
+        }
+        newline = !x.match(/\n$/);
+        process.stdout.write(x);
     }),
     'stack-trace': doc(function() {
         if (strace) {
