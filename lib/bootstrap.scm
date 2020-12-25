@@ -1061,3 +1061,26 @@
       value))
 
 ;; ---------------------------------------------------------------------------------------
+(define-macro (let-env-values env spec . body)
+  "(let-env-values env ((name var)) . body)
+
+   Macro add mapping for variables var from specified env,
+   Macro work similar to let-env but lexical scope is working with it."
+  (let ((env-name (gensym 'env)))
+    `(let ((,env-name ,env))
+       (let ,(map (lambda (pair)
+                    `(,(car pair) (--> ,env-name (get ',(cadr pair)))))
+                  spec)
+         ,@body))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (let-std spec . body)
+  "(let-std ((name var)) . body)
+
+   Macro that create aliases for variables in global environment.
+   This is needed so user don't change constants like stdin or stdout
+   that use taken from lexical scope. The function still can use those
+   from interaction-environment."
+  `(let-env-values lips.env.__parent__ ,spec ,@body))
+
+;; ---------------------------------------------------------------------------------------
