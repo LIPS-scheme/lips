@@ -1116,7 +1116,7 @@
     function matcher(name, arg) {
         if (arg instanceof RegExp) {
             return x => String(x).match(arg);
-        } else if (typeof arg === 'function') {
+        } else if (is_function(arg)) {
             // it will alwasy be function
             return arg;
         }
@@ -1948,15 +1948,15 @@
         return array_methods.includes(x);
     }
     // ----------------------------------------------------------------------
-    function lips_function(x) {
-        return typeof x === 'function' && (x[__lambda__] || x.__doc__);
+    function is_lips_function(x) {
+        return is_function(x) && (x[__lambda__] || x.__doc__);
     }
     // ----------------------------------------------------------------------
     function user_repr(obj) {
         var constructor = obj.constructor || Object;
         var plain_object = is_plain_object(obj);
-        var iterator = typeof obj[Symbol.asyncIterator] === 'function' ||
-            typeof obj[Symbol.iterator] === 'function';
+        var iterator = is_function(obj[Symbol.asyncIterator]) ||
+            is_function(obj[Symbol.iterator]);
         var fn;
         if (repr.has(constructor)) {
             fn = repr.get(constructor);
@@ -2018,7 +2018,7 @@
     }
     // ----------------------------------------------------------------------
     function has_own_function(obj, name) {
-        return obj.hasOwnProperty(name) && typeof obj.toString === 'function';
+        return obj.hasOwnProperty(name) && is_function(obj.toString);
     }
     // ----------------------------------------------------------------------
     function function_to_string(fn) {
@@ -2026,7 +2026,7 @@
             return '#<procedure(native)>';
         }
         const constructor = fn.prototype && fn.prototype.constructor;
-        if (typeof constructor === 'function' && constructor[__lambda__]) {
+        if (is_function(constructor) && constructor[__lambda__]) {
             if (fn[__class__] && constructor.hasOwnProperty('__name__')) {
                 let name = constructor.__name__;
                 if (LString.isString(name)) {
@@ -2091,7 +2091,7 @@
                 return obj.toString();
             }
         }
-        if (typeof obj === 'function') {
+        if (is_function(obj)) {
             return function_to_string(obj);
         }
         if (obj instanceof LString) {
@@ -2109,7 +2109,7 @@
         }
         if (typeof obj === 'object') {
             // user defined representation
-            if (typeof obj.toString === 'function' && obj.toString[__lambda__]) {
+            if (is_function(obj.toString) && obj.toString[__lambda__]) {
                 return obj.toString().valueOf();
             }
             var constructor = obj.constructor;
@@ -2127,7 +2127,7 @@
                 }
                 var fn = user_repr(obj);
                 if (fn) {
-                    if (typeof fn === 'function') {
+                    if (is_function(fn)) {
                         return fn(obj, quote);
                     } else {
                         throw new Error('toString: Invalid repr value');
@@ -2141,10 +2141,10 @@
             if (root.HTMLElement && obj instanceof root.HTMLElement) {
                 return `#<HTMLElement(${obj.tagName.toLowerCase()})>`;
             }
-            if (typeof obj[Symbol.iterator] === 'function') {
+            if (is_function(obj[Symbol.iterator])) {
                 return '#<iterator>';
             }
-            if (typeof obj[Symbol.asyncIterator] === 'function') {
+            if (is_function(obj[Symbol.asyncIterator])) {
                 return '#<asyncIterator>';
             }
             if (name !== '') {
@@ -2407,9 +2407,12 @@
 
     // ----------------------------------------------------------------------
     function equal(x, y) {
-        if (typeof x === 'function' && typeof y === 'function') {
-            return unbind(x) === unbind(y);
-        } else if (x instanceof LNumber && y instanceof LNumber) {
+        if (is_function(x)) {
+            return is_function(y) && unbind(x) === unbind(y);
+        } else if (x instanceof LNumber) {
+            if (!(y instanceof LNumber)) {
+                return false;
+            }
             let type;
             if (x.__type__ === y.__type__) {
                 if (x.__type__ === 'complex') {
@@ -2421,11 +2424,17 @@
                 return type && x.cmp(y) === 0;
             }
             return false;
-        } else if (typeof x === 'number' || typeof y === 'number') {
+        } else if (typeof x === 'number') {
+            if (typeof y !== 'number') {
+                return false;
+            }
             x = LNumber(x);
             y = LNumber(y);
             return x.__type__ === y.__type__ && x.cmp(y) === 0;
-        } else if (x instanceof LCharacter && y instanceof LCharacter) {
+        } else if (x instanceof LCharacter) {
+            if (!(y instanceof LCharacter)) {
+                return false;
+            }
             return x.__char__ === y.__char__;
         } else {
             return x === y;
@@ -3372,8 +3381,12 @@
     // ----------------------------------------------------------------------
     // :: check for nullish values
     // ----------------------------------------------------------------------
-    function isNull(value) {
+    function is_null(value) {
         return typeof value === 'undefined' || value === nil || value === null;
+    }
+    // ----------------------------------------------------------------------
+    function is_function(o) {
+        return typeof o === 'function';
     }
     // ----------------------------------------------------------------------
     function is_promise(o) {
@@ -3383,7 +3396,7 @@
         if (o instanceof Promise) {
             return true;
         }
-        return o && typeof o !== 'undefined' && typeof o.then === 'function';
+        return o && typeof o !== 'undefined' && is_function(o.then);
     }
     // ----------------------------------------------------------------------
     // :: Function utilities
@@ -3436,7 +3449,7 @@
             value.markCycles();
             return quote(value);
         }
-        if (typeof value === 'function') {
+        if (is_function(value)) {
             // original function can be restored using unbind function
             // only real JS function require to be bound
             if (context) {
@@ -3495,11 +3508,11 @@
     }
     // ----------------------------------------------------------------------
     function is_bound(obj) {
-        return !!(typeof obj === 'function' && obj[__fn__]);
+        return !!(is_function(obj) && obj[__fn__]);
     }
     // ----------------------------------------------------------------------
     function lips_context(obj) {
-        if (typeof obj === 'function') {
+        if (is_function(obj)) {
             var context = obj[__context__];
             if (context && (context === lips ||
                             (context.constructor &&
@@ -3515,7 +3528,7 @@
     }
     // ----------------------------------------------------------------------
     function is_port_method(obj) {
-        if (typeof obj === 'function') {
+        if (is_function(obj)) {
             if (is_port(obj[__context__])) {
                 return true;
             }
@@ -3573,7 +3586,7 @@
     // ----------------------------------------------------------------------
     function is_native_function(fn) {
         var native = Symbol.for('__native__');
-        return typeof fn === 'function' &&
+        return is_function(fn) &&
             fn.toString().match(/\{\s*\[native code\]\s*\}/) &&
             ((fn.name.match(/^bound /) && fn[native] === true) ||
              (!fn.name.match(/^bound /) && !fn[native]));
@@ -3745,7 +3758,7 @@
         var self = this;
         return function recur(fn, init, ...lists) {
             typecheck(name, fn, 'function');
-            if (lists.some(isNull)) {
+            if (lists.some(is_null)) {
                 if (typeof init === 'number') {
                     return LNumber(init);
                 }
@@ -3805,7 +3818,7 @@
     // -------------------------------------------------------------------------------
     var get = doc(function get(object, ...args) {
         // if arg is symbol someone probably want to get __fn__ from binded function
-        if (typeof object === 'function' && typeof args[0] !== 'symbol') {
+        if (is_function(object) && typeof args[0] !== 'symbol') {
             object = unbind(object);
         }
         var value;
@@ -3813,7 +3826,7 @@
         while (args.length) {
             var arg = args.shift();
             var name = unbox(arg);
-            if (name === '__code__' && typeof object === 'function' &&
+            if (name === '__code__' && is_function(object) &&
                         typeof object.__code__ === 'undefined') {
                 value = native_lambda;
             } else {
@@ -5163,7 +5176,7 @@
     // -------------------------------------------------------------------------
     Interpreter.prototype.get = function(value) {
         const result = this.__env__.get(value);
-        if (typeof result === 'function') {
+        if (is_function(result)) {
             return result.bind(this.__env__);
         }
         return result;
@@ -5364,7 +5377,7 @@
                             value = value.valueOf();
                         } else {
                             value = get(root, first);
-                            if (typeof value === 'function') {
+                            if (is_function(value)) {
                                 value = unbind(value);
                             }
                         }
@@ -5697,10 +5710,10 @@
             Display error message.`),
         // ------------------------------------------------------------------
         '%same-functions': doc('%same-functions', function(a, b) {
-            if (typeof a !== 'function') {
+            if (!is_function(a)) {
                 return false;
             }
-            if (typeof b !== 'function') {
+            if (!is_function(b)) {
                 return false;
             }
             return unbind(a) === unbind(b);
@@ -6147,7 +6160,7 @@
                     env = env.__parent__;
                 }
                 if (new_expr &&
-                    ((typeof value === 'function' && value[__lambda__]) ||
+                    ((is_function(value) && value[__lambda__]) ||
                      (value instanceof Syntax))) {
                     value.__name__ = code.car.valueOf();
                     if (value.__name__ instanceof LString) {
@@ -6171,7 +6184,7 @@
         // ------------------------------------------------------------------
         'set-obj!': doc('set-obj!', function(obj, key, value) {
             var obj_type = typeof obj;
-            if (isNull(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
+            if (is_null(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
                 var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
                 throw new Error(msg);
             }
@@ -6179,10 +6192,10 @@
             key = key.valueOf();
             if (arguments.length === 2) {
                 delete obj[key];
-            } else if (is_prototype(obj) && typeof value === 'function') {
+            } else if (is_prototype(obj) && is_function(value)) {
                 obj[key] = unbind(value);
                 obj[key][__prototype__] = true;
-            } else if (typeof value === 'function' || is_native(value) || value === nil) {
+            } else if (is_function(value) || is_native(value) || value === nil) {
                 obj[key] = value;
             } else {
                 obj[key] = value ? value.valueOf() : value;
@@ -6924,7 +6937,7 @@
                 if ((item instanceof Pair || item === nil) && !is_list(item)) {
                     throw new Error('append!: Invalid argument, value is not a list');
                 }
-                if (isNull(item)) {
+                if (is_null(item)) {
                     return acc;
                 }
                 if (acc === nil) {
@@ -7160,11 +7173,12 @@
 
             Function check if value is a macro.`),
         // ------------------------------------------------------------------
-        'function?': doc('function?', function(obj) {
-            return typeof obj === 'function';
-        }, `(function? expression)
+        'function?': doc(
+            'function?',
+            is_function,
+            `(function? expression)
 
-            Function check if value is a function.`),
+             Function check if value is a function.`),
         // ------------------------------------------------------------------
         'real?': doc('real?', function(value) {
             if (type(value) !== 'number') {
@@ -7204,7 +7218,7 @@
             Function check if value is regular expression.`),
         // ------------------------------------------------------------------
         'null?': doc('null?', function(obj) {
-            return isNull(obj);
+            return is_null(obj);
         }, `(null? expression)
 
             Function check if value is nulish.`),
@@ -7359,7 +7373,7 @@
         find: doc(function find(arg, list) {
             typecheck('find', arg, ['regex', 'function']);
             typecheck('find', list, ['pair', 'nil']);
-            if (isNull(list)) {
+            if (is_null(list)) {
                 return nil;
             }
             var fn = matcher('find', arg);
@@ -7450,7 +7464,7 @@
         some: doc(function some(fn, list) {
             typecheck('some', fn, 'function');
             typecheck('some', list, ['pair', 'nil']);
-            if (isNull(list)) {
+            if (is_null(list)) {
                 return false;
             } else {
                 return unpromise(fn(list.car), (value) => {
@@ -7846,7 +7860,7 @@
 
             Function left shit the value a by value b.`),
         not: doc(function not(value) {
-            if (isNull(value)) {
+            if (is_null(value)) {
                 return true;
             }
             return !value;
@@ -8102,13 +8116,13 @@
                     return obj.constructor.__class__;
                 }
                 if (obj.constructor === Object &&
-                    typeof obj[Symbol.iterator] === 'function') {
+                    is_function(obj[Symbol.iterator])) {
                     return 'iterator';
                 }
                 return obj.constructor.name.toLowerCase();
             }
         }
-        if (typeof obj === 'function' && obj[Symbol.for('promise')]) {
+        if (is_function(obj) && obj[Symbol.for('promise')]) {
             return 'promise';
         }
         return typeof obj;
@@ -8168,7 +8182,7 @@
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
                 if (dynamic_scope) {
                     arg = unpromise(arg, arg => {
-                        if (typeof arg === 'function' && is_native_function(arg)) {
+                        if (is_native_function(arg)) {
                             return arg.bind(dynamic_scope);
                         }
                         return arg;
@@ -8230,13 +8244,13 @@
                 // lambda need environment as context
                 // normal functions are bound to their contexts
                 fn = unbind(fn);
-            } else if (args.some(lips_function) &&
-                       !lips_function(fn) &&
+            } else if (args.some(is_lips_function) &&
+                       !is_lips_function(fn) &&
                        !is_array_method(fn)) {
                 // we unbox values from callback functions #76
                 // calling map on array should not unbox the value
                 args = args.map(arg => {
-                    if (lips_function(arg)) {
+                    if (is_lips_function(arg)) {
                         var wrapper = function(...args) {
                             return unpromise(arg.apply(this, args), unbox);
                         };
@@ -8283,7 +8297,7 @@
             }
             var eval_args = { env, dynamic_scope, error };
             var value;
-            if (isNull(code)) {
+            if (is_null(code)) {
                 return code;
             }
             if (code instanceof LSymbol) {
@@ -8301,7 +8315,7 @@
                         return evaluate(new Pair(value, code.cdr), eval_args);
                     });
                     // else is later in code
-                } else if (typeof value !== 'function') {
+                } else if (!is_function(value)) {
                     throw new Error(
                         type(value) + ' ' + env.get('repr')(value) +
                             ' is not a function while evaluating ' + code.toString()
@@ -8310,7 +8324,7 @@
             }
             if (first instanceof LSymbol) {
                 value = env.get(first);
-            } else if (typeof first === 'function') {
+            } else if (is_function(first)) {
                 value = first;
             }
             var result;
@@ -8318,12 +8332,12 @@
                 result = evaluate_syntax(value, code, eval_args);
             } else if (value instanceof Macro) {
                 result = evaluate_macro(value, rest, eval_args);
-            } else if (typeof value === 'function') {
+            } else if (is_function(value)) {
                 result = apply(value, rest, eval_args);
             } else if (code instanceof Pair) {
                 value = first && first.toString();
                 throw new Error(`${type(first)} ${value} is not a function`);
-            } else if (typeof value !== 'function') {
+            } else if (!is_function(value)) {
                 if (value) {
                     var msg = `${type(value)} \`${value}' is not a function`;
                     throw new Error(msg);
