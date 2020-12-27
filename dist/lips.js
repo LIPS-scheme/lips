@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 26 Dec 2020 16:23:07 +0000
+ * build: Sun, 27 Dec 2020 10:59:19 +0000
  */
 (function () {
   'use strict';
@@ -3821,8 +3821,9 @@
         repr.forEach(function (value, key) {
           key = unbind(key); // if key is Object it should only work for plain_object
           // because otherwise it will match every object
+          // we don't use instanceof so it don't work for subclasses
 
-          if (obj instanceof key && (key === Object && plain_object && !iterator || key !== Object)) {
+          if (obj.constructor === key && (key === Object && plain_object && !iterator || key !== Object)) {
             fn = value;
           }
         });
@@ -4045,15 +4046,19 @@
           name = 'instance';
         }
 
-        if (root.HTMLElement && obj instanceof root.HTMLElement) {
-          return "#<HTMLElement(".concat(obj.tagName.toLowerCase(), ")>");
-        }
+        if (is_iterator(obj, Symbol.iterator)) {
+          if (name) {
+            return "#<iterator(".concat(name, ")>");
+          }
 
-        if (is_function(obj[Symbol.iterator])) {
           return '#<iterator>';
         }
 
-        if (is_function(obj[Symbol.asyncIterator])) {
+        if (is_iterator(obj, Symbol.asyncIterator)) {
+          if (name) {
+            return "#<asyncIterator(".concat(name, ")>");
+          }
+
           return '#<asyncIterator>';
         }
 
@@ -9048,10 +9053,14 @@
                 reject(err);
                 global_env.set(PATH, module_path);
               } else {
-                run(data).then(function () {
-                  resolve();
-                  global_env.set(PATH, module_path);
-                })["catch"](reject);
+                try {
+                  run(data).then(function () {
+                    resolve();
+                    global_env.set(PATH, module_path);
+                  })["catch"](reject);
+                } catch (e) {
+                  reject(e);
+                }
               }
             });
           });
@@ -11301,6 +11310,22 @@
     } // -------------------------------------------------------------------------
 
 
+    function has_own_symbol(obj, symbol) {
+      if (obj === null) {
+        return false;
+      }
+
+      return _typeof_1(obj) === 'object' && symbol in Object.getOwnPropertySymbols(obj);
+    } // -------------------------------------------------------------------------
+
+
+    function is_iterator(obj, symbol) {
+      if (has_own_symbol(obj, symbol) || has_own_symbol(obj.__proto__, symbol)) {
+        return is_function(obj[symbol]);
+      }
+    } // -------------------------------------------------------------------------
+
+
     function type(obj) {
       var mapping = {
         'pair': Pair,
@@ -11361,8 +11386,14 @@
             return obj.constructor.__class__;
           }
 
-          if (obj.constructor === Object && is_function(obj[Symbol.iterator])) {
-            return 'iterator';
+          if (obj.constructor === Object) {
+            if (is_iterator(obj, Symbol.iterator)) {
+              return 'iterator';
+            }
+
+            if (is_iterator(obj, Symbol.asyncIterator)) {
+              return 'async-iterator';
+            }
           }
 
           return obj.constructor.name.toLowerCase();
@@ -12208,10 +12239,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 26 Dec 2020 16:23:07 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 27 Dec 2020 10:59:19 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 26 Dec 2020 16:23:07 +0000').valueOf();
+      var date = LString('Sun, 27 Dec 2020 10:59:19 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12248,7 +12279,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 26 Dec 2020 16:23:07 +0000',
+      date: 'Sun, 27 Dec 2020 10:59:19 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

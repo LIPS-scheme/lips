@@ -1,14 +1,18 @@
 ## 1.0.0-beta.11
+### Breaking
+* remove repr of HTMLElement (it's now default instance of a class)
 ### Features
 * add support for quasiquote on objects and vectors
 * interning symbols mechanism [#106](https://github.com/jcubic/lips/issues/106)
 * new macro `quoted-promise` and syntax `'>` [#54](https://github.com/jcubic/lips/issues/54)
 * new function await that return original promise from QuotedPromise
 * bytevector functions (R7RS)
+* improve detecting and repr of iterators
 ### Bugfix
 * fix resolving promises on vectors and objects
 * fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)
 * fix `equal?` on typed arrays
+* fix detecting user repr (when object is subclass)
 
 ## 1.0.0-beta.10
 ### Breaking

@@ -1965,7 +1965,8 @@
                 key = unbind(key);
                 // if key is Object it should only work for plain_object
                 // because otherwise it will match every object
-                if (obj instanceof key &&
+                // we don't use instanceof so it don't work for subclasses
+                if (obj.constructor === key &&
                     (key === Object && plain_object && !iterator || key !== Object)) {
                     fn = value;
                 }
@@ -2138,13 +2139,16 @@
             if (type(obj) === 'instance' && !is_native_function(constructor)) {
                 name = 'instance';
             }
-            if (root.HTMLElement && obj instanceof root.HTMLElement) {
-                return `#<HTMLElement(${obj.tagName.toLowerCase()})>`;
-            }
-            if (is_function(obj[Symbol.iterator])) {
+            if (is_iterator(obj, Symbol.iterator)) {
+                if (name) {
+                    return `#<iterator(${name})>`;
+                }
                 return '#<iterator>';
             }
-            if (is_function(obj[Symbol.asyncIterator])) {
+            if (is_iterator(obj, Symbol.asyncIterator)) {
+                if (name) {
+                    return `#<asyncIterator(${name})>`;
+                }
                 return '#<asyncIterator>';
             }
             if (name !== '') {
@@ -5920,10 +5924,14 @@
                             reject(err);
                             global_env.set(PATH, module_path);
                         } else {
-                            run(data).then(() => {
-                                resolve();
-                                global_env.set(PATH, module_path);
-                            }).catch(reject);
+                            try {
+                                run(data).then(() => {
+                                    resolve();
+                                    global_env.set(PATH, module_path);
+                                }).catch(reject);
+                            } catch (e) {
+                                reject(e);
+                            }
                         }
                     });
                 });
@@ -8070,6 +8078,20 @@
             obj instanceof LCharacter;
     }
     // -------------------------------------------------------------------------
+    function has_own_symbol(obj, symbol) {
+        if (obj === null) {
+            return false;
+        }
+        return typeof obj === 'object' &&
+            symbol in Object.getOwnPropertySymbols(obj);
+    }
+    // -------------------------------------------------------------------------
+    function is_iterator(obj, symbol) {
+        if (has_own_symbol(obj, symbol) || has_own_symbol(obj.__proto__, symbol)) {
+            return is_function(obj[symbol]);
+        }
+    }
+    // -------------------------------------------------------------------------
     function type(obj) {
         var mapping = {
             'pair': Pair,
@@ -8115,9 +8137,13 @@
                 if (obj.constructor.__class__) {
                     return obj.constructor.__class__;
                 }
-                if (obj.constructor === Object &&
-                    is_function(obj[Symbol.iterator])) {
-                    return 'iterator';
+                if (obj.constructor === Object) {
+                    if (is_iterator(obj, Symbol.iterator)) {
+                        return 'iterator';
+                    }
+                    if (is_iterator(obj, Symbol.asyncIterator)) {
+                        return 'async-iterator';
+                    }
                 }
                 return obj.constructor.name.toLowerCase();
             }
