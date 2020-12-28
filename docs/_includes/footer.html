@@ -9,28 +9,48 @@
 <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/terminal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/js/prism.js"></script>
-<script>
- var term = terminal({ selector: '.term', dynamic: false, name: 'demo', lips: lips });
- term.echo('LIPS version ' + lips.version + '\n' +
-           'Copyright (c) 2018-' + new Date().getFullYear() +
-           ' [[!;;;;https://jcubic.pl/me]Jakub T. Jankiewicz]\n\n' +
-           'Type [[b;#fff;](env)] to see environment with ' +
-           'functions macros and variables\nYou can also use [[b;#fff;](help obj)]' +
-           ' to display help for specic function or macro.\n' +
-           'Use [[b;#fff;](dir object)] to get list of JavaScript properties.\n',
-           { formatters: false });
- $.terminal.syntax("scheme");
- // bootstrap it will be method of lips
- var path = 'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/';
- term.exec([
-     '(let-env lips.env.__parent__',
-       '(load "' + path + 'lib/bootstrap.scm")',
-       '(load "' + path + 'lib/R5RS.scm")',
-       '(load "' + path + 'lib/R7RS.scm"))'
- ].join('\n'), true);
- $('section#head .examples .run').click(function() {
-     var code = $('section#head .example:visible').text();
-     term.exec(code.trim(), true);
- });
+<script type="text/x-scheme">
+ ($.terminal.syntax "scheme")
+ (let ((env lips.env.__parent__)
+       (path "https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/"))
+     (load (concat path "lib/bootstrap.scm") env)
+     (load (concat path "lib/R5RS.scm") env)
+     (load (concat path "lib/R7RS.scm") env))
+ (define term (terminal (object :selector ".term"
+                                :dynamic false
+                                :name "demo"
+                                :lips lips)))
+ (term.echo (string-append "LIPS version " lips.version "\n"
+                           "Copyright (c) 2018-" (repr (--> (new Date) (getFullYear)))
+                           " [[!;;;;https://jcubic.pl/me]Jakub T. Jankiewicz]\n\n"
+                           "Type [[b;#fff;](env)] to see environment with "
+                           "functions macros and variables\nYou can also use [[b;#fff;](help obj)]"
+                           " to display help for specic function or macro.\n"
+                           "Use [[b;#fff;](dir object)] to get list of JavaScript properties.\n")
+     &(:formatters false))
+ (--> ($ "section#head .examples .run")
+      (click (lambda ()
+               (let ((code (--> ($ "section#head .example:visible") (text))))
+                 (term.exec (code.trim) true)))))
+ (define (make-active $list index)
+     (--> $list
+          (eq index)
+          (addClass "active")
+          (siblings)
+          (removeClass "active")))
+
+ (let* ((examples ($ "section#head .examples .list li"))
+        (pagination ($ "section#head .examples .pagination"))
+        (pages (pagination.find "li")))
+   (--> examples (eq 0) (addClass "active"))
+   (--> pages (eq 0) (addClass "active"))
+   (--> pagination
+       (on "click" "li:not(.active)" (lambda (e)
+                                       (let* ((self ($ this))
+                                              (index (self.index)))
+                                         (make-active examples index)
+                                         (make-active pages index)
+                                         (e.preventDefault))))))
+ (--> ($ ".examples") (removeClass "cloak"))
 </script>
 {% endif %}

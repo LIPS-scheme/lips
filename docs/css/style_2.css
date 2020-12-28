@@ -2,6 +2,9 @@ body {
     margin: 0;
     font-family: 'Crimson Text', serif;
 }
+.cloak {
+    display: none;
+}
 section#head {
     background: linear-gradient(127deg, rgba(43,148,215,1) 0%, rgba(19,75,123,1) 100%);
 }
@@ -175,4 +178,41 @@ section#head .description {
     font-size: 20px;
     box-sizing: border-box;
     padding: 0 20px;
+}
+section#head .examples .list > li {
+    display: none;
+}
+section#head .examples .list > li.active {
+    display: flex;
+}
+/* example pagiantion */
+.examples .pagination {
+    display: flex;
+    position: absolute;
+    top: calc(100% - 10px);
+    right: 25%;
+    transform: translate(50%, -100%);
+}
+.examples .pagination li {
+    width: 26px;
+    height: 26px;
+    text-align: center;
+    border-radius: 3px;
+    cursor: pointer;
+}
+.examples .pagination li + li {
+    margin-left: 10px;
+}
+.examples .pagination li,
+.examples .pagination a,
+.examples .pagination a:visited {
+    background: #1d6aa1;
+    color: white;
+    text-decoration: none;
+s}
+.examples .pagination li.active,
+.examples .pagination li.active a,
+examples .pagination li.active a:visited {
+    background: white;
+    color: #1d6aa1;
 }
