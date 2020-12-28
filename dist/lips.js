@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 27 Dec 2020 10:59:19 +0000
+ * build: Mon, 28 Dec 2020 13:24:40 +0000
  */
 (function () {
   'use strict';
@@ -8552,37 +8552,12 @@
 
     var global_env = new Environment({
       nil: nil,
-      'undefined': undefined$1,
+      eof: eof,
+      undefined: undefined$1,
       'true': true,
       'false': false,
       'null': null,
       'NaN': NaN,
-      // ------------------------------------------------------------------
-      'open-input-string': doc('open-input-string', function (string) {
-        typecheck('open-input-string', string, 'string');
-        return InputStringPort(string);
-      }, "(open-input-string string)\n\n            Function create new string port as input that can be used to\n            read S-exressions from this port using `read` function."),
-      // ------------------------------------------------------------------
-      'output-port?': doc('output-port?', function (x) {
-        return x instanceof OutputPort;
-      }, "(output-port? arg)\n\n            Function return true if argument is output port."),
-      // ------------------------------------------------------------------
-      'input-port?': doc('input-port?', function (x) {
-        return x instanceof InputPort;
-      }, "(input-port? arg)\n\n            Function return true if argument is input port."),
-      // ------------------------------------------------------------------
-      'open-output-string': doc('open-output-string', function () {
-        return OutputStringPort(global_env.get('repr'));
-      }, "(open-output-string)\n\n            Function create new output port that can used to write string into\n            and after finish get the whole string using `get-output-string`"),
-      // ------------------------------------------------------------------
-      'get-output-string': doc('get-output-string', function (port) {
-        typecheck('get-output-string', port, 'output-string-port');
-        return port.getString();
-      }, "(get-output-string port)\n\n            Function get full string from string port. If nothing was wrote\n            to given port it will return empty string."),
-      // ------------------------------------------------------------------
-      'eof-object?': doc('eof-object?', function (x) {
-        return x === eof;
-      }, "(eof-object? arg)\n\n            Function check if value is eof object, returned from input string\n            port when there are no more data to read."),
       // ------------------------------------------------------------------
       'peek-char': doc('peek-char', function (port) {
         typecheck('peek-char', port, ['input-port', 'input-string-port']);
@@ -9289,10 +9264,7 @@
           error: error
         });
         return unpromise(ret, function (value) {
-          if (!(value instanceof Environment)) {
-            throw new Error('let-env: First argument need to be ' + 'environment');
-          }
-
+          typecheck('let-env', value, 'environment');
           return evaluate(Pair(LSymbol('begin'), code.cdr), {
             env: value,
             dynamic_scope: dynamic_scope,
@@ -12239,10 +12211,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 27 Dec 2020 10:59:19 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 28 Dec 2020 13:24:40 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 27 Dec 2020 10:59:19 +0000').valueOf();
+      var date = LString('Mon, 28 Dec 2020 13:24:40 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12279,7 +12251,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 27 Dec 2020 10:59:19 +0000',
+      date: 'Mon, 28 Dec 2020 13:24:40 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

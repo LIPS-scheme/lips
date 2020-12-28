@@ -8,6 +8,7 @@
 * new function await that return original promise from QuotedPromise
 * bytevector functions (R7RS)
 * improve detecting and repr of iterators
+* add `eof` variable
 ### Bugfix
 * fix resolving promises on vectors and objects
 * fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)

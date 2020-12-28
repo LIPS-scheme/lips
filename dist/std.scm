@@ -2246,6 +2246,28 @@
       (exact->inexact (/ seed m)))))
 
 ;; -----------------------------------------------------------------------------
+(define (eof-object? obj)
+  "(eof-object? arg)
+
+   Function check if value is eof object, returned from input string
+   port when there are no more data to read."
+  (eq? obj eof))
+
+;; -----------------------------------------------------------------------------
+(define (output-port? obj)
+  "(output-port? arg)
+
+   Function return true if argument is output port."
+  (instanceof lips.OutputPort obj))
+
+;; -----------------------------------------------------------------------------
+(define (input-port? obj)
+  "(input-port? arg)
+
+   Function return true if argument is input port."
+  (instanceof lips.InputPort obj))
+
+;; -----------------------------------------------------------------------------
 ;; Implementation of byte vector functions - SRFI-4
 ;;
 ;; original code was ased on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
@@ -2923,5 +2945,31 @@
                  (len (--> (Array.from string) 'length))
                  (end (if (null? (cdr rest)) len (cadr rest))))
             (decoder.decode (v.slice start end)))))))
+
+;; -----------------------------------------------------------------------------
+(define (open-input-string string)
+  "(open-input-string string)
+
+   Function create new string port as input that can be used to
+   read S-exressions from this port using `read` function."
+  (typecheck "open-input-string" string "string")
+  (lips.InputStringPort string))
+
+;; -----------------------------------------------------------------------------
+(define (open-output-string)
+  "(open-output-string)
+
+   Function create new output port that can used to write string into
+   and after finish get the whole string using `get-output-string`."
+  (lips.OutputStringPort repr))
+
+;; -----------------------------------------------------------------------------
+(define (get-output-string port)
+  "(get-output-string port)
+
+   Function get full string from string port. If nothing was wrote
+   to given port it will return empty string."
+  (typecheck "get-output-string" port "output-string-port")
+  (port.getString))
 
 ;; -----------------------------------------------------------------------------

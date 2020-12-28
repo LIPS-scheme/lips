@@ -541,3 +541,29 @@
             (decoder.decode (v.slice start end)))))))
 
 ;; -----------------------------------------------------------------------------
+(define (open-input-string string)
+  "(open-input-string string)
+
+   Function create new string port as input that can be used to
+   read S-exressions from this port using `read` function."
+  (typecheck "open-input-string" string "string")
+  (lips.InputStringPort string))
+
+;; -----------------------------------------------------------------------------
+(define (open-output-string)
+  "(open-output-string)
+
+   Function create new output port that can used to write string into
+   and after finish get the whole string using `get-output-string`."
+  (lips.OutputStringPort repr))
+
+;; -----------------------------------------------------------------------------
+(define (get-output-string port)
+  "(get-output-string port)
+
+   Function get full string from string port. If nothing was wrote
+   to given port it will return empty string."
+  (typecheck "get-output-string" port "output-string-port")
+  (port.getString))
+
+;; -----------------------------------------------------------------------------

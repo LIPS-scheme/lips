@@ -1160,3 +1160,25 @@
       (exact->inexact (/ seed m)))))
 
 ;; -----------------------------------------------------------------------------
+(define (eof-object? obj)
+  "(eof-object? arg)
+
+   Function check if value is eof object, returned from input string
+   port when there are no more data to read."
+  (eq? obj eof))
+
+;; -----------------------------------------------------------------------------
+(define (output-port? obj)
+  "(output-port? arg)
+
+   Function return true if argument is output port."
+  (instanceof lips.OutputPort obj))
+
+;; -----------------------------------------------------------------------------
+(define (input-port? obj)
+  "(input-port? arg)
+
+   Function return true if argument is input port."
+  (instanceof lips.InputPort obj))
+
+;; -----------------------------------------------------------------------------

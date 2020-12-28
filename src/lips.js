@@ -5527,54 +5527,13 @@
     });
     // -------------------------------------------------------------------------
     var global_env = new Environment({
-        nil: nil,
-        'undefined': undefined,
+        nil,
+        eof,
+        undefined,
         'true': true,
         'false': false,
         'null': null,
         'NaN': NaN,
-        // ------------------------------------------------------------------
-        'open-input-string': doc('open-input-string', function(string) {
-            typecheck('open-input-string', string, 'string');
-            return InputStringPort(string);
-        }, `(open-input-string string)
-
-            Function create new string port as input that can be used to
-            read S-exressions from this port using \`read\` function.`),
-        // ------------------------------------------------------------------
-        'output-port?': doc('output-port?', function(x) {
-            return x instanceof OutputPort;
-        }, `(output-port? arg)
-
-            Function return true if argument is output port.`),
-        // ------------------------------------------------------------------
-        'input-port?': doc('input-port?', function(x) {
-            return x instanceof InputPort;
-        }, `(input-port? arg)
-
-            Function return true if argument is input port.`),
-        // ------------------------------------------------------------------
-        'open-output-string': doc('open-output-string', function() {
-            return OutputStringPort(global_env.get('repr'));
-        }, `(open-output-string)
-
-            Function create new output port that can used to write string into
-            and after finish get the whole string using \`get-output-string\``),
-        // ------------------------------------------------------------------
-        'get-output-string': doc('get-output-string', function(port) {
-            typecheck('get-output-string', port, 'output-string-port');
-            return port.getString();
-        }, `(get-output-string port)
-
-            Function get full string from string port. If nothing was wrote
-            to given port it will return empty string.`),
-        // ------------------------------------------------------------------
-        'eof-object?': doc('eof-object?', function(x) {
-            return x === eof;
-        }, `(eof-object? arg)
-
-            Function check if value is eof object, returned from input string
-            port when there are no more data to read.`),
         // ------------------------------------------------------------------
         'peek-char': doc('peek-char', function(port) {
             typecheck('peek-char', port, ['input-port', 'input-string-port']);
@@ -6039,10 +5998,7 @@
             typecheck('let-env', code, 'pair');
             var ret = evaluate(code.car, { env: this, dynamic_scope, error });
             return unpromise(ret, function(value) {
-                if (!(value instanceof Environment)) {
-                    throw new Error('let-env: First argument need to be ' +
-                                    'environment');
-                }
+                typecheck('let-env', value, 'environment');
                 return evaluate(Pair(LSymbol('begin'), code.cdr), {
                     env: value, dynamic_scope, error
                 });
