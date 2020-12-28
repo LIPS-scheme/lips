@@ -51,6 +51,16 @@
                                          (make-active examples index)
                                          (make-active pages index)
                                          (e.preventDefault))))))
+ (begin
+     (--> ($ ".actions .full-screen")
+          (click (lambda ()
+                   (--> ($ document.body)
+                        (addClass "full-screen")))))
+     (--> ($ ".actions .exit-full-screen")
+          (click (lambda ()
+                   (--> ($ document.body)
+                        (removeClass "full-screen"))))))
+
  (--> ($ ".examples") (removeClass "cloak"))
 </script>
 {% endif %}

@@ -7,6 +7,7 @@ body {
 }
 section#head {
     background: linear-gradient(127deg, rgba(43,148,215,1) 0%, rgba(19,75,123,1) 100%);
+    min-height: 620px; /* prevent content shift when terminal and example are hidden */
 }
 section#head > header {
     padding-top: 70px;
@@ -23,7 +24,12 @@ section#head .examples {
     width: 100%;
     margin: 0 auto;
 }
-
+.full-screen section#head .intro > .actions {
+    max-width: initial;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
 section#head .intro > .actions {
     padding: 0;
     list-style: none;
@@ -39,6 +45,7 @@ section#head .intro > .actions > li {
     height: 52px;
     text-indent: -99999px;
     overflow: hidden;
+    cursor: pointer;
 }
 section#head .exit-full-screen, .full-screen section#head .full-screen {
     display: none;
@@ -54,6 +61,15 @@ section#head .intro > .actions > li, .top-bar .icons a {
 }
 section#head .terminal {
     height: 200px;
+}
+.full-screen .terminal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh !important;
+    max-width: initial !important;
+    z-index: 50;
 }
 section#head h1 {
     color: white;
@@ -198,6 +214,8 @@ section#head .examples .list > li.active {
     height: 26px;
     text-align: center;
     border-radius: 3px;
+}
+.examples .pagination li:active {
     cursor: pointer;
 }
 .examples .pagination li + li {
