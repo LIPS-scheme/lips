@@ -86,7 +86,7 @@ section#head h1 {
     margin: 0;
     transform: translateY(-50%);
 }
-h1, h2, main header nav, main header p, .top-bars {
+h1, h2, main header nav, main header p, .top-bars, section#head .description {
     font-family: 'Play', sans-serif;
     font-weight: normal;
 }
