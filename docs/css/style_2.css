@@ -30,6 +30,12 @@ section#head .examples {
     top: 0;
     right: 0;
 }
+.full-screen section#head ~ * {
+    display: none;
+}
+.full-screen section#head {
+    min-height: initial;
+}
 section#head .intro > .actions {
     padding: 0;
     list-style: none;
@@ -60,7 +66,7 @@ section#head .intro > .actions > li, .top-bar .icons a {
     background: url(/img/icons.svg);
 }
 section#head .terminal {
-    height: 200px;
+    height: calc((var(--size, 1) * 14 * 14px) + 20px);
 }
 .full-screen .terminal {
     position: absolute;
