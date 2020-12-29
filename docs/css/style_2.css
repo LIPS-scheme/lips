@@ -7,7 +7,7 @@ body {
 }
 section#head {
     background: linear-gradient(127deg, rgba(43,148,215,1) 0%, rgba(19,75,123,1) 100%);
-    min-height: 620px; /* prevent content shift when terminal and example are hidden */
+    min-height: 544px;; /* prevent content shift when terminal and example are hidden */
 }
 section#head > header {
     padding-top: 70px;
