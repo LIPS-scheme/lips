@@ -10,15 +10,31 @@
 }
 .token.__doc__::before {
     position: absolute;
-    top: calc(var(--top, 100%) * 1px);
+    top: clac(var(--top) * 1px);
     left: calc(var(--left, 0) * 1px);
     z-index: 400;
-    width: 85ch;
     background: var(--color, #ccc);
     color: var(--background, #000);
     white-space: pre;
     padding: 5px;
+    pointer-events:none;
 }
+.token.__doc__.top::before {
+    top: calc(var(--top) * 1px - var(--size, 1) * 14px);
+    transform: translateY(-100%);
+}
+.cmd .token.__doc__::before {
+    top: 0;
+    transform: translateY(-100%);
+}
+.token.__doc__.right::before {
+    left: calc(var(--right) * 1px);
+    transform: translateX(-100%);
+}
+.cmd .token.__doc__.right::before, .token.__doc__.top.right::before {
+    transform: translate(-100%, -100%);
+}
+
 .shell-wrapper .terminal.lips {
     font-size-adjust: none; --size: 1.2;
     height: calc(100% - 26px);
