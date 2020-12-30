@@ -66,9 +66,11 @@
   (syntax-rules ()
     ((_ arg ...) (list->array (list arg ...))))
   "(vector 1 2 3 (+ 3 1))
-   #(1 2 3 (+ 3 1))
+   #(1 2 3 4)
 
-   Macro for defining vectors (JavaScript arrays).")
+   Macro for defining vectors (JavaScript arrays). Vectors literals are
+   automatically quoted. So you can use expressions inside them. Only other
+   literals, like other vectors or object.")
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
