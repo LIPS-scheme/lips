@@ -1,0 +1,62 @@
+.terminal-output > :not(.raw) {
+    position: relative;
+}
+.token.__doc__ {
+    cursor: help;
+}
+.token.__doc__:hover::before {
+    display: block;
+    content: attr(data-doc);
+}
+.token.__doc__::before {
+    position: absolute;
+    top: 100%;
+    left: calc(var(--left, 0) * 1px);
+    z-index: 400;
+    width: 85ch;
+    background: var(--color, #ccc);
+    color: var(--background, #000);
+    white-space: pre;
+    padding: 5px;
+}
+.shell-wrapper .terminal.lips {
+    font-size-adjust: none; --size: 1.2;
+    height: calc(100% - 26px);
+}
+.shell-wrapper nav {
+    cursor: row-resize; color:#ccc;
+    border-bottom: 1px solid #ccc;
+    font-family: monospace;
+    text-align: right;
+    background:black;
+    font-size: 13px;
+    line-height: initial;
+    margin: 0;
+    width: 100%;
+    height: auto;
+}
+.shell-container {
+    position: fixed;
+    z-index: 99999;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+}
+.shell-wrapper .shell-destroy {
+    padding: 5px;
+    cursor: pointer;
+    display: inline-block;
+}
+.shell-wrapper .shell-mask{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: none;
+    z-index: 100
+}
+.shell-wrapper.drag .shell-mask {
+    display: block;
+}
