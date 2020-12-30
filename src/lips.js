@@ -8668,7 +8668,8 @@ LIPS Interpreter {{VER}} (${_build}) <https://lips.js.org>
 Copyright (c) 2018-${_year} Jakub T. Jankiewicz
 
 Type (env) to see environment with functions macros and variables.
-You can also use (help name) to display help for specic function or macro.
+You can also use (help name) to display help for specic function or macro and
+(apropos name) to display list of matched names in environment.
 `.replace(/^.*\n/, '');
         return banner;
     })();
