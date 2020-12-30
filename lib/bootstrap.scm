@@ -1084,3 +1084,15 @@
   `(let-env-values lips.env.__parent__ ,spec ,@body))
 
 ;; ---------------------------------------------------------------------------------------
+(define (apropos name)
+  "(apropos name)
+
+   Search environment and display names that match the given name.
+   name can be regex or string."
+  (typecheck "apropos" name '("string" "regex"))
+  (filter (if (string? name)
+              (new RegExp name)
+              name)
+          (env)))
+
+;; ---------------------------------------------------------------------------------------
