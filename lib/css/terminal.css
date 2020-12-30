@@ -10,7 +10,7 @@
 }
 .token.__doc__::before {
     position: absolute;
-    top: 100%;
+    top: calc(var(--top, 100%) * 1px);
     left: calc(var(--left, 0) * 1px);
     z-index: 400;
     width: 85ch;
