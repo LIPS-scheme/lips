@@ -63,7 +63,7 @@ section#head .intro > .actions > li.full-screen {
     background-position: -52px 0;
 }
 section#head .intro > .actions > li, .top-bar .icons a {
-    background: url(/img/icons.svg);
+    background: url(../img/icons.svg);
 }
 section#head .terminal {
     height: calc((var(--size, 1) * 14 * 14px) + 20px);
