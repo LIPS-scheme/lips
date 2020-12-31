@@ -17,7 +17,7 @@
 (define (%doc string fn)
   (typecheck "%doc" fn "function")
   (typecheck "%doc" string "string")
-  (set-obj! fn '__doc__ (--> string (replace /^ +/mg "")))
+  (set-obj! fn '__doc__ (--> string (replace #/^ +/mg "")))
   fn)
 
 ;; -----------------------------------------------------------------------------
@@ -84,7 +84,7 @@
           (--> document (querySelectorAll \"div\"))
           (--> (fetch \"https://jcubic.pl\")
                (text)
-               (match /<title>([^<]+)<\\/title>/)
+               (match #/<title>([^<]+)<\\/title>/)
                1)
           (--> document
                (querySelectorAll \".cmd-prompt\")

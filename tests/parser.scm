@@ -101,7 +101,7 @@
       (lambda (t)
         (let ((str (make-string 10 #\ )))
           (t.is (string-length str) 10)
-          (t.is (not (null? (--> str (match /^\s{10}$/)))) #t))))
+          (t.is (not (null? (--> str (match #/^\s{10}$/)))) #t))))
 
 (test "parser: vector quoting"
       (lambda (t)
@@ -129,6 +129,6 @@
         ;; testing #48 - when writing code with string in Scheme
         ;; we need to double escape to get slash
         (define code (lips.parse "(--> \"<title>hello-world<\\/title>\"
-                                       (match /<title>([^<]+)<\\/title>/)
+                                       (match #/<title>([^<]+)<\\/title>/)
                                        1)"))
         (t.is (eval (. code 0)) "hello-world")))

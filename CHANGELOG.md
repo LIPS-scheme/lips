@@ -1,6 +1,7 @@
 ## 1.0.0-beta.11
 ### Breaking
 * remove repr of HTMLElement (it's now default instance of a class)
+* regular expressions are now prefixed with hash like in Gauche e.g. `#/foo/`
 ### Features
 * add support for quasiquote on objects and vectors
 * interning symbols mechanism [#106](https://github.com/jcubic/lips/issues/106)

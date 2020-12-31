@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 30 Dec 2020 18:22:25 +0000
+ * build: Thu, 31 Dec 2020 11:47:40 +0000
  */
 (function () {
   'use strict';
@@ -1427,7 +1427,7 @@
       return "".concat(num_mnemicic_re(mnemonic), "[+-]?").concat(range, "+");
     }
 
-    var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
+    var re_re = /^#\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimyus]*)$/;
     var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)'; // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
 
     var complex_float_stre = "(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|".concat(float_stre, "|[+-]?[0-9]+))?(?:").concat(float_stre, "|[+-](?:[0-9]+/[0-9]+|[0-9]+))i");
@@ -1844,7 +1844,7 @@
     /* eslint-disable */
 
 
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||#;|;.*|#\|(?!\|#)[\s\S]*\|#)/g;
+    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|#\/[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimyus]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||#;|;.*|#\|(?!\|#)[\s\S]*\|#)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g; // generate regex for all number literals
 
     var num_stre = [gen_complex_re, gen_rational_re, gen_integer_re].map(make_num_stre).join('|'); // ----------------------------------------------------------------------
@@ -12211,10 +12211,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 30 Dec 2020 18:22:25 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 31 Dec 2020 11:47:40 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 30 Dec 2020 18:22:25 +0000').valueOf();
+      var date = LString('Thu, 31 Dec 2020 11:47:40 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12251,7 +12251,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 30 Dec 2020 18:22:25 +0000',
+      date: 'Thu, 31 Dec 2020 11:47:40 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

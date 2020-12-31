@@ -248,12 +248,12 @@
         (t.is '((foo . 1)
                 (bar . 2.1)
                 (baz . "string")
-                (quux . /foo./g))
+                (quux . #/foo./g))
 
               (list (cons 'foo 1)
                     (cons 'bar 2.1)
                     (cons 'baz "string")
-                    (cons 'quux /foo./g)))))
+                    (cons 'quux #/foo./g)))))
 
 (test "quote: should return literal atoms"
       (lambda (t)

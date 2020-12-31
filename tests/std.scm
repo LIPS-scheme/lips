@@ -58,7 +58,7 @@
 
 (test "std: predicates"
       (lambda (t)
-        (t.is (regex? /foo/) #t)
+        (t.is (regex? #/foo/) #t)
         (t.is (boolean? nil) #f)
         (t.is (boolean? null) #f)
         (t.is (boolean? undefined) #f)
@@ -68,7 +68,7 @@
 (test "std: find"
       (lambda (t)
         (t.is (find odd? (list 1 2 3)) 1)
-        (t.is (find /^[0-9]+$/ (list "foo" "bar" "10")) "10")
+        (t.is (find #/^[0-9]+$/ (list "foo" "bar" "10")) "10")
         (t.is (to.throw (find "xxx" (list 1 2 3))) true)
         (t.is (find odd? (list 0 2 4 3)) 3)
         (t.is (find odd? (list 0 2 4 6)) nil)))
