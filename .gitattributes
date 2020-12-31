@@ -2,3 +2,4 @@
 .* text eol=lf
 dist/* binary
 package-lock.json binary
+*.png binary
