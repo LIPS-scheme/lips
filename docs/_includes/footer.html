@@ -5,29 +5,34 @@
 {% if page.layout != 'post' %}
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/dist/lips.min.js"></script>
 <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js"></script>
 <script type="text/x-scheme">
  ($.terminal.syntax "scheme")
  (let ((env lips.env.__parent__)
-       (path "https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/"))
-     (load (concat path "lib/bootstrap.scm") env)
-     (load (concat path "lib/R5RS.scm") env)
-     (load (concat path "lib/R7RS.scm") env))
+       (path "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/"))
+     (load (concat path "dist/std.scm") env))
+
  (define term (terminal (object :selector ".term"
                                 :dynamic false
                                 :name "demo"
                                 :lips lips)))
- (term.echo (string-append "LIPS version " lips.version "\n"
-                           "Copyright (c) 2018-" (repr (--> (new Date) (getFullYear)))
-                           " [[!;;;;https://jcubic.pl/me]Jakub T. Jankiewicz]\n\n"
-                           "Type [[b;#fff;](env)] to see environment with "
-                           "functions macros and variables\nYou can also use [[b;#fff;](help obj)]"
-                           " to display help for specic function or macro.\n"
-                           "Use [[b;#fff;](dir object)] to get list of JavaScript properties.\n")
+
+ (term.echo (--> (string-append "LIPS version " lips.version "\n"
+                                "Copyright (c) 2018-" (repr (--> (new Date) (getFullYear)))
+                                " [[!;;;;https://jcubic.pl/me]Jakub T. Jankiewicz]\n\n"
+                                "Type (env) to see environment with "
+                                "functions macros and variables\nYou can also use (help obj)"
+                                " to display help for specic function or macro.\n"
+                                "Use (dir object) to get list of JavaScript properties.\n"
+                                "(apropos name) to display list of matched names in environment.\n")
+                 (replace /(\((?:env|dir|help|apropos)[^)]*\))/g
+                          (lambda (code)
+                            ($.terminal.prism "scheme" code &(:echo true)))))
      &(:formatters false))
+
  (--> ($ "section#head .examples .run")
       (click (lambda ()
                (let ((code (--> ($ "section#head .example:visible") (text))))
