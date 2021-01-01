@@ -1135,6 +1135,7 @@
         Lexer._cache.valid = false;
         Lexer._cache.rules = null;
     });
+    // ----------------------------------------------------------------------
     Object.defineProperty(Lexer, 'rules', {
         get() {
             if (Lexer._cache.valid) {

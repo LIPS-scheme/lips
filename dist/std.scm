@@ -1100,10 +1100,25 @@
 ;; ---------------------------------------------------------------------------------------
 (set-special! "#," 'sharp-comma)
 
+(define **reader-ctor-list** '())
+
+;; ---------------------------------------------------------------------------------------
+(define (define-reader-ctor symbol fn)
+  (let ((node (assoc symbol **reader-ctor-list**)))
+    (if (pair? node)
+        (set-cdr! node fn)
+        (set! **reader-ctor-list** (cons (cons symbol fn)
+                                         **reader-ctor-list**)))))
+
+;; ---------------------------------------------------------------------------------------
 (define-syntax sharp-comma
   (syntax-rules ()
     ((_ (fn arg ...))
-      (fn 'arg ...))))
+     (let ((node (assoc 'fn **reader-ctor-list**)))
+       (if (pair? node)
+           ((cdr node) 'arg ...)
+           (throw (new Error (string-append "Invalid symbol " (symbol->string 'fn)
+                                            " in expression " (repr '(fn arg ...))))))))))
 
 ;; ---------------------------------------------------------------------------------------
 ;;   __ __                          __

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 01 Jan 2021 13:27:47 +0000
+ * build: Fri, 01 Jan 2021 13:41:32 +0000
  */
 (function () {
   'use strict';
@@ -2555,7 +2555,8 @@
     specials.on(['remove', 'append'], function () {
       Lexer._cache.valid = false;
       Lexer._cache.rules = null;
-    });
+    }); // ----------------------------------------------------------------------
+
     Object.defineProperty(Lexer, 'rules', {
       get: function get() {
         if (Lexer._cache.valid) {
@@ -12645,10 +12646,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 01 Jan 2021 13:27:47 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 01 Jan 2021 13:41:32 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 01 Jan 2021 13:27:47 +0000').valueOf();
+      var date = LString('Fri, 01 Jan 2021 13:41:32 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12685,7 +12686,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 01 Jan 2021 13:27:47 +0000',
+      date: 'Fri, 01 Jan 2021 13:41:32 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
