@@ -1096,6 +1096,16 @@
           (env)))
 
 ;; ---------------------------------------------------------------------------------------
+;; SRFI-10 https://srfi.schemers.org/srfi-10/srfi-10.html
+;; ---------------------------------------------------------------------------------------
+(set-special! "#," 'sharp-comma)
+
+(define-syntax sharp-comma
+  (syntax-rules ()
+    ((_ (fn arg ...))
+      (fn 'arg ...))))
+
+;; ---------------------------------------------------------------------------------------
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
@@ -2796,8 +2806,8 @@
 ;; based on https://srfi.schemers.org/srfi-0/srfi-0.html
 ;; -----------------------------------------------------------------------------
 (define-syntax cond-expand
-  (syntax-rules (and or not else srfi-0 srfi-4 srfi-6 srfi-22
-                     srfi-23 srfi-46 srfi-176 lips
+  (syntax-rules (and or not else srfi-0 srfi-4 srfi-6 srfi-10
+                     srfi-22 srfi-23 srfi-46 srfi-176 lips
                      complex full-unicode ieee-float ratios
                      exact-complex full-numeric-tower)
     ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
@@ -2832,6 +2842,8 @@
     ((cond-expand (srfi-4  body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (srfi-6  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-10  body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (srfi-22  body ...) more-clauses ...)
        (begin body ...))

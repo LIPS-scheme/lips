@@ -11,6 +11,8 @@
 * improve detecting and repr of iterators
 * add `eof` variable to global env
 * add `apropos` function
+* new incremental Lexer that allow to modify parser while it's running
+* add SRFI-10 sharp-comma
 ### Bugfix
 * fix resolving promises on vectors and objects
 * fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)
