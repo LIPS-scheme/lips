@@ -54,7 +54,9 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
         code = code.toString();
     }
     return interpreter.exec(code, dynamic, env).catch(function(e) {
-        console.error(e.message);
+        if (!stack) {
+            console.error(e.message);
+        }
         log_error(e.message);
         if (e.__code__) {
             strace = e.__code__.map((line, i) => {

@@ -357,6 +357,7 @@
         if (char) {
             return LCharacter(char);
         }
+        throw new Error('Parse: invalid character');
     }
     // ----------------------------------------------------------------------
     function parse_complex(arg, radix = 10) {
@@ -519,10 +520,12 @@
             return parse_float(arg);
         } else if (arg === 'nil') {
             return nil;
-        } else if (['true', '#t'].includes(arg)) {
+        } else if (['true', '#t', '#true'].includes(arg)) {
             return true;
-        } else if (['false', '#f'].includes(arg)) {
+        } else if (['false', '#f', '#false'].includes(arg)) {
             return false;
+        } else if (arg.match(/^#[iexobd]/)) {
+            throw new Error('Invalid numeric constant');
         } else {
             return parse_symbol(arg);
         }
@@ -550,7 +553,7 @@
         const tokens = specials.names()
             .sort((a, b) => b.length - a.length || a.localeCompare(b))
             .map(escape_regex).join('|');
-        return new RegExp(`(${char_sre_re}|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|'(?=#[ft]|(?:#[xiobe]){1,2}|#\\\\)|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
+        return new RegExp(`(${char_sre_re}|#false|#true|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|'(?=#[ft]|(?:#[xiobe]){1,2}|#\\\\)|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -585,6 +588,9 @@
     };
     // ----------------------------------------------------------------------
     function tokens(str) {
+        if (str instanceof LString) {
+            str = str.valueOf();
+        }
         var tokens_re = make_tokens_re();
         str = str.replace(/\n\r|\r/g, '\n');
         var count = 0;
@@ -847,6 +853,7 @@
     var specials = {
         LITERAL: Symbol.for('literal'),
         SPLICE: Symbol.for('splice'),
+        SYMBOL: Symbol.for('symbol'),
         names: function() {
             return Object.keys(this._specials);
         },
@@ -887,6 +894,244 @@
         specials.append(seq, symbol, type);
     });
     // ----------------------------------------------------------------------
+    // :: State based incremental Lexer
+    // ----------------------------------------------------------------------
+    class Lexer {
+        constructor(input) {
+            this._input = input;
+            this._i = 0;
+            this._state = null;
+            this._next = null;
+            this._token = null;
+            this._line = 0;
+        }
+        peek() {
+            if (this._token) {
+                return this._token;
+            }
+            var found = this.next_token();
+            if (found) {
+                this._token = this._input.substring(this._i, this._next);
+                return this._token;
+            }
+            return eof;
+        }
+        skip() {
+            if (this._next !== null) {
+                this._token = null;
+                this._i = this._next;
+            }
+        }
+        match_rule(rule, { prev_char, char, next_char } = {}) {
+            var [ re, prev_re, next_re, state ] = rule;
+            if (rule.length !== 5) {
+                throw new Error(`Lexer: Invald rule of length ${rule.length}`);
+            }
+            if (!char.match(re)) {
+                return false;
+            }
+            if (!match_or_null(prev_re, prev_char)) {
+                return false;
+            }
+            if (!match_or_null(next_re, next_char)) {
+                return false;
+            }
+            if (state !== this._state) {
+                return false;
+            }
+            return true;
+        }
+        next_token() {
+            if (this._i >= this._input.length) {
+                return false;
+            }
+            var start = true;
+            loop:
+            for (let i = this._i, len = this._input.length; i < len; ++i) {
+                var char = this._input[i];
+                var prev_char = this._input[i - 1] || '';
+                var next_char = this._input[i + 1] || '';
+                if (char === '\n') {
+                    this._line++;
+                }
+                // skip leadning spaces
+                if (start && this._state === null && char.match(/\s/)) {
+                    this._i = i + 1;
+                    continue;
+                }
+                start = false;
+                for (let rule of Lexer.rules) {
+                    if (this.match_rule(rule, { prev_char, char, next_char })) {
+                        // change state to null is end of the token
+                        var next_state = rule[rule.length - 1];
+                        this._state = next_state;
+                        if (this._state === null) {
+                            this._next = i + 1;
+                            return true;
+                        }
+                        // token is activated
+                        continue loop;
+                    }
+                }
+                if (this._state !== null) {
+                    // collect char in token
+                    continue loop;
+                }
+                // no rule for token
+                var line = this._input.split('\n')[this._line];
+                throw new Error(`Invalid Syntax at line ${this._line}\n${line}`);
+            }
+        }
+    }
+    // ----------------------------------------------------------------------
+    // TODO: cache the rules creation or whole list
+    // ----------------------------------------------------------------------
+    Lexer.symbol_rule = function symbol_rule(string, symbol) {
+        var rules = Lexer.literal_rule(string, symbol, Lexer.boundary, /\S/);
+
+        return rules.concat([
+            [/\S/, /\S/, Lexer.boundary, null, null],
+            [/\S/, /\S/, null, null, Lexer.symbol],
+            [/\S/, null, Lexer.boundary, Lexer.symbol, null]
+        ]);
+    };
+    // ----------------------------------------------------------------------
+    // state rule for literal symbol
+    // ----------------------------------------------------------------------
+    Lexer.literal_rule = function literal_rule(string, symbol, p_re = null, n_re = null) {
+        if (string.length === 0) {
+            throw new Error('Lexer: invalid literal rule');
+        }
+        if (string.length === 1) {
+            return [[string, p_re, n_re, null, null]];
+        }
+        var rules = [];
+        for (let i = 0, len = string.length; i < len; ++i) {
+            const rule = [];
+            rule.push(string[i]);
+            rule.push(string[i - 1] || p_re);
+            rule.push(string[i + 1] || n_re);
+            if (i === 0) {
+                rule.push(null);
+                rule.push(symbol);
+            } else if (i === len - 1) {
+                rule.push(symbol);
+                rule.push(null);
+            } else {
+                rule.push(symbol);
+                rule.push(symbol);
+            }
+            rules.push(rule);
+        }
+        return rules;
+    };
+    // ----------------------------------------------------------------------
+    Lexer.string = Symbol.for('string');
+    Lexer.symbol = Symbol.for('symbol');
+    Lexer.comment = Symbol.for('comment');
+    Lexer.regex = Symbol.for('regex');
+    Lexer.character = Symbol.for('character');
+    Lexer.bracket = Symbol.for('bracket');
+    Lexer.b_symbol = Symbol.for('b_symbol');
+    Lexer.b_comment = Symbol.for('b_comment');
+    Lexer.i_comment = Symbol.for('i_comment');
+    Lexer.character = Symbol.for('character');
+    // ----------------------------------------------------------------------
+    Lexer.boundary = /^$|[\s()[\]]/;
+    // ----------------------------------------------------------------------
+    Lexer._rules = [
+        // char_re prev_re next_re from_state to_state
+        // null as to_state mean that is single char token
+        // string
+        [/"/, /^$|[^\\]/, null, null, Lexer.string],
+        [/"/, /^$|[^\\]/, null, Lexer.string, null],
+
+        // comment
+        [/;/, /^$|[^#]/, null, null, Lexer.comment],
+        [/[\s\S]/, null, /\n/, Lexer.comment, null],
+        [/\s/, null, null, Lexer.comment, Lexer.comment],
+
+        // block comment
+        [/#/, null, /\|/, null, Lexer.b_comment],
+        [/\s/, null, null, Lexer.b_comment, Lexer.b_comment],
+        [/#/, /\|/, null, Lexer.b_comment, null],
+
+        // inline commentss
+        [/#/, null, /;/, null, Lexer.i_comment],
+        [/;/, /#/, null, Lexer.i_comment, null],
+
+        // block symbols
+        [/\|/, Lexer.boundary, null, null, Lexer.b_symbol],
+        [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol],
+        [/\|/, null, Lexer.boundary, Lexer.b_symbol, null],
+
+        // hash special symbols, lexer don't need to distingiush those
+        // we only care if it's not pick up by vectors literals
+        [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol],
+
+        // characters
+        [/#/, null, /\\/, null, Lexer.character],
+        [/\\/, /#/, /\s/, Lexer.character, Lexer.character],
+        [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character],
+        [/\s/, /\\/, null, Lexer.character, null],
+        [/\S/, null, Lexer.boundary, Lexer.character, null],
+
+        // brackets
+        [/[()[\]]/, null, null, null, null],
+
+        // regex
+        [/#/, Lexer.boundary, /\//, null, Lexer.regex],
+        [/ \t/, null, null, Lexer.regex, Lexer.regex],
+        [/\//, null, Lexer.boundary, Lexer.regex, null],
+        [/[gimyus]/, null, Lexer.boundary, Lexer.regex, null]
+    ];
+    // ----------------------------------------------------------------------
+    // :: symbols should be matched last
+    // ----------------------------------------------------------------------
+    Lexer._symbol_rules = [
+        [/\S/, Lexer.boundary, Lexer.boundary, null, null],
+        [/\S/, Lexer.boundary, null, null, Lexer.symbol],
+        [/\S/, null, Lexer.boundary, null, null],
+        [/\S/, null, null, null, Lexer.symbol],
+        [/\S/, null, Lexer.boundary, Lexer.symbol, null]
+    ];
+    // ----------------------------------------------------------------------
+    // :: dynamic getter or Lexer state rules, parser use this
+    // :: so in fact user code can modify lexer using syntax extensions
+    // ----------------------------------------------------------------------
+    Object.defineProperty(Lexer, 'rules', {
+        get() {
+            var tokens = specials.names().sort((a, b) => {
+                return b.length - a.length || a.localeCompare(b);
+            });
+            return Lexer._rules.concat(tokens.reduce((acc, token) => {
+                const { type, symbol: special_symbol } = specials.get(token);
+                let rules;
+                let symbol;
+                // we need distinct symbols_ for syntax extensions
+                if (token[0] === '#') {
+                    if (token.length === 1) {
+                        symbol = Symbol.for(token);
+                    } else {
+                        symbol = Symbol.for(token[1]);
+                    }
+                } else {
+                    symbol = special_symbol;
+                }
+                if (type === specials.SYMBOL) {
+                    rules = Lexer.symbol_rule(token, symbol);
+                } else {
+                    rules = Lexer.literal_rule(token, symbol);
+                }
+                return acc.concat(rules);
+            }, []), Lexer._symbol_rules);
+        }
+    });
+    // ----------------------------------------------------------------------
+    function match_or_null(re, char) {
+        return re === null || char.match(re);
+    }
+    // ----------------------------------------------------------------------
     // :: Parser inspired by BiwaScheme
     // :: ref: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
     // ----------------------------------------------------------------------
@@ -895,21 +1140,35 @@
             if (arg instanceof LString) {
                 arg = arg.toString();
             }
-            if (typeof arg === 'string') {
-                arg = tokenize(arg);
-            }
-            this.__tokens__ = arg;
+            this.__lexer__ = new Lexer(arg);
             this.__env__ = env;
-            this.__i__ = 0;
         }
         resolve(name) {
             return this.__env__ && this.__env__.get(name, { throwError: false });
         }
-        peek() {
-            return this.__tokens__[this.__i__] || eof;
+        async peek() {
+            while (true) {
+                var token = this.__lexer__.peek();
+                if (token === eof) {
+                    return token;
+                }
+                if (this.is_comment(token)) {
+                    this.skip();
+                    continue;
+                }
+                if (token === '#;') {
+                    this.skip();
+                    if (this.__lexer__.peek() === eof) {
+                        throw new Error('Lexer: syntax error eof found after comment');
+                    }
+                    await this.read_object();
+                    continue;
+                }
+                return token;
+            }
         }
         skip() {
-            this.__i__++;
+            this.__lexer__.skip();
         }
         special(token) {
             return specials.names().includes(token);
@@ -917,36 +1176,24 @@
         builtin(token) {
             return specials.builtin.includes(token);
         }
-        // split parser extension that is added inside single string
-        // (e.g. one file) - tokenizer parse them before parsing the expression
-        // this only happen on symbols that have special as prefix
-        split_special(token) {
-            if (!is_symbol_string(token) || this.special(token)) {
-                return [];
-            }
-            var names = specials.names().filter(name => !specials.builtin.includes(name));
-            var prefix = names.find(name => token.startsWith(name));
-            if (!prefix) {
-                return [];
-            }
-            return [prefix, token.replace(new RegExp('^' + escape_regex(prefix)), '')];
-        }
-        read() {
-            const token = this.peek();
+        async read() {
+            const token = await this.peek();
             this.skip();
             return token;
         }
         is_open(token) {
-            return token === '(' || token === '[';
+            return ['(', '['].includes(token);
         }
         is_close(token) {
-            return token === ')' || token === ']';
+            return [')', ']'].includes(token);
         }
         async read_list() {
             let head = nil, prev = head;
-            var first = true;
-            while (this.__i__ < this.__tokens__.length) {
-                const token = this.peek();
+            while (true) {
+                const token = await this.peek();
+                if (token === eof) {
+                    break;
+                }
                 if (this.is_close(token)) {
                     this.skip();
                     break;
@@ -963,30 +1210,30 @@
                     }
                     prev = cur;
                 }
-                if (first) {
-                    first = false;
-                }
             }
             return head;
         }
-        read_value() {
-            var token = this.read();
+        async read_value() {
+            var token = await this.read();
+            if (token === eof) {
+                throw new Error('Parser: Expected token eof found');
+            }
             return parse_argument(token);
         }
+        is_comment(token) {
+            return token.match(/^;/) || (token.match(/^#\|/) && token.match(/\|#$/));
+        }
         async read_object() {
-            const token = this.peek();
+            const token = await this.peek();
             if (token === eof) {
                 return token;
             }
-            // special case when code add special and it try to parse
-            // that special as prefix of a symbol
-            const [prefix, rest] = this.split_special(token);
-            if (this.special(token) || (prefix && rest)) {
-                const special = specials.get(prefix ? prefix : token);
+            if (this.special(token)) {
+                const special = specials.get(token);
                 this.skip();
                 let expr;
-                const object = prefix ? parse_argument(rest) : await this.read_object();
-                if (is_literal(prefix || token)) {
+                const object = await this.read_object();
+                if (is_literal(token)) {
                     expr = new Pair(
                         special.symbol,
                         new Pair(
@@ -1026,9 +1273,9 @@
             }
             if (this.is_open(token)) {
                 this.skip();
-                return this.read_list();
+                return await this.read_list();
             } else {
-                return this.read_value();
+                return await this.read_value();
             }
         }
     }
@@ -5588,11 +5835,11 @@
         pprint: doc(function pprint(arg) {
             if (arg instanceof Pair) {
                 arg = new lips.Formatter(arg.toString(true)).break().format();
-                global_env.get('display')(arg);
+                global_env.get('display').call(global_env, arg);
             } else {
-                global_env.get('write')(arg);
+                global_env.get('write').call(global_env, arg);
             }
-            global_env.get('newline')();
+            global_env.get('newline').call(global_env);
         }, `(pprint expression)
 
            Pretty print list expression, if called with non-pair it just call
@@ -8728,9 +8975,11 @@ You can also use (help name) to display help for specic function or macro and
 
         Formatter,
         Parser,
+        Lexer,
         specials,
         repr,
         nil,
+        eof,
 
         LSymbol,
         LNumber,

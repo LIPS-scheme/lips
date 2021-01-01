@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 31 Dec 2020 11:47:40 +0000
+ * build: Fri, 01 Jan 2021 12:49:34 +0000
  */
 (function () {
   'use strict';
@@ -1618,6 +1618,8 @@
       if (_char) {
         return LCharacter(_char);
       }
+
+      throw new Error('Parse: invalid character');
     } // ----------------------------------------------------------------------
 
 
@@ -1827,10 +1829,12 @@
         return parse_float(arg);
       } else if (arg === 'nil') {
         return nil;
-      } else if (['true', '#t'].includes(arg)) {
+      } else if (['true', '#t', '#true'].includes(arg)) {
         return true;
-      } else if (['false', '#f'].includes(arg)) {
+      } else if (['false', '#f', '#false'].includes(arg)) {
         return false;
+      } else if (arg.match(/^#[iexobd]/)) {
+        throw new Error('Invalid numeric constant');
       } else {
         return parse_symbol(arg);
       }
@@ -1853,7 +1857,7 @@
       var tokens = specials.names().sort(function (a, b) {
         return b.length - a.length || a.localeCompare(b);
       }).map(escape_regex).join('|');
-      return new RegExp("(".concat(char_sre_re, "|#f|#t|#;|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|'(?=#[ft]|(?:#[xiobe]){1,2}|#\\\\)|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
+      return new RegExp("(".concat(char_sre_re, "|#false|#true|#f|#t|#;|(?:").concat(num_stre, ")(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?").concat(float_stre, "(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|'(?=#[ft]|(?:#[xiobe]){1,2}|#\\\\)|(?!#:)(?:").concat(tokens, ")|[^(\\s)[\\]]+)"), 'gim');
     }
     /* eslint-enable */
     // ----------------------------------------------------------------------
@@ -1898,6 +1902,10 @@
 
 
     function tokens(str) {
+      if (str instanceof LString) {
+        str = str.valueOf();
+      }
+
       var tokens_re = make_tokens_re();
       str = str.replace(/\n\r|\r/g, '\n');
       var count = 0;
@@ -2220,6 +2228,7 @@
     var specials = {
       LITERAL: Symbol["for"]('literal'),
       SPLICE: Symbol["for"]('splice'),
+      SYMBOL: Symbol["for"]('symbol'),
       names: function names() {
         return Object.keys(this._specials);
       },
@@ -2262,9 +2271,278 @@
 
       specials.append(seq, symbol, type);
     }); // ----------------------------------------------------------------------
+    // :: State based incremental Lexer
+    // ----------------------------------------------------------------------
+
+    var Lexer = /*#__PURE__*/function () {
+      function Lexer(input) {
+        classCallCheck(this, Lexer);
+
+        this._input = input;
+        this._i = 0;
+        this._state = null;
+        this._next = null;
+        this._token = null;
+        this._line = 0;
+      }
+
+      createClass(Lexer, [{
+        key: "peek",
+        value: function peek() {
+          if (this._token) {
+            return this._token;
+          }
+
+          var found = this.next_token();
+
+          if (found) {
+            this._token = this._input.substring(this._i, this._next);
+            return this._token;
+          }
+
+          return eof;
+        }
+      }, {
+        key: "skip",
+        value: function skip() {
+          if (this._next !== null) {
+            this._token = null;
+            this._i = this._next;
+          }
+        }
+      }, {
+        key: "match_rule",
+        value: function match_rule(rule) {
+          var _ref7 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+              prev_char = _ref7.prev_char,
+              _char2 = _ref7["char"],
+              next_char = _ref7.next_char;
+
+          var _rule = slicedToArray(rule, 4),
+              re = _rule[0],
+              prev_re = _rule[1],
+              next_re = _rule[2],
+              state = _rule[3];
+
+          if (rule.length !== 5) {
+            throw new Error("Lexer: Invald rule of length ".concat(rule.length));
+          }
+
+          if (!_char2.match(re)) {
+            return false;
+          }
+
+          if (!match_or_null(prev_re, prev_char)) {
+            return false;
+          }
+
+          if (!match_or_null(next_re, next_char)) {
+            return false;
+          }
+
+          if (state !== this._state) {
+            return false;
+          }
+
+          return true;
+        }
+      }, {
+        key: "next_token",
+        value: function next_token() {
+          if (this._i >= this._input.length) {
+            return false;
+          }
+
+          var start = true;
+
+          loop: for (var i = this._i, len = this._input.length; i < len; ++i) {
+            var _char3 = this._input[i];
+            var prev_char = this._input[i - 1] || '';
+            var next_char = this._input[i + 1] || '';
+
+            if (_char3 === '\n') {
+              this._line++;
+            } // skip leadning spaces
+
+
+            if (start && this._state === null && _char3.match(/\s/)) {
+              this._i = i + 1;
+              continue;
+            }
+
+            start = false;
+
+            var _iterator4 = _createForOfIteratorHelper(Lexer.rules),
+                _step4;
+
+            try {
+              for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+                var rule = _step4.value;
+
+                if (this.match_rule(rule, {
+                  prev_char: prev_char,
+                  "char": _char3,
+                  next_char: next_char
+                })) {
+                  // change state to null is end of the token
+                  var next_state = rule[rule.length - 1];
+                  this._state = next_state;
+
+                  if (this._state === null) {
+                    this._next = i + 1;
+                    return true;
+                  } // token is activated
+
+
+                  continue loop;
+                }
+              }
+            } catch (err) {
+              _iterator4.e(err);
+            } finally {
+              _iterator4.f();
+            }
+
+            if (this._state !== null) {
+              // collect char in token
+              continue loop;
+            } // no rule for token
+
+
+            var line = this._input.split('\n')[this._line];
+
+            throw new Error("Invalid Syntax at line ".concat(this._line, "\n").concat(line));
+          }
+        }
+      }]);
+
+      return Lexer;
+    }(); // ----------------------------------------------------------------------
+    // TODO: cache the rules creation or whole list
+    // ----------------------------------------------------------------------
+
+
+    Lexer.symbol_rule = function symbol_rule(string, symbol) {
+      var rules = Lexer.literal_rule(string, symbol, Lexer.boundary, /\S/);
+      return rules.concat([[/\S/, /\S/, Lexer.boundary, null, null], [/\S/, /\S/, null, null, Lexer.symbol], [/\S/, null, Lexer.boundary, Lexer.symbol, null]]);
+    }; // ----------------------------------------------------------------------
+    // state rule for literal symbol
+    // ----------------------------------------------------------------------
+
+
+    Lexer.literal_rule = function literal_rule(string, symbol) {
+      var p_re = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
+      var n_re = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : null;
+
+      if (string.length === 0) {
+        throw new Error('Lexer: invalid literal rule');
+      }
+
+      if (string.length === 1) {
+        return [[string, p_re, n_re, null, null]];
+      }
+
+      var rules = [];
+
+      for (var i = 0, len = string.length; i < len; ++i) {
+        var rule = [];
+        rule.push(string[i]);
+        rule.push(string[i - 1] || p_re);
+        rule.push(string[i + 1] || n_re);
+
+        if (i === 0) {
+          rule.push(null);
+          rule.push(symbol);
+        } else if (i === len - 1) {
+          rule.push(symbol);
+          rule.push(null);
+        } else {
+          rule.push(symbol);
+          rule.push(symbol);
+        }
+
+        rules.push(rule);
+      }
+
+      return rules;
+    }; // ----------------------------------------------------------------------
+
+
+    Lexer.string = Symbol["for"]('string');
+    Lexer.symbol = Symbol["for"]('symbol');
+    Lexer.comment = Symbol["for"]('comment');
+    Lexer.regex = Symbol["for"]('regex');
+    Lexer.character = Symbol["for"]('character');
+    Lexer.bracket = Symbol["for"]('bracket');
+    Lexer.b_symbol = Symbol["for"]('b_symbol');
+    Lexer.b_comment = Symbol["for"]('b_comment');
+    Lexer.i_comment = Symbol["for"]('i_comment');
+    Lexer.character = Symbol["for"]('character'); // ----------------------------------------------------------------------
+
+    Lexer.boundary = /^$|[\s()[\]]/; // ----------------------------------------------------------------------
+
+    Lexer._rules = [// char_re prev_re next_re from_state to_state
+    // null as to_state mean that is single char token
+    // string
+    [/"/, /^$|[^\\]/, null, null, Lexer.string], [/"/, /^$|[^\\]/, null, Lexer.string, null], // comment
+    [/;/, /^$|[^#]/, null, null, Lexer.comment], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment], // block comment
+    [/#/, null, /\|/, null, Lexer.b_comment], [/\s/, null, null, Lexer.b_comment, Lexer.b_comment], [/#/, /\|/, null, Lexer.b_comment, null], // inline commentss
+    [/#/, null, /;/, null, Lexer.i_comment], [/;/, /#/, null, Lexer.i_comment, null], // block symbols
+    [/\|/, Lexer.boundary, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], // hash special symbols, lexer don't need to distingiush those
+    // we only care if it's not pick up by vectors literals
+    [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
+    [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null], // brackets
+    [/[()[\]]/, null, null, null, null], // regex
+    [/#/, Lexer.boundary, /\//, null, Lexer.regex], [/ \t/, null, null, Lexer.regex, Lexer.regex], [/\//, null, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, null, Lexer.boundary, Lexer.regex, null]]; // ----------------------------------------------------------------------
+    // :: symbols should be matched last
+    // ----------------------------------------------------------------------
+
+    Lexer._symbol_rules = [[/\S/, Lexer.boundary, Lexer.boundary, null, null], [/\S/, Lexer.boundary, null, null, Lexer.symbol], [/\S/, null, Lexer.boundary, null, null], [/\S/, null, null, null, Lexer.symbol], [/\S/, null, Lexer.boundary, Lexer.symbol, null]]; // ----------------------------------------------------------------------
+    // :: dynamic getter or Lexer state rules, parser use this
+    // :: so in fact user code can modify lexer using syntax extensions
+    // ----------------------------------------------------------------------
+
+    Object.defineProperty(Lexer, 'rules', {
+      get: function get() {
+        var tokens = specials.names().sort(function (a, b) {
+          return b.length - a.length || a.localeCompare(b);
+        });
+        return Lexer._rules.concat(tokens.reduce(function (acc, token) {
+          var _specials$get = specials.get(token),
+              type = _specials$get.type,
+              special_symbol = _specials$get.symbol;
+
+          var rules;
+          var symbol; // we need distinct symbols_ for syntax extensions
+
+          if (token[0] === '#') {
+            if (token.length === 1) {
+              symbol = Symbol["for"](token);
+            } else {
+              symbol = Symbol["for"](token[1]);
+            }
+          } else {
+            symbol = special_symbol;
+          }
+
+          if (type === specials.SYMBOL) {
+            rules = Lexer.symbol_rule(token, symbol);
+          } else {
+            rules = Lexer.literal_rule(token, symbol);
+          }
+
+          return acc.concat(rules);
+        }, []), Lexer._symbol_rules);
+      }
+    }); // ----------------------------------------------------------------------
+
+    function match_or_null(re, _char4) {
+      return re === null || _char4.match(re);
+    } // ----------------------------------------------------------------------
     // :: Parser inspired by BiwaScheme
     // :: ref: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
     // ----------------------------------------------------------------------
+
 
     var Parser = /*#__PURE__*/function () {
       function Parser(arg, env) {
@@ -2274,13 +2552,8 @@
           arg = arg.toString();
         }
 
-        if (typeof arg === 'string') {
-          arg = tokenize(arg);
-        }
-
-        this.__tokens__ = arg;
+        this.__lexer__ = new Lexer(arg);
         this.__env__ = env;
-        this.__i__ = 0;
       }
 
       createClass(Parser, [{
@@ -2292,13 +2565,75 @@
         }
       }, {
         key: "peek",
-        value: function peek() {
-          return this.__tokens__[this.__i__] || eof;
-        }
+        value: function () {
+          var _peek = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
+            var token;
+            return regenerator.wrap(function _callee$(_context) {
+              while (1) {
+                switch (_context.prev = _context.next) {
+                  case 0:
+
+                    token = this.__lexer__.peek();
+
+                    if (!(token === eof)) {
+                      _context.next = 4;
+                      break;
+                    }
+
+                    return _context.abrupt("return", token);
+
+                  case 4:
+                    if (!this.is_comment(token)) {
+                      _context.next = 7;
+                      break;
+                    }
+
+                    this.skip();
+                    return _context.abrupt("continue", 0);
+
+                  case 7:
+                    if (!(token === '#;')) {
+                      _context.next = 14;
+                      break;
+                    }
+
+                    this.skip();
+
+                    if (!(this.__lexer__.peek() === eof)) {
+                      _context.next = 11;
+                      break;
+                    }
+
+                    throw new Error('Lexer: syntax error eof found after comment');
+
+                  case 11:
+                    _context.next = 13;
+                    return this.read_object();
+
+                  case 13:
+                    return _context.abrupt("continue", 0);
+
+                  case 14:
+                    return _context.abrupt("return", token);
+
+                  case 17:
+                  case "end":
+                    return _context.stop();
+                }
+              }
+            }, _callee, this);
+          }));
+
+          function peek() {
+            return _peek.apply(this, arguments);
+          }
+
+          return peek;
+        }()
       }, {
         key: "skip",
         value: function skip() {
-          this.__i__++;
+          this.__lexer__.skip();
         }
       }, {
         key: "special",
@@ -2309,98 +2644,107 @@
         key: "builtin",
         value: function builtin(token) {
           return specials.builtin.includes(token);
-        } // split parser extension that is added inside single string
-        // (e.g. one file) - tokenizer parse them before parsing the expression
-        // this only happen on symbols that have special as prefix
-
-      }, {
-        key: "split_special",
-        value: function split_special(token) {
-          if (!is_symbol_string(token) || this.special(token)) {
-            return [];
-          }
-
-          var names = specials.names().filter(function (name) {
-            return !specials.builtin.includes(name);
-          });
-          var prefix = names.find(function (name) {
-            return token.startsWith(name);
-          });
-
-          if (!prefix) {
-            return [];
-          }
-
-          return [prefix, token.replace(new RegExp('^' + escape_regex(prefix)), '')];
         }
       }, {
         key: "read",
-        value: function read() {
-          var token = this.peek();
-          this.skip();
-          return token;
-        }
+        value: function () {
+          var _read = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2() {
+            var token;
+            return regenerator.wrap(function _callee2$(_context2) {
+              while (1) {
+                switch (_context2.prev = _context2.next) {
+                  case 0:
+                    _context2.next = 2;
+                    return this.peek();
+
+                  case 2:
+                    token = _context2.sent;
+                    this.skip();
+                    return _context2.abrupt("return", token);
+
+                  case 5:
+                  case "end":
+                    return _context2.stop();
+                }
+              }
+            }, _callee2, this);
+          }));
+
+          function read() {
+            return _read.apply(this, arguments);
+          }
+
+          return read;
+        }()
       }, {
         key: "is_open",
         value: function is_open(token) {
-          return token === '(' || token === '[';
+          return ['(', '['].includes(token);
         }
       }, {
         key: "is_close",
         value: function is_close(token) {
-          return token === ')' || token === ']';
+          return [')', ']'].includes(token);
         }
       }, {
         key: "read_list",
         value: function () {
-          var _read_list = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
+          var _read_list = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3() {
             var head, prev, token, cur;
-            return regenerator.wrap(function _callee$(_context) {
+            return regenerator.wrap(function _callee3$(_context3) {
               while (1) {
-                switch (_context.prev = _context.next) {
+                switch (_context3.prev = _context3.next) {
                   case 0:
                     head = nil, prev = head;
 
-                  case 2:
-                    if (!(this.__i__ < this.__tokens__.length)) {
-                      _context.next = 25;
+                  case 1:
+
+                    _context3.next = 4;
+                    return this.peek();
+
+                  case 4:
+                    token = _context3.sent;
+
+                    if (!(token === eof)) {
+                      _context3.next = 7;
                       break;
                     }
 
-                    token = this.peek();
-
-                    if (!this.is_close(token)) {
-                      _context.next = 7;
-                      break;
-                    }
-
-                    this.skip();
-                    return _context.abrupt("break", 25);
+                    return _context3.abrupt("break", 27);
 
                   case 7:
-                    if (!(token === '.' && head !== nil)) {
-                      _context.next = 14;
+                    if (!this.is_close(token)) {
+                      _context3.next = 10;
                       break;
                     }
 
                     this.skip();
-                    _context.next = 11;
-                    return this.read_object();
+                    return _context3.abrupt("break", 27);
 
-                  case 11:
-                    prev.cdr = _context.sent;
-                    _context.next = 22;
-                    break;
+                  case 10:
+                    if (!(token === '.' && head !== nil)) {
+                      _context3.next = 17;
+                      break;
+                    }
+
+                    this.skip();
+                    _context3.next = 14;
+                    return this.read_object();
 
                   case 14:
-                    _context.t0 = Pair;
-                    _context.next = 17;
-                    return this.read_object();
+                    prev.cdr = _context3.sent;
+                    _context3.next = 25;
+                    break;
 
                   case 17:
-                    _context.t1 = _context.sent;
-                    _context.t2 = nil;
-                    cur = new _context.t0(_context.t1, _context.t2);
+                    _context3.t0 = Pair;
+                    _context3.next = 20;
+                    return this.read_object();
+
+                  case 20:
+                    _context3.t1 = _context3.sent;
+                    _context3.t2 = nil;
+                    cur = new _context3.t0(_context3.t1, _context3.t2);
 
                     if (head === nil) {
                       head = cur;
@@ -2410,20 +2754,19 @@
 
                     prev = cur;
 
-                  case 22:
-
-                    _context.next = 2;
+                  case 25:
+                    _context3.next = 1;
                     break;
 
-                  case 25:
-                    return _context.abrupt("return", head);
+                  case 27:
+                    return _context3.abrupt("return", head);
 
-                  case 26:
+                  case 28:
                   case "end":
-                    return _context.stop();
+                    return _context3.stop();
                 }
               }
-            }, _callee, this);
+            }, _callee3, this);
           }));
 
           function read_list() {
@@ -2434,62 +2777,85 @@
         }()
       }, {
         key: "read_value",
-        value: function read_value() {
-          var token = this.read();
-          return parse_argument(token);
+        value: function () {
+          var _read_value = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4() {
+            var token;
+            return regenerator.wrap(function _callee4$(_context4) {
+              while (1) {
+                switch (_context4.prev = _context4.next) {
+                  case 0:
+                    _context4.next = 2;
+                    return this.read();
+
+                  case 2:
+                    token = _context4.sent;
+
+                    if (!(token === eof)) {
+                      _context4.next = 5;
+                      break;
+                    }
+
+                    throw new Error('Parser: Expected token eof found');
+
+                  case 5:
+                    return _context4.abrupt("return", parse_argument(token));
+
+                  case 6:
+                  case "end":
+                    return _context4.stop();
+                }
+              }
+            }, _callee4, this);
+          }));
+
+          function read_value() {
+            return _read_value.apply(this, arguments);
+          }
+
+          return read_value;
+        }()
+      }, {
+        key: "is_comment",
+        value: function is_comment(token) {
+          return token.match(/^;/) || token.match(/^#\|/) && token.match(/\|#$/);
         }
       }, {
         key: "read_object",
         value: function () {
-          var _read_object = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2() {
-            var token, _this$split_special, _this$split_special2, prefix, rest, special, expr, object, result;
-
-            return regenerator.wrap(function _callee2$(_context2) {
+          var _read_object = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5() {
+            var token, special, expr, object, result;
+            return regenerator.wrap(function _callee5$(_context5) {
               while (1) {
-                switch (_context2.prev = _context2.next) {
+                switch (_context5.prev = _context5.next) {
                   case 0:
-                    token = this.peek();
+                    _context5.next = 2;
+                    return this.peek();
+
+                  case 2:
+                    token = _context5.sent;
 
                     if (!(token === eof)) {
-                      _context2.next = 3;
+                      _context5.next = 5;
                       break;
                     }
 
-                    return _context2.abrupt("return", token);
+                    return _context5.abrupt("return", token);
 
-                  case 3:
-                    // special case when code add special and it try to parse
-                    // that special as prefix of a symbol
-                    _this$split_special = this.split_special(token), _this$split_special2 = slicedToArray(_this$split_special, 2), prefix = _this$split_special2[0], rest = _this$split_special2[1];
-
-                    if (!(this.special(token) || prefix && rest)) {
-                      _context2.next = 22;
+                  case 5:
+                    if (!this.special(token)) {
+                      _context5.next = 18;
                       break;
                     }
 
-                    special = specials.get(prefix ? prefix : token);
+                    special = specials.get(token);
                     this.skip();
-
-                    if (!prefix) {
-                      _context2.next = 11;
-                      break;
-                    }
-
-                    _context2.t0 = parse_argument(rest);
-                    _context2.next = 14;
-                    break;
-
-                  case 11:
-                    _context2.next = 13;
+                    _context5.next = 10;
                     return this.read_object();
 
-                  case 13:
-                    _context2.t0 = _context2.sent;
+                  case 10:
+                    object = _context5.sent;
 
-                  case 14:
-                    object = _context2.t0;
-
-                    if (is_literal(prefix || token)) {
+                    if (is_literal(token)) {
                       expr = new Pair(special.symbol, new Pair(object, nil));
                     } else {
                       expr = new Pair(special.symbol, object);
@@ -2497,14 +2863,14 @@
 
 
                     if (!this.builtin(token)) {
-                      _context2.next = 18;
+                      _context5.next = 14;
                       break;
                     }
 
-                    return _context2.abrupt("return", expr);
+                    return _context5.abrupt("return", expr);
 
-                  case 18:
-                    _context2.next = 20;
+                  case 14:
+                    _context5.next = 16;
                     return evaluate(expr, {
                       env: this.__env__,
                       error: function error(e) {
@@ -2512,9 +2878,9 @@
                       }
                     });
 
-                  case 20:
-                    result = _context2.sent;
-                    return _context2.abrupt("return", unpromise(result, function (result) {
+                  case 16:
+                    result = _context5.sent;
+                    return _context5.abrupt("return", unpromise(result, function (result) {
                       if (result instanceof Pair || result instanceof LSymbol) {
                         return new Pair(LSymbol('quote'), new Pair(result, nil));
                       }
@@ -2522,24 +2888,32 @@
                       return result;
                     }));
 
-                  case 22:
+                  case 18:
                     if (!this.is_open(token)) {
-                      _context2.next = 27;
+                      _context5.next = 25;
                       break;
                     }
 
                     this.skip();
-                    return _context2.abrupt("return", this.read_list());
+                    _context5.next = 22;
+                    return this.read_list();
+
+                  case 22:
+                    return _context5.abrupt("return", _context5.sent);
+
+                  case 25:
+                    _context5.next = 27;
+                    return this.read_value();
 
                   case 27:
-                    return _context2.abrupt("return", this.read_value());
+                    return _context5.abrupt("return", _context5.sent);
 
                   case 28:
                   case "end":
-                    return _context2.stop();
+                    return _context5.stop();
                 }
               }
-            }, _callee2, this);
+            }, _callee5, this);
           }));
 
           function read_object() {
@@ -2566,11 +2940,11 @@
 
 
     function _parse() {
-      _parse = wrapAsyncGenerator( /*#__PURE__*/regenerator.mark(function _callee3(arg, env) {
+      _parse = wrapAsyncGenerator( /*#__PURE__*/regenerator.mark(function _callee6(arg, env) {
         var parser, expr;
-        return regenerator.wrap(function _callee3$(_context3) {
+        return regenerator.wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
                 if (!env) {
                   if (global_env) {
@@ -2586,33 +2960,33 @@
 
               case 2:
 
-                _context3.next = 5;
+                _context6.next = 5;
                 return awaitAsyncGenerator(parser.read_object());
 
               case 5:
-                expr = _context3.sent;
+                expr = _context6.sent;
 
                 if (!(expr === eof)) {
-                  _context3.next = 8;
+                  _context6.next = 8;
                   break;
                 }
 
-                return _context3.abrupt("break", 12);
+                return _context6.abrupt("break", 12);
 
               case 8:
-                _context3.next = 10;
+                _context6.next = 10;
                 return expr;
 
               case 10:
-                _context3.next = 2;
+                _context6.next = 2;
                 break;
 
               case 12:
               case "end":
-                return _context3.stop();
+                return _context6.stop();
             }
           }
-        }, _callee3);
+        }, _callee6);
       }));
       return _parse.apply(this, arguments);
     }
@@ -2688,34 +3062,34 @@
 
 
     function _uniterate_async() {
-      _uniterate_async = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(object) {
+      _uniterate_async = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(object) {
         var result, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _value, item;
 
-        return regenerator.wrap(function _callee11$(_context11) {
+        return regenerator.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
                 result = [];
                 _iteratorNormalCompletion = true;
                 _didIteratorError = false;
-                _context11.prev = 3;
+                _context14.prev = 3;
                 _iterator = asyncIterator(object);
 
               case 5:
-                _context11.next = 7;
+                _context14.next = 7;
                 return _iterator.next();
 
               case 7:
-                _step = _context11.sent;
+                _step = _context14.sent;
                 _iteratorNormalCompletion = _step.done;
-                _context11.next = 11;
+                _context14.next = 11;
                 return _step.value;
 
               case 11:
-                _value = _context11.sent;
+                _value = _context14.sent;
 
                 if (_iteratorNormalCompletion) {
-                  _context11.next = 18;
+                  _context14.next = 18;
                   break;
                 }
 
@@ -2724,56 +3098,56 @@
 
               case 15:
                 _iteratorNormalCompletion = true;
-                _context11.next = 5;
+                _context14.next = 5;
                 break;
 
               case 18:
-                _context11.next = 24;
+                _context14.next = 24;
                 break;
 
               case 20:
-                _context11.prev = 20;
-                _context11.t0 = _context11["catch"](3);
+                _context14.prev = 20;
+                _context14.t0 = _context14["catch"](3);
                 _didIteratorError = true;
-                _iteratorError = _context11.t0;
+                _iteratorError = _context14.t0;
 
               case 24:
-                _context11.prev = 24;
-                _context11.prev = 25;
+                _context14.prev = 24;
+                _context14.prev = 25;
 
                 if (!(!_iteratorNormalCompletion && _iterator["return"] != null)) {
-                  _context11.next = 29;
+                  _context14.next = 29;
                   break;
                 }
 
-                _context11.next = 29;
+                _context14.next = 29;
                 return _iterator["return"]();
 
               case 29:
-                _context11.prev = 29;
+                _context14.prev = 29;
 
                 if (!_didIteratorError) {
-                  _context11.next = 32;
+                  _context14.next = 32;
                   break;
                 }
 
                 throw _iteratorError;
 
               case 32:
-                return _context11.finish(29);
+                return _context14.finish(29);
 
               case 33:
-                return _context11.finish(24);
+                return _context14.finish(24);
 
               case 34:
-                return _context11.abrupt("return", result);
+                return _context14.abrupt("return", result);
 
               case 35:
               case "end":
-                return _context11.stop();
+                return _context14.stop();
             }
           }
-        }, _callee11, null, [[3, 20, 24, 34], [25,, 29, 33]]);
+        }, _callee14, null, [[3, 20, 24, 34], [25,, 29, 33]]);
       }));
       return _uniterate_async.apply(this, arguments);
     }
@@ -3100,21 +3474,21 @@
             return false;
           }
 
-          var _iterator4 = _createForOfIteratorHelper(regexes),
-              _step4;
+          var _iterator5 = _createForOfIteratorHelper(regexes),
+              _step5;
 
           try {
-            for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-              var re = _step4.value;
+            for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+              var re = _step5.value;
 
               if (token.match(re)) {
                 return true;
               }
             }
           } catch (err) {
-            _iterator4.e(err);
+            _iterator5.e(err);
           } finally {
-            _iterator4.f();
+            _iterator5.f();
           }
         }
 
@@ -3303,15 +3677,15 @@
           }
         });
 
-        var _iterator5 = _createForOfIteratorHelper(rules),
-            _step5;
+        var _iterator6 = _createForOfIteratorHelper(rules),
+            _step6;
 
         try {
-          for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-            var _step5$value = slicedToArray(_step5.value, 3),
-                pattern = _step5$value[0],
-                count = _step5$value[1],
-                ext = _step5$value[2];
+          for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+            var _step6$value = slicedToArray(_step6.value, 3),
+                pattern = _step6$value[0],
+                count = _step6$value[1],
+                ext = _step6$value[2];
 
             count = count.valueOf();
             var m = match(pattern, sexp[count].filter(function (t) {
@@ -3328,9 +3702,9 @@
             }
           }
         } catch (err) {
-          _iterator5.e(err);
+          _iterator6.e(err);
         } finally {
-          _iterator5.f();
+          _iterator6.f();
         }
       }
 
@@ -3834,10 +4208,10 @@
 
 
     var str_mapping = new Map();
-    [[Number.NEGATIVE_INFINITY, '-inf.0'], [Number.POSITIVE_INFINITY, '+inf.0'], [true, '#t'], [false, '#f'], [null, 'null'], [undefined$1, '#<undefined>']].forEach(function (_ref7) {
-      var _ref8 = slicedToArray(_ref7, 2),
-          key = _ref8[0],
-          value = _ref8[1];
+    [[Number.NEGATIVE_INFINITY, '-inf.0'], [Number.POSITIVE_INFINITY, '+inf.0'], [true, '#t'], [false, '#f'], [null, 'null'], [undefined$1, '#<undefined>']].forEach(function (_ref8) {
+      var _ref9 = slicedToArray(_ref8, 2),
+          key = _ref9[0],
+          value = _ref9[1];
 
       str_mapping.set(key, value);
     }); // ----------------------------------------------------------------------
@@ -4255,9 +4629,9 @@
 
 
     Pair.prototype.toString = function (quote) {
-      var _ref9 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          _ref9$nested = _ref9.nested,
-          nested = _ref9$nested === void 0 ? false : _ref9$nested;
+      var _ref10 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          _ref10$nested = _ref10.nested,
+          nested = _ref10$nested === void 0 ? false : _ref10$nested;
 
       if (is_debug()) {
         var result = [];
@@ -4362,9 +4736,9 @@
 
 
     function seq_compare(fn, args) {
-      var _args5 = toArray(args),
-          a = _args5[0],
-          rest = _args5.slice(1);
+      var _args8 = toArray(args),
+          a = _args8[0],
+          rest = _args8.slice(1);
 
       while (rest.length > 0) {
         var _rest = rest,
@@ -4499,10 +4873,10 @@
     }; // ----------------------------------------------------------------------
 
 
-    Macro.prototype.invoke = function (code, _ref10, macro_expand) {
-      var env = _ref10.env,
-          dynamic_scope = _ref10.dynamic_scope,
-          error = _ref10.error;
+    Macro.prototype.invoke = function (code, _ref11, macro_expand) {
+      var env = _ref11.env,
+          dynamic_scope = _ref11.dynamic_scope,
+          error = _ref11.error;
       var args = {
         dynamic_scope: dynamic_scope,
         error: error,
@@ -4526,32 +4900,32 @@
 
     function macro_expand(single) {
       return /*#__PURE__*/function () {
-        var _ref11 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(code, args) {
+        var _ref12 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(code, args) {
           var env, traverse, _traverse;
 
-          return regenerator.wrap(function _callee5$(_context5) {
+          return regenerator.wrap(function _callee8$(_context8) {
             while (1) {
-              switch (_context5.prev = _context5.next) {
+              switch (_context8.prev = _context8.next) {
                 case 0:
                   _traverse = function _traverse3() {
-                    _traverse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(node, n, env) {
+                    _traverse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(node, n, env) {
                       var value, code, result, _result, expr, scope, car, cdr, pair;
 
-                      return regenerator.wrap(function _callee4$(_context4) {
+                      return regenerator.wrap(function _callee7$(_context7) {
                         while (1) {
-                          switch (_context4.prev = _context4.next) {
+                          switch (_context7.prev = _context7.next) {
                             case 0:
                               if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-                                _context4.next = 26;
+                                _context7.next = 26;
                                 break;
                               }
 
                               if (!node[__data__]) {
-                                _context4.next = 3;
+                                _context7.next = 3;
                                 break;
                               }
 
-                              return _context4.abrupt("return", node);
+                              return _context7.abrupt("return", node);
 
                             case 3:
                               value = env.get(node.car, {
@@ -4559,123 +4933,123 @@
                               });
 
                               if (!(value instanceof Macro && value.__defmacro__)) {
-                                _context4.next = 26;
+                                _context7.next = 26;
                                 break;
                               }
 
                               code = value instanceof Syntax ? node : node.cdr;
-                              _context4.next = 8;
+                              _context7.next = 8;
                               return value.invoke(code, _objectSpread(_objectSpread({}, args), {}, {
                                 env: env
                               }), true);
 
                             case 8:
-                              result = _context4.sent;
+                              result = _context7.sent;
 
                               if (!(value instanceof Syntax)) {
-                                _context4.next = 17;
+                                _context7.next = 17;
                                 break;
                               }
 
                               _result = result, expr = _result.expr, scope = _result.scope;
 
                               if (!(expr instanceof Pair)) {
-                                _context4.next = 16;
+                                _context7.next = 16;
                                 break;
                               }
 
                               if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                                _context4.next = 14;
+                                _context7.next = 14;
                                 break;
                               }
 
-                              return _context4.abrupt("return", expr);
+                              return _context7.abrupt("return", expr);
 
                             case 14:
                               if (n !== -1) {
                                 n = n - 1;
                               }
 
-                              return _context4.abrupt("return", traverse(expr, n, scope));
+                              return _context7.abrupt("return", traverse(expr, n, scope));
 
                             case 16:
                               result = expr;
 
                             case 17:
                               if (!(result instanceof LSymbol)) {
-                                _context4.next = 19;
+                                _context7.next = 19;
                                 break;
                               }
 
-                              return _context4.abrupt("return", quote(result));
+                              return _context7.abrupt("return", quote(result));
 
                             case 19:
                               if (!(result instanceof Pair)) {
-                                _context4.next = 24;
+                                _context7.next = 24;
                                 break;
                               }
 
                               if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                                _context4.next = 22;
+                                _context7.next = 22;
                                 break;
                               }
 
-                              return _context4.abrupt("return", result);
+                              return _context7.abrupt("return", result);
 
                             case 22:
                               if (n !== -1) {
                                 n = n - 1;
                               }
 
-                              return _context4.abrupt("return", traverse(result, n, env));
+                              return _context7.abrupt("return", traverse(result, n, env));
 
                             case 24:
                               if (!is_atom(result)) {
-                                _context4.next = 26;
+                                _context7.next = 26;
                                 break;
                               }
 
-                              return _context4.abrupt("return", result);
+                              return _context7.abrupt("return", result);
 
                             case 26:
                               // TODO: CYCLE DETECT
                               car = node.car;
 
                               if (!(car instanceof Pair)) {
-                                _context4.next = 31;
+                                _context7.next = 31;
                                 break;
                               }
 
-                              _context4.next = 30;
+                              _context7.next = 30;
                               return traverse(car, n, env);
 
                             case 30:
-                              car = _context4.sent;
+                              car = _context7.sent;
 
                             case 31:
                               cdr = node.cdr;
 
                               if (!(cdr instanceof Pair)) {
-                                _context4.next = 36;
+                                _context7.next = 36;
                                 break;
                               }
 
-                              _context4.next = 35;
+                              _context7.next = 35;
                               return traverse(cdr, n, env);
 
                             case 35:
-                              cdr = _context4.sent;
+                              cdr = _context7.sent;
 
                             case 36:
                               pair = new Pair(car, cdr);
-                              return _context4.abrupt("return", pair);
+                              return _context7.abrupt("return", pair);
 
                             case 38:
                             case "end":
-                              return _context4.stop();
+                              return _context7.stop();
                           }
                         }
-                      }, _callee4);
+                      }, _callee7);
                     }));
                     return _traverse.apply(this, arguments);
                   };
@@ -4687,51 +5061,51 @@
                   env = args['env'] = this;
 
                   if (!(code.cdr instanceof Pair && LNumber.isNumber(code.cdr.car))) {
-                    _context5.next = 9;
+                    _context8.next = 9;
                     break;
                   }
 
-                  _context5.t0 = quote;
-                  _context5.next = 7;
+                  _context8.t0 = quote;
+                  _context8.next = 7;
                   return traverse(code, code.cdr.car.valueOf(), env);
 
                 case 7:
-                  _context5.t1 = _context5.sent.car;
-                  return _context5.abrupt("return", (0, _context5.t0)(_context5.t1));
+                  _context8.t1 = _context8.sent.car;
+                  return _context8.abrupt("return", (0, _context8.t0)(_context8.t1));
 
                 case 9:
                   if (!single) {
-                    _context5.next = 15;
+                    _context8.next = 15;
                     break;
                   }
 
-                  _context5.t2 = quote;
-                  _context5.next = 13;
+                  _context8.t2 = quote;
+                  _context8.next = 13;
                   return traverse(code, 1, env);
 
                 case 13:
-                  _context5.t3 = _context5.sent.car;
-                  return _context5.abrupt("return", (0, _context5.t2)(_context5.t3));
+                  _context8.t3 = _context8.sent.car;
+                  return _context8.abrupt("return", (0, _context8.t2)(_context8.t3));
 
                 case 15:
-                  _context5.t4 = quote;
-                  _context5.next = 18;
+                  _context8.t4 = quote;
+                  _context8.next = 18;
                   return traverse(code, -1, env);
 
                 case 18:
-                  _context5.t5 = _context5.sent.car;
-                  return _context5.abrupt("return", (0, _context5.t4)(_context5.t5));
+                  _context8.t5 = _context8.sent.car;
+                  return _context8.abrupt("return", (0, _context8.t4)(_context8.t5));
 
                 case 20:
                 case "end":
-                  return _context5.stop();
+                  return _context8.stop();
               }
             }
-          }, _callee5, this);
+          }, _callee8, this);
         }));
 
         return function (_x4, _x5) {
-          return _ref11.apply(this, arguments);
+          return _ref12.apply(this, arguments);
         };
       }();
     } // ----------------------------------------------------------------------
@@ -4750,9 +5124,9 @@
 
     Syntax.prototype = Object.create(Macro.prototype);
 
-    Syntax.prototype.invoke = function (code, _ref12, macro_expand) {
-      var error = _ref12.error,
-          env = _ref12.env;
+    Syntax.prototype.invoke = function (code, _ref13, macro_expand) {
+      var error = _ref13.error,
+          env = _ref13.env;
       var args = {
         error: error,
         env: env,
@@ -5426,8 +5800,8 @@
 
 
       function traverse(expr) {
-        var _ref13 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            disabled = _ref13.disabled;
+        var _ref14 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            disabled = _ref14.disabled;
 
         log('traverse>> ' + expr.toString());
 
@@ -6060,9 +6434,9 @@
                   }
                 }).then(exec);
               } else {
-                values.forEach(function (_ref14) {
-                  var name = _ref14.name,
-                      value = _ref14.value;
+                values.forEach(function (_ref15) {
+                  var name = _ref15.name,
+                      value = _ref15.value;
                   env.set(name, value);
                 });
               }
@@ -6106,9 +6480,9 @@
 
     function pararel(name, fn) {
       return new Macro(name, function (code) {
-        var _ref15 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref15.dynamic_scope,
-            error = _ref15.error;
+        var _ref16 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref16.dynamic_scope,
+            error = _ref16.error;
 
         var env = this;
 
@@ -6415,18 +6789,18 @@
         };
       };
 
-      var _iterator6 = _createForOfIteratorHelper(_keys),
-          _step6;
+      var _iterator7 = _createForOfIteratorHelper(_keys),
+          _step7;
 
       try {
-        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-          var key = _step6.value;
+        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+          var key = _step7.value;
           LString.prototype[key] = wrap(String.prototype[key]);
         }
       } catch (err) {
-        _iterator6.e(err);
+        _iterator7.e(err);
       } finally {
-        _iterator6.f();
+        _iterator7.f();
       }
     }
 
@@ -6460,9 +6834,9 @@
       return LString(this._string.toUpperCase());
     };
 
-    LString.prototype.set = function (n, _char2) {
-      if (_char2 instanceof LCharacter) {
-        _char2 = _char2.__char__;
+    LString.prototype.set = function (n, _char5) {
+      if (_char5 instanceof LCharacter) {
+        _char5 = _char5.__char__;
       }
 
       var string = [];
@@ -6471,7 +6845,7 @@
         string.push(this._string.substring(0, n));
       }
 
-      string.push(_char2);
+      string.push(_char5);
 
       if (n < this._string.length - 1) {
         string.push(this._string.substring(n + 1));
@@ -7937,13 +8311,13 @@
     };
 
     InputPort.prototype.read_char = function () {
-      var _char3 = this.peek_char();
+      var _char6 = this.peek_char();
 
-      if (_char3 !== eof) {
+      if (_char6 !== eof) {
         this._in_char++;
       }
 
-      return _char3;
+      return _char6;
     };
 
     InputPort.prototype.peek_char = function () {
@@ -8010,27 +8384,27 @@
       this._index = 0;
       this._in_char = 0;
       var self = this;
-      this.read = /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6() {
-        return regenerator.wrap(function _callee6$(_context6) {
+      this.read = /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9() {
+        return regenerator.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
                 if (!self._parser) {
                   self._parser = new Parser(self._string, this);
                 }
 
-                _context6.next = 3;
+                _context9.next = 3;
                 return self._parser.read_object();
 
               case 3:
-                return _context6.abrupt("return", _context6.sent);
+                return _context9.abrupt("return", _context9.sent);
 
               case 4:
               case "end":
-                return _context6.stop();
+                return _context9.stop();
             }
           }
-        }, _callee6, this);
+        }, _callee9, this);
       }));
     }
 
@@ -8062,11 +8436,11 @@
 
 
     function Interpreter(name) {
-      var _ref17 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          stderr = _ref17.stderr,
-          stdin = _ref17.stdin,
-          stdout = _ref17.stdout,
-          obj = objectWithoutProperties(_ref17, ["stderr", "stdin", "stdout"]);
+      var _ref18 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          stderr = _ref18.stderr,
+          stdin = _ref18.stdin,
+          stdout = _ref18.stdout,
+          obj = objectWithoutProperties(_ref18, ["stderr", "stdin", "stdout"]);
 
       if (typeof this !== 'undefined' && !(this instanceof Interpreter) || typeof this === 'undefined') {
         return new Interpreter(name, _objectSpread({
@@ -8583,86 +8957,86 @@
       }, "(read-char port)\n\n            Function read next character from input port."),
       // ------------------------------------------------------------------
       read: doc( /*#__PURE__*/function () {
-        var _read = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(arg) {
+        var _read2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(arg) {
           var _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _value2, value, port;
 
-          return regenerator.wrap(function _callee7$(_context7) {
+          return regenerator.wrap(function _callee10$(_context10) {
             while (1) {
-              switch (_context7.prev = _context7.next) {
+              switch (_context10.prev = _context10.next) {
                 case 0:
                   if (!LString.isString(arg)) {
-                    _context7.next = 34;
+                    _context10.next = 34;
                     break;
                   }
 
                   _iteratorNormalCompletion2 = true;
                   _didIteratorError2 = false;
-                  _context7.prev = 3;
+                  _context10.prev = 3;
                   _iterator2 = asyncIterator(parse(arg, this));
 
                 case 5:
-                  _context7.next = 7;
+                  _context10.next = 7;
                   return _iterator2.next();
 
                 case 7:
-                  _step2 = _context7.sent;
+                  _step2 = _context10.sent;
                   _iteratorNormalCompletion2 = _step2.done;
-                  _context7.next = 11;
+                  _context10.next = 11;
                   return _step2.value;
 
                 case 11:
-                  _value2 = _context7.sent;
+                  _value2 = _context10.sent;
 
                   if (_iteratorNormalCompletion2) {
-                    _context7.next = 18;
+                    _context10.next = 18;
                     break;
                   }
 
                   value = _value2;
-                  return _context7.abrupt("return", value);
+                  return _context10.abrupt("return", value);
 
                 case 15:
                   _iteratorNormalCompletion2 = true;
-                  _context7.next = 5;
+                  _context10.next = 5;
                   break;
 
                 case 18:
-                  _context7.next = 24;
+                  _context10.next = 24;
                   break;
 
                 case 20:
-                  _context7.prev = 20;
-                  _context7.t0 = _context7["catch"](3);
+                  _context10.prev = 20;
+                  _context10.t0 = _context10["catch"](3);
                   _didIteratorError2 = true;
-                  _iteratorError2 = _context7.t0;
+                  _iteratorError2 = _context10.t0;
 
                 case 24:
-                  _context7.prev = 24;
-                  _context7.prev = 25;
+                  _context10.prev = 24;
+                  _context10.prev = 25;
 
                   if (!(!_iteratorNormalCompletion2 && _iterator2["return"] != null)) {
-                    _context7.next = 29;
+                    _context10.next = 29;
                     break;
                   }
 
-                  _context7.next = 29;
+                  _context10.next = 29;
                   return _iterator2["return"]();
 
                 case 29:
-                  _context7.prev = 29;
+                  _context10.prev = 29;
 
                   if (!_didIteratorError2) {
-                    _context7.next = 32;
+                    _context10.next = 32;
                     break;
                   }
 
                   throw _iteratorError2;
 
                 case 32:
-                  return _context7.finish(29);
+                  return _context10.finish(29);
 
                 case 33:
-                  return _context7.finish(24);
+                  return _context10.finish(24);
 
                 case 34:
                   if (arg instanceof InputPort) {
@@ -8671,18 +9045,18 @@
                     port = internal(this, 'stdin');
                   }
 
-                  return _context7.abrupt("return", port.read.call(this));
+                  return _context10.abrupt("return", port.read.call(this));
 
                 case 36:
                 case "end":
-                  return _context7.stop();
+                  return _context10.stop();
               }
             }
-          }, _callee7, this, [[3, 20, 24, 34], [25,, 29, 33]]);
+          }, _callee10, this, [[3, 20, 24, 34], [25,, 29, 33]]);
         }));
 
         function read(_x9) {
-          return _read.apply(this, arguments);
+          return _read2.apply(this, arguments);
         }
 
         return read;
@@ -8691,12 +9065,12 @@
       pprint: doc(function pprint(arg) {
         if (arg instanceof Pair) {
           arg = new lips.Formatter(arg.toString(true))["break"]().format();
-          global_env.get('display')(arg);
+          global_env.get('display').call(global_env, arg);
         } else {
-          global_env.get('write')(arg);
+          global_env.get('write').call(global_env, arg);
         }
 
-        global_env.get('newline')();
+        global_env.get('newline').call(global_env);
       }, "(pprint expression)\n\n           Pretty print list expression, if called with non-pair it just call\n           print function with passed argument."),
       // ------------------------------------------------------------------
       print: doc(function print() {
@@ -8790,9 +9164,9 @@
         return unbind(a) === unbind(b);
       }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
       // ------------------------------------------------------------------
-      help: doc(new Macro('help', function (code, _ref18) {
-        var dynamic_scope = _ref18.dynamic_scope,
-            error = _ref18.error;
+      help: doc(new Macro('help', function (code, _ref19) {
+        var dynamic_scope = _ref19.dynamic_scope,
+            error = _ref19.error;
         var symbol;
 
         if (code.car instanceof LSymbol) {
@@ -8856,9 +9230,9 @@
       'set!': doc(new Macro('set!', function (code) {
         var _this5 = this;
 
-        var _ref19 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref19.dynamic_scope,
-            error = _ref19.error;
+        var _ref20 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref20.dynamic_scope,
+            error = _ref20.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -9057,14 +9431,14 @@
       }, "(load filename)\n            (load filename environment)\n\n            Function fetch the file and evaluate its content as LIPS code,\n            If second argument is provided and it's environment the evaluation\n            will happen in that environment."),
       // ------------------------------------------------------------------
       'do': doc(new Macro('do', /*#__PURE__*/function () {
-        var _ref20 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(code, _ref21) {
+        var _ref21 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(code, _ref22) {
           var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _loop3;
 
-          return regenerator.wrap(function _callee9$(_context9) {
+          return regenerator.wrap(function _callee12$(_context12) {
             while (1) {
-              switch (_context9.prev = _context9.next) {
+              switch (_context12.prev = _context12.next) {
                 case 0:
-                  dynamic_scope = _ref21.dynamic_scope, error = _ref21.error;
+                  dynamic_scope = _ref22.dynamic_scope, error = _ref22.error;
                   self = this;
 
                   if (dynamic_scope) {
@@ -9089,23 +9463,23 @@
 
                 case 10:
                   if (!(node !== nil)) {
-                    _context9.next = 21;
+                    _context12.next = 21;
                     break;
                   }
 
                   item = node.car;
-                  _context9.t0 = scope;
-                  _context9.t1 = item.car;
-                  _context9.next = 16;
+                  _context12.t0 = scope;
+                  _context12.t1 = item.car;
+                  _context12.next = 16;
                   return evaluate(item.cdr.car, eval_args);
 
                 case 16:
-                  _context9.t2 = _context9.sent;
+                  _context12.t2 = _context12.sent;
 
-                  _context9.t0.set.call(_context9.t0, _context9.t1, _context9.t2);
+                  _context12.t0.set.call(_context12.t0, _context12.t1, _context12.t2);
 
                   node = node.cdr;
-                  _context9.next = 10;
+                  _context12.next = 10;
                   break;
 
                 case 21:
@@ -9114,19 +9488,19 @@
                     dynamic_scope: dynamic_scope,
                     error: error
                   };
-                  _loop3 = /*#__PURE__*/regenerator.mark(function _callee8() {
+                  _loop3 = /*#__PURE__*/regenerator.mark(function _callee11() {
                     var node, next, _item, value, symbols;
 
-                    return regenerator.wrap(function _callee8$(_context8) {
+                    return regenerator.wrap(function _callee11$(_context11) {
                       while (1) {
-                        switch (_context8.prev = _context8.next) {
+                        switch (_context11.prev = _context11.next) {
                           case 0:
                             if (!(body !== nil)) {
-                              _context8.next = 3;
+                              _context11.next = 3;
                               break;
                             }
 
-                            _context8.next = 3;
+                            _context11.next = 3;
                             return lips.evaluate(body, eval_args);
 
                           case 3:
@@ -9135,27 +9509,27 @@
 
                           case 5:
                             if (!(node !== nil)) {
-                              _context8.next = 15;
+                              _context11.next = 15;
                               break;
                             }
 
                             _item = node.car;
 
                             if (!(_item.cdr.cdr !== nil)) {
-                              _context8.next = 12;
+                              _context11.next = 12;
                               break;
                             }
 
-                            _context8.next = 10;
+                            _context11.next = 10;
                             return evaluate(_item.cdr.cdr.car, eval_args);
 
                           case 10:
-                            value = _context8.sent;
+                            value = _context11.sent;
                             next[_item.car.valueOf()] = value;
 
                           case 12:
                             node = node.cdr;
-                            _context8.next = 5;
+                            _context11.next = 5;
                             break;
 
                           case 15:
@@ -9166,58 +9540,58 @@
 
                           case 17:
                           case "end":
-                            return _context8.stop();
+                            return _context11.stop();
                         }
                       }
-                    }, _callee8);
+                    }, _callee11);
                   });
 
                 case 23:
-                  _context9.next = 25;
+                  _context12.next = 25;
                   return evaluate(test.car, eval_args);
 
                 case 25:
-                  _context9.t3 = _context9.sent;
+                  _context12.t3 = _context12.sent;
 
-                  if (!(_context9.t3 === false)) {
-                    _context9.next = 30;
+                  if (!(_context12.t3 === false)) {
+                    _context12.next = 30;
                     break;
                   }
 
-                  return _context9.delegateYield(_loop3(), "t4", 28);
+                  return _context12.delegateYield(_loop3(), "t4", 28);
 
                 case 28:
-                  _context9.next = 23;
+                  _context12.next = 23;
                   break;
 
                 case 30:
                   if (!(test.cdr !== nil)) {
-                    _context9.next = 34;
+                    _context12.next = 34;
                     break;
                   }
 
-                  _context9.next = 33;
+                  _context12.next = 33;
                   return evaluate(test.cdr.car, eval_args);
 
                 case 33:
-                  return _context9.abrupt("return", _context9.sent);
+                  return _context12.abrupt("return", _context12.sent);
 
                 case 34:
                 case "end":
-                  return _context9.stop();
+                  return _context12.stop();
               }
             }
-          }, _callee9, this);
+          }, _callee12, this);
         }));
 
         return function (_x10, _x11) {
-          return _ref20.apply(this, arguments);
+          return _ref21.apply(this, arguments);
         };
       }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
       // ------------------------------------------------------------------
-      'if': doc(new Macro('if', function (code, _ref22) {
-        var dynamic_scope = _ref22.dynamic_scope,
-            error = _ref22.error;
+      'if': doc(new Macro('if', function (code, _ref23) {
+        var dynamic_scope = _ref23.dynamic_scope,
+            error = _ref23.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -9307,9 +9681,9 @@
         }();
       }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
       // ------------------------------------------------------------------
-      'ignore': new Macro('ignore', function (code, _ref23) {
-        var dynamic_scope = _ref23.dynamic_scope,
-            error = _ref23.error;
+      'ignore': new Macro('ignore', function (code, _ref24) {
+        var dynamic_scope = _ref24.dynamic_scope,
+            error = _ref24.error;
         var args = {
           env: this,
           error: error
@@ -9469,9 +9843,9 @@
       }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
       // ------------------------------------------------------------------
       lambda: new Macro('lambda', function (code) {
-        var _ref24 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref24.dynamic_scope,
-            error = _ref24.error;
+        var _ref25 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref25.dynamic_scope,
+            error = _ref25.error;
 
         var self = this;
 
@@ -9585,9 +9959,9 @@
       'macroexpand': new Macro('macroexpand', macro_expand()),
       'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
       // ------------------------------------------------------------------
-      'define-macro': doc(new Macro(macro, function (macro, _ref25) {
-        var dynamic_scope = _ref25.dynamic_scope,
-            error = _ref25.error;
+      'define-macro': doc(new Macro(macro, function (macro, _ref26) {
+        var dynamic_scope = _ref26.dynamic_scope,
+            error = _ref26.error;
 
         if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
           var name = macro.car.car.__name__;
@@ -9699,8 +10073,8 @@
           validate_identifiers(macro.car);
         }
 
-        var syntax = new Syntax(function (code, _ref26) {
-          var macro_expand = _ref26.macro_expand;
+        var syntax = new Syntax(function (code, _ref27) {
+          var macro_expand = _ref27.macro_expand;
           var scope = env.inherit('syntax');
 
           if (dynamic_scope) {
@@ -9839,10 +10213,10 @@
             }
 
             if (is_promise(car) || is_promise(cdr)) {
-              return Promise.all([car, cdr]).then(function (_ref27) {
-                var _ref28 = slicedToArray(_ref27, 2),
-                    car = _ref28[0],
-                    cdr = _ref28[1];
+              return Promise.all([car, cdr]).then(function (_ref28) {
+                var _ref29 = slicedToArray(_ref28, 2),
+                    car = _ref29[0],
+                    cdr = _ref29[1];
 
                 return new Pair(car, cdr);
               });
@@ -10516,11 +10890,11 @@
         return false;
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
-      'try': doc(new Macro('try', function (code, _ref29) {
+      'try': doc(new Macro('try', function (code, _ref30) {
         var _this7 = this;
 
-        var dynamic_scope = _ref29.dynamic_scope,
-            _error = _ref29.error;
+        var dynamic_scope = _ref30.dynamic_scope,
+            _error = _ref30.error;
         return new Promise(function (resolve) {
           var args = {
             env: _this7,
@@ -10943,9 +11317,9 @@
       // ------------------------------------------------------------------
       'eq?': doc('eq?', equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
-      or: doc(new Macro('or', function (code, _ref30) {
-        var dynamic_scope = _ref30.dynamic_scope,
-            error = _ref30.error;
+      or: doc(new Macro('or', function (code, _ref31) {
+        var dynamic_scope = _ref31.dynamic_scope,
+            error = _ref31.error;
         var args = global_env.get('list->array')(code);
         var self = this;
 
@@ -10988,9 +11362,9 @@
       }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
       // ------------------------------------------------------------------
       and: doc(new Macro('and', function (code) {
-        var _ref31 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref31.dynamic_scope,
-            error = _ref31.error;
+        var _ref32 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref32.dynamic_scope,
+            error = _ref32.error;
 
         var args = global_env.get('list->array')(code);
         var self = this;
@@ -11414,65 +11788,65 @@
       }
 
       function _promise() {
-        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(node) {
+        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(node) {
           var pair;
-          return regenerator.wrap(function _callee10$(_context10) {
+          return regenerator.wrap(function _callee13$(_context13) {
             while (1) {
-              switch (_context10.prev = _context10.next) {
+              switch (_context13.prev = _context13.next) {
                 case 0:
-                  _context10.t0 = Pair;
+                  _context13.t0 = Pair;
 
                   if (!node.haveCycles('car')) {
-                    _context10.next = 5;
+                    _context13.next = 5;
                     break;
                   }
 
-                  _context10.t1 = node.car;
-                  _context10.next = 8;
+                  _context13.t1 = node.car;
+                  _context13.next = 8;
                   break;
 
                 case 5:
-                  _context10.next = 7;
+                  _context13.next = 7;
                   return resolve(node.car);
 
                 case 7:
-                  _context10.t1 = _context10.sent;
+                  _context13.t1 = _context13.sent;
 
                 case 8:
-                  _context10.t2 = _context10.t1;
+                  _context13.t2 = _context13.t1;
 
                   if (!node.haveCycles('cdr')) {
-                    _context10.next = 13;
+                    _context13.next = 13;
                     break;
                   }
 
-                  _context10.t3 = node.cdr;
-                  _context10.next = 16;
+                  _context13.t3 = node.cdr;
+                  _context13.next = 16;
                   break;
 
                 case 13:
-                  _context10.next = 15;
+                  _context13.next = 15;
                   return resolve(node.cdr);
 
                 case 15:
-                  _context10.t3 = _context10.sent;
+                  _context13.t3 = _context13.sent;
 
                 case 16:
-                  _context10.t4 = _context10.t3;
-                  pair = new _context10.t0(_context10.t2, _context10.t4);
+                  _context13.t4 = _context13.t3;
+                  pair = new _context13.t0(_context13.t2, _context13.t4);
 
                   if (node[__data__]) {
                     pair[__data__] = true;
                   }
 
-                  return _context10.abrupt("return", pair);
+                  return _context13.abrupt("return", pair);
 
                 case 20:
                 case "end":
-                  return _context10.stop();
+                  return _context13.stop();
               }
             }
-          }, _callee10);
+          }, _callee13);
         }));
         return _promise.apply(this, arguments);
       }
@@ -11491,10 +11865,10 @@
     } // -------------------------------------------------------------------------
 
 
-    function evaluate_args(rest, _ref32) {
-      var env = _ref32.env,
-          dynamic_scope = _ref32.dynamic_scope,
-          error = _ref32.error;
+    function evaluate_args(rest, _ref33) {
+      var env = _ref33.env,
+          dynamic_scope = _ref33.dynamic_scope,
+          error = _ref33.error;
       var args = [];
       var node = rest;
       markCycles(node);
@@ -11569,11 +11943,11 @@
 
 
     function apply(fn, args) {
-      var _ref33 = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {},
-          env = _ref33.env,
-          dynamic_scope = _ref33.dynamic_scope,
-          _ref33$error = _ref33.error,
-          error = _ref33$error === void 0 ? function () {} : _ref33$error;
+      var _ref34 = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {},
+          env = _ref34.env,
+          dynamic_scope = _ref34.dynamic_scope,
+          _ref34$error = _ref34.error,
+          error = _ref34$error === void 0 ? function () {} : _ref34$error;
 
       args = evaluate_args(args, {
         env: env,
@@ -11643,11 +12017,11 @@
 
 
     function evaluate(code) {
-      var _ref34 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          env = _ref34.env,
-          dynamic_scope = _ref34.dynamic_scope,
-          _ref34$error = _ref34.error,
-          error = _ref34$error === void 0 ? function () {} : _ref34$error;
+      var _ref35 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          env = _ref35.env,
+          dynamic_scope = _ref35.dynamic_scope,
+          _ref35$error = _ref35.error,
+          error = _ref35$error === void 0 ? function () {} : _ref35$error;
 
       try {
         if (dynamic_scope === true) {
@@ -11742,12 +12116,12 @@
 
 
     function _exec() {
-      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(string, env, dynamic_scope) {
+      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15(string, env, dynamic_scope) {
         var results, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
 
-        return regenerator.wrap(function _callee12$(_context12) {
+        return regenerator.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -11760,24 +12134,24 @@
                 results = [];
                 _iteratorNormalCompletion3 = true;
                 _didIteratorError3 = false;
-                _context12.prev = 4;
+                _context15.prev = 4;
                 _iterator3 = asyncIterator(parse(string));
 
               case 6:
-                _context12.next = 8;
+                _context15.next = 8;
                 return _iterator3.next();
 
               case 8:
-                _step3 = _context12.sent;
+                _step3 = _context15.sent;
                 _iteratorNormalCompletion3 = _step3.done;
-                _context12.next = 12;
+                _context15.next = 12;
                 return _step3.value;
 
               case 12:
-                _value3 = _context12.sent;
+                _value3 = _context15.sent;
 
                 if (_iteratorNormalCompletion3) {
-                  _context12.next = 28;
+                  _context15.next = 28;
                   break;
                 }
 
@@ -11800,76 +12174,76 @@
                 });
 
                 if (is_promise(value)) {
-                  _context12.next = 20;
+                  _context15.next = 20;
                   break;
                 }
 
                 results.push(value);
-                _context12.next = 25;
+                _context15.next = 25;
                 break;
 
               case 20:
-                _context12.t0 = results;
-                _context12.next = 23;
+                _context15.t0 = results;
+                _context15.next = 23;
                 return value;
 
               case 23:
-                _context12.t1 = _context12.sent;
+                _context15.t1 = _context15.sent;
 
-                _context12.t0.push.call(_context12.t0, _context12.t1);
+                _context15.t0.push.call(_context15.t0, _context15.t1);
 
               case 25:
                 _iteratorNormalCompletion3 = true;
-                _context12.next = 6;
+                _context15.next = 6;
                 break;
 
               case 28:
-                _context12.next = 34;
+                _context15.next = 34;
                 break;
 
               case 30:
-                _context12.prev = 30;
-                _context12.t2 = _context12["catch"](4);
+                _context15.prev = 30;
+                _context15.t2 = _context15["catch"](4);
                 _didIteratorError3 = true;
-                _iteratorError3 = _context12.t2;
+                _iteratorError3 = _context15.t2;
 
               case 34:
-                _context12.prev = 34;
-                _context12.prev = 35;
+                _context15.prev = 34;
+                _context15.prev = 35;
 
                 if (!(!_iteratorNormalCompletion3 && _iterator3["return"] != null)) {
-                  _context12.next = 39;
+                  _context15.next = 39;
                   break;
                 }
 
-                _context12.next = 39;
+                _context15.next = 39;
                 return _iterator3["return"]();
 
               case 39:
-                _context12.prev = 39;
+                _context15.prev = 39;
 
                 if (!_didIteratorError3) {
-                  _context12.next = 42;
+                  _context15.next = 42;
                   break;
                 }
 
                 throw _iteratorError3;
 
               case 42:
-                return _context12.finish(39);
+                return _context15.finish(39);
 
               case 43:
-                return _context12.finish(34);
+                return _context15.finish(34);
 
               case 44:
-                return _context12.abrupt("return", results);
+                return _context15.abrupt("return", results);
 
               case 45:
               case "end":
-                return _context12.stop();
+                return _context15.stop();
             }
           }
-        }, _callee12, null, [[4, 30, 34, 44], [35,, 39, 43]]);
+        }, _callee15, null, [[4, 30, 34, 44], [35,, 39, 43]]);
       }));
       return _exec.apply(this, arguments);
     }
@@ -11896,12 +12270,12 @@
       });
       var stack = new Stack();
 
-      var _iterator7 = _createForOfIteratorHelper(tokens),
-          _step7;
+      var _iterator8 = _createForOfIteratorHelper(tokens),
+          _step8;
 
       try {
-        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-          var token = _step7.value;
+        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+          var token = _step8.value;
 
           if (open_tokens.includes(token)) {
             stack.push(token);
@@ -11922,9 +12296,9 @@
           }
         }
       } catch (err) {
-        _iterator7.e(err);
+        _iterator8.e(err);
       } finally {
-        _iterator7.f();
+        _iterator8.f();
       }
 
       return stack.is_empty();
@@ -12211,10 +12585,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 31 Dec 2020 11:47:40 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 01 Jan 2021 12:49:34 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 31 Dec 2020 11:47:40 +0000').valueOf();
+      var date = LString('Fri, 01 Jan 2021 12:49:34 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12251,7 +12625,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 31 Dec 2020 11:47:40 +0000',
+      date: 'Fri, 01 Jan 2021 12:49:34 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
@@ -12277,9 +12651,11 @@
       OutputStringPort: OutputStringPort,
       Formatter: Formatter,
       Parser: Parser,
+      Lexer: Lexer,
       specials: specials,
       repr: repr,
       nil: nil,
+      eof: eof,
       LSymbol: LSymbol,
       LNumber: LNumber,
       LFloat: LFloat,

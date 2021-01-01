@@ -2797,7 +2797,9 @@
 ;; -----------------------------------------------------------------------------
 (define-syntax cond-expand
   (syntax-rules (and or not else srfi-0 srfi-4 srfi-6 srfi-22
-                     srfi-23 srfi-46 srfi-176 lips)
+                     srfi-23 srfi-46 srfi-176 lips
+                     complex full-unicode ieee-float ratios
+                     exact-complex full-numeric-tower)
     ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
     ((cond-expand (else body ...))
      (begin body ...))
@@ -2840,6 +2842,18 @@
     ((cond-expand (srfi-176  body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (lips  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (complex body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (full-unicode body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (ieee-float body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (ratios body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (exact-complex body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (full-numeric-tower body ...) more-clauses ...)
        (begin body ...))))
 
 ;; -----------------------------------------------------------------------------

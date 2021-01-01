@@ -14,7 +14,7 @@ const {promisify} = require('util');
 const fs = require('fs');
 const readFile = promisify(fs.readFile);
 const readDir = promisify(fs.readdir);
-
+var util = require('util');
 const lips = require('../src/lips');
 
 readDir('./tests/').then(function(filenames) {
