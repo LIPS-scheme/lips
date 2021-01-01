@@ -1,6 +1,3 @@
-
-;; DEBUG
-
 (define-macro (t.is a b)
   "(t.is a b)
 

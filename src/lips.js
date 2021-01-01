@@ -863,16 +863,43 @@
         get: function(name) {
             return this._specials[name];
         },
+        // events are used in Lexer dynamic rules
+        off: function(name, fn = null) {
+            if (Array.isArray(name)) {
+                name.forEach(name => this.off(name, fn));
+            } else if (fn === null) {
+                delete this._events[name];
+            } else {
+                this._events = this._events.filter(test => test !== fn);
+            }
+        },
+        on: function(name, fn) {
+            if (Array.isArray(name)) {
+                name.forEach(name => this.on(name, fn));
+            } else if (!this._events[name]) {
+                this._events[name] = [fn];
+            } else {
+                this._events[name].push(fn);
+            }
+        },
+        trigger: function(name, ...args) {
+            if (this._events[name]) {
+                this._events[name].forEach(fn => fn(...args));
+            }
+        },
         remove: function(name) {
+            this.trigger('remove');
             delete this._specials[name];
         },
         append: function(name, value, type) {
+            this.trigger('append');
             this._specials[name] = {
                 seq: name,
                 symbol: value,
                 type
             };
         },
+        _events: {},
         _specials: {}
     };
     function is_literal(special) {
@@ -1099,12 +1126,24 @@
     // :: dynamic getter or Lexer state rules, parser use this
     // :: so in fact user code can modify lexer using syntax extensions
     // ----------------------------------------------------------------------
+    Lexer._cache = {
+        valid: false,
+        rules: null
+    };
+    // ----------------------------------------------------------------------
+    specials.on(['remove', 'append'], function() {
+        Lexer._cache.valid = false;
+        Lexer._cache.rules = null;
+    });
     Object.defineProperty(Lexer, 'rules', {
         get() {
+            if (Lexer._cache.valid) {
+                return Lexer._cache.rules;
+            }
             var tokens = specials.names().sort((a, b) => {
                 return b.length - a.length || a.localeCompare(b);
             });
-            return Lexer._rules.concat(tokens.reduce((acc, token) => {
+            Lexer._cache.rules = Lexer._rules.concat(tokens.reduce((acc, token) => {
                 const { type, symbol: special_symbol } = specials.get(token);
                 let rules;
                 let symbol;
@@ -1125,6 +1164,9 @@
                 }
                 return acc.concat(rules);
             }, []), Lexer._symbol_rules);
+
+            Lexer._cache.valid = true;
+            return Lexer._cache.rules;
         }
     });
     // ----------------------------------------------------------------------
