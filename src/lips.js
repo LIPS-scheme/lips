@@ -3189,62 +3189,6 @@
         }
     }
     // ----------------------------------------------------------------------
-    /*
-    async function expand(code, args) {
-        async function traverse(node, args) {
-            if (!(node instanceof Pair)) {
-                return { code: node, scope: args.env };
-            }
-            var result;
-            if (node instanceof Pair && node.car instanceof LSymbol) {
-                if (node.data) {
-                    return node;
-                }
-                var value = args.env.get(node.car, { throwError: false });
-                if (value instanceof Syntax && value.defmacro) {
-                    var {
-                        expr: result,
-                        scope
-                    } = await value.invoke(node, args, true);
-                    if (result instanceof LSymbol) {
-                        return { scope, code: result };
-                    }
-                    if (result instanceof Pair) {
-                        return traverse(result, { ...args, env: scope });
-                    }
-                }
-            }
-            var car = node.car;
-            var scopes = [];
-            if (car instanceof Pair) {
-                result = await traverse(car, args);
-                car = result.code;
-                if (args.env !== result.scope) {
-                    scopes.push(result.scope);
-                }
-            }
-            var cdr = node.cdr;
-            if (cdr instanceof Pair) {
-                result = await traverse(cdr, args);
-                cdr = result.code;
-                if (args.env !== result.scope) {
-                    scopes.push(result.scope);
-                }
-            }
-            if (scopes.length) {
-                scope = scopes.reduce((acc, scope) => {
-                    return acc.merge(scope);
-                });
-            } else {
-                scope = args.env;
-            }
-            var pair = new Pair(car, cdr);
-            return { code: pair, scope };
-        }
-        return traverse(code, args);
-    }
-    */
-    // ----------------------------------------------------------------------
     // :: This function is called after syntax-rules macro is evaluated
     // :: and if there are any gensyms added by macro they need to restored
     // :: to original symbols
