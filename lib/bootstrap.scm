@@ -1117,7 +1117,7 @@
      (let ((node (assoc 'fn **reader-ctor-list**)))
        (if (pair? node)
            ((cdr node) 'arg ...)
-           (throw (new Error (string-append "Invalid symbol " (symbol->string 'fn)
-                                            " in expression " (repr '(fn arg ...))))))))))
+           (syntax-error (string-append "Invalid symbol " (symbol->string 'fn)
+                                        " in expression " (repr '(fn arg ...)))))))))
 
 ;; ---------------------------------------------------------------------------------------

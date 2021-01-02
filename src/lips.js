@@ -8455,8 +8455,8 @@
             }
             if (fn[__lambda__] &&
                 !fn[__prototype__] &&
-                !fn[__method__] ||
-                is_port_method(fn)) {
+                !fn[__method__] &&
+                !is_port_method(fn)) {
                 // lambda need environment as context
                 // normal functions are bound to their contexts
                 fn = unbind(fn);

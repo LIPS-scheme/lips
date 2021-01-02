@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 01 Jan 2021 13:41:32 +0000
+ * build: Sat, 02 Jan 2021 09:26:53 +0000
  */
 (function () {
   'use strict';
@@ -5525,63 +5525,6 @@
         return bindings;
       }
     } // ----------------------------------------------------------------------
-
-    /*
-    async function expand(code, args) {
-        async function traverse(node, args) {
-            if (!(node instanceof Pair)) {
-                return { code: node, scope: args.env };
-            }
-            var result;
-            if (node instanceof Pair && node.car instanceof LSymbol) {
-                if (node.data) {
-                    return node;
-                }
-                var value = args.env.get(node.car, { throwError: false });
-                if (value instanceof Syntax && value.defmacro) {
-                    var {
-                        expr: result,
-                        scope
-                    } = await value.invoke(node, args, true);
-                    if (result instanceof LSymbol) {
-                        return { scope, code: result };
-                    }
-                    if (result instanceof Pair) {
-                        return traverse(result, { ...args, env: scope });
-                    }
-                }
-            }
-            var car = node.car;
-            var scopes = [];
-            if (car instanceof Pair) {
-                result = await traverse(car, args);
-                car = result.code;
-                if (args.env !== result.scope) {
-                    scopes.push(result.scope);
-                }
-            }
-            var cdr = node.cdr;
-            if (cdr instanceof Pair) {
-                result = await traverse(cdr, args);
-                cdr = result.code;
-                if (args.env !== result.scope) {
-                    scopes.push(result.scope);
-                }
-            }
-            if (scopes.length) {
-                scope = scopes.reduce((acc, scope) => {
-                    return acc.merge(scope);
-                });
-            } else {
-                scope = args.env;
-            }
-            var pair = new Pair(car, cdr);
-            return { code: pair, scope };
-        }
-        return traverse(code, args);
-    }
-    */
-    // ----------------------------------------------------------------------
     // :: This function is called after syntax-rules macro is evaluated
     // :: and if there are any gensyms added by macro they need to restored
     // :: to original symbols
@@ -12020,7 +11963,7 @@
           args = args.map(unbox);
         }
 
-        if (fn[__lambda__] && !fn[__prototype__] && !fn[__method__] || is_port_method(fn)) {
+        if (fn[__lambda__] && !fn[__prototype__] && !fn[__method__] && !is_port_method(fn)) {
           // lambda need environment as context
           // normal functions are bound to their contexts
           fn = unbind(fn);
@@ -12646,10 +12589,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 01 Jan 2021 13:41:32 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 02 Jan 2021 09:26:53 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 01 Jan 2021 13:41:32 +0000').valueOf();
+      var date = LString('Sat, 02 Jan 2021 09:26:53 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12686,7 +12629,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 01 Jan 2021 13:41:32 +0000',
+      date: 'Sat, 02 Jan 2021 09:26:53 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
