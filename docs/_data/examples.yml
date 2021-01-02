@@ -3,9 +3,9 @@
   code: >
     " (print (filter number? '(foo 10 bar 20 baz 30)))
      ;; ==> (10 20 30)
-     (print (filter /foo|bar/ '(foo bar baz quux)))
+     (print (filter #/foo|bar/ '(foo bar baz quux)))
      ;; ==> (foo bar)
-     (define foo_or_bar (curry filter /foo|bar/))
+     (define foo_or_bar (curry filter #/foo|bar/))
      (print (foo_or_bar '(foo bar baz)))
      ;; ==> (foo bar)"
 -
