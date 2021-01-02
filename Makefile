@@ -81,6 +81,9 @@ jest-test: dist/lips.js
 test: dist/lips.js dist/std.scm
 	@$(NPM) run test
 
+test-file: dist/lips.js dist/std.scm
+	@$(NPM) run test -- -- -f $(FILE)
+
 test-update: dist/lips.js dist/std.scm
 	@$(NPM) run test-update
 

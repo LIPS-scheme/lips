@@ -58,6 +58,15 @@ To run tests execute:
 make test
 ```
 
+when tests are failing and single test is the problem you can speed it up,
+but running single test file after fixing the issue:
+
+```
+make test-file FILE=ports.scm
+```
+
+This will run single Scheme test file.
+
 If your code don't pass tests it will be not merged. You can run tests locally,
 but they will also run in CI (by [Travis](https://travis-ci.org/)).
 
