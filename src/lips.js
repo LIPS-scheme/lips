@@ -923,6 +923,14 @@
     // ----------------------------------------------------------------------
     // :: State based incremental Lexer
     // ----------------------------------------------------------------------
+    /* Lexer debugger
+    var DEBUG = false;
+    function log(...args) {
+        if (DEBUG) {
+            console.log(...args);
+        }
+    }
+    */
     class Lexer {
         constructor(input) {
             this._input = input;
@@ -1108,9 +1116,12 @@
 
         // regex
         [/#/, Lexer.boundary, /\//, null, Lexer.regex],
-        [/ \t/, null, null, Lexer.regex, Lexer.regex],
-        [/\//, null, Lexer.boundary, Lexer.regex, null],
-        [/[gimyus]/, null, Lexer.boundary, Lexer.regex, null]
+        [/[ \t]/, null, null, Lexer.regex, Lexer.regex],
+        [/[()[\]]/, null, null, Lexer.regex, Lexer.regex],
+        [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null],
+        [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null],
+        [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex],
+        [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null]
     ];
     // ----------------------------------------------------------------------
     // :: symbols should be matched last
@@ -2376,11 +2387,14 @@
         if ([nil, eof].includes(obj)) {
             return obj.toString();
         }
-        var types = [RegExp, LSymbol, LNumber, Macro, Values];
+        var types = [LSymbol, LNumber, Macro, Values];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString();
             }
+        }
+        if (obj instanceof RegExp) {
+            return '#' + obj.toString();
         }
         if (is_function(obj)) {
             return function_to_string(obj);

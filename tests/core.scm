@@ -230,3 +230,9 @@
           (await p)
           (t.is result #(10)))))
 
+(test "core: regex"
+      (lambda (t)
+        (let* ((str "#/(\\((?:env|dir|help|apropos)[^)]*\\))/g")
+               (re (. (lips.parse str) 0)))
+          (t.is (regex? re) true)
+          (t.is (repr re) str))))

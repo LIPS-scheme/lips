@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 02 Jan 2021 09:26:53 +0000
+ * build: Sat, 02 Jan 2021 18:49:10 +0000
  */
 (function () {
   'use strict';
@@ -2319,6 +2319,15 @@
     // :: State based incremental Lexer
     // ----------------------------------------------------------------------
 
+    /* Lexer debugger
+    var DEBUG = false;
+    function log(...args) {
+        if (DEBUG) {
+            console.log(...args);
+        }
+    }
+    */
+
     var Lexer = /*#__PURE__*/function () {
       function Lexer(input) {
         classCallCheck(this, Lexer);
@@ -2538,7 +2547,7 @@
     [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
     [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null], // brackets
     [/[()[\]]/, null, null, null, null], // regex
-    [/#/, Lexer.boundary, /\//, null, Lexer.regex], [/ \t/, null, null, Lexer.regex, Lexer.regex], [/\//, null, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, null, Lexer.boundary, Lexer.regex, null]]; // ----------------------------------------------------------------------
+    [/#/, Lexer.boundary, /\//, null, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null]]; // ----------------------------------------------------------------------
     // :: symbols should be matched last
     // ----------------------------------------------------------------------
 
@@ -4409,7 +4418,7 @@
         return obj.toString();
       }
 
-      var types = [RegExp, LSymbol, LNumber, Macro, Values];
+      var types = [LSymbol, LNumber, Macro, Values];
 
       for (var _i4 = 0, _types = types; _i4 < _types.length; _i4++) {
         var _type2 = _types[_i4];
@@ -4417,6 +4426,10 @@
         if (obj instanceof _type2) {
           return obj.toString();
         }
+      }
+
+      if (obj instanceof RegExp) {
+        return '#' + obj.toString();
       }
 
       if (is_function(obj)) {
@@ -12589,10 +12602,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 02 Jan 2021 09:26:53 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 02 Jan 2021 18:49:10 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 02 Jan 2021 09:26:53 +0000').valueOf();
+      var date = LString('Sat, 02 Jan 2021 18:49:10 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12629,7 +12642,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 02 Jan 2021 09:26:53 +0000',
+      date: 'Sat, 02 Jan 2021 18:49:10 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
