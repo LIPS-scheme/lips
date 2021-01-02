@@ -18,6 +18,8 @@
 * fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)
 * fix `equal?` on typed arrays
 * fix detecting user repr (when object is subclass)
+* fix calling port methods (e.g. calling `get-output-string` function)
+* fix prism highlighting of multiple regular expression
 
 ## 1.0.0-beta.10
 ### Breaking
