@@ -28,7 +28,7 @@
                                 " to display help for specic function or macro.\n"
                                 "Use (dir name) to get list of JavaScript properties and (apropos name)\n"
                                 "to display list of matched names in environment.\n")
-                 (replace /(\((?:env|dir|help|apropos)[^)]*\))/g
+                 (replace #/(\((?:env|dir|help|apropos)[^)]*\))/g
                           (lambda (code)
                             ($.terminal.prism "scheme" code &(:echo true)))))
      &(:formatters false))
