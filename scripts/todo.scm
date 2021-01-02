@@ -14,7 +14,7 @@
 
 (begin
   (print "R5RS")
-  (print-list "R5RS_list")
+  (print-list "../assets/R5RS_list")
   (print "R7RS")
-  (print-list "R7RS_base")
+  (print-list "../assets/R7RS_list")
 )
