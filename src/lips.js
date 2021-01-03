@@ -260,6 +260,33 @@
         'us': '\x1f',
         'del': '\x7f'
     };
+    // -------------------------------------------------------------------------
+    // :: ref: https://github.com/bestiejs/punycode.js/blob/master/punycode.js
+    // -------------------------------------------------------------------------
+    function ucs2decode(string) {
+        const output = [];
+        let counter = 0;
+        const length = string.length;
+        while (counter < length) {
+            const value = string.charCodeAt(counter++);
+            if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
+                // It's a high surrogate, and there is a next character.
+                const extra = string.charCodeAt(counter++);
+                if ((extra & 0xFC00) == 0xDC00) { // Low surrogate.
+                    output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
+                } else {
+                    // It's an unmatched surrogate; only append this code unit, in case the
+                    // next code unit is the high surrogate of a surrogate pair.
+                    output.push(value);
+                    counter--;
+                }
+            } else {
+                output.push(value);
+            }
+        }
+        return output;
+    }
+    // -------------------------------------------------------------------------
     const character_symbols = Object.keys(characters).join('|');
     const char_sre_re = `#\\\\(?:x[0-9a-f]+|${character_symbols}|[\\s\\S])`;
     const char_re = new RegExp(`^${char_sre_re}$`, 'i');
@@ -466,10 +493,12 @@
         // handle non JSON escapes and skip unicode escape \u (even partial)
         var re = /([^\\\n])(\\(?:\\{2})*)(?!x[0-9A-F]+)(?!u[0-9A-F]{2,4})(.)/gi;
         string = string.replace(re, function(_, before, slashes, chr) {
+            /*
             if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't', 'x'].includes(chr)) {
                 slashes = slashes.substring(1).replace(/\\\\/, '\\');
                 //return before + slashes + chr;
             }
+            */
             return _;
         }).replace(/\\x([0-9a-f]+);/ig, function(_, hex) {
             return "\\u" + hex.padStart(4, '0');
@@ -527,6 +556,11 @@
         } else if (arg.match(/^#[iexobd]/)) {
             throw new Error('Invalid numeric constant');
         } else {
+            // characters with more than one codepoint
+            var m = arg.match(/#\\(.+)/);
+            if (m && ucs2decode(m[1]).length === 1) {
+                return parse_character(arg);
+            }
             return parse_symbol(arg);
         }
     }
