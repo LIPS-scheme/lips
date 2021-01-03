@@ -2,8 +2,8 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.10-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&ba2d1e4468f637e0008772228c7a646f6a380442)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&d007a9e21b388e6d73a88905b121c10e)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&2f6887296d03b2b06e67eedfe5fa94a47ad6ff4c)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&87d536a96d6253b7371eac48f7b39b1d)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/jcubic/lips.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/jcubic/lips/stargazers/)
@@ -243,7 +243,8 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 * Current parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
 * `fetch` polyfill use [unfetch](https://github.com/developit/unfetch) by Jason Miller.
 * Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
-* The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley
+* The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley.
+* `ucs2decode` function taken from [punycode.js](https://github.com/bestiejs/punycode.js) by [Mathias Bynens](https://mathiasbynens.be/).
 * [Rosetta Code](https://rosettacode.org/) is used for:
   * [gdc](https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript),
   * [lcm](https://rosettacode.org/wiki/Least_common_multiple#JavaScript),
@@ -253,8 +254,6 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
   * [flatten](https://stackoverflow.com/a/27282907/387194),
   * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
-
-
 
 ## License
 

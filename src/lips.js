@@ -17,8 +17,9 @@
  *
  * unfetch by Jason Miller (@developit) MIT License
  *
- * includes:
  * contentloaded.js
+ *
+ * ucs2decode function from Punycode v 2.1.1 by Mathias Bynens MIT License
  *
  * Author: Diego Perini (diego.perini at gmail.com)
  * Summary: cross-browser wrapper for DOMContentLoaded
@@ -272,7 +273,7 @@
             if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
                 // It's a high surrogate, and there is a next character.
                 const extra = string.charCodeAt(counter++);
-                if ((extra & 0xFC00) == 0xDC00) { // Low surrogate.
+                if ((extra & 0xFC00) === 0xDC00) { // Low surrogate.
                     output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
                 } else {
                     // It's an unmatched surrogate; only append this code unit, in case the
@@ -491,16 +492,7 @@
     // ----------------------------------------------------------------------
     function parse_string(string) {
         // handle non JSON escapes and skip unicode escape \u (even partial)
-        var re = /([^\\\n])(\\(?:\\{2})*)(?!x[0-9A-F]+)(?!u[0-9A-F]{2,4})(.)/gi;
-        string = string.replace(re, function(_, before, slashes, chr) {
-            /*
-            if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't', 'x'].includes(chr)) {
-                slashes = slashes.substring(1).replace(/\\\\/, '\\');
-                //return before + slashes + chr;
-            }
-            */
-            return _;
-        }).replace(/\\x([0-9a-f]+);/ig, function(_, hex) {
+        string = string.replace(/\\x([0-9a-f]+);/ig, function(_, hex) {
             return "\\u" + hex.padStart(4, '0');
         }).replace(/\n/g, '\\n'); // in LIPS strings can be multiline
         var m = string.match(/(\\*)(\\x[0-9A-F])/i);
@@ -573,34 +565,16 @@
                  ['#t', '#f', 'nil', 'true', 'false'].includes(str));
     }
     // ----------------------------------------------------------------------
-    /* eslint-disable */
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|#\/[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimyus]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||#;|;.*|#\|(?!\|#)[\s\S]*\|#)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
-    // generate regex for all number literals
-    var num_stre = [
-        gen_complex_re,
-        gen_rational_re,
-        gen_integer_re
-    ].map(make_num_stre).join('|');
     // ----------------------------------------------------------------------
-    function make_tokens_re() {
-        const tokens = specials.names()
-            .sort((a, b) => b.length - a.length || a.localeCompare(b))
-            .map(escape_regex).join('|');
-        return new RegExp(`(${char_sre_re}|#false|#true|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|'(?=#[ft]|(?:#[xiobe]){1,2}|#\\\\)|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
-    }
-    /* eslint-enable */
-    // ----------------------------------------------------------------------
-    function last_item(array, n = 1) {
-        return array[array.length - n];
-    }
-    // ----------------------------------------------------------------------
+    /*
     function escape_regex(str) {
         if (typeof str === 'string') {
             var special = /([-\\^$[\]()+{}?*.|])/g;
             return str.replace(special, '\\$1');
         }
     }
+    */
     // ----------------------------------------------------------------------
     // Stack used in balanced function
     // TODO: use it in parser
@@ -625,59 +599,17 @@
         if (str instanceof LString) {
             str = str.valueOf();
         }
-        var tokens_re = make_tokens_re();
-        str = str.replace(/\n\r|\r/g, '\n');
-        var count = 0;
-        var line = 0;
-        var tokens = [];
-        var current_line = [];
-        var col = 0;
-        str.split(pre_parse_re).filter(Boolean).forEach(function(string) {
-            if (string.match(pre_parse_re)) {
-                col = 0;
-                if (current_line.length) {
-                    var last_token = last_item(current_line);
-                    if (last_token.token.match(/\n/)) {
-                        var last_line = last_token.token.split('\n').pop();
-                        col += last_line.length;
-                    } else {
-                        col += last_token.token.length;
-                    }
-                    col += last_token.col;
-                }
-                var token = {
-                    col,
-                    line,
-                    token: string,
-                    offset: count
-                };
-                tokens.push(token);
-                current_line.push(token);
-                count += string.length;
-                col += string.length;
-                line += (string.match("\n") || []).length;
-                return;
+        var lexer = new Lexer(str, { whitespace: true });
+        var result = [];
+        while (true) {
+            const token = lexer.peek(true);
+            if (token === eof) {
+                break;
             }
-            var parts = string.split(tokens_re).filter(Boolean);
-            parts.forEach(function(string) {
-                var token = {
-                    col,
-                    line,
-                    token: string,
-                    offset: count
-                };
-                col += string.length;
-                count += string.length;
-                tokens.push(token);
-                current_line.push(token);
-                if (string === '\n') {
-                    ++line;
-                    current_line = [];
-                    col = 0;
-                }
-            });
-        });
-        return tokens;
+            result.push(token);
+            lexer.skip();
+        }
+        return result;
     }
     // ----------------------------------------------------------------------
     function multiline_formatter(meta) {
@@ -718,23 +650,19 @@
         return result;
     }
     // ----------------------------------------------------------------------
-    function tokenize(str, extra, formatter = multiline_formatter) {
+    function tokenize(str, meta = false) {
         if (str instanceof LString) {
             str = str.toString();
         }
-        if (extra) {
-            return tokens(str).map(formatter);
+        if (meta) {
+            return tokens(str);
         } else {
             var result = tokens(str).map(function(token) {
-                var ret = formatter(token);
-                if (!ret || typeof ret.token !== 'string') {
-                    throw new Error('[tokenize] Invalid formatter wrong return object');
-                }
                 // we don't want literal space character to be trimmed
-                if (ret.token === '#\\ ') {
-                    return ret.token;
+                if (token.token === '#\\ ') {
+                    return token.token;
                 }
-                return ret.token.trim();
+                return token.token.trim();
             }).filter(function(token) {
                 return token && !token.match(/^;/) && !token.match(/^#\|[\s\S]*\|#$/);
             });
@@ -966,22 +894,36 @@
     }
     */
     class Lexer {
-        constructor(input) {
-            this._input = input;
-            this._i = 0;
-            this._state = null;
-            this._next = null;
-            this._token = null;
-            this._line = 0;
+        constructor(input, { whitespace = false } = {}) {
+            this._input = input.replace(/\r/g, '');
+            this._whitespace = whitespace;
+            this._i = this._line = this._col = this._newline = 0;
+            this._state = this._next = this._token = null;
+            this._prev_char = '';
         }
-        peek() {
+        token(meta = false) {
+            if (meta) {
+                let line = this._line;
+                if (this._whitespace && this._token === '\n') {
+                    --line;
+                }
+                return {
+                    token: this._token,
+                    col: this._col,
+                    offset: this._i,
+                    line
+                };
+            }
+            return this._token;
+        }
+        peek(meta = false) {
             if (this._token) {
-                return this._token;
+                return this.token(meta);
             }
             var found = this.next_token();
             if (found) {
                 this._token = this._input.substring(this._i, this._next);
-                return this._token;
+                return this.token(meta);
             }
             return eof;
         }
@@ -989,6 +931,37 @@
             if (this._next !== null) {
                 this._token = null;
                 this._i = this._next;
+            }
+        }
+        read_line() {
+            if (this._i >= this._input.length) {
+                return eof;
+            }
+            for (let i = this._i, len = this._input.length; i < len; ++i) {
+                var char = this._input[i];
+                if (char === '\n') {
+                    const line = this._input.substring(this._i, i);
+                    this._i = i + 1;
+                    ++this._line;
+                    return line;
+                }
+            }
+            return this._input.substring(this._i);
+        }
+        peek_char() {
+            if (this._i >= this._input.length) {
+                return eof;
+            }
+            return LCharacter(this._input[this._i]);
+        }
+        read_char() {
+            const char = this.peek_char();
+            this.skip_char();
+            return char;
+        }
+        skip_char() {
+            if (this._i < this._input.length) {
+                ++this._i;
             }
         }
         match_rule(rule, { prev_char, char, next_char } = {}) {
@@ -1021,12 +994,29 @@
                 var prev_char = this._input[i - 1] || '';
                 var next_char = this._input[i + 1] || '';
                 if (char === '\n') {
-                    this._line++;
+                    ++this._line;
+                    const newline = this._newline;
+                    this._newline = i + 1;
+                    if (this._whitespace) {
+                        this._next = i + 1;
+                        this._col = this._i - newline;
+                        return true;
+                    }
                 }
                 // skip leadning spaces
                 if (start && this._state === null && char.match(/\s/)) {
-                    this._i = i + 1;
-                    continue;
+                    if (this._whitespace) {
+                        if (!next_char.match(/\s/)) {
+                            this._next = i + 1;
+                            this._col = this._i - this._newline;
+                            return true;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        this._i = i + 1;
+                        continue;
+                    }
                 }
                 start = false;
                 for (let rule of Lexer.rules) {
@@ -1036,6 +1026,7 @@
                         this._state = next_state;
                         if (this._state === null) {
                             this._next = i + 1;
+                            this._col = this._i - this._newline;
                             return true;
                         }
                         // token is activated
@@ -1224,10 +1215,12 @@
     // :: ref: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
     // ----------------------------------------------------------------------
     class Parser {
-        constructor(arg, env) {
+        constructor(arg, { env, meta = false, formatter = multiline_formatter } = {}) {
             if (arg instanceof LString) {
                 arg = arg.toString();
             }
+            this._formatter = formatter;
+            this._meta = meta;
             this.__lexer__ = new Lexer(arg);
             this.__env__ = env;
         }
@@ -1235,16 +1228,17 @@
             return this.__env__ && this.__env__.get(name, { throwError: false });
         }
         async peek() {
+            let token;
             while (true) {
-                var token = this.__lexer__.peek();
+                token = this.__lexer__.peek(true);
                 if (token === eof) {
-                    return token;
+                    return eof;
                 }
-                if (this.is_comment(token)) {
+                if (this.is_comment(token.token)) {
                     this.skip();
                     continue;
                 }
-                if (token === '#;') {
+                if (token.token === '#;') {
                     this.skip();
                     if (this.__lexer__.peek() === eof) {
                         throw new Error('Lexer: syntax error eof found after comment');
@@ -1252,8 +1246,13 @@
                     await this.read_object();
                     continue;
                 }
+                break;
+            }
+            token = this._formatter(token);
+            if (this._meta) {
                 return token;
             }
+            return token.token;
         }
         skip() {
             this.__lexer__.skip();
@@ -1384,7 +1383,7 @@
                 env = user_env;
             }
         }
-        const parser = new Parser(arg, env);
+        const parser = new Parser(arg, { env });
         while (true) {
             const expr = await parser.read_object();
             if (expr === eof) {
@@ -1828,7 +1827,7 @@
     const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
     var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
-    /* eslint-disable */
+    /* eslint-disable max-len */
     var non_def = /^(?!.*\b(?:[()[\]]|define|let(?:\*|rec|-env|-syntax)?|lambda|syntax-rules)\b).*$/;
     /* eslint-enable */
     var let_re = /^(?:#:)?(let(?:\*|rec|-env|-syntax)?)$/;
@@ -4097,53 +4096,6 @@
             return fn(...args.slice(0, n));
         };
     }
-    // -------------------------------------------------------------------------------
-    var native_lambda = parse(tokenize(`(lambda ()
-                                          "[native code]"
-                                          (throw "Invalid Invocation"))`))[0];
-    // -------------------------------------------------------------------------------
-    var get = doc(function get(object, ...args) {
-        // if arg is symbol someone probably want to get __fn__ from binded function
-        if (is_function(object) && typeof args[0] !== 'symbol') {
-            object = unbind(object);
-        }
-        var value;
-        var len = args.length;
-        while (args.length) {
-            var arg = args.shift();
-            var name = unbox(arg);
-            if (name === '__code__' && is_function(object) &&
-                        typeof object.__code__ === 'undefined') {
-                value = native_lambda;
-            } else {
-                value = object[name];
-            }
-            if (typeof value === 'undefined') {
-                if (args.length) {
-                    throw new Error(`Try to get ${args[0]} from undefined`);
-                }
-                return value;
-            } else {
-                var context;
-                if (args.length - 1 < len) {
-                    context = object;
-                }
-                value = patch_value(value, context);
-            }
-            object = value;
-        }
-        return value;
-    }, `(. obj . args)
-        (get obj . args)
-
-        Function use object as base and keep using arguments to get the
-        property of JavaScript object. Arguments need to be a strings.
-        e.g. \`(. console "log")\` if you use any function inside LIPS is
-        will be weakly bind (can be rebind), so you can call this log function
-        without problem unlike in JavaScript when you use
-       \`var log = console.log\`.
-       \`get\` is an alias because . don't work in every place, e.g. you can't
-        pass it as argument.`);
     // -------------------------------------------------------------------------
     // :: character object representation
     // -------------------------------------------------------------------------
@@ -5394,26 +5346,29 @@
         }
         typecheck('InputStringPort', string, 'string');
         this._string = string.valueOf();
-        this._index = 0;
-        this._in_char = 0;
-        var self = this;
-        this.read = async function() {
-            if (!self._parser) {
-                self._parser = new Parser(self._string, this);
-            }
-            return await self._parser.read_object();
-        };
+        this._parser = null;
+        this.read = this.with_parser(this, function(parser) {
+            return parser.read_object();
+        });
+        this.read_char = this.with_parser(this, function(parser) {
+            return parser.__lexer__.read_char();
+        });
+        this.peek_char = this.with_parser(this, function(parser) {
+            return parser.__lexer__.peek_char();
+        });
+        this.read_line = this.with_parser(this, function(parser) {
+            return parser.__lexer__.read_line();
+        });
     }
     InputStringPort.prototype = Object.create(InputPort.prototype);
     InputStringPort.prototype.constructor = InputStringPort;
-    InputStringPort.prototype.read_line = function() {
-        var after = this._string.substring(this._in_char);
-        if (!after) {
-            return eof;
-        }
-        var line = after.match(/([^\n])(?:\n|$)/)[0];
-        this._in_char += line.length;
-        return line;
+    InputStringPort.prototype.with_parser = function(self, fn) {
+        return function() {
+            if (!self._parser) {
+                self._parser = new Parser(self._string, { env: this });
+            }
+            return fn.call(this, self._parser);
+        };
     };
     // -------------------------------------------------------------------------
     var eof = new EOF();
@@ -5773,6 +5728,53 @@
     Unquote.prototype.toString = function() {
         return '#<unquote[' + this.count + '] ' + this.value + '>';
     };
+    // -------------------------------------------------------------------------------
+    var native_lambda = parse(tokenize(`(lambda ()
+                                          "[native code]"
+                                          (throw "Invalid Invocation"))`))[0];
+    // -------------------------------------------------------------------------------
+    var get = doc(function get(object, ...args) {
+        // if arg is symbol someone probably want to get __fn__ from binded function
+        if (is_function(object) && typeof args[0] !== 'symbol') {
+            object = unbind(object);
+        }
+        var value;
+        var len = args.length;
+        while (args.length) {
+            var arg = args.shift();
+            var name = unbox(arg);
+            if (name === '__code__' && is_function(object) &&
+                        typeof object.__code__ === 'undefined') {
+                value = native_lambda;
+            } else {
+                value = object[name];
+            }
+            if (typeof value === 'undefined') {
+                if (args.length) {
+                    throw new Error(`Try to get ${args[0]} from undefined`);
+                }
+                return value;
+            } else {
+                var context;
+                if (args.length - 1 < len) {
+                    context = object;
+                }
+                value = patch_value(value, context);
+            }
+            object = value;
+        }
+        return value;
+    }, `(. obj . args)
+        (get obj . args)
+
+        Function use object as base and keep using arguments to get the
+        property of JavaScript object. Arguments need to be a strings.
+        e.g. \`(. console "log")\` if you use any function inside LIPS is
+        will be weakly bind (can be rebind), so you can call this log function
+        without problem unlike in JavaScript when you use
+       \`var log = console.log\`.
+       \`get\` is an alias because . don't work in every place, e.g. you can't
+        pass it as argument.`);
     // -------------------------------------------------------------------------
     // function get internal protected data
     // -------------------------------------------------------------------------
@@ -5798,9 +5800,7 @@
         }),
         // ------------------------------------------------------------------
         stdin: InputPort(function() {
-            return new Promise((resolve) => {
-                resolve(prompt(''));
-            });
+            return Promise.resolve(prompt(''));
         }),
         // those will be compiled by babel regex plugin
         'letter-unicode-regex': /\p{L}/u,

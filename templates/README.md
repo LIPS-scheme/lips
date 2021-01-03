@@ -243,7 +243,8 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 * Current parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
 * `fetch` polyfill use [unfetch](https://github.com/developit/unfetch) by Jason Miller.
 * Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
-* The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley
+* The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley.
+* `ucs2decode` function taken from [punycode.js](https://github.com/bestiejs/punycode.js) by [Mathias Bynens](https://mathiasbynens.be/).
 * [Rosetta Code](https://rosettacode.org/) is used for:
   * [gdc](https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript),
   * [lcm](https://rosettacode.org/wiki/Least_common_multiple#JavaScript),
@@ -253,8 +254,6 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
   * [flatten](https://stackoverflow.com/a/27282907/387194),
   * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
-
-
 
 ## License
 

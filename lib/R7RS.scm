@@ -583,3 +583,7 @@
   (port.getString))
 
 ;; -----------------------------------------------------------------------------
+
+(define (open-input-file path)
+  "(open-input-file path)"
+  )
