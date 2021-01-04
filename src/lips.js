@@ -996,7 +996,11 @@
                 if (char === '\n') {
                     ++this._line;
                     const newline = this._newline;
-                    this._newline = i + 1;
+                    if (this._state === null) {
+                        // keep beging of newline to calculate col
+                        // we don't want to check inside the token (e.g. strings)
+                        this._newline = i + 1;
+                    }
                     if (this._whitespace) {
                         this._next = i + 1;
                         this._col = this._i - newline;

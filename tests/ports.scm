@@ -23,7 +23,7 @@
                       (peek-char p)
                       (read-char p))
                 (list #\x #\x #\y #\y lips.eof lips.eof)))
-        #;(let ((result (vector))
+        (let ((result (vector))
               (p (open-input-string "first line
                                      second line")))
           (result.push (read-line p))
