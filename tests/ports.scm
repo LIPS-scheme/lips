@@ -29,3 +29,10 @@
           (result.push (read-line p))
           (result.push (read-line p))
           (t.is result #("first line" "second line")))))
+
+(test "ports: repr"
+      (lambda (t)
+        (t.is (repr (current-input-port)) "#<input-port>")
+        (t.is (repr (open-input-string "xxx")) "#<input-port <string>>")
+        (t.is (repr (open-input-string "xxx")) "#<input-port <string>>")
+        (t.is (repr (open-input-file "./tests/ports.scm")) "#<input-port ./tests/ports.scm>")))

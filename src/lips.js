@@ -2424,7 +2424,7 @@
         if ([nil, eof].includes(obj)) {
             return obj.toString();
         }
-        var types = [LSymbol, LNumber, Macro, Values];
+        var types = [LSymbol, LNumber, Macro, Values, InputPort];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString();
@@ -5308,6 +5308,9 @@
         }
         return LCharacter(this._string[this._in_char]);
     };
+    InputPort.prototype.toString = function() {
+        return '#<input-port>';
+    };
     // -------------------------------------------------------------------------
     function OutputPort(write) {
         if (typeof this !== 'undefined' && !(this instanceof OutputPort) ||
@@ -5344,10 +5347,6 @@
     OutputStringPort.prototype.constructor = OutputStringPort;
     // -------------------------------------------------------------------------
     function InputStringPort(string) {
-        if (typeof this !== 'undefined' && !(this instanceof InputStringPort) ||
-            typeof this === 'undefined') {
-            return new InputStringPort(string);
-        }
         typecheck('InputStringPort', string, 'string');
         this._string = string.valueOf();
         this._parser = null;
@@ -5373,6 +5372,20 @@
             }
             return fn.call(this, self._parser);
         };
+    };
+    InputStringPort.prototype.toString = function() {
+        return `#<input-port <string>>`;
+    };
+    // -------------------------------------------------------------------------
+    function InputFilePort(content, filename) {
+        InputStringPort.call(this, content);
+        typecheck('InputFilePort', filename, 'string');
+        this._filename = filename;
+    }
+    InputFilePort.prototype = Object.create(InputStringPort.prototype);
+    InputFilePort.prototype.constructor = InputFilePort;
+    InputFilePort.prototype.toString = function() {
+        return `#<input-port ${this._filename}>`;
     };
     // -------------------------------------------------------------------------
     var eof = new EOF();
@@ -5833,7 +5846,7 @@
             if (typeof port === 'undefined') {
                 port = internal(this, 'stdin');
             }
-            typecheck('read-line', port, ['input-port', 'input-string-port']);
+            typecheck('read-line', port, ['input-port']);
             return port.read_line();
         }, `(read-char port)
 
@@ -8340,6 +8353,10 @@
             'symbol': LSymbol,
             'character': LCharacter,
             'values': Values,
+            'input-port': InputPort,
+            'number': LNumber,
+            'regex': RegExp,
+            'syntax': Syntax,
             'macro': Macro,
             'string': LString,
             'array': Array,
@@ -8354,19 +8371,10 @@
         if (obj === null) {
             return 'null';
         }
-        if (obj instanceof Syntax) {
-            return 'syntax';
-        }
         for (let [key, value] of Object.entries(mapping)) {
             if (obj instanceof value) {
                 return key;
             }
-        }
-        if (obj instanceof LNumber) {
-            return 'number';
-        }
-        if (obj instanceof RegExp) {
-            return "regex";
         }
         if (typeof obj === 'object') {
             if (obj.__instance__) {
@@ -9009,6 +9017,7 @@ You can also use (help name) to display help for specic function or macro and
 
         InputPort,
         OutputPort,
+        InputFilePort,
         InputStringPort,
         OutputStringPort,
 

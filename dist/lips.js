@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 04 Jan 2021 07:56:11 +0000
+ * build: Mon, 04 Jan 2021 17:22:34 +0000
  */
 (function () {
   'use strict';
@@ -4504,7 +4504,7 @@
         return obj.toString();
       }
 
-      var types = [LSymbol, LNumber, Macro, Values];
+      var types = [LSymbol, LNumber, Macro, Values, InputPort];
 
       for (var _i4 = 0, _types = types; _i4 < _types.length; _i4++) {
         var _type2 = _types[_i4];
@@ -8382,6 +8382,10 @@
       }
 
       return LCharacter(this._string[this._in_char]);
+    };
+
+    InputPort.prototype.toString = function () {
+      return '#<input-port>';
     }; // -------------------------------------------------------------------------
 
 
@@ -8431,10 +8435,6 @@
     OutputStringPort.prototype.constructor = OutputStringPort; // -------------------------------------------------------------------------
 
     function InputStringPort(string) {
-      if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
-        return new InputStringPort(string);
-      }
-
       typecheck('InputStringPort', string, 'string');
       this._string = string.valueOf();
       this._parser = null;
@@ -8465,6 +8465,24 @@
 
         return fn.call(this, self._parser);
       };
+    };
+
+    InputStringPort.prototype.toString = function () {
+      return "#<input-port <string>>";
+    }; // -------------------------------------------------------------------------
+
+
+    function InputFilePort(content, filename) {
+      InputStringPort.call(this, content);
+      typecheck('InputFilePort', filename, 'string');
+      this._filename = filename;
+    }
+
+    InputFilePort.prototype = Object.create(InputStringPort.prototype);
+    InputFilePort.prototype.constructor = InputFilePort;
+
+    InputFilePort.prototype.toString = function () {
+      return "#<input-port ".concat(this._filename, ">");
     }; // -------------------------------------------------------------------------
 
 
@@ -9032,7 +9050,7 @@
           port = internal(this, 'stdin');
         }
 
-        typecheck('read-line', port, ['input-port', 'input-string-port']);
+        typecheck('read-line', port, ['input-port']);
         return port.read_line();
       }, "(read-char port)\n\n            Function read next character from input port."),
       // ------------------------------------------------------------------
@@ -11767,6 +11785,10 @@
         'symbol': LSymbol,
         'character': LCharacter,
         'values': Values,
+        'input-port': InputPort,
+        'number': LNumber,
+        'regex': RegExp,
+        'syntax': Syntax,
         'macro': Macro,
         'string': LString,
         'array': Array,
@@ -11785,10 +11807,6 @@
         return 'null';
       }
 
-      if (obj instanceof Syntax) {
-        return 'syntax';
-      }
-
       for (var _i5 = 0, _Object$entries2 = Object.entries(mapping); _i5 < _Object$entries2.length; _i5++) {
         var _Object$entries2$_i = slicedToArray(_Object$entries2[_i5], 2),
             _key40 = _Object$entries2$_i[0],
@@ -11797,14 +11815,6 @@
         if (obj instanceof value) {
           return _key40;
         }
-      }
-
-      if (obj instanceof LNumber) {
-        return 'number';
-      }
-
-      if (obj instanceof RegExp) {
-        return "regex";
       }
 
       if (_typeof_1(obj) === 'object') {
@@ -12674,10 +12684,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 04 Jan 2021 07:56:11 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 04 Jan 2021 17:22:34 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 04 Jan 2021 07:56:11 +0000').valueOf();
+      var date = LString('Mon, 04 Jan 2021 17:22:34 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12714,7 +12724,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 04 Jan 2021 07:56:11 +0000',
+      date: 'Mon, 04 Jan 2021 17:22:34 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
@@ -12736,6 +12746,7 @@
       quote: quote,
       InputPort: InputPort,
       OutputPort: OutputPort,
+      InputFilePort: InputFilePort,
       InputStringPort: InputStringPort,
       OutputStringPort: OutputStringPort,
       Formatter: Formatter,

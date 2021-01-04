@@ -563,7 +563,7 @@
    Function create new string port as input that can be used to
    read S-exressions from this port using `read` function."
   (typecheck "open-input-string" string "string")
-  (lips.InputStringPort string))
+  (new lips.InputStringPort string))
 
 ;; -----------------------------------------------------------------------------
 (define (open-output-string)
@@ -571,7 +571,7 @@
 
    Function create new output port that can used to write string into
    and after finish get the whole string using `get-output-string`."
-  (lips.OutputStringPort repr))
+  (new lips.OutputStringPort repr))
 
 ;; -----------------------------------------------------------------------------
 (define (get-output-string port)
@@ -583,7 +583,30 @@
   (port.getString))
 
 ;; -----------------------------------------------------------------------------
+;; NodeJS filesystem functions
+;; -----------------------------------------------------------------------------
+(if (eq? global self)
+    (begin
+      (set! self.fs (require "fs"))
+      (define (readFile filename)
+        "(readFile filename)
 
-(define (open-input-file path)
-  "(open-input-file path)"
-  )
+         Helper function that return Promise, it sometimes give warnings
+         when using fs.promises"
+        (new Promise (lambda (resolve reject)
+                       (fs.readFile filename (lambda (err data)
+                                               (if (null? err)
+                                                   (resolve (data.toString))
+                                                   (reject err)))))))))
+
+;; -----------------------------------------------------------------------------
+(define (open-input-file filename)
+  "(open-input-file filename)
+
+   Function return new Input Port with given filename. In Browser user need to
+   provide global fs variable that is instance of FS interface."
+  (if (null? self.fs)
+      (throw (new Error "open-input-file: fs not defined"))
+      (new lips.InputFilePort (readFile filename) filename)))
+
+;; -----------------------------------------------------------------------------
