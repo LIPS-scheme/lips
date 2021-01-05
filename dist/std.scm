@@ -3031,18 +3031,20 @@
 ;; NodeJS filesystem functions
 ;; -----------------------------------------------------------------------------
 (if (eq? global self)
-    (begin
-      (set! self.fs (require "fs"))
-      (define (readFile filename)
-        "(readFile filename)
+    (set! self.fs (require "fs")))
 
-         Helper function that return Promise, it sometimes give warnings
-         when using fs.promises"
-        (new Promise (lambda (resolve reject)
-                       (fs.readFile filename (lambda (err data)
-                                               (if (null? err)
-                                                   (resolve (data.toString))
-                                                   (reject err)))))))))
+;; -----------------------------------------------------------------------------
+(define (promisify fn)
+  "(promisify fn)
+
+   Simple function for adding promises to NodeJS callback based function.
+   Function tested only with fs module."
+  (lambda args
+    (new Promise (lambda (resolve reject)
+                   (apply fn (append args (list (lambda (err data)
+                                                  (if (null? err)
+                                                      (resolve data)
+                                                      (reject err))))))))))
 
 ;; -----------------------------------------------------------------------------
 (define (open-input-file filename)
@@ -3052,6 +3054,15 @@
    provide global fs variable that is instance of FS interface."
   (if (null? self.fs)
       (throw (new Error "open-input-file: fs not defined"))
-      (new lips.InputFilePort (readFile filename) filename)))
+      (begin
+         (if (not (procedure? self.readFile))
+             (let ((_readFile (promisify fs.readFile)))
+               (set! self.readFile (lambda (filename)
+                                     "(readFile filename)
+
+                                      Helper function that return Promise. NodeJS function sometimes give warnings
+                                      when using fs.promises on Windows."
+                                     (--> (_readFile filename) (toString))))))
+         (new lips.InputFilePort (readFile filename) filename))))
 
 ;; -----------------------------------------------------------------------------
