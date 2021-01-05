@@ -1,7 +1,7 @@
 ;; Example pattern matching macro
 ;;
 ;; This file is part of the LIPS - Scheme implementation in JavaScript
-;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyriht (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 
 

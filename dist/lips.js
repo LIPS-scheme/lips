@@ -8,7 +8,7 @@
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
- * Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
+ * Copyright (c) 2018-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  * includes:
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 05 Jan 2021 14:04:19 +0000
+ * build: Tue, 05 Jan 2021 17:38:08 +0000
  */
 (function () {
   'use strict';
@@ -12749,10 +12749,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 05 Jan 2021 14:04:19 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 05 Jan 2021 17:38:08 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 05 Jan 2021 14:04:19 +0000').valueOf();
+      var date = LString('Tue, 05 Jan 2021 17:38:08 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12789,7 +12789,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 05 Jan 2021 14:04:19 +0000',
+      date: 'Tue, 05 Jan 2021 17:38:08 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

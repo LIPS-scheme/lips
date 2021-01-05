@@ -5,7 +5,7 @@
 ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
 
