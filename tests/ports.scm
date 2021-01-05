@@ -36,3 +36,21 @@
         (t.is (repr (open-input-string "xxx")) "#<input-port <string>>")
         (t.is (repr (open-input-string "xxx")) "#<input-port <string>>")
         (t.is (repr (open-input-file "./tests/ports.scm")) "#<input-port ./tests/ports.scm>")))
+
+(test "ports: input-port"
+      (lambda (t)
+        (let ((port (let* ((lines #("First Line" "Second Line" "Third Line"))
+                           (i 0))
+                      (lips.InputPort (lambda ()
+                                        (if (>= i (vector-length lines))
+                                            lips.eof
+                                            (let ((line (vector-ref lines i)))
+                                              (set! i (+ i 1))
+                                              line)))))))
+          (t.is (read-line port) "First Line")
+          (t.is (read-line port) "Second Line")
+          (t.is (read port) 'Third)
+          (t.is (peek-char port) #\L)
+          (t.is (read-char port) #\L)
+          (t.is (read-char port) #\i)
+          (t.is (read port) 'ne))))

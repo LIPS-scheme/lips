@@ -917,6 +917,9 @@
             return this._token;
         }
         peek(meta = false) {
+            if (this._i >= this._input.length) {
+                return eof;
+            }
             if (this._token) {
                 return this.token(meta);
             }
@@ -946,7 +949,9 @@
                     return line;
                 }
             }
-            return this._input.substring(this._i);
+            const i = this._i;
+            this._i = this._input.length;
+            return this._input.substring(i);
         }
         peek_char() {
             if (this._i >= this._input.length) {
@@ -962,6 +967,7 @@
         skip_char() {
             if (this._i < this._input.length) {
                 ++this._i;
+                this._token = null;
             }
         }
         match_rule(rule, { prev_char, char, next_char } = {}) {
@@ -5255,7 +5261,7 @@
         }
     };
     // -------------------------------------------------------------------------
-    // :: Port abstration (used only for it's type - old code used inline objects)
+    // :: Port abstration - read should be a function that return next line
     // -------------------------------------------------------------------------
     function InputPort(read) {
         if (typeof this !== 'undefined' && !(this instanceof InputPort) ||
@@ -5263,50 +5269,41 @@
             return new InputPort(read);
         }
         typecheck('InputPort', read, 'function');
-        this._index = 0;
-        this._in_char = 0;
-        this.read = read;
-    }
-    InputPort.prototype.read_line = function() {
-        return this.read();
-    };
-    InputPort.prototype.get_next_tokens = function() {
-        if (!this._tokens) {
-            this._tokens = tokenize(this._string);
-        }
-        if (typeof this._tokens[this._index] === 'undefined') {
-            return eof;
-        }
-        var balancer = 0;
-        var result = [];
-        var parens = ['(', ')', '[', ']'];
-        if (!parens.includes(this._tokens[this._index])) {
-            return this._tokens[this._index++];
-        }
-        do {
-            var token = this._tokens[this._index];
-            result.push(this._tokens[this._index]);
-            if (token === ')' || token === ']') {
-                balancer--;
-            } else if (token === '(' || token === '[') {
-                balancer++;
+        this._read = read;
+        this._with_parser = this._with_init_parser.bind(this, async () => {
+            if (!this.__parser__ || this.__parser__.__lexer__.peek() === eof) {
+                const line = await this._read();
+                this.__parser__ = new Parser(line, { env: this });
             }
-            this._index++;
-        } while (balancer !== 0);
-        return result;
-    };
-    InputPort.prototype.read_char = function() {
-        var char = this.peek_char();
-        if (char !== eof) {
-            this._in_char++;
-        }
-        return char;
-    };
-    InputPort.prototype.peek_char = function() {
-        if (this._in_char >= this._string.length) {
-            return eof;
-        }
-        return LCharacter(this._string[this._in_char]);
+            return this.__parser__;
+        });
+        this.read = this._with_parser((parser) => {
+            return parser.read_object();
+        });
+        this.read_line = this._with_parser((parser) => {
+            return parser.__lexer__.read_line();
+        });
+        this.read_char = this._with_parser((parser) => {
+            return parser.__lexer__.read_char();
+        });
+        this.skip_char = this._with_parser(() => {
+            this.__parser__.__lexer__.skip_char();
+        });
+        this.read_char = this._with_parser(async () => {
+            var char = await this.peek_char();
+            this.skip_char();
+            return char;
+        });
+        this.peek_char = this._with_parser((parser) => {
+            return parser.__lexer__.peek_char();
+        });
+    }
+    InputPort.prototype._with_init_parser = function(make_parser, fn) {
+        var self = this;
+        return async function() {
+            var parser = await make_parser.call(self);
+            return fn(parser);
+        };
     };
     InputPort.prototype.toString = function() {
         return '#<input-port>';
@@ -5347,45 +5344,50 @@
     OutputStringPort.prototype.constructor = OutputStringPort;
     // -------------------------------------------------------------------------
     function InputStringPort(string) {
+        if (typeof this !== 'undefined' && !(this instanceof InputStringPort) ||
+            typeof this === 'undefined') {
+            return new InputStringPort(string);
+        }
         typecheck('InputStringPort', string, 'string');
         this._string = string.valueOf();
-        this._parser = null;
-        this.read = this.with_parser(this, function(parser) {
+        this._with_parser = this._with_init_parser.bind(this, () => {
+            if (!this.__parser__) {
+                this.__parser__ = new Parser(this._string, { env: this });
+            }
+            return this.__parser__;
+        });
+        this.read = this._with_parser(function(parser) {
             return parser.read_object();
         });
-        this.read_char = this.with_parser(this, function(parser) {
+        this.read_char = this._with_parser(function(parser) {
             return parser.__lexer__.read_char();
         });
-        this.peek_char = this.with_parser(this, function(parser) {
+        this.peek_char = this._with_parser(function(parser) {
             return parser.__lexer__.peek_char();
         });
-        this.read_line = this.with_parser(this, function(parser) {
+        this.read_line = this._with_parser(function(parser) {
             return parser.__lexer__.read_line();
         });
     }
     InputStringPort.prototype = Object.create(InputPort.prototype);
     InputStringPort.prototype.constructor = InputStringPort;
-    InputStringPort.prototype.with_parser = function(self, fn) {
-        return function() {
-            if (!self._parser) {
-                self._parser = new Parser(self._string, { env: this });
-            }
-            return fn.call(this, self._parser);
-        };
-    };
     InputStringPort.prototype.toString = function() {
         return `#<input-port <string>>`;
     };
     // -------------------------------------------------------------------------
     function InputFilePort(content, filename) {
+        if (typeof this !== 'undefined' && !(this instanceof InputFilePort) ||
+            typeof this === 'undefined') {
+            return new InputFilePort(content, filename);
+        }
         InputStringPort.call(this, content);
         typecheck('InputFilePort', filename, 'string');
-        this._filename = filename;
+        this.__filename__ = filename;
     }
     InputFilePort.prototype = Object.create(InputStringPort.prototype);
     InputFilePort.prototype.constructor = InputFilePort;
     InputFilePort.prototype.toString = function() {
-        return `#<input-port ${this._filename}>`;
+        return `#<input-port ${this.__filename__}>`;
     };
     // -------------------------------------------------------------------------
     var eof = new EOF();
@@ -7545,12 +7547,16 @@
 
              Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
-        apply: doc(function apply(fn, ...list) {
+        apply: doc(function apply(fn, ...args) {
             typecheck('apply', fn, 'function', 1);
-            var last = list.pop();
-            typecheck('apply', last, ['pair', 'nil'], list.length + 2);
-            list = list.concat(global_env.get('list->array').call(this, last));
-            return fn.apply(this, list);
+            var last = args.pop();
+            typecheck('apply', last, ['pair', 'nil'], args.length + 2);
+            args = args.concat(global_env.get('list->array').call(this, last));
+            if (is_bound(fn) && !is_object_bound(fn) &&
+                (!lips_context(fn) || is_port_method(fn))) {
+                args = args.map(unbox);
+            }
+            return fn.apply(this, args);
         }, `(apply fn list)
 
             Function that call function with list of arguments.`),
