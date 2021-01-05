@@ -7552,11 +7552,7 @@
             var last = args.pop();
             typecheck('apply', last, ['pair', 'nil'], args.length + 2);
             args = args.concat(global_env.get('list->array').call(this, last));
-            if (is_bound(fn) && !is_object_bound(fn) &&
-                (!lips_context(fn) || is_port_method(fn))) {
-                args = args.map(unbox);
-            }
-            return fn.apply(this, args);
+            return fn.apply(this, prepare_fn_args(fn, args));
         }, `(apply fn list)
 
             Function that call function with list of arguments.`),
@@ -8512,40 +8508,49 @@
         });
     }
     // -------------------------------------------------------------------------
+    function is_raw_lambda(fn) {
+        return fn[__lambda__] && !fn[__prototype__] &&
+            !fn[__method__] && !is_port_method(fn);
+    }
+    // -------------------------------------------------------------------------
+    function prepare_fn_args(fn, args) {
+        if (is_bound(fn) && !is_object_bound(fn) &&
+            (!lips_context(fn) || is_port_method(fn))) {
+            args = args.map(unbox);
+        }
+        if (!is_raw_lambda(fn) &&
+            args.some(is_lips_function) &&
+            !is_lips_function(fn) &&
+            !is_array_method(fn)) {
+            // we unbox values from callback functions #76
+            // calling map on array should not unbox the value
+            args = args.map(arg => {
+                if (is_lips_function(arg)) {
+                    var wrapper = function(...args) {
+                        return unpromise(arg.apply(this, args), unbox);
+                    };
+                    // copy prototype from function to wrapper
+                    // so this work when calling new from JavaScript
+                    // case of Preact that pass LIPS class as argument
+                    // to h function
+                    wrapper.prototype = arg.prototype;
+                    return wrapper;
+                }
+                return arg;
+            });
+        }
+        return args;
+    }
+    // -------------------------------------------------------------------------
     function apply(fn, args, { env, dynamic_scope, error = () => {} } = {}) {
         args = evaluate_args(args, { env, dynamic_scope, error });
         return unpromise(args, function(args) {
-            if (is_bound(fn) && !is_object_bound(fn) &&
-                (!lips_context(fn) || is_port_method(fn))) {
-                args = args.map(unbox);
-            }
-            if (fn[__lambda__] &&
-                !fn[__prototype__] &&
-                !fn[__method__] &&
-                !is_port_method(fn)) {
+            if (is_raw_lambda(fn)) {
                 // lambda need environment as context
                 // normal functions are bound to their contexts
                 fn = unbind(fn);
-            } else if (args.some(is_lips_function) &&
-                       !is_lips_function(fn) &&
-                       !is_array_method(fn)) {
-                // we unbox values from callback functions #76
-                // calling map on array should not unbox the value
-                args = args.map(arg => {
-                    if (is_lips_function(arg)) {
-                        var wrapper = function(...args) {
-                            return unpromise(arg.apply(this, args), unbox);
-                        };
-                        // copy prototype from function to wrapper
-                        // so this work when calling new from JavaScript
-                        // case of Preact that pass LIPS class as argument
-                        // to h function
-                        wrapper.prototype = arg.prototype;
-                        return wrapper;
-                    }
-                    return arg;
-                });
             }
+            args = prepare_fn_args(fn, args);
             var _args = args.slice();
             var scope = (dynamic_scope || env).newFrame(fn, _args);
             var result = resolve_promises(fn.apply(scope, args));

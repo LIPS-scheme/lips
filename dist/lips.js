@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 05 Jan 2021 13:06:55 +0000
+ * build: Tue, 05 Jan 2021 14:04:19 +0000
  */
 (function () {
   'use strict';
@@ -11005,12 +11005,7 @@
         var last = args.pop();
         typecheck('apply', last, ['pair', 'nil'], args.length + 2);
         args = args.concat(global_env.get('list->array').call(this, last));
-
-        if (is_bound(fn) && !is_object_bound(fn) && (!lips_context(fn) || is_port_method(fn))) {
-          args = args.map(unbox);
-        }
-
-        return fn.apply(this, args);
+        return fn.apply(this, prepare_fn_args(fn, args));
       }, "(apply fn list)\n\n            Function that call function with list of arguments."),
       // ------------------------------------------------------------------
       'length': doc(function length(obj) {
@@ -12097,6 +12092,45 @@
     } // -------------------------------------------------------------------------
 
 
+    function is_raw_lambda(fn) {
+      return fn[__lambda__] && !fn[__prototype__] && !fn[__method__] && !is_port_method(fn);
+    } // -------------------------------------------------------------------------
+
+
+    function prepare_fn_args(fn, args) {
+      if (is_bound(fn) && !is_object_bound(fn) && (!lips_context(fn) || is_port_method(fn))) {
+        args = args.map(unbox);
+      }
+
+      if (!is_raw_lambda(fn) && args.some(is_lips_function) && !is_lips_function(fn) && !is_array_method(fn)) {
+        // we unbox values from callback functions #76
+        // calling map on array should not unbox the value
+        args = args.map(function (arg) {
+          if (is_lips_function(arg)) {
+            var wrapper = function wrapper() {
+              for (var _len39 = arguments.length, args = new Array(_len39), _key41 = 0; _key41 < _len39; _key41++) {
+                args[_key41] = arguments[_key41];
+              }
+
+              return unpromise(arg.apply(this, args), unbox);
+            }; // copy prototype from function to wrapper
+            // so this work when calling new from JavaScript
+            // case of Preact that pass LIPS class as argument
+            // to h function
+
+
+            wrapper.prototype = arg.prototype;
+            return wrapper;
+          }
+
+          return arg;
+        });
+      }
+
+      return args;
+    } // -------------------------------------------------------------------------
+
+
     function apply(fn, args) {
       var _ref38 = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {},
           env = _ref38.env,
@@ -12110,38 +12144,13 @@
         error: error
       });
       return unpromise(args, function (args) {
-        if (is_bound(fn) && !is_object_bound(fn) && (!lips_context(fn) || is_port_method(fn))) {
-          args = args.map(unbox);
-        }
-
-        if (fn[__lambda__] && !fn[__prototype__] && !fn[__method__] && !is_port_method(fn)) {
+        if (is_raw_lambda(fn)) {
           // lambda need environment as context
           // normal functions are bound to their contexts
           fn = unbind(fn);
-        } else if (args.some(is_lips_function) && !is_lips_function(fn) && !is_array_method(fn)) {
-          // we unbox values from callback functions #76
-          // calling map on array should not unbox the value
-          args = args.map(function (arg) {
-            if (is_lips_function(arg)) {
-              var wrapper = function wrapper() {
-                for (var _len39 = arguments.length, args = new Array(_len39), _key41 = 0; _key41 < _len39; _key41++) {
-                  args[_key41] = arguments[_key41];
-                }
-
-                return unpromise(arg.apply(this, args), unbox);
-              }; // copy prototype from function to wrapper
-              // so this work when calling new from JavaScript
-              // case of Preact that pass LIPS class as argument
-              // to h function
-
-
-              wrapper.prototype = arg.prototype;
-              return wrapper;
-            }
-
-            return arg;
-          });
         }
+
+        args = prepare_fn_args(fn, args);
 
         var _args = args.slice();
 
@@ -12740,10 +12749,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 05 Jan 2021 13:06:55 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 05 Jan 2021 14:04:19 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 05 Jan 2021 13:06:55 +0000').valueOf();
+      var date = LString('Tue, 05 Jan 2021 14:04:19 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12780,7 +12789,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 05 Jan 2021 13:06:55 +0000',
+      date: 'Tue, 05 Jan 2021 14:04:19 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
