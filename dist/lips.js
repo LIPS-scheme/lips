@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 06 Jan 2021 10:15:07 +0000
+ * build: Wed, 06 Jan 2021 11:55:10 +0000
  */
 (function () {
   'use strict';
@@ -8536,7 +8536,7 @@
       // because the value is in prototype
 
       this._with_parser = null;
-      ['read', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
+      ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
         _this7[name] = function () {
           throw new Error('InputFilePort: port is closed');
         };
@@ -8938,7 +8938,7 @@
     Environment.prototype.constant = function (name, value) {
       var _this9 = this;
 
-      if (name in this.__env__) {
+      if (this.__env__.hasOwnProperty(name)) {
         throw new Error("Environment::constant: ".concat(name, " already exists"));
       }
 
@@ -9066,7 +9066,7 @@
 
 
     function interaction(env, name) {
-      var interaction_env = env.get('interaction-environment').call(env);
+      var interaction_env = env.get('**interaction-environment**');
       return interaction_env.get(name);
     } // -------------------------------------------------------------------------
 
@@ -11062,29 +11062,61 @@
       'try': doc(new Macro('try', function (code, _ref34) {
         var _this12 = this;
 
-        var dynamic_scope = _ref34.dynamic_scope,
-            error = _ref34.error;
+        var dynamic_scope = _ref34.dynamic_scope;
         return new Promise(function (resolve, reject) {
+          var catch_clause, finally_clause;
+
+          if (LSymbol.is(code.cdr.car.car, 'catch')) {
+            catch_clause = code.cdr.car;
+
+            if (code.cdr.cdr instanceof Pair && LSymbol.is(code.cdr.cdr.car.car, 'finally')) {
+              finally_clause = code.cdr.cdr.car;
+            }
+          } else if (LSymbol.is(code.cdr.car.car, 'finally')) {
+            finally_clause = code.cdr.car;
+          }
+
+          if (!(finally_clause || catch_clause)) {
+            throw new Error('try: invalid syntax');
+          }
+
+          var next = resolve;
+
+          if (finally_clause) {
+            next = function next(result, cont) {
+              unpromise(evaluate(new Pair(new LSymbol('begin'), finally_clause.cdr), args), function () {
+                cont(result);
+              });
+            };
+          }
+
+          var rejected;
           var args = {
             env: _this12,
             error: function error(e) {
+              rejected = true;
+
               var env = _this12.inherit('try');
 
-              env.set(code.cdr.car.cdr.car.car, e);
-              var args = {
-                env: env,
-                error: function error(e) {
-                  return reject(e);
+              if (catch_clause) {
+                env.set(catch_clause.cdr.car.car, e);
+                var args = {
+                  env: env,
+                  error: function error(e) {
+                    return reject(e);
+                  }
+                };
+
+                if (dynamic_scope) {
+                  args.dynamic_scope = _this12;
                 }
-              };
 
-              if (dynamic_scope) {
-                args.dynamic_scope = _this12;
+                unpromise(evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
+                  next(result, resolve);
+                });
+              } else {
+                next(e, reject);
               }
-
-              unpromise(evaluate(new Pair(new LSymbol('begin'), code.cdr.car.cdr.cdr), args), function (result) {
-                resolve(result);
-              });
             }
           };
 
@@ -11096,11 +11128,11 @@
 
           if (is_promise(ret)) {
             ret["catch"](args.error).then(resolve);
-          } else {
-            resolve(ret);
+          } else if (!rejected) {
+            next(ret, resolve);
           }
         });
-      }), "(try expr (catch (e) code)"),
+      }), "(try expr (catch (e) code))\n             (try expr (catch (e) code) (finally code))\n             (try expr (finally code))\n\n             Macro execute user code and catch exception. If catch is provided\n             it's executed when expression expr throw error. If finally is provide\n             it's always executed at the end."),
       // ------------------------------------------------------------------
       'throw': doc('throw', function (message) {
         throw new Error(message);
@@ -12765,10 +12797,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 06 Jan 2021 10:15:07 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 06 Jan 2021 11:55:10 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 06 Jan 2021 10:15:07 +0000').valueOf();
+      var date = LString('Wed, 06 Jan 2021 11:55:10 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12805,7 +12837,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 06 Jan 2021 10:15:07 +0000',
+      date: 'Wed, 06 Jan 2021 11:55:10 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

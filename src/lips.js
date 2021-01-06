@@ -5690,7 +5690,7 @@
     // for internal use only
     // -------------------------------------------------------------------------
     Environment.prototype.constant = function(name, value) {
-        if (name in this.__env__) {
+        if (this.__env__.hasOwnProperty(name)) {
             throw new Error(`Environment::constant: ${name} already exists`);
         }
         if (arguments.length === 1 && is_plain_object(arguments[0])) {
@@ -5814,7 +5814,7 @@
     // get variable from interaction environment
     // -------------------------------------------------------------------------
     function interaction(env, name) {
-        var interaction_env = env.get('interaction-environment').call(env);
+        var interaction_env = env.get('**interaction-environment**');
         return interaction_env.get(name);
     }
     // -------------------------------------------------------------------------
@@ -7604,26 +7604,56 @@
 
            Function convert string to number.`),
         // ------------------------------------------------------------------
-        'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
+        'try': doc(new Macro('try', function(code, { dynamic_scope }) {
             return new Promise((resolve, reject) => {
+                var catch_clause, finally_clause;
+                if (LSymbol.is(code.cdr.car.car, 'catch')) {
+                    catch_clause = code.cdr.car;
+                    if (code.cdr.cdr instanceof Pair &&
+                        LSymbol.is(code.cdr.cdr.car.car, 'finally')) {
+                        finally_clause = code.cdr.cdr.car;
+                    }
+                } else if (LSymbol.is(code.cdr.car.car, 'finally')) {
+                    finally_clause = code.cdr.car;
+                }
+                if (!(finally_clause || catch_clause)) {
+                    throw new Error('try: invalid syntax');
+                }
+                var next = resolve;
+                if (finally_clause) {
+                    next = function(result, cont) {
+                        unpromise(evaluate(new Pair(
+                            new LSymbol('begin'),
+                            finally_clause.cdr
+                        ), args), function() {
+                            cont(result);
+                        });
+                    };
+                }
+                var rejected;
                 var args = {
                     env: this,
                     error: (e) => {
+                        rejected = true;
                         var env = this.inherit('try');
-                        env.set(code.cdr.car.cdr.car.car, e);
-                        var args = {
-                            env,
-                            error: (e) => reject(e)
-                        };
-                        if (dynamic_scope) {
-                            args.dynamic_scope = this;
+                        if (catch_clause) {
+                            env.set(catch_clause.cdr.car.car, e);
+                            var args = {
+                                env,
+                                error: (e) => reject(e)
+                            };
+                            if (dynamic_scope) {
+                                args.dynamic_scope = this;
+                            }
+                            unpromise(evaluate(new Pair(
+                                new LSymbol('begin'),
+                                catch_clause.cdr.cdr
+                            ), args), function(result) {
+                                next(result, resolve);
+                            });
+                        } else {
+                            next(e, reject);
                         }
-                        unpromise(evaluate(new Pair(
-                            new LSymbol('begin'),
-                            code.cdr.car.cdr.cdr
-                        ), args), function(result) {
-                            resolve(result);
-                        });
                     }
                 };
                 if (dynamic_scope) {
@@ -7632,11 +7662,17 @@
                 var ret = evaluate(code.car, args);
                 if (is_promise(ret)) {
                     ret.catch(args.error).then(resolve);
-                } else {
-                    resolve(ret);
+                } else if (!rejected) {
+                    next(ret, resolve);
                 }
             });
-        }), `(try expr (catch (e) code)`),
+        }), `(try expr (catch (e) code))
+             (try expr (catch (e) code) (finally code))
+             (try expr (finally code))
+
+             Macro execute user code and catch exception. If catch is provided
+             it's executed when expression expr throw error. If finally is provide
+             it's always executed at the end.`),
         // ------------------------------------------------------------------
         'throw': doc('throw', function(message) {
             throw new Error(message);

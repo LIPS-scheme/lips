@@ -236,3 +236,30 @@
                (re (. (lips.parse str) 0)))
           (t.is (regex? re) true)
           (t.is (repr re) str))))
+
+(test "core: try..catch"
+      (lambda (t)
+        (let ((x))
+          (t.is (try xx (catch (e) false) (finally (set! x 10))) false)
+          (t.is x 10))
+
+        (t.is (to.throw (try xx (catch (e) (throw e)))) true)
+
+        (let ((x))
+          (t.is (to.throw (try xx (finally (set! x 10)))) true)
+          (t.is x 10))
+
+        (t.is (try xx (catch (e) false)) false)
+
+        (let ((x))
+          (t.is (try (Promise.reject 10) (catch (e) e) (finally (set! x 10))) 10)
+          (t.is x 10))
+
+        (t.is (try (Promise.reject 10) (catch (e) e)) 10)
+
+
+        (t.is (to.throw (try (Promise.reject 10) (catch (e) (throw e)))) true)
+
+        (let ((x))
+          (t.is (to.throw (try (Promise.reject 10) (finally (set! x 10)))) true)
+          (t.is x 10))))
