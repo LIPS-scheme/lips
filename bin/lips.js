@@ -82,7 +82,7 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
 
 // -----------------------------------------------------------------------------
 function print(result) {
-    if (result.length) {
+    if (result && result.length) {
         var last = result.pop();
         if (last !== undefined) {
             var ret = env.get('repr')(last, true);
