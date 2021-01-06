@@ -1245,3 +1245,19 @@
           (close-input-port p)))))
 
 ;; -----------------------------------------------------------------------------
+(define (with-input-from-file string thunk)
+  "(with-input-from-file string thunk)
+
+   Procedure open file and make it current-input-port then thunk is executed.
+   After thunk is executed current-input-port is restored and file port
+   is closed."
+  (let* ((port (open-input-file string))
+         (old-stdin (**internal-env**.get "stdin")))
+    (**internal-env**.set "stdin" port)
+    (try
+      (thunk)
+      (finally
+        (**internal-env**.set "stdin" old-stdin)
+        (close-input-port port)))))
+
+;; -----------------------------------------------------------------------------
