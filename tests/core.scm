@@ -240,6 +240,10 @@
 (test "core: try..catch"
       (lambda (t)
         (let ((x))
+          (t.is (try 10 (finally (set! x 10))) 10)
+          (t.is x 10))
+
+        (let ((x))
           (t.is (try xx (catch (e) false) (finally (set! x 10))) false)
           (t.is x 10))
 

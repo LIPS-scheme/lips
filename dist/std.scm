@@ -2375,15 +2375,15 @@
    After thunk is executed current-input-port is restored and file port
    is closed."
   (let* ((port (open-input-file string))
-         (old-stdin (**internal-env**.get "stdin")))
-    (**internal-env**.set "stdin" port)
+         (env **interaction-environment**)
+         (internal-env (env.get '**internal-env**))
+         (old-stdin (internal-env.get "stdin")))
+    (internal-env.set "stdin" port)
     (try
       (thunk)
       (finally
-        (**internal-env**.set "stdin" old-stdin)
+        (internal-env.set "stdin" old-stdin)
         (close-input-port port)))))
-
-;; -----------------------------------------------------------------------------
 ;; Implementation of byte vector functions - SRFI-4
 ;;
 ;; original code was ased on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
