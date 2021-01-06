@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 06 Jan 2021 10:10:19 +0000
+ * build: Wed, 06 Jan 2021 10:15:07 +0000
  */
 (function () {
   'use strict';
@@ -8532,11 +8532,11 @@
     InputFilePort.prototype.close = function () {
       var _this7 = this;
 
-      delete this.__parser__;
-      delete this._string;
-      this._with_parser = null; // make content garbage collected
+      delete this.__parser__; // make content garbage collected, we assign null,
+      // because the value is in prototype
 
-      ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
+      this._with_parser = null;
+      ['read', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
         _this7[name] = function () {
           throw new Error('InputFilePort: port is closed');
         };
@@ -12765,10 +12765,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 06 Jan 2021 10:10:19 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 06 Jan 2021 10:15:07 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 06 Jan 2021 10:10:19 +0000').valueOf();
+      var date = LString('Wed, 06 Jan 2021 10:15:07 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12805,7 +12805,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 06 Jan 2021 10:10:19 +0000',
+      date: 'Wed, 06 Jan 2021 10:15:07 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

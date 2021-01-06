@@ -66,3 +66,10 @@
         (let ((test (read f)))
           (t.is (and (pair? test) (string=? (cadr test) "ports: scheme repr (output-string)")) true))))
 
+(test "ports: read after port close should throw"
+      (lambda (t)
+        (define f (open-input-file "./tests/ports.scm"))
+        (read f)
+        (close-input-port f)
+        (t.is (repr (open-input-file "./tests/ports.scm")) "#<input-port ./tests/ports.scm>")
+        (t.is (to.throw (read f)) true)))

@@ -5386,8 +5386,9 @@
     InputFilePort.prototype.constructor = InputFilePort;
     InputFilePort.prototype.close = function() {
         delete this.__parser__;
-        delete this._string;
-        this._with_parser = null; // make content garbage collected
+        // make content garbage collected, we assign null,
+        // because the value is in prototype
+        this._with_parser = null;
         ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(name => {
             this[name] = function() {
                 throw new Error('InputFilePort: port is closed');

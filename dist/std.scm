@@ -2356,6 +2356,19 @@
       (port.close)))
 
 ;; -----------------------------------------------------------------------------
+(define (call-with-input-file filename proc)
+  "(call-with-input-file filename proc)
+
+   Procedure open file call user defined procedure and then close the port.
+   It return value that was returned by user proc and it close the port
+   even if user proc throw exception."
+  (let ((p (open-input-file filename)))
+    (try (proc p)
+         (catch (e)
+                (close-input-port p)
+                (throw e)))))
+
+;; -----------------------------------------------------------------------------
 ;; Implementation of byte vector functions - SRFI-4
 ;;
 ;; original code was ased on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
