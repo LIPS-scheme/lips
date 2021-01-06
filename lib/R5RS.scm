@@ -1257,7 +1257,7 @@
          (old-stdin (internal-env.get "stdin")))
     (internal-env.set "stdin" port)
     (try
-      (thunk)
-      (finally
-        (internal-env.set "stdin" old-stdin)
-        (close-input-port port)))))
+     (thunk)
+     (finally
+      (internal-env.set "stdin" old-stdin)
+      (close-input-port port)))))

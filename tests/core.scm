@@ -244,13 +244,17 @@
           (t.is x 10))
 
         (let ((x))
-          (t.is (try xx (catch (e) false) (finally (set! x 10))) false)
+          (t.is (try aa (catch (e) false) (finally (set! x 10))) false)
           (t.is x 10))
 
-        (t.is (to.throw (try xx (catch (e) (throw e)))) true)
+        (t.is (to.throw (try bb (catch (e) (throw e)))) true)
 
         (let ((x))
-          (t.is (to.throw (try xx (finally (set! x 10)))) true)
+          (t.is (to.throw (try cc (finally (set! x 10)))) true)
+          (t.is x 10))
+
+        (let ((x))
+          (t.is (try (new Promise (lambda (r) (r 10))) (finally (set! x 10))) 10)
           (t.is x 10))
 
         (t.is (try xx (catch (e) false)) false)

@@ -7604,8 +7604,11 @@
 
            Function convert string to number.`),
         // ------------------------------------------------------------------
-        'try': doc(new Macro('try', function(code, { dynamic_scope }) {
-            return new Promise((resolve, reject) => {
+        'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
+            // Not sure why, but here macro can't reject, instead if call error
+            // all cases are covered by unit tests, Couldn't reproduce this issue
+            // with simple case
+            return new Promise((resolve) => {
                 var catch_clause, finally_clause;
                 if (LSymbol.is(code.cdr.car.car, 'catch')) {
                     catch_clause = code.cdr.car;
@@ -7630,17 +7633,15 @@
                         });
                     };
                 }
-                var rejected;
                 var args = {
                     env: this,
                     error: (e) => {
-                        rejected = true;
                         var env = this.inherit('try');
                         if (catch_clause) {
                             env.set(catch_clause.cdr.car.car, e);
                             var args = {
                                 env,
-                                error: (e) => reject(e)
+                                error
                             };
                             if (dynamic_scope) {
                                 args.dynamic_scope = this;
@@ -7652,19 +7653,16 @@
                                 next(result, resolve);
                             });
                         } else {
-                            next(e, reject);
+                            next(e, error);
                         }
                     }
                 };
                 if (dynamic_scope) {
                     args.dynamic_scope = this;
                 }
-                var ret = evaluate(code.car, args);
-                if (is_promise(ret)) {
-                    ret.catch(args.error).then(resolve);
-                } else if (!rejected) {
-                    next(ret, resolve);
-                }
+                unpromise(evaluate(code.car, args), function(result) {
+                    next(result, resolve);
+                });
             });
         }), `(try expr (catch (e) code))
              (try expr (catch (e) code) (finally code))
@@ -8703,14 +8701,16 @@
                 env,
                 dynamic_scope,
                 error: (e, code) => {
-                    // clean duplicated Error: added by JS
-                    e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
-                    if (code) {
-                        // LIPS stack trace
-                        if (!(e.__code__ instanceof Array)) {
-                            e.__code__ = [];
+                    if (e && e.message) {
+                        // clean duplicated Error: added by JS
+                        e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
+                        if (code) {
+                            // LIPS stack trace
+                            if (!(e.__code__ instanceof Array)) {
+                                e.__code__ = [];
+                            }
+                            e.__code__.push(code.toString(true));
                         }
-                        e.__code__.push(code.toString(true));
                     }
                     throw e;
                 }

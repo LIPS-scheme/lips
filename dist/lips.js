@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 06 Jan 2021 12:49:30 +0000
+ * build: Wed, 06 Jan 2021 14:53:06 +0000
  */
 (function () {
   'use strict';
@@ -11062,8 +11062,12 @@
       'try': doc(new Macro('try', function (code, _ref34) {
         var _this12 = this;
 
-        var dynamic_scope = _ref34.dynamic_scope;
-        return new Promise(function (resolve, reject) {
+        var dynamic_scope = _ref34.dynamic_scope,
+            _error = _ref34.error;
+        // Not sure why, but here macro can't reject, instead if call error
+        // all cases are covered by unit tests, Couldn't reproduce this issue
+        // with simple case
+        return new Promise(function (resolve) {
           var catch_clause, finally_clause;
 
           if (LSymbol.is(code.cdr.car.car, 'catch')) {
@@ -11090,21 +11094,16 @@
             };
           }
 
-          var rejected;
           var args = {
             env: _this12,
             error: function error(e) {
-              rejected = true;
-
               var env = _this12.inherit('try');
 
               if (catch_clause) {
                 env.set(catch_clause.cdr.car.car, e);
                 var args = {
                   env: env,
-                  error: function error(e) {
-                    return reject(e);
-                  }
+                  error: _error
                 };
 
                 if (dynamic_scope) {
@@ -11115,7 +11114,7 @@
                   next(result, resolve);
                 });
               } else {
-                next(e, reject);
+                next(e, _error);
               }
             }
           };
@@ -11124,13 +11123,9 @@
             args.dynamic_scope = _this12;
           }
 
-          var ret = evaluate(code.car, args);
-
-          if (is_promise(ret)) {
-            ret["catch"](args.error).then(resolve);
-          } else if (!rejected) {
-            next(ret, resolve);
-          }
+          unpromise(evaluate(code.car, args), function (result) {
+            next(result, resolve);
+          });
         });
       }), "(try expr (catch (e) code))\n             (try expr (catch (e) code) (finally code))\n             (try expr (finally code))\n\n             Macro execute user code and catch exception. If catch is provided\n             it's executed when expression expr throw error. If finally is provide\n             it's always executed at the end."),
       // ------------------------------------------------------------------
@@ -12369,16 +12364,18 @@
                   env: env,
                   dynamic_scope: dynamic_scope,
                   error: function error(e, code) {
-                    // clean duplicated Error: added by JS
-                    e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
+                    if (e && e.message) {
+                      // clean duplicated Error: added by JS
+                      e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
 
-                    if (code) {
-                      // LIPS stack trace
-                      if (!(e.__code__ instanceof Array)) {
-                        e.__code__ = [];
+                      if (code) {
+                        // LIPS stack trace
+                        if (!(e.__code__ instanceof Array)) {
+                          e.__code__ = [];
+                        }
+
+                        e.__code__.push(code.toString(true));
                       }
-
-                      e.__code__.push(code.toString(true));
                     }
 
                     throw e;
@@ -12797,10 +12794,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 06 Jan 2021 12:49:30 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 06 Jan 2021 14:53:06 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 06 Jan 2021 12:49:30 +0000').valueOf();
+      var date = LString('Wed, 06 Jan 2021 14:53:06 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12837,7 +12834,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 06 Jan 2021 12:49:30 +0000',
+      date: 'Wed, 06 Jan 2021 14:53:06 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

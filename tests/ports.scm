@@ -62,9 +62,9 @@
 
 (test "ports: read input file"
       (lambda (t)
-        (define f (open-input-file "./tests/ports.scm"))
-        (let ((test (read f)))
-          (t.is (and (pair? test) (string=? (cadr test) "ports: scheme repr (output-string)")) true))))
+        (define f (open-input-file "./tests/stubs/test.txt"))
+        (let ((line (read-line f)))
+          (t.is line "Hello this is File"))))
 
 (test "ports: read after port close should throw"
       (lambda (t)
@@ -73,3 +73,10 @@
         (close-input-port f)
         (t.is (repr (open-input-file "./tests/ports.scm")) "#<input-port ./tests/ports.scm>")
         (t.is (to.throw (read f)) true)))
+
+(test "ports: with-input-from-file"
+      (lambda (t)
+        (define stdin (current-input-port))
+        (t.is (with-input-from-file "./tests/stubs/test.txt" read-line)
+              "Hello this is File")
+        (t.is (current-input-port) stdin)))

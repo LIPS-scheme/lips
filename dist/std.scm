@@ -2380,10 +2380,10 @@
          (old-stdin (internal-env.get "stdin")))
     (internal-env.set "stdin" port)
     (try
-      (thunk)
-      (finally
-        (internal-env.set "stdin" old-stdin)
-        (close-input-port port)))))
+     (thunk)
+     (finally
+      (internal-env.set "stdin" old-stdin)
+      (close-input-port port)))))
 ;; Implementation of byte vector functions - SRFI-4
 ;;
 ;; original code was ased on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
