@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 06 Jan 2021 09:09:41 +0000
+ * build: Wed, 06 Jan 2021 10:10:19 +0000
  */
 (function () {
   'use strict';
@@ -2086,10 +2086,6 @@
 
       if (LSymbol.list[name] instanceof LSymbol) {
         return LSymbol.list[name];
-      }
-
-      if (name === undefined$1) {
-        console.trace();
       }
 
       this.__name__ = name;
@@ -11067,8 +11063,8 @@
         var _this12 = this;
 
         var dynamic_scope = _ref34.dynamic_scope,
-            _error = _ref34.error;
-        return new Promise(function (resolve) {
+            error = _ref34.error;
+        return new Promise(function (resolve, reject) {
           var args = {
             env: _this12,
             error: function error(e) {
@@ -11077,7 +11073,9 @@
               env.set(code.cdr.car.cdr.car.car, e);
               var args = {
                 env: env,
-                error: _error
+                error: function error(e) {
+                  return reject(e);
+                }
               };
 
               if (dynamic_scope) {
@@ -11097,7 +11095,7 @@
           var ret = evaluate(code.car, args);
 
           if (is_promise(ret)) {
-            ret.then(resolve)["catch"](args.error);
+            ret["catch"](args.error).then(resolve);
           } else {
             resolve(ret);
           }
@@ -12339,6 +12337,9 @@
                   env: env,
                   dynamic_scope: dynamic_scope,
                   error: function error(e, code) {
+                    // clean duplicated Error: added by JS
+                    e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
+
                     if (code) {
                       // LIPS stack trace
                       if (!(e.__code__ instanceof Array)) {
@@ -12764,10 +12765,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 06 Jan 2021 09:09:41 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 06 Jan 2021 10:10:19 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 06 Jan 2021 09:09:41 +0000').valueOf();
+      var date = LString('Wed, 06 Jan 2021 10:10:19 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12804,7 +12805,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 06 Jan 2021 09:09:41 +0000',
+      date: 'Wed, 06 Jan 2021 10:10:19 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

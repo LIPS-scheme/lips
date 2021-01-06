@@ -727,9 +727,6 @@
         if (LSymbol.list[name] instanceof LSymbol) {
             return LSymbol.list[name];
         }
-        if (name === undefined) {
-            console.trace();
-        }
         this.__name__ = name;
         if (typeof name === 'string') {
             LSymbol.list[name] = this;
@@ -7607,7 +7604,7 @@
            Function convert string to number.`),
         // ------------------------------------------------------------------
         'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 var args = {
                     env: this,
                     error: (e) => {
@@ -7615,7 +7612,7 @@
                         env.set(code.cdr.car.cdr.car.car, e);
                         var args = {
                             env,
-                            error
+                            error: (e) => reject(e)
                         };
                         if (dynamic_scope) {
                             args.dynamic_scope = this;
@@ -7633,7 +7630,7 @@
                 }
                 var ret = evaluate(code.car, args);
                 if (is_promise(ret)) {
-                    ret.then(resolve).catch(args.error);
+                    ret.catch(args.error).then(resolve);
                 } else {
                     resolve(ret);
                 }
@@ -8669,6 +8666,8 @@
                 env,
                 dynamic_scope,
                 error: (e, code) => {
+                    // clean duplicated Error: added by JS
+                    e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
                     if (code) {
                         // LIPS stack trace
                         if (!(e.__code__ instanceof Array)) {
