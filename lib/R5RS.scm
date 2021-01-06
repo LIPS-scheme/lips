@@ -1223,3 +1223,9 @@
          (new lips.InputFilePort (readFile filename) filename))))
 
 ;; -----------------------------------------------------------------------------
+(define (close-input-port port)
+  (if (not (instanceof lips.InputFilePort port))
+      (throw (new Error (string-append "close-input-port: argument need to be input-port")))
+      (port.close)))
+
+;; -----------------------------------------------------------------------------

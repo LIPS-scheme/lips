@@ -5343,16 +5343,17 @@
     };
     OutputStringPort.prototype.constructor = OutputStringPort;
     // -------------------------------------------------------------------------
-    function InputStringPort(string) {
+    function InputStringPort(string, env) {
         if (typeof this !== 'undefined' && !(this instanceof InputStringPort) ||
             typeof this === 'undefined') {
             return new InputStringPort(string);
         }
         typecheck('InputStringPort', string, 'string');
-        this._string = string.valueOf();
+        env = env || global_env;
+        string = string.valueOf();
         this._with_parser = this._with_init_parser.bind(this, () => {
             if (!this.__parser__) {
-                this.__parser__ = new Parser(this._string, { env: this });
+                this.__parser__ = new Parser(string, { env });
             }
             return this.__parser__;
         });
@@ -5386,6 +5387,16 @@
     }
     InputFilePort.prototype = Object.create(InputStringPort.prototype);
     InputFilePort.prototype.constructor = InputFilePort;
+    InputFilePort.prototype.close = function() {
+        delete this.__parser__;
+        delete this._string;
+        this._with_parser = null; // make content garbage collected
+        ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(name => {
+            this[name] = function() {
+                throw new Error('InputFilePort: port is closed');
+            };
+        });
+    };
     InputFilePort.prototype.toString = function() {
         return `#<input-port ${this.__filename__}>`;
     };

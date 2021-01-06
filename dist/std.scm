@@ -2346,6 +2346,12 @@
          (new lips.InputFilePort (readFile filename) filename))))
 
 ;; -----------------------------------------------------------------------------
+(define (close-input-port port)
+  (if (not (instanceof lips.InputFilePort port))
+      (throw (new Error (string-append "close-input-port: argument need to be input-port")))
+      (port.close)))
+
+;; -----------------------------------------------------------------------------
 ;; Implementation of byte vector functions - SRFI-4
 ;;
 ;; original code was ased on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
@@ -3047,7 +3053,7 @@
    Function create new string port as input that can be used to
    read S-exressions from this port using `read` function."
   (typecheck "open-input-string" string "string")
-  (new lips.InputStringPort string))
+  (new lips.InputStringPort string (interaction-environment)))
 
 ;; -----------------------------------------------------------------------------
 (define (open-output-string)

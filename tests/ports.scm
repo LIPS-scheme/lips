@@ -1,4 +1,4 @@
-(test "ports: scheme repr"
+(test "ports: scheme repr (output-string)"
       (lambda (t)
         (define (repr x . rest)
           (let ((port (open-output-string))
@@ -30,12 +30,17 @@
           (result.push (read-line p))
           (t.is result #("first line" "second line")))))
 
-(test "ports: repr"
+(test "ports: port repr"
       (lambda (t)
         (t.is (repr (current-input-port)) "#<input-port>")
         (t.is (repr (open-input-string "xxx")) "#<input-port <string>>")
         (t.is (repr (open-input-string "xxx")) "#<input-port <string>>")
         (t.is (repr (open-input-file "./tests/ports.scm")) "#<input-port ./tests/ports.scm>")))
+
+(test "ports: syntax extensions"
+      (lambda (t)
+        (let ((p (open-input-string "#(1 2 3)")))
+          (t.is (read p) #(1 2 3)))))
 
 (test "ports: input-port"
       (lambda (t)
@@ -54,3 +59,10 @@
           (t.is (read-char port) #\L)
           (t.is (read-char port) #\i)
           (t.is (read port) 'ne))))
+
+(test "ports: read input file"
+      (lambda (t)
+        (define f (open-input-file "./tests/ports.scm"))
+        (let ((test (read f)))
+          (t.is (and (pair? test) (string=? (cadr test) "ports: scheme repr (output-string)")) true))))
+
