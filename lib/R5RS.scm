@@ -1224,6 +1224,10 @@
 
 ;; -----------------------------------------------------------------------------
 (define (close-input-port port)
+  "(close-input-port port)
+
+   Procedure close port that was opened with open-input-file. After that
+   it no longer accept reading from that port."
   (if (not (instanceof lips.InputFilePort port))
       (throw (new Error (string-append "close-input-port: argument need to be input-port")))
       (port.close)))
