@@ -2364,9 +2364,8 @@
    even if user proc throw exception."
   (let ((p (open-input-file filename)))
     (try (proc p)
-         (catch (e)
-                (close-input-port p)
-                (throw e)))))
+         (finally
+          (close-input-port p)))))
 
 ;; -----------------------------------------------------------------------------
 ;; Implementation of byte vector functions - SRFI-4
