@@ -2422,6 +2422,19 @@
       (close-input-port port)))))
 
 ;; -----------------------------------------------------------------------------
+(define (with-output-to-file string thunk)
+  (let* ((port (open-output-file string))
+         (env **interaction-environment**)
+         (internal-env (env.get '**internal-env**))
+         (old-stdout (internal-env.get "stdout")))
+    (internal-env.set "stdout" port)
+    (try
+     (thunk)
+     (finally
+      (internal-env.set "stdout" old-stdout)
+      (close-output-port port)))))
+
+;; -----------------------------------------------------------------------------
 (define (file-exists? filename)
   (new Promise (lambda (resolve)
                  (if (null? self.fs)
