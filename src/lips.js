@@ -5886,7 +5886,11 @@
         'NaN': NaN,
         // ------------------------------------------------------------------
         'peek-char': doc('peek-char', function(port) {
-            typecheck('peek-char', port, ['input-port', 'input-string-port']);
+            if (port) {
+                typecheck('peek-char', port, ['input-port']);
+            } else {
+                port = internal(this, 'stdin');
+            }
             return port.peek_char();
         }, `(peek-char port)
 
@@ -5920,7 +5924,8 @@
                 }
             }
             var port;
-            if (arg instanceof InputPort) {
+            if (arg) {
+                typecheck('read', arg, ['input-port']);
                 port = arg;
             } else {
                 port = internal(this, 'stdin');
@@ -8538,7 +8543,10 @@
         var args = [];
         var node = rest;
         markCycles(node);
-        while (true) {
+        function next() {
+            return args;
+        }
+        return (function loop() {
             if (node instanceof Pair) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
                 if (dynamic_scope) {
@@ -8549,18 +8557,20 @@
                         return arg;
                     });
                 }
-                args.push(arg);
-                if (node.haveCycles('cdr')) {
-                    break;
-                }
-                node = node.cdr;
+                return unpromise(resolve_promises(arg), function(arg) {
+                    args.push(arg);
+                    if (node.haveCycles('cdr')) {
+                        return next();
+                    }
+                    node = node.cdr;
+                    return loop();
+                });
             } else if (node === nil) {
-                break;
+                return next();
             } else {
                 throw new Error('Syntax Error: improper list found in apply');
             }
-        }
-        return resolve_promises(args);
+        })();
     }
     // -------------------------------------------------------------------------
     function evaluate_syntax(macro, code, eval_args) {

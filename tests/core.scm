@@ -271,3 +271,23 @@
         (let ((x))
           (t.is (to.throw (try (Promise.reject 10) (finally (set! x 10)))) true)
           (t.is x 10))))
+
+(test "core: promises"
+      (lambda (t)
+        (define-macro (delay time . expr)
+          (let ((resolve (gensym "resolve")))
+            `(new Promise (lambda (,resolve)
+                            (setTimeout (lambda ()
+                                          (,resolve (begin ,@expr)))
+                                        ,time)))))
+
+        (let ((x 1) (y 2))
+          (delay 100 (set! x 10))
+          (delay 100 (set! y 20))
+          (t.is (+ x y) 30))
+
+        // bug #116
+        (let ((x 1) (y 2))
+          (t.is (list (delay 200 (set! x 10) 10)
+                      (delay 100 x))
+                '(10 10)))))

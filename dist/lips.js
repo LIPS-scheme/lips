@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 08 Jan 2021 11:00:16 +0000
+ * build: Fri, 08 Jan 2021 14:40:30 +0000
  */
 (function () {
   'use strict';
@@ -9155,7 +9155,12 @@
       'NaN': NaN,
       // ------------------------------------------------------------------
       'peek-char': doc('peek-char', function (port) {
-        typecheck('peek-char', port, ['input-port', 'input-string-port']);
+        if (port) {
+          typecheck('peek-char', port, ['input-port']);
+        } else {
+          port = internal(this, 'stdin');
+        }
+
         return port.peek_char();
       }, "(peek-char port)\n\n            Function get character from string port or EOF object if no more\n            data in string port."),
       // ------------------------------------------------------------------
@@ -9260,7 +9265,8 @@
                   return _context12.finish(24);
 
                 case 34:
-                  if (arg instanceof InputPort) {
+                  if (arg) {
+                    typecheck('read', arg, ['input-port']);
                     port = arg;
                   } else {
                     port = internal(this, 'stdin');
@@ -12115,7 +12121,11 @@
       var node = rest;
       markCycles(node);
 
-      while (true) {
+      function next() {
+        return args;
+      }
+
+      return function loop() {
         if (node instanceof Pair) {
           var arg = evaluate(node.car, {
             env: env,
@@ -12133,21 +12143,22 @@
             });
           }
 
-          args.push(arg);
+          return unpromise(resolve_promises(arg), function (arg) {
+            args.push(arg);
 
-          if (node.haveCycles('cdr')) {
-            break;
-          }
+            if (node.haveCycles('cdr')) {
+              return next();
+            }
 
-          node = node.cdr;
+            node = node.cdr;
+            return loop();
+          });
         } else if (node === nil) {
-          break;
+          return next();
         } else {
           throw new Error('Syntax Error: improper list found in apply');
         }
-      }
-
-      return resolve_promises(args);
+      }();
     } // -------------------------------------------------------------------------
 
 
@@ -12846,10 +12857,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 08 Jan 2021 11:00:16 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 08 Jan 2021 14:40:30 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 08 Jan 2021 11:00:16 +0000').valueOf();
+      var date = LString('Fri, 08 Jan 2021 14:40:30 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12886,7 +12897,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 08 Jan 2021 11:00:16 +0000',
+      date: 'Fri, 08 Jan 2021 14:40:30 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
