@@ -2102,7 +2102,7 @@
 
    Write single character to given port using write function."
   (typecheck "write-char" char "character")
-  (apply write (cons (char.valueOf) rest)))
+  (apply display (cons (char.valueOf) rest)))
 
 ;; -----------------------------------------------------------------------------
 (define fold-right reduce)

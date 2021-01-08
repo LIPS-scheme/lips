@@ -83,11 +83,35 @@
 
 (test "ports: read/write/delete file"
       (lambda (t)
-        (let* ((filename "./tests/__random__.scm")
+        (let* ((filename "./tests/__x1__.scm")
                (input '(hello world))
                (p (open-output-file filename))
                (result #f))
           (write input p)
+          (close-output-port p)
+          (let ((p (open-input-file filename)))
+            (set! result (read p))
+            (delete-file filename)
+            (t.is result input)))))
+
+(test "ports: write-char to output string"
+      (lambda (t)
+        (let ((input "(hello world)")
+              (port (open-output-string)))
+          (for-each (lambda (char)
+                      (write-char char port))
+                    (string->list (repr input)))
+          (t.is (get-output-string port) input))))
+
+(test "port: write-char to output file"
+      (lambda (t)
+        (let* ((filename "./tests/__x2__.scm")
+               (input '(hello world))
+               (p (open-output-file filename))
+               (result #f))
+          (for-each (lambda (char)
+                      (write-char char p))
+                    (string->list (repr input)))
           (close-output-port p)
           (let ((p (open-input-file filename)))
             (set! result (read p))
