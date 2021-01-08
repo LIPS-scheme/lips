@@ -3183,3 +3183,14 @@
             (unlink filename))))))
 
 ;; -----------------------------------------------------------------------------
+(define (call-with-port port proc)
+  "(call-with-port port proc)
+
+   Proc is executed with given port and after it returns, the port is closed."
+  (try
+   (proc port)
+   (finally
+    (if (procedure? port.close)
+        (port.close)))))
+
+;; -----------------------------------------------------------------------------

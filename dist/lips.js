@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 08 Jan 2021 14:40:30 +0000
+ * build: Fri, 08 Jan 2021 16:06:16 +0000
  */
 (function () {
   'use strict';
@@ -9266,7 +9266,7 @@
 
                 case 34:
                   if (arg) {
-                    typecheck('read', arg, ['input-port']);
+                    typecheck('read', arg, 'input-port');
                     port = arg;
                   } else {
                     port = internal(this, 'stdin');
@@ -11122,10 +11122,7 @@
 
         var dynamic_scope = _ref34.dynamic_scope,
             _error = _ref34.error;
-        // Not sure why, but here macro can't reject, instead if call error
-        // all cases are covered by unit tests, Couldn't reproduce this issue
-        // with simple case
-        return new Promise(function (resolve) {
+        return new Promise(function (resolve, reject) {
           var catch_clause, finally_clause;
 
           if (LSymbol.is(code.cdr.car.car, 'catch')) {
@@ -11142,10 +11139,12 @@
             throw new Error('try: invalid syntax');
           }
 
-          var next = resolve;
+          var _next = resolve;
 
           if (finally_clause) {
-            next = function next(result, cont) {
+            _next = function next(result, cont) {
+              // prevent infinite loop when finally throw exception
+              _next = reject;
               unpromise(evaluate(new Pair(new LSymbol('begin'), finally_clause.cdr), args), function () {
                 cont(result);
               });
@@ -11169,10 +11168,10 @@
                 }
 
                 unpromise(evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
-                  next(result, resolve);
+                  _next(result, resolve);
                 });
               } else {
-                next(e, _error);
+                _next(e, _error);
               }
             }
           };
@@ -11181,9 +11180,15 @@
             args.dynamic_scope = _this14;
           }
 
-          unpromise(evaluate(code.car, args), function (result) {
-            next(result, resolve);
-          });
+          var result = evaluate(code.car, args);
+
+          if (is_promise(result)) {
+            result.then(function (result) {
+              _next(result, resolve);
+            })["catch"](args.error);
+          } else {
+            _next(result, resolve);
+          }
         });
       }), "(try expr (catch (e) code))\n             (try expr (catch (e) code) (finally code))\n             (try expr (finally code))\n\n             Macro execute user code and catch exception. If catch is provided\n             it's executed when expression expr throw error. If finally is provide\n             it's always executed at the end."),
       // ------------------------------------------------------------------
@@ -12857,10 +12862,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 08 Jan 2021 14:40:30 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 08 Jan 2021 16:06:16 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 08 Jan 2021 14:40:30 +0000').valueOf();
+      var date = LString('Fri, 08 Jan 2021 16:06:16 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12897,7 +12902,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 08 Jan 2021 14:40:30 +0000',
+      date: 'Fri, 08 Jan 2021 16:06:16 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

@@ -5925,7 +5925,7 @@
             }
             var port;
             if (arg) {
-                typecheck('read', arg, ['input-port']);
+                typecheck('read', arg, 'input-port');
                 port = arg;
             } else {
                 port = internal(this, 'stdin');
@@ -7650,10 +7650,7 @@
            Function convert string to number.`),
         // ------------------------------------------------------------------
         'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
-            // Not sure why, but here macro can't reject, instead if call error
-            // all cases are covered by unit tests, Couldn't reproduce this issue
-            // with simple case
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 var catch_clause, finally_clause;
                 if (LSymbol.is(code.cdr.car.car, 'catch')) {
                     catch_clause = code.cdr.car;
@@ -7670,6 +7667,8 @@
                 var next = resolve;
                 if (finally_clause) {
                     next = function(result, cont) {
+                        // prevent infinite loop when finally throw exception
+                        next = reject;
                         unpromise(evaluate(new Pair(
                             new LSymbol('begin'),
                             finally_clause.cdr
@@ -7705,9 +7704,14 @@
                 if (dynamic_scope) {
                     args.dynamic_scope = this;
                 }
-                unpromise(evaluate(code.car, args), function(result) {
+                var result = evaluate(code.car, args);
+                if (is_promise(result)) {
+                    result.then(result => {
+                        next(result, resolve);
+                    }).catch(args.error);
+                } else {
                     next(result, resolve);
-                });
+                }
             });
         }), `(try expr (catch (e) code))
              (try expr (catch (e) code) (finally code))

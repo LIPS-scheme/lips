@@ -14,6 +14,7 @@
 * new incremental Lexer that allow to modify parser while it's running
 * add SRFI-10 sharp-comma
 * new syntax try..catch..finally
+* new parallel `list*` macro
 ### Bugfix
 * fix resolving promises on vectors and objects
 * fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)
@@ -23,6 +24,7 @@
 * fix prism highlighting of multiple regular expression
 * fix parsing chars for Unicode outside of BMP
 * fix when try..catch is promise that rejects and catch throws
+* fix resolving promises when apply function they are not executed in sequentially
 
 ## 1.0.0-beta.10
 ### Breaking
