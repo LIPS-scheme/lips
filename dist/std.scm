@@ -1120,6 +1120,19 @@
            (syntax-error (string-append "Invalid symbol " (symbol->string 'fn)
                                         " in expression " (repr '(fn arg ...)))))))))
 
+;; -----------------------------------------------------------------------------
+(define (promisify fn)
+  "(promisify fn)
+
+   Simple function for adding promises to NodeJS callback based function.
+   Function tested only with fs module."
+  (lambda args
+    (new Promise (lambda (resolve reject)
+                   (apply fn (append args (list (lambda (err data)
+                                                  (if (null? err)
+                                                      (resolve data)
+                                                      (reject err))))))))))
+
 ;; ---------------------------------------------------------------------------------------
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
@@ -2314,36 +2327,25 @@
     (set! self.fs (require "fs")))
 
 ;; -----------------------------------------------------------------------------
-(define (promisify fn)
-  "(promisify fn)
+(define open-input-file
+  (let ((readFile #f))
+    (lambda(filename)
+      "(open-input-file filename)
 
-   Simple function for adding promises to NodeJS callback based function.
-   Function tested only with fs module."
-  (lambda args
-    (new Promise (lambda (resolve reject)
-                   (apply fn (append args (list (lambda (err data)
-                                                  (if (null? err)
-                                                      (resolve data)
-                                                      (reject err))))))))))
+       Function return new Input Port with given filename. In Browser user need to
+       provide global fs variable that is instance of FS interface."
+      (if (null? self.fs)
+          (throw (new Error "open-input-file: fs not defined"))
+          (begin
+            (if (not (procedure? readFile))
+                (let ((_readFile (promisify fs.readFile)))
+                  (set! readFile (lambda (filename)
+                                   "(readFile filename)
 
-;; -----------------------------------------------------------------------------
-(define (open-input-file filename)
-  "(open-input-file filename)
-
-   Function return new Input Port with given filename. In Browser user need to
-   provide global fs variable that is instance of FS interface."
-  (if (null? self.fs)
-      (throw (new Error "open-input-file: fs not defined"))
-      (begin
-         (if (not (procedure? self.readFile))
-             (let ((_readFile (promisify fs.readFile)))
-               (set! self.readFile (lambda (filename)
-                                     "(readFile filename)
-
-                                      Helper function that return Promise. NodeJS function sometimes give warnings
-                                      when using fs.promises on Windows."
-                                     (--> (_readFile filename) (toString))))))
-         (new lips.InputFilePort (readFile filename) filename))))
+                                    Helper function that return Promise. NodeJS function sometimes give warnings
+                                    when using fs.promises on Windows."
+                                   (--> (_readFile filename) (toString))))))
+            (new lips.InputFilePort (readFile filename) filename))))))
 
 ;; -----------------------------------------------------------------------------
 (define (close-input-port port)
@@ -2353,6 +2355,16 @@
    it no longer accept reading from that port."
   (if (not (instanceof lips.InputFilePort port))
       (throw (new Error (string-append "close-input-port: argument need to be input-port")))
+      (port.close)))
+
+;; -----------------------------------------------------------------------------
+(define (close-output-port port)
+  "(close-output-port port)
+
+   Procedure close port that was opened with open-output-file. After that
+   it no longer accept write to that port."
+  (if (not (instanceof lips.OutputFilePort port))
+      (throw (new Error (string-append "close-output-port: argument need to be output-port")))
       (port.close)))
 
 ;; -----------------------------------------------------------------------------
@@ -2384,6 +2396,36 @@
      (finally
       (internal-env.set "stdin" old-stdin)
       (close-input-port port)))))
+
+;; -----------------------------------------------------------------------------
+(define (file-exists? filename)
+  (new Promise (lambda (resolve)
+                 (if (null? self.fs)
+                     (throw (new Error "file-exists?: fs not defined"))
+                     (fs.stat filename (lambda (err stat)
+                                         (if (null? err)
+                                             (resolve (stat.isFile))
+                                             (resolve #f))))))))
+
+;; -----------------------------------------------------------------------------
+(define open-output-file
+  (let ((open))
+    (lambda (filename)
+      "(open-output-file filename)
+
+       Function open file and return port that can be used for writing. If file
+       exists it will throw an Error."
+      (typecheck "open-output-file" filename "string")
+      (if (null? self.fs)
+          (throw (new Error "open-output-file: fs not defined"))
+          (begin
+            (if (not (procedure? open))
+                (set! open (promisify fs.open)))
+            (if (file-exists? filename)
+                (throw (new Error "open-output-file: file exists"))
+                (lips.OutputFilePort filename (open filename "w"))))))))
+
+;; -----------------------------------------------------------------------------
 ;; Implementation of byte vector functions - SRFI-4
 ;;
 ;; original code was ased on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
@@ -3103,5 +3145,17 @@
    to given port it will return empty string."
   (typecheck "get-output-string" port "output-string-port")
   (port.getString))
+
+;; -----------------------------------------------------------------------------
+(define delete-file
+  (let ((unlink #f))
+    (lambda (filename)
+      (typecheck "delete-file" filename "string")
+      (if (null? self.fs)
+          (throw (new Error "delete-file: fs not defined"))
+          (begin
+            (if (not (procedure? unlink))
+                (set! unlink (promisify fs.unlink)))
+            (unlink filename))))))
 
 ;; -----------------------------------------------------------------------------

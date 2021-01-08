@@ -80,3 +80,16 @@
         (t.is (with-input-from-file "./tests/stubs/test.txt" read-line)
               "Hello this is File")
         (t.is (current-input-port) stdin)))
+
+(test "ports: read/write/delete file"
+      (lambda (t)
+        (let* ((filename "./tests/__random__.scm")
+               (input '(hello world))
+               (p (open-output-file filename))
+               (result #f))
+          (write input p)
+          (close-output-port p)
+          (let ((p (open-input-file filename)))
+            (set! result (read p))
+            (delete-file filename)
+            (t.is result input)))))

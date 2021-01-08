@@ -5335,10 +5335,50 @@
         };
     }
     OutputStringPort.prototype = Object.create(OutputPort.prototype);
+    OutputStringPort.prototype.toString = function() {
+        return '#<output-port <string>>';
+    };
     OutputStringPort.prototype.getString = function() {
         return this._buffer.map(x => x.valueOf()).join('');
     };
     OutputStringPort.prototype.constructor = OutputStringPort;
+    // -------------------------------------------------------------------------
+    function OutputFilePort(filename, fd) {
+        if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) ||
+            typeof this === 'undefined') {
+            return new OutputFilePort(filename, fd);
+        }
+        typecheck('OutputFilePort', filename, 'string');
+        this._filename = filename;
+        this._fd = fd.valueOf();
+        this.write = (x) => {
+            if (!LString.isString(x)) {
+                x = toString(x);
+            } else {
+                x = x.valueOf();
+            }
+            if (!this._fd) {
+                throw new Error('OutputFilePort: file is closed');
+            }
+            root.fs.write(this._fd, x, function() { });
+        };
+    }
+    OutputFilePort.prototype = Object.create(OutputPort.prototype);
+    OutputFilePort.prototype.constructor = OutputFilePort;
+    OutputFilePort.prototype.close = function() {
+        return new Promise((resolve, reject) => {
+            root.fs.close(this._fd, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
+    OutputFilePort.prototype.toString = function() {
+        return `#<output-port ${this._filename}>`;
+    };
     // -------------------------------------------------------------------------
     function InputStringPort(string, env) {
         if (typeof this !== 'undefined' && !(this instanceof InputStringPort) ||
@@ -9076,6 +9116,7 @@ You can also use (help name) to display help for specic function or macro and
         InputPort,
         OutputPort,
         InputFilePort,
+        OutputFilePort,
         InputStringPort,
         OutputStringPort,
 

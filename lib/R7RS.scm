@@ -583,3 +583,15 @@
   (port.getString))
 
 ;; -----------------------------------------------------------------------------
+(define delete-file
+  (let ((unlink #f))
+    (lambda (filename)
+      (typecheck "delete-file" filename "string")
+      (if (null? self.fs)
+          (throw (new Error "delete-file: fs not defined"))
+          (begin
+            (if (not (procedure? unlink))
+                (set! unlink (promisify fs.unlink)))
+            (unlink filename))))))
+
+;; -----------------------------------------------------------------------------

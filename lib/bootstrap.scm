@@ -1120,4 +1120,17 @@
            (syntax-error (string-append "Invalid symbol " (symbol->string 'fn)
                                         " in expression " (repr '(fn arg ...)))))))))
 
+;; -----------------------------------------------------------------------------
+(define (promisify fn)
+  "(promisify fn)
+
+   Simple function for adding promises to NodeJS callback based function.
+   Function tested only with fs module."
+  (lambda args
+    (new Promise (lambda (resolve reject)
+                   (apply fn (append args (list (lambda (err data)
+                                                  (if (null? err)
+                                                      (resolve data)
+                                                      (reject err))))))))))
+
 ;; ---------------------------------------------------------------------------------------
