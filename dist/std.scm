@@ -1134,6 +1134,18 @@
                                                       (reject err))))))))))
 
 ;; ---------------------------------------------------------------------------------------
+(define-macro (list* . args)
+  "(list* arg1 ...)
+
+   Parallel version of list."
+  (let ((result (gensym "result")))
+     `(let ((,result (vector)))
+        ,@(map (lambda (arg)
+                 `(--> ,result (push '>,arg)))
+               args)
+        (map await (vector->list ,result)))))
+
+;; ---------------------------------------------------------------------------------------
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
