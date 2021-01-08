@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://jcubic.github.io/lips/</loc>
-    <lastmod>2020-09-06T08:54:45+00:00</lastmod>
+    <loc>https://lips.js.org/</loc>
+    <lastmod>2021-01-08T08:54:45+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://jcubic.github.io/lips/docs.html</loc>
-    <lastmod>2020-09-06T08:54:45+00:00</lastmod>
+    <loc>https://lips.js.org/docs.html</loc>
+    <lastmod>2021-01-08T08:54:45+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://jcubic.github.io/lips/beta.html</loc>
-    <lastmod>2020-09-06T08:54:45+00:00</lastmod>
+    <loc>https://lips.js.org/beta.html</loc>
+    <lastmod>2021-01-08T08:54:45+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://jcubic.github.io/lips/todo.html</loc>
-    <lastmod>2020-09-06T08:54:45+00:00</lastmod>
+    <loc>https://lips.js.org/todo.html</loc>
+    <lastmod>2021-01-08T08:54:45+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
