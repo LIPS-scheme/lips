@@ -117,3 +117,12 @@
             (set! result (read p))
             (delete-file filename)
             (t.is result input)))))
+
+(test "port: call-with-?-ports"
+      (lambda (t)
+        (let ((fname "./tests/__x3__.scm")
+              (input '(hello world)))
+          (call-with-output-file fname (lambda (p) (write '(hello world) p)))
+          (let ((result (call-with-input-file fname read)))
+            (delete-file fname)
+            (t.is result input)))))

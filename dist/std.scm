@@ -2371,13 +2371,25 @@
 (define (call-with-input-file filename proc)
   "(call-with-input-file filename proc)
 
-   Procedure open file call user defined procedure and then close the port.
-   It return value that was returned by user proc and it close the port
-   even if user proc throw exception."
+   Procedure open file for reading, call user defined procedure with given port
+   and then close the port. It return value that was returned by user proc
+   and it close the port even if user proc throw exception."
   (let ((p (open-input-file filename)))
     (try (proc p)
          (finally
           (close-input-port p)))))
+
+;; -----------------------------------------------------------------------------
+(define (call-with-output-file filename proc)
+  "(call-with-output-file filename proc)
+
+   Procedure open file for writing, call user defined procedure with port
+   and then close the port. It return value that was returned by user proc and it close the port
+   even if user proc throw exception."
+  (let ((p (open-output-file filename)))
+    (try (proc p)
+         (finally
+          (close-output-port p)))))
 
 ;; -----------------------------------------------------------------------------
 (define (with-input-from-file string thunk)
