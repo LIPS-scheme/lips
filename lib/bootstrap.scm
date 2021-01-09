@@ -1146,3 +1146,29 @@
         (map await (vector->list ,result)))))
 
 ;; ---------------------------------------------------------------------------------------
+(define-macro (%not-implemented name)
+  "(not-implemented name)
+
+   Returns new function taht throw exception that function is not implmeneted"
+  (let ((str-name (symbol->string name)))
+    `(lambda ()
+       ,(string-append "(" str-name ")\n\nThis function is not yet implemented.")
+       (throw (new Error ,(string-append str-name " has not beed implemented"))))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (%make-env name . names)
+  "(%make-env name f1 f2 ...)
+
+   Create new Environment with given name and defined symbols in it from global env.
+   If given function name f1 f2 ... don't exists, it will define function that
+   throw exception that function is not yet implemented."
+  `(new lips.Environment (alist->object (list ,@(map (lambda (name)
+                                                       `(cons ',name ,(let ((ref (lips.env.ref name)))
+                                                                       (if (null? ref)
+                                                                           `(%not-implemented ,name)
+                                                                           `(lips.env.get ',name)))))
+                                                     names)))
+        null
+        ,name))
+
+;; ---------------------------------------------------------------------------------------

@@ -15,6 +15,7 @@
 * add SRFI-10 sharp-comma
 * new syntax try..catch..finally
 * new parallel `list*` macro
+* new `scheme-report-environment` function (R5RS)
 ### Bugfix
 * fix resolving promises on vectors and objects
 * fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)
