@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 09 Jan 2021 14:16:41 +0000
+ * build: Sat, 09 Jan 2021 16:36:37 +0000
  */
 (function () {
   'use strict';
@@ -8336,7 +8336,7 @@
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                if (!(!_this4.__parser__ || _this4.__parser__.__lexer__.peek() === eof)) {
+                if (_this4.char_ready()) {
                   _context9.next = 5;
                   break;
                 }
@@ -8360,6 +8360,11 @@
           }
         }, _callee9);
       })));
+
+      this.char_ready = function () {
+        return this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
+      };
+
       this.read = this._with_parser(function (parser) {
         return parser.read_object();
       });
@@ -8441,6 +8446,10 @@
           throw new Error('input-port: port is closed');
         };
       });
+
+      this.char_ready = function () {
+        return false;
+      };
     };
 
     InputPort.prototype.toString = function () {
@@ -8594,6 +8603,10 @@
         return parser.__lexer__.read_line();
       });
     }
+
+    InputStringPort.prototype.char_ready = function () {
+      return true;
+    };
 
     InputStringPort.prototype = Object.create(InputPort.prototype);
     InputStringPort.prototype.constructor = InputStringPort;
@@ -12884,10 +12897,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 09 Jan 2021 14:16:41 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 09 Jan 2021 16:36:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 09 Jan 2021 14:16:41 +0000').valueOf();
+      var date = LString('Sat, 09 Jan 2021 16:36:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12924,7 +12937,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 09 Jan 2021 14:16:41 +0000',
+      date: 'Sat, 09 Jan 2021 16:36:37 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

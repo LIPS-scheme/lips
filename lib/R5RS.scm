@@ -1184,6 +1184,18 @@
   (instanceof lips.InputPort obj))
 
 ;; -----------------------------------------------------------------------------
+(define (char-ready? . rest)
+  "(char-ready?)
+   (char-ready? port)
+
+   Function check it characters is ready in input port. This is usefull mostly
+   for interactive ports that return false if it would wait for user input.
+   It return false if port is closed."
+  (let ((port (if (null? rest) (current-input-port) (car rest))))
+    (typecheck "char-ready?" port "input-port")
+    (port.char_ready)))
+
+;; -----------------------------------------------------------------------------
 ;; NodeJS filesystem functions
 ;; -----------------------------------------------------------------------------
 (if (eq? global self)
@@ -1324,7 +1336,7 @@
                     char-lower-case? char-numeric?  char-ready?  char-upcase char-upper-case?
                     char-whitespace? char<=? char<? char=? char>=? char>? char? close-input-port
                     close-output-port complex? cond cons cos current-input-port current-output-port
-                    define define-syntax delay denominator display do dynamic-wind eof-object?  eq?
+                    define define-syntax delay denominator display do dynamic-wind eof-object? eq?
                     equal? eqv? eval even? exact->inexact exact? exp expt floor for-each force gcd
                     if imag-part inexact->exact inexact? input-port? integer->char integer?
                     interaction-environment lambda lcm length let let* let-syntax letrec letrec-syntax

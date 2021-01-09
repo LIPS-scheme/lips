@@ -5268,12 +5268,15 @@
         typecheck('InputPort', read, 'function');
         this._read = read;
         this._with_parser = this._with_init_parser.bind(this, async () => {
-            if (!this.__parser__ || this.__parser__.__lexer__.peek() === eof) {
+            if (!this.char_ready()) {
                 const line = await this._read();
                 this.__parser__ = new Parser(line, { env: this });
             }
             return this.__parser__;
         });
+        this.char_ready = function() {
+            return this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
+        };
         this.read = this._with_parser((parser) => {
             return parser.read_object();
         });
@@ -5315,6 +5318,9 @@
                 throw new Error('input-port: port is closed');
             };
         });
+        this.char_ready = function() {
+            return false;
+        };
     };
     InputPort.prototype.toString = function() {
         return '#<input-port>';
@@ -5434,6 +5440,9 @@
             return parser.__lexer__.read_line();
         });
     }
+    InputStringPort.prototype.char_ready = function() {
+        return true;
+    };
     InputStringPort.prototype = Object.create(InputPort.prototype);
     InputStringPort.prototype.constructor = InputStringPort;
     InputStringPort.prototype.toString = function() {
