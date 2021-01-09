@@ -28,7 +28,12 @@
                                      second line")))
           (result.push (read-line p))
           (result.push (read-line p))
-          (t.is result #("first line" "second line")))))
+          (t.is result #("first line" "second line")))
+        (let* ((input '(hello))
+               (p (open-input-string (repr input))))
+          (t.is (read p) input)
+          (t.is (map eof-object? (list (read p) (read-char p) (read-line p)))
+                '(true true true)))))
 
 (test "ports: port repr"
       (lambda (t)
