@@ -5494,11 +5494,12 @@
             inter.set('stdout', stdout);
         }
         this.constant('**internal-env**', inter);
+        global_env.set('**interaction-environment**', this.__env__);
     }
     // -------------------------------------------------------------------------
     Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
-        typecheck('Intepreter::exec', code, 'string', 1);
-        typecheck('Intepreter::exec', dynamic, 'boolean', 2);
+        typecheck('Interpreter::exec', code, 'string', 1);
+        typecheck('Interpreter::exec', dynamic, 'boolean', 2);
         // simple solution to overwrite this variable in each interpreter
         // before evaluation of user code
         global_env.set('**interaction-environment**', this.__env__);
