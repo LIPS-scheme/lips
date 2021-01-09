@@ -579,8 +579,10 @@
 
    Function get full string from string port. If nothing was wrote
    to given port it will return empty string."
-  (typecheck "get-output-string" port "output-string-port")
-  (port.getString))
+  (if (not (instanceof lips.OutputStringPort port))
+      (throw (new Error (string-append "get-output-string: expecting output-string-port get "
+                                       (type port))))
+      (port.getString)))
 
 ;; -----------------------------------------------------------------------------
 (define delete-file
@@ -606,3 +608,24 @@
         (port.close)))))
 
 ;; -----------------------------------------------------------------------------
+(define (close-port port)
+  "(close-port port)
+
+   Close input or output port."
+  (typecheck "close-port" port #("input-port" "output-port"))
+  (port.close))
+
+;; -----------------------------------------------------------------------------
+(define (eof-object)
+  "(eof-object)
+
+   Procedure returns eof object that indicate end of the port"
+  lips.eof)
+
+;; -----------------------------------------------------------------------------
+
+(define (output-port-open? port)
+  (and (output-port? port) (port.is_open)))
+
+(define (input-port-open? port)
+  (and (input-port? port) (port.is_open)))

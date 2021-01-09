@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 08 Jan 2021 16:06:16 +0000
+ * build: Sat, 09 Jan 2021 10:45:21 +0000
  */
 (function () {
   'use strict';
@@ -8425,6 +8425,24 @@
       }));
     };
 
+    InputPort.prototype.is_open = function () {
+      return this._with_parser !== null;
+    };
+
+    InputPort.prototype.close = function () {
+      var _this5 = this;
+
+      delete this.__parser__; // make content garbage collected, we assign null,
+      // because the value is in prototype
+
+      this._with_parser = null;
+      ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
+        _this5[name] = function () {
+          throw new Error('input-port: port is closed');
+        };
+      });
+    };
+
     InputPort.prototype.toString = function () {
       return '#<input-port>';
     }; // -------------------------------------------------------------------------
@@ -8439,13 +8457,32 @@
       this.write = write;
     }
 
+    OutputPort.prototype.is_open = function () {
+      return this._closed !== true;
+    };
+
+    OutputPort.prototype.close = function () {
+      Object.defineProperty(this, '_closed', {
+        get: function get() {
+          return true;
+        },
+        set: function set() {},
+        configurable: false,
+        enumerable: false
+      });
+
+      this.write = function () {
+        throw new Error('output-port: port is closed');
+      };
+    };
+
     OutputPort.prototype.toString = function () {
       return '#<output-port>';
     }; // -------------------------------------------------------------------------
 
 
     function OutputStringPort(toString) {
-      var _this5 = this;
+      var _this6 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
         return new OutputStringPort(toString);
@@ -8461,7 +8498,7 @@
           x = x.valueOf();
         }
 
-        _this5._buffer.push(x);
+        _this6._buffer.push(x);
       };
     }
 
@@ -8480,7 +8517,7 @@
     OutputStringPort.prototype.constructor = OutputStringPort; // -------------------------------------------------------------------------
 
     function OutputFilePort(filename, fd) {
-      var _this6 = this;
+      var _this7 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) || typeof this === 'undefined') {
         return new OutputFilePort(filename, fd);
@@ -8497,11 +8534,7 @@
           x = x.valueOf();
         }
 
-        if (!_this6._fd) {
-          throw new Error('OutputFilePort: file is closed');
-        }
-
-        root.fs.write(_this6._fd, x, function () {});
+        root.fs.write(_this7._fd, x, function () {});
       };
     }
 
@@ -8509,13 +8542,15 @@
     OutputFilePort.prototype.constructor = OutputFilePort;
 
     OutputFilePort.prototype.close = function () {
-      var _this7 = this;
+      var _this8 = this;
 
       return new Promise(function (resolve, reject) {
-        root.fs.close(_this7._fd, function (err) {
+        root.fs.close(_this8._fd, function (err) {
           if (err) {
             reject(err);
           } else {
+            _this8._fd = null;
+            OutputPort.prototype.close.call(_this8);
             resolve();
           }
         });
@@ -8528,7 +8563,7 @@
 
 
     function InputStringPort(string, env) {
-      var _this8 = this;
+      var _this9 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
         return new InputStringPort(string);
@@ -8538,13 +8573,13 @@
       env = env || global_env;
       string = string.valueOf();
       this._with_parser = this._with_init_parser.bind(this, function () {
-        if (!_this8.__parser__) {
-          _this8.__parser__ = new Parser(string, {
+        if (!_this9.__parser__) {
+          _this9.__parser__ = new Parser(string, {
             env: env
           });
         }
 
-        return _this8.__parser__;
+        return _this9.__parser__;
       });
       this.read = this._with_parser(function (parser) {
         return parser.read_object();
@@ -8580,20 +8615,6 @@
 
     InputFilePort.prototype = Object.create(InputStringPort.prototype);
     InputFilePort.prototype.constructor = InputFilePort;
-
-    InputFilePort.prototype.close = function () {
-      var _this9 = this;
-
-      delete this.__parser__; // make content garbage collected, we assign null,
-      // because the value is in prototype
-
-      this._with_parser = null;
-      ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
-        _this9[name] = function () {
-          throw new Error('InputFilePort: port is closed');
-        };
-      });
-    };
 
     InputFilePort.prototype.toString = function () {
       return "#<input-port ".concat(this.__filename__, ">");
@@ -11940,6 +11961,7 @@
         'character': LCharacter,
         'values': Values,
         'input-port': InputPort,
+        'output-port': OutputPort,
         'number': LNumber,
         'regex': RegExp,
         'syntax': Syntax,
@@ -12862,10 +12884,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 08 Jan 2021 16:06:16 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 09 Jan 2021 10:45:21 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 08 Jan 2021 16:06:16 +0000').valueOf();
+      var date = LString('Sat, 09 Jan 2021 10:45:21 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12902,7 +12924,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 08 Jan 2021 16:06:16 +0000',
+      date: 'Sat, 09 Jan 2021 10:45:21 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

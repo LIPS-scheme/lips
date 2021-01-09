@@ -1217,9 +1217,8 @@
 
    Procedure close port that was opened with open-input-file. After that
    it no longer accept reading from that port."
-  (if (not (instanceof lips.InputFilePort port))
-      (throw (new Error (string-append "close-input-port: argument need to be input-port")))
-      (port.close)))
+  (typecheck "close-input-port" port "input-port")
+  (port.close))
 
 ;; -----------------------------------------------------------------------------
 (define (close-output-port port)
@@ -1227,9 +1226,8 @@
 
    Procedure close port that was opened with open-output-file. After that
    it no longer accept write to that port."
-  (if (not (instanceof lips.OutputFilePort port))
-      (throw (new Error (string-append "close-output-port: argument need to be output-port")))
-      (port.close)))
+  (typecheck "close-output-port" port "output-port")
+  (port.close))
 
 ;; -----------------------------------------------------------------------------
 (define (call-with-input-file filename proc)

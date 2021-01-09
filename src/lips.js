@@ -5302,6 +5302,20 @@
             return fn(parser);
         };
     };
+    InputPort.prototype.is_open = function() {
+        return this._with_parser !== null;
+    };
+    InputPort.prototype.close = function() {
+        delete this.__parser__;
+        // make content garbage collected, we assign null,
+        // because the value is in prototype
+        this._with_parser = null;
+        ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(name => {
+            this[name] = function() {
+                throw new Error('input-port: port is closed');
+            };
+        });
+    };
     InputPort.prototype.toString = function() {
         return '#<input-port>';
     };
@@ -5314,6 +5328,20 @@
         typecheck('OutputPort', write, 'function');
         this.write = write;
     }
+    OutputPort.prototype.is_open = function() {
+        return this._closed !== true;
+    };
+    OutputPort.prototype.close = function() {
+        Object.defineProperty(this, '_closed', {
+            get: () => true,
+            set: () => {},
+            configurable: false,
+            enumerable: false
+        });
+        this.write = function() {
+            throw new Error('output-port: port is closed');
+        };
+    };
     OutputPort.prototype.toString = function() {
         return '#<output-port>';
     };
@@ -5357,9 +5385,6 @@
             } else {
                 x = x.valueOf();
             }
-            if (!this._fd) {
-                throw new Error('OutputFilePort: file is closed');
-            }
             root.fs.write(this._fd, x, function() { });
         };
     }
@@ -5371,6 +5396,8 @@
                 if (err) {
                     reject(err);
                 } else {
+                    this._fd = null;
+                    OutputPort.prototype.close.call(this);
                     resolve();
                 }
             });
@@ -5424,17 +5451,6 @@
     }
     InputFilePort.prototype = Object.create(InputStringPort.prototype);
     InputFilePort.prototype.constructor = InputFilePort;
-    InputFilePort.prototype.close = function() {
-        delete this.__parser__;
-        // make content garbage collected, we assign null,
-        // because the value is in prototype
-        this._with_parser = null;
-        ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(name => {
-            this[name] = function() {
-                throw new Error('InputFilePort: port is closed');
-            };
-        });
-    };
     InputFilePort.prototype.toString = function() {
         return `#<input-port ${this.__filename__}>`;
     };
@@ -8448,6 +8464,7 @@
             'character': LCharacter,
             'values': Values,
             'input-port': InputPort,
+            'output-port': OutputPort,
             'number': LNumber,
             'regex': RegExp,
             'syntax': Syntax,
