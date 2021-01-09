@@ -3038,6 +3038,11 @@
        (begin body ...))))
 
 ;; -----------------------------------------------------------------------------
+(define (features)
+  '(srfi-0 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips
+           complex full-unicode ieee-float ratios exact-complex full-numeric-tower))
+
+;; -----------------------------------------------------------------------------
 ;; the numerals can be generated using `make unicode` to get latest version
 ;; of the file use `make zero`
 ;; -----------------------------------------------------------------------------
