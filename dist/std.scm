@@ -3222,9 +3222,25 @@
   lips.eof)
 
 ;; -----------------------------------------------------------------------------
-
 (define (output-port-open? port)
+  "(output-port-open? port)
+
+   Function check if argument is output-port and if you can write to it."
   (and (output-port? port) (port.is_open)))
 
+;; -----------------------------------------------------------------------------
 (define (input-port-open? port)
+  "(input-port-open? port)
+
+   Function check if argument is input-port and if you can read from it."
   (and (input-port? port) (port.is_open)))
+
+;; -----------------------------------------------------------------------------
+(define (flush-output-port port)
+  "(flush-output-port port)
+
+   Functio do nothing, flush is not needed in LIPS in both NodeJS and Browser.
+   The function is added, so it don't throw exception when using R7RS code."
+  (if #f #f))
+
+;; -----------------------------------------------------------------------------
