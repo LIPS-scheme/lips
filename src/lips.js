@@ -2427,7 +2427,7 @@
         if ([nil, eof].includes(obj)) {
             return obj.toString();
         }
-        var types = [LSymbol, LNumber, Macro, Values, InputPort];
+        var types = [LSymbol, LNumber, Macro, Values, InputPort, Environment];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString();
@@ -5618,7 +5618,7 @@
     };
     // -------------------------------------------------------------------------
     Environment.prototype.toString = function() {
-        return '#<env:' + this.__name__ + '>';
+        return '#<environment:' + this.__name__ + '>';
     };
     // -------------------------------------------------------------------------
     Environment.prototype.clone = function() {
