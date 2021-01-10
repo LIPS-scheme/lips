@@ -26,6 +26,7 @@
 * fix parsing chars for Unicode outside of BMP
 * fix when try..catch is promise that rejects and catch throws
 * fix resolving promises when apply function they are not executed in sequentially
+* fix `eval` builtin function to evaluate everything
 
 ## 1.0.0-beta.10
 ### Breaking

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 09 Jan 2021 20:10:08 +0000
+ * build: Sun, 10 Jan 2021 12:32:56 +0000
  */
 (function () {
   'use strict';
@@ -10070,39 +10070,23 @@
       'eval': doc('eval', function (code, env) {
         var _this13 = this;
 
-        typecheck('eval', code, ['symbol', 'pair', 'array']);
         env = env || this;
+        return evaluate(code, {
+          env: env,
+          //dynamic_scope: this,
+          error: function error(e) {
+            var error = global_env.get('error');
+            error.call(_this13, e.message);
 
-        if (code instanceof LSymbol) {
-          return env.get(code);
-        }
-
-        if (code instanceof Pair) {
-          return evaluate(code, {
-            env: env,
-            //dynamic_scope: this,
-            error: function error(e) {
-              var error = global_env.get('error');
-              error.call(_this13, e.message);
-
-              if (e.code) {
-                var stack = e.code.map(function (line, i) {
-                  return "[".concat(i + 1, "]: ").concat(line);
-                }).join('\n');
-                error.call(_this13, stack);
-              }
+            if (e.code) {
+              var stack = e.code.map(function (line, i) {
+                return "[".concat(i + 1, "]: ").concat(line);
+              }).join('\n');
+              error.call(_this13, stack);
             }
-          });
-        }
-
-        if (code instanceof Array) {
-          var _eval = global_env.get('eval');
-
-          return code.reduce(function (_, code) {
-            return _eval(code, env);
-          });
-        }
-      }, "(eval list)\n\n            Function evalute LIPS code as list structure."),
+          }
+        });
+      }, "(eval expr)\n            (eval expr environment)\n\n            Function evalute LIPS Scheme code."),
       // ------------------------------------------------------------------
       lambda: new Macro('lambda', function (code) {
         var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
@@ -12898,10 +12882,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 09 Jan 2021 20:10:08 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 10 Jan 2021 12:32:56 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 09 Jan 2021 20:10:08 +0000').valueOf();
+      var date = LString('Sun, 10 Jan 2021 12:32:56 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12938,7 +12922,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 09 Jan 2021 20:10:08 +0000',
+      date: 'Sun, 10 Jan 2021 12:32:56 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

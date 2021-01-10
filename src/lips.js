@@ -6593,36 +6593,25 @@
             If no parent frame found it return nil.`),
         // ------------------------------------------------------------------
         'eval': doc('eval', function(code, env) {
-            typecheck('eval', code, ['symbol', 'pair', 'array']);
             env = env || this;
-            if (code instanceof LSymbol) {
-                return env.get(code);
-            }
-            if (code instanceof Pair) {
-                return evaluate(code, {
-                    env,
-                    //dynamic_scope: this,
-                    error: e => {
-                        var error = global_env.get('error');
-                        error.call(this, e.message);
-                        if (e.code) {
-                            var stack = e.code.map((line, i) => {
-                                return `[${i + 1}]: ${line}`;
-                            }).join('\n');
-                            error.call(this, stack);
-                        }
+            return evaluate(code, {
+                env,
+                //dynamic_scope: this,
+                error: e => {
+                    var error = global_env.get('error');
+                    error.call(this, e.message);
+                    if (e.code) {
+                        var stack = e.code.map((line, i) => {
+                            return `[${i + 1}]: ${line}`;
+                        }).join('\n');
+                        error.call(this, stack);
                     }
-                });
-            }
-            if (code instanceof Array) {
-                var _eval = global_env.get('eval');
-                return code.reduce((_, code) => {
-                    return _eval(code, env);
-                });
-            }
-        }, `(eval list)
+                }
+            });
+        }, `(eval expr)
+            (eval expr environment)
 
-            Function evalute LIPS code as list structure.`),
+            Function evalute LIPS Scheme code.`),
         // ------------------------------------------------------------------
         lambda: new Macro('lambda', function(code, { dynamic_scope, error } = {}) {
             var self = this;
