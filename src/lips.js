@@ -8067,11 +8067,15 @@
              Function return square root of the number.`),
         // ------------------------------------------------------------------
         '**': doc('**', binaryMathOp(function(a, b) {
-            return LNumber(a).pow(b);
+            a = LNumber(a);
+            b = LNumber(b);
+            if (b.cmp(0) === -1) {
+                return LFloat(1).div(a).pow(b.sub());
+            }
+            return a.pow(b);
         }), `(** a b)
 
-            Function calculate number a to to the power of b. It can throw
-            exception when ** native operator is not supported.`),
+            Function calculate number a to to the power of b.`),
         // ------------------------------------------------------------------
         '1+': doc('1+', singleMathOp(function(number) {
             return LNumber(number).add(1);

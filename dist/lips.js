@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 10 Jan 2021 12:32:56 +0000
+ * build: Sun, 10 Jan 2021 14:52:57 +0000
  */
 (function () {
   'use strict';
@@ -11529,8 +11529,15 @@
       }), "(sqrt number)\n\n             Function return square root of the number."),
       // ------------------------------------------------------------------
       '**': doc('**', binaryMathOp(function (a, b) {
-        return LNumber(a).pow(b);
-      }), "(** a b)\n\n            Function calculate number a to to the power of b. It can throw\n            exception when ** native operator is not supported."),
+        a = LNumber(a);
+        b = LNumber(b);
+
+        if (b.cmp(0) === -1) {
+          return LFloat(1).div(a).pow(b.sub());
+        }
+
+        return a.pow(b);
+      }), "(** a b)\n\n            Function calculate number a to to the power of b."),
       // ------------------------------------------------------------------
       '1+': doc('1+', singleMathOp(function (number) {
         return LNumber(number).add(1);
@@ -12882,10 +12889,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 10 Jan 2021 12:32:56 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 10 Jan 2021 14:52:57 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 10 Jan 2021 12:32:56 +0000').valueOf();
+      var date = LString('Sun, 10 Jan 2021 14:52:57 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12922,7 +12929,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 10 Jan 2021 12:32:56 +0000',
+      date: 'Sun, 10 Jan 2021 14:52:57 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
