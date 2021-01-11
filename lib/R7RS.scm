@@ -274,7 +274,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define (with-exception-handler handler thunk)
-  "(with-exception-handler thunk handler)
+  "(with-exception-handler handler thunk)
 
    Procedure call and return value of thunk function, if exception happen
    it call handler procedure."
