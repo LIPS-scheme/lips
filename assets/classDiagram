@@ -84,7 +84,7 @@ class Pattern {
 }
 
 class LString {
-  string _string
+  string __string__
   number length
   toString(): string
   get(number): string

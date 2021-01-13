@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 13 Jan 2021 18:08:37 +0000
+ * build: Wed, 13 Jan 2021 18:19:32 +0000
  */
 (function () {
   'use strict';
@@ -6822,12 +6822,12 @@
       }
 
       if (string instanceof Array) {
-        this._string = string.map(function (x, i) {
+        this.__string__ = string.map(function (x, i) {
           typecheck('LString', x, 'character', i + 1);
           return x.toString();
         }).join('');
       } else {
-        this._string = string.valueOf();
+        this.__string__ = string.valueOf();
       }
     }
 
@@ -6844,7 +6844,7 @@
             args[_key14] = arguments[_key14];
           }
 
-          return fn.apply(this._string, args);
+          return fn.apply(this.__string__, args);
         };
       };
 
@@ -6868,7 +6868,7 @@
     };
 
     LString.prototype.get = function (n) {
-      return Array.from(this._string)[n];
+      return Array.from(this.__string__)[n];
     };
 
     LString.prototype.cmp = function (string) {
@@ -6886,11 +6886,11 @@
     };
 
     LString.prototype.lower = function () {
-      return LString(this._string.toLowerCase());
+      return LString(this.__string__.toLowerCase());
     };
 
     LString.prototype.upper = function () {
-      return LString(this._string.toUpperCase());
+      return LString(this.__string__.toUpperCase());
     };
 
     LString.prototype.set = function (n, _char7) {
@@ -6901,21 +6901,21 @@
       var string = [];
 
       if (n > 0) {
-        string.push(this._string.substring(0, n));
+        string.push(this.__string__.substring(0, n));
       }
 
       string.push(_char7);
 
-      if (n < this._string.length - 1) {
-        string.push(this._string.substring(n + 1));
+      if (n < this.__string__.length - 1) {
+        string.push(this.__string__.substring(n + 1));
       }
 
-      this._string = string.join('');
+      this.__string__ = string.join('');
     };
 
     Object.defineProperty(LString.prototype, "length", {
       get: function get() {
-        return this._string.length;
+        return this.__string__.length;
       }
     });
 
@@ -6928,8 +6928,8 @@
         chr = chr.toString();
       }
 
-      var len = this._string.length;
-      this._string = new Array(len + 1).join(chr);
+      var len = this.__string__.length;
+      this.__string__ = new Array(len + 1).join(chr);
     }; // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
     // -------------------------------------------------------------------------
@@ -12889,10 +12889,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 13 Jan 2021 18:08:37 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 13 Jan 2021 18:19:32 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 13 Jan 2021 18:08:37 +0000').valueOf();
+      var date = LString('Wed, 13 Jan 2021 18:19:32 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12929,7 +12929,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 13 Jan 2021 18:08:37 +0000',
+      date: 'Wed, 13 Jan 2021 18:19:32 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

@@ -4160,12 +4160,12 @@
             return new LString(string);
         }
         if (string instanceof Array) {
-            this._string = string.map((x, i) => {
+            this.__string__ = string.map((x, i) => {
                 typecheck('LString', x, 'character', i + 1);
                 return x.toString();
             }).join('');
         } else {
-            this._string = string.valueOf();
+            this.__string__ = string.valueOf();
         }
     }
     {
@@ -4174,7 +4174,7 @@
             return !ignore.includes(name);
         });
         const wrap = (fn) => function(...args) {
-            return fn.apply(this._string, args);
+            return fn.apply(this.__string__, args);
         };
         for (let key of _keys) {
             LString.prototype[key] = wrap(String.prototype[key]);
@@ -4184,7 +4184,7 @@
         return x instanceof LString || typeof x === 'string';
     };
     LString.prototype.get = function(n) {
-        return Array.from(this._string)[n];
+        return Array.from(this.__string__)[n];
     };
     LString.prototype.cmp = function(string) {
         typecheck('LStrign::cmp', string, 'string');
@@ -4199,10 +4199,10 @@
         }
     };
     LString.prototype.lower = function() {
-        return LString(this._string.toLowerCase());
+        return LString(this.__string__.toLowerCase());
     };
     LString.prototype.upper = function() {
-        return LString(this._string.toUpperCase());
+        return LString(this.__string__.toUpperCase());
     };
     LString.prototype.set = function(n, char) {
         if (char instanceof LCharacter) {
@@ -4210,17 +4210,17 @@
         }
         var string = [];
         if (n > 0) {
-            string.push(this._string.substring(0, n));
+            string.push(this.__string__.substring(0, n));
         }
         string.push(char);
-        if (n < this._string.length - 1) {
-            string.push(this._string.substring(n + 1));
+        if (n < this.__string__.length - 1) {
+            string.push(this.__string__.substring(n + 1));
         }
-        this._string = string.join('');
+        this.__string__ = string.join('');
     };
     Object.defineProperty(LString.prototype, "length", {
         get: function() {
-            return this._string.length;
+            return this.__string__.length;
         }
     });
     LString.prototype.clone = function() {
@@ -4230,8 +4230,8 @@
         if (chr instanceof LCharacter) {
             chr = chr.toString();
         }
-        var len = this._string.length;
-        this._string = new Array(len + 1).join(chr);
+        var len = this.__string__.length;
+        this.__string__ = new Array(len + 1).join(chr);
     };
     // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
