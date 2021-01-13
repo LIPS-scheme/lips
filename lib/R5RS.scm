@@ -340,8 +340,8 @@
     (or (string=? type "bigint")
         (string=? type "rational")
         (and (string=? type "complex")
-             (exact? n.im)
-             (exact? n.re)))))
+             (exact? n.__im__)
+             (exact? n.__re__)))))
 
 (define (inexact? n)
   "(inexact? n)"
@@ -1102,7 +1102,7 @@
    Return imaginary part of the complex number n."
   (typecheck "imag-part" n "number")
   (if (complex? n)
-      n.im
+      n.__im__
       0))
 
 ;; -----------------------------------------------------------------------------
@@ -1135,7 +1135,7 @@
    Returns angle of the complex number in polar coordinate system."
   (if (not (complex? x))
       (error "angle: number need to be complex")
-      (Math.atan2 x.im x.re)))
+      (Math.atan2 x.__im__ x.__re__)))
 
 ;; -----------------------------------------------------------------------------
 (define (magnitude x)
@@ -1144,7 +1144,7 @@
    Returns magnitude of the complex number in polar coordinate system."
   (if (not (complex? x))
       (error "magnitude: number need to be complex")
-      (sqrt (+ (* x.im x.im) (* x.re x.re)))))
+      (sqrt (+ (* x.__im__ x.__im__) (* x.__re__ x.__re__)))))
 
 ;; -----------------------------------------------------------------------------
 ;; ref: https://stackoverflow.com/a/14675103/387194

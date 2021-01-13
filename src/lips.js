@@ -2764,8 +2764,8 @@
             let type;
             if (x.__type__ === y.__type__) {
                 if (x.__type__ === 'complex') {
-                    type = x.im.__type__ === y.im.__type__ &&
-                        x.re.__type__ === y.re.__type__;
+                    type = x.__im__.__type__ === y.__im__.__type__ &&
+                        x.__re__.__type__ === y.__re__.__type__;
                 } else {
                     type = true;
                 }
@@ -4357,21 +4357,19 @@
             return new LComplex(n, force);
         }
         if (n instanceof LComplex) {
-            return LComplex({ im: n.im, re: n.re });
+            return LComplex({ im: n.__im__, re: n.__re__ });
         }
         if (LNumber.isNumber(n) && force) {
-            n = { im: 0, re: n.valueOf() };
+            if (!force) {
+                return Number(n);
+            }
         } else if (!LNumber.isComplex(n)) {
             throw new Error('Invalid constructor call for LComplex');
         }
         var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
         var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
-        //const [im, re] = LNumber.coerce(n.im, n.re);
-        if (im.cmp(0) === 0 && !force) {
-            return re;
-        }
-        this.im = im;
-        this.re = re;
+        this.__im__ = im;
+        this.__re__ = re;
         this.__type__ = 'complex';
     }
     // -------------------------------------------------------------------------
@@ -4379,9 +4377,9 @@
     LComplex.prototype.constructor = LComplex;
     // -------------------------------------------------------------------------
     LComplex.prototype.toRational = function(n) {
-        if (LNumber.isFloat(this.im) && LNumber.isFloat(this.re)) {
-            const im = LFloat(this.im).toRational(n);
-            const re = LFloat(this.re).toRational(n);
+        if (LNumber.isFloat(this.__im__) && LNumber.isFloat(this.__re__)) {
+            const im = LFloat(this.__im__).toRational(n);
+            const re = LFloat(this.__re__).toRational(n);
             return LComplex({ im, re });
         }
         return this;
@@ -4400,8 +4398,8 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.factor = function() {
         // fix rounding when calculating (/ 1.0 1/10+1/10i)
-        if (this.im instanceof LFloat || this.im instanceof LFloat) {
-            let { re, im } = this;
+        if (this.__im__ instanceof LFloat || this.__im__ instanceof LFloat) {
+            let { __re__: re, __im__: im } = this;
             let x, y;
             if (re instanceof LFloat) {
                 x = re.toRational().mul(re.toRational());
@@ -4415,7 +4413,7 @@
             }
             return x.add(y);
         } else {
-            return this.re.mul(this.re).add(this.im.mul(this.im));
+            return this.__re__.mul(this.__re__).add(this.__im__.mul(this.__im__));
         }
     };
     // -------------------------------------------------------------------------
@@ -4431,15 +4429,15 @@
         let re, im;
         if (r.cmp(0) === 0) {
             re = im = r;
-        } else if (this.re.cmp(0) === 1) {
-            re = LFloat(0.5).mul(r.add(this.re)).sqrt();
-            im = this.im.div(re).div(2);
+        } else if (this.__re__.cmp(0) === 1) {
+            re = LFloat(0.5).mul(r.add(this.__re__)).sqrt();
+            im = this.__im__.div(re).div(2);
         } else {
-            im = LFloat(0.5).mul(r.sub(this.re)).sqrt();
-            if (this.im.cmp(0) === -1) {
+            im = LFloat(0.5).mul(r.sub(this.__re__)).sqrt();
+            if (this.__im__.cmp(0) === -1) {
                 im = im.sub();
             }
-            re = this.im.div(im).div(2);
+            re = this.__im__.div(im).div(2);
         }
         return LComplex({ im, re });
     };
@@ -4451,11 +4449,11 @@
             throw new Error('[LComplex::add] Invalid value');
         }
         const [ a, b ] = this.coerce(n);
-        const conj = LComplex({ re: b.re, im: b.im.sub() });
+        const conj = LComplex({ re: b.__re__, im: b.__im__.sub() });
         const denom = b.factor().valueOf();
         const num = a.mul(conj);
-        const re = num.re.op('/', denom);
-        const im = num.im.op('/', denom);
+        const re = num.__re__.op('/', denom);
+        const im = num.__im__.op('/', denom);
         return LComplex({ re, im });
     };
     // -------------------------------------------------------------------------
@@ -4463,7 +4461,7 @@
         return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
             return {
                 re: a_re.sub(b_re),
-                im: a_im.sum(b_im)
+                im: a_im.add(b_im)
             };
         });
     };
@@ -4484,13 +4482,13 @@
                 n = LNumber(n);
             }
             const im = n.asType(0);
-            n = { im, re: n };
+            n = { __im__: im, __re__: n };
         } else if (!LNumber.isComplex(n)) {
             throw new Error('[LComplex::add] Invalid value');
         }
-        var re = n.re instanceof LNumber ? n.re : this.re.asType(n.re);
-        var im = n.im instanceof LNumber ? n.im : this.im.asType(n.im);
-        var ret = fn(this.re, re, this.im, im);
+        var re = n.__re__ instanceof LNumber ? n.__re__ : this.__re__.asType(n.__re__);
+        var im = n.__im__ instanceof LNumber ? n.__im__ : this.__im__.asType(n.__im__);
+        var ret = fn(this.__re__, re, this.__im__, im);
         if ('im' in ret && 're' in ret) {
             var x = LComplex(ret, true);
             return x;
@@ -4512,12 +4510,12 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.cmp = function(n) {
         const [a, b] = this.coerce(n);
-        const [re_a, re_b] = a.re.coerce(b.re);
+        const [re_a, re_b] = a.__re__.coerce(b.__re__);
         const re_cmp = re_a.cmp(re_b);
         if (re_cmp !== 0) {
             return re_cmp;
         } else {
-            const [im_a, im_b] = a.im.coerce(b.im);
+            const [im_a, im_b] = a.__im__.coerce(b.__im__);
             return im_a.cmp(im_b);
         }
     };
@@ -4527,13 +4525,13 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.toString = function() {
         var result;
-        if (this.re.cmp(0) !== 0) {
-            result = [this.re.toString()];
+        if (this.__re__.cmp(0) !== 0) {
+            result = [this.__re__.toString()];
         } else {
             result = [];
         }
-        result.push(this.im.cmp(0) < 0 ? '-' : '+');
-        result.push(this.im.toString().replace(/^-/, ''));
+        result.push(this.__im__.cmp(0) < 0 ? '-' : '+');
+        result.push(this.__im__.toString().replace(/^-/, ''));
         result.push('i');
         return result.join('');
     };
@@ -5020,8 +5018,8 @@
                 float: complex('float'),
                 rational: complex('rational'),
                 complex: (a, b) => {
-                    const [a_re, b_re] = LNumber.coerce(a.re, b.re);
-                    const [a_im, b_im] = LNumber.coerce(a.im, b.im);
+                    const [a_re, b_re] = LNumber.coerce(a.__re__, b.__re__);
+                    const [a_im, b_im] = LNumber.coerce(a.__im__, b.__im__);
                     return [
                         { im: a_im, re: a_re },
                         { im: b_im, re: b_re }
@@ -5035,12 +5033,12 @@
                 complex: (a, b) => {
                     return [
                         {
-                            im: coerce(a.__type__, b.im.__type__, 0),
-                            re: coerce(a.__type__, b.re.__type__, a)
+                            im: coerce(a.__type__, b.__im__.__type__, 0),
+                            re: coerce(a.__type__, b.__re__.__type__, a)
                         },
                         {
-                            im: coerce(a.__type__, b.im.__type__, b.im),
-                            re: coerce(a.__type__, b.re.__type__, b.re)
+                            im: coerce(a.__type__, b.__im__.__type__, b.__im__),
+                            re: coerce(a.__type__, b.__re__.__type__, b.__re__)
                         }
                     ];
                 }
@@ -5050,11 +5048,11 @@
             return (a, b) => {
                 return [
                     {
-                        im: coerce(type, a.im.__type__, a.im),
-                        re: coerce(type, a.re.__type__, a.re)
+                        im: coerce(type, a.__im__.__type__, a.__im__),
+                        re: coerce(type, a.__re__.__type__, a.__re__)
                     },
                     {
-                        im: coerce(type, a.im.__type__, 0),
+                        im: coerce(type, a.__im__.__type__, 0),
                         re: coerce(type, b.__type__, b)
                     }
                 ];

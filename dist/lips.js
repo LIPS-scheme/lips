@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 13 Jan 2021 18:19:32 +0000
+ * build: Wed, 13 Jan 2021 19:35:12 +0000
  */
 (function () {
   'use strict';
@@ -4936,7 +4936,7 @@
 
         if (x.__type__ === y.__type__) {
           if (x.__type__ === 'complex') {
-            _type3 = x.im.__type__ === y.im.__type__ && x.re.__type__ === y.re.__type__;
+            _type3 = x.__im__.__type__ === y.__im__.__type__ && x.__re__.__type__ === y.__re__.__type__;
           } else {
             _type3 = true;
           }
@@ -7101,29 +7101,23 @@
 
       if (n instanceof LComplex) {
         return LComplex({
-          im: n.im,
-          re: n.re
+          im: n.__im__,
+          re: n.__re__
         });
       }
 
       if (LNumber.isNumber(n) && force) {
-        n = {
-          im: 0,
-          re: n.valueOf()
-        };
+        if (!force) {
+          return Number(n);
+        }
       } else if (!LNumber.isComplex(n)) {
         throw new Error('Invalid constructor call for LComplex');
       }
 
       var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
-      var re = n.re instanceof LNumber ? n.re : LNumber(n.re); //const [im, re] = LNumber.coerce(n.im, n.re);
-
-      if (im.cmp(0) === 0 && !force) {
-        return re;
-      }
-
-      this.im = im;
-      this.re = re;
+      var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
+      this.__im__ = im;
+      this.__re__ = re;
       this.__type__ = 'complex';
     } // -------------------------------------------------------------------------
 
@@ -7132,9 +7126,9 @@
     LComplex.prototype.constructor = LComplex; // -------------------------------------------------------------------------
 
     LComplex.prototype.toRational = function (n) {
-      if (LNumber.isFloat(this.im) && LNumber.isFloat(this.re)) {
-        var im = LFloat(this.im).toRational(n);
-        var re = LFloat(this.re).toRational(n);
+      if (LNumber.isFloat(this.__im__) && LNumber.isFloat(this.__re__)) {
+        var im = LFloat(this.__im__).toRational(n);
+        var re = LFloat(this.__re__).toRational(n);
         return LComplex({
           im: im,
           re: re
@@ -7159,9 +7153,9 @@
 
     LComplex.prototype.factor = function () {
       // fix rounding when calculating (/ 1.0 1/10+1/10i)
-      if (this.im instanceof LFloat || this.im instanceof LFloat) {
-        var re = this.re,
-            im = this.im;
+      if (this.__im__ instanceof LFloat || this.__im__ instanceof LFloat) {
+        var re = this.__re__,
+            im = this.__im__;
         var x, y;
 
         if (re instanceof LFloat) {
@@ -7178,7 +7172,7 @@
 
         return x.add(y);
       } else {
-        return this.re.mul(this.re).add(this.im.mul(this.im));
+        return this.__re__.mul(this.__re__).add(this.__im__.mul(this.__im__));
       }
     }; // -------------------------------------------------------------------------
 
@@ -7197,17 +7191,17 @@
 
       if (r.cmp(0) === 0) {
         re = im = r;
-      } else if (this.re.cmp(0) === 1) {
-        re = LFloat(0.5).mul(r.add(this.re)).sqrt();
-        im = this.im.div(re).div(2);
+      } else if (this.__re__.cmp(0) === 1) {
+        re = LFloat(0.5).mul(r.add(this.__re__)).sqrt();
+        im = this.__im__.div(re).div(2);
       } else {
-        im = LFloat(0.5).mul(r.sub(this.re)).sqrt();
+        im = LFloat(0.5).mul(r.sub(this.__re__)).sqrt();
 
-        if (this.im.cmp(0) === -1) {
+        if (this.__im__.cmp(0) === -1) {
           im = im.sub();
         }
 
-        re = this.im.div(im).div(2);
+        re = this.__im__.div(im).div(2);
       }
 
       return LComplex({
@@ -7233,13 +7227,16 @@
           b = _this$coerce2[1];
 
       var conj = LComplex({
-        re: b.re,
-        im: b.im.sub()
+        re: b.__re__,
+        im: b.__im__.sub()
       });
       var denom = b.factor().valueOf();
       var num = a.mul(conj);
-      var re = num.re.op('/', denom);
-      var im = num.im.op('/', denom);
+
+      var re = num.__re__.op('/', denom);
+
+      var im = num.__im__.op('/', denom);
+
       return LComplex({
         re: re,
         im: im
@@ -7251,7 +7248,7 @@
       return this.complex_op(n, function (a_re, b_re, a_im, b_im) {
         return {
           re: a_re.sub(b_re),
-          im: a_im.sum(b_im)
+          im: a_im.add(b_im)
         };
       });
     }; // -------------------------------------------------------------------------
@@ -7277,16 +7274,16 @@
         var _im = n.asType(0);
 
         n = {
-          im: _im,
-          re: n
+          __im__: _im,
+          __re__: n
         };
       } else if (!LNumber.isComplex(n)) {
         throw new Error('[LComplex::add] Invalid value');
       }
 
-      var re = n.re instanceof LNumber ? n.re : this.re.asType(n.re);
-      var im = n.im instanceof LNumber ? n.im : this.im.asType(n.im);
-      var ret = fn(this.re, re, this.im, im);
+      var re = n.__re__ instanceof LNumber ? n.__re__ : this.__re__.asType(n.__re__);
+      var im = n.__im__ instanceof LNumber ? n.__im__ : this.__im__.asType(n.__im__);
+      var ret = fn(this.__re__, re, this.__im__, im);
 
       if ('im' in ret && 're' in ret) {
         var x = LComplex(ret, true);
@@ -7316,20 +7313,20 @@
           a = _this$coerce4[0],
           b = _this$coerce4[1];
 
-      var _a$re$coerce = a.re.coerce(b.re),
-          _a$re$coerce2 = slicedToArray(_a$re$coerce, 2),
-          re_a = _a$re$coerce2[0],
-          re_b = _a$re$coerce2[1];
+      var _a$__re__$coerce = a.__re__.coerce(b.__re__),
+          _a$__re__$coerce2 = slicedToArray(_a$__re__$coerce, 2),
+          re_a = _a$__re__$coerce2[0],
+          re_b = _a$__re__$coerce2[1];
 
       var re_cmp = re_a.cmp(re_b);
 
       if (re_cmp !== 0) {
         return re_cmp;
       } else {
-        var _a$im$coerce = a.im.coerce(b.im),
-            _a$im$coerce2 = slicedToArray(_a$im$coerce, 2),
-            im_a = _a$im$coerce2[0],
-            im_b = _a$im$coerce2[1];
+        var _a$__im__$coerce = a.__im__.coerce(b.__im__),
+            _a$__im__$coerce2 = slicedToArray(_a$__im__$coerce, 2),
+            im_a = _a$__im__$coerce2[0],
+            im_b = _a$__im__$coerce2[1];
 
         return im_a.cmp(im_b);
       }
@@ -7342,14 +7339,14 @@
     LComplex.prototype.toString = function () {
       var result;
 
-      if (this.re.cmp(0) !== 0) {
-        result = [this.re.toString()];
+      if (this.__re__.cmp(0) !== 0) {
+        result = [this.__re__.toString()];
       } else {
         result = [];
       }
 
-      result.push(this.im.cmp(0) < 0 ? '-' : '+');
-      result.push(this.im.toString().replace(/^-/, ''));
+      result.push(this.__im__.cmp(0) < 0 ? '-' : '+');
+      result.push(this.__im__.toString().replace(/^-/, ''));
       result.push('i');
       return result.join('');
     }; // -------------------------------------------------------------------------
@@ -8017,12 +8014,12 @@
           "float": complex('float'),
           rational: complex('rational'),
           complex: function complex(a, b) {
-            var _LNumber$coerce9 = LNumber.coerce(a.re, b.re),
+            var _LNumber$coerce9 = LNumber.coerce(a.__re__, b.__re__),
                 _LNumber$coerce10 = slicedToArray(_LNumber$coerce9, 2),
                 a_re = _LNumber$coerce10[0],
                 b_re = _LNumber$coerce10[1];
 
-            var _LNumber$coerce11 = LNumber.coerce(a.im, b.im),
+            var _LNumber$coerce11 = LNumber.coerce(a.__im__, b.__im__),
                 _LNumber$coerce12 = slicedToArray(_LNumber$coerce11, 2),
                 a_im = _LNumber$coerce12[0],
                 b_im = _LNumber$coerce12[1];
@@ -8049,11 +8046,11 @@
           rational: i,
           complex: function complex(a, b) {
             return [{
-              im: coerce(a.__type__, b.im.__type__, 0),
-              re: coerce(a.__type__, b.re.__type__, a)
+              im: coerce(a.__type__, b.__im__.__type__, 0),
+              re: coerce(a.__type__, b.__re__.__type__, a)
             }, {
-              im: coerce(a.__type__, b.im.__type__, b.im),
-              re: coerce(a.__type__, b.re.__type__, b.re)
+              im: coerce(a.__type__, b.__im__.__type__, b.__im__),
+              re: coerce(a.__type__, b.__re__.__type__, b.__re__)
             }];
           }
         }
@@ -8062,10 +8059,10 @@
       function complex(type) {
         return function (a, b) {
           return [{
-            im: coerce(type, a.im.__type__, a.im),
-            re: coerce(type, a.re.__type__, a.re)
+            im: coerce(type, a.__im__.__type__, a.__im__),
+            re: coerce(type, a.__re__.__type__, a.__re__)
           }, {
-            im: coerce(type, a.im.__type__, 0),
+            im: coerce(type, a.__im__.__type__, 0),
             re: coerce(type, b.__type__, b)
           }];
         };
@@ -12889,10 +12886,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 13 Jan 2021 18:19:32 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 13 Jan 2021 19:35:12 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 13 Jan 2021 18:19:32 +0000').valueOf();
+      var date = LString('Wed, 13 Jan 2021 19:35:12 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12929,7 +12926,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 13 Jan 2021 18:19:32 +0000',
+      date: 'Wed, 13 Jan 2021 19:35:12 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

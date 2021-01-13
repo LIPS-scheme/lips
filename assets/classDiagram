@@ -22,12 +22,28 @@ Interpreter *-- Environment
 class LRational {
   LNumber num
   LNumber denom
+  pow()
+  abs()
+  cmp()
+  valueOf()
+  toString()
+  mul()
+  div()
+  sub()
+  add()
 }
+
 class LBigInteger {
   BigInt value
+  sqrt()
+  gcd()
+  sqrt()
+
 }
 class LFloat {
   Number value
+  toRational()
+  toString()
 }
 class LNumber {
   Number value
@@ -40,10 +56,29 @@ class LNumber {
   isBN()
   getType()
   coerce()
+  op()
+  sqrt()
+  pow()
+  abs()
+  isOdd()
+  isEven()
+  cmp()
+  
 }
 class LComplex {
- LNumber im
- LNumber re
+  LNumber __im__
+  LNumber __re__
+  sqrt()
+  toRational()
+  add()
+  factor()
+  modulus()
+  sqrt()
+  div()
+  sub()
+  mul()
+  cmp()
+  toString()
 }
 
 class InputPort {
