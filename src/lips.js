@@ -792,19 +792,19 @@
         // prevent exception on unhandled rejecting when using
         // '>(Promise.reject (new Error "zonk")) in REPL
         promise.catch(() => {});
-        this._promise = promise;
+        this.__promise__ = promise;
     }
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.then = function(fn) {
-        return new QuotedPromise(this._promise.then(fn));
+        return new QuotedPromise(this.__promise__.then(fn));
     };
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.catch = function(fn) {
-        return new QuotedPromise(this._promise.catch(fn));
+        return new QuotedPromise(this.__promise__.catch(fn));
     };
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.valueOf = function() {
-        return this._promise;
+        return this.__promise__;
     };
     // ----------------------------------------------------------------------
     // :: Parser macros transformers
@@ -1662,7 +1662,7 @@
     // :: it rely on meta data from tokenizer function
     // ----------------------------------------------------------------------
     function Formatter(code) {
-        this._code = code.replace(/\r/g, '');
+        this.__code__ = code.replace(/\r/g, '');
     }
     // ----------------------------------------------------------------------
     Formatter.defaults = {
@@ -1705,7 +1705,7 @@
     };
     // ----------------------------------------------------------------------
     Formatter.prototype.indent = function indent(options) {
-        var tokens = tokenize(this._code, true);
+        var tokens = tokenize(this.__code__, true);
         return this._indent(tokens, options);
     };
     // ----------------------------------------------------------------------
@@ -1859,7 +1859,7 @@
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
-        var code = this._code.replace(/\n[ \t]*/g, '\n ');
+        var code = this.__code__.replace(/\n[ \t]*/g, '\n ');
         const token = t => {
             if (t.token.match(string_re)) {
                 return t.token;
@@ -1892,7 +1892,7 @@
                 }
             }
         }
-        this._code = tokens.join('');
+        this.__code__ = tokens.join('');
         return this;
     };
     // ----------------------------------------------------------------------
@@ -1905,7 +1905,7 @@
     Formatter.prototype.format = function format(options) {
         // prepare code with single space after newline
         // so we have space token to align
-        var code = this._code.replace(/[ \t]*\n[ \t]*/g, '\n ');
+        var code = this.__code__.replace(/[ \t]*\n[ \t]*/g, '\n ');
         var tokens = tokenize(code, true);
         var settings = this._options(options);
         var indent = 0;
@@ -2928,7 +2928,7 @@
                 var pair = new Pair(car, cdr);
                 return pair;
             }
-            //var new_code = code;
+            //var this.__code__ = code;
             if (code.cdr instanceof Pair && LNumber.isNumber(code.cdr.car)) {
                 return quote((await traverse(code, code.cdr.car.valueOf(), env)).car);
             }
@@ -3678,7 +3678,7 @@
     }
     // ----------------------------------------------------------------------
     function is_function(o) {
-        return typeof o === 'function';
+        return typeof o === 'function' && typeof o.bind === 'function';
     }
     // ----------------------------------------------------------------------
     function is_promise(o) {

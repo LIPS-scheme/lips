@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 10 Jan 2021 14:52:57 +0000
+ * build: Wed, 13 Jan 2021 18:08:37 +0000
  */
 (function () {
   'use strict';
@@ -2166,22 +2166,22 @@
       // prevent exception on unhandled rejecting when using
       // '>(Promise.reject (new Error "zonk")) in REPL
       promise["catch"](function () {});
-      this._promise = promise;
+      this.__promise__ = promise;
     } // ----------------------------------------------------------------------
 
 
     QuotedPromise.prototype.then = function (fn) {
-      return new QuotedPromise(this._promise.then(fn));
+      return new QuotedPromise(this.__promise__.then(fn));
     }; // ----------------------------------------------------------------------
 
 
     QuotedPromise.prototype["catch"] = function (fn) {
-      return new QuotedPromise(this._promise["catch"](fn));
+      return new QuotedPromise(this.__promise__["catch"](fn));
     }; // ----------------------------------------------------------------------
 
 
     QuotedPromise.prototype.valueOf = function () {
-      return this._promise;
+      return this.__promise__;
     }; // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
@@ -3565,7 +3565,7 @@
 
 
     function Formatter(code) {
-      this._code = code.replace(/\r/g, '');
+      this.__code__ = code.replace(/\r/g, '');
     } // ----------------------------------------------------------------------
 
 
@@ -3611,7 +3611,7 @@
 
 
     Formatter.prototype.indent = function indent(options) {
-      var tokens = tokenize(this._code, true);
+      var tokens = tokenize(this.__code__, true);
       return this._indent(tokens, options);
     }; // ----------------------------------------------------------------------
 
@@ -3804,7 +3804,7 @@
     Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, p_o, let_value, p_e, sexp], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, open], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close], [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]]; // ----------------------------------------------------------------------
 
     Formatter.prototype["break"] = function () {
-      var code = this._code.replace(/\n[ \t]*/g, '\n ');
+      var code = this.__code__.replace(/\n[ \t]*/g, '\n ');
 
       var token = function token(t) {
         if (t.token.match(string_re)) {
@@ -3867,7 +3867,7 @@
         }
       }
 
-      this._code = tokens.join('');
+      this.__code__ = tokens.join('');
       return this;
     }; // ----------------------------------------------------------------------
 
@@ -3882,7 +3882,7 @@
     Formatter.prototype.format = function format(options) {
       // prepare code with single space after newline
       // so we have space token to align
-      var code = this._code.replace(/[ \t]*\n[ \t]*/g, '\n ');
+      var code = this.__code__.replace(/[ \t]*\n[ \t]*/g, '\n ');
 
       var tokens = tokenize(code, true);
 
@@ -6187,7 +6187,7 @@
 
 
     function is_function(o) {
-      return typeof o === 'function';
+      return typeof o === 'function' && typeof o.bind === 'function';
     } // ----------------------------------------------------------------------
 
 
@@ -12889,10 +12889,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 10 Jan 2021 14:52:57 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 13 Jan 2021 18:08:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 10 Jan 2021 14:52:57 +0000').valueOf();
+      var date = LString('Wed, 13 Jan 2021 18:08:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12929,7 +12929,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 10 Jan 2021 14:52:57 +0000',
+      date: 'Wed, 13 Jan 2021 18:08:37 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
