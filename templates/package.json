@@ -207,6 +207,7 @@
     "@babel/preset-env": "^7.9.6",
     "@babel/runtime": "^7.9.6",
     "@babel/runtime-corejs2": "^7.9.6",
+    "@mermaid-js/mermaid-cli": "^8.8.4-1",
     "acorn": "^7.1.1",
     "ava": "^3.8.1",
     "babel-preset-env": "^1.7.0",

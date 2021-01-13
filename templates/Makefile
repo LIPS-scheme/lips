@@ -25,11 +25,12 @@ WGET=wget
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
+MERMAID=./node_modules/.bin/mmdc
 NPM=npm
 UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 
-ALL: Makefile  package.json .$(VERSION) dist/lips.js dist/lips.min.js README.md dist/std.scm
+ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.scm
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
@@ -52,6 +53,9 @@ Makefile: templates/Makefile
 
 package.json: templates/package.json .$(VERSION)
 	$(SED) -e "s/{{VER}}/"$(VERSION)"/g" templates/package.json > package.json || true
+
+assets/classDiagram.svg: assets/classDiagram
+	$(MERMAID) -i assets/classDiagram -o assets/classDiagram.svg
 
 README.md: templates/README.md dist/lips.js .$(VERSION)
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \

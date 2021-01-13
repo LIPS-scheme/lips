@@ -1,0 +1,186 @@
+classDiagram
+LNumber <|-- LBigInteger
+LNumber <|-- LRational
+LNumber <|-- LFloat
+LNumber <|-- LComplex
+
+InputPort <|-- InputStringPort
+InputStringPort <|-- InputFilePort
+OutputPort <|-- OutputStringPort
+OutputPort <|-- OutputFilePort
+
+Parser *-- Lexer
+Macro <|-- Syntax
+
+String <|-- LString
+
+Formatter *-- Ahead
+Formatter *-- Pattern
+
+Interpreter *-- Environment
+
+class LRational {
+  LNumber num
+  LNumber denom
+}
+class LBigInteger {
+  BigInt value
+}
+class LFloat {
+  Number value
+}
+class LNumber {
+  Number value
+  isFloat()
+  isNumber()
+  isComplex()
+  isRational()
+  isNative()
+  isBigInteger()
+  isBN()
+  getType()
+  coerce()
+}
+class LComplex {
+ LNumber im
+ LNumber re
+}
+
+class InputPort {
+  Function _read
+  read_char()
+  skip_char()
+  read_line()
+  read()
+  char_ready()
+  is_open()
+  close()
+  toString()
+}
+class OutputPort {
+  is_open()
+  close()
+  toString()
+}
+
+class OutputStringPort {
+  string[] _buffer
+}
+class OutputFilePort {
+  string _filename
+  number _fd
+}
+class Formatter {
+  string __code__
+  indent(object): number
+  exception_shift(token, object): number
+  break(): Formatter
+  format(): string
+}
+
+class Pattern {
+  rule pattern
+  string flag
+}
+
+class LString {
+  string _string
+  number length
+  toString(): string
+  get(number): string
+  cmp(string): boolean
+  lower(): LString
+  upper(): LString
+  set(number, LCharacter)
+  clone(): LString
+  fill(LCharacter)
+}
+class Worker {
+  string url
+  Worker worker
+  rpc(method, params): Promise
+  exec(code, [dynamic]): Promise
+}
+class LCharacter {
+  string __name__ 
+  string __char__
+  toUpperCase(): LCharacter
+  toLowerCase(): LCharacter
+  toString(): string
+  valueOf(): string
+}
+class Lexer {
+  string _input
+}
+class Parser {
+  Lexer __lexer__
+}
+class LSymbol {
+  string __name__
+}
+class Environment {
+  string __name__
+  Map __docs__
+  Object __env__
+  Environment __parent__
+  list(): string[]
+  uset(name)
+  inherit(name, object): Environment
+  doc(name, value = null)
+  get(symbol, options)
+  set(symbol, value, doc = null)
+  constant(name, value)
+  has(string): boolean
+  ref(string): Environment
+  parents(): Environment[]
+  newFrame(Function, args)
+  clone(): Environment
+  merge(): Environment
+  toString(): string
+}
+class Values {
+  any[] __values__
+  valueOf()
+  toString()
+}
+class Macro {
+  string __doc__
+  string __name__
+  boolean __defmacro__
+  Function __fn__
+  defmacro()
+  invoke()
+  toString()
+}
+class Syntax {
+  invoke()
+  toString()
+}
+class QuotedPromise {
+  Promise __promise__
+  then()
+  catch()
+  valueOf()
+}
+class Pair {
+  any car
+  any cdr
+  flatten()
+  length()
+  find(any)
+  clone()
+  lastPair()
+  toArray()
+  toObject()
+  reduce(Function)
+  reverse(): Pair
+  transform(Function)
+  map(Function)
+}
+class Interpreter {
+  Environment __env__
+  get(symbol)
+  set(symbol, value)
+  constant(name, value)
+  exec(code, dynamic = false, env = null)
+}
