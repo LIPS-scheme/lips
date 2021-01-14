@@ -4349,6 +4349,363 @@
         }
     };
     // -------------------------------------------------------------------------
+    LNumber.prototype.gcd = function(b) {
+        // ref: https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
+        var a = this.abs();
+        b = b.abs();
+        if (b.cmp(a) === 1) {
+            var temp = a;
+            a = b;
+            b = temp;
+        }
+        while (true) {
+            a = a.rem(b);
+            if (a.cmp(0) === 0) {
+                return b;
+            }
+            b = b.rem(a);
+            if (b.cmp(0) === 0) {
+                return a;
+            }
+        }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isFloat = function isFloat(n) {
+        return n instanceof LFloat || (Number(n) === n && n % 1 !== 0);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isNumber = function(n) {
+        return n instanceof LNumber ||
+            (!Number.isNaN(n) && LNumber.isNative(n) || LNumber.isBN(n));
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isComplex = function(n) {
+        var ret = n instanceof LComplex ||
+            (LNumber.isNumber(n.im) && LNumber.isNumber(n.re));
+        return ret;
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isRational = function(n) {
+        return n instanceof LRational ||
+            (LNumber.isNumber(n.num) && LNumber.isNumber(n.denom));
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isNative = function(n) {
+        return typeof n === 'bigint' || typeof n === 'number';
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isBigInteger = function(n) {
+        return n instanceof LBigInteger || typeof n === 'bigint' ||
+            LNumber.isBN(n);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isBN = function(n) {
+        return typeof BN !== 'undefined' && n instanceof BN;
+    };
+    // -------------------------------------------------------------------------
+    LNumber.getArgsType = function(a, b) {
+        if (a instanceof LFloat || b instanceof LFloat) {
+            return LFloat;
+        }
+        if (a instanceof LBigInteger || b instanceof LBigInteger) {
+            return LBigInteger;
+        }
+        return LNumber;
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.toString = LNumber.prototype.toJSON = function(radix) {
+        if (radix > 2 && radix < 36) {
+            return this.value.toString(radix);
+        }
+        return this.value.toString();
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.asType = function(n) {
+        var _type = LNumber.getType(this);
+        return LNumber.types[_type] ? LNumber.types[_type](n) : LNumber(n);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isBigNumber = function() {
+        return typeof this.value === 'bigint' ||
+            typeof BN !== 'undefined' && !(this.value instanceof BN);
+    };
+    // -------------------------------------------------------------------------
+    ['floor', 'ceil', 'round'].forEach(fn => {
+        LNumber.prototype[fn] = function() {
+            if (this.float || LNumber.isFloat(this.value)) {
+                return LNumber(Math[fn](this.value));
+            } else {
+                return LNumber(Math[fn](this.valueOf()));
+            }
+        };
+    });
+    // -------------------------------------------------------------------------
+    LNumber.prototype.valueOf = function() {
+        if (LNumber.isNative(this.value)) {
+            return Number(this.value);
+        } else if (LNumber.isBN(this.value)) {
+            return this.value.toNumber();
+        }
+    };
+    // -------------------------------------------------------------------------
+    var matrix = (function() {
+        var i = (a, b) => [a, b];
+        return {
+            bigint: {
+                'bigint': i,
+                'float': (a, b) => [LFloat(a.valueOf(), true), b],
+                'rational': (a, b) => [{ num: a, denom: 1 }, b],
+                'complex': (a, b) => [{ im: 0, re: a }, b]
+            },
+            float: {
+                'bigint': (a, b) => [a, b && LFloat(b.valueOf(), true)],
+                'float': i,
+                'rational': (a, b) => [a, b && LFloat(b.valueOf(), true)],
+                'complex': (a, b) => [{ re: a, im: LFloat(0, true) }, b]
+            },
+            complex: {
+                bigint: complex('bigint'),
+                float: complex('float'),
+                rational: complex('rational'),
+                complex: (a, b) => {
+                    const [a_re, b_re] = LNumber.coerce(a.__re__, b.__re__);
+                    const [a_im, b_im] = LNumber.coerce(a.__im__, b.__im__);
+                    return [
+                        { im: a_im, re: a_re },
+                        { im: b_im, re: b_re }
+                    ];
+                }
+            },
+            rational: {
+                bigint: (a, b) => [a, b && { num: b, denom: 1 }],
+                float: (a, b) => [LFloat(a.valueOf()), b],
+                rational: i,
+                complex: (a, b) => {
+                    return [
+                        {
+                            im: coerce(a.__type__, b.__im__.__type__, 0),
+                            re: coerce(a.__type__, b.__re__.__type__, a)
+                        },
+                        {
+                            im: coerce(a.__type__, b.__im__.__type__, b.__im__),
+                            re: coerce(a.__type__, b.__re__.__type__, b.__re__)
+                        }
+                    ];
+                }
+            }
+        };
+        function complex(type) {
+            return (a, b) => {
+                return [
+                    {
+                        im: coerce(type, a.__im__.__type__, a.__im__),
+                        re: coerce(type, a.__re__.__type__, a.__re__)
+                    },
+                    {
+                        im: coerce(type, a.__im__.__type__, 0),
+                        re: coerce(type, b.__type__, b)
+                    }
+                ];
+            };
+        }
+    })();
+    // -------------------------------------------------------------------------
+    function coerce(type_a, type_b, a) {
+        return matrix[type_a][type_b](a)[0];
+    }
+    // -------------------------------------------------------------------------
+    LNumber.coerce = function(a, b) {
+        function clean(type) {
+            if (type === 'integer') {
+                return 'bigint';
+            }
+            return type;
+        }
+        const a_type = clean(LNumber.getType(a));
+        const b_type = clean(LNumber.getType(b));
+        if (!matrix[a_type]) {
+            throw new Error(`LNumber::coerce unknown lhs type ${a_type}`);
+        } else if (!matrix[a_type][b_type]) {
+            throw new Error(`LNumber::coerce unknown rhs type ${b_type}`);
+        }
+        return matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.coerce = function(n) {
+        if (!(typeof n === 'number' || n instanceof LNumber)) {
+            throw new Error(`LNumber: you can't coerce ${type(n)}`);
+        }
+        if (typeof n === 'number') {
+            n = LNumber(n);
+        }
+        return LNumber.coerce(this, n);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.getType = function(n) {
+        if (n instanceof LNumber) {
+            return n.__type__;
+        }
+        if (LNumber.isFloat(n)) {
+            return 'float';
+        }
+        if (LNumber.isComplex(n)) {
+            return 'complex';
+        }
+        if (LNumber.isRational(n)) {
+            return 'rational';
+        }
+        if (typeof n === 'number') {
+            return 'integer';
+        }
+        if ((typeof BigInt !== 'undefined' && typeof n !== 'bigint') ||
+            (typeof BN !== 'undefined' && !(n instanceof BN))) {
+            return 'bigint';
+        }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isFloat = function() {
+        return !!(LNumber.isFloat(this.value) || this.float);
+    };
+    // -------------------------------------------------------------------------
+    var mapping = {
+        'add': '+',
+        'sub': '-',
+        'mul': '*',
+        'div': '/',
+        'rem': '%',
+        'or': '|',
+        'and': '&',
+        'neg': '~',
+        'shl': '>>',
+        'shr': '<<'
+    };
+    var rev_mapping = {};
+    Object.keys(mapping).forEach((key) => {
+        rev_mapping[mapping[key]] = key;
+        LNumber.prototype[key] = function(n) {
+            return this.op(mapping[key], n);
+        };
+    });
+    // -------------------------------------------------------------------------
+    LNumber._ops = {
+        '*': function(a, b) {
+            return a * b;
+        },
+        '+': function(a, b) {
+            return a + b;
+        },
+        '-': function(a, b) {
+            if (typeof b === 'undefined') {
+                return -a;
+            }
+            return a - b;
+        },
+        '/': function(a, b) {
+            return a / b;
+        },
+        '%': function(a, b) {
+            return a % b;
+        },
+        '|': function(a, b) {
+            return a | b;
+        },
+        '&': function(a, b) {
+            return a & b;
+        },
+        '~': function(a) {
+            return ~a;
+        },
+        '>>': function(a, b) {
+            return a >> b;
+        },
+        '<<': function(a, b) {
+            return a << b;
+        }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.op = function(op, n) {
+        if (typeof n === 'undefined') {
+            return LNumber(LNumber._ops[op](this.valueOf()));
+        }
+        const [a, b] = this.coerce(n);
+        if (a._op) {
+            return a._op(op, b);
+        }
+        return LNumber(LNumber._ops[op](a, b));
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.sqrt = function() {
+        var value = this.valueOf();
+        if (this.cmp(0) < 0) {
+            return LComplex({ re: 0, im: Math.sqrt(-value) });
+        }
+        return new LNumber(Math.sqrt(value));
+    };
+    // -------------------------------------------------------------------------
+    var pow = function(a, b) {
+        var e = typeof a === 'bigint' ? BigInt(1) : 1;
+        return new Array(Number(b)).fill(0).reduce(x => x * a, e);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.pow = function(n) {
+        var value;
+        if (LNumber.isBN(this.value)) {
+            value = this.value.pow(n.value);
+        } else {
+            value = pow(this.value, n.value);
+        }
+        return LNumber(value);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.abs = function() {
+        var value = this.value;
+        if (LNumber.isNative(this.value)) {
+            if (value < 0) {
+                value = -value;
+            }
+        } else if (LNumber.isBN(value)) {
+            value.iabs();
+        }
+        return new LNumber(value);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isOdd = function() {
+        if (LNumber.isNative(this.value)) {
+            if (this.isBigNumber()) {
+                return this.value % BigInt(2) === BigInt(1);
+            }
+            return this.value % 2 === 1;
+        } else if (LNumber.isBN(this.value)) {
+            return this.value.isOdd();
+        }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isEven = function() {
+        return !this.isOdd();
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.cmp = function(n) {
+        const [a, b] = this.coerce(n);
+        function cmp(a, b) {
+            if (a.value < b.value) {
+                return -1;
+            } else if (a.value === b.value) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+        if (a.__type__ === 'bigint') {
+            if (LNumber.isNative(a.value)) {
+                return cmp(a, b);
+            } else if (LNumber.isBN(a.value)) {
+                return this.value.cmp(b.value);
+            }
+        } else if (a instanceof LFloat) {
+            return cmp(a, b);
+        }
+    };
+    // -------------------------------------------------------------------------
     // :: COMPLEX TYPE
     // -------------------------------------------------------------------------
     function LComplex(n, force = false) {
@@ -4898,363 +5255,6 @@
             return LComplex({ re: 0, im: value });
         }
         return value;
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.gcd = function(b) {
-        // ref: https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
-        var a = this.abs();
-        b = b.abs();
-        if (b.cmp(a) === 1) {
-            var temp = a;
-            a = b;
-            b = temp;
-        }
-        while (true) {
-            a = a.rem(b);
-            if (a.cmp(0) === 0) {
-                return b;
-            }
-            b = b.rem(a);
-            if (b.cmp(0) === 0) {
-                return a;
-            }
-        }
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isFloat = function isFloat(n) {
-        return n instanceof LFloat || (Number(n) === n && n % 1 !== 0);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isNumber = function(n) {
-        return n instanceof LNumber ||
-            (!Number.isNaN(n) && LNumber.isNative(n) || LNumber.isBN(n));
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isComplex = function(n) {
-        var ret = n instanceof LComplex ||
-            (LNumber.isNumber(n.im) && LNumber.isNumber(n.re));
-        return ret;
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isRational = function(n) {
-        return n instanceof LRational ||
-            (LNumber.isNumber(n.num) && LNumber.isNumber(n.denom));
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isNative = function(n) {
-        return typeof n === 'bigint' || typeof n === 'number';
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isBigInteger = function(n) {
-        return n instanceof LBigInteger || typeof n === 'bigint' ||
-            LNumber.isBN(n);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isBN = function(n) {
-        return typeof BN !== 'undefined' && n instanceof BN;
-    };
-    // -------------------------------------------------------------------------
-    LNumber.getArgsType = function(a, b) {
-        if (a instanceof LFloat || b instanceof LFloat) {
-            return LFloat;
-        }
-        if (a instanceof LBigInteger || b instanceof LBigInteger) {
-            return LBigInteger;
-        }
-        return LNumber;
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.toString = LNumber.prototype.toJSON = function(radix) {
-        if (radix > 2 && radix < 36) {
-            return this.value.toString(radix);
-        }
-        return this.value.toString();
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.asType = function(n) {
-        var _type = LNumber.getType(this);
-        return LNumber.types[_type] ? LNumber.types[_type](n) : LNumber(n);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.isBigNumber = function() {
-        return typeof this.value === 'bigint' ||
-            typeof BN !== 'undefined' && !(this.value instanceof BN);
-    };
-    // -------------------------------------------------------------------------
-    ['floor', 'ceil', 'round'].forEach(fn => {
-        LNumber.prototype[fn] = function() {
-            if (this.float || LNumber.isFloat(this.value)) {
-                return LNumber(Math[fn](this.value));
-            } else {
-                return LNumber(Math[fn](this.valueOf()));
-            }
-        };
-    });
-    // -------------------------------------------------------------------------
-    LNumber.prototype.valueOf = function() {
-        if (LNumber.isNative(this.value)) {
-            return Number(this.value);
-        } else if (LNumber.isBN(this.value)) {
-            return this.value.toNumber();
-        }
-    };
-    // -------------------------------------------------------------------------
-    var matrix = (function() {
-        var i = (a, b) => [a, b];
-        return {
-            bigint: {
-                'bigint': i,
-                'float': (a, b) => [LFloat(a.valueOf(), true), b],
-                'rational': (a, b) => [{ num: a, denom: 1 }, b],
-                'complex': (a, b) => [{ im: 0, re: a }, b]
-            },
-            float: {
-                'bigint': (a, b) => [a, b && LFloat(b.valueOf(), true)],
-                'float': i,
-                'rational': (a, b) => [a, b && LFloat(b.valueOf(), true)],
-                'complex': (a, b) => [{ re: a, im: LFloat(0, true) }, b]
-            },
-            complex: {
-                bigint: complex('bigint'),
-                float: complex('float'),
-                rational: complex('rational'),
-                complex: (a, b) => {
-                    const [a_re, b_re] = LNumber.coerce(a.__re__, b.__re__);
-                    const [a_im, b_im] = LNumber.coerce(a.__im__, b.__im__);
-                    return [
-                        { im: a_im, re: a_re },
-                        { im: b_im, re: b_re }
-                    ];
-                }
-            },
-            rational: {
-                bigint: (a, b) => [a, b && { num: b, denom: 1 }],
-                float: (a, b) => [LFloat(a.valueOf()), b],
-                rational: i,
-                complex: (a, b) => {
-                    return [
-                        {
-                            im: coerce(a.__type__, b.__im__.__type__, 0),
-                            re: coerce(a.__type__, b.__re__.__type__, a)
-                        },
-                        {
-                            im: coerce(a.__type__, b.__im__.__type__, b.__im__),
-                            re: coerce(a.__type__, b.__re__.__type__, b.__re__)
-                        }
-                    ];
-                }
-            }
-        };
-        function complex(type) {
-            return (a, b) => {
-                return [
-                    {
-                        im: coerce(type, a.__im__.__type__, a.__im__),
-                        re: coerce(type, a.__re__.__type__, a.__re__)
-                    },
-                    {
-                        im: coerce(type, a.__im__.__type__, 0),
-                        re: coerce(type, b.__type__, b)
-                    }
-                ];
-            };
-        }
-    })();
-    // -------------------------------------------------------------------------
-    function coerce(type_a, type_b, a) {
-        return matrix[type_a][type_b](a)[0];
-    }
-    // -------------------------------------------------------------------------
-    LNumber.coerce = function(a, b) {
-        function clean(type) {
-            if (type === 'integer') {
-                return 'bigint';
-            }
-            return type;
-        }
-        const a_type = clean(LNumber.getType(a));
-        const b_type = clean(LNumber.getType(b));
-        if (!matrix[a_type]) {
-            throw new Error(`LNumber::coerce unknown lhs type ${a_type}`);
-        } else if (!matrix[a_type][b_type]) {
-            throw new Error(`LNumber::coerce unknown rhs type ${b_type}`);
-        }
-        return matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.coerce = function(n) {
-        if (!(typeof n === 'number' || n instanceof LNumber)) {
-            throw new Error(`LNumber: you can't coerce ${type(n)}`);
-        }
-        if (typeof n === 'number') {
-            n = LNumber(n);
-        }
-        return LNumber.coerce(this, n);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.getType = function(n) {
-        if (n instanceof LNumber) {
-            return n.__type__;
-        }
-        if (LNumber.isFloat(n)) {
-            return 'float';
-        }
-        if (LNumber.isComplex(n)) {
-            return 'complex';
-        }
-        if (LNumber.isRational(n)) {
-            return 'rational';
-        }
-        if (typeof n === 'number') {
-            return 'integer';
-        }
-        if ((typeof BigInt !== 'undefined' && typeof n !== 'bigint') ||
-            (typeof BN !== 'undefined' && !(n instanceof BN))) {
-            return 'bigint';
-        }
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.isFloat = function() {
-        return !!(LNumber.isFloat(this.value) || this.float);
-    };
-    // -------------------------------------------------------------------------
-    var mapping = {
-        'add': '+',
-        'sub': '-',
-        'mul': '*',
-        'div': '/',
-        'rem': '%',
-        'or': '|',
-        'and': '&',
-        'neg': '~',
-        'shl': '>>',
-        'shr': '<<'
-    };
-    var rev_mapping = {};
-    Object.keys(mapping).forEach((key) => {
-        rev_mapping[mapping[key]] = key;
-        LNumber.prototype[key] = function(n) {
-            return this.op(mapping[key], n);
-        };
-    });
-    // -------------------------------------------------------------------------
-    LNumber._ops = {
-        '*': function(a, b) {
-            return a * b;
-        },
-        '+': function(a, b) {
-            return a + b;
-        },
-        '-': function(a, b) {
-            if (typeof b === 'undefined') {
-                return -a;
-            }
-            return a - b;
-        },
-        '/': function(a, b) {
-            return a / b;
-        },
-        '%': function(a, b) {
-            return a % b;
-        },
-        '|': function(a, b) {
-            return a | b;
-        },
-        '&': function(a, b) {
-            return a & b;
-        },
-        '~': function(a) {
-            return ~a;
-        },
-        '>>': function(a, b) {
-            return a >> b;
-        },
-        '<<': function(a, b) {
-            return a << b;
-        }
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.op = function(op, n) {
-        if (typeof n === 'undefined') {
-            return LNumber(LNumber._ops[op](this.valueOf()));
-        }
-        const [a, b] = this.coerce(n);
-        if (a._op) {
-            return a._op(op, b);
-        }
-        return LNumber(LNumber._ops[op](a, b));
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.sqrt = function() {
-        var value = this.valueOf();
-        if (this.cmp(0) < 0) {
-            return LComplex({ re: 0, im: Math.sqrt(-value) });
-        }
-        return new LNumber(Math.sqrt(value));
-    };
-    // -------------------------------------------------------------------------
-    var pow = function(a, b) {
-        var e = typeof a === 'bigint' ? BigInt(1) : 1;
-        return new Array(Number(b)).fill(0).reduce(x => x * a, e);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.pow = function(n) {
-        var value;
-        if (LNumber.isBN(this.value)) {
-            value = this.value.pow(n.value);
-        } else {
-            value = pow(this.value, n.value);
-        }
-        return LNumber(value);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.abs = function() {
-        var value = this.value;
-        if (LNumber.isNative(this.value)) {
-            if (value < 0) {
-                value = -value;
-            }
-        } else if (LNumber.isBN(value)) {
-            value.iabs();
-        }
-        return new LNumber(value);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.isOdd = function() {
-        if (LNumber.isNative(this.value)) {
-            if (this.isBigNumber()) {
-                return this.value % BigInt(2) === BigInt(1);
-            }
-            return this.value % 2 === 1;
-        } else if (LNumber.isBN(this.value)) {
-            return this.value.isOdd();
-        }
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.isEven = function() {
-        return !this.isOdd();
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.cmp = function(n) {
-        const [a, b] = this.coerce(n);
-        function cmp(a, b) {
-            if (a.value < b.value) {
-                return -1;
-            } else if (a.value === b.value) {
-                return 0;
-            } else {
-                return 1;
-            }
-        }
-        if (a.__type__ === 'bigint') {
-            if (LNumber.isNative(a.value)) {
-                return cmp(a, b);
-            } else if (LNumber.isBN(a.value)) {
-                return this.value.cmp(b.value);
-            }
-        } else if (a instanceof LFloat) {
-            return cmp(a, b);
-        }
     };
     // -------------------------------------------------------------------------
     // :: Port abstration - read should be a function that return next line
