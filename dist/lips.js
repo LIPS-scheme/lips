@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 13 Jan 2021 19:35:12 +0000
+ * build: Thu, 14 Jan 2021 07:46:00 +0000
  */
 (function () {
   'use strict';
@@ -7333,7 +7333,11 @@
     }; // -------------------------------------------------------------------------
 
 
-    LComplex.prototype.valueOf = function () {}; // -------------------------------------------------------------------------
+    LComplex.prototype.valueOf = function () {
+      return [this.__re__, this.__im__].map(function (x) {
+        return x.valueOf();
+      });
+    }; // -------------------------------------------------------------------------
 
 
     LComplex.prototype.toString = function () {
@@ -12886,10 +12890,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 13 Jan 2021 19:35:12 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 14 Jan 2021 07:46:00 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 13 Jan 2021 19:35:12 +0000').valueOf();
+      var date = LString('Thu, 14 Jan 2021 07:46:00 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12926,7 +12930,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 13 Jan 2021 19:35:12 +0000',
+      date: 'Thu, 14 Jan 2021 07:46:00 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

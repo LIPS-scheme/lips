@@ -4521,6 +4521,7 @@
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.valueOf = function() {
+        return [this.__re__, this.__im__].map(x => x.valueOf());
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.toString = function() {
