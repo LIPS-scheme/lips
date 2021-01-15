@@ -892,11 +892,36 @@
     */
     class Lexer {
         constructor(input, { whitespace = false } = {}) {
-            this._input = input.replace(/\r/g, '');
+            Object.defineProperty(this, '__input__', {
+                value: input.replace(/\r/g, ''),
+                enumerable: true
+            });
+            var internals = {};
+            [
+                '_i', '_whitespace', '_col', '_newline', '_line',
+                '_state', '_next', '_token', '_prev_char'
+            ].forEach(name => {
+                Object.defineProperty(this, name, {
+                    configurable: false,
+                    enumerable: false,
+                    get() {
+                        return internals[name];
+                    },
+                    set(value) {
+                        internals[name] = value;
+                    }
+                });
+            });
             this._whitespace = whitespace;
             this._i = this._line = this._col = this._newline = 0;
             this._state = this._next = this._token = null;
             this._prev_char = '';
+        }
+        get(name) {
+            return this.__internal[name];
+        }
+        set(name, value) {
+            this.__internal[name] = value;
         }
         token(meta = false) {
             if (meta) {
@@ -914,7 +939,7 @@
             return this._token;
         }
         peek(meta = false) {
-            if (this._i >= this._input.length) {
+            if (this._i >= this.__input__.length) {
                 return eof;
             }
             if (this._token) {
@@ -922,7 +947,7 @@
             }
             var found = this.next_token();
             if (found) {
-                this._token = this._input.substring(this._i, this._next);
+                this._token = this.__input__.substring(this._i, this._next);
                 return this.token(meta);
             }
             return eof;
@@ -934,27 +959,27 @@
             }
         }
         read_line() {
-            if (this._i >= this._input.length) {
+            if (this._i >= this.__input__.length) {
                 return eof;
             }
-            for (let i = this._i, len = this._input.length; i < len; ++i) {
-                var char = this._input[i];
+            for (let i = this._i, len = this.__input__.length; i < len; ++i) {
+                var char = this.__input__[i];
                 if (char === '\n') {
-                    const line = this._input.substring(this._i, i);
+                    const line = this.__input__.substring(this._i, i);
                     this._i = i + 1;
                     ++this._line;
                     return line;
                 }
             }
             const i = this._i;
-            this._i = this._input.length;
-            return this._input.substring(i);
+            this._i = this.__input__.length;
+            return this.__input__.substring(i);
         }
         peek_char() {
-            if (this._i >= this._input.length) {
+            if (this._i >= this.__input__.length) {
                 return eof;
             }
-            return LCharacter(this._input[this._i]);
+            return LCharacter(this.__input__[this._i]);
         }
         read_char() {
             const char = this.peek_char();
@@ -962,7 +987,7 @@
             return char;
         }
         skip_char() {
-            if (this._i < this._input.length) {
+            if (this._i < this.__input__.length) {
                 ++this._i;
                 this._token = null;
             }
@@ -987,15 +1012,15 @@
             return true;
         }
         next_token() {
-            if (this._i >= this._input.length) {
+            if (this._i >= this.__input__.length) {
                 return false;
             }
             var start = true;
             loop:
-            for (let i = this._i, len = this._input.length; i < len; ++i) {
-                var char = this._input[i];
-                var prev_char = this._input[i - 1] || '';
-                var next_char = this._input[i + 1] || '';
+            for (let i = this._i, len = this.__input__.length; i < len; ++i) {
+                var char = this.__input__[i];
+                var prev_char = this.__input__[i - 1] || '';
+                var next_char = this.__input__[i + 1] || '';
                 if (char === '\n') {
                     ++this._line;
                     const newline = this._newline;
@@ -1045,7 +1070,7 @@
                     continue loop;
                 }
                 // no rule for token
-                var line = this._input.split('\n')[this._line];
+                var line = this.__input__.split('\n')[this._line];
                 throw new Error(`Invalid Syntax at line ${this._line}\n${line}`);
             }
         }

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 14 Jan 2021 07:59:20 +0000
+ * build: Fri, 15 Jan 2021 14:56:06 +0000
  */
 (function () {
   'use strict';
@@ -2292,13 +2292,31 @@
 
     var Lexer = /*#__PURE__*/function () {
       function Lexer(input) {
+        var _this3 = this;
+
         var _ref7 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             _ref7$whitespace = _ref7.whitespace,
             whitespace = _ref7$whitespace === void 0 ? false : _ref7$whitespace;
 
         classCallCheck(this, Lexer);
 
-        this._input = input.replace(/\r/g, '');
+        Object.defineProperty(this, '__input__', {
+          value: input.replace(/\r/g, ''),
+          enumerable: true
+        });
+        var internals = {};
+        ['_i', '_whitespace', '_col', '_newline', '_line', '_state', '_next', '_token', '_prev_char'].forEach(function (name) {
+          Object.defineProperty(_this3, name, {
+            configurable: false,
+            enumerable: false,
+            get: function get() {
+              return internals[name];
+            },
+            set: function set(value) {
+              internals[name] = value;
+            }
+          });
+        });
         this._whitespace = whitespace;
         this._i = this._line = this._col = this._newline = 0;
         this._state = this._next = this._token = null;
@@ -2306,6 +2324,16 @@
       }
 
       createClass(Lexer, [{
+        key: "get",
+        value: function get(name) {
+          return this.__internal[name];
+        }
+      }, {
+        key: "set",
+        value: function set(name, value) {
+          this.__internal[name] = value;
+        }
+      }, {
         key: "token",
         value: function token() {
           var meta = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : false;
@@ -2332,7 +2360,7 @@
         value: function peek() {
           var meta = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : false;
 
-          if (this._i >= this._input.length) {
+          if (this._i >= this.__input__.length) {
             return eof;
           }
 
@@ -2343,7 +2371,7 @@
           var found = this.next_token();
 
           if (found) {
-            this._token = this._input.substring(this._i, this._next);
+            this._token = this.__input__.substring(this._i, this._next);
             return this.token(meta);
           }
 
@@ -2360,15 +2388,15 @@
       }, {
         key: "read_line",
         value: function read_line() {
-          if (this._i >= this._input.length) {
+          if (this._i >= this.__input__.length) {
             return eof;
           }
 
-          for (var _i2 = this._i, len = this._input.length; _i2 < len; ++_i2) {
-            var _char2 = this._input[_i2];
+          for (var _i2 = this._i, len = this.__input__.length; _i2 < len; ++_i2) {
+            var _char2 = this.__input__[_i2];
 
             if (_char2 === '\n') {
-              var line = this._input.substring(this._i, _i2);
+              var line = this.__input__.substring(this._i, _i2);
 
               this._i = _i2 + 1;
               ++this._line;
@@ -2377,17 +2405,17 @@
           }
 
           var i = this._i;
-          this._i = this._input.length;
-          return this._input.substring(i);
+          this._i = this.__input__.length;
+          return this.__input__.substring(i);
         }
       }, {
         key: "peek_char",
         value: function peek_char() {
-          if (this._i >= this._input.length) {
+          if (this._i >= this.__input__.length) {
             return eof;
           }
 
-          return LCharacter(this._input[this._i]);
+          return LCharacter(this.__input__[this._i]);
         }
       }, {
         key: "read_char",
@@ -2400,7 +2428,7 @@
       }, {
         key: "skip_char",
         value: function skip_char() {
-          if (this._i < this._input.length) {
+          if (this._i < this.__input__.length) {
             ++this._i;
             this._token = null;
           }
@@ -2444,16 +2472,16 @@
       }, {
         key: "next_token",
         value: function next_token() {
-          if (this._i >= this._input.length) {
+          if (this._i >= this.__input__.length) {
             return false;
           }
 
           var start = true;
 
-          loop: for (var i = this._i, len = this._input.length; i < len; ++i) {
-            var _char5 = this._input[i];
-            var prev_char = this._input[i - 1] || '';
-            var next_char = this._input[i + 1] || '';
+          loop: for (var i = this._i, len = this.__input__.length; i < len; ++i) {
+            var _char5 = this.__input__[i];
+            var prev_char = this.__input__[i - 1] || '';
+            var next_char = this.__input__[i + 1] || '';
 
             if (_char5 === '\n') {
               ++this._line;
@@ -2528,7 +2556,7 @@
             } // no rule for token
 
 
-            var line = this._input.split('\n')[this._line];
+            var line = this.__input__.split('\n')[this._line];
 
             throw new Error("Invalid Syntax at line ".concat(this._line, "\n").concat(line));
           }
@@ -6632,7 +6660,7 @@
 
 
     function pipe() {
-      var _this3 = this;
+      var _this4 = this;
 
       for (var _len6 = arguments.length, fns = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
         fns[_key6] = arguments[_key6];
@@ -6647,7 +6675,7 @@
         }
 
         return fns.reduce(function (args, f) {
-          return [f.apply(_this3, args)];
+          return [f.apply(_this4, args)];
         }, args)[0];
       };
     } // -------------------------------------------------------------------------
@@ -8323,7 +8351,7 @@
 
 
     function InputPort(read) {
-      var _this4 = this;
+      var _this5 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputPort) || typeof this === 'undefined') {
         return new InputPort(read);
@@ -8337,22 +8365,22 @@
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                if (_this4.char_ready()) {
+                if (_this5.char_ready()) {
                   _context9.next = 5;
                   break;
                 }
 
                 _context9.next = 3;
-                return _this4._read();
+                return _this5._read();
 
               case 3:
                 line = _context9.sent;
-                _this4.__parser__ = new Parser(line, {
-                  env: _this4
+                _this5.__parser__ = new Parser(line, {
+                  env: _this5
                 });
 
               case 5:
-                return _context9.abrupt("return", _this4.__parser__);
+                return _context9.abrupt("return", _this5.__parser__);
 
               case 6:
               case "end":
@@ -8376,7 +8404,7 @@
         return parser.__lexer__.read_char();
       });
       this.skip_char = this._with_parser(function () {
-        _this4.__parser__.__lexer__.skip_char();
+        _this5.__parser__.__lexer__.skip_char();
       });
       this.read_char = this._with_parser( /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10() {
         var _char8;
@@ -8386,12 +8414,12 @@
             switch (_context10.prev = _context10.next) {
               case 0:
                 _context10.next = 2;
-                return _this4.peek_char();
+                return _this5.peek_char();
 
               case 2:
                 _char8 = _context10.sent;
 
-                _this4.skip_char();
+                _this5.skip_char();
 
                 return _context10.abrupt("return", _char8);
 
@@ -8436,14 +8464,14 @@
     };
 
     InputPort.prototype.close = function () {
-      var _this5 = this;
+      var _this6 = this;
 
       delete this.__parser__; // make content garbage collected, we assign null,
       // because the value is in prototype
 
       this._with_parser = null;
       ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
-        _this5[name] = function () {
+        _this6[name] = function () {
           throw new Error('input-port: port is closed');
         };
       });
@@ -8492,7 +8520,7 @@
 
 
     function OutputStringPort(toString) {
-      var _this6 = this;
+      var _this7 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
         return new OutputStringPort(toString);
@@ -8508,7 +8536,7 @@
           x = x.valueOf();
         }
 
-        _this6._buffer.push(x);
+        _this7._buffer.push(x);
       };
     }
 
@@ -8527,7 +8555,7 @@
     OutputStringPort.prototype.constructor = OutputStringPort; // -------------------------------------------------------------------------
 
     function OutputFilePort(filename, fd) {
-      var _this7 = this;
+      var _this8 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) || typeof this === 'undefined') {
         return new OutputFilePort(filename, fd);
@@ -8544,7 +8572,7 @@
           x = x.valueOf();
         }
 
-        root.fs.write(_this7._fd, x, function () {});
+        root.fs.write(_this8._fd, x, function () {});
       };
     }
 
@@ -8552,15 +8580,15 @@
     OutputFilePort.prototype.constructor = OutputFilePort;
 
     OutputFilePort.prototype.close = function () {
-      var _this8 = this;
+      var _this9 = this;
 
       return new Promise(function (resolve, reject) {
-        root.fs.close(_this8._fd, function (err) {
+        root.fs.close(_this9._fd, function (err) {
           if (err) {
             reject(err);
           } else {
-            _this8._fd = null;
-            OutputPort.prototype.close.call(_this8);
+            _this9._fd = null;
+            OutputPort.prototype.close.call(_this9);
             resolve();
           }
         });
@@ -8573,7 +8601,7 @@
 
 
     function InputStringPort(string, env) {
-      var _this9 = this;
+      var _this10 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
         return new InputStringPort(string);
@@ -8583,13 +8611,13 @@
       env = env || global_env;
       string = string.valueOf();
       this._with_parser = this._with_init_parser.bind(this, function () {
-        if (!_this9.__parser__) {
-          _this9.__parser__ = new Parser(string, {
+        if (!_this10.__parser__) {
+          _this10.__parser__ = new Parser(string, {
             env: env
           });
         }
 
-        return _this9.__parser__;
+        return _this10.__parser__;
       });
       this.read = this._with_parser(function (parser) {
         return parser.read_object();
@@ -8861,13 +8889,13 @@
 
 
     Environment.prototype.clone = function () {
-      var _this10 = this;
+      var _this11 = this;
 
       // duplicate refs
       var env = {}; // TODO: duplicated Symbols
 
       Object.keys(this.__env__).forEach(function (key) {
-        env[key] = _this10.__env__[key];
+        env[key] = _this11.__env__[key];
       });
       return new Environment(env, this.__parent__, this.__name__);
     }; // -------------------------------------------------------------------------
@@ -9024,7 +9052,7 @@
 
 
     Environment.prototype.constant = function (name, value) {
-      var _this11 = this;
+      var _this12 = this;
 
       if (this.__env__.hasOwnProperty(name)) {
         throw new Error("Environment::constant: ".concat(name, " already exists"));
@@ -9033,7 +9061,7 @@
       if (arguments.length === 1 && is_plain_object(arguments[0])) {
         var obj = arguments[0];
         Object.keys(obj).forEach(function (key) {
-          _this11.constant(name, obj[key]);
+          _this12.constant(name, obj[key]);
         });
       } else {
         Object.defineProperty(this.__env__, name, {
@@ -9491,7 +9519,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this12 = this;
+        var _this13 = this;
 
         var _ref24 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref24.dynamic_scope,
@@ -9566,7 +9594,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this12.get(name, {
+              var obj = _this13.get(name, {
                 throwError: false
               });
 
@@ -10069,7 +10097,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this13 = this;
+        var _this14 = this;
 
         env = env || this;
         return evaluate(code, {
@@ -10077,13 +10105,13 @@
           //dynamic_scope: this,
           error: function error(e) {
             var error = global_env.get('error');
-            error.call(_this13, e.message);
+            error.call(_this14, e.message);
 
             if (e.code) {
               var stack = e.code.map(function (line, i) {
                 return "[".concat(i + 1, "]: ").concat(line);
               }).join('\n');
-              error.call(_this13, stack);
+              error.call(_this14, stack);
             }
           }
         });
@@ -11138,7 +11166,7 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref34) {
-        var _this14 = this;
+        var _this15 = this;
 
         var dynamic_scope = _ref34.dynamic_scope,
             _error = _ref34.error;
@@ -11172,9 +11200,9 @@
           }
 
           var args = {
-            env: _this14,
+            env: _this15,
             error: function error(e) {
-              var env = _this14.inherit('try');
+              var env = _this15.inherit('try');
 
               if (catch_clause) {
                 env.set(catch_clause.cdr.car.car, e);
@@ -11184,7 +11212,7 @@
                 };
 
                 if (dynamic_scope) {
-                  args.dynamic_scope = _this14;
+                  args.dynamic_scope = _this15;
                 }
 
                 unpromise(evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
@@ -11197,7 +11225,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this14;
+            args.dynamic_scope = _this15;
           }
 
           var result = evaluate(code.car, args);
@@ -11257,7 +11285,7 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this15 = this;
+        var _this16 = this;
 
         for (var _len28 = arguments.length, lists = new Array(_len28 > 1 ? _len28 - 1 : 0), _key28 = 1; _key28 < _len28; _key28++) {
           lists[_key28 - 1] = arguments[_key28];
@@ -11268,7 +11296,7 @@
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this15, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this16, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -11290,7 +11318,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this15, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this16, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -11386,7 +11414,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this16 = this;
+        var _this17 = this;
 
         for (var _len31 = arguments.length, lists = new Array(_len31 > 3 ? _len31 - 3 : 0), _key32 = 3; _key32 < _len31; _key32++) {
           lists[_key32 - 3] = arguments[_key32];
@@ -11406,7 +11434,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this16, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this17, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -12890,10 +12918,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 14 Jan 2021 07:59:20 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 15 Jan 2021 14:56:06 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 14 Jan 2021 07:59:20 +0000').valueOf();
+      var date = LString('Fri, 15 Jan 2021 14:56:06 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12930,7 +12958,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 14 Jan 2021 07:59:20 +0000',
+      date: 'Fri, 15 Jan 2021 14:56:06 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

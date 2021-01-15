@@ -377,10 +377,6 @@
                                           (not (hidden.includes name))))))))
         (append (array->list names) (dir (Object.getPrototypeOf obj) true)))))
 
-
-
-
-
 ;; ---------------------------------------------------------------------------------------
 (define (tree-map f tree)
   "(tree-map fn tree)
