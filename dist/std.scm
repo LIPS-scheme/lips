@@ -349,15 +349,36 @@
         obj)))
 
 ;; -----------------------------------------------------------------------------
-(define (dir obj)
+(define (%hidden-props obj)
+  "(%hidden-props obj)
+  
+   Function return hidden names of an object, for ES6 class prototype
+   it return all methods since they are indistinguishable from hidden property
+   created using defineProperty."
+  (let* ((descriptors (Object.getOwnPropertyDescriptors obj))
+         (names (Object.keys descriptors)))
+    (--> names (filter (lambda (name)
+                          (let ((descriptor (. descriptors name)))
+                            (eq? descriptor.enumerable false)))))))
+
+;; -----------------------------------------------------------------------------
+(define (dir obj . rest)
   "(dir obj)
 
    Function return all props on the object including those in prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
       nil
-      (let ((names (Object.getOwnPropertyNames obj))
-            (proto (Object.getPrototypeOf obj)))
-        (append (array->list names) (dir proto)))))
+      (let ((proto (if (null? rest) false (car rest)))
+            (names (Object.getOwnPropertyNames obj)))
+        (if (not proto)
+            (let ((hidden (%hidden-props obj)))
+              (set! names (--> names
+                               (filter (lambda (name)
+                                          (not (hidden.includes name))))))))
+        (append (array->list names) (dir (Object.getPrototypeOf obj) true)))))
+
+
+
 
 
 ;; ---------------------------------------------------------------------------------------
