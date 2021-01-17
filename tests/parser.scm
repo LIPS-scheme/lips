@@ -48,6 +48,7 @@
          (t.is (to.throw (read "\"\\x9\"")) #t)
          (t.is "\uFFFF" "￿")
          (t.is "\x9;\x9;" "\t\t")
+         (t.is (repr '|foo bar|) "foo bar")
          (t.is '|\x9;\x9;|  '|\t\t|)))
 
 (test "parser: character literals"

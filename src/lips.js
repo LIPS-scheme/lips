@@ -40,6 +40,7 @@
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
 /* global define, jQuery, BigInt, Map, Set, Symbol, importScripts */
+
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -1153,7 +1154,7 @@
         [/;/, /#/, null, Lexer.i_comment, null],
 
         // block symbols
-        [/\|/, Lexer.boundary, null, null, Lexer.b_symbol],
+        [/\|/, null, null, null, Lexer.b_symbol],
         [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol],
         [/\|/, null, Lexer.boundary, Lexer.b_symbol, null],
 

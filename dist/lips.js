@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 15 Jan 2021 14:56:06 +0000
+ * build: Sun, 17 Jan 2021 11:12:45 +0000
  */
 (function () {
   'use strict';
@@ -2635,7 +2635,7 @@
     [/;/, /^$|[^#]/, null, null, Lexer.comment], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment], // block comment
     [/#/, null, /\|/, null, Lexer.b_comment], [/\s/, null, null, Lexer.b_comment, Lexer.b_comment], [/#/, /\|/, null, Lexer.b_comment, null], // inline commentss
     [/#/, null, /;/, null, Lexer.i_comment], [/;/, /#/, null, Lexer.i_comment, null], // block symbols
-    [/\|/, Lexer.boundary, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], // hash special symbols, lexer don't need to distingiush those
+    [/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], // hash special symbols, lexer don't need to distingiush those
     // we only care if it's not pick up by vectors literals
     [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
     [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null], // brackets
@@ -12918,10 +12918,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 15 Jan 2021 14:56:06 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 17 Jan 2021 11:12:45 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 15 Jan 2021 14:56:06 +0000').valueOf();
+      var date = LString('Sun, 17 Jan 2021 11:12:45 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12958,7 +12958,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 15 Jan 2021 14:56:06 +0000',
+      date: 'Sun, 17 Jan 2021 11:12:45 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
