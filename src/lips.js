@@ -1380,10 +1380,9 @@
                             return extension.call(this.__env__, object);
                         } else if (object instanceof Pair) {
                             return extension.apply(this.__env__, object.toArray(false));
-                        } else {
-                            throw new Error('Parser: Invalid parser extension ' +
-                                            `invocation ${special.symbol}`);
                         }
+                        throw new Error('Parser: Invalid parser extension ' +
+                                        `invocation ${special.symbol}`);
                     }
                 }
                 if (is_literal(token)) {
@@ -1413,10 +1412,8 @@
                     if (result instanceof Pair || result instanceof LSymbol) {
                         return Pair.fromArray([LSymbol('quote'), result]);
                     }
-                } else {
-                    throw new Error(`Parser: invlid parser extension: ${special.symbol}`);
                 }
-                return result;
+                throw new Error(`Parser: invlid parser extension: ${special.symbol}`);
             }
             if (this.is_open(token)) {
                 this.skip();

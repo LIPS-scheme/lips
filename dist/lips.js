@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 Jan 2021 13:05:40 +0000
+ * build: Sun, 17 Jan 2021 13:43:05 +0000
  */
 (function () {
   'use strict';
@@ -3048,7 +3048,7 @@
 
                   case 5:
                     if (!this.special(token)) {
-                      _context5.next = 37;
+                      _context5.next = 32;
                       break;
                     }
 
@@ -3069,14 +3069,14 @@
                     object = _context5.sent;
 
                     if (bultin) {
-                      _context5.next = 24;
+                      _context5.next = 22;
                       break;
                     }
 
                     extension = this.__env__.get(special.symbol);
 
                     if (!(typeof extension === 'function')) {
-                      _context5.next = 24;
+                      _context5.next = 22;
                       break;
                     }
 
@@ -3089,16 +3089,16 @@
 
                   case 19:
                     if (!(object instanceof Pair)) {
-                      _context5.next = 23;
+                      _context5.next = 21;
                       break;
                     }
 
                     return _context5.abrupt("return", extension.apply(this.__env__, object.toArray(false)));
 
-                  case 23:
+                  case 21:
                     throw new Error('Parser: Invalid parser extension ' + "invocation ".concat(special.symbol));
 
-                  case 24:
+                  case 22:
                     if (is_literal(token)) {
                       expr = new Pair(special.symbol, new Pair(object, nil));
                     } else {
@@ -3107,62 +3107,55 @@
 
 
                     if (!bultin) {
-                      _context5.next = 27;
+                      _context5.next = 25;
                       break;
                     }
 
                     return _context5.abrupt("return", expr);
 
-                  case 27:
+                  case 25:
                     if (!(extension instanceof Macro)) {
-                      _context5.next = 35;
+                      _context5.next = 31;
                       break;
                     }
 
-                    _context5.next = 30;
+                    _context5.next = 28;
                     return this._eval(expr);
 
-                  case 30:
+                  case 28:
                     result = _context5.sent;
 
                     if (!(result instanceof Pair || result instanceof LSymbol)) {
-                      _context5.next = 33;
+                      _context5.next = 31;
                       break;
                     }
 
                     return _context5.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
 
-                  case 33:
-                    _context5.next = 36;
-                    break;
-
-                  case 35:
+                  case 31:
                     throw new Error("Parser: invlid parser extension: ".concat(special.symbol));
 
-                  case 36:
-                    return _context5.abrupt("return", result);
-
-                  case 37:
+                  case 32:
                     if (!this.is_open(token)) {
-                      _context5.next = 44;
+                      _context5.next = 39;
                       break;
                     }
 
                     this.skip();
-                    _context5.next = 41;
+                    _context5.next = 36;
                     return this.read_list();
+
+                  case 36:
+                    return _context5.abrupt("return", _context5.sent);
+
+                  case 39:
+                    _context5.next = 41;
+                    return this.read_value();
 
                   case 41:
                     return _context5.abrupt("return", _context5.sent);
 
-                  case 44:
-                    _context5.next = 46;
-                    return this.read_value();
-
-                  case 46:
-                    return _context5.abrupt("return", _context5.sent);
-
-                  case 47:
+                  case 42:
                   case "end":
                     return _context5.stop();
                 }
@@ -12992,10 +12985,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 17 Jan 2021 13:05:40 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 17 Jan 2021 13:43:05 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 17 Jan 2021 13:05:40 +0000').valueOf();
+      var date = LString('Sun, 17 Jan 2021 13:43:05 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13032,7 +13025,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 17 Jan 2021 13:05:40 +0000',
+      date: 'Sun, 17 Jan 2021 13:43:05 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
