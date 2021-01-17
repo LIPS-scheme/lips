@@ -1412,8 +1412,10 @@
                     if (result instanceof Pair || result instanceof LSymbol) {
                         return Pair.fromArray([LSymbol('quote'), result]);
                     }
+                    return result;
+                } else {
+                    throw new Error(`Parser: invlid parser extension: ${special.symbol}`);
                 }
-                throw new Error(`Parser: invlid parser extension: ${special.symbol}`);
             }
             if (this.is_open(token)) {
                 this.skip();
