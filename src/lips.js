@@ -1350,16 +1350,42 @@
         is_comment(token) {
             return token.match(/^;/) || (token.match(/^#\|/) && token.match(/\|#$/));
         }
+        _eval(code) {
+            return evaluate(code, { env: this.__env__, error: (e) => {
+                throw e;
+            } });
+        }
         async read_object() {
             const token = await this.peek();
             if (token === eof) {
                 return token;
             }
             if (this.special(token)) {
+                // bultin parser extensions are mapping short symbol to longer symbol
+                // that can be function or macro, parser don't care
+                // if it's not bultin then the extension can be macro or function
+                // FUNCTION: when it's used it get arguments like FEXPR and
+                // result is returned by parser as is
+                // MACRO: if macros are used they are evaluated in place and
+                // result is returned by parser but they are quoted
                 const special = specials.get(token);
+                const bultin = this.builtin(token);
                 this.skip();
                 let expr;
                 const object = await this.read_object();
+                if (!bultin) {
+                    var extension = this.__env__.get(special.symbol);
+                    if (typeof extension === 'function') {
+                        if (is_literal(token)) {
+                            return extension.call(this.__env__, object);
+                        } else if (object instanceof Pair) {
+                            return extension.apply(this.__env__, object.toArray(false));
+                        } else {
+                            throw new Error('Parser: Invalid parser extension ' +
+                                            `invocation ${special.symbol}`);
+                        }
+                    }
+                }
                 if (is_literal(token)) {
                     expr = new Pair(
                         special.symbol,
@@ -1375,28 +1401,22 @@
                     );
                 }
                 // builtin parser extensions just expand into lists like 'x ==> (quote x)
-                if (this.builtin(token)) {
+                if (bultin) {
                     return expr;
                 }
                 // evaluate parser extension at parse time
-                var result = await evaluate(expr, { env: this.__env__, error: (e) => {
-                    throw e;
-                } });
-                // we need literal quote to make macro that return pair works
-                // because after parser return the value it will be evaluated again
-                // by the interpreter, so we create quoted expression
-                return unpromise(result, result => {
+                if (extension instanceof Macro) {
+                    var result = await this._eval(expr);
+                    // we need literal quote to make macro that return pair works
+                    // because after parser return the value it will be evaluated again
+                    // by the interpreter, so we create quoted expression
                     if (result instanceof Pair || result instanceof LSymbol) {
-                        return new Pair(
-                            LSymbol('quote'),
-                            new Pair(
-                                result,
-                                nil
-                            )
-                        );
+                        return Pair.fromArray([LSymbol('quote'), result]);
                     }
-                    return result;
-                });
+                } else {
+                    throw new Error(`Parser: invlid parser extension: ${special.symbol}`);
+                }
+                return result;
             }
             if (this.is_open(token)) {
                 this.skip();
@@ -2141,10 +2161,14 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toArray = function() {
+    Pair.prototype.toArray = function(deep = true) {
         var result = [];
         if (this.car instanceof Pair) {
-            result.push(this.car.toArray());
+            if (deep) {
+                result.push(this.car.toArray());
+            } else {
+                result.push(this.car);
+            }
         } else {
             result.push(this.car.valueOf());
         }

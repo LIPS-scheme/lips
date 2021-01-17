@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 Jan 2021 11:22:56 +0000
+ * build: Sun, 17 Jan 2021 13:05:40 +0000
  */
 (function () {
   'use strict';
@@ -3015,10 +3015,20 @@
           return token.match(/^;/) || token.match(/^#\|/) && token.match(/\|#$/);
         }
       }, {
+        key: "_eval",
+        value: function _eval(code) {
+          return evaluate(code, {
+            env: this.__env__,
+            error: function error(e) {
+              throw e;
+            }
+          });
+        }
+      }, {
         key: "read_object",
         value: function () {
           var _read_object = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5() {
-            var token, special, expr, object, result;
+            var token, special, bultin, expr, object, extension, result;
             return regenerator.wrap(function _callee5$(_context5) {
               while (1) {
                 switch (_context5.prev = _context5.next) {
@@ -3038,18 +3048,57 @@
 
                   case 5:
                     if (!this.special(token)) {
-                      _context5.next = 18;
+                      _context5.next = 37;
                       break;
                     }
 
+                    // bultin parser extensions are mapping short symbol to longer symbol
+                    // that can be function or macro, parser don't care
+                    // if it's not bultin then the extension can be macro or function
+                    // FUNCTION: when it's used it get arguments like FEXPR and
+                    // result is returned by parser as is
+                    // MACRO: if macros are used they are evaluated in place and
+                    // result is returned by parser but they are quoted
                     special = specials.get(token);
+                    bultin = this.builtin(token);
                     this.skip();
-                    _context5.next = 10;
+                    _context5.next = 11;
                     return this.read_object();
 
-                  case 10:
+                  case 11:
                     object = _context5.sent;
 
+                    if (bultin) {
+                      _context5.next = 24;
+                      break;
+                    }
+
+                    extension = this.__env__.get(special.symbol);
+
+                    if (!(typeof extension === 'function')) {
+                      _context5.next = 24;
+                      break;
+                    }
+
+                    if (!is_literal(token)) {
+                      _context5.next = 19;
+                      break;
+                    }
+
+                    return _context5.abrupt("return", extension.call(this.__env__, object));
+
+                  case 19:
+                    if (!(object instanceof Pair)) {
+                      _context5.next = 23;
+                      break;
+                    }
+
+                    return _context5.abrupt("return", extension.apply(this.__env__, object.toArray(false)));
+
+                  case 23:
+                    throw new Error('Parser: Invalid parser extension ' + "invocation ".concat(special.symbol));
+
+                  case 24:
                     if (is_literal(token)) {
                       expr = new Pair(special.symbol, new Pair(object, nil));
                     } else {
@@ -3057,53 +3106,63 @@
                     } // builtin parser extensions just expand into lists like 'x ==> (quote x)
 
 
-                    if (!this.builtin(token)) {
-                      _context5.next = 14;
+                    if (!bultin) {
+                      _context5.next = 27;
                       break;
                     }
 
                     return _context5.abrupt("return", expr);
 
-                  case 14:
-                    _context5.next = 16;
-                    return evaluate(expr, {
-                      env: this.__env__,
-                      error: function error(e) {
-                        throw e;
-                      }
-                    });
+                  case 27:
+                    if (!(extension instanceof Macro)) {
+                      _context5.next = 35;
+                      break;
+                    }
 
-                  case 16:
+                    _context5.next = 30;
+                    return this._eval(expr);
+
+                  case 30:
                     result = _context5.sent;
-                    return _context5.abrupt("return", unpromise(result, function (result) {
-                      if (result instanceof Pair || result instanceof LSymbol) {
-                        return new Pair(LSymbol('quote'), new Pair(result, nil));
-                      }
 
-                      return result;
-                    }));
+                    if (!(result instanceof Pair || result instanceof LSymbol)) {
+                      _context5.next = 33;
+                      break;
+                    }
 
-                  case 18:
+                    return _context5.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
+
+                  case 33:
+                    _context5.next = 36;
+                    break;
+
+                  case 35:
+                    throw new Error("Parser: invlid parser extension: ".concat(special.symbol));
+
+                  case 36:
+                    return _context5.abrupt("return", result);
+
+                  case 37:
                     if (!this.is_open(token)) {
-                      _context5.next = 25;
+                      _context5.next = 44;
                       break;
                     }
 
                     this.skip();
-                    _context5.next = 22;
+                    _context5.next = 41;
                     return this.read_list();
 
-                  case 22:
+                  case 41:
                     return _context5.abrupt("return", _context5.sent);
 
-                  case 25:
-                    _context5.next = 27;
+                  case 44:
+                    _context5.next = 46;
                     return this.read_value();
 
-                  case 27:
+                  case 46:
                     return _context5.abrupt("return", _context5.sent);
 
-                  case 28:
+                  case 47:
                   case "end":
                     return _context5.stop();
                 }
@@ -4162,10 +4221,15 @@
 
 
     Pair.prototype.toArray = function () {
+      var deep = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : true;
       var result = [];
 
       if (this.car instanceof Pair) {
-        result.push(this.car.toArray());
+        if (deep) {
+          result.push(this.car.toArray());
+        } else {
+          result.push(this.car);
+        }
       } else {
         result.push(this.car.valueOf());
       }
@@ -12928,10 +12992,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 17 Jan 2021 11:22:56 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 17 Jan 2021 13:05:40 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 17 Jan 2021 11:22:56 +0000').valueOf();
+      var date = LString('Sun, 17 Jan 2021 13:05:40 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12968,7 +13032,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 17 Jan 2021 11:22:56 +0000',
+      date: 'Sun, 17 Jan 2021 13:05:40 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

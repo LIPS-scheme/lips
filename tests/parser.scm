@@ -34,6 +34,19 @@
 
 (unset-special! ":")
 
+(set-special! "::" 'cube)
+
+(define (cube x)
+  (if (number? x)
+      (* x x x)
+      `(let ((.x ,x))
+         (* .x .x .x))))
+
+(define parser/t6 (let ((x 3)) ::x))
+(define parser/t7 (read "(let ((x 3)) ::x))"))
+
+(unset-special! "::")
+
 (test "parser: syntax extension"
       (lambda (t)
 
@@ -41,7 +54,9 @@
         (t.is parser/t2 '(foo . bar))
         (t.is parser/t3 '(--))
         (t.is parser/t4 ':foo)
-        (t.is parser/t5 ':foo)))
+        (t.is parser/t5 ':foo)
+        (t.is parser/t6 27)
+        (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))))
 
 (test "parser: escape hex literals"
       (lambda (t)
