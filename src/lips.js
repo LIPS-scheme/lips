@@ -742,12 +742,19 @@
              (name instanceof RegExp && name.test(symbol.__name__)));
     };
     // ----------------------------------------------------------------------
-    LSymbol.prototype.toJSON = LSymbol.prototype.toString = function() {
+    LSymbol.prototype.toString = function(quote) {
         //return '#<symbol \'' + this.name + '\'>';
         if (isSymbol(this.__name__)) {
             return symbol_to_string(this.__name__);
         }
-        return this.valueOf();
+        var str = this.valueOf();
+        if (quote && str.match(/\s/)) {
+            return `|${str}|`;
+        }
+        return str;
+    };
+    LSymbol.prototype.toJSON = function() {
+        this.toString(true);
     };
     LSymbol.prototype.valueOf = function() {
         return this.__name__.valueOf();
@@ -2456,7 +2463,7 @@
         var types = [LSymbol, LNumber, Macro, Values, InputPort, Environment];
         for (let type of types) {
             if (obj instanceof type) {
-                return obj.toString();
+                return obj.toString(quote);
             }
         }
         if (obj instanceof RegExp) {

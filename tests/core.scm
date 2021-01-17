@@ -300,3 +300,8 @@
           (t.is (list* (delay 200 (set! x 10) 10)
                        (delay 100 x))
                 '(10 1)))))
+
+(test "core: repr of R7RS symbols"
+      (lambda (t)
+        (t.is (repr '|foo bar| true) "|foo bar|")
+        (t.is (repr (string->symbol "foo bar") true) "|foo bar|")))

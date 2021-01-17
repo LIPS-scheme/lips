@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 Jan 2021 11:12:45 +0000
+ * build: Sun, 17 Jan 2021 11:22:56 +0000
  */
 (function () {
   'use strict';
@@ -2102,13 +2102,23 @@
     }; // ----------------------------------------------------------------------
 
 
-    LSymbol.prototype.toJSON = LSymbol.prototype.toString = function () {
+    LSymbol.prototype.toString = function (quote) {
       //return '#<symbol \'' + this.name + '\'>';
       if (isSymbol(this.__name__)) {
         return symbol_to_string(this.__name__);
       }
 
-      return this.valueOf();
+      var str = this.valueOf();
+
+      if (quote && str.match(/\s/)) {
+        return "|".concat(str, "|");
+      }
+
+      return str;
+    };
+
+    LSymbol.prototype.toJSON = function () {
+      this.toString(true);
     };
 
     LSymbol.prototype.valueOf = function () {
@@ -4541,7 +4551,7 @@
         var _type2 = _types[_i5];
 
         if (obj instanceof _type2) {
-          return obj.toString();
+          return obj.toString(quote);
         }
       }
 
@@ -12918,10 +12928,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 17 Jan 2021 11:12:45 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 17 Jan 2021 11:22:56 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 17 Jan 2021 11:12:45 +0000').valueOf();
+      var date = LString('Sun, 17 Jan 2021 11:22:56 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -12958,7 +12968,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 17 Jan 2021 11:12:45 +0000',
+      date: 'Sun, 17 Jan 2021 11:22:56 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
