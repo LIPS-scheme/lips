@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 17 Jan 2021 13:53:25 +0000
+ * build: Mon, 18 Jan 2021 14:58:43 +0000
  */
 (function () {
   'use strict';
@@ -2398,25 +2398,58 @@
       }, {
         key: "read_line",
         value: function read_line() {
-          if (this._i >= this.__input__.length) {
+          var len = this.__input__.length;
+
+          if (this._i >= len) {
             return eof;
           }
 
-          for (var _i2 = this._i, len = this.__input__.length; _i2 < len; ++_i2) {
-            var _char2 = this.__input__[_i2];
+          for (var i = this._i; i < len; ++i) {
+            var _char2 = this.__input__[i];
 
             if (_char2 === '\n') {
-              var line = this.__input__.substring(this._i, _i2);
+              var line = this.__input__.substring(this._i, i);
 
-              this._i = _i2 + 1;
+              this._i = i + 1;
               ++this._line;
               return line;
             }
           }
 
+          return this.read_rest();
+        }
+      }, {
+        key: "read_rest",
+        value: function read_rest() {
           var i = this._i;
           this._i = this.__input__.length;
           return this.__input__.substring(i);
+        }
+      }, {
+        key: "read_string",
+        value: function read_string(num) {
+          var len = this.__input__.length;
+
+          if (this._i >= len) {
+            return eof;
+          }
+
+          if (num + this._i >= len) {
+            return this.read_rest();
+          }
+
+          var end = this._i + num;
+
+          var result = this.__input__.substring(this._i, end);
+
+          var found = result.match(/\n/g);
+
+          if (found) {
+            this._line += found.length;
+          }
+
+          this._i = end;
+          return result;
         }
       }, {
         key: "peek_char",
@@ -3314,34 +3347,34 @@
 
 
     function _uniterate_async() {
-      _uniterate_async = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(object) {
+      _uniterate_async = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15(object) {
         var result, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _value, item;
 
-        return regenerator.wrap(function _callee16$(_context16) {
+        return regenerator.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
                 result = [];
                 _iteratorNormalCompletion = true;
                 _didIteratorError = false;
-                _context16.prev = 3;
+                _context15.prev = 3;
                 _iterator = asyncIterator(object);
 
               case 5:
-                _context16.next = 7;
+                _context15.next = 7;
                 return _iterator.next();
 
               case 7:
-                _step = _context16.sent;
+                _step = _context15.sent;
                 _iteratorNormalCompletion = _step.done;
-                _context16.next = 11;
+                _context15.next = 11;
                 return _step.value;
 
               case 11:
-                _value = _context16.sent;
+                _value = _context15.sent;
 
                 if (_iteratorNormalCompletion) {
-                  _context16.next = 18;
+                  _context15.next = 18;
                   break;
                 }
 
@@ -3350,56 +3383,56 @@
 
               case 15:
                 _iteratorNormalCompletion = true;
-                _context16.next = 5;
+                _context15.next = 5;
                 break;
 
               case 18:
-                _context16.next = 24;
+                _context15.next = 24;
                 break;
 
               case 20:
-                _context16.prev = 20;
-                _context16.t0 = _context16["catch"](3);
+                _context15.prev = 20;
+                _context15.t0 = _context15["catch"](3);
                 _didIteratorError = true;
-                _iteratorError = _context16.t0;
+                _iteratorError = _context15.t0;
 
               case 24:
-                _context16.prev = 24;
-                _context16.prev = 25;
+                _context15.prev = 24;
+                _context15.prev = 25;
 
                 if (!(!_iteratorNormalCompletion && _iterator["return"] != null)) {
-                  _context16.next = 29;
+                  _context15.next = 29;
                   break;
                 }
 
-                _context16.next = 29;
+                _context15.next = 29;
                 return _iterator["return"]();
 
               case 29:
-                _context16.prev = 29;
+                _context15.prev = 29;
 
                 if (!_didIteratorError) {
-                  _context16.next = 32;
+                  _context15.next = 32;
                   break;
                 }
 
                 throw _iteratorError;
 
               case 32:
-                return _context16.finish(29);
+                return _context15.finish(29);
 
               case 33:
-                return _context16.finish(24);
+                return _context15.finish(24);
 
               case 34:
-                return _context16.abrupt("return", result);
+                return _context15.abrupt("return", result);
 
               case 35:
               case "end":
-                return _context16.stop();
+                return _context15.stop();
             }
           }
-        }, _callee16, null, [[3, 20, 24, 34], [25,, 29, 33]]);
+        }, _callee15, null, [[3, 20, 24, 34], [25,, 29, 33]]);
       }));
       return _uniterate_async.apply(this, arguments);
     }
@@ -3753,8 +3786,8 @@
 
       var shift = settings.exceptions.shift;
 
-      for (var _i3 = 0, _Object$entries = Object.entries(shift); _i3 < _Object$entries.length; _i3++) {
-        var _Object$entries$_i = slicedToArray(_Object$entries[_i3], 2),
+      for (var _i2 = 0, _Object$entries = Object.entries(shift); _i2 < _Object$entries.length; _i2++) {
+        var _Object$entries$_i = slicedToArray(_Object$entries[_i2], 2),
             indent = _Object$entries$_i[0],
             tokens = _Object$entries$_i[1];
 
@@ -4249,8 +4282,8 @@
       if (deep === false) {
         var list = nil;
 
-        for (var _i4 = array.length; _i4--;) {
-          list = new Pair(array[_i4], list);
+        for (var _i3 = array.length; _i3--;) {
+          list = new Pair(array[_i3], list);
         }
 
         return list;
@@ -4607,8 +4640,8 @@
 
       var types = [LSymbol, LNumber, Macro, Values, InputPort, Environment];
 
-      for (var _i5 = 0, _types = types; _i5 < _types.length; _i5++) {
-        var _type2 = _types[_i5];
+      for (var _i4 = 0, _types = types; _i4 < _types.length; _i4++) {
+        var _type2 = _types[_i4];
 
         if (obj instanceof _type2) {
           return obj.toString(quote);
@@ -7236,6 +7269,27 @@
     }; // -------------------------------------------------------------------------
 
 
+    LNumber.isInteger = function (n) {
+      if (!(LNumber.isNative(n) || n instanceof LNumber)) {
+        return false;
+      }
+
+      if (LNumber.isFloat(n)) {
+        return false;
+      }
+
+      if (LNumber.isRational(n)) {
+        return false;
+      }
+
+      if (LNumber.isComplex(n)) {
+        return false;
+      }
+
+      return true;
+    }; // -------------------------------------------------------------------------
+
+
     LNumber.isNative = function (n) {
       return typeof n === 'bigint' || typeof n === 'number';
     }; // -------------------------------------------------------------------------
@@ -8464,6 +8518,10 @@
         return this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
       };
 
+      this._make_defaults();
+    }
+
+    InputPort.prototype._make_defaults = function () {
       this.read = this._with_parser(function (parser) {
         return parser.read_object();
       });
@@ -8473,60 +8531,58 @@
       this.read_char = this._with_parser(function (parser) {
         return parser.__lexer__.read_char();
       });
-      this.skip_char = this._with_parser(function () {
-        _this5.__parser__.__lexer__.skip_char();
+      this.read_string = this._with_parser(function (parser, number) {
+        if (!LNumber.isInteger(number)) {
+          var _type4 = LNumber.getType(number);
+
+          typeErrorMessage('read-string', _type4, 'integer');
+        }
+
+        return parser.__lexer__.read_string(number.valueOf());
       });
-      this.read_char = this._with_parser( /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10() {
-        var _char8;
-
-        return regenerator.wrap(function _callee10$(_context10) {
-          while (1) {
-            switch (_context10.prev = _context10.next) {
-              case 0:
-                _context10.next = 2;
-                return _this5.peek_char();
-
-              case 2:
-                _char8 = _context10.sent;
-
-                _this5.skip_char();
-
-                return _context10.abrupt("return", _char8);
-
-              case 5:
-              case "end":
-                return _context10.stop();
-            }
-          }
-        }, _callee10);
-      })));
       this.peek_char = this._with_parser(function (parser) {
         return parser.__lexer__.peek_char();
       });
-    }
+    };
 
     InputPort.prototype._with_init_parser = function (make_parser, fn) {
       var self = this;
-      return /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11() {
-        var parser;
-        return regenerator.wrap(function _callee11$(_context11) {
-          while (1) {
-            switch (_context11.prev = _context11.next) {
-              case 0:
-                _context11.next = 2;
-                return make_parser.call(self);
+      return /*#__PURE__*/function () {
+        var _ref20 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10() {
+          var parser,
+              _len15,
+              args,
+              _key15,
+              _args12 = arguments;
 
-              case 2:
-                parser = _context11.sent;
-                return _context11.abrupt("return", fn(parser));
+          return regenerator.wrap(function _callee10$(_context10) {
+            while (1) {
+              switch (_context10.prev = _context10.next) {
+                case 0:
+                  _context10.next = 2;
+                  return make_parser.call(self);
 
-              case 4:
-              case "end":
-                return _context11.stop();
+                case 2:
+                  parser = _context10.sent;
+
+                  for (_len15 = _args12.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+                    args[_key15] = _args12[_key15];
+                  }
+
+                  return _context10.abrupt("return", fn.apply(void 0, [parser].concat(args)));
+
+                case 5:
+                case "end":
+                  return _context10.stop();
+              }
             }
-          }
-        }, _callee11);
-      }));
+          }, _callee10);
+        }));
+
+        return function () {
+          return _ref20.apply(this, arguments);
+        };
+      }();
     };
 
     InputPort.prototype.is_open = function () {
@@ -8689,18 +8745,8 @@
 
         return _this10.__parser__;
       });
-      this.read = this._with_parser(function (parser) {
-        return parser.read_object();
-      });
-      this.read_char = this._with_parser(function (parser) {
-        return parser.__lexer__.read_char();
-      });
-      this.peek_char = this._with_parser(function (parser) {
-        return parser.__lexer__.peek_char();
-      });
-      this.read_line = this._with_parser(function (parser) {
-        return parser.__lexer__.read_line();
-      });
+
+      this._make_defaults();
     }
 
     InputStringPort.prototype.char_ready = function () {
@@ -8745,11 +8791,11 @@
 
 
     function Interpreter(name) {
-      var _ref22 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          stderr = _ref22.stderr,
-          stdin = _ref22.stdin,
-          stdout = _ref22.stdout,
-          obj = objectWithoutProperties(_ref22, ["stderr", "stdin", "stdout"]);
+      var _ref21 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          stderr = _ref21.stderr,
+          stdin = _ref21.stdin,
+          stdout = _ref21.stdout,
+          obj = objectWithoutProperties(_ref21, ["stderr", "stdin", "stdout"]);
 
       if (typeof this !== 'undefined' && !(this instanceof Interpreter) || typeof this === 'undefined') {
         return new Interpreter(name, _objectSpread({
@@ -9197,8 +9243,8 @@
     var native_lambda = parse(tokenize("(lambda ()\n                                          \"[native code]\"\n                                          (throw \"Invalid Invocation\"))"))[0]; // -------------------------------------------------------------------------------
 
     var get = doc(function get(object) {
-      for (var _len15 = arguments.length, args = new Array(_len15 > 1 ? _len15 - 1 : 0), _key15 = 1; _key15 < _len15; _key15++) {
-        args[_key15 - 1] = arguments[_key15];
+      for (var _len16 = arguments.length, args = new Array(_len16 > 1 ? _len16 - 1 : 0), _key16 = 1; _key16 < _len16; _key16++) {
+        args[_key16 - 1] = arguments[_key16];
       }
 
       // if arg is symbol someone probably want to get __fn__ from binded function
@@ -9317,86 +9363,86 @@
       }, "(read-char port)\n\n            Function read next character from input port."),
       // ------------------------------------------------------------------
       read: doc( /*#__PURE__*/function () {
-        var _read2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(arg) {
+        var _read2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(arg) {
           var _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _value2, value, port;
 
-          return regenerator.wrap(function _callee12$(_context12) {
+          return regenerator.wrap(function _callee11$(_context11) {
             while (1) {
-              switch (_context12.prev = _context12.next) {
+              switch (_context11.prev = _context11.next) {
                 case 0:
                   if (!LString.isString(arg)) {
-                    _context12.next = 34;
+                    _context11.next = 34;
                     break;
                   }
 
                   _iteratorNormalCompletion2 = true;
                   _didIteratorError2 = false;
-                  _context12.prev = 3;
+                  _context11.prev = 3;
                   _iterator2 = asyncIterator(parse(arg, this));
 
                 case 5:
-                  _context12.next = 7;
+                  _context11.next = 7;
                   return _iterator2.next();
 
                 case 7:
-                  _step2 = _context12.sent;
+                  _step2 = _context11.sent;
                   _iteratorNormalCompletion2 = _step2.done;
-                  _context12.next = 11;
+                  _context11.next = 11;
                   return _step2.value;
 
                 case 11:
-                  _value2 = _context12.sent;
+                  _value2 = _context11.sent;
 
                   if (_iteratorNormalCompletion2) {
-                    _context12.next = 18;
+                    _context11.next = 18;
                     break;
                   }
 
                   value = _value2;
-                  return _context12.abrupt("return", value);
+                  return _context11.abrupt("return", value);
 
                 case 15:
                   _iteratorNormalCompletion2 = true;
-                  _context12.next = 5;
+                  _context11.next = 5;
                   break;
 
                 case 18:
-                  _context12.next = 24;
+                  _context11.next = 24;
                   break;
 
                 case 20:
-                  _context12.prev = 20;
-                  _context12.t0 = _context12["catch"](3);
+                  _context11.prev = 20;
+                  _context11.t0 = _context11["catch"](3);
                   _didIteratorError2 = true;
-                  _iteratorError2 = _context12.t0;
+                  _iteratorError2 = _context11.t0;
 
                 case 24:
-                  _context12.prev = 24;
-                  _context12.prev = 25;
+                  _context11.prev = 24;
+                  _context11.prev = 25;
 
                   if (!(!_iteratorNormalCompletion2 && _iterator2["return"] != null)) {
-                    _context12.next = 29;
+                    _context11.next = 29;
                     break;
                   }
 
-                  _context12.next = 29;
+                  _context11.next = 29;
                   return _iterator2["return"]();
 
                 case 29:
-                  _context12.prev = 29;
+                  _context11.prev = 29;
 
                   if (!_didIteratorError2) {
-                    _context12.next = 32;
+                    _context11.next = 32;
                     break;
                   }
 
                   throw _iteratorError2;
 
                 case 32:
-                  return _context12.finish(29);
+                  return _context11.finish(29);
 
                 case 33:
-                  return _context12.finish(24);
+                  return _context11.finish(24);
 
                 case 34:
                   if (arg) {
@@ -9406,14 +9452,14 @@
                     port = internal(this, 'stdin');
                   }
 
-                  return _context12.abrupt("return", port.read.call(this));
+                  return _context11.abrupt("return", port.read.call(this));
 
                 case 36:
                 case "end":
-                  return _context12.stop();
+                  return _context11.stop();
               }
             }
-          }, _callee12, this, [[3, 20, 24, 34], [25,, 29, 33]]);
+          }, _callee11, this, [[3, 20, 24, 34], [25,, 29, 33]]);
         }));
 
         function read(_x9) {
@@ -9438,8 +9484,8 @@
         var display = global_env.get('display');
         var newline = global_env.get('newline');
 
-        for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-          args[_key16] = arguments[_key16];
+        for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+          args[_key17] = arguments[_key17];
         }
 
         args.forEach(function (arg) {
@@ -9449,8 +9495,8 @@
       }, "(print . args)\n\n            Function convert each argument to string and print the result to\n            standard output (by default it's console but it can be defined\n            it user code), the function call newline after printing each arg."),
       // ------------------------------------------------------------------
       'format': doc(function format(str) {
-        for (var _len17 = arguments.length, args = new Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
-          args[_key17 - 1] = arguments[_key17];
+        for (var _len18 = arguments.length, args = new Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
+          args[_key18 - 1] = arguments[_key18];
         }
 
         typecheck('format', str, 'string');
@@ -9504,8 +9550,8 @@
         var port = internal(this, 'stderr');
         var repr = global_env.get('repr');
 
-        for (var _len18 = arguments.length, args = new Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
-          args[_key18] = arguments[_key18];
+        for (var _len19 = arguments.length, args = new Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
+          args[_key19] = arguments[_key19];
         }
 
         var value = args.map(repr).join(' ');
@@ -9525,9 +9571,9 @@
         return unbind(a) === unbind(b);
       }, "(%same-functions a b)\n\n            Helper function that check if two bound functions are the same"),
       // ------------------------------------------------------------------
-      help: doc(new Macro('help', function (code, _ref23) {
-        var dynamic_scope = _ref23.dynamic_scope,
-            error = _ref23.error;
+      help: doc(new Macro('help', function (code, _ref22) {
+        var dynamic_scope = _ref22.dynamic_scope,
+            error = _ref22.error;
         var symbol;
 
         if (code.car instanceof LSymbol) {
@@ -9591,9 +9637,9 @@
       'set!': doc(new Macro('set!', function (code) {
         var _this13 = this;
 
-        var _ref24 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref24.dynamic_scope,
-            error = _ref24.error;
+        var _ref23 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref23.dynamic_scope,
+            error = _ref23.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -9792,14 +9838,14 @@
       }, "(load filename)\n            (load filename environment)\n\n            Function fetch the file and evaluate its content as LIPS code,\n            If second argument is provided and it's environment the evaluation\n            will happen in that environment."),
       // ------------------------------------------------------------------
       'do': doc(new Macro('do', /*#__PURE__*/function () {
-        var _ref25 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(code, _ref26) {
+        var _ref24 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(code, _ref25) {
           var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _loop3;
 
-          return regenerator.wrap(function _callee14$(_context14) {
+          return regenerator.wrap(function _callee13$(_context13) {
             while (1) {
-              switch (_context14.prev = _context14.next) {
+              switch (_context13.prev = _context13.next) {
                 case 0:
-                  dynamic_scope = _ref26.dynamic_scope, error = _ref26.error;
+                  dynamic_scope = _ref25.dynamic_scope, error = _ref25.error;
                   self = this;
 
                   if (dynamic_scope) {
@@ -9824,23 +9870,23 @@
 
                 case 10:
                   if (!(node !== nil)) {
-                    _context14.next = 21;
+                    _context13.next = 21;
                     break;
                   }
 
                   item = node.car;
-                  _context14.t0 = scope;
-                  _context14.t1 = item.car;
-                  _context14.next = 16;
+                  _context13.t0 = scope;
+                  _context13.t1 = item.car;
+                  _context13.next = 16;
                   return evaluate(item.cdr.car, eval_args);
 
                 case 16:
-                  _context14.t2 = _context14.sent;
+                  _context13.t2 = _context13.sent;
 
-                  _context14.t0.set.call(_context14.t0, _context14.t1, _context14.t2);
+                  _context13.t0.set.call(_context13.t0, _context13.t1, _context13.t2);
 
                   node = node.cdr;
-                  _context14.next = 10;
+                  _context13.next = 10;
                   break;
 
                 case 21:
@@ -9849,19 +9895,19 @@
                     dynamic_scope: dynamic_scope,
                     error: error
                   };
-                  _loop3 = /*#__PURE__*/regenerator.mark(function _callee13() {
+                  _loop3 = /*#__PURE__*/regenerator.mark(function _callee12() {
                     var node, next, _item, value, symbols;
 
-                    return regenerator.wrap(function _callee13$(_context13) {
+                    return regenerator.wrap(function _callee12$(_context12) {
                       while (1) {
-                        switch (_context13.prev = _context13.next) {
+                        switch (_context12.prev = _context12.next) {
                           case 0:
                             if (!(body !== nil)) {
-                              _context13.next = 3;
+                              _context12.next = 3;
                               break;
                             }
 
-                            _context13.next = 3;
+                            _context12.next = 3;
                             return lips.evaluate(body, eval_args);
 
                           case 3:
@@ -9870,27 +9916,27 @@
 
                           case 5:
                             if (!(node !== nil)) {
-                              _context13.next = 15;
+                              _context12.next = 15;
                               break;
                             }
 
                             _item = node.car;
 
                             if (!(_item.cdr.cdr !== nil)) {
-                              _context13.next = 12;
+                              _context12.next = 12;
                               break;
                             }
 
-                            _context13.next = 10;
+                            _context12.next = 10;
                             return evaluate(_item.cdr.cdr.car, eval_args);
 
                           case 10:
-                            value = _context13.sent;
+                            value = _context12.sent;
                             next[_item.car.valueOf()] = value;
 
                           case 12:
                             node = node.cdr;
-                            _context13.next = 5;
+                            _context12.next = 5;
                             break;
 
                           case 15:
@@ -9901,58 +9947,58 @@
 
                           case 17:
                           case "end":
-                            return _context13.stop();
+                            return _context12.stop();
                         }
                       }
-                    }, _callee13);
+                    }, _callee12);
                   });
 
                 case 23:
-                  _context14.next = 25;
+                  _context13.next = 25;
                   return evaluate(test.car, eval_args);
 
                 case 25:
-                  _context14.t3 = _context14.sent;
+                  _context13.t3 = _context13.sent;
 
-                  if (!(_context14.t3 === false)) {
-                    _context14.next = 30;
+                  if (!(_context13.t3 === false)) {
+                    _context13.next = 30;
                     break;
                   }
 
-                  return _context14.delegateYield(_loop3(), "t4", 28);
+                  return _context13.delegateYield(_loop3(), "t4", 28);
 
                 case 28:
-                  _context14.next = 23;
+                  _context13.next = 23;
                   break;
 
                 case 30:
                   if (!(test.cdr !== nil)) {
-                    _context14.next = 34;
+                    _context13.next = 34;
                     break;
                   }
 
-                  _context14.next = 33;
+                  _context13.next = 33;
                   return evaluate(test.cdr.car, eval_args);
 
                 case 33:
-                  return _context14.abrupt("return", _context14.sent);
+                  return _context13.abrupt("return", _context13.sent);
 
                 case 34:
                 case "end":
-                  return _context14.stop();
+                  return _context13.stop();
               }
             }
-          }, _callee14, this);
+          }, _callee13, this);
         }));
 
         return function (_x10, _x11) {
-          return _ref25.apply(this, arguments);
+          return _ref24.apply(this, arguments);
         };
       }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
       // ------------------------------------------------------------------
-      'if': doc(new Macro('if', function (code, _ref27) {
-        var dynamic_scope = _ref27.dynamic_scope,
-            error = _ref27.error;
+      'if': doc(new Macro('if', function (code, _ref26) {
+        var dynamic_scope = _ref26.dynamic_scope,
+            error = _ref26.error;
 
         if (dynamic_scope) {
           dynamic_scope = this;
@@ -10042,9 +10088,9 @@
         }();
       }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
       // ------------------------------------------------------------------
-      'ignore': new Macro('ignore', function (code, _ref28) {
-        var dynamic_scope = _ref28.dynamic_scope,
-            error = _ref28.error;
+      'ignore': new Macro('ignore', function (code, _ref27) {
+        var dynamic_scope = _ref27.dynamic_scope,
+            error = _ref27.error;
         var args = {
           env: this,
           error: error
@@ -10135,8 +10181,8 @@
       }, "(null-environment)\n\n            Function return new base environment with std lib."),
       // ------------------------------------------------------------------
       'values': doc(function values() {
-        for (var _len19 = arguments.length, args = new Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
-          args[_key19] = arguments[_key19];
+        for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
+          args[_key20] = arguments[_key20];
         }
 
         return Values(args);
@@ -10188,9 +10234,9 @@
       }, "(eval expr)\n            (eval expr environment)\n\n            Function evalute LIPS Scheme code."),
       // ------------------------------------------------------------------
       lambda: new Macro('lambda', function (code) {
-        var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref29.dynamic_scope,
-            error = _ref29.error;
+        var _ref28 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref28.dynamic_scope,
+            error = _ref28.error;
 
         var self = this;
 
@@ -10235,8 +10281,8 @@
           } // arguments and arguments.callee inside lambda function
 
 
-          for (var _len20 = arguments.length, args = new Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
-            args[_key20] = arguments[_key20];
+          for (var _len21 = arguments.length, args = new Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
+            args[_key21] = arguments[_key21];
           }
 
           if (this instanceof Environment) {
@@ -10304,9 +10350,9 @@
       'macroexpand': new Macro('macroexpand', macro_expand()),
       'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
       // ------------------------------------------------------------------
-      'define-macro': doc(new Macro(macro, function (macro, _ref30) {
-        var dynamic_scope = _ref30.dynamic_scope,
-            error = _ref30.error;
+      'define-macro': doc(new Macro(macro, function (macro, _ref29) {
+        var dynamic_scope = _ref29.dynamic_scope,
+            error = _ref29.error;
 
         if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
           var name = macro.car.car.__name__;
@@ -10418,8 +10464,8 @@
           validate_identifiers(macro.car);
         }
 
-        var syntax = new Syntax(function (code, _ref31) {
-          var macro_expand = _ref31.macro_expand;
+        var syntax = new Syntax(function (code, _ref30) {
+          var macro_expand = _ref30.macro_expand;
           var scope = env.inherit('syntax');
 
           if (dynamic_scope) {
@@ -10558,10 +10604,10 @@
             }
 
             if (is_promise(car) || is_promise(cdr)) {
-              return Promise.all([car, cdr]).then(function (_ref32) {
-                var _ref33 = slicedToArray(_ref32, 2),
-                    car = _ref33[0],
-                    cdr = _ref33[1];
+              return Promise.all([car, cdr]).then(function (_ref31) {
+                var _ref32 = slicedToArray(_ref31, 2),
+                    car = _ref32[0],
+                    cdr = _ref32[1];
 
                 return new Pair(car, cdr);
               });
@@ -10895,8 +10941,8 @@
       append: doc(function append() {
         var _global_env$get;
 
-        for (var _len21 = arguments.length, items = new Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
-          items[_key21] = arguments[_key21];
+        for (var _len22 = arguments.length, items = new Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
+          items[_key22] = arguments[_key22];
         }
 
         items = items.map(function (item) {
@@ -10912,8 +10958,8 @@
       'append!': doc('append!', function () {
         var is_list = global_env.get('list?');
 
-        for (var _len22 = arguments.length, items = new Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
-          items[_key22] = arguments[_key22];
+        for (var _len23 = arguments.length, items = new Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+          items[_key23] = arguments[_key23];
         }
 
         return items.reduce(function (acc, item) {
@@ -10982,8 +11028,8 @@
       }, "(nth index obj)\n\n            Function return nth element of the list or array. If used with different\n            value it will throw exception"),
       // ------------------------------------------------------------------
       list: doc(function list() {
-        for (var _len23 = arguments.length, args = new Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
-          args[_key23] = arguments[_key23];
+        for (var _len24 = arguments.length, args = new Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
+          args[_key24] = arguments[_key24];
         }
 
         return args.reverse().reduce(function (list, item) {
@@ -10999,8 +11045,8 @@
       }, "(substring string start end)\n\n            Function return part of the string starting at start ending with end."),
       // ------------------------------------------------------------------
       concat: doc(function concat() {
-        for (var _len24 = arguments.length, args = new Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
-          args[_key24] = arguments[_key24];
+        for (var _len25 = arguments.length, args = new Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
+          args[_key25] = arguments[_key25];
         }
 
         args.forEach(function (arg, i) {
@@ -11065,8 +11111,8 @@
       }, "(env obj)\n\n            Function return list values (functions and variables) inside environment."),
       // ------------------------------------------------------------------
       'new': doc('new', function (obj) {
-        for (var _len25 = arguments.length, args = new Array(_len25 > 1 ? _len25 - 1 : 0), _key25 = 1; _key25 < _len25; _key25++) {
-          args[_key25 - 1] = arguments[_key25];
+        for (var _len26 = arguments.length, args = new Array(_len26 > 1 ? _len26 - 1 : 0), _key26 = 1; _key26 < _len26; _key26++) {
+          args[_key26 - 1] = arguments[_key26];
         }
 
         var instance = construct(unbind(obj), toConsumableArray(args.map(function (x) {
@@ -11184,8 +11230,8 @@
       'list->array': doc('list->array', toArray$1('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
       // ------------------------------------------------------------------
       apply: doc(function apply(fn) {
-        for (var _len26 = arguments.length, args = new Array(_len26 > 1 ? _len26 - 1 : 0), _key26 = 1; _key26 < _len26; _key26++) {
-          args[_key26 - 1] = arguments[_key26];
+        for (var _len27 = arguments.length, args = new Array(_len27 > 1 ? _len27 - 1 : 0), _key27 = 1; _key27 < _len27; _key27++) {
+          args[_key27 - 1] = arguments[_key27];
         }
 
         typecheck('apply', fn, 'function', 1);
@@ -11235,11 +11281,11 @@
         return false;
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
-      'try': doc(new Macro('try', function (code, _ref34) {
+      'try': doc(new Macro('try', function (code, _ref33) {
         var _this15 = this;
 
-        var dynamic_scope = _ref34.dynamic_scope,
-            _error = _ref34.error;
+        var dynamic_scope = _ref33.dynamic_scope,
+            _error = _ref33.error;
         return new Promise(function (resolve, reject) {
           var catch_clause, finally_clause;
 
@@ -11337,8 +11383,8 @@
 
         typecheck('for-each', fn, 'function');
 
-        for (var _len27 = arguments.length, lists = new Array(_len27 > 1 ? _len27 - 1 : 0), _key27 = 1; _key27 < _len27; _key27++) {
-          lists[_key27 - 1] = arguments[_key27];
+        for (var _len28 = arguments.length, lists = new Array(_len28 > 1 ? _len28 - 1 : 0), _key28 = 1; _key28 < _len28; _key28++) {
+          lists[_key28 - 1] = arguments[_key28];
         }
 
         lists.forEach(function (arg, i) {
@@ -11357,8 +11403,8 @@
       map: doc(function map(fn) {
         var _this16 = this;
 
-        for (var _len28 = arguments.length, lists = new Array(_len28 > 1 ? _len28 - 1 : 0), _key28 = 1; _key28 < _len28; _key28++) {
-          lists[_key28 - 1] = arguments[_key28];
+        for (var _len29 = arguments.length, lists = new Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
+          lists[_key29 - 1] = arguments[_key29];
         }
 
         typecheck('map', fn, 'function');
@@ -11430,8 +11476,8 @@
       }, "(some fn list)\n\n            Higher order function that call argument on each element of the list.\n            It stops when function fn return true for a value if so it will\n            return true. If none of the values give true, the function return false"),
       // ------------------------------------------------------------------
       fold: doc('fold', fold('fold', function (fold, fn, init) {
-        for (var _len29 = arguments.length, lists = new Array(_len29 > 3 ? _len29 - 3 : 0), _key29 = 3; _key29 < _len29; _key29++) {
-          lists[_key29 - 3] = arguments[_key29];
+        for (var _len30 = arguments.length, lists = new Array(_len30 > 3 ? _len30 - 3 : 0), _key30 = 3; _key30 < _len30; _key30++) {
+          lists[_key30 - 3] = arguments[_key30];
         }
 
         typecheck('fold', fn, 'function');
@@ -11456,8 +11502,8 @@
       }), "(fold fn init . lists)\n\n             Function fold is reverse of the reduce. it call function `fn`\n             on each elements of the list and return single value.\n             e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n             for: (fold fn '() alist blist)"),
       // ------------------------------------------------------------------
       pluck: doc(function pluck() {
-        for (var _len30 = arguments.length, keys = new Array(_len30), _key30 = 0; _key30 < _len30; _key30++) {
-          keys[_key30] = arguments[_key30];
+        for (var _len31 = arguments.length, keys = new Array(_len31), _key31 = 0; _key31 < _len31; _key31++) {
+          keys[_key31] = arguments[_key31];
         }
 
         return function (obj) {
@@ -11470,9 +11516,9 @@
           } else if (keys.length === 1) {
             var _keys3 = keys,
                 _keys4 = slicedToArray(_keys3, 1),
-                _key31 = _keys4[0];
+                _key32 = _keys4[0];
 
-            return obj[_key31];
+            return obj[_key32];
           }
 
           var result = {};
@@ -11486,8 +11532,8 @@
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
         var _this17 = this;
 
-        for (var _len31 = arguments.length, lists = new Array(_len31 > 3 ? _len31 - 3 : 0), _key32 = 3; _key32 < _len31; _key32++) {
-          lists[_key32 - 3] = arguments[_key32];
+        for (var _len32 = arguments.length, lists = new Array(_len32 > 3 ? _len32 - 3 : 0), _key33 = 3; _key33 < _len32; _key33++) {
+          lists[_key33 - 3] = arguments[_key33];
         }
 
         typecheck('reduce', fn, 'function');
@@ -11538,8 +11584,8 @@
       pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
       curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (display (add12 3 4))"),
       'gcd': doc(function gcd() {
-        for (var _len32 = arguments.length, args = new Array(_len32), _key33 = 0; _key33 < _len32; _key33++) {
-          args[_key33] = arguments[_key33];
+        for (var _len33 = arguments.length, args = new Array(_len33), _key34 = 0; _key34 < _len33; _key34++) {
+          args[_key34] = arguments[_key34];
         }
 
         return args.reduce(function (result, item) {
@@ -11584,8 +11630,8 @@
       }, LNumber(0)), "(+ . numbers)\n\n        Sum all numbers passed as arguments. If single value is passed it will\n        return that value."),
       // ------------------------------------------------------------------
       '-': doc('-', function () {
-        for (var _len33 = arguments.length, args = new Array(_len33), _key34 = 0; _key34 < _len33; _key34++) {
-          args[_key34] = arguments[_key34];
+        for (var _len34 = arguments.length, args = new Array(_len34), _key35 = 0; _key35 < _len34; _key35++) {
+          args[_key35] = arguments[_key35];
         }
 
         if (args.length === 0) {
@@ -11652,8 +11698,8 @@
       // ------------------------------------------------------------------
       // Booleans
       '==': doc('==', function () {
-        for (var _len34 = arguments.length, args = new Array(_len34), _key35 = 0; _key35 < _len34; _key35++) {
-          args[_key35] = arguments[_key35];
+        for (var _len35 = arguments.length, args = new Array(_len35), _key36 = 0; _key36 < _len35; _key36++) {
+          args[_key36] = arguments[_key36];
         }
 
         return seq_compare(function (a, b) {
@@ -11662,8 +11708,8 @@
       }, "(== x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are equal"),
       // ------------------------------------------------------------------
       '>': doc('>', function () {
-        for (var _len35 = arguments.length, args = new Array(_len35), _key36 = 0; _key36 < _len35; _key36++) {
-          args[_key36] = arguments[_key36];
+        for (var _len36 = arguments.length, args = new Array(_len36), _key37 = 0; _key37 < _len36; _key37++) {
+          args[_key37] = arguments[_key37];
         }
 
         return seq_compare(function (a, b) {
@@ -11672,8 +11718,8 @@
       }, "(> x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically increasing"),
       // ------------------------------------------------------------------
       '<': doc('<', function () {
-        for (var _len36 = arguments.length, args = new Array(_len36), _key37 = 0; _key37 < _len36; _key37++) {
-          args[_key37] = arguments[_key37];
+        for (var _len37 = arguments.length, args = new Array(_len37), _key38 = 0; _key38 < _len37; _key38++) {
+          args[_key38] = arguments[_key38];
         }
 
         return seq_compare(function (a, b) {
@@ -11682,8 +11728,8 @@
       }, "(< x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically decreasing"),
       // ------------------------------------------------------------------
       '<=': doc(function () {
-        for (var _len37 = arguments.length, args = new Array(_len37), _key38 = 0; _key38 < _len37; _key38++) {
-          args[_key38] = arguments[_key38];
+        for (var _len38 = arguments.length, args = new Array(_len38), _key39 = 0; _key39 < _len38; _key39++) {
+          args[_key39] = arguments[_key39];
         }
 
         return seq_compare(function (a, b) {
@@ -11692,8 +11738,8 @@
       }, "(<= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nonincreasing"),
       // ------------------------------------------------------------------
       '>=': doc('>=', function () {
-        for (var _len38 = arguments.length, args = new Array(_len38), _key39 = 0; _key39 < _len38; _key39++) {
-          args[_key39] = arguments[_key39];
+        for (var _len39 = arguments.length, args = new Array(_len39), _key40 = 0; _key40 < _len39; _key40++) {
+          args[_key40] = arguments[_key40];
         }
 
         return seq_compare(function (a, b) {
@@ -11703,9 +11749,9 @@
       // ------------------------------------------------------------------
       'eq?': doc('eq?', equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
-      or: doc(new Macro('or', function (code, _ref35) {
-        var dynamic_scope = _ref35.dynamic_scope,
-            error = _ref35.error;
+      or: doc(new Macro('or', function (code, _ref34) {
+        var dynamic_scope = _ref34.dynamic_scope,
+            error = _ref34.error;
         var args = global_env.get('list->array')(code);
         var self = this;
 
@@ -11748,9 +11794,9 @@
       }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
       // ------------------------------------------------------------------
       and: doc(new Macro('and', function (code) {
-        var _ref36 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-            dynamic_scope = _ref36.dynamic_scope,
-            error = _ref36.error;
+        var _ref35 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+            dynamic_scope = _ref35.dynamic_scope,
+            error = _ref35.error;
 
         var args = global_env.get('list->array')(code);
         var self = this;
@@ -12087,13 +12133,13 @@
         return 'null';
       }
 
-      for (var _i6 = 0, _Object$entries2 = Object.entries(mapping); _i6 < _Object$entries2.length; _i6++) {
-        var _Object$entries2$_i = slicedToArray(_Object$entries2[_i6], 2),
-            _key40 = _Object$entries2$_i[0],
+      for (var _i5 = 0, _Object$entries2 = Object.entries(mapping); _i5 < _Object$entries2.length; _i5++) {
+        var _Object$entries2$_i = slicedToArray(_Object$entries2[_i5], 2),
+            _key41 = _Object$entries2$_i[0],
             value = _Object$entries2$_i[1];
 
         if (obj instanceof value) {
-          return _key40;
+          return _key41;
         }
       }
 
@@ -12167,65 +12213,65 @@
       }
 
       function _promise() {
-        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15(node) {
+        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(node) {
           var pair;
-          return regenerator.wrap(function _callee15$(_context15) {
+          return regenerator.wrap(function _callee14$(_context14) {
             while (1) {
-              switch (_context15.prev = _context15.next) {
+              switch (_context14.prev = _context14.next) {
                 case 0:
-                  _context15.t0 = Pair;
+                  _context14.t0 = Pair;
 
                   if (!node.haveCycles('car')) {
-                    _context15.next = 5;
+                    _context14.next = 5;
                     break;
                   }
 
-                  _context15.t1 = node.car;
-                  _context15.next = 8;
+                  _context14.t1 = node.car;
+                  _context14.next = 8;
                   break;
 
                 case 5:
-                  _context15.next = 7;
+                  _context14.next = 7;
                   return resolve(node.car);
 
                 case 7:
-                  _context15.t1 = _context15.sent;
+                  _context14.t1 = _context14.sent;
 
                 case 8:
-                  _context15.t2 = _context15.t1;
+                  _context14.t2 = _context14.t1;
 
                   if (!node.haveCycles('cdr')) {
-                    _context15.next = 13;
+                    _context14.next = 13;
                     break;
                   }
 
-                  _context15.t3 = node.cdr;
-                  _context15.next = 16;
+                  _context14.t3 = node.cdr;
+                  _context14.next = 16;
                   break;
 
                 case 13:
-                  _context15.next = 15;
+                  _context14.next = 15;
                   return resolve(node.cdr);
 
                 case 15:
-                  _context15.t3 = _context15.sent;
+                  _context14.t3 = _context14.sent;
 
                 case 16:
-                  _context15.t4 = _context15.t3;
-                  pair = new _context15.t0(_context15.t2, _context15.t4);
+                  _context14.t4 = _context14.t3;
+                  pair = new _context14.t0(_context14.t2, _context14.t4);
 
                   if (node[__data__]) {
                     pair[__data__] = true;
                   }
 
-                  return _context15.abrupt("return", pair);
+                  return _context14.abrupt("return", pair);
 
                 case 20:
                 case "end":
-                  return _context15.stop();
+                  return _context14.stop();
               }
             }
-          }, _callee15);
+          }, _callee14);
         }));
         return _promise.apply(this, arguments);
       }
@@ -12244,10 +12290,10 @@
     } // -------------------------------------------------------------------------
 
 
-    function evaluate_args(rest, _ref37) {
-      var env = _ref37.env,
-          dynamic_scope = _ref37.dynamic_scope,
-          error = _ref37.error;
+    function evaluate_args(rest, _ref36) {
+      var env = _ref36.env,
+          dynamic_scope = _ref36.dynamic_scope,
+          error = _ref36.error;
       var args = [];
       var node = rest;
       markCycles(node);
@@ -12342,8 +12388,8 @@
         args = args.map(function (arg) {
           if (is_lips_function(arg)) {
             var wrapper = function wrapper() {
-              for (var _len39 = arguments.length, args = new Array(_len39), _key41 = 0; _key41 < _len39; _key41++) {
-                args[_key41] = arguments[_key41];
+              for (var _len40 = arguments.length, args = new Array(_len40), _key42 = 0; _key42 < _len40; _key42++) {
+                args[_key42] = arguments[_key42];
               }
 
               return unpromise(arg.apply(this, args), unbox);
@@ -12366,11 +12412,11 @@
 
 
     function apply(fn, args) {
-      var _ref38 = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {},
-          env = _ref38.env,
-          dynamic_scope = _ref38.dynamic_scope,
-          _ref38$error = _ref38.error,
-          error = _ref38$error === void 0 ? function () {} : _ref38$error;
+      var _ref37 = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {},
+          env = _ref37.env,
+          dynamic_scope = _ref37.dynamic_scope,
+          _ref37$error = _ref37.error,
+          error = _ref37$error === void 0 ? function () {} : _ref37$error;
 
       args = evaluate_args(args, {
         env: env,
@@ -12415,11 +12461,11 @@
 
 
     function evaluate(code) {
-      var _ref39 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
-          env = _ref39.env,
-          dynamic_scope = _ref39.dynamic_scope,
-          _ref39$error = _ref39.error,
-          error = _ref39$error === void 0 ? function () {} : _ref39$error;
+      var _ref38 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
+          env = _ref38.env,
+          dynamic_scope = _ref38.dynamic_scope,
+          _ref38$error = _ref38.error,
+          error = _ref38$error === void 0 ? function () {} : _ref38$error;
 
       try {
         if (dynamic_scope === true) {
@@ -12514,12 +12560,12 @@
 
 
     function _exec() {
-      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee17(string, env, dynamic_scope) {
+      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(string, env, dynamic_scope) {
         var results, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
 
-        return regenerator.wrap(function _callee17$(_context17) {
+        return regenerator.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -12532,24 +12578,24 @@
                 results = [];
                 _iteratorNormalCompletion3 = true;
                 _didIteratorError3 = false;
-                _context17.prev = 4;
+                _context16.prev = 4;
                 _iterator3 = asyncIterator(parse(string));
 
               case 6:
-                _context17.next = 8;
+                _context16.next = 8;
                 return _iterator3.next();
 
               case 8:
-                _step3 = _context17.sent;
+                _step3 = _context16.sent;
                 _iteratorNormalCompletion3 = _step3.done;
-                _context17.next = 12;
+                _context16.next = 12;
                 return _step3.value;
 
               case 12:
-                _value3 = _context17.sent;
+                _value3 = _context16.sent;
 
                 if (_iteratorNormalCompletion3) {
-                  _context17.next = 28;
+                  _context16.next = 28;
                   break;
                 }
 
@@ -12577,76 +12623,76 @@
                 });
 
                 if (is_promise(value)) {
-                  _context17.next = 20;
+                  _context16.next = 20;
                   break;
                 }
 
                 results.push(value);
-                _context17.next = 25;
+                _context16.next = 25;
                 break;
 
               case 20:
-                _context17.t0 = results;
-                _context17.next = 23;
+                _context16.t0 = results;
+                _context16.next = 23;
                 return value;
 
               case 23:
-                _context17.t1 = _context17.sent;
+                _context16.t1 = _context16.sent;
 
-                _context17.t0.push.call(_context17.t0, _context17.t1);
+                _context16.t0.push.call(_context16.t0, _context16.t1);
 
               case 25:
                 _iteratorNormalCompletion3 = true;
-                _context17.next = 6;
+                _context16.next = 6;
                 break;
 
               case 28:
-                _context17.next = 34;
+                _context16.next = 34;
                 break;
 
               case 30:
-                _context17.prev = 30;
-                _context17.t2 = _context17["catch"](4);
+                _context16.prev = 30;
+                _context16.t2 = _context16["catch"](4);
                 _didIteratorError3 = true;
-                _iteratorError3 = _context17.t2;
+                _iteratorError3 = _context16.t2;
 
               case 34:
-                _context17.prev = 34;
-                _context17.prev = 35;
+                _context16.prev = 34;
+                _context16.prev = 35;
 
                 if (!(!_iteratorNormalCompletion3 && _iterator3["return"] != null)) {
-                  _context17.next = 39;
+                  _context16.next = 39;
                   break;
                 }
 
-                _context17.next = 39;
+                _context16.next = 39;
                 return _iterator3["return"]();
 
               case 39:
-                _context17.prev = 39;
+                _context16.prev = 39;
 
                 if (!_didIteratorError3) {
-                  _context17.next = 42;
+                  _context16.next = 42;
                   break;
                 }
 
                 throw _iteratorError3;
 
               case 42:
-                return _context17.finish(39);
+                return _context16.finish(39);
 
               case 43:
-                return _context17.finish(34);
+                return _context16.finish(34);
 
               case 44:
-                return _context17.abrupt("return", results);
+                return _context16.abrupt("return", results);
 
               case 45:
               case "end":
-                return _context17.stop();
+                return _context16.stop();
             }
           }
-        }, _callee17, null, [[4, 30, 34, 44], [35,, 39, 43]]);
+        }, _callee16, null, [[4, 30, 34, 44], [35,, 39, 43]]);
       }));
       return _exec.apply(this, arguments);
     }
@@ -12988,10 +13034,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 17 Jan 2021 13:53:25 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 18 Jan 2021 14:58:43 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 17 Jan 2021 13:53:25 +0000').valueOf();
+      var date = LString('Mon, 18 Jan 2021 14:58:43 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13028,7 +13074,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 17 Jan 2021 13:53:25 +0000',
+      date: 'Mon, 18 Jan 2021 14:58:43 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

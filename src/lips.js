@@ -967,10 +967,11 @@
             }
         }
         read_line() {
-            if (this._i >= this.__input__.length) {
+            var len = this.__input__.length;
+            if (this._i >= len) {
                 return eof;
             }
-            for (let i = this._i, len = this.__input__.length; i < len; ++i) {
+            for (let i = this._i; i < len; ++i) {
                 var char = this.__input__[i];
                 if (char === '\n') {
                     const line = this.__input__.substring(this._i, i);
@@ -979,9 +980,29 @@
                     return line;
                 }
             }
+            return this.read_rest();
+        }
+        read_rest() {
             const i = this._i;
             this._i = this.__input__.length;
             return this.__input__.substring(i);
+        }
+        read_string(num) {
+            const len = this.__input__.length;
+            if (this._i >= len) {
+                return eof;
+            }
+            if (num + this._i >= len) {
+                return this.read_rest();
+            }
+            const end = this._i + num;
+            const result = this.__input__.substring(this._i, end);
+            const found = result.match(/\n/g);
+            if (found) {
+                this._line += found.length;
+            }
+            this._i = end;
+            return result;
         }
         peek_char() {
             if (this._i >= this.__input__.length) {
@@ -4446,6 +4467,22 @@
             (LNumber.isNumber(n.num) && LNumber.isNumber(n.denom));
     };
     // -------------------------------------------------------------------------
+    LNumber.isInteger = function(n) {
+        if (!(LNumber.isNative(n) || n instanceof LNumber)) {
+            return false;
+        }
+        if (LNumber.isFloat(n)) {
+            return false;
+        }
+        if (LNumber.isRational(n)) {
+            return false;
+        }
+        if (LNumber.isComplex(n)) {
+            return false;
+        }
+        return true;
+    };
+    // -------------------------------------------------------------------------
     LNumber.isNative = function(n) {
         return typeof n === 'bigint' || typeof n === 'number';
     };
@@ -5332,6 +5369,9 @@
         this.char_ready = function() {
             return this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
         };
+        this._make_defaults();
+    }
+    InputPort.prototype._make_defaults = function() {
         this.read = this._with_parser((parser) => {
             return parser.read_object();
         });
@@ -5341,23 +5381,22 @@
         this.read_char = this._with_parser((parser) => {
             return parser.__lexer__.read_char();
         });
-        this.skip_char = this._with_parser(() => {
-            this.__parser__.__lexer__.skip_char();
-        });
-        this.read_char = this._with_parser(async () => {
-            var char = await this.peek_char();
-            this.skip_char();
-            return char;
+        this.read_string = this._with_parser((parser, number) => {
+            if (!LNumber.isInteger(number)) {
+                const type = LNumber.getType(number);
+                typeErrorMessage('read-string', type, 'integer');
+            }
+            return parser.__lexer__.read_string(number.valueOf());
         });
         this.peek_char = this._with_parser((parser) => {
             return parser.__lexer__.peek_char();
         });
-    }
+    };
     InputPort.prototype._with_init_parser = function(make_parser, fn) {
         var self = this;
-        return async function() {
+        return async function(...args) {
             var parser = await make_parser.call(self);
-            return fn(parser);
+            return fn(parser, ...args);
         };
     };
     InputPort.prototype.is_open = function() {
@@ -5482,18 +5521,7 @@
             }
             return this.__parser__;
         });
-        this.read = this._with_parser(function(parser) {
-            return parser.read_object();
-        });
-        this.read_char = this._with_parser(function(parser) {
-            return parser.__lexer__.read_char();
-        });
-        this.peek_char = this._with_parser(function(parser) {
-            return parser.__lexer__.peek_char();
-        });
-        this.read_line = this._with_parser(function(parser) {
-            return parser.__lexer__.read_line();
-        });
+        this._make_defaults();
     }
     InputStringPort.prototype.char_ready = function() {
         return true;

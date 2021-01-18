@@ -189,3 +189,9 @@
             (t.is (to.throw (read port)) true)
             (t.is (input-port-open? port) false)
             (delete-file filename)))))
+
+(test "port: read-string for input-string"
+      (lambda (t)
+        (let ((p (open-input-string "123456")))
+          (t.is (list (read-string 2 p) (read-string 2 p) (read-string 10 p))
+                '("12" "34" "56")))))

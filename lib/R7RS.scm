@@ -659,15 +659,15 @@
 
    Writes the characters of string from start to end in left-toright order
    to the textual output port."
-  (typechek "write-string" string "string")
+  (typecheck "write-string" string "string")
   (let ((port (if (null? rest) (current-output-port) (car rest)))
         (start (if (or (null? rest) (null? (cdr rest))) 0 (cadr rest)))
         (end (if (or (null? rest) (null? (cdr rest)) (null? (cddr rest)))
                  (string-length string)
                  (caddr rest))))
-    (typechek "write-string" port "output-port")
-    (typechek "write-string" start "number")
-    (typechek "write-string" end "number")
+    (typecheck "write-string" port "output-port")
+    (typecheck "write-string" start "number")
+    (typecheck "write-string" end "number")
     (display (substring string start end) port)))
 
 ;; -----------------------------------------------------------------------------
@@ -677,9 +677,23 @@
 
    Writes the character char (not an external representation of the character)
    to the given textual output port and returns an unspecified value."
-  (typechek "write-char" char "character")
+  (typecheck "write-char" char "character")
   (let ((port (if (null? rest) (current-output-port) (car rest))))
-    (typechek "write-char" port "output-port")
+    (typecheck "write-char" port "output-port")
     (display (string char) port)))
 
 ;; -----------------------------------------------------------------------------
+
+(define (read-string k . rest)
+  "(read-string k)
+   (read-string k port)
+
+   Reads the next k characters, or as many as are available
+   before the end of file, from the textual input port into a
+   newly allocated string in left-to-right order and returns the
+   string. If no characters are available before the end of file,
+   an end-of-file object is returned."
+  (typecheck "read-string" k "number")
+  (let ((port (if (null? rest) (current-input-port) (car rest))))
+    (typecheck "read-string" port "input-port")
+    (port.read_string k)))
