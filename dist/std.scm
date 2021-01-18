@@ -3363,11 +3363,27 @@
 
    Writes the characters of string from start to end in left-toright order
    to the textual output port."
+  (typechek "write-string" string "string")
   (let ((port (if (null? rest) (current-output-port) (car rest)))
         (start (if (or (null? rest) (null? (cdr rest))) 0 (cadr rest)))
         (end (if (or (null? rest) (null? (cdr rest)) (null? (cddr rest)))
                  (string-length string)
                  (caddr rest))))
+    (typechek "write-string" port "output-port")
+    (typechek "write-string" start "number")
+    (typechek "write-string" end "number")
     (display (substring string start end) port)))
+
+;; -----------------------------------------------------------------------------
+(define (write-char char . rest)
+  "(write-char string)
+   (write-char string port)
+
+   Writes the character char (not an external representation of the character)
+   to the given textual output port and returns an unspecified value."
+  (typechek "write-char" char "character")
+  (let ((port (if (null? rest) (current-output-port) (car rest))))
+    (typechek "write-char" port "output-port")
+    (display (string char) port)))
 
 ;; -----------------------------------------------------------------------------
