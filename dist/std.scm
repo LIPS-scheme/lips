@@ -3355,3 +3355,19 @@
   (if #f #f))
 
 ;; -----------------------------------------------------------------------------
+(define (write-string string . rest)
+  "(write-string string)
+   (write-string string port)
+   (write-string string port start)
+   (write-string string port start end)
+
+   Writes the characters of string from start to end in left-toright order
+   to the textual output port."
+  (let ((port (if (null? rest) (current-output-port) (car rest)))
+        (start (if (or (null? rest) (null? (cdr rest))) 0 (cadr rest)))
+        (end (if (or (null? rest) (null? (cdr rest)) (null? (cddr rest)))
+                 (string-length string)
+                 (caddr rest))))
+    (display (substring string start end) port)))
+
+;; -----------------------------------------------------------------------------
