@@ -25,7 +25,7 @@ var term = (function() {
     var bold = '[[b;rgba(255,255,255,0.99);]';
     function formatBaner(banner, dynamic) {
         var entry = '   ' + bold + (dynamic ? 'dynamic' : 'lexical') + ' scope] $1';
-        return banner.replace(/(\((?:env|help [^)]+)\))/g, bold + '$1]')
+        return banner.replace(/(\((?:env|apropos|help)[^)]*\))/g, bold + '$1]')
             .replace(/(\n\nLIPS.+)/m, entry)
             .replace(/(Jakub T. Jankiewicz)/, '[[!;;;;https://jcubic.pl/me]$1]');
     }
