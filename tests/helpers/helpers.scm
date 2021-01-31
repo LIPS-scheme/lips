@@ -20,6 +20,7 @@
                            (set-obj! e 'savedError undefined)))))
        (--> ,attempt (commit)))))
 
+
 (define-macro (to.throw . body)
   "(to.throw code)
 
@@ -34,11 +35,7 @@
 (define (test_ . rest)
   "(test_ . rest)
 
-   Helper that disable tests. Function that do nothing"
-  )
-
-
-;;(define t.is equal?)
+   Helper that disable tests. Function that do nothing")
 
 (define (%test-specs t specs)
   "(%test-specs t list)
@@ -70,11 +67,3 @@
                                  `(list ,(symbol->string (car spec))
                                         ,@spec))
                                body))))
-
-
-;;(define (test name fn)
-;;  (fn (make-object :is
-;;         (lambda (a b)
-;;           (if (eq? a b)
-;;               (display "ok")
-;;               (throw (concat "FAIL " (number->string a) " != " (number->string b))))))))

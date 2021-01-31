@@ -9,25 +9,34 @@
 
 // without this tests stop before running LIPS files
 const ava = require('ava');
+const lily = require('@jcubic/lily');
 
-const {promisify} = require('util');
+const { promisify } = require('util');
 const fs = require('fs');
 const readFile = promisify(fs.readFile);
 const readDir = promisify(fs.readdir);
+var util = require('util');
 
 const lips = require('../src/lips');
 
-readDir('./tests/').then(function(filenames) {
-  return Promise.all(filenames.filter(function(file) {
-      return file.match(/.scm$/) && !file.match(/^\.#|^_/);
-  }).map(function(file) {
-    return readFile(`tests/${file}`).then(d => d.toString());
-  })).then(async function (files) {
+async function get_files() {
+    const options = lily(process.argv.slice(2));
+    if (options.f) {
+        return [options.f];
+    }
+    var files = await readDir('./tests/');
+    return files.filter(function(file) {
+        return file.match(/.scm$/) && !file.match(/^\.#|^_/);
+    });
+}
+
+get_files().then(filenames => {
+    return Promise.all(filenames.map(function(file) {
+        return readFile(`tests/${file}`).then(d => d.toString());
+    })).then(async function (files) {
       await lips.exec(`
         (let-env lips.env.__parent__
-          (load "./lib/bootstrap.scm")
-          (load "./lib/R5RS.scm")
-          (load "./lib/R7RS.scm")
+          (load "./dist/std.scm")
           (load "./tests/helpers/helpers.scm"))
       `);
       return lips.exec([`

@@ -4,7 +4,7 @@
 ;; http://people.cs.aau.dk/~normark/prog3-03/html/notes/eval-order_themes-delay-stream-section.html
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyriht (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyriht (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
 
@@ -22,7 +22,7 @@
 ;; -----------------------------------------------------------------------------
 (define head stream-car)
 (define tail stream-cdr)
-  
+
 ;; -----------------------------------------------------------------------------
 (define (empty-stream? x) (eq? x the-empty-stream))
 
@@ -38,10 +38,10 @@
 ;; -----------------------------------------------------------------------------
 (define (stream-section n stream)
   (cond ((= n 0) '())
-        (else 
-          (cons 
+        (else
+          (cons
             (head stream)
-            (stream-section 
+            (stream-section
              (- n 1)
              (tail stream))))))
 
@@ -58,14 +58,14 @@
 (define (add-streams s1 s2)
  (let ((h1 (head s1))
        (h2 (head s2)))
-   (cons-stream 
+   (cons-stream
      (+ h1 h2)
      (add-streams (tail s1) (tail s2)))))
 
 ;; --------------------------------------------------------------------------
 (define (stream-range n)
   (let loop ((i 0))
-    (if (= i n) 
+    (if (= i n)
 	the-empty-stream
 	(cons-stream i (loop (+ i 1))))))
 ;; --------------------------------------------------------------------------
@@ -76,7 +76,7 @@
 	result
 	(iter (fun result (stream-car stream))
 	      (stream-cdr stream)))))
-	      
+
 ;; -----------------------------------------------------------------------------
 (define (zip-streams . streams)
   (if (empty-stream? streams)
@@ -124,7 +124,7 @@
        '()
 	(cons (stream-car stream)
 	      (iter (stream-cdr stream))))))
-	      
+
 ;; -----------------------------------------------------------------------------
 ;; example streams
 ;; -----------------------------------------------------------------------------
@@ -151,7 +151,7 @@
 ;;(;;define factorials
 ;;  (stream-map ! integers))
 
-;; -----------------------------------------------------------------------------  
+;; -----------------------------------------------------------------------------
 (define (divisible? x y)
   (eq? (gcd x y) y))
 
@@ -160,15 +160,13 @@
   (cons-stream
    (stream-car stream)
    (sieve (stream-filter
-	   (lambda (x)
-	     (not
-	      (divisible? x (stream-car stream))))
-	   (stream-cdr stream)))))
+           (lambda (x)
+             (not
+              (divisible? x (stream-car stream))))
+           (stream-cdr stream)))))
 
 ;; -----------------------------------------------------------------------------
 (define (scale-stream stream n)
   (map-stream (lambda (x) (* x n)) stream))
-  
+
 ;;(force-stream (limit 10 (stream-map (lambda (a b) (+ a b)) integers (stream-cdr integers))))
-
-

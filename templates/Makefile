@@ -25,11 +25,12 @@ WGET=wget
 ESLINT=./node_modules/.bin/eslint
 COVERALLS=./node_modules/.bin/coveralls
 JEST=./node_modules/.bin/jest
+MERMAID=./node_modules/.bin/mmdc
 NPM=npm
 UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 
-ALL: Makefile  package.json .$(VERSION) dist/lips.js dist/lips.min.js README.md
+ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.scm
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
@@ -44,11 +45,17 @@ dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
 
+dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm
+	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm > dist/std.scm
+
 Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/g" templates/Makefile > Makefile
 
 package.json: templates/package.json .$(VERSION)
 	$(SED) -e "s/{{VER}}/"$(VERSION)"/g" templates/package.json > package.json || true
+
+assets/classDiagram.svg: assets/classDiagram
+	$(MERMAID) -i assets/classDiagram -o assets/classDiagram.svg
 
 README.md: templates/README.md dist/lips.js .$(VERSION)
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \
@@ -75,8 +82,14 @@ publish:
 jest-test: dist/lips.js
 	@$(JEST) --coverage spec/*.spec.js
 
-test: dist/lips.js
+test: dist/lips.js dist/std.scm
 	@$(NPM) run test
+
+test-file: dist/lips.js dist/std.scm
+	@$(NPM) run test -- -- -f $(FILE)
+
+test-update: dist/lips.js dist/std.scm
+	@$(NPM) run test-update
 
 zero:
 	@$(WGET) $(UNICODE) -O ./assets/UnicodeData.txt

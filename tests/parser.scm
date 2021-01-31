@@ -34,6 +34,19 @@
 
 (unset-special! ":")
 
+(set-special! "::" 'cube)
+
+(define (cube x)
+  (if (number? x)
+      (* x x x)
+      `(let ((.x ,x))
+         (* .x .x .x))))
+
+(define parser/t6 (let ((x 3)) ::x))
+(define parser/t7 (read "(let ((x 3)) ::x))"))
+
+(unset-special! "::")
+
 (test "parser: syntax extension"
       (lambda (t)
 
@@ -41,13 +54,16 @@
         (t.is parser/t2 '(foo . bar))
         (t.is parser/t3 '(--))
         (t.is parser/t4 ':foo)
-        (t.is parser/t5 ':foo)))
+        (t.is parser/t5 ':foo)
+        (t.is parser/t6 27)
+        (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))))
 
 (test "parser: escape hex literals"
       (lambda (t)
          (t.is (to.throw (read "\"\\x9\"")) #t)
          (t.is "\uFFFF" "￿")
          (t.is "\x9;\x9;" "\t\t")
+         (t.is (repr '|foo bar|) "foo bar")
          (t.is '|\x9;\x9;|  '|\t\t|)))
 
 (test "parser: character literals"
@@ -101,10 +117,34 @@
       (lambda (t)
         (let ((str (make-string 10 #\ )))
           (t.is (string-length str) 10)
-          (t.is (not (null? (--> str (match /^\s{10}$/)))) #t))))
+          (t.is (not (null? (--> str (match #/^\s{10}$/)))) #t))))
 
 (test "parser: vector quoting"
       (lambda (t)
          (t.is `#(1 2 3) #(1 2 3))
          (t.is `#(1 2 foo) #(1 2 foo))
          (t.is '#(1 2 foo) #(1 2 foo))))
+
+
+(test "parser: vector constants"
+      (lambda (t)
+
+        (define (v)
+          #(1 2 3))
+
+        (t.is (eq? (v) (v)) true)
+
+        (define (v)
+          `#(1 2 3))
+
+        (t.is (eq? (v) (v)) true)))
+
+
+(test "parser: escaping in strings"
+      (lambda (t)
+        ;; testing #48 - when writing code with string in Scheme
+        ;; we need to double escape to get slash
+        (define code (lips.parse "(--> \"<title>hello-world<\\/title>\"
+                                       (match #/<title>([^<]+)<\\/title>/)
+                                       1)"))
+        (t.is (eval (. code 0)) "hello-world")))

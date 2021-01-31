@@ -31,7 +31,7 @@
   "homepage": "https://github.com/jcubic/lips#readme",
   "eslintConfig": {
     "parserOptions": {
-      "ecmaVersion": 2018,
+      "ecmaVersion": 2020,
       "sourceType": "module",
       "ecmaFeatures": {}
     },
@@ -168,7 +168,11 @@
       "space-infix-ops": "error",
       "space-before-function-paren": [
         "error",
-        "never"
+        {
+            "anonymous": "never",
+            "named": "never",
+            "asyncArrow": "always"
+        }
       ],
       "complexity": [
         "error",
@@ -203,13 +207,16 @@
     "@babel/preset-env": "^7.9.6",
     "@babel/runtime": "^7.9.6",
     "@babel/runtime-corejs2": "^7.9.6",
+    "@mermaid-js/mermaid-cli": "^8.8.4-1",
     "acorn": "^7.1.1",
     "ava": "^3.8.1",
     "babel-preset-env": "^1.7.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
+    "benchmark": "^2.1.4",
     "coveralls": "^3.1.0",
-    "eslint": "^6.8.0",
+    "eslint": "^7.17.0",
+    "microtime": "^3.0.0",
     "nyc": "^15.0.1",
     "preact": "^10.5.7",
     "preact-render-to-string": "^5.1.12",

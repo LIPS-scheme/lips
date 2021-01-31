@@ -7,7 +7,7 @@
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/jcubic/lips.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/jcubic/lips/stargazers/)
-<a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20makes%20life%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JavaScript%2C%20lisp%20and%20npm%20to%20create%20your%20applications%20via%20@jcubic&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
+<a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20makes%20life%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JS%2C%20lisp%20and%20npm%20to%20create%20your%20applications%20via%20@lips_lang&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
    <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
 </a>
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
@@ -133,7 +133,7 @@ You can call this Scheme code:
     (load "./lib/R7RS.scm" e))
 ```
 
-you need to use path to lib files, you can host them yourself or use CDN.
+if you need to use path to lib files, you can host them yourself or use CDN.
 
 ```
 (let ((e lips.env.__parent__)
@@ -233,10 +233,29 @@ chmod a+x foo.scm
 
 Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
-## Credits
-* Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod)
+## Links
+* [Gitter Chat](https://gitter.im/jcubic/lips)
+* [Git Repository](https://github.com/jcubic/lips)
+* [Official Website](https://lips.js.org/)
+
+## Acknowledgments
+* Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
+* Current parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
+* `fetch` polyfill use [unfetch](https://github.com/developit/unfetch) by Jason Miller.
+* Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
+* The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley.
+* `ucs2decode` function taken from [punycode.js](https://github.com/bestiejs/punycode.js) by [Mathias Bynens](https://mathiasbynens.be/).
+* [Rosetta Code](https://rosettacode.org/) is used for:
+  * [gdc](https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript),
+  * [lcm](https://rosettacode.org/wiki/Least_common_multiple#JavaScript),
+  * [LFloat::toRational](https://rosettacode.org/wiki/Convert_decimal_number_to_rational).
+* [StackOverlow](https://stackoverflow.com) code was used for functions:
+  * [fworker](https://stackoverflow.com/a/10372280/387194),
+  * [flatten](https://stackoverflow.com/a/27282907/387194),
+  * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
+* Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
 
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
-Copyright (c) 2018-2020 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)

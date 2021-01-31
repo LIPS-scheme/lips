@@ -17,6 +17,15 @@
                                           (iter (- x 1))))))))
 
 
+(test "formatter: let"
+      (lambda (t)
+        (t.snapshot (pretty-format '(let ((x 10))
+                                      (print x)
+                                      (print x))))
+
+        (t.snapshot (pretty-format '(let ((x))
+                                      (print x)
+                                      (print x))))))
 
 (test "formatter: cond"
       (lambda (t)
@@ -39,7 +48,13 @@
 (test "formatter: define"
       (lambda (t)
 
+        (t.snapshot (pretty-format '(define (foo (x) (+ x x)))))
+
+        (t.snapshot (pretty-format '(define (foo (x) "xxx" (+ x x)))))
+
         (t.snapshot (pretty-format '(define foo (lambda (x) (+ x x)))))
+
+        (t.snapshot (pretty-format '(define foo (lambda (x) "xxx" (+ x x)))))
 
         (t.snapshot (pretty-format '(define foo (list 1 2 3))))
 

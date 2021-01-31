@@ -155,10 +155,10 @@
 (test "core: input-string-port"
       (lambda (t)
 
-        (let ((port (open-input-string "`(```,,,,@(list 1 2)) 10 /foo bar/")))
+        (let ((port (open-input-string "`(```,,,,@(list 1 2)) 10 #/foo bar/")))
           (t.is (read port) '(quasiquote ((quasiquote (quasiquote (quasiquote (unquote (unquote (unquote (unquote-splicing (list 1 2)))))))))))
           (t.is (read port) 10)
-          (t.is (read port) /foo bar/)
+          (t.is (read port) #/foo bar/)
           (t.is (eof-object? (read port)) true))))
 
 (test "core: it should throw exception why calling with improper list"
@@ -169,3 +169,139 @@
       (lambda (t)
         (t.is (to.throw (let ((x '(1 2 . 3))) (apply + x))) true)))
 
+
+(test "core: async for-each"
+      (lambda (t)
+          (define (delay x)
+            (new Promise (lambda (r)
+                           (setTimeout r x))))
+          (let* ((result (vector))
+                 (push (lambda (x) (--> result (push x))))
+                 (count 4)
+                 (time 100)
+                 (numbers (map (curry + 1) (range count)))
+                 (start (Date.now)))
+            (push 0)
+            (for-each (lambda (x)
+                        (delay time)
+                        (--> result (push x)))
+                      numbers)
+            (push (+ 1 count))
+            (let ((end (Date.now)))
+              (t.is (>= (- end start) (* (+ count 1) time)) true))
+            (t.is result (--> #(0) (concat (list->vector numbers) (vector (+ count 1))))))))
+
+(test "core: access this in method"
+      (lambda (t)
+        (let* ((x (object :foo (lambda () this.bar) :bar 10)))
+          (t.is (x.foo) 10))))
+
+(test "core: access env in called function inside method"
+      (lambda (t)
+        (let* ((result (vector))
+               (x (object :foo (lambda ()
+                                 (for-each (lambda (x)
+                                             (--> result (push x)))
+                                           '(1 2 3))))))
+          (x.foo)
+          (t.is result #(1 2 3)))))
+
+(test "core: access this in closure returned from method"
+      (lambda (t)
+        (let* ((x (object :foo (lambda ()
+                         (lambda (x)
+                           (+ x this.bar)))
+                          :bar 1))
+               (fn (x.foo)))
+          (t.is (fn 2) 3))))
+
+
+
+(test "core: quoted promise"
+      (lambda (t)
+        (let ((result (vector))
+              (p '>(new Promise (lambda (resolve)
+                                  (setTimeout (lambda ()
+                                                (resolve 10))
+                                              100)))))
+          (p.then (lambda (x)
+                    (result.push x)))
+          (t.is result #())
+          (await p)
+          (t.is result #(10)))))
+
+(test "core: regex"
+      (lambda (t)
+        (let* ((str "#/(\\((?:env|dir|help|apropos)[^)]*\\))/g")
+               (re (. (lips.parse str) 0)))
+          (t.is (regex? re) true)
+          (t.is (repr re) str))))
+
+(test "core: try..catch"
+      (lambda (t)
+        (let ((x))
+          (t.is (try 10 (finally (set! x 10))) 10)
+          (t.is x 10))
+
+        (let ((x))
+          (t.is (try aa (catch (e) false) (finally (set! x 10))) false)
+          (t.is x 10))
+
+        (t.is (to.throw (try bb (catch (e) (throw e)))) true)
+
+        (let ((x))
+          (t.is (to.throw (try cc (finally (set! x 10)))) true)
+          (t.is x 10))
+
+        (let ((x))
+          (t.is (try (new Promise (lambda (r) (r 10))) (finally (set! x 10))) 10)
+          (t.is x 10))
+
+        (let ((x))
+          (t.is (to.throw (try (Promise.reject 10) (catch (e) (set! x 10) (throw e)))) true)
+          (t.is x 10))
+
+        (t.is (try xx (catch (e) false)) false)
+
+        (let ((x))
+          (t.is (try (Promise.reject 10) (catch (e) e) (finally (set! x 10))) 10)
+          (t.is x 10))
+
+        (t.is (try (Promise.reject 10) (catch (e) e)) 10)
+
+
+        (t.is (to.throw (try (Promise.reject 10) (catch (e) (throw e)))) true)
+
+        (let ((x))
+          (t.is (to.throw (try (Promise.reject 10) (finally (set! x 10))))true)
+          (t.is x 10))))
+
+(test "core: chain of promises"
+      (lambda (t)
+        (define-macro (delay time . expr)
+          (let ((resolve (gensym "resolve")))
+            `(new Promise (lambda (,resolve)
+                            (setTimeout (lambda ()
+                                          (,resolve (begin ,@expr)))
+                                        ,time)))))
+
+        (let ((x 1) (y 2))
+          (delay 100 (set! x 10))
+          (delay 100 (set! y 20))
+          (t.is (+ x y) 30))
+
+        ;; bug #116
+        (let ((x 1))
+          (t.is (list (delay 200 (set! x 10) 10)
+                      (delay 100 x))
+                '(10 10)))
+
+        (let ((x 1))
+          (t.is (list* (delay 200 (set! x 10) 10)
+                       (delay 100 x))
+                '(10 1)))))
+
+(test "core: repr of R7RS symbols"
+      (lambda (t)
+        (t.is (repr '|foo bar| true) "|foo bar|")
+        (t.is (repr (string->symbol "foo bar") true) "|foo bar|")))

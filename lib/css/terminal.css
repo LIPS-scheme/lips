@@ -1,0 +1,78 @@
+.terminal-output > :not(.raw) {
+    position: relative;
+}
+.token.__doc__ {
+    cursor: help;
+}
+.token.__doc__:hover::before {
+    display: block;
+    content: attr(data-doc);
+}
+.token.__doc__::before {
+    position: absolute;
+    top: clac(var(--top) * 1px);
+    left: calc(var(--left, 0) * 1px);
+    z-index: 400;
+    background: var(--color, #ccc);
+    color: var(--background, #000);
+    white-space: pre;
+    padding: 5px;
+    pointer-events:none;
+}
+.token.__doc__.top::before {
+    top: calc(var(--top) * 1px - var(--size, 1) * 14px);
+    transform: translateY(-100%);
+}
+.cmd .token.__doc__::before {
+    top: 0;
+    transform: translateY(-100%);
+}
+.token.__doc__.right::before {
+    left: calc(var(--right) * 1px);
+    transform: translateX(-100%);
+}
+.cmd .token.__doc__.right::before, .token.__doc__.top.right::before {
+    transform: translate(-100%, -100%);
+}
+
+.shell-wrapper .terminal.lips {
+    font-size-adjust: none; --size: 1.2;
+    height: calc(100% - 26px);
+}
+.shell-wrapper nav {
+    cursor: row-resize; color:#ccc;
+    border-bottom: 1px solid #ccc;
+    font-family: monospace;
+    text-align: right;
+    background:black;
+    font-size: 13px;
+    line-height: initial;
+    margin: 0;
+    width: 100%;
+    height: auto;
+}
+.shell-container {
+    position: fixed;
+    z-index: 99999;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+}
+.shell-wrapper .shell-destroy {
+    padding: 5px;
+    cursor: pointer;
+    display: inline-block;
+}
+.shell-wrapper .shell-mask{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: none;
+    z-index: 100
+}
+.shell-wrapper.drag .shell-mask {
+    display: block;
+}

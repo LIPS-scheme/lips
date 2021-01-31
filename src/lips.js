@@ -10,15 +10,16 @@
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
- * Copyright (c) 2018-2020 Jakub T. Jankiewicz <https://jcubic.pl/me>
+ * Copyright (c) 2018-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  * includes:
  *
  * unfetch by Jason Miller (@developit) MIT License
  *
- * includes:
  * contentloaded.js
+ *
+ * ucs2decode function from Punycode v 2.1.1 by Mathias Bynens MIT License
  *
  * Author: Diego Perini (diego.perini at gmail.com)
  * Summary: cross-browser wrapper for DOMContentLoaded
@@ -39,6 +40,7 @@
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
 /* global define, jQuery, BigInt, Map, Set, Symbol, importScripts */
+
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -105,7 +107,7 @@
                 console.log(x);
             }
         }
-        if (isPromise(x)) {
+        if (is_promise(x)) {
             x.then(msg);
         } else {
             msg(x);
@@ -190,7 +192,7 @@
     function gen_integer_re(mnemonic, range) {
         return `${num_mnemicic_re(mnemonic)}[+-]?${range}+`;
     }
-    var re_re = /^\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimy]*)$/;
+    var re_re = /^#\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimyus]*)$/;
     var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
     // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
     var complex_float_stre = `(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|${float_stre}|[+-]?[0-9]+))?(?:${float_stre}|[+-](?:[0-9]+/[0-9]+|[0-9]+))i`;
@@ -260,6 +262,33 @@
         'us': '\x1f',
         'del': '\x7f'
     };
+    // -------------------------------------------------------------------------
+    // :: ref: https://github.com/bestiejs/punycode.js/blob/master/punycode.js
+    // -------------------------------------------------------------------------
+    function ucs2decode(string) {
+        const output = [];
+        let counter = 0;
+        const length = string.length;
+        while (counter < length) {
+            const value = string.charCodeAt(counter++);
+            if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
+                // It's a high surrogate, and there is a next character.
+                const extra = string.charCodeAt(counter++);
+                if ((extra & 0xFC00) === 0xDC00) { // Low surrogate.
+                    output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
+                } else {
+                    // It's an unmatched surrogate; only append this code unit, in case the
+                    // next code unit is the high surrogate of a surrogate pair.
+                    output.push(value);
+                    counter--;
+                }
+            } else {
+                output.push(value);
+            }
+        }
+        return output;
+    }
+    // -------------------------------------------------------------------------
     const character_symbols = Object.keys(characters).join('|');
     const char_sre_re = `#\\\\(?:x[0-9a-f]+|${character_symbols}|[\\s\\S])`;
     const char_re = new RegExp(`^${char_sre_re}$`, 'i');
@@ -357,6 +386,7 @@
         if (char) {
             return LCharacter(char);
         }
+        throw new Error('Parse: invalid character');
     }
     // ----------------------------------------------------------------------
     function parse_complex(arg, radix = 10) {
@@ -463,14 +493,7 @@
     // ----------------------------------------------------------------------
     function parse_string(string) {
         // handle non JSON escapes and skip unicode escape \u (even partial)
-        var re = /([^\\\n])(\\(?:\\{2})*)(?!x[0-9A-F]+)(?!u[0-9A-F]{2,4})(.)/gi;
-        string = string.replace(re, function(_, before, slashes, chr) {
-            if (!['"', '/', 'b', 'f', 'n', '\\', 'r', 't', 'x'].includes(chr)) {
-                slashes = slashes.substring(1).replace(/\\\\/, '\\');
-                //return before + slashes + chr;
-            }
-            return _;
-        }).replace(/\\x([0-9a-f]+);/ig, function(_, hex) {
+        string = string.replace(/\\x([0-9a-f]+);/ig, function(_, hex) {
             return "\\u" + hex.padStart(4, '0');
         }).replace(/\n/g, '\\n'); // in LIPS strings can be multiline
         var m = string.match(/(\\*)(\\x[0-9A-F])/i);
@@ -519,11 +542,18 @@
             return parse_float(arg);
         } else if (arg === 'nil') {
             return nil;
-        } else if (['true', '#t'].includes(arg)) {
+        } else if (['true', '#t', '#true'].includes(arg)) {
             return true;
-        } else if (['false', '#f'].includes(arg)) {
+        } else if (['false', '#f', '#false'].includes(arg)) {
             return false;
+        } else if (arg.match(/^#[iexobd]/)) {
+            throw new Error('Invalid numeric constant');
         } else {
+            // characters with more than one codepoint
+            var m = arg.match(/#\\(.+)/);
+            if (m && ucs2decode(m[1]).length === 1) {
+                return parse_character(arg);
+            }
             return parse_symbol(arg);
         }
     }
@@ -536,34 +566,16 @@
                  ['#t', '#f', 'nil', 'true', 'false'].includes(str));
     }
     // ----------------------------------------------------------------------
-    /* eslint-disable */
-    var pre_parse_re = /("(?:\\[\S\s]|[^"])*"?|\/(?! )[^\n\/\\]*(?:\\[\S\s][^\n\/\\]*)*\/[gimy]*(?=[\s[\]()]|$)|\|[^|\s\n]+\||#;|;.*|#\|(?!\|#)[\s\S]*\|#)/g;
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
-    // generate regex for all number literals
-    var num_stre = [
-        gen_complex_re,
-        gen_rational_re,
-        gen_integer_re
-    ].map(make_num_stre).join('|');
     // ----------------------------------------------------------------------
-    function make_tokens_re() {
-        const tokens = specials.names()
-            .sort((a, b) => b.length - a.length || a.localeCompare(b))
-            .map(escape_regex).join('|');
-        return new RegExp(`(${char_sre_re}|#f|#t|#;|(?:${num_stre})(?=$|[\\n\\s()[\\]])|\\[|\\]|\\(|\\)|\\|[^|]+\\||;.*|(?:#[ei])?${float_stre}(?=$|[\\n\\s()[\\]])|\\n|\\.{2,}|'(?=#[ft]|(?:#[xiobe]){1,2}|#\\\\)|(?!#:)(?:${tokens})|[^(\\s)[\\]]+)`, 'gim');
-    }
-    /* eslint-enable */
-    // ----------------------------------------------------------------------
-    function last_item(array, n = 1) {
-        return array[array.length - n];
-    }
-    // ----------------------------------------------------------------------
+    /*
     function escape_regex(str) {
         if (typeof str === 'string') {
             var special = /([-\\^$[\]()+{}?*.|])/g;
             return str.replace(special, '\\$1');
         }
     }
+    */
     // ----------------------------------------------------------------------
     // Stack used in balanced function
     // TODO: use it in parser
@@ -585,59 +597,20 @@
     };
     // ----------------------------------------------------------------------
     function tokens(str) {
-        var tokens_re = make_tokens_re();
-        str = str.replace(/\n\r|\r/g, '\n');
-        var count = 0;
-        var line = 0;
-        var tokens = [];
-        var current_line = [];
-        var col = 0;
-        str.split(pre_parse_re).filter(Boolean).forEach(function(string) {
-            if (string.match(pre_parse_re)) {
-                col = 0;
-                if (current_line.length) {
-                    var last_token = last_item(current_line);
-                    if (last_token.token.match(/\n/)) {
-                        var last_line = last_token.token.split('\n').pop();
-                        col += last_line.length;
-                    } else {
-                        col += last_token.token.length;
-                    }
-                    col += last_token.col;
-                }
-                var token = {
-                    col,
-                    line,
-                    token: string,
-                    offset: count
-                };
-                tokens.push(token);
-                current_line.push(token);
-                count += string.length;
-                col += string.length;
-                line += (string.match("\n") || []).length;
-                return;
+        if (str instanceof LString) {
+            str = str.valueOf();
+        }
+        var lexer = new Lexer(str, { whitespace: true });
+        var result = [];
+        while (true) {
+            const token = lexer.peek(true);
+            if (token === eof) {
+                break;
             }
-            var parts = string.split(tokens_re).filter(Boolean);
-            parts.forEach(function(string) {
-                var token = {
-                    col,
-                    line,
-                    token: string,
-                    offset: count
-                };
-                col += string.length;
-                count += string.length;
-                tokens.push(token);
-                current_line.push(token);
-                if (string === '\n') {
-                    ++line;
-                    current_line = [];
-                    col = 0;
-                }
-            });
-        });
-        return tokens;
+            result.push(token);
+            lexer.skip();
+        }
+        return result;
     }
     // ----------------------------------------------------------------------
     function multiline_formatter(meta) {
@@ -678,23 +651,19 @@
         return result;
     }
     // ----------------------------------------------------------------------
-    function tokenize(str, extra, formatter = multiline_formatter) {
+    function tokenize(str, meta = false) {
         if (str instanceof LString) {
             str = str.toString();
         }
-        if (extra) {
-            return tokens(str).map(formatter);
+        if (meta) {
+            return tokens(str);
         } else {
             var result = tokens(str).map(function(token) {
-                var ret = formatter(token);
-                if (!ret || typeof ret.token !== 'string') {
-                    throw new Error('[tokenize] Invalid formatter wrong return object');
-                }
                 // we don't want literal space character to be trimmed
-                if (ret.token === '#\\ ') {
-                    return ret.token;
+                if (token.token === '#\\ ') {
+                    return token.token;
                 }
-                return ret.token.trim();
+                return token.token.trim();
             }).filter(function(token) {
                 return token && !token.match(/^;/) && !token.match(/^#\|[\s\S]*\|#$/);
             });
@@ -738,11 +707,120 @@
         return tokens;
     }
     // ----------------------------------------------------------------------
+    // detect if object is ES6 Symbol that work with polyfills
+    // ----------------------------------------------------------------------
+    function isSymbol(x) {
+        return typeof x === 'symbol' ||
+            typeof x === 'object' &&
+            Object.prototype.toString.call(x) === '[object Symbol]';
+    }
+    // ----------------------------------------------------------------------
+    // :: LSymbol constructor
+    // ----------------------------------------------------------------------
+    function LSymbol(name) {
+        if (typeof this !== 'undefined' && this.constructor !== LSymbol ||
+            typeof this === 'undefined') {
+            return new LSymbol(name);
+        }
+        if (name instanceof LString) {
+            name = name.valueOf();
+        }
+        if (LSymbol.list[name] instanceof LSymbol) {
+            return LSymbol.list[name];
+        }
+        this.__name__ = name;
+        if (typeof name === 'string') {
+            LSymbol.list[name] = this;
+        }
+    }
+    LSymbol.list = {};
+    // ----------------------------------------------------------------------
+    LSymbol.is = function(symbol, name) {
+        return symbol instanceof LSymbol &&
+            ((name instanceof LSymbol && symbol.__name__ === name.__name__) ||
+             (typeof name === 'string' && symbol.__name__ === name) ||
+             (name instanceof RegExp && name.test(symbol.__name__)));
+    };
+    // ----------------------------------------------------------------------
+    LSymbol.prototype.toString = function(quote) {
+        //return '#<symbol \'' + this.name + '\'>';
+        if (isSymbol(this.__name__)) {
+            return symbol_to_string(this.__name__);
+        }
+        var str = this.valueOf();
+        if (quote && str.match(/\s/)) {
+            return `|${str}|`;
+        }
+        return str;
+    };
+    LSymbol.prototype.toJSON = function() {
+        this.toString(true);
+    };
+    LSymbol.prototype.valueOf = function() {
+        return this.__name__.valueOf();
+    };
+    // -------------------------------------------------------------------------
+    LSymbol.prototype.is_gensym = function() {
+        return is_gensym(this.__name__);
+    };
+    // -------------------------------------------------------------------------
+    function symbol_to_string(obj) {
+        return obj.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
+    }
+    // -------------------------------------------------------------------------
+    function is_gensym(symbol) {
+        if (typeof symbol === 'symbol') {
+            return !!symbol.toString().match(/^Symbol\(#:/);
+        }
+        return false;
+    }
+    // -------------------------------------------------------------------------
+    var gensym = (function() {
+        var count = 0;
+        return function(name = null) {
+            if (name instanceof LSymbol) {
+                name = name.valueOf();
+            }
+            if (is_gensym(name)) {
+                // don't do double gynsyms in nested syntax-rules
+                return LSymbol(name);
+            }
+            // use ES6 symbol as name for lips symbol (they are unique)
+            if (name !== null) {
+                return new LSymbol(Symbol(`#:${name}`));
+            }
+            count++;
+            return new LSymbol(Symbol(`#:g${count}`));
+        };
+    })();
+    // ----------------------------------------------------------------------
+    // class used to escape promises feature #54
+    // ----------------------------------------------------------------------
+    function QuotedPromise(promise) {
+        // prevent exception on unhandled rejecting when using
+        // '>(Promise.reject (new Error "zonk")) in REPL
+        promise.catch(() => {});
+        this.__promise__ = promise;
+    }
+    // ----------------------------------------------------------------------
+    QuotedPromise.prototype.then = function(fn) {
+        return new QuotedPromise(this.__promise__.then(fn));
+    };
+    // ----------------------------------------------------------------------
+    QuotedPromise.prototype.catch = function(fn) {
+        return new QuotedPromise(this.__promise__.catch(fn));
+    };
+    // ----------------------------------------------------------------------
+    QuotedPromise.prototype.valueOf = function() {
+        return this.__promise__;
+    };
+    // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
     var specials = {
         LITERAL: Symbol.for('literal'),
         SPLICE: Symbol.for('splice'),
+        SYMBOL: Symbol.for('symbol'),
         names: function() {
             return Object.keys(this._specials);
         },
@@ -752,16 +830,43 @@
         get: function(name) {
             return this._specials[name];
         },
+        // events are used in Lexer dynamic rules
+        off: function(name, fn = null) {
+            if (Array.isArray(name)) {
+                name.forEach(name => this.off(name, fn));
+            } else if (fn === null) {
+                delete this._events[name];
+            } else {
+                this._events = this._events.filter(test => test !== fn);
+            }
+        },
+        on: function(name, fn) {
+            if (Array.isArray(name)) {
+                name.forEach(name => this.on(name, fn));
+            } else if (!this._events[name]) {
+                this._events[name] = [fn];
+            } else {
+                this._events[name].push(fn);
+            }
+        },
+        trigger: function(name, ...args) {
+            if (this._events[name]) {
+                this._events[name].forEach(fn => fn(...args));
+            }
+        },
         remove: function(name) {
+            this.trigger('remove');
             delete this._specials[name];
         },
         append: function(name, value, type) {
+            this.trigger('append');
             this._specials[name] = {
                 seq: name,
                 symbol: value,
                 type
             };
         },
+        _events: {},
         _specials: {}
     };
     function is_literal(special) {
@@ -772,7 +877,8 @@
         ["'", new LSymbol('quote'), specials.LITERAL],
         ['`', new LSymbol('quasiquote'), specials.LITERAL],
         [',@', new LSymbol('unquote-splicing'), specials.LITERAL],
-        [',', new LSymbol('unquote'), specials.LITERAL]
+        [',', new LSymbol('unquote'), specials.LITERAL],
+        ["'>", new LSymbol('quote-promise'), specials.LITERAL]
     ];
     Object.defineProperty(specials, 'builtin', {
         writable: false,
@@ -782,29 +888,435 @@
         specials.append(seq, symbol, type);
     });
     // ----------------------------------------------------------------------
+    // :: State based incremental Lexer
+    // ----------------------------------------------------------------------
+    /* Lexer debugger
+    var DEBUG = false;
+    function log(...args) {
+        if (DEBUG) {
+            console.log(...args);
+        }
+    }
+    */
+    class Lexer {
+        constructor(input, { whitespace = false } = {}) {
+            Object.defineProperty(this, '__input__', {
+                value: input.replace(/\r/g, ''),
+                enumerable: true
+            });
+            var internals = {};
+            [
+                '_i', '_whitespace', '_col', '_newline', '_line',
+                '_state', '_next', '_token', '_prev_char'
+            ].forEach(name => {
+                Object.defineProperty(this, name, {
+                    configurable: false,
+                    enumerable: false,
+                    get() {
+                        return internals[name];
+                    },
+                    set(value) {
+                        internals[name] = value;
+                    }
+                });
+            });
+            this._whitespace = whitespace;
+            this._i = this._line = this._col = this._newline = 0;
+            this._state = this._next = this._token = null;
+            this._prev_char = '';
+        }
+        get(name) {
+            return this.__internal[name];
+        }
+        set(name, value) {
+            this.__internal[name] = value;
+        }
+        token(meta = false) {
+            if (meta) {
+                let line = this._line;
+                if (this._whitespace && this._token === '\n') {
+                    --line;
+                }
+                return {
+                    token: this._token,
+                    col: this._col,
+                    offset: this._i,
+                    line
+                };
+            }
+            return this._token;
+        }
+        peek(meta = false) {
+            if (this._i >= this.__input__.length) {
+                return eof;
+            }
+            if (this._token) {
+                return this.token(meta);
+            }
+            var found = this.next_token();
+            if (found) {
+                this._token = this.__input__.substring(this._i, this._next);
+                return this.token(meta);
+            }
+            return eof;
+        }
+        skip() {
+            if (this._next !== null) {
+                this._token = null;
+                this._i = this._next;
+            }
+        }
+        read_line() {
+            var len = this.__input__.length;
+            if (this._i >= len) {
+                return eof;
+            }
+            for (let i = this._i; i < len; ++i) {
+                var char = this.__input__[i];
+                if (char === '\n') {
+                    const line = this.__input__.substring(this._i, i);
+                    this._i = i + 1;
+                    ++this._line;
+                    return line;
+                }
+            }
+            return this.read_rest();
+        }
+        read_rest() {
+            const i = this._i;
+            this._i = this.__input__.length;
+            return this.__input__.substring(i);
+        }
+        read_string(num) {
+            const len = this.__input__.length;
+            if (this._i >= len) {
+                return eof;
+            }
+            if (num + this._i >= len) {
+                return this.read_rest();
+            }
+            const end = this._i + num;
+            const result = this.__input__.substring(this._i, end);
+            const found = result.match(/\n/g);
+            if (found) {
+                this._line += found.length;
+            }
+            this._i = end;
+            return result;
+        }
+        peek_char() {
+            if (this._i >= this.__input__.length) {
+                return eof;
+            }
+            return LCharacter(this.__input__[this._i]);
+        }
+        read_char() {
+            const char = this.peek_char();
+            this.skip_char();
+            return char;
+        }
+        skip_char() {
+            if (this._i < this.__input__.length) {
+                ++this._i;
+                this._token = null;
+            }
+        }
+        match_rule(rule, { prev_char, char, next_char } = {}) {
+            var [ re, prev_re, next_re, state ] = rule;
+            if (rule.length !== 5) {
+                throw new Error(`Lexer: Invald rule of length ${rule.length}`);
+            }
+            if (!char.match(re)) {
+                return false;
+            }
+            if (!match_or_null(prev_re, prev_char)) {
+                return false;
+            }
+            if (!match_or_null(next_re, next_char)) {
+                return false;
+            }
+            if (state !== this._state) {
+                return false;
+            }
+            return true;
+        }
+        next_token() {
+            if (this._i >= this.__input__.length) {
+                return false;
+            }
+            var start = true;
+            loop:
+            for (let i = this._i, len = this.__input__.length; i < len; ++i) {
+                var char = this.__input__[i];
+                var prev_char = this.__input__[i - 1] || '';
+                var next_char = this.__input__[i + 1] || '';
+                if (char === '\n') {
+                    ++this._line;
+                    const newline = this._newline;
+                    if (this._state === null) {
+                        // keep beging of newline to calculate col
+                        // we don't want to check inside the token (e.g. strings)
+                        this._newline = i + 1;
+                    }
+                    if (this._whitespace) {
+                        this._next = i + 1;
+                        this._col = this._i - newline;
+                        return true;
+                    }
+                }
+                // skip leadning spaces
+                if (start && this._state === null && char.match(/\s/)) {
+                    if (this._whitespace) {
+                        if (!next_char.match(/\s/)) {
+                            this._next = i + 1;
+                            this._col = this._i - this._newline;
+                            return true;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        this._i = i + 1;
+                        continue;
+                    }
+                }
+                start = false;
+                for (let rule of Lexer.rules) {
+                    if (this.match_rule(rule, { prev_char, char, next_char })) {
+                        // change state to null is end of the token
+                        var next_state = rule[rule.length - 1];
+                        this._state = next_state;
+                        if (this._state === null) {
+                            this._next = i + 1;
+                            this._col = this._i - this._newline;
+                            return true;
+                        }
+                        // token is activated
+                        continue loop;
+                    }
+                }
+                if (this._state !== null) {
+                    // collect char in token
+                    continue loop;
+                }
+                // no rule for token
+                var line = this.__input__.split('\n')[this._line];
+                throw new Error(`Invalid Syntax at line ${this._line}\n${line}`);
+            }
+        }
+    }
+    // ----------------------------------------------------------------------
+    // TODO: cache the rules creation or whole list
+    // ----------------------------------------------------------------------
+    Lexer.symbol_rule = function symbol_rule(string, symbol) {
+        var rules = Lexer.literal_rule(string, symbol, Lexer.boundary, /\S/);
+
+        return rules.concat([
+            [/\S/, /\S/, Lexer.boundary, null, null],
+            [/\S/, /\S/, null, null, Lexer.symbol],
+            [/\S/, null, Lexer.boundary, Lexer.symbol, null]
+        ]);
+    };
+    // ----------------------------------------------------------------------
+    // state rule for literal symbol
+    // ----------------------------------------------------------------------
+    Lexer.literal_rule = function literal_rule(string, symbol, p_re = null, n_re = null) {
+        if (string.length === 0) {
+            throw new Error('Lexer: invalid literal rule');
+        }
+        if (string.length === 1) {
+            return [[string, p_re, n_re, null, null]];
+        }
+        var rules = [];
+        for (let i = 0, len = string.length; i < len; ++i) {
+            const rule = [];
+            rule.push(string[i]);
+            rule.push(string[i - 1] || p_re);
+            rule.push(string[i + 1] || n_re);
+            if (i === 0) {
+                rule.push(null);
+                rule.push(symbol);
+            } else if (i === len - 1) {
+                rule.push(symbol);
+                rule.push(null);
+            } else {
+                rule.push(symbol);
+                rule.push(symbol);
+            }
+            rules.push(rule);
+        }
+        return rules;
+    };
+    // ----------------------------------------------------------------------
+    Lexer.string = Symbol.for('string');
+    Lexer.symbol = Symbol.for('symbol');
+    Lexer.comment = Symbol.for('comment');
+    Lexer.regex = Symbol.for('regex');
+    Lexer.character = Symbol.for('character');
+    Lexer.bracket = Symbol.for('bracket');
+    Lexer.b_symbol = Symbol.for('b_symbol');
+    Lexer.b_comment = Symbol.for('b_comment');
+    Lexer.i_comment = Symbol.for('i_comment');
+    Lexer.character = Symbol.for('character');
+    // ----------------------------------------------------------------------
+    Lexer.boundary = /^$|[\s()[\]]/;
+    // ----------------------------------------------------------------------
+    Lexer._rules = [
+        // char_re prev_re next_re from_state to_state
+        // null as to_state mean that is single char token
+        // string
+        [/"/, /^$|[^\\]/, null, null, Lexer.string],
+        [/"/, /^$|[^\\]/, null, Lexer.string, null],
+
+        // comment
+        [/;/, /^$|[^#]/, null, null, Lexer.comment],
+        [/[\s\S]/, null, /\n/, Lexer.comment, null],
+        [/\s/, null, null, Lexer.comment, Lexer.comment],
+
+        // block comment
+        [/#/, null, /\|/, null, Lexer.b_comment],
+        [/\s/, null, null, Lexer.b_comment, Lexer.b_comment],
+        [/#/, /\|/, null, Lexer.b_comment, null],
+
+        // inline commentss
+        [/#/, null, /;/, null, Lexer.i_comment],
+        [/;/, /#/, null, Lexer.i_comment, null],
+
+        // block symbols
+        [/\|/, null, null, null, Lexer.b_symbol],
+        [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol],
+        [/\|/, null, Lexer.boundary, Lexer.b_symbol, null],
+
+        // hash special symbols, lexer don't need to distingiush those
+        // we only care if it's not pick up by vectors literals
+        [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol],
+
+        // characters
+        [/#/, null, /\\/, null, Lexer.character],
+        [/\\/, /#/, /\s/, Lexer.character, Lexer.character],
+        [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character],
+        [/\s/, /\\/, null, Lexer.character, null],
+        [/\S/, null, Lexer.boundary, Lexer.character, null],
+
+        // brackets
+        [/[()[\]]/, null, null, null, null],
+
+        // regex
+        [/#/, Lexer.boundary, /\//, null, Lexer.regex],
+        [/[ \t]/, null, null, Lexer.regex, Lexer.regex],
+        [/[()[\]]/, null, null, Lexer.regex, Lexer.regex],
+        [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null],
+        [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null],
+        [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex],
+        [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null]
+    ];
+    // ----------------------------------------------------------------------
+    // :: symbols should be matched last
+    // ----------------------------------------------------------------------
+    Lexer._symbol_rules = [
+        [/\S/, Lexer.boundary, Lexer.boundary, null, null],
+        [/\S/, Lexer.boundary, null, null, Lexer.symbol],
+        [/\S/, null, Lexer.boundary, null, null],
+        [/\S/, null, null, null, Lexer.symbol],
+        [/\S/, null, Lexer.boundary, Lexer.symbol, null]
+    ];
+    // ----------------------------------------------------------------------
+    // :: dynamic getter or Lexer state rules, parser use this
+    // :: so in fact user code can modify lexer using syntax extensions
+    // ----------------------------------------------------------------------
+    Lexer._cache = {
+        valid: false,
+        rules: null
+    };
+    // ----------------------------------------------------------------------
+    specials.on(['remove', 'append'], function() {
+        Lexer._cache.valid = false;
+        Lexer._cache.rules = null;
+    });
+    // ----------------------------------------------------------------------
+    Object.defineProperty(Lexer, 'rules', {
+        get() {
+            if (Lexer._cache.valid) {
+                return Lexer._cache.rules;
+            }
+            var tokens = specials.names().sort((a, b) => {
+                return b.length - a.length || a.localeCompare(b);
+            });
+            Lexer._cache.rules = Lexer._rules.concat(tokens.reduce((acc, token) => {
+                const { type, symbol: special_symbol } = specials.get(token);
+                let rules;
+                let symbol;
+                // we need distinct symbols_ for syntax extensions
+                if (token[0] === '#') {
+                    if (token.length === 1) {
+                        symbol = Symbol.for(token);
+                    } else {
+                        symbol = Symbol.for(token[1]);
+                    }
+                } else {
+                    symbol = special_symbol;
+                }
+                if (type === specials.SYMBOL) {
+                    rules = Lexer.symbol_rule(token, symbol);
+                } else {
+                    rules = Lexer.literal_rule(token, symbol);
+                }
+                return acc.concat(rules);
+            }, []), Lexer._symbol_rules);
+
+            Lexer._cache.valid = true;
+            return Lexer._cache.rules;
+        }
+    });
+    // ----------------------------------------------------------------------
+    function match_or_null(re, char) {
+        return re === null || char.match(re);
+    }
+    // ----------------------------------------------------------------------
     // :: Parser inspired by BiwaScheme
-    // :: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
+    // :: ref: https://github.com/biwascheme/biwascheme/blob/master/src/system/parser.js
     // ----------------------------------------------------------------------
     class Parser {
-        constructor(arg, env) {
+        constructor(arg, { env, meta = false, formatter = multiline_formatter } = {}) {
             if (arg instanceof LString) {
                 arg = arg.toString();
             }
-            if (typeof arg === 'string') {
-                arg = tokenize(arg);
-            }
-            this.__tokens__ = arg;
+            this._formatter = formatter;
+            this._meta = meta;
+            this.__lexer__ = new Lexer(arg);
             this.__env__ = env;
-            this.__i__ = 0;
         }
         resolve(name) {
             return this.__env__ && this.__env__.get(name, { throwError: false });
         }
-        peek() {
-            return this.__tokens__[this.__i__] || eof;
+        async peek() {
+            let token;
+            while (true) {
+                token = this.__lexer__.peek(true);
+                if (token === eof) {
+                    return eof;
+                }
+                if (this.is_comment(token.token)) {
+                    this.skip();
+                    continue;
+                }
+                if (token.token === '#;') {
+                    this.skip();
+                    if (this.__lexer__.peek() === eof) {
+                        throw new Error('Lexer: syntax error eof found after comment');
+                    }
+                    await this.read_object();
+                    continue;
+                }
+                break;
+            }
+            token = this._formatter(token);
+            if (this._meta) {
+                return token;
+            }
+            return token.token;
         }
         skip() {
-            this.__i__++;
+            this.__lexer__.skip();
         }
         special(token) {
             return specials.names().includes(token);
@@ -812,36 +1324,24 @@
         builtin(token) {
             return specials.builtin.includes(token);
         }
-        // split parser extension that is added inside single string
-        // (e.g. one file) - tokenizer parse them before parsing the expression
-        // this only happen on symbols that have special as prefix
-        split_special(token) {
-            if (!is_symbol_string(token) || this.special(token)) {
-                return [];
-            }
-            var names = specials.names().filter(name => !specials.builtin.includes(name));
-            var prefix = names.find(name => token.startsWith(name));
-            if (!prefix) {
-                return [];
-            }
-            return [prefix, token.replace(new RegExp('^' + escape_regex(prefix)), '')];
-        }
-        read() {
-            const token = this.peek();
+        async read() {
+            const token = await this.peek();
             this.skip();
             return token;
         }
         is_open(token) {
-            return token === '(' || token === '[';
+            return ['(', '['].includes(token);
         }
         is_close(token) {
-            return token === ')' || token === ']';
+            return [')', ']'].includes(token);
         }
         async read_list() {
             let head = nil, prev = head;
-            var first = true;
-            while (this.__i__ < this.__tokens__.length) {
-                const token = this.peek();
+            while (true) {
+                const token = await this.peek();
+                if (token === eof) {
+                    break;
+                }
                 if (this.is_close(token)) {
                     this.skip();
                     break;
@@ -858,30 +1358,55 @@
                     }
                     prev = cur;
                 }
-                if (first) {
-                    first = false;
-                }
             }
             return head;
         }
-        read_value() {
-            var token = this.read();
+        async read_value() {
+            var token = await this.read();
+            if (token === eof) {
+                throw new Error('Parser: Expected token eof found');
+            }
             return parse_argument(token);
         }
+        is_comment(token) {
+            return token.match(/^;/) || (token.match(/^#\|/) && token.match(/\|#$/));
+        }
+        _eval(code) {
+            return evaluate(code, { env: this.__env__, error: (e) => {
+                throw e;
+            } });
+        }
         async read_object() {
-            const token = this.peek();
+            const token = await this.peek();
             if (token === eof) {
                 return token;
             }
-            // special case when code add special and it try to parse
-            // that special as prefix of a symbol
-            const [prefix, rest] = this.split_special(token);
-            if (this.special(token) || (prefix && rest)) {
-                const special = specials.get(prefix ? prefix : token);
+            if (this.special(token)) {
+                // bultin parser extensions are mapping short symbol to longer symbol
+                // that can be function or macro, parser don't care
+                // if it's not bultin then the extension can be macro or function
+                // FUNCTION: when it's used it get arguments like FEXPR and
+                // result is returned by parser as is
+                // MACRO: if macros are used they are evaluated in place and
+                // result is returned by parser but they are quoted
+                const special = specials.get(token);
+                const bultin = this.builtin(token);
                 this.skip();
                 let expr;
-                const object = prefix ? parse_argument(rest) : await this.read_object();
-                if (is_literal(prefix || token)) {
+                const object = await this.read_object();
+                if (!bultin) {
+                    var extension = this.__env__.get(special.symbol);
+                    if (typeof extension === 'function') {
+                        if (is_literal(token)) {
+                            return extension.call(this.__env__, object);
+                        } else if (object instanceof Pair) {
+                            return extension.apply(this.__env__, object.toArray(false));
+                        }
+                        throw new Error('Parser: Invalid parser extension ' +
+                                        `invocation ${special.symbol}`);
+                    }
+                }
+                if (is_literal(token)) {
                     expr = new Pair(
                         special.symbol,
                         new Pair(
@@ -896,34 +1421,28 @@
                     );
                 }
                 // builtin parser extensions just expand into lists like 'x ==> (quote x)
-                if (this.builtin(token)) {
+                if (bultin) {
                     return expr;
                 }
                 // evaluate parser extension at parse time
-                var result = await evaluate(expr, { env: this.__env__, error: (e) => {
-                    throw e;
-                } });
-                // we need literal quote to make macro that return pair works
-                // because after parser return the value it will be evaluated again
-                // by the interpreter, so we create quoted expression
-                return unpromise(result, result => {
+                if (extension instanceof Macro) {
+                    var result = await this._eval(expr);
+                    // we need literal quote to make macro that return pair works
+                    // because after parser return the value it will be evaluated again
+                    // by the interpreter, so we create quoted expression
                     if (result instanceof Pair || result instanceof LSymbol) {
-                        return new Pair(
-                            LSymbol('quote'),
-                            new Pair(
-                                result,
-                                nil
-                            )
-                        );
+                        return Pair.fromArray([LSymbol('quote'), result]);
                     }
                     return result;
-                });
+                } else {
+                    throw new Error(`Parser: invlid parser extension: ${special.symbol}`);
+                }
             }
             if (this.is_open(token)) {
                 this.skip();
-                return this.read_list();
+                return await this.read_list();
             } else {
-                return this.read_value();
+                return await this.read_value();
             }
         }
     }
@@ -944,7 +1463,7 @@
                 env = user_env;
             }
         }
-        const parser = new Parser(arg, env);
+        const parser = new Parser(arg, { env });
         while (true) {
             const expr = await parser.read_object();
             if (expr === eof) {
@@ -956,13 +1475,36 @@
     // ----------------------------------------------------------------------
     function unpromise(value, fn = x => x, error = null) {
         if (value instanceof Array) {
-            var anyPromise = value.filter(isPromise);
+            const anyPromise = value.filter(is_promise);
             if (anyPromise.length) {
-                return unpromise(Promise.all(anyPromise), fn, error);
+                return unpromise(Promise.all(value), (arr) => {
+                    if (Object.isFrozen(value)) {
+                        Object.freeze(arr);
+                    }
+                    return arr;
+                }, error);
             }
             return fn(value);
         }
-        if (isPromise(value)) {
+        if (is_plain_object(value)) {
+            const keys = Object.keys(value);
+            const values = keys.map(x => value[x]);
+            const anyPromise = values.filter(is_promise);
+            if (anyPromise.length) {
+                return unpromise(Promise.all(values), (values) => {
+                    const result = {};
+                    values.forEach((value, i) => {
+                        const key = keys[i];
+                        result[key] = value;
+                    });
+                    if (Object.isFrozen(value)) {
+                        Object.freeze(result);
+                    }
+                    return result;
+                }, error);
+            }
+        }
+        if (is_promise(value)) {
             var ret = value.then(fn);
             if (error === null) {
                 return ret;
@@ -988,7 +1530,7 @@
     function matcher(name, arg) {
         if (arg instanceof RegExp) {
             return x => String(x).match(arg);
-        } else if (typeof arg === 'function') {
+        } else if (is_function(arg)) {
             // it will alwasy be function
             return arg;
         }
@@ -1014,7 +1556,7 @@
         }
         if (name) {
             fn.__name__ = name;
-        } else if (fn.name && !fn.__lambda__) {
+        } else if (fn.name && !fn[__lambda__]) {
             fn.__name__ = fn.name;
         }
         return fn;
@@ -1076,12 +1618,28 @@
     // ----------------------------------------------------------------------
     // :: token based pattern matching (used by formatter)
     // ----------------------------------------------------------------------
+    function nested_pattern(pattern) {
+        return pattern instanceof Array ||
+                pattern instanceof Pattern;
+    }
+    // ----------------------------------------------------------------------
     function match(pattern, input) {
         return inner_match(pattern, input) === input.length;
         function inner_match(pattern, input) {
             function empty_match() {
-                return p > 0 && i > 0 && pattern[p - 1] === input[i - 1] &&
-                    pattern[p + 1] === input[i];
+                if (p <= 0 && i <= 0) {
+                    return false;
+                }
+                var prev_pattern = pattern[p - 1];
+                if (!nested_pattern(prev_pattern)) {
+                    prev_pattern = [prev_pattern];
+                }
+                var next_pattern = pattern[p + 1];
+                if (next_pattern && !nested_pattern(next_pattern)) {
+                    next_pattern = [next_pattern];
+                }
+                return match(prev_pattern, [input[i - 1]]) &&
+                    (!next_pattern || match(next_pattern, [input[i]]));
             }
             function not_symbol_match() {
                 return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
@@ -1100,8 +1658,8 @@
                     return i;
                 }
                 if (pattern[p] instanceof Pattern) {
-                    if (pattern[p].flag === '+') {
-                        var m;
+                    var m;
+                    if (['+', '*'].includes(pattern[p].flag)) {
                         while (i < input.length) {
                             m = inner_match(pattern[p].pattern, input.slice(i));
                             if (m === -1) {
@@ -1109,30 +1667,19 @@
                             }
                             i += m;
                         }
-                        if (m === -1 && (input[i] && !pattern[p + 1])) {
-                            return -1;
-                        }
-                        p++;
                         i -= 1;
+                        p++;
                         continue;
                     } else if (pattern[p].flag === '?') {
                         m = inner_match(pattern[p].pattern, input.slice(i));
                         if (m === -1) {
-                            i -= 2; // if not found use same test same input again
+                            i -= 2; // if not found use same test on same input again
                         } else {
                             p++;
                         }
                         continue;
-                    } else if (pattern[p].flag === '*') {
-                        m = inner_match(pattern[p].pattern, input.slice(i));
-                        if (m === -1) {
-                            i -= 1;
-                            p++;
-                            continue;
-                        }
                     }
-                }
-                if (pattern[p] instanceof RegExp) {
+                } else if (pattern[p] instanceof RegExp) {
                     if (!input[i].match(pattern[p])) {
                         return -1;
                     }
@@ -1144,12 +1691,13 @@
                     if (pattern[p] === Symbol.for('*')) {
                         // ignore S-expressions inside for case when next pattern is )
                         glob[p] = glob[p] || 0;
+                        var zero_match = empty_match();
                         if (['(', '['].includes(input[i])) {
                             glob[p]++;
-                        } else if ([')', ']'].includes(input[i])) {
+                        } else if ([')', ']'].includes(input[i]) && !zero_match) {
                             glob[p]--;
                         }
-                        if (empty_match()) {
+                        if (zero_match) {
                             i -= 1;
                         } else if ((typeof pattern[p + 1] !== 'undefined' &&
                                     glob[p] === 0 && match_next() === -1) ||
@@ -1187,7 +1735,7 @@
     // :: it rely on meta data from tokenizer function
     // ----------------------------------------------------------------------
     function Formatter(code) {
-        this._code = code.replace(/\r/g, '');
+        this.__code__ = code.replace(/\r/g, '');
     }
     // ----------------------------------------------------------------------
     Formatter.defaults = {
@@ -1230,7 +1778,7 @@
     };
     // ----------------------------------------------------------------------
     Formatter.prototype.indent = function indent(options) {
-        var tokens = tokenize(this._code, true);
+        var tokens = tokenize(this.__code__, true);
         return this._indent(tokens, options);
     };
     // ----------------------------------------------------------------------
@@ -1359,7 +1907,7 @@
     const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
     var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
-    /* eslint-disable */
+    /* eslint-disable max-len */
     var non_def = /^(?!.*\b(?:[()[\]]|define|let(?:\*|rec|-env|-syntax)?|lambda|syntax-rules)\b).*$/;
     /* eslint-enable */
     var let_re = /^(?:#:)?(let(?:\*|rec|-env|-syntax)?)$/;
@@ -1369,34 +1917,22 @@
     // line breaking rules
     Formatter.rules = [
         [[p_o, keywords_re('begin')], 1],
-        //[[p_o, keywords_re('begin'), sexp], 1, not_close],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
+        [[p_o, let_re, p_o, let_value, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
-        [[p_o, keywords_re('syntax-rules'), symbol, identifiers], 1],
-        [[p_o, keywords_re('syntax-rules'), symbol, identifiers, sexp], 1, not_close],
-        //[[p_o, let_re, symbol, p_o, let_value], 2, not_close],
-        //[[p_o, let_re, symbol, [p_o, let_value, p_e], sexp], 1, not_close],
         [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
-        //[[p_o, p_o, non_def, sexp, p_e], 1, open],
         [[p_o, sexp], 1, open],
-        //[[p_o, non_def, new Pattern([/[^([]/], '+')], 1, open],
-        [[p_o, keywords_re('lambda'), p_o, p_e], 1, not_close], // no args
-        [[p_o, keywords_re('lambda'), p_o, p_e, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
         [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
-        //[[p_o, keywords_re('while'), [p_o, glob, p_e], sexp], 1, not_close],
         [[p_o, keywords_re('if'), not_p, glob], 1],
-        //[[p_o, keywords_re('if', 'while'), [p_o, glob, p_e]], 1],
-        //[[p_o, keywords_re('if'), [p_o, glob, p_e], not_p], 1],
-        //[[p_o, keywords_re('if'), [p_o, glob, p_e], [p_o, glob, p_e]], 1, not_close],
-        //[[p_o, [p_o, glob, p_e], string_re], 1],
-        [[p_o, def_lambda_re, p_o, glob, p_e], 1, not_close],
-        [[p_o, def_lambda_re, [p_o, glob, p_e], string_re, sexp], 1, not_close],
-        [[p_o, def_lambda_re, [p_o, glob, p_e], sexp], 1, not_close]
+        [[p_o, def_lambda_re, identifiers], 1, not_close],
+        [[p_o, def_lambda_re, identifiers, string_re], 1, not_close],
+        [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close],
+        [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
-        var code = this._code.replace(/\n[ \t]*/g, '\n ');
+        var code = this.__code__.replace(/\n[ \t]*/g, '\n ');
         const token = t => {
             if (t.token.match(string_re)) {
                 return t.token;
@@ -1429,7 +1965,7 @@
                 }
             }
         }
-        this._code = tokens.join('');
+        this.__code__ = tokens.join('');
         return this;
     };
     // ----------------------------------------------------------------------
@@ -1442,7 +1978,7 @@
     Formatter.prototype.format = function format(options) {
         // prepare code with single space after newline
         // so we have space token to align
-        var code = this._code.replace(/[ \t]*\n[ \t]*/g, '\n ');
+        var code = this.__code__.replace(/[ \t]*\n[ \t]*/g, '\n ');
         var tokens = tokenize(code, true);
         var settings = this._options(options);
         var indent = 0;
@@ -1484,7 +2020,7 @@
     };
     // ----------------------------------------------------------------------
     // :: flatten nested arrays
-    // :: source: https://stackoverflow.com/a/27282907/387194
+    // :: ref: https://stackoverflow.com/a/27282907/387194
     // ----------------------------------------------------------------------
     function flatten(array, mutable) {
         var toString = Object.prototype.toString;
@@ -1511,79 +2047,6 @@
         result.reverse(); // we reverse result to restore the original order
         return result;
     }
-    // ----------------------------------------------------------------------
-    // detect if object is ES6 Symbol that work with polyfills
-    // ----------------------------------------------------------------------
-    function isSymbol(x) {
-        return typeof x === 'symbol' ||
-            typeof x === 'object' &&
-            Object.prototype.toString.call(x) === '[object Symbol]';
-    }
-    // ----------------------------------------------------------------------
-    // :: LSymbol constructor
-    // ----------------------------------------------------------------------
-    function LSymbol(name) {
-        if (typeof this !== 'undefined' && this.constructor !== LSymbol ||
-            typeof this === 'undefined') {
-            return new LSymbol(name);
-        }
-        if (name === undefined) {
-            console.trace();
-        }
-        this.__name__ = name;
-    }
-    // ----------------------------------------------------------------------
-    LSymbol.is = function(symbol, name) {
-        return symbol instanceof LSymbol &&
-            ((name instanceof LSymbol && symbol.__name__ === name.__name__) ||
-             (typeof name === 'string' && symbol.__name__ === name) ||
-             (name instanceof RegExp && name.test(symbol.__name__)));
-    };
-    // ----------------------------------------------------------------------
-    LSymbol.prototype.toJSON = LSymbol.prototype.toString = function() {
-        //return '#<symbol \'' + this.name + '\'>';
-        if (isSymbol(this.__name__)) {
-            return symbol_to_string(this.__name__);
-        }
-        return this.valueOf();
-    };
-    LSymbol.prototype.valueOf = function() {
-        return this.__name__.valueOf();
-    };
-    // -------------------------------------------------------------------------
-    LSymbol.prototype.is_gensym = function() {
-        return is_gensym(this.__name__);
-    };
-    // -------------------------------------------------------------------------
-    function symbol_to_string(obj) {
-        return obj.toString().replace(/^Symbol\(([^)]+)\)/, '$1');
-    }
-    // -------------------------------------------------------------------------
-    function is_gensym(symbol) {
-        if (typeof symbol === 'symbol') {
-            return !!symbol.toString().match(/^Symbol\(#:/);
-        }
-        return false;
-    }
-    // -------------------------------------------------------------------------
-    var gensym = (function() {
-        var count = 0;
-        return function(name = null) {
-            if (name instanceof LSymbol) {
-                name = name.valueOf();
-            }
-            if (is_gensym(name)) {
-                // don't do double gynsyms in nested syntax-rules
-                return LSymbol(name);
-            }
-            // use ES6 symbol as name for lips symbol (they are unique)
-            if (name !== null) {
-                return new LSymbol(Symbol(`#:${name}`));
-            }
-            count++;
-            return new LSymbol(Symbol(`#:g${count}`));
-        };
-    })();
     // ----------------------------------------------------------------------
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
@@ -1664,25 +2127,26 @@
         }
         return len;
     };
-
     // ----------------------------------------------------------------------
-    Pair.prototype.find = function(item) {
-        var car;
-        if (this.car instanceof Pair && this.car.find(item)) {
-            car = true;
-        } else if (this.car instanceof LSymbol) {
-            car = LSymbol.is(this.car, item);
-        }
-        var cdr;
-        if (this.cdr instanceof Pair && this.cdr.find(item)) {
-            cdr = true;
-        } else if (this.cdr instanceof LSymbol) {
-            cdr = LSymbol.is(this.cdr, item);
-        }
-        if (cdr || car) {
-            return true;
+    Pair.match = function(obj, item) {
+        if (obj instanceof LSymbol) {
+            return LSymbol.is(obj, item);
+        } else if (obj instanceof Pair) {
+            return Pair.match(obj.car, item) || Pair.match(obj.cdr, item);
+        } else if (Array.isArray(obj)) {
+            return obj.some(x => {
+                return Pair.match(x, item);
+            });
+        } else if (is_plain_object(obj)) {
+            return Object.values(obj).some(x => {
+                return Pair.match(x, item);
+            });
         }
         return false;
+    };
+    // ----------------------------------------------------------------------
+    Pair.prototype.find = function(item) {
+        return Pair.match(this, item);
     };
 
     // ----------------------------------------------------------------------
@@ -1717,10 +2181,14 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toArray = function() {
+    Pair.prototype.toArray = function(deep = true) {
         var result = [];
         if (this.car instanceof Pair) {
-            result.push(this.car.toArray());
+            if (deep) {
+                result.push(this.car.toArray());
+            } else {
+                result.push(this.car);
+            }
         } else {
             result.push(this.car.valueOf());
         }
@@ -1898,15 +2366,15 @@
         return array_methods.includes(x);
     }
     // ----------------------------------------------------------------------
-    function lips_function(x) {
-        return typeof x === 'function' && (x.__lambda__ || x.__doc__);
+    function is_lips_function(x) {
+        return is_function(x) && (x[__lambda__] || x.__doc__);
     }
     // ----------------------------------------------------------------------
     function user_repr(obj) {
         var constructor = obj.constructor || Object;
         var plain_object = is_plain_object(obj);
-        var iterator = typeof obj[Symbol.asyncIterator] === 'function' ||
-            typeof obj[Symbol.iterator] === 'function';
+        var iterator = is_function(obj[Symbol.asyncIterator]) ||
+            is_function(obj[Symbol.iterator]);
         var fn;
         if (repr.has(constructor)) {
             fn = repr.get(constructor);
@@ -1915,7 +2383,8 @@
                 key = unbind(key);
                 // if key is Object it should only work for plain_object
                 // because otherwise it will match every object
-                if (obj instanceof key &&
+                // we don't use instanceof so it don't work for subclasses
+                if (obj.constructor === key &&
                     (key === Object && plain_object && !iterator || key !== Object)) {
                     fn = value;
                 }
@@ -1968,15 +2437,15 @@
     }
     // ----------------------------------------------------------------------
     function has_own_function(obj, name) {
-        return obj.hasOwnProperty(name) && typeof obj.toString === 'function';
+        return obj.hasOwnProperty(name) && is_function(obj.toString);
     }
     // ----------------------------------------------------------------------
     function function_to_string(fn) {
-        if (isNativeFunction(fn)) {
+        if (is_native_function(fn)) {
             return '#<procedure(native)>';
         }
         const constructor = fn.prototype && fn.prototype.constructor;
-        if (typeof constructor === 'function' && constructor.__lambda__) {
+        if (is_function(constructor) && constructor[__lambda__]) {
             if (fn[__class__] && constructor.hasOwnProperty('__name__')) {
                 let name = constructor.__name__;
                 if (LString.isString(name)) {
@@ -1997,7 +2466,7 @@
         }
         if (has_own_function(fn, 'toString')) {
             return fn.toString();
-        } else if (fn.name && !fn.__lambda__) {
+        } else if (fn.name && !fn[__lambda__]) {
             return `#<procedure:${fn.name}>`;
         } else {
             return '#<procedure>';
@@ -2035,13 +2504,16 @@
         if ([nil, eof].includes(obj)) {
             return obj.toString();
         }
-        var types = [RegExp, LSymbol, LNumber, Macro, Values];
+        var types = [LSymbol, LNumber, Macro, Values, InputPort, Environment];
         for (let type of types) {
             if (obj instanceof type) {
-                return obj.toString();
+                return obj.toString(quote);
             }
         }
-        if (typeof obj === 'function') {
+        if (obj instanceof RegExp) {
+            return '#' + obj.toString();
+        }
+        if (is_function(obj)) {
             return function_to_string(obj);
         }
         if (obj instanceof LString) {
@@ -2059,7 +2531,7 @@
         }
         if (typeof obj === 'object') {
             // user defined representation
-            if (typeof obj.toString === 'function' && obj.toString.__lambda__) {
+            if (is_function(obj.toString) && obj.toString[__lambda__]) {
                 return obj.toString().valueOf();
             }
             var constructor = obj.constructor;
@@ -2077,7 +2549,7 @@
                 }
                 var fn = user_repr(obj);
                 if (fn) {
-                    if (typeof fn === 'function') {
+                    if (is_function(fn)) {
                         return fn(obj, quote);
                     } else {
                         throw new Error('toString: Invalid repr value');
@@ -2085,16 +2557,19 @@
                 }
                 name = constructor.name;
             }
-            if (type(obj) === 'instance' && !isNativeFunction(constructor)) {
+            if (type(obj) === 'instance' && !is_native_function(constructor)) {
                 name = 'instance';
             }
-            if (root.HTMLElement && obj instanceof root.HTMLElement) {
-                return `#<HTMLElement(${obj.tagName.toLowerCase()})>`;
-            }
-            if (typeof obj[Symbol.iterator] === 'function') {
+            if (is_iterator(obj, Symbol.iterator)) {
+                if (name) {
+                    return `#<iterator(${name})>`;
+                }
                 return '#<iterator>';
             }
-            if (typeof obj[Symbol.asyncIterator] === 'function') {
+            if (is_iterator(obj, Symbol.asyncIterator)) {
+                if (name) {
+                    return `#<asyncIterator(${name})>`;
+                }
                 return '#<asyncIterator>';
             }
             if (name !== '') {
@@ -2357,28 +2832,35 @@
 
     // ----------------------------------------------------------------------
     function equal(x, y) {
-        if (typeof x === 'function' && typeof y === 'function') {
-            return unbind(x) === unbind(y);
-        } else if (x instanceof LNumber && y instanceof LNumber) {
+        if (is_function(x)) {
+            return is_function(y) && unbind(x) === unbind(y);
+        } else if (x instanceof LNumber) {
+            if (!(y instanceof LNumber)) {
+                return false;
+            }
             let type;
             if (x.__type__ === y.__type__) {
                 if (x.__type__ === 'complex') {
-                    type = x.im.__type__ === y.im.__type__ &&
-                        x.re.__type__ === y.re.__type__;
+                    type = x.__im__.__type__ === y.__im__.__type__ &&
+                        x.__re__.__type__ === y.__re__.__type__;
                 } else {
                     type = true;
                 }
                 return type && x.cmp(y) === 0;
             }
             return false;
-        } else if (typeof x === 'number' || typeof y === 'number') {
+        } else if (typeof x === 'number') {
+            if (typeof y !== 'number') {
+                return false;
+            }
             x = LNumber(x);
             y = LNumber(y);
             return x.__type__ === y.__type__ && x.cmp(y) === 0;
-        } else if (x instanceof LCharacter && y instanceof LCharacter) {
+        } else if (x instanceof LCharacter) {
+            if (!(y instanceof LCharacter)) {
+                return false;
+            }
             return x.__char__ === y.__char__;
-        } else if (x instanceof LSymbol && y instanceof LSymbol) {
-            return x.__name__ === y.__name__;
         } else {
             return x === y;
         }
@@ -2523,7 +3005,7 @@
                 var pair = new Pair(car, cdr);
                 return pair;
             }
-            //var new_code = code;
+            //var this.__code__ = code;
             if (code.cdr instanceof Pair && LNumber.isNumber(code.cdr.car)) {
                 return quote((await traverse(code, code.cdr.car.valueOf(), env)).car);
             }
@@ -2837,62 +3319,6 @@
             return bindings;
         }
     }
-    // ----------------------------------------------------------------------
-    /*
-    async function expand(code, args) {
-        async function traverse(node, args) {
-            if (!(node instanceof Pair)) {
-                return { code: node, scope: args.env };
-            }
-            var result;
-            if (node instanceof Pair && node.car instanceof LSymbol) {
-                if (node.data) {
-                    return node;
-                }
-                var value = args.env.get(node.car, { throwError: false });
-                if (value instanceof Syntax && value.defmacro) {
-                    var {
-                        expr: result,
-                        scope
-                    } = await value.invoke(node, args, true);
-                    if (result instanceof LSymbol) {
-                        return { scope, code: result };
-                    }
-                    if (result instanceof Pair) {
-                        return traverse(result, { ...args, env: scope });
-                    }
-                }
-            }
-            var car = node.car;
-            var scopes = [];
-            if (car instanceof Pair) {
-                result = await traverse(car, args);
-                car = result.code;
-                if (args.env !== result.scope) {
-                    scopes.push(result.scope);
-                }
-            }
-            var cdr = node.cdr;
-            if (cdr instanceof Pair) {
-                result = await traverse(cdr, args);
-                cdr = result.code;
-                if (args.env !== result.scope) {
-                    scopes.push(result.scope);
-                }
-            }
-            if (scopes.length) {
-                scope = scopes.reduce((acc, scope) => {
-                    return acc.merge(scope);
-                });
-            } else {
-                scope = args.env;
-            }
-            var pair = new Pair(car, cdr);
-            return { code: pair, scope };
-        }
-        return traverse(code, args);
-    }
-    */
     // ----------------------------------------------------------------------
     // :: This function is called after syntax-rules macro is evaluated
     // :: and if there are any gensyms added by macro they need to restored
@@ -3324,13 +3750,22 @@
     // ----------------------------------------------------------------------
     // :: check for nullish values
     // ----------------------------------------------------------------------
-    function isNull(value) {
+    function is_null(value) {
         return typeof value === 'undefined' || value === nil || value === null;
     }
     // ----------------------------------------------------------------------
-    function isPromise(o) {
-        return o instanceof Promise ||
-            (o && typeof o !== 'undefined' && typeof o.then === 'function');
+    function is_function(o) {
+        return typeof o === 'function' && typeof o.bind === 'function';
+    }
+    // ----------------------------------------------------------------------
+    function is_promise(o) {
+        if (o instanceof QuotedPromise) {
+            return false;
+        }
+        if (o instanceof Promise) {
+            return true;
+        }
+        return o && typeof o !== 'undefined' && is_function(o.then);
     }
     // ----------------------------------------------------------------------
     // :: Function utilities
@@ -3378,12 +3813,12 @@
         return object;
     }
     // ----------------------------------------------------------------------
-    function patchValue(value, context) {
+    function patch_value(value, context) {
         if (value instanceof Pair) {
             value.markCycles();
             return quote(value);
         }
-        if (typeof value === 'function') {
+        if (is_function(value)) {
             // original function can be restored using unbind function
             // only real JS function require to be bound
             if (context) {
@@ -3421,8 +3856,11 @@
         hidden_prop(bound, '__fn__', fn);
         hidden_prop(bound, '__context__', context);
         hidden_prop(bound, '__bound__', true);
-        if (isNativeFunction(fn)) {
+        if (is_native_function(fn)) {
             hidden_prop(bound, '__native__', true);
+        }
+        if (is_plain_object(context) && fn[__lambda__]) {
+            hidden_prop(bound, '__method__', true);
         }
         bound.valueOf = function() {
             return fn;
@@ -3439,11 +3877,11 @@
     }
     // ----------------------------------------------------------------------
     function is_bound(obj) {
-        return !!(typeof obj === 'function' && obj[__fn__]);
+        return !!(is_function(obj) && obj[__fn__]);
     }
     // ----------------------------------------------------------------------
     function lips_context(obj) {
-        if (typeof obj === 'function') {
+        if (is_function(obj)) {
             var context = obj[__context__];
             if (context && (context === lips ||
                             (context.constructor &&
@@ -3455,26 +3893,29 @@
     }
     // ----------------------------------------------------------------------
     function is_port(obj) {
-        function port(obj) {
-            return obj instanceof InputPort || obj instanceof OutputPort;
-        }
-        if (typeof obj === 'function') {
-            if (port(obj)) {
-                return true;
-            }
-            if (port(obj[__context__])) {
+        return obj instanceof InputPort || obj instanceof OutputPort;
+    }
+    // ----------------------------------------------------------------------
+    function is_port_method(obj) {
+        if (is_function(obj)) {
+            if (is_port(obj[__context__])) {
                 return true;
             }
         }
         return false;
     }
     // ----------------------------------------------------------------------
+    // hidden props
+    // ----------------------------------------------------------------------
     var __context__ = Symbol.for('__context__');
     var __fn__ = Symbol.for('__fn__');
     var __data__ = Symbol.for('__data__');
     var __ref__ = Symbol.for('__ref__');
     var __cycles__ = Symbol.for('__cycles__');
-    var __class__ = Symbol.for("__class__");
+    var __class__ = Symbol.for('__class__');
+    var __method__ = Symbol.for('__method__');
+    var __prototype__ = Symbol.for('__prototype__');
+    var __lambda__ = Symbol.for('__lambda__');
     // ----------------------------------------------------------------------
     // :: function bind fn with context but it also move all props
     // :: mostly used for Object function
@@ -3512,9 +3953,9 @@
         }
     }
     // ----------------------------------------------------------------------
-    function isNativeFunction(fn) {
+    function is_native_function(fn) {
         var native = Symbol.for('__native__');
-        return typeof fn === 'function' &&
+        return is_function(fn) &&
             fn.toString().match(/\{\s*\[native code\]\s*\}/) &&
             ((fn.name.match(/^bound /) && fn[native] === true) ||
              (!fn.name.match(/^bound /) && !fn[native]));
@@ -3568,7 +4009,7 @@
                 return;
             }
             var self = this;
-            args = this.get('list->array')(code.car);
+            args = global_env.get('list->array')(code.car);
             var env = self.inherit(name);
             var values, var_body_env;
             if (name === 'let*') {
@@ -3594,7 +4035,7 @@
                     // resolve all promises
                     if (values && values.length) {
                         var v = values.map(x => x.value);
-                        var promises = v.filter(isPromise);
+                        var promises = v.filter(is_promise);
                         if (promises.length) {
                             return Promise.all(v).then((arr) => {
                                 for (var i = 0, len = arr.length; i < len; ++i) {
@@ -3648,7 +4089,7 @@
                 results.push(evaluate(node.car, { env, dynamic_scope, error }));
                 node = node.cdr;
             }
-            var havePromises = results.filter(isPromise).length;
+            var havePromises = results.filter(is_promise).length;
             if (havePromises) {
                 return Promise.all(results).then(fn.bind(this));
             } else {
@@ -3668,8 +4109,8 @@
         fns.forEach((fn, i) => {
             typecheck('pipe', fn, 'function', i + 1);
         });
-        return function(...args) {
-            return fns.reduce((args, f) => [f(...args)], args)[0];
+        return (...args) => {
+            return fns.reduce((args, f) => [f.apply(this, args)], args)[0];
         };
     }
     // -------------------------------------------------------------------------
@@ -3686,7 +4127,7 @@
         var self = this;
         return function recur(fn, init, ...lists) {
             typecheck(name, fn, 'function');
-            if (lists.some(isNull)) {
+            if (lists.some(is_null)) {
                 if (typeof init === 'number') {
                     return LNumber(init);
                 }
@@ -3739,53 +4180,6 @@
             return fn(...args.slice(0, n));
         };
     }
-    // -------------------------------------------------------------------------------
-    var native_lambda = parse(tokenize(`(lambda ()
-                                          "[native code]"
-                                          (throw "Invalid Invocation"))`))[0];
-    // -------------------------------------------------------------------------------
-    var get = doc(function get(object, ...args) {
-        // if arg is symbol someone probably want to get __fn__ from binded function
-        if (typeof object === 'function' && typeof args[0] !== 'symbol') {
-            object = unbind(object);
-        }
-        var value;
-        var len = args.length;
-        while (args.length) {
-            var arg = args.shift();
-            var name = unbox(arg);
-            if (name === '__code__' && typeof object === 'function' &&
-                        typeof object.__code__ === 'undefined') {
-                value = native_lambda;
-            } else {
-                value = object[name];
-            }
-            if (typeof value === 'undefined') {
-                if (args.length) {
-                    throw new Error(`Try to get ${args[0]} from undefined`);
-                }
-                return value;
-            } else {
-                var context;
-                if (args.length - 1 < len) {
-                    context = object;
-                }
-                value = patchValue(value, context);
-            }
-            object = value;
-        }
-        return value;
-    }, `(. obj . args)
-        (get obj . args)
-
-        Function use object as base and keep using arguments to get the
-        property of JavaScript object. Arguments need to be a strings.
-        e.g. \`(. console "log")\` if you use any function inside LIPS is
-        will be weakly bind (can be rebind), so you can call this log function
-        without problem unlike in JavaScript when you use
-       \`var log = console.log\`.
-       \`get\` is an alias because . don't work in every place, e.g. you can't
-        pass it as argument.`);
     // -------------------------------------------------------------------------
     // :: character object representation
     // -------------------------------------------------------------------------
@@ -3843,12 +4237,12 @@
             return new LString(string);
         }
         if (string instanceof Array) {
-            this._string = string.map((x, i) => {
+            this.__string__ = string.map((x, i) => {
                 typecheck('LString', x, 'character', i + 1);
                 return x.toString();
             }).join('');
         } else {
-            this._string = string.valueOf();
+            this.__string__ = string.valueOf();
         }
     }
     {
@@ -3857,7 +4251,7 @@
             return !ignore.includes(name);
         });
         const wrap = (fn) => function(...args) {
-            return fn.apply(this._string, args);
+            return fn.apply(this.__string__, args);
         };
         for (let key of _keys) {
             LString.prototype[key] = wrap(String.prototype[key]);
@@ -3867,7 +4261,7 @@
         return x instanceof LString || typeof x === 'string';
     };
     LString.prototype.get = function(n) {
-        return Array.from(this._string)[n];
+        return Array.from(this.__string__)[n];
     };
     LString.prototype.cmp = function(string) {
         typecheck('LStrign::cmp', string, 'string');
@@ -3882,10 +4276,10 @@
         }
     };
     LString.prototype.lower = function() {
-        return LString(this._string.toLowerCase());
+        return LString(this.__string__.toLowerCase());
     };
     LString.prototype.upper = function() {
-        return LString(this._string.toUpperCase());
+        return LString(this.__string__.toUpperCase());
     };
     LString.prototype.set = function(n, char) {
         if (char instanceof LCharacter) {
@@ -3893,17 +4287,17 @@
         }
         var string = [];
         if (n > 0) {
-            string.push(this._string.substring(0, n));
+            string.push(this.__string__.substring(0, n));
         }
         string.push(char);
-        if (n < this._string.length - 1) {
-            string.push(this._string.substring(n + 1));
+        if (n < this.__string__.length - 1) {
+            string.push(this.__string__.substring(n + 1));
         }
-        this._string = string.join('');
+        this.__string__ = string.join('');
     };
     Object.defineProperty(LString.prototype, "length", {
         get: function() {
-            return this._string.length;
+            return this.__string__.length;
         }
     });
     LString.prototype.clone = function() {
@@ -3913,8 +4307,8 @@
         if (chr instanceof LCharacter) {
             chr = chr.toString();
         }
-        var len = this._string.length;
-        this._string = new Array(len + 1).join(chr);
+        var len = this.__string__.length;
+        this.__string__ = new Array(len + 1).join(chr);
     };
     // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
@@ -4032,6 +4426,379 @@
         }
     };
     // -------------------------------------------------------------------------
+    LNumber.prototype.gcd = function(b) {
+        // ref: https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
+        var a = this.abs();
+        b = b.abs();
+        if (b.cmp(a) === 1) {
+            var temp = a;
+            a = b;
+            b = temp;
+        }
+        while (true) {
+            a = a.rem(b);
+            if (a.cmp(0) === 0) {
+                return b;
+            }
+            b = b.rem(a);
+            if (b.cmp(0) === 0) {
+                return a;
+            }
+        }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isFloat = function isFloat(n) {
+        return n instanceof LFloat || (Number(n) === n && n % 1 !== 0);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isNumber = function(n) {
+        return n instanceof LNumber ||
+            (!Number.isNaN(n) && LNumber.isNative(n) || LNumber.isBN(n));
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isComplex = function(n) {
+        var ret = n instanceof LComplex ||
+            (LNumber.isNumber(n.im) && LNumber.isNumber(n.re));
+        return ret;
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isRational = function(n) {
+        return n instanceof LRational ||
+            (LNumber.isNumber(n.num) && LNumber.isNumber(n.denom));
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isInteger = function(n) {
+        if (!(LNumber.isNative(n) || n instanceof LNumber)) {
+            return false;
+        }
+        if (LNumber.isFloat(n)) {
+            return false;
+        }
+        if (LNumber.isRational(n)) {
+            return false;
+        }
+        if (LNumber.isComplex(n)) {
+            return false;
+        }
+        return true;
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isNative = function(n) {
+        return typeof n === 'bigint' || typeof n === 'number';
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isBigInteger = function(n) {
+        return n instanceof LBigInteger || typeof n === 'bigint' ||
+            LNumber.isBN(n);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.isBN = function(n) {
+        return typeof BN !== 'undefined' && n instanceof BN;
+    };
+    // -------------------------------------------------------------------------
+    LNumber.getArgsType = function(a, b) {
+        if (a instanceof LFloat || b instanceof LFloat) {
+            return LFloat;
+        }
+        if (a instanceof LBigInteger || b instanceof LBigInteger) {
+            return LBigInteger;
+        }
+        return LNumber;
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.toString = LNumber.prototype.toJSON = function(radix) {
+        if (radix > 2 && radix < 36) {
+            return this.value.toString(radix);
+        }
+        return this.value.toString();
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.asType = function(n) {
+        var _type = LNumber.getType(this);
+        return LNumber.types[_type] ? LNumber.types[_type](n) : LNumber(n);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isBigNumber = function() {
+        return typeof this.value === 'bigint' ||
+            typeof BN !== 'undefined' && !(this.value instanceof BN);
+    };
+    // -------------------------------------------------------------------------
+    ['floor', 'ceil', 'round'].forEach(fn => {
+        LNumber.prototype[fn] = function() {
+            if (this.float || LNumber.isFloat(this.value)) {
+                return LNumber(Math[fn](this.value));
+            } else {
+                return LNumber(Math[fn](this.valueOf()));
+            }
+        };
+    });
+    // -------------------------------------------------------------------------
+    LNumber.prototype.valueOf = function() {
+        if (LNumber.isNative(this.value)) {
+            return Number(this.value);
+        } else if (LNumber.isBN(this.value)) {
+            return this.value.toNumber();
+        }
+    };
+    // -------------------------------------------------------------------------
+    var matrix = (function() {
+        var i = (a, b) => [a, b];
+        return {
+            bigint: {
+                'bigint': i,
+                'float': (a, b) => [LFloat(a.valueOf(), true), b],
+                'rational': (a, b) => [{ num: a, denom: 1 }, b],
+                'complex': (a, b) => [{ im: 0, re: a }, b]
+            },
+            float: {
+                'bigint': (a, b) => [a, b && LFloat(b.valueOf(), true)],
+                'float': i,
+                'rational': (a, b) => [a, b && LFloat(b.valueOf(), true)],
+                'complex': (a, b) => [{ re: a, im: LFloat(0, true) }, b]
+            },
+            complex: {
+                bigint: complex('bigint'),
+                float: complex('float'),
+                rational: complex('rational'),
+                complex: (a, b) => {
+                    const [a_re, b_re] = LNumber.coerce(a.__re__, b.__re__);
+                    const [a_im, b_im] = LNumber.coerce(a.__im__, b.__im__);
+                    return [
+                        { im: a_im, re: a_re },
+                        { im: b_im, re: b_re }
+                    ];
+                }
+            },
+            rational: {
+                bigint: (a, b) => [a, b && { num: b, denom: 1 }],
+                float: (a, b) => [LFloat(a.valueOf()), b],
+                rational: i,
+                complex: (a, b) => {
+                    return [
+                        {
+                            im: coerce(a.__type__, b.__im__.__type__, 0),
+                            re: coerce(a.__type__, b.__re__.__type__, a)
+                        },
+                        {
+                            im: coerce(a.__type__, b.__im__.__type__, b.__im__),
+                            re: coerce(a.__type__, b.__re__.__type__, b.__re__)
+                        }
+                    ];
+                }
+            }
+        };
+        function complex(type) {
+            return (a, b) => {
+                return [
+                    {
+                        im: coerce(type, a.__im__.__type__, a.__im__),
+                        re: coerce(type, a.__re__.__type__, a.__re__)
+                    },
+                    {
+                        im: coerce(type, a.__im__.__type__, 0),
+                        re: coerce(type, b.__type__, b)
+                    }
+                ];
+            };
+        }
+    })();
+    // -------------------------------------------------------------------------
+    function coerce(type_a, type_b, a) {
+        return matrix[type_a][type_b](a)[0];
+    }
+    // -------------------------------------------------------------------------
+    LNumber.coerce = function(a, b) {
+        function clean(type) {
+            if (type === 'integer') {
+                return 'bigint';
+            }
+            return type;
+        }
+        const a_type = clean(LNumber.getType(a));
+        const b_type = clean(LNumber.getType(b));
+        if (!matrix[a_type]) {
+            throw new Error(`LNumber::coerce unknown lhs type ${a_type}`);
+        } else if (!matrix[a_type][b_type]) {
+            throw new Error(`LNumber::coerce unknown rhs type ${b_type}`);
+        }
+        return matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.coerce = function(n) {
+        if (!(typeof n === 'number' || n instanceof LNumber)) {
+            throw new Error(`LNumber: you can't coerce ${type(n)}`);
+        }
+        if (typeof n === 'number') {
+            n = LNumber(n);
+        }
+        return LNumber.coerce(this, n);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.getType = function(n) {
+        if (n instanceof LNumber) {
+            return n.__type__;
+        }
+        if (LNumber.isFloat(n)) {
+            return 'float';
+        }
+        if (LNumber.isComplex(n)) {
+            return 'complex';
+        }
+        if (LNumber.isRational(n)) {
+            return 'rational';
+        }
+        if (typeof n === 'number') {
+            return 'integer';
+        }
+        if ((typeof BigInt !== 'undefined' && typeof n !== 'bigint') ||
+            (typeof BN !== 'undefined' && !(n instanceof BN))) {
+            return 'bigint';
+        }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isFloat = function() {
+        return !!(LNumber.isFloat(this.value) || this.float);
+    };
+    // -------------------------------------------------------------------------
+    var mapping = {
+        'add': '+',
+        'sub': '-',
+        'mul': '*',
+        'div': '/',
+        'rem': '%',
+        'or': '|',
+        'and': '&',
+        'neg': '~',
+        'shl': '>>',
+        'shr': '<<'
+    };
+    var rev_mapping = {};
+    Object.keys(mapping).forEach((key) => {
+        rev_mapping[mapping[key]] = key;
+        LNumber.prototype[key] = function(n) {
+            return this.op(mapping[key], n);
+        };
+    });
+    // -------------------------------------------------------------------------
+    LNumber._ops = {
+        '*': function(a, b) {
+            return a * b;
+        },
+        '+': function(a, b) {
+            return a + b;
+        },
+        '-': function(a, b) {
+            if (typeof b === 'undefined') {
+                return -a;
+            }
+            return a - b;
+        },
+        '/': function(a, b) {
+            return a / b;
+        },
+        '%': function(a, b) {
+            return a % b;
+        },
+        '|': function(a, b) {
+            return a | b;
+        },
+        '&': function(a, b) {
+            return a & b;
+        },
+        '~': function(a) {
+            return ~a;
+        },
+        '>>': function(a, b) {
+            return a >> b;
+        },
+        '<<': function(a, b) {
+            return a << b;
+        }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.op = function(op, n) {
+        if (typeof n === 'undefined') {
+            return LNumber(LNumber._ops[op](this.valueOf()));
+        }
+        const [a, b] = this.coerce(n);
+        if (a._op) {
+            return a._op(op, b);
+        }
+        return LNumber(LNumber._ops[op](a, b));
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.sqrt = function() {
+        var value = this.valueOf();
+        if (this.cmp(0) < 0) {
+            return LComplex({ re: 0, im: Math.sqrt(-value) });
+        }
+        return new LNumber(Math.sqrt(value));
+    };
+    // -------------------------------------------------------------------------
+    var pow = function(a, b) {
+        var e = typeof a === 'bigint' ? BigInt(1) : 1;
+        return new Array(Number(b)).fill(0).reduce(x => x * a, e);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.pow = function(n) {
+        var value;
+        if (LNumber.isBN(this.value)) {
+            value = this.value.pow(n.value);
+        } else {
+            value = pow(this.value, n.value);
+        }
+        return LNumber(value);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.abs = function() {
+        var value = this.value;
+        if (LNumber.isNative(this.value)) {
+            if (value < 0) {
+                value = -value;
+            }
+        } else if (LNumber.isBN(value)) {
+            value.iabs();
+        }
+        return new LNumber(value);
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isOdd = function() {
+        if (LNumber.isNative(this.value)) {
+            if (this.isBigNumber()) {
+                return this.value % BigInt(2) === BigInt(1);
+            }
+            return this.value % 2 === 1;
+        } else if (LNumber.isBN(this.value)) {
+            return this.value.isOdd();
+        }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isEven = function() {
+        return !this.isOdd();
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.cmp = function(n) {
+        const [a, b] = this.coerce(n);
+        function cmp(a, b) {
+            if (a.value < b.value) {
+                return -1;
+            } else if (a.value === b.value) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+        if (a.__type__ === 'bigint') {
+            if (LNumber.isNative(a.value)) {
+                return cmp(a, b);
+            } else if (LNumber.isBN(a.value)) {
+                return this.value.cmp(b.value);
+            }
+        } else if (a instanceof LFloat) {
+            return cmp(a, b);
+        }
+    };
+    // -------------------------------------------------------------------------
     // :: COMPLEX TYPE
     // -------------------------------------------------------------------------
     function LComplex(n, force = false) {
@@ -4040,21 +4807,19 @@
             return new LComplex(n, force);
         }
         if (n instanceof LComplex) {
-            return LComplex({ im: n.im, re: n.re });
+            return LComplex({ im: n.__im__, re: n.__re__ });
         }
         if (LNumber.isNumber(n) && force) {
-            n = { im: 0, re: n.valueOf() };
+            if (!force) {
+                return Number(n);
+            }
         } else if (!LNumber.isComplex(n)) {
             throw new Error('Invalid constructor call for LComplex');
         }
         var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
         var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
-        //const [im, re] = LNumber.coerce(n.im, n.re);
-        if (im.cmp(0) === 0 && !force) {
-            return re;
-        }
-        this.im = im;
-        this.re = re;
+        this.__im__ = im;
+        this.__re__ = re;
         this.__type__ = 'complex';
     }
     // -------------------------------------------------------------------------
@@ -4062,9 +4827,9 @@
     LComplex.prototype.constructor = LComplex;
     // -------------------------------------------------------------------------
     LComplex.prototype.toRational = function(n) {
-        if (LNumber.isFloat(this.im) && LNumber.isFloat(this.re)) {
-            const im = LFloat(this.im).toRational(n);
-            const re = LFloat(this.re).toRational(n);
+        if (LNumber.isFloat(this.__im__) && LNumber.isFloat(this.__re__)) {
+            const im = LFloat(this.__im__).toRational(n);
+            const re = LFloat(this.__re__).toRational(n);
             return LComplex({ im, re });
         }
         return this;
@@ -4083,8 +4848,8 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.factor = function() {
         // fix rounding when calculating (/ 1.0 1/10+1/10i)
-        if (this.im instanceof LFloat || this.im instanceof LFloat) {
-            let { re, im } = this;
+        if (this.__im__ instanceof LFloat || this.__im__ instanceof LFloat) {
+            let { __re__: re, __im__: im } = this;
             let x, y;
             if (re instanceof LFloat) {
                 x = re.toRational().mul(re.toRational());
@@ -4098,7 +4863,7 @@
             }
             return x.add(y);
         } else {
-            return this.re.mul(this.re).add(this.im.mul(this.im));
+            return this.__re__.mul(this.__re__).add(this.__im__.mul(this.__im__));
         }
     };
     // -------------------------------------------------------------------------
@@ -4114,15 +4879,15 @@
         let re, im;
         if (r.cmp(0) === 0) {
             re = im = r;
-        } else if (this.re.cmp(0) === 1) {
-            re = LFloat(0.5).mul(r.add(this.re)).sqrt();
-            im = this.im.div(re).div(2);
+        } else if (this.__re__.cmp(0) === 1) {
+            re = LFloat(0.5).mul(r.add(this.__re__)).sqrt();
+            im = this.__im__.div(re).div(2);
         } else {
-            im = LFloat(0.5).mul(r.sub(this.re)).sqrt();
-            if (this.im.cmp(0) === -1) {
+            im = LFloat(0.5).mul(r.sub(this.__re__)).sqrt();
+            if (this.__im__.cmp(0) === -1) {
                 im = im.sub();
             }
-            re = this.im.div(im).div(2);
+            re = this.__im__.div(im).div(2);
         }
         return LComplex({ im, re });
     };
@@ -4134,11 +4899,11 @@
             throw new Error('[LComplex::add] Invalid value');
         }
         const [ a, b ] = this.coerce(n);
-        const conj = LComplex({ re: b.re, im: b.im.sub() });
+        const conj = LComplex({ re: b.__re__, im: b.__im__.sub() });
         const denom = b.factor().valueOf();
         const num = a.mul(conj);
-        const re = num.re.op('/', denom);
-        const im = num.im.op('/', denom);
+        const re = num.__re__.op('/', denom);
+        const im = num.__im__.op('/', denom);
         return LComplex({ re, im });
     };
     // -------------------------------------------------------------------------
@@ -4146,7 +4911,7 @@
         return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
             return {
                 re: a_re.sub(b_re),
-                im: a_im.sum(b_im)
+                im: a_im.add(b_im)
             };
         });
     };
@@ -4167,13 +4932,13 @@
                 n = LNumber(n);
             }
             const im = n.asType(0);
-            n = { im, re: n };
+            n = { __im__: im, __re__: n };
         } else if (!LNumber.isComplex(n)) {
             throw new Error('[LComplex::add] Invalid value');
         }
-        var re = n.re instanceof LNumber ? n.re : this.re.asType(n.re);
-        var im = n.im instanceof LNumber ? n.im : this.im.asType(n.im);
-        var ret = fn(this.re, re, this.im, im);
+        var re = n.__re__ instanceof LNumber ? n.__re__ : this.__re__.asType(n.__re__);
+        var im = n.__im__ instanceof LNumber ? n.__im__ : this.__im__.asType(n.__im__);
+        var ret = fn(this.__re__, re, this.__im__, im);
         if ('im' in ret && 're' in ret) {
             var x = LComplex(ret, true);
             return x;
@@ -4195,28 +4960,29 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.cmp = function(n) {
         const [a, b] = this.coerce(n);
-        const [re_a, re_b] = a.re.coerce(b.re);
+        const [re_a, re_b] = a.__re__.coerce(b.__re__);
         const re_cmp = re_a.cmp(re_b);
         if (re_cmp !== 0) {
             return re_cmp;
         } else {
-            const [im_a, im_b] = a.im.coerce(b.im);
+            const [im_a, im_b] = a.__im__.coerce(b.__im__);
             return im_a.cmp(im_b);
         }
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.valueOf = function() {
+        return [this.__re__, this.__im__].map(x => x.valueOf());
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.toString = function() {
         var result;
-        if (this.re.cmp(0) !== 0) {
-            result = [this.re.toString()];
+        if (this.__re__.cmp(0) !== 0) {
+            result = [this.__re__.toString()];
         } else {
             result = [];
         }
-        result.push(this.im.cmp(0) < 0 ? '-' : '+');
-        result.push(this.im.toString().replace(/^-/, ''));
+        result.push(this.__im__.cmp(0) < 0 ? '-' : '+');
+        result.push(this.__im__.toString().replace(/^-/, ''));
         result.push('i');
         return result.join('');
     };
@@ -4270,7 +5036,7 @@
         return approxRatio(n.valueOf())(this.value.valueOf());
     };
     // -------------------------------------------------------------------------
-    // based on https://rosettacode.org/wiki/Convert_decimal_number_to_rational
+    // ref: https://rosettacode.org/wiki/Convert_decimal_number_to_rational
     // -------------------------------------------------------------------------
     var toRational = approxRatio(1e-10);
     function approxRatio(eps) {
@@ -4584,364 +5350,7 @@
         return value;
     };
     // -------------------------------------------------------------------------
-    LNumber.prototype.gcd = function(b) {
-        // ref: https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
-        var a = this.abs();
-        b = b.abs();
-        if (b.cmp(a) === 1) {
-            var temp = a;
-            a = b;
-            b = temp;
-        }
-        while (true) {
-            a = a.rem(b);
-            if (a.cmp(0) === 0) {
-                return b;
-            }
-            b = b.rem(a);
-            if (b.cmp(0) === 0) {
-                return a;
-            }
-        }
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isFloat = function isFloat(n) {
-        return n instanceof LFloat || (Number(n) === n && n % 1 !== 0);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isNumber = function(n) {
-        return n instanceof LNumber ||
-            (!Number.isNaN(n) && LNumber.isNative(n) || LNumber.isBN(n));
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isComplex = function(n) {
-        var ret = n instanceof LComplex ||
-            (LNumber.isNumber(n.im) && LNumber.isNumber(n.re));
-        return ret;
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isRational = function(n) {
-        return n instanceof LRational ||
-            (LNumber.isNumber(n.num) && LNumber.isNumber(n.denom));
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isNative = function(n) {
-        return typeof n === 'bigint' || typeof n === 'number';
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isBigInteger = function(n) {
-        return n instanceof LBigInteger || typeof n === 'bigint' ||
-            LNumber.isBN(n);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.isBN = function(n) {
-        return typeof BN !== 'undefined' && n instanceof BN;
-    };
-    // -------------------------------------------------------------------------
-    LNumber.getArgsType = function(a, b) {
-        if (a instanceof LFloat || b instanceof LFloat) {
-            return LFloat;
-        }
-        if (a instanceof LBigInteger || b instanceof LBigInteger) {
-            return LBigInteger;
-        }
-        return LNumber;
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.toString = LNumber.prototype.toJSON = function(radix) {
-        if (radix > 2 && radix < 36) {
-            return this.value.toString(radix);
-        }
-        return this.value.toString();
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.asType = function(n) {
-        var _type = LNumber.getType(this);
-        return LNumber.types[_type] ? LNumber.types[_type](n) : LNumber(n);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.isBigNumber = function() {
-        return typeof this.value === 'bigint' ||
-            typeof BN !== 'undefined' && !(this.value instanceof BN);
-    };
-    // -------------------------------------------------------------------------
-    ['floor', 'ceil', 'round'].forEach(fn => {
-        LNumber.prototype[fn] = function() {
-            if (this.float || LNumber.isFloat(this.value)) {
-                return LNumber(Math[fn](this.value));
-            } else {
-                return LNumber(Math[fn](this.valueOf()));
-            }
-        };
-    });
-    // -------------------------------------------------------------------------
-    LNumber.prototype.valueOf = function() {
-        if (LNumber.isNative(this.value)) {
-            return Number(this.value);
-        } else if (LNumber.isBN(this.value)) {
-            return this.value.toNumber();
-        }
-    };
-    // -------------------------------------------------------------------------
-    var matrix = (function() {
-        var i = (a, b) => [a, b];
-        return {
-            bigint: {
-                'bigint': i,
-                'float': (a, b) => [LFloat(a.valueOf(), true), b],
-                'rational': (a, b) => [{ num: a, denom: 1 }, b],
-                'complex': (a, b) => [{ im: 0, re: a }, b]
-            },
-            float: {
-                'bigint': (a, b) => [a, b && LFloat(b.valueOf(), true)],
-                'float': i,
-                'rational': (a, b) => [a, b && LFloat(b.valueOf(), true)],
-                'complex': (a, b) => [{ re: a, im: LFloat(0, true) }, b]
-            },
-            complex: {
-                bigint: complex('bigint'),
-                float: complex('float'),
-                rational: complex('rational'),
-                complex: (a, b) => {
-                    const [a_re, b_re] = LNumber.coerce(a.re, b.re);
-                    const [a_im, b_im] = LNumber.coerce(a.im, b.im);
-                    return [
-                        { im: a_im, re: a_re },
-                        { im: b_im, re: b_re }
-                    ];
-                }
-            },
-            rational: {
-                bigint: (a, b) => [a, b && { num: b, denom: 1 }],
-                float: (a, b) => [LFloat(a.valueOf()), b],
-                rational: i,
-                complex: (a, b) => {
-                    return [
-                        {
-                            im: coerce(a.__type__, b.im.__type__, 0),
-                            re: coerce(a.__type__, b.re.__type__, a)
-                        },
-                        {
-                            im: coerce(a.__type__, b.im.__type__, b.im),
-                            re: coerce(a.__type__, b.re.__type__, b.re)
-                        }
-                    ];
-                }
-            }
-        };
-        function complex(type) {
-            return (a, b) => {
-                return [
-                    {
-                        im: coerce(type, a.im.__type__, a.im),
-                        re: coerce(type, a.re.__type__, a.re)
-                    },
-                    {
-                        im: coerce(type, a.im.__type__, 0),
-                        re: coerce(type, b.__type__, b)
-                    }
-                ];
-            };
-        }
-    })();
-    // -------------------------------------------------------------------------
-    function coerce(type_a, type_b, a) {
-        return matrix[type_a][type_b](a)[0];
-    }
-    // -------------------------------------------------------------------------
-    LNumber.coerce = function(a, b) {
-        function clean(type) {
-            if (type === 'integer') {
-                return 'bigint';
-            }
-            return type;
-        }
-        const a_type = clean(LNumber.getType(a));
-        const b_type = clean(LNumber.getType(b));
-        if (!matrix[a_type]) {
-            throw new Error(`LNumber::coerce unknown lhs type ${a_type}`);
-        } else if (!matrix[a_type][b_type]) {
-            throw new Error(`LNumber::coerce unknown rhs type ${b_type}`);
-        }
-        return matrix[a_type][b_type](a, b).map(n => LNumber(n, true));
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.coerce = function(n) {
-        if (!(typeof n === 'number' || n instanceof LNumber)) {
-            throw new Error(`LNumber: you can't coerce ${type(n)}`);
-        }
-        if (typeof n === 'number') {
-            n = LNumber(n);
-        }
-        return LNumber.coerce(this, n);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.getType = function(n) {
-        if (n instanceof LNumber) {
-            return n.__type__;
-        }
-        if (LNumber.isFloat(n)) {
-            return 'float';
-        }
-        if (LNumber.isComplex(n)) {
-            return 'complex';
-        }
-        if (LNumber.isRational(n)) {
-            return 'rational';
-        }
-        if (typeof n === 'number') {
-            return 'integer';
-        }
-        if ((typeof BigInt !== 'undefined' && typeof n !== 'bigint') ||
-            (typeof BN !== 'undefined' && !(n instanceof BN))) {
-            return 'bigint';
-        }
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.isFloat = function() {
-        return !!(LNumber.isFloat(this.value) || this.float);
-    };
-    // -------------------------------------------------------------------------
-    var mapping = {
-        'add': '+',
-        'sub': '-',
-        'mul': '*',
-        'div': '/',
-        'rem': '%',
-        'or': '|',
-        'and': '&',
-        'neg': '~',
-        'shl': '>>',
-        'shr': '<<'
-    };
-    var rev_mapping = {};
-    Object.keys(mapping).forEach((key) => {
-        rev_mapping[mapping[key]] = key;
-        LNumber.prototype[key] = function(n) {
-            return this.op(mapping[key], n);
-        };
-    });
-    // -------------------------------------------------------------------------
-    LNumber._ops = {
-        '*': function(a, b) {
-            return a * b;
-        },
-        '+': function(a, b) {
-            return a + b;
-        },
-        '-': function(a, b) {
-            if (typeof b === 'undefined') {
-                return -a;
-            }
-            return a - b;
-        },
-        '/': function(a, b) {
-            return a / b;
-        },
-        '%': function(a, b) {
-            return a % b;
-        },
-        '|': function(a, b) {
-            return a | b;
-        },
-        '&': function(a, b) {
-            return a & b;
-        },
-        '~': function(a) {
-            return ~a;
-        },
-        '>>': function(a, b) {
-            return a >> b;
-        },
-        '<<': function(a, b) {
-            return a << b;
-        }
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.op = function(op, n) {
-        if (typeof n === 'undefined') {
-            return LNumber(LNumber._ops[op](this.valueOf()));
-        }
-        const [a, b] = this.coerce(n);
-        if (a._op) {
-            return a._op(op, b);
-        }
-        return LNumber(LNumber._ops[op](a, b));
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.sqrt = function() {
-        var value = this.valueOf();
-        if (this.cmp(0) < 0) {
-            return LComplex({ re: 0, im: Math.sqrt(-value) });
-        }
-        return new LNumber(Math.sqrt(value));
-    };
-    // -------------------------------------------------------------------------
-    var pow = function(a, b) {
-        var e = typeof a === 'bigint' ? BigInt(1) : 1;
-        return new Array(Number(b)).fill(0).reduce(x => x * a, e);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.pow = function(n) {
-        var value;
-        if (LNumber.isBN(this.value)) {
-            value = this.value.pow(n.value);
-        } else {
-            value = pow(this.value, n.value);
-        }
-        return LNumber(value);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.abs = function() {
-        var value = this.value;
-        if (LNumber.isNative(this.value)) {
-            if (value < 0) {
-                value = -value;
-            }
-        } else if (LNumber.isBN(value)) {
-            value.iabs();
-        }
-        return new LNumber(value);
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.isOdd = function() {
-        if (LNumber.isNative(this.value)) {
-            if (this.isBigNumber()) {
-                return this.value % BigInt(2) === BigInt(1);
-            }
-            return this.value % 2 === 1;
-        } else if (LNumber.isBN(this.value)) {
-            return this.value.isOdd();
-        }
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.isEven = function() {
-        return !this.isOdd();
-    };
-    // -------------------------------------------------------------------------
-    LNumber.prototype.cmp = function(n) {
-        const [a, b] = this.coerce(n);
-        function cmp(a, b) {
-            if (a.value < b.value) {
-                return -1;
-            } else if (a.value === b.value) {
-                return 0;
-            } else {
-                return 1;
-            }
-        }
-        if (a.__type__ === 'bigint') {
-            if (LNumber.isNative(a.value)) {
-                return cmp(a, b);
-            } else if (LNumber.isBN(a.value)) {
-                return this.value.cmp(b.value);
-            }
-        } else if (a instanceof LFloat) {
-            return cmp(a, b);
-        }
-    };
-    // -------------------------------------------------------------------------
-    // :: Port abstration (used only for it's type - old code used inline objects)
+    // :: Port abstration - read should be a function that return next line
     // -------------------------------------------------------------------------
     function InputPort(read) {
         if (typeof this !== 'undefined' && !(this instanceof InputPort) ||
@@ -4949,50 +5358,66 @@
             return new InputPort(read);
         }
         typecheck('InputPort', read, 'function');
-        this._index = 0;
-        this._in_char = 0;
-        this.read = read;
-    }
-    InputPort.prototype.read_line = function() {
-        return this.read();
-    };
-    InputPort.prototype.get_next_tokens = function() {
-        if (!this._tokens) {
-            this._tokens = tokenize(this._string);
-        }
-        if (typeof this._tokens[this._index] === 'undefined') {
-            return eof;
-        }
-        var balancer = 0;
-        var result = [];
-        var parens = ['(', ')', '[', ']'];
-        if (!parens.includes(this._tokens[this._index])) {
-            return this._tokens[this._index++];
-        }
-        do {
-            var token = this._tokens[this._index];
-            result.push(this._tokens[this._index]);
-            if (token === ')' || token === ']') {
-                balancer--;
-            } else if (token === '(' || token === '[') {
-                balancer++;
+        this._read = read;
+        this._with_parser = this._with_init_parser.bind(this, async () => {
+            if (!this.char_ready()) {
+                const line = await this._read();
+                this.__parser__ = new Parser(line, { env: this });
             }
-            this._index++;
-        } while (balancer !== 0);
-        return result;
+            return this.__parser__;
+        });
+        this.char_ready = function() {
+            return this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
+        };
+        this._make_defaults();
+    }
+    InputPort.prototype._make_defaults = function() {
+        this.read = this._with_parser((parser) => {
+            return parser.read_object();
+        });
+        this.read_line = this._with_parser((parser) => {
+            return parser.__lexer__.read_line();
+        });
+        this.read_char = this._with_parser((parser) => {
+            return parser.__lexer__.read_char();
+        });
+        this.read_string = this._with_parser((parser, number) => {
+            if (!LNumber.isInteger(number)) {
+                const type = LNumber.getType(number);
+                typeErrorMessage('read-string', type, 'integer');
+            }
+            return parser.__lexer__.read_string(number.valueOf());
+        });
+        this.peek_char = this._with_parser((parser) => {
+            return parser.__lexer__.peek_char();
+        });
     };
-    InputPort.prototype.read_char = function() {
-        var char = this.peek_char();
-        if (char !== eof) {
-            this._in_char++;
-        }
-        return char;
+    InputPort.prototype._with_init_parser = function(make_parser, fn) {
+        var self = this;
+        return async function(...args) {
+            var parser = await make_parser.call(self);
+            return fn(parser, ...args);
+        };
     };
-    InputPort.prototype.peek_char = function() {
-        if (this._in_char >= this._string.length) {
-            return eof;
-        }
-        return LCharacter(this._string[this._in_char]);
+    InputPort.prototype.is_open = function() {
+        return this._with_parser !== null;
+    };
+    InputPort.prototype.close = function() {
+        delete this.__parser__;
+        // make content garbage collected, we assign null,
+        // because the value is in prototype
+        this._with_parser = null;
+        ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(name => {
+            this[name] = function() {
+                throw new Error('input-port: port is closed');
+            };
+        });
+        this.char_ready = function() {
+            return false;
+        };
+    };
+    InputPort.prototype.toString = function() {
+        return '#<input-port>';
     };
     // -------------------------------------------------------------------------
     function OutputPort(write) {
@@ -5003,6 +5428,20 @@
         typecheck('OutputPort', write, 'function');
         this.write = write;
     }
+    OutputPort.prototype.is_open = function() {
+        return this._closed !== true;
+    };
+    OutputPort.prototype.close = function() {
+        Object.defineProperty(this, '_closed', {
+            get: () => true,
+            set: () => {},
+            configurable: false,
+            enumerable: false
+        });
+        this.write = function() {
+            throw new Error('output-port: port is closed');
+        };
+    };
     OutputPort.prototype.toString = function() {
         return '#<output-port>';
     };
@@ -5024,42 +5463,88 @@
         };
     }
     OutputStringPort.prototype = Object.create(OutputPort.prototype);
+    OutputStringPort.prototype.toString = function() {
+        return '#<output-port <string>>';
+    };
     OutputStringPort.prototype.getString = function() {
         return this._buffer.map(x => x.valueOf()).join('');
     };
     OutputStringPort.prototype.constructor = OutputStringPort;
     // -------------------------------------------------------------------------
-    function InputStringPort(string) {
+    function OutputFilePort(filename, fd) {
+        if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) ||
+            typeof this === 'undefined') {
+            return new OutputFilePort(filename, fd);
+        }
+        typecheck('OutputFilePort', filename, 'string');
+        this._filename = filename;
+        this._fd = fd.valueOf();
+        this.write = (x) => {
+            if (!LString.isString(x)) {
+                x = toString(x);
+            } else {
+                x = x.valueOf();
+            }
+            root.fs.write(this._fd, x, function() { });
+        };
+    }
+    OutputFilePort.prototype = Object.create(OutputPort.prototype);
+    OutputFilePort.prototype.constructor = OutputFilePort;
+    OutputFilePort.prototype.close = function() {
+        return new Promise((resolve, reject) => {
+            root.fs.close(this._fd, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    this._fd = null;
+                    OutputPort.prototype.close.call(this);
+                    resolve();
+                }
+            });
+        });
+    };
+    OutputFilePort.prototype.toString = function() {
+        return `#<output-port ${this._filename}>`;
+    };
+    // -------------------------------------------------------------------------
+    function InputStringPort(string, env) {
         if (typeof this !== 'undefined' && !(this instanceof InputStringPort) ||
             typeof this === 'undefined') {
             return new InputStringPort(string);
         }
         typecheck('InputStringPort', string, 'string');
-        this._string = string.valueOf();
-        this._index = 0;
-        this._in_char = 0;
-        var self = this;
-        this.read = async function() {
-            if (!self._parser) {
-                self._parser = new Parser(self._string, this);
+        env = env || global_env;
+        string = string.valueOf();
+        this._with_parser = this._with_init_parser.bind(this, () => {
+            if (!this.__parser__) {
+                this.__parser__ = new Parser(string, { env });
             }
-            var result = await self._parser.read_object();
-            if (result === Parser.EOS) {
-                return eof;
-            }
-            return result;
-        };
+            return this.__parser__;
+        });
+        this._make_defaults();
     }
+    InputStringPort.prototype.char_ready = function() {
+        return true;
+    };
     InputStringPort.prototype = Object.create(InputPort.prototype);
     InputStringPort.prototype.constructor = InputStringPort;
-    InputStringPort.prototype.read_line = function() {
-        var after = this._string.substring(this._in_char);
-        if (!after) {
-            return eof;
+    InputStringPort.prototype.toString = function() {
+        return `#<input-port <string>>`;
+    };
+    // -------------------------------------------------------------------------
+    function InputFilePort(content, filename) {
+        if (typeof this !== 'undefined' && !(this instanceof InputFilePort) ||
+            typeof this === 'undefined') {
+            return new InputFilePort(content, filename);
         }
-        var line = after.match(/([^\n])(?:\n|$)/)[0];
-        this._in_char += line.length;
-        return line;
+        InputStringPort.call(this, content);
+        typecheck('InputFilePort', filename, 'string');
+        this.__filename__ = filename;
+    }
+    InputFilePort.prototype = Object.create(InputStringPort.prototype);
+    InputFilePort.prototype.constructor = InputFilePort;
+    InputFilePort.prototype.toString = function() {
+        return `#<input-port ${this.__filename__}>`;
     };
     // -------------------------------------------------------------------------
     var eof = new EOF();
@@ -5070,22 +5555,34 @@
     // -------------------------------------------------------------------------
     // simpler way to create interpreter with interaction-environment
     // -------------------------------------------------------------------------
-    function Interpreter(name, obj = {}) {
+    function Interpreter(name, { stderr, stdin, stdout, ...obj } = {}) {
         if (typeof this !== 'undefined' && !(this instanceof Interpreter) ||
             typeof this === 'undefined') {
-            return new Interpreter(name, obj);
+            return new Interpreter(name, { stdin, stdout, stderr, ...obj });
         }
         if (typeof name === 'undefined') {
             name = 'anonymous';
         }
         this.__env__ = user_env.inherit(name, obj);
         const defaults_name = '**interaction-environment-defaults**';
-        this.__env__.set(defaults_name, get_props(obj).concat(defaults_name));
+        this.set(defaults_name, get_props(obj).concat(defaults_name));
+        var inter = internal_env.inherit(`internal-${name}`);
+        if (is_port(stdin)) {
+            inter.set('stdin', stdin);
+        }
+        if (is_port(stderr)) {
+            inter.set('stderr', stderr);
+        }
+        if (is_port(stdout)) {
+            inter.set('stdout', stdout);
+        }
+        this.constant('**internal-env**', inter);
+        global_env.set('**interaction-environment**', this.__env__);
     }
     // -------------------------------------------------------------------------
     Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
-        typecheck('Intepreter::exec', code, 'string', 1);
-        typecheck('Intepreter::exec', dynamic, 'boolean', 2);
+        typecheck('Interpreter::exec', code, 'string', 1);
+        typecheck('Interpreter::exec', dynamic, 'boolean', 2);
         // simple solution to overwrite this variable in each interpreter
         // before evaluation of user code
         global_env.set('**interaction-environment**', this.__env__);
@@ -5097,7 +5594,7 @@
     // -------------------------------------------------------------------------
     Interpreter.prototype.get = function(value) {
         const result = this.__env__.get(value);
-        if (typeof result === 'function') {
+        if (is_function(result)) {
             return result.bind(this.__env__);
         }
         return result;
@@ -5105,6 +5602,10 @@
     // -------------------------------------------------------------------------
     Interpreter.prototype.set = function(name, value) {
         return this.__env__.set(name, value);
+    };
+    // -------------------------------------------------------------------------
+    Interpreter.prototype.constant = function(name, value) {
+        return this.__env__.constant(name, value);
     };
     // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
@@ -5210,7 +5711,7 @@
     };
     // -------------------------------------------------------------------------
     Environment.prototype.toString = function() {
-        return '#<env:' + this.__name__ + '>';
+        return '#<environment:' + this.__name__ + '>';
     };
     // -------------------------------------------------------------------------
     Environment.prototype.clone = function() {
@@ -5281,7 +5782,7 @@
             if (Value.isUndefined(value)) {
                 return undefined;
             }
-            return patchValue(value.valueOf());
+            return patch_value(value.valueOf());
         }
         if (typeof name === 'string') {
             var parts = name.split('.').filter(Boolean);
@@ -5294,7 +5795,7 @@
                             value = value.valueOf();
                         } else {
                             value = get(root, first);
-                            if (typeof value === 'function') {
+                            if (is_function(value)) {
                                 value = unbind(value);
                             }
                         }
@@ -5304,7 +5805,7 @@
                         // property access e.g. %as.data
                     }
                 } else if (value instanceof Value) {
-                    return patchValue(value.valueOf());
+                    return patch_value(value.valueOf());
                 }
             }
             value = get(root, name);
@@ -5331,6 +5832,26 @@
         this.__env__[name] = value;
         if (doc) {
             this.doc(name, doc);
+        }
+        return this;
+    };
+    // -------------------------------------------------------------------------
+    // for internal use only
+    // -------------------------------------------------------------------------
+    Environment.prototype.constant = function(name, value) {
+        if (this.__env__.hasOwnProperty(name)) {
+            throw new Error(`Environment::constant: ${name} already exists`);
+        }
+        if (arguments.length === 1 && is_plain_object(arguments[0])) {
+            var obj = arguments[0];
+            Object.keys(obj).forEach(key => {
+                this.constant(name, obj[key]);
+            });
+        } else {
+            Object.defineProperty(this.__env__, name, {
+                value,
+                enumerable: true
+            });
         }
         return this;
     };
@@ -5365,7 +5886,7 @@
     // :: Quote funtion used to pause evaluation from Macro
     // -------------------------------------------------------------------------
     function quote(value) {
-        if (isPromise(value)) {
+        if (is_promise(value)) {
             return value.then(quote);
         }
         if (value instanceof Pair || value instanceof LSymbol) {
@@ -5384,19 +5905,69 @@
     Unquote.prototype.toString = function() {
         return '#<unquote[' + this.count + '] ' + this.value + '>';
     };
+    // -------------------------------------------------------------------------------
+    var native_lambda = parse(tokenize(`(lambda ()
+                                          "[native code]"
+                                          (throw "Invalid Invocation"))`))[0];
+    // -------------------------------------------------------------------------------
+    var get = doc(function get(object, ...args) {
+        // if arg is symbol someone probably want to get __fn__ from binded function
+        if (is_function(object) && typeof args[0] !== 'symbol') {
+            object = unbind(object);
+        }
+        var value;
+        var len = args.length;
+        while (args.length) {
+            var arg = args.shift();
+            var name = unbox(arg);
+            if (name === '__code__' && is_function(object) &&
+                        typeof object.__code__ === 'undefined') {
+                value = native_lambda;
+            } else {
+                value = object[name];
+            }
+            if (typeof value === 'undefined') {
+                if (args.length) {
+                    throw new Error(`Try to get ${args[0]} from undefined`);
+                }
+                return value;
+            } else {
+                var context;
+                if (args.length - 1 < len) {
+                    context = object;
+                }
+                value = patch_value(value, context);
+            }
+            object = value;
+        }
+        return value;
+    }, `(. obj . args)
+        (get obj . args)
+
+        Function use object as base and keep using arguments to get the
+        property of JavaScript object. Arguments need to be a strings.
+        e.g. \`(. console "log")\` if you use any function inside LIPS is
+        will be weakly bind (can be rebind), so you can call this log function
+        without problem unlike in JavaScript when you use
+       \`var log = console.log\`.
+       \`get\` is an alias because . don't work in every place, e.g. you can't
+        pass it as argument.`);
     // -------------------------------------------------------------------------
-    var global_env = new Environment({
-        nil: nil,
-        'undefined': undefined,
-        'true': true,
-        'false': false,
-        'null': null,
-        'NaN': NaN,
-        // those will be compiled by babel regex plugin
-        '*letter-unicode-regex*': /\p{L}/u,
-        '*numeral-unicode-regex*': /\p{N}/u,
-        '*space-unicode-regex*': /\s/u,
-        // ------------------------------------------------------------------
+    // function get internal protected data
+    // -------------------------------------------------------------------------
+    function internal(env, name) {
+        var internal_env = interaction(env, '**internal-env**');
+        return internal_env.get(name);
+    }
+    // -------------------------------------------------------------------------
+    // get variable from interaction environment
+    // -------------------------------------------------------------------------
+    function interaction(env, name) {
+        var interaction_env = env.get('**interaction-environment**');
+        return interaction_env.get(name);
+    }
+    // -------------------------------------------------------------------------
+    var internal_env = new Environment({
         stdout: new OutputPort(function(...args) {
             console.log(...args);
         }),
@@ -5406,55 +5977,29 @@
         }),
         // ------------------------------------------------------------------
         stdin: InputPort(function() {
-            return new Promise((resolve) => {
-                resolve(prompt(''));
-            });
+            return Promise.resolve(prompt(''));
         }),
-        // ------------------------------------------------------------------
-        'open-input-string': doc('open-input-string', function(string) {
-            typecheck('open-input-string', string, 'string');
-            return InputStringPort(string);
-        }, `(open-input-string string)
-
-            Function create new string port as input that can be used to
-            read S-exressions from this port using \`read\` function.`),
-        // ------------------------------------------------------------------
-        'output-port?': doc('output-port?', function(x) {
-            return x instanceof OutputPort;
-        }, `(output-port? arg)
-
-            Function return true if argument is output port.`),
-        // ------------------------------------------------------------------
-        'input-port?': doc('input-port?', function(x) {
-            return x instanceof InputPort;
-        }, `(input-port? arg)
-
-            Function return true if argument is input port.`),
-        // ------------------------------------------------------------------
-        'open-output-string': doc('open-output-string', function() {
-            return OutputStringPort(this.get('repr'));
-        }, `(open-output-string)
-
-            Function create new output port that can used to write string into
-            and after finish get the whole string using \`get-output-string\``),
-        // ------------------------------------------------------------------
-        'get-output-string': doc('get-output-string', function(port) {
-            typecheck('get-output-string', port, 'output-string-port');
-            return port.getString();
-        }, `(get-output-string port)
-
-            Function get full string from string port. If nothing was wrote
-            to given port it will return empty string.`),
-        // ------------------------------------------------------------------
-        'eof-object?': doc('eof-object?', function(x) {
-            return x === eof;
-        }, `(eof-object? arg)
-
-            Function check if value is eof object, returned from input string
-            port when there are no more data to read.`),
+        // those will be compiled by babel regex plugin
+        'letter-unicode-regex': /\p{L}/u,
+        'numeral-unicode-regex': /\p{N}/u,
+        'space-unicode-regex': /\s/u
+    });
+    // -------------------------------------------------------------------------
+    var global_env = new Environment({
+        nil,
+        eof,
+        undefined,
+        'true': true,
+        'false': false,
+        'null': null,
+        'NaN': NaN,
         // ------------------------------------------------------------------
         'peek-char': doc('peek-char', function(port) {
-            typecheck('peek-char', port, ['input-port', 'input-string-port']);
+            if (port) {
+                typecheck('peek-char', port, ['input-port']);
+            } else {
+                port = internal(this, 'stdin');
+            }
             return port.peek_char();
         }, `(peek-char port)
 
@@ -5463,9 +6008,9 @@
         // ------------------------------------------------------------------
         'read-line': doc('read-line', function(port) {
             if (typeof port === 'undefined') {
-                port = this.get('stdin');
+                port = internal(this, 'stdin');
             }
-            typecheck('read-line', port, ['input-port', 'input-string-port']);
+            typecheck('read-line', port, ['input-port']);
             return port.read_line();
         }, `(read-char port)
 
@@ -5473,7 +6018,7 @@
         // ------------------------------------------------------------------
         'read-char': doc('read-char', function(port) {
             if (typeof port === 'undefined') {
-                port = this.get('stdin');
+                port = internal(this, 'stdin');
             }
             typecheck('read-char', port, ['input-port', 'input-string-port']);
             return port.read_char();
@@ -5488,10 +6033,11 @@
                 }
             }
             var port;
-            if (arg instanceof InputPort) {
+            if (arg) {
+                typecheck('read', arg, 'input-port');
                 port = arg;
             } else {
-                port = this.get('stdin');
+                port = internal(this, 'stdin');
             }
             return port.read.call(this);
         }, `(read [string])
@@ -5506,22 +6052,22 @@
         pprint: doc(function pprint(arg) {
             if (arg instanceof Pair) {
                 arg = new lips.Formatter(arg.toString(true)).break().format();
-                this.get('display').call(this, arg);
+                global_env.get('display').call(global_env, arg);
             } else {
-                this.get('write').call(this, arg);
+                global_env.get('write').call(global_env, arg);
             }
-            this.get('newline').call(this);
+            global_env.get('newline').call(global_env);
         }, `(pprint expression)
 
            Pretty print list expression, if called with non-pair it just call
            print function with passed argument.`),
         // ------------------------------------------------------------------
         print: doc(function print(...args) {
-            const display = this.get('display');
-            const newline = this.get('newline');
+            const display = global_env.get('display');
+            const newline = global_env.get('newline');
             args.forEach(arg => {
-                display.call(this, arg);
-                newline.call(this);
+                display.call(global_env, arg);
+                newline.call(global_env);
             });
         }, `(print . args)
 
@@ -5537,7 +6083,7 @@
                 throw new Error('Not enough arguments');
             }
             var i = 0;
-            var repr = this.get('repr');
+            var repr = global_env.get('repr');
             str = str.replace(re, (x) => {
                 const chr = x[1];
                 if (chr === '~') {
@@ -5572,29 +6118,29 @@
         // ------------------------------------------------------------------
         display: doc(function display(arg, port = null) {
             if (port === null) {
-                port = this.get('stdout');
+                port = internal(this, 'stdout');
             }
-            const value = this.get('repr')(arg);
-            port.write.call(this, value);
+            const value = global_env.get('repr')(arg);
+            port.write.call(global_env, value);
         }, `(display arg [port])
 
             Function send string to standard output or provied port.`),
         // ------------------------------------------------------------------
         error: doc(function error(...args) {
-            const port = this.get('stderr');
-            const repr = this.get('repr');
-            const value = args.map(arg => repr.call(this, arg)).join(' ');
-            port.write.call(this, value);
-            this.get('newline').call(this, port);
+            const port = internal(this, 'stderr');
+            const repr = global_env.get('repr');
+            const value = args.map(repr).join(' ');
+            port.write.call(global_env, value);
+            global_env.get('newline')(port);
         }, `(error . args)
 
             Display error message.`),
         // ------------------------------------------------------------------
         '%same-functions': doc('%same-functions', function(a, b) {
-            if (typeof a !== 'function') {
+            if (!is_function(a)) {
                 return false;
             }
-            if (typeof b !== 'function') {
+            if (!is_function(b)) {
                 return false;
             }
             return unbind(a) === unbind(b);
@@ -5665,15 +6211,15 @@
             var env = this;
             var ref;
             var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
-            value = resolvePromises(value);
+            value = resolve_promises(value);
             function set(object, key, value) {
-                if (isPromise(object)) {
+                if (is_promise(object)) {
                     return object.then(key => set(object, key, value));
                 }
-                if (isPromise(key)) {
+                if (is_promise(key)) {
                     return key.then(key => set(object, key, value));
                 }
-                if (isPromise(value)) {
+                if (is_promise(value)) {
                     return value.then(value => set(object, key, value));
                 }
                 env.get('set-obj!').call(env, object, key, value);
@@ -5801,10 +6347,14 @@
                             reject(err);
                             global_env.set(PATH, module_path);
                         } else {
-                            run(data).then(() => {
-                                resolve();
-                                global_env.set(PATH, module_path);
-                            }).catch(reject);
+                            try {
+                                run(data).then(() => {
+                                    resolve();
+                                    global_env.set(PATH, module_path);
+                                }).catch(reject);
+                            } catch (e) {
+                                reject(e);
+                            }
                         }
                     });
                 });
@@ -5912,10 +6462,7 @@
             typecheck('let-env', code, 'pair');
             var ret = evaluate(code.car, { env: this, dynamic_scope, error });
             return unpromise(ret, function(value) {
-                if (!(value instanceof Environment)) {
-                    throw new Error('let-env: First argument need to be ' +
-                                    'environment');
-                }
+                typecheck('let-env', value, 'environment');
                 return evaluate(Pair(LSymbol('begin'), code.cdr), {
                     env: value, dynamic_scope, error
                 });
@@ -5962,7 +6509,7 @@
         // ------------------------------------------------------------------
         'begin': doc(new Macro('begin', function(code, options) {
             var args = Object.assign({ }, options);
-            var arr = this.get('list->array')(code);
+            var arr = global_env.get('list->array')(code);
             if (args.dynamic_scope) {
                 args.dynamic_scope = this;
             }
@@ -6041,7 +6588,7 @@
                     env = env.__parent__;
                 }
                 if (new_expr &&
-                    ((typeof value === 'function' && value.__lambda__) ||
+                    ((is_function(value) && value[__lambda__]) ||
                      (value instanceof Syntax))) {
                     value.__name__ = code.car.valueOf();
                     if (value.__name__ instanceof LString) {
@@ -6065,7 +6612,7 @@
         // ------------------------------------------------------------------
         'set-obj!': doc('set-obj!', function(obj, key, value) {
             var obj_type = typeof obj;
-            if (isNull(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
+            if (is_null(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
                 var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
                 throw new Error(msg);
             }
@@ -6073,10 +6620,10 @@
             key = key.valueOf();
             if (arguments.length === 2) {
                 delete obj[key];
-            } else if (is_prototype(obj) && typeof value === 'function') {
+            } else if (is_prototype(obj) && is_function(value)) {
                 obj[key] = unbind(value);
-                obj[key].__prototype__ = true;
-            } else if (typeof value === 'function' || is_native(value) || value === nil) {
+                obj[key][__prototype__] = true;
+            } else if (is_function(value) || is_native(value) || value === nil) {
                 obj[key] = value;
             } else {
                 obj[key] = value ? value.valueOf() : value;
@@ -6129,35 +6676,25 @@
             If no parent frame found it return nil.`),
         // ------------------------------------------------------------------
         'eval': doc('eval', function(code, env) {
-            typecheck('eval', code, ['symbol', 'pair', 'array']);
             env = env || this;
-            if (code instanceof LSymbol) {
-                return env.get(code);
-            }
-            if (code instanceof Pair) {
-                return evaluate(code, {
-                    env,
-                    //dynamic_scope: this,
-                    error: e => {
-                        this.get('error').call(this, e.message);
-                        if (e.code) {
-                            var stack = e.code.map((line, i) => {
-                                return `[${i + 1}]: ${line}`;
-                            }).join('\n');
-                            this.get('error').call(this, stack);
-                        }
+            return evaluate(code, {
+                env,
+                //dynamic_scope: this,
+                error: e => {
+                    var error = global_env.get('error');
+                    error.call(this, e.message);
+                    if (e.code) {
+                        var stack = e.code.map((line, i) => {
+                            return `[${i + 1}]: ${line}`;
+                        }).join('\n');
+                        error.call(this, stack);
                     }
-                });
-            }
-            if (code instanceof Array) {
-                var _eval = this.get('eval');
-                return code.reduce((_, code) => {
-                    return _eval(code, env);
-                });
-            }
-        }, `(eval list)
+                }
+            });
+        }, `(eval expr)
+            (eval expr environment)
 
-            Function evalute LIPS code as list structure.`),
+            Function evalute LIPS Scheme code.`),
         // ------------------------------------------------------------------
         lambda: new Macro('lambda', function(code, { dynamic_scope, error } = {}) {
             var self = this;
@@ -6184,7 +6721,15 @@
                 var name = code.car;
                 var i = 0;
                 var value;
-                if (typeof this !== 'undefined') {
+                if (typeof this !== 'undefined' && !(this instanceof Environment)) {
+                    if (this && !this.__instance__) {
+                        Object.defineProperty(this, '__instance__', {
+                            enumerable: false,
+                            get: () => true,
+                            set: () => {},
+                            configurable: false
+                        });
+                    }
                     env.set('this', this);
                 }
                 // arguments and arguments.callee inside lambda function
@@ -6228,7 +6773,7 @@
             }
             var length = code.car instanceof Pair ? code.car.length() : null;
             lambda.__code__ = new Pair(new LSymbol('lambda'), code);
-            lambda.__lambda__ = true;
+            lambda[__lambda__] = true;
             if (!(code.car instanceof Pair)) {
                 return doc(lambda, __doc__, true); // variable arguments
             }
@@ -6449,10 +6994,14 @@
             if (dynamic_scope) {
                 dynamic_scope = self;
             }
-            function isPair(value) {
-                return value instanceof Pair;
+            // -----------------------------------------------------------------
+            function is_struct(value) {
+                return value instanceof Pair ||
+                    is_plain_object(value) ||
+                    Array.isArray(value);
             }
-            function resolve_pair(pair, fn, test = isPair) {
+            // -----------------------------------------------------------------
+            function resolve_pair(pair, fn, test = is_struct) {
                 if (pair instanceof Pair) {
                     var car = pair.car;
                     var cdr = pair.cdr;
@@ -6462,7 +7011,7 @@
                     if (test(cdr)) {
                         cdr = fn(cdr);
                     }
-                    if (isPromise(car) || isPromise(cdr)) {
+                    if (is_promise(car) || is_promise(cdr)) {
                         return Promise.all([car, cdr]).then(([car, cdr]) => {
                             return new Pair(car, cdr);
                         });
@@ -6472,6 +7021,7 @@
                 }
                 return pair;
             }
+            // -----------------------------------------------------------------
             function join(eval_pair, value) {
                 if (eval_pair === nil && value === nil) {
                     //return nil;
@@ -6488,6 +7038,72 @@
                 }
                 return eval_pair;
             }
+            // -----------------------------------------------------------------
+            function unquoted_arr(arr) {
+                return !!arr.filter(value => {
+                    return value instanceof Pair &&
+                        LSymbol.is(value.car, 'unquote');
+                }).length;
+            }
+            // -----------------------------------------------------------------
+            function quote_vector(arr, unquote_cnt, max_unq) {
+                return arr.reduce((acc, x) => {
+                    if (!(x instanceof Pair)) {
+                        acc.push(x);
+                        return acc;
+                    }
+                    if (LSymbol.is(x.car, 'unquote-splicing')) {
+                        let result;
+                        if (unquote_cnt + 1 < max_unq) {
+                            result = recur(x.cdr, unquote_cnt + 1, max_unq);
+                        } else {
+                            result = evaluate(x.cdr.car, {
+                                env: self,
+                                dynamic_scope,
+                                error
+                            });
+                        }
+                        if (!(result instanceof Pair)) {
+                            throw new Error(`Expecting list ${type(x)} found`);
+                        }
+                        return acc.concat(result.toArray());
+                    }
+                    acc.push(recur(x, unquote_cnt, max_unq));
+                    return acc;
+                }, []);
+            }
+            // -----------------------------------------------------------------
+            function quote_object(object, unquote_cnt, max_unq) {
+                const result = {};
+                unquote_cnt++;
+                Object.keys(object).forEach(key => {
+                    const value = object[key];
+                    if (value instanceof Pair) {
+                        if (LSymbol.is(value.car, 'unquote-splicing')) {
+                            throw new Error("You can't call `unquote-splicing` " +
+                                            "inside object");
+                        }
+                        let output;
+                        if (unquote_cnt < max_unq) {
+                            output = recur(value.cdr.car, unquote_cnt, max_unq);
+                        } else {
+                            output = evaluate(value.cdr.car, {
+                                env: self,
+                                dynamic_scope,
+                                error
+                            });
+                        }
+                        result[key] = output;
+                    } else {
+                        result[key] = value;
+                    }
+                });
+                if (Object.isFrozen(object)) {
+                    Object.freeze(result);
+                }
+                return result;
+            }
+            // -----------------------------------------------------------------
             function unquote_splice(pair, unquote_cnt, max_unq) {
                 if (unquote_cnt < max_unq) {
                     return new Pair(
@@ -6557,6 +7173,7 @@
                     });
                 })(pair.car.cdr);
             }
+            // -----------------------------------------------------------------
             var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair) {
@@ -6664,9 +7281,14 @@
                     return resolve_pair(pair, (pair) => {
                         return recur(pair, unquote_cnt, max_unq);
                     });
+                } else if (is_plain_object(pair)) {
+                    return quote_object(pair, unquote_cnt, max_unq);
+                } else if (pair instanceof Array) {
+                    return quote_vector(pair, unquote_cnt, max_unq);
                 }
                 return pair;
             }
+            // -----------------------------------------------------------------
             function clear(node) {
                 if (node instanceof Pair) {
                     delete node[__data__];
@@ -6677,6 +7299,13 @@
                         clear(node.cdr);
                     }
                 }
+            }
+            // -----------------------------------------------------------------
+            if (is_plain_object(arg.car) && !unquoted_arr(Object.values(arg.car))) {
+                return quote(arg.car);
+            }
+            if (Array.isArray(arg.car) && !unquoted_arr(arg.car)) {
+                return quote(arg.car);
             }
             if (arg.car instanceof Pair &&
                 !arg.car.find('unquote') &&
@@ -6712,19 +7341,20 @@
                 }
                 return item;
             });
-            return this.get('append!').call(this, ...items);
+            return global_env.get('append!').call(this, ...items);
         }, `(append item ...)
 
             Function will create new list with eac argument appended to the end.
             It will always return new list and not modify it's arguments.`),
         // ------------------------------------------------------------------
         'append!': doc('append!', function(...items) {
+            var is_list = global_env.get('list?');
             return items.reduce((acc, item) => {
                 typecheck('append!', acc, ['nil', 'pair']);
-                if ((item instanceof Pair || item === nil) && !this.get('list?')(item)) {
+                if ((item instanceof Pair || item === nil) && !is_list(item)) {
                     throw new Error('append!: Invalid argument, value is not a list');
                 }
-                if (isNull(item)) {
+                if (is_null(item)) {
                     return acc;
                 }
                 if (acc === nil) {
@@ -6747,8 +7377,8 @@
                 return nil;
             }
             if (arg instanceof Pair) {
-                var arr = this.get('list->array')(arg).reverse();
-                return this.get('array->list')(arr);
+                var arr = global_env.get('list->array')(arg).reverse();
+                return global_env.get('array->list')(arr);
             } else if (!(arg instanceof Array)) {
                 throw new Error(typeErrorMessage('reverse', type(arg), 'array or pair'));
             } else {
@@ -6808,7 +7438,7 @@
         join: doc(function join(separator, list) {
             typecheck('join', separator, 'string');
             typecheck('join', list, ['pair', 'nil']);
-            return this.get('list->array')(list).join(separator);
+            return global_env.get('list->array')(list).join(separator);
         }, `(join separator list)
 
             Function return string by joining elements of the list`),
@@ -6816,7 +7446,7 @@
         split: doc(function split(separator, string) {
             typecheck('split', separator, ['regex', 'string']);
             typecheck('split', string, 'string');
-            return this.get('array->list')(string.split(separator));
+            return global_env.get('array->list')(string.split(separator));
         }, `(split separator string)
 
             Function create list by splitting string by separatar that can
@@ -6836,7 +7466,7 @@
             typecheck('match', pattern, ['regex', 'string']);
             typecheck('match', string, 'string');
             var m = string.match(pattern);
-            return m ? this.get('array->list')(m) : nil;
+            return m ? global_env.get('array->list')(m) : nil;
         }, `(match pattern string)
 
             function return match object from JavaScript as list.`),
@@ -6866,7 +7496,7 @@
                 result = nil;
             }
             if (env.__parent__ !== undefined) {
-                return this.get('env').call(this, env.__parent__).append(result);
+                return global_env.get('env')(env.__parent__).append(result);
             }
             return result;
         }, `(env obj)
@@ -6875,12 +7505,6 @@
         // ------------------------------------------------------------------
         'new': doc('new', function(obj, ...args) {
             var instance = new (unbind(obj))(...args.map(x => unbox(x)));
-            Object.defineProperty(instance, '__instance__', {
-                enumerable: false,
-                get: () => true,
-                set: () => {},
-                configurable: false
-            });
             return instance;
         }, `(new obj . args)
 
@@ -6966,11 +7590,12 @@
 
             Function check if value is a macro.`),
         // ------------------------------------------------------------------
-        'function?': doc('function?', function(obj) {
-            return typeof obj === 'function';
-        }, `(function? expression)
+        'function?': doc(
+            'function?',
+            is_function,
+            `(function? expression)
 
-            Function check if value is a function.`),
+             Function check if value is a function.`),
         // ------------------------------------------------------------------
         'real?': doc('real?', function(value) {
             if (type(value) !== 'number') {
@@ -7010,7 +7635,7 @@
             Function check if value is regular expression.`),
         // ------------------------------------------------------------------
         'null?': doc('null?', function(obj) {
-            return isNull(obj);
+            return is_null(obj);
         }, `(null? expression)
 
             Function check if value is nulish.`),
@@ -7074,12 +7699,12 @@
 
              Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
-        apply: doc(function apply(fn, ...list) {
+        apply: doc(function apply(fn, ...args) {
             typecheck('apply', fn, 'function', 1);
-            var last = list.pop();
-            typecheck('apply', last, ['pair', 'nil'], list.length + 2);
-            list = list.concat(this.get('list->array').call(this, last));
-            return fn.apply(this, list);
+            var last = args.pop();
+            typecheck('apply', last, ['pair', 'nil'], args.length + 2);
+            args = args.concat(global_env.get('list->array').call(this, last));
+            return fn.apply(this, prepare_fn_args(fn, args));
         }, `(apply fn list)
 
             Function that call function with list of arguments.`),
@@ -7123,38 +7748,76 @@
            Function convert string to number.`),
         // ------------------------------------------------------------------
         'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
+                var catch_clause, finally_clause;
+                if (LSymbol.is(code.cdr.car.car, 'catch')) {
+                    catch_clause = code.cdr.car;
+                    if (code.cdr.cdr instanceof Pair &&
+                        LSymbol.is(code.cdr.cdr.car.car, 'finally')) {
+                        finally_clause = code.cdr.cdr.car;
+                    }
+                } else if (LSymbol.is(code.cdr.car.car, 'finally')) {
+                    finally_clause = code.cdr.car;
+                }
+                if (!(finally_clause || catch_clause)) {
+                    throw new Error('try: invalid syntax');
+                }
+                var next = resolve;
+                if (finally_clause) {
+                    next = function(result, cont) {
+                        // prevent infinite loop when finally throw exception
+                        next = reject;
+                        unpromise(evaluate(new Pair(
+                            new LSymbol('begin'),
+                            finally_clause.cdr
+                        ), args), function() {
+                            cont(result);
+                        });
+                    };
+                }
                 var args = {
                     env: this,
                     error: (e) => {
                         var env = this.inherit('try');
-                        env.set(code.cdr.car.cdr.car.car, e);
-                        var args = {
-                            env,
-                            error
-                        };
-                        if (dynamic_scope) {
-                            args.dynamic_scope = this;
+                        if (catch_clause) {
+                            env.set(catch_clause.cdr.car.car, e);
+                            var args = {
+                                env,
+                                error
+                            };
+                            if (dynamic_scope) {
+                                args.dynamic_scope = this;
+                            }
+                            unpromise(evaluate(new Pair(
+                                new LSymbol('begin'),
+                                catch_clause.cdr.cdr
+                            ), args), function(result) {
+                                next(result, resolve);
+                            });
+                        } else {
+                            next(e, error);
                         }
-                        unpromise(evaluate(new Pair(
-                            new LSymbol('begin'),
-                            code.cdr.car.cdr.cdr
-                        ), args), function(result) {
-                            resolve(result);
-                        });
                     }
                 };
                 if (dynamic_scope) {
                     args.dynamic_scope = this;
                 }
-                var ret = evaluate(code.car, args);
-                if (isPromise(ret)) {
-                    ret.then(resolve).catch(args.error);
+                var result = evaluate(code.car, args);
+                if (is_promise(result)) {
+                    result.then(result => {
+                        next(result, resolve);
+                    }).catch(args.error);
                 } else {
-                    resolve(ret);
+                    next(result, resolve);
                 }
             });
-        }), `(try expr (catch (e) code)`),
+        }), `(try expr (catch (e) code))
+             (try expr (catch (e) code) (finally code))
+             (try expr (finally code))
+
+             Macro execute user code and catch exception. If catch is provided
+             it's executed when expression expr throw error. If finally is provide
+             it's always executed at the end.`),
         // ------------------------------------------------------------------
         'throw': doc('throw', function(message) {
             throw new Error(message);
@@ -7165,7 +7828,7 @@
         find: doc(function find(arg, list) {
             typecheck('find', arg, ['regex', 'function']);
             typecheck('find', list, ['pair', 'nil']);
-            if (isNull(list)) {
+            if (is_null(list)) {
                 return nil;
             }
             var fn = matcher('find', arg);
@@ -7189,8 +7852,8 @@
             // we need to use call(this because babel transpile this code into:
             // var ret = map.apply(void 0, [fn].concat(lists));
             // it don't work with weakBind
-            var ret = this.get('map').call(this, fn, ...lists);
-            if (isPromise(ret)) {
+            var ret = global_env.get('map').call(this, fn, ...lists);
+            if (is_promise(ret)) {
                 return ret.then(() => {});
             }
         }, `(for-each fn . lists)
@@ -7202,7 +7865,7 @@
         // ------------------------------------------------------------------
         map: doc(function map(fn, ...lists) {
             typecheck('map', fn, 'function');
-            var is_list = this.get('list?');
+            var is_list = global_env.get('list?');
             lists.forEach((arg, i) => {
                 typecheck('map', arg, ['pair', 'nil'], i + 1);
                 // detect cycles
@@ -7256,7 +7919,7 @@
         some: doc(function some(fn, list) {
             typecheck('some', fn, 'function');
             typecheck('some', list, ['pair', 'nil']);
-            if (isNull(list)) {
+            if (is_null(list)) {
                 return false;
             } else {
                 return unpromise(fn(list.car), (value) => {
@@ -7332,7 +7995,7 @@
         filter: doc(function filter(arg, list) {
             typecheck('filter', arg, ['regex', 'function']);
             typecheck('filter', list, ['pair', 'nil']);
-            var array = this.get('list->array')(list);
+            var array = global_env.get('list->array')(list);
             var result = [];
             var fn = matcher('filter', arg);
             return (function loop(i) {
@@ -7396,8 +8059,7 @@
             Function return the greatest common divisor of their arguments.`),
         // ------------------------------------------------------------------
         'lcm': doc(function lcm(...args) {
-            // implementation based on
-            // https://rosettacode.org/wiki/Least_common_multiple#JavaScript
+            // ref: https://rosettacode.org/wiki/Least_common_multiple#JavaScript
             var n = args.length, a = abs(args[0]);
             for (var i = 1; i < n; i++) {
                 var b = abs(args[i]), c = a;
@@ -7488,11 +8150,15 @@
              Function return square root of the number.`),
         // ------------------------------------------------------------------
         '**': doc('**', binaryMathOp(function(a, b) {
-            return LNumber(a).pow(b);
+            a = LNumber(a);
+            b = LNumber(b);
+            if (b.cmp(0) === -1) {
+                return LFloat(1).div(a).pow(b.sub());
+            }
+            return a.pow(b);
         }), `(** a b)
 
-            Function calculate number a to to the power of b. It can throw
-            exception when ** native operator is not supported.`),
+            Function calculate number a to to the power of b.`),
         // ------------------------------------------------------------------
         '1+': doc('1+', singleMathOp(function(number) {
             return LNumber(number).add(1);
@@ -7555,7 +8221,7 @@
              Function compare two values if they are identical.`),
         // ------------------------------------------------------------------
         or: doc(new Macro('or', function(code, { dynamic_scope, error }) {
-            var args = this.get('list->array')(code);
+            var args = global_env.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
                 dynamic_scope = self;
@@ -7591,7 +8257,7 @@
              If there are no expression that evaluate to true it return false.`),
         // ------------------------------------------------------------------
         and: doc(new Macro('and', function(code, { dynamic_scope, error } = {}) {
-            var args = this.get('list->array')(code);
+            var args = global_env.get('list->array')(code);
             var self = this;
             if (dynamic_scope) {
                 dynamic_scope = self;
@@ -7653,7 +8319,7 @@
 
             Function left shit the value a by value b.`),
         not: doc(function not(value) {
-            if (isNull(value)) {
+            if (is_null(value)) {
                 return true;
             }
             return !value;
@@ -7663,6 +8329,7 @@
     }, undefined, 'global');
     var user_env = global_env.inherit('user-env');
     global_env.set('**interaction-environment**', user_env);
+    global_env.constant('**internal-env**', internal_env);
     // -------------------------------------------------------------------------
     (function() {
         var map = { ceil: 'ceiling' };
@@ -7679,7 +8346,7 @@
         });
     })();
     // -------------------------------------------------------------------------
-    // source: https://stackoverflow.com/a/4331218/387194
+    // ref: https://stackoverflow.com/a/4331218/387194
     function allPossibleCases(arr) {
         if (arr.length === 1) {
             return arr[0];
@@ -7792,7 +8459,7 @@
             } catch (e) {
                 value = nodeRequire(module);
             }
-            return patchValue(value, global);
+            return patch_value(value, global);
         }, `(require module)
 
             Function to be used inside Node.js to import the module.`));
@@ -7862,12 +8529,31 @@
             obj instanceof LCharacter;
     }
     // -------------------------------------------------------------------------
+    function has_own_symbol(obj, symbol) {
+        if (obj === null) {
+            return false;
+        }
+        return typeof obj === 'object' &&
+            symbol in Object.getOwnPropertySymbols(obj);
+    }
+    // -------------------------------------------------------------------------
+    function is_iterator(obj, symbol) {
+        if (has_own_symbol(obj, symbol) || has_own_symbol(obj.__proto__, symbol)) {
+            return is_function(obj[symbol]);
+        }
+    }
+    // -------------------------------------------------------------------------
     function type(obj) {
         var mapping = {
             'pair': Pair,
             'symbol': LSymbol,
             'character': LCharacter,
             'values': Values,
+            'input-port': InputPort,
+            'output-port': OutputPort,
+            'number': LNumber,
+            'regex': RegExp,
+            'syntax': Syntax,
             'macro': Macro,
             'string': LString,
             'array': Array,
@@ -7882,19 +8568,10 @@
         if (obj === null) {
             return 'null';
         }
-        if (obj instanceof Syntax) {
-            return 'syntax';
-        }
         for (let [key, value] of Object.entries(mapping)) {
             if (obj instanceof value) {
                 return key;
             }
-        }
-        if (obj instanceof LNumber) {
-            return 'number';
-        }
-        if (obj instanceof RegExp) {
-            return "regex";
         }
         if (typeof obj === 'object') {
             if (obj.__instance__) {
@@ -7907,14 +8584,18 @@
                 if (obj.constructor.__class__) {
                     return obj.constructor.__class__;
                 }
-                if (obj.constructor === Object &&
-                    typeof obj[Symbol.iterator] === 'function') {
-                    return 'iterator';
+                if (obj.constructor === Object) {
+                    if (is_iterator(obj, Symbol.iterator)) {
+                        return 'iterator';
+                    }
+                    if (is_iterator(obj, Symbol.asyncIterator)) {
+                        return 'async-iterator';
+                    }
                 }
                 return obj.constructor.name.toLowerCase();
             }
         }
-        if (typeof obj === 'function' && obj[Symbol.for('promise')]) {
+        if (is_function(obj) && obj[Symbol.for('promise')]) {
             return 'promise';
         }
         return typeof obj;
@@ -7923,7 +8604,7 @@
     // :; wrap tree of Promises with single Promise or return argument as is
     // :: if tree have no Promises
     // -------------------------------------------------------------------------
-    function resolvePromises(arg) {
+    function resolve_promises(arg) {
         var promises = [];
         traverse(arg);
         if (promises.length) {
@@ -7931,7 +8612,7 @@
         }
         return arg;
         function traverse(node) {
-            if (isPromise(node)) {
+            if (is_promise(node)) {
                 promises.push(node);
             } else if (node instanceof Pair) {
                 if (!node.haveCycles('car')) {
@@ -7964,38 +8645,44 @@
             return node;
         }
     }
+    // -------------------------------------------------------------------------
     function evaluate_args(rest, { env, dynamic_scope, error }) {
         var args = [];
         var node = rest;
         markCycles(node);
-        while (true) {
+        function next() {
+            return args;
+        }
+        return (function loop() {
             if (node instanceof Pair) {
                 var arg = evaluate(node.car, { env, dynamic_scope, error });
                 if (dynamic_scope) {
                     arg = unpromise(arg, arg => {
-                        if (typeof arg === 'function' && isNativeFunction(arg)) {
+                        if (is_native_function(arg)) {
                             return arg.bind(dynamic_scope);
                         }
                         return arg;
                     });
                 }
-                args.push(arg);
-                if (node.haveCycles('cdr')) {
-                    break;
-                }
-                node = node.cdr;
+                return unpromise(resolve_promises(arg), function(arg) {
+                    args.push(arg);
+                    if (node.haveCycles('cdr')) {
+                        return next();
+                    }
+                    node = node.cdr;
+                    return loop();
+                });
             } else if (node === nil) {
-                break;
+                return next();
             } else {
                 throw new Error('Syntax Error: improper list found in apply');
             }
-        }
-        return resolvePromises(args);
+        })();
     }
     // -------------------------------------------------------------------------
-    function evaluateSyntax(macro, code, eval_args) {
+    function evaluate_syntax(macro, code, eval_args) {
         var value = macro.invoke(code, eval_args);
-        return unpromise(resolvePromises(value), function(value) {
+        return unpromise(resolve_promises(value), function(value) {
             if (value instanceof Pair) {
                 value.markCycles();
             }
@@ -8003,7 +8690,7 @@
         });
     }
     // -------------------------------------------------------------------------
-    function evaluateMacro(macro, code, eval_args) {
+    function evaluate_macro(macro, code, eval_args) {
         function finalize(result) {
             if (result instanceof Pair) {
                 result.markCycles();
@@ -8012,7 +8699,7 @@
             return quote(result);
         }
         var value = macro.invoke(code, eval_args);
-        return unpromise(resolvePromises(value), function ret(value) {
+        return unpromise(resolve_promises(value), function ret(value) {
             if (value && value[__data__] || !value || self_evaluated(value)) {
                 return value;
             } else {
@@ -8021,40 +8708,52 @@
         });
     }
     // -------------------------------------------------------------------------
+    function is_raw_lambda(fn) {
+        return fn[__lambda__] && !fn[__prototype__] &&
+            !fn[__method__] && !is_port_method(fn);
+    }
+    // -------------------------------------------------------------------------
+    function prepare_fn_args(fn, args) {
+        if (is_bound(fn) && !is_object_bound(fn) &&
+            (!lips_context(fn) || is_port_method(fn))) {
+            args = args.map(unbox);
+        }
+        if (!is_raw_lambda(fn) &&
+            args.some(is_lips_function) &&
+            !is_lips_function(fn) &&
+            !is_array_method(fn)) {
+            // we unbox values from callback functions #76
+            // calling map on array should not unbox the value
+            args = args.map(arg => {
+                if (is_lips_function(arg)) {
+                    var wrapper = function(...args) {
+                        return unpromise(arg.apply(this, args), unbox);
+                    };
+                    // copy prototype from function to wrapper
+                    // so this work when calling new from JavaScript
+                    // case of Preact that pass LIPS class as argument
+                    // to h function
+                    wrapper.prototype = arg.prototype;
+                    return wrapper;
+                }
+                return arg;
+            });
+        }
+        return args;
+    }
+    // -------------------------------------------------------------------------
     function apply(fn, args, { env, dynamic_scope, error = () => {} } = {}) {
         args = evaluate_args(args, { env, dynamic_scope, error });
         return unpromise(args, function(args) {
-            if (is_bound(fn) && !is_object_bound(fn) &&
-                (!lips_context(fn) || is_port(fn))) {
-                args = args.map(unbox);
-            }
-            if (fn.__lambda__ && !fn.__prototype__ || is_port(fn)) {
+            if (is_raw_lambda(fn)) {
                 // lambda need environment as context
                 // normal functions are bound to their contexts
                 fn = unbind(fn);
-            } else if (args.some(lips_function) &&
-                       !lips_function(fn) &&
-                       !is_array_method(fn)) {
-                // we unbox values from callback functions #76
-                // calling map on array should not unbox the value
-                args = args.map(arg => {
-                    if (lips_function(arg)) {
-                        var wrapper = function(...args) {
-                            return unpromise(arg.apply(this, args), unbox);
-                        };
-                        // copy prototype from function to wrapper
-                        // so this work when calling new from JavaScript
-                        // case of Preact that pass LIPS class as argument
-                        // to h function
-                        wrapper.prototype = arg.prototype;
-                        return wrapper;
-                    }
-                    return arg;
-                });
             }
+            args = prepare_fn_args(fn, args);
             var _args = args.slice();
             var scope = (dynamic_scope || env).newFrame(fn, _args);
-            var result = resolvePromises(fn.apply(scope, args));
+            var result = resolve_promises(fn.apply(scope, args));
             return unpromise(result, (result) => {
                 if (result instanceof Pair) {
                     result.markCycles();
@@ -8085,7 +8784,7 @@
             }
             var eval_args = { env, dynamic_scope, error };
             var value;
-            if (isNull(code)) {
+            if (is_null(code)) {
                 return code;
             }
             if (code instanceof LSymbol) {
@@ -8097,13 +8796,13 @@
             var first = code.car;
             var rest = code.cdr;
             if (first instanceof Pair) {
-                value = resolvePromises(evaluate(first, eval_args));
-                if (isPromise(value)) {
+                value = resolve_promises(evaluate(first, eval_args));
+                if (is_promise(value)) {
                     return value.then((value) => {
                         return evaluate(new Pair(value, code.cdr), eval_args);
                     });
                     // else is later in code
-                } else if (typeof value !== 'function') {
+                } else if (!is_function(value)) {
                     throw new Error(
                         type(value) + ' ' + env.get('repr')(value) +
                             ' is not a function while evaluating ' + code.toString()
@@ -8112,19 +8811,20 @@
             }
             if (first instanceof LSymbol) {
                 value = env.get(first);
-            } else if (typeof first === 'function') {
+            } else if (is_function(first)) {
                 value = first;
             }
+            var result;
             if (value instanceof Syntax) {
-                return evaluateSyntax(value, code, eval_args);
+                result = evaluate_syntax(value, code, eval_args);
             } else if (value instanceof Macro) {
-                return evaluateMacro(value, rest, eval_args);
-            } else if (typeof value === 'function') {
-                return apply(value, rest, eval_args);
+                result = evaluate_macro(value, rest, eval_args);
+            } else if (is_function(value)) {
+                result = apply(value, rest, eval_args);
             } else if (code instanceof Pair) {
                 value = first && first.toString();
                 throw new Error(`${type(first)} ${value} is not a function`);
-            } else if (typeof value !== 'function') {
+            } else if (!is_function(value)) {
                 if (value) {
                     var msg = `${type(value)} \`${value}' is not a function`;
                     throw new Error(msg);
@@ -8133,6 +8833,12 @@
             } else {
                 return code;
             }
+            // escape promise feature #54
+            var __promise__ = env.get(Symbol.for('__promise__'), { throwError: false });
+            if (__promise__ === true && is_promise(result)) {
+                return new QuotedPromise(result);
+            }
+            return result;
         } catch (e) {
             error && error.call(env, e, code);
         }
@@ -8148,21 +8854,29 @@
         }
         var results = [];
         for await (let code of parse(string)) {
-            var result = await evaluate(code, {
+            const value = evaluate(code, {
                 env,
                 dynamic_scope,
                 error: (e, code) => {
-                    if (code) {
-                        // LIPS stack trace
-                        if (!(e.__code__ instanceof Array)) {
-                            e.__code__ = [];
+                    if (e && e.message) {
+                        // clean duplicated Error: added by JS
+                        e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
+                        if (code) {
+                            // LIPS stack trace
+                            if (!(e.__code__ instanceof Array)) {
+                                e.__code__ = [];
+                            }
+                            e.__code__.push(code.toString(true));
                         }
-                        e.__code__.push(code.toString(true));
                     }
                     throw e;
                 }
             });
-            results.push(result);
+            if (!is_promise(value)) {
+                results.push(value);
+            } else {
+                results.push(await value);
+            }
         }
         return results;
     }
@@ -8227,7 +8941,7 @@
         return lips.version.match(/^(\{\{VER\}\}|DEV)$/);
     }
     // -------------------------------------------------------------------------
-    async function bootstrap(url = '') {
+    function bootstrap(url = '') {
         if (url === '') {
             if (is_dev()) {
                 url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
@@ -8238,14 +8952,7 @@
             url += '/';
         }
         var load = global_env.get('load');
-        var files = [
-            'lib/bootstrap.scm',
-            'lib/R5RS.scm',
-            'lib/R7RS.scm'
-        ];
-        for (let file of files) {
-            await load.call(lips.env, url + file, global_env);
-        }
+        return load.call(lips.env, `${url}dist/std.scm`, global_env);
     }
     // -------------------------------------------------------------------------
     function Worker(url) {
@@ -8372,6 +9079,7 @@
     // -------------------------------------------------------------------------
     function init() {
         var lips_mimes = ['text/x-lips', 'text/x-scheme'];
+        var bootstraped;
         function load(script) {
             return new Promise(function(resolve) {
                 var src = script.getAttribute('src');
@@ -8389,9 +9097,8 @@
                 }
             });
         }
-        if (!window.document) {
-            return Promise.resolve();
-        } else {
+
+        function loop() {
             return new Promise(function(resolve) {
                 var scripts = Array.from(document.querySelectorAll('script'));
                 return (function loop() {
@@ -8402,7 +9109,7 @@
                         var type = script.getAttribute('type');
                         if (lips_mimes.includes(type)) {
                             var bootstrap_attr = script.getAttribute('bootstrap');
-                            if (typeof bootstrap_attr === 'string') {
+                            if (!bootstraped && typeof bootstrap_attr === 'string') {
                                 bootstrap(bootstrap_attr).then(function() {
                                     return load(script, function(e) {
                                         console.error(e);
@@ -8422,7 +9129,23 @@
                 })();
             });
         }
+        if (!window.document) {
+            return Promise.resolve();
+        } else if (currentScript) {
+            var script = currentScript;
+            var bootstrap_attr = script.getAttribute('bootstrap');
+            if (typeof bootstrap_attr === 'string') {
+                return bootstrap(bootstrap_attr).then(function() {
+                    bootstraped = true;
+                    return loop();
+                });
+            }
+        }
+        return loop();
     }
+    // this can't be in init function, because it need to be in script context
+    const currentScript = typeof window !== 'undefined' &&
+          window.document && document.currentScript;
     // -------------------------------------------------------------------------
     if (typeof window !== 'undefined') {
         contentLoaded(window, init);
@@ -8454,7 +9177,8 @@ LIPS Interpreter {{VER}} (${_build}) <https://lips.js.org>
 Copyright (c) 2018-${_year} Jakub T. Jankiewicz
 
 Type (env) to see environment with functions macros and variables.
-You can also use (help name) to display help for specic function or macro.
+You can also use (help name) to display help for specic function or macro and
+(apropos name) to display list of matched names in environment.
 `.replace(/^.*\n/, '');
         return banner;
     })();
@@ -8486,6 +9210,8 @@ You can also use (help name) to display help for specic function or macro.
         tokenize,
         evaluate,
 
+        bootstrap,
+
         Environment,
         env: user_env,
 
@@ -8500,18 +9226,24 @@ You can also use (help name) to display help for specic function or macro.
         Syntax,
         Pair,
         Values,
+        QuotedPromise,
 
         quote,
 
         InputPort,
         OutputPort,
+        InputFilePort,
+        OutputFilePort,
         InputStringPort,
         OutputStringPort,
 
         Formatter,
+        Parser,
+        Lexer,
         specials,
         repr,
         nil,
+        eof,
 
         LSymbol,
         LNumber,

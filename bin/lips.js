@@ -54,8 +54,9 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
         code = code.toString();
     }
     return interpreter.exec(code, dynamic, env).catch(function(e) {
-        console.error(e.message);
-        console.error('Call (stack-trace) to see the stack');
+        if (!stack) {
+            console.error(e.message);
+        }
         log_error(e.message);
         if (e.__code__) {
             strace = e.__code__.map((line, i) => {
@@ -71,6 +72,7 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
             console.error(e.stack);
             console.error(strace);
         } else {
+            console.error('Call (stack-trace) to see the stack');
             console.error('Thrown exception is in global exception variable, use ' +
                           '(display exception.stack) to display JS stack trace');
         }
@@ -80,7 +82,7 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
 
 // -----------------------------------------------------------------------------
 function print(result) {
-    if (result.length) {
+    if (result && result.length) {
         var last = result.pop();
         if (last !== undefined) {
             var ret = env.get('repr')(last, true);
@@ -90,8 +92,8 @@ function print(result) {
 }
 // -----------------------------------------------------------------------------
 
-function boostrap(interpreter) {
-    var list = ['./lib/bootstrap.scm', './lib/R5RS.scm', './lib/R7RS.scm'];
+function bootstrap(interpreter) {
+    var list = ['./dist/std.scm'];
     return (function next() {
         var name = list.shift();
         if (name) {
@@ -166,9 +168,11 @@ var interp = Interpreter('repl', {
     __dirname: __dirname,
     __filename: __filename,
     stdout: OutputPort(function(x) {
-        var repr = this.get('repr')(x);
-        newline = !repr.match(/\n$/);
-        process.stdout.write(repr);
+        if (typeof x !== 'string') {
+            x = this.get('repr')(x);
+        }
+        newline = !x.match(/\n$/);
+        process.stdout.write(x);
     }),
     'stack-trace': doc(function() {
         if (strace) {
@@ -200,7 +204,7 @@ if (options.version || options.V) {
         ["website", "https://lips.js.org"],
         ['languages', 'scheme', 'r5rs', 'r7rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
-        ["scheme.srfi", 0, 4, 6, 22, 23, 46, 176],
+        ["scheme.srfi", 0, 4, 6, 10, 22, 23, 46, 176],
         ["release", version],
         ["os.uname", os.platform(), os.release()],
         ["os.env.LANG", process.env.LANG],
@@ -209,12 +213,12 @@ if (options.version || options.V) {
     ].map(([key, ...values]) => {
         return [LSymbol(key), ...values];
     }));
-    boostrap(interp).then(function() {
+    bootstrap(interp).then(function() {
         return run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
     });
 } else if (options.e || options.eval || options.c || options.code) {
     // from 1.0 documentation should use -e but it's not breaking change
-    boostrap(interp).then(function() {
+    bootstrap(interp).then(function() {
         const code = options.e || options.eval || options.c || options.code;
         const dynamic = options.d || options.dynamic;
         return run(code, interp, dynamic).then(print);
@@ -235,7 +239,7 @@ if (options.version || options.V) {
         process.exit();
     });
     fs.promises.readFile(options._[0]).then(function(data) {
-        return boostrap(interp).then(() => {
+        return bootstrap(interp).then(() => {
             const code = data.toString().replace(/^#!.*\n/, '');
             const dynamic = options.d || options.dynamic;
             return run(code, interp, dynamic, null, options.t || options.trace);
@@ -307,7 +311,7 @@ function run_repl(err, rl) {
         rl.prompt();
     }
     var prev_line;
-    boostrap(interp).then(function() {
+    bootstrap(interp).then(function() {
         rl.on('line', function(line) {
             code += line;
             const lines = code.split('\n');
@@ -395,9 +399,9 @@ function run_repl(err, rl) {
             }
         });
     }).catch(function(e) {
-        log_error('Internal Error: boostrap filed');
+        log_error('Internal Error: bootstrap filed');
         log_error(e.message || e);
-        console.error('Internal Error: boostrap filed');
+        console.error('Internal Error: bootstrap filed');
     });
 }
 

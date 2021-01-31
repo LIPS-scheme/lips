@@ -10,14 +10,14 @@
 ;; This file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2020 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
 (define (%doc string fn)
   (typecheck "%doc" fn "function")
   (typecheck "%doc" string "string")
-  (set-obj! fn '__doc__ (--> string (replace /^ +/mg "")))
+  (set-obj! fn '__doc__ (--> string (replace #/^ +/mg "")))
   fn)
 
 ;; -----------------------------------------------------------------------------
@@ -84,7 +84,7 @@
           (--> document (querySelectorAll \"div\"))
           (--> (fetch \"https://jcubic.pl\")
                (text)
-               (match /<title>([^<]+)<\\/title>/)
+               (match #/<title>([^<]+)<\\/title>/)
                1)
           (--> document
                (querySelectorAll \".cmd-prompt\")
@@ -177,6 +177,15 @@
    Function check if value is plain JavaScript object. Created using object macro."
   ;; here we don't use string=? or equal? because it may not be defined
   (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
+
+;; ---------------------------------------------------------------------------------------
+(define typed-array?
+  (let ((TypedArray (Object.getPrototypeOf Uint8Array)))
+    (lambda (o)
+      "(typed-array? o)
+
+      Function test if argumnet is JavaScript typed array (Scheme byte vector)."
+      (instanceof TypedArray o))))
 
 ;; -----------------------------------------------------------------------------
 (define (symbol->string s)
@@ -292,7 +301,7 @@
    Macro that create JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used with & object literal."
   (try
-    (object-expander true expr)
+    (object-expander true expr true)
     (catch (e)
       (error e.message))))
 
@@ -340,16 +349,33 @@
         obj)))
 
 ;; -----------------------------------------------------------------------------
-(define (dir obj)
+(define (%hidden-props obj)
+  "(%hidden-props obj)
+  
+   Function return hidden names of an object, for ES6 class prototype
+   it return all methods since they are indistinguishable from hidden property
+   created using defineProperty."
+  (let* ((descriptors (Object.getOwnPropertyDescriptors obj))
+         (names (Object.keys descriptors)))
+    (--> names (filter (lambda (name)
+                          (let ((descriptor (. descriptors name)))
+                            (eq? descriptor.enumerable false)))))))
+
+;; -----------------------------------------------------------------------------
+(define (dir obj . rest)
   "(dir obj)
 
    Function return all props on the object including those in prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
       nil
-      (let ((names (Object.getOwnPropertyNames obj))
-            (proto (Object.getPrototypeOf obj)))
-        (append (array->list names) (dir proto)))))
-
+      (let ((proto (if (null? rest) false (car rest)))
+            (names (Object.getOwnPropertyNames obj)))
+        (if (not proto)
+            (let ((hidden (%hidden-props obj)))
+              (set! names (--> names
+                               (filter (lambda (name)
+                                          (not (hidden.includes name))))))))
+        (append (array->list names) (dir (Object.getPrototypeOf obj) true)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (tree-map f tree)
@@ -481,11 +507,6 @@
                       `(cond ,@rest)))))
       nil))
 
-
-;; -----------------------------------------------------------------------------
-;; formatter rules for cond to break after each S-Expression
-;; regex literal /[^)]/ breaks scheme emacs mode so we use string and macro
-;; use RegExp constructor
 ;; -----------------------------------------------------------------------------
 (define (%r re . rest)
   "(%r re)
@@ -518,7 +539,7 @@
 
    Function return default stdout port."
   (let-env (interaction-environment)
-     stdout))
+           (--> **internal-env** (get 'stdout))))
 
 ;; -----------------------------------------------------------------------------
 (define (current-error-port)
@@ -526,7 +547,7 @@
 
    Function return default stdout port."
   (let-env (interaction-environment)
-     stderr))
+     (--> **internal-env** (get 'stderr))))
 
 ;; -----------------------------------------------------------------------------
 (define (current-input-port)
@@ -534,7 +555,7 @@
 
    Function return default stdin port."
   (let-env (interaction-environment)
-     stdin))
+     (--> **internal-env** (get 'stdin))))
 
 ;; -----------------------------------------------------------------------------
 (define (regex? x)
@@ -1030,6 +1051,158 @@
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (warn-quote)
+  "(warn-quote)
+
+   Simple macro that throw error, when you try to use ’ symbol as quote in code"
   (throw (new Error (string-append "You're using invalid quote character run: "
                                    "(set-special! \"’\" 'quote)"
                                    " to allow running this type of quote"))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (quote-promise expr)
+  "(quote-promise expr)
+   '>expr
+
+  Macro used to escape promise the whole expression, will be wrapped
+  with JavaScript class that behave like Promise but will not
+  auto resolve like normal promise."
+  `(let ((env))
+      (set! env (current-environment))
+      (env.set (Symbol.for "__promise__") true)
+      ,expr))
+
+;; ---------------------------------------------------------------------------------------
+(define (await value)
+  (if (instanceof lips.QuotedPromise value)
+      (value.valueOf)
+      value))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (let-env-values env spec . body)
+  "(let-env-values env ((name var)) . body)
+
+   Macro add mapping for variables var from specified env,
+   Macro work similar to let-env but lexical scope is working with it."
+  (let ((env-name (gensym 'env)))
+    `(let ((,env-name ,env))
+       (let ,(map (lambda (pair)
+                    `(,(car pair) (--> ,env-name (get ',(cadr pair)))))
+                  spec)
+         ,@body))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (let-std spec . body)
+  "(let-std ((name var)) . body)
+
+   Macro that create aliases for variables in global environment.
+   This is needed so user don't change constants like stdin or stdout
+   that use taken from lexical scope. The function still can use those
+   from interaction-environment."
+  `(let-env-values lips.env.__parent__ ,spec ,@body))
+
+;; ---------------------------------------------------------------------------------------
+(define (apropos name)
+  "(apropos name)
+
+   Search environment and display names that match the given name.
+   name can be regex or string."
+  (typecheck "apropos" name '("string" "regex"))
+  (filter (if (string? name)
+              (new RegExp name)
+              name)
+          (env)))
+
+;; ---------------------------------------------------------------------------------------
+;; SRFI-10 https://srfi.schemers.org/srfi-10/srfi-10.html
+;; ---------------------------------------------------------------------------------------
+(set-special! "#," 'sharp-comma)
+
+(define **reader-ctor-list** '())
+
+;; ---------------------------------------------------------------------------------------
+(define (define-reader-ctor symbol fn)
+  (let ((node (assoc symbol **reader-ctor-list**)))
+    (if (pair? node)
+        (set-cdr! node fn)
+        (set! **reader-ctor-list** (cons (cons symbol fn)
+                                         **reader-ctor-list**)))))
+
+;; ---------------------------------------------------------------------------------------
+(define-syntax sharp-comma
+  (syntax-rules ()
+    ((_ (fn arg ...))
+     (let ((node (assoc 'fn **reader-ctor-list**)))
+       (if (pair? node)
+           ((cdr node) 'arg ...)
+           (syntax-error (string-append "Invalid symbol " (symbol->string 'fn)
+                                        " in expression " (repr '(fn arg ...)))))))))
+
+;; -----------------------------------------------------------------------------
+(define (promisify fn)
+  "(promisify fn)
+
+   Simple function for adding promises to NodeJS callback based function.
+   Function tested only with fs module."
+  (lambda args
+    (new Promise (lambda (resolve reject)
+                   (apply fn (append args (list (lambda (err data)
+                                                  (if (null? err)
+                                                      (resolve data)
+                                                      (reject err))))))))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (list* . args)
+  "(list* arg1 ...)
+
+   Parallel version of list."
+  (let ((result (gensym "result")))
+     `(let ((,result (vector)))
+        ,@(map (lambda (arg)
+                 `(--> ,result (push '>,arg)))
+               args)
+        (map await (vector->list ,result)))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (%not-implemented name)
+  "(not-implemented name)
+
+   Returns new function taht throw exception that function is not implmeneted"
+  (let ((str-name (symbol->string name)))
+    `(lambda ()
+       ,(string-append "(" str-name ")\n\nThis function is not yet implemented.")
+       (throw (new Error ,(string-append str-name " has not beed implemented"))))))
+
+;; ---------------------------------------------------------------------------------------
+(define-macro (%make-env name . names)
+  "(%make-env name f1 f2 ...)
+
+   Create new Environment with given name and defined symbols in it from global env.
+   If given function name f1 f2 ... don't exists, it will define function that
+   throw exception that function is not yet implemented."
+  `(new lips.Environment (alist->object (list ,@(map (lambda (name)
+                                                       `(cons ',name ,(let ((ref (lips.env.ref name)))
+                                                                       (if (null? ref)
+                                                                           `(%not-implemented ,name)
+                                                                           `(lips.env.get ',name)))))
+                                                     names)))
+        null
+        ,name))
+
+;; ---------------------------------------------------------------------------------------
+(define Y
+  (lambda (h)
+    "(Y f)
+
+       _ __   __    _            _       _      _ __   __         _   _  _
+      /  \\ \\ / /   /  __        /   ____  \\    /  \\ \\ / /    ____  \\   \\  \\
+     +    \\ v /   +   \\ \\      +   / ___|  +  +    \\ v /    / ___|  +   +  +
+     |     \\ /    |    \\ \\     |  | |__    |  |     \\ /    | |__    |   |  |
+     |     | |    |    /  \\    |  |  __|   |  |     | |    |  __|   |   |  |
+     |     | |    |   / /\\ \\   |  | |      |  |     | |    | |      |   |  |
+     +     |_|    +  /_/  \\_\\  +  |_|      +  +     |_|    |_|      +   +  +
+      \\_           \\_           \\_       _/    \\_                 _/  _/ _/"
+          ((lambda (x) (x x))
+           (lambda (g)
+             (h (lambda args (apply (g g) args)))))))
+
+;; ---------------------------------------------------------------------------------------

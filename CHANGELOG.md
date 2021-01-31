@@ -1,3 +1,34 @@
+## 1.0.0-beta.11
+### Breaking
+* remove repr of HTMLElement (it's now default instance of a class)
+* regular expressions are now prefixed with hash like in Gauche e.g. `#/foo/`
+### Features
+* add support for quasiquote on objects and vectors
+* interning symbols mechanism [#106](https://github.com/jcubic/lips/issues/106)
+* new macro `quoted-promise` and syntax `'>` [#54](https://github.com/jcubic/lips/issues/54)
+* new function await that return original promise from QuotedPromise
+* bytevector functions (R7RS)
+* improve detecting and repr of iterators
+* add `eof` variable to global env
+* add `apropos` function
+* new incremental Lexer that allow to modify parser while it's running
+* add SRFI-10 sharp-comma
+* new syntax try..catch..finally
+* new parallel `list*` macro
+* new `scheme-report-environment` function (R5RS)
+* update `**` to work on negative numbers
+### Bugfix
+* fix resolving promises on vectors and objects
+* fix context in methods of plain objects [#103](https://github.com/jcubic/lips/issues/103)
+* fix `equal?` on typed arrays
+* fix detecting user repr (when object is subclass)
+* fix calling port methods (e.g. calling `get-output-string` function)
+* fix prism highlighting of multiple regular expression
+* fix parsing chars for Unicode outside of BMP
+* fix when try..catch is promise that rejects and catch throws
+* fix resolving promises when apply function they are not executed in sequentially
+* fix `eval` builtin function to evaluate everything
+
 ## 1.0.0-beta.10
 ### Breaking
 * change behavior of `and` and `or` to work like `if` (`#f` only falsy value)
