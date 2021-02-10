@@ -37,6 +37,7 @@
       (click (lambda ()
                (let ((code (--> ($ "section#head .example:visible") (text))))
                  (term.exec (code.trim) true)))))
+
  (define (make-active $list index)
      (--> $list
           (eq index)
@@ -60,10 +61,19 @@
      (Prism.highlight code Prism.languages.scheme "scheme"))
 
  (begin
-     (--> ($ ".actions .full-screen")
+     (--> ($ ".actions > li .full-screen")
           (click (lambda ()
                    (--> ($ document.body)
                         (addClass "full-screen")))))
+     (let ((size 1))
+       (define (change inc)
+         (lambda ()
+           (set! size (+ size inc))
+           (--> term (css "--size" size))))
+        (--> ($ ".actions .zoom-in")
+             (click (change 0.1)))
+         (--> ($ ".actions .zoom-out")
+             (click (change -0.1))))
      (--> ($ ".actions .exit-full-screen")
           (click (lambda ()
                    (--> ($ document.body)

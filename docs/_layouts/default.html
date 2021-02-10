@@ -36,14 +36,26 @@
       </header>
       {% if page.layout != 'post' %}
       <div class="intro">
-        <ul class="actions cloak">
-          <li class="full-screen">
-            <a href="#">Full Screen</a>
-          </li>
-          <li class="exit-full-screen">
-            <a href="#">Exit Full Screen</a>
-          </li>
-        </ul>
+        <div class="actions-wrapper">
+          <ul class="actions cloak">
+            <li class="zoom-in icon">
+              <a href="#">Zoom In</a>
+            </li>
+            <li class="zoom-out icon">
+              <a href="#">Zoom Out</a>
+            </li>
+            <li class="full-screen">
+              <ul>
+                <li class="full-screen icon">
+                  <a href="#">Full Screen</a>
+                </li>
+                <li class="exit-full-screen icon">
+                  <a href="#">Exit Full Screen</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
         <div class="term"></div>
         <div class="examples cloak">
           <button class="run">run</button>

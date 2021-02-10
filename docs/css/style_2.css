@@ -3,7 +3,7 @@ body {
     font-family: 'Crimson Text', serif;
 }
 .cloak {
-    display: none;
+    display: none !important;
 }
 section#head {
     background: linear-gradient(127deg, rgba(43,148,215,1) 0%, rgba(19,75,123,1) 100%);
@@ -18,13 +18,16 @@ section#head .terminal {
     --color: white;
 }
 section#head .terminal,
-section#head .intro > .actions,
+section#head .actions-wrapper,
 section#head .examples {
     max-width: 1000px;
     width: 100%;
     margin: 0 auto;
 }
-.full-screen section#head .intro > .actions {
+section#head .actions-wrapper {
+    position: relative;
+}
+.full-screen section#head .intro .actions-wrapper {
     max-width: initial;
     position: absolute;
     top: 0;
@@ -36,34 +39,57 @@ section#head .examples {
 .full-screen section#head {
     min-height: initial;
 }
-section#head .intro > .actions {
+section#head .intro .actions {
     padding: 0;
     list-style: none;
-    position: relative;
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 0;
     z-index: 100;
 }
-section#head .intro > .actions > li {
-    position: absolute;
-    right: 0;
-    top: 0;
+section#head .intro .actions li.icon {
     margin: 10px;
     width: 52px;
     height: 52px;
-    text-indent: -99999px;
     overflow: hidden;
     cursor: pointer;
 }
-section#head .exit-full-screen, .full-screen section#head .full-screen {
+section#head .intro .actions a {
+    display: block;
+    text-indent: -99999px;
+}
+section#head .intro .actions > li.full-screen {
+    position: relative;
+    padding: 10px;
+    width: 52px;
+    height: 52px;
+}
+section#head .intro .actions > li.full-screen li {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+section#head .exit-full-screen,
+.full-screen section#head li .full-screen {
     display: none;
+}
+section#head .intro .actions .icon,
+.top-bar .icons a {
+    background-image: url(../img/icons.svg);
 }
 .full-screen section#head .exit-full-screen {
     display: block;
+    background-position: -64px 0;
 }
-section#head .intro > .actions > li.full-screen {
-    background-position: -52px 0;
+section#head .intro .actions li .full-screen {
+    background-position: -116px 0;
 }
-section#head .intro > .actions > li, .top-bar .icons a {
-    background: url(../img/icons.svg);
+section#head .intro .actions > li.zoom-in {
+    background-position: -168px 0;
+}
+section#head .intro .actions > li.zoom-out {
+    background-position: -220px 0;
 }
 section#head .terminal {
     height: calc((var(--size, 1) * 14 * 14px) + 20px);
@@ -144,10 +170,10 @@ h1, h2, main header nav, main header p, .top-bars, section#head .description {
     margin: 4px 0;
 }
 .top-bar .twitter a {
-    background-position: -104px 0;
+    background-position: 0 0;
 }
 .top-bar .github a {
-    background-position: -136px 0;
+    background-position: -32px 0;
 }
 /* Examples */
 section#head .examples {
