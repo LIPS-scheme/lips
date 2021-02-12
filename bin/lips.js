@@ -223,7 +223,7 @@ if (options.version || options.V) {
         const dynamic = options.d || options.dynamic;
         return run(code, interp, dynamic).then(print);
     });
-} else if (options._.length === 1) {
+} else if (options._.length >= 1) {
     // hack for node-gtk
     const rl = readline.createInterface({
         input: process.stdin,
