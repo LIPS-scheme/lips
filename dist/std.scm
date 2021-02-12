@@ -3387,7 +3387,6 @@
     (display (string char) port)))
 
 ;; -----------------------------------------------------------------------------
-
 (define (read-string k . rest)
   "(read-string k)
    (read-string k port)
@@ -3401,3 +3400,15 @@
   (let ((port (if (null? rest) (current-input-port) (car rest))))
     (typecheck "read-string" port "input-port")
     (port.read_string k)))
+
+;; -----------------------------------------------------------------------------
+(define (list-copy obj)
+  "(list-copy obj)
+
+   Copy the object passed as argument but only if it's list"
+  (typecheck "list-copy" obj #("pair" "nil"))
+  (if (null? obj)
+      obj
+      (obj.clone false)))
+
+;; -----------------------------------------------------------------------------

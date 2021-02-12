@@ -2150,7 +2150,7 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.prototype.clone = function() {
+    Pair.prototype.clone = function(deep = true) {
         var visited = new Map();
         function clone(node) {
             if (node instanceof Pair) {
@@ -2159,7 +2159,11 @@
                 }
                 var pair = new Pair();
                 visited.set(node, pair);
-                pair.car = clone(node.car);
+                if (deep) {
+                    pair.car = clone(node.car);
+                } else {
+                    pair.car = node.car;
+                }
                 pair.cdr = clone(node.cdr);
                 pair[__cycles__] = node[__cycles__];
                 return pair;

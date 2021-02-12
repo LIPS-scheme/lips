@@ -682,4 +682,6 @@ Reads the next k characters, or as many as are available
 before the end of file, from the textual input port into a
 newly allocated string in left-to-right order and returns the
 string. If no characters are available before the end of file,
-an end-of-file object is returned." (typecheck "read-string" k "number") (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-string" port "input-port") (port.read_string k)))
+an end-of-file object is returned." (typecheck "read-string" k "number") (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-string" port "input-port") (port.read_string k)))(define (list-copy obj) "(list-copy obj)
+
+Copy the object passed as argument but only if it's list" (typecheck "list-copy" obj #("pair" "nil")) (if (null? obj) obj (obj.clone #f)))

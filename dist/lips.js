@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 12 Feb 2021 10:31:11 +0000
+ * build: Fri, 12 Feb 2021 18:27:04 +0000
  */
 (function () {
   'use strict';
@@ -4213,6 +4213,7 @@
 
 
     Pair.prototype.clone = function () {
+      var deep = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : true;
       var visited = new Map();
 
       function clone(node) {
@@ -4223,7 +4224,13 @@
 
           var pair = new Pair();
           visited.set(node, pair);
-          pair.car = clone(node.car);
+
+          if (deep) {
+            pair.car = clone(node.car);
+          } else {
+            pair.car = node.car;
+          }
+
           pair.cdr = clone(node.cdr);
           pair[__cycles__] = node[__cycles__];
           return pair;
@@ -13034,10 +13041,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 12 Feb 2021 10:31:11 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 12 Feb 2021 18:27:04 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 12 Feb 2021 10:31:11 +0000').valueOf();
+      var date = LString('Fri, 12 Feb 2021 18:27:04 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13074,7 +13081,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 12 Feb 2021 10:31:11 +0000',
+      date: 'Fri, 12 Feb 2021 18:27:04 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

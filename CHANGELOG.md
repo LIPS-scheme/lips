@@ -1,6 +1,7 @@
 ## 1.0.0-beta.12
 ### Features
 * create minfied std scheme file for faster bootstrap
+* add `list-copy`
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 
