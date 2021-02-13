@@ -685,4 +685,19 @@ string. If no characters are available before the end of file,
 an end-of-file object is returned." (typecheck "read-string" k "number") (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-string" port "input-port") (port.read_string k)))(define (list-copy obj) "(list-copy obj)
 
 Copy the object passed as argument but only if it's list. The car elements
-of the list are not copied, they are passed as is." (typecheck "list-copy" obj #("pair" "nil")) (if (null? obj) obj (obj.clone #f)))
+of the list are not copied, they are passed as is." (typecheck "list-copy" obj #("pair" "nil")) (if (null? obj) obj (obj.clone #f)))(define-macro (define-record-type name constructor pred . fields) "(define-record-type name constructor pred . fields)
+
+Macro for defining records. Example of usage:
+
+   (define-record-type <pare>
+     (kons x y)
+     pare?
+     (x kar set-kar!)
+     (y kdr set-kdr!))
+
+(define p (kons 1 2))
+(print (kar p))
+;; 1
+(set-kdr! p 3)
+(print (kdr p))
+;; 3" (let ((class-name (gensym)) (obj-name (gensym)) (value-name (gensym))) (quasiquote (begin (define (unquote class-name) (class Object (constructor (lambda (self (unquote-splicing (cdr constructor))) (unquote-splicing (map (lambda (field) (let* ((name (symbol->string field)) (prop (string-append "self." name))) (quasiquote (set! (unquote (string->symbol prop)) (unquote field))))) (cdr constructor))))) (toType (lambda (self) "record")) (toString (lambda (self) (unquote (symbol->string name)))))) (define (unquote constructor) (new (unquote class-name) (unquote-splicing (cdr constructor)))) (define ((unquote pred) obj) (instanceof (unquote class-name) obj)) (unquote-splicing (map (lambda (field) (let ((prop-name (car field)) (get (cadr field)) (set (if (null? (cddr field)) () (caddr field)))) (quasiquote (begin (define ((unquote get) (unquote obj-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (. (unquote obj-name) (quote (unquote prop-name))))) (unquote (if (not (null? set)) (quasiquote (define ((unquote set) (unquote obj-name) (unquote value-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (set-obj! (unquote obj-name) (quote (unquote prop-name)) (unquote value-name))))))))))) fields))))))

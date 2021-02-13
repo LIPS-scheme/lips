@@ -2,6 +2,7 @@
 ### Features
 * create minfied std scheme file for faster bootstrap
 * add `list-copy`
+* add `define-record-type`
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 

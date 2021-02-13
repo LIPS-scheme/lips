@@ -1744,7 +1744,7 @@
         exceptions: {
             specials: [
                 /* eslint-disable max-len */
-                /^(?:#:)?(?:define(?:-values|-syntax|-macro)?|lambda|let*|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax))$/
+                /^(?:#:)?(?:define(?:-values|-syntax|-macro|-class)?|lambda|let*|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax))$/
                 /* eslint-enable */
             ],
             shift: {
@@ -8581,6 +8581,9 @@
             if (obj.__instance__) {
                 obj.__instance__ = false;
                 if (obj.__instance__) {
+                    if (is_function(obj.toType)) {
+                        return obj.toType();
+                    }
                     return 'instance';
                 }
             }
