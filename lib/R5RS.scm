@@ -1325,6 +1325,10 @@
 
 ;; -----------------------------------------------------------------------------
 (define (scheme-report-environment version)
+  "(scheme-report-environment version)
+
+   Function return new Environment object for given Scheme Spec version.
+   Only argument 5 is supported that create environemnt for R5RS."
   (typecheck "scheme-report-environment" version "number")
   (case version
     ((5) (%make-env "R5RS" * + - / < <= = > >= abs acos and angle append apply asin assoc assq assv

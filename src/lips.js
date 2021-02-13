@@ -7499,13 +7499,15 @@
             } else {
                 result = nil;
             }
-            if (env.__parent__ !== undefined) {
+            if (env.__parent__ instanceof Environment) {
                 return global_env.get('env')(env.__parent__).append(result);
             }
             return result;
-        }, `(env obj)
+        }, `(env)
+            (env obj)
 
-            Function return list values (functions and variables) inside environment.`),
+            Function return list of values (functions, macros and variables)
+            inside environment.`),
         // ------------------------------------------------------------------
         'new': doc('new', function(obj, ...args) {
             var instance = new (unbind(obj))(...args.map(x => unbox(x)));
