@@ -701,7 +701,8 @@
 (define (list-copy obj)
   "(list-copy obj)
 
-   Copy the object passed as argument but only if it's list"
+   Copy the object passed as argument but only if it's list. The car elements
+   of the list are not copied, they are passed as is."
   (typecheck "list-copy" obj #("pair" "nil"))
   (if (null? obj)
       obj

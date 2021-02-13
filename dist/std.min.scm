@@ -684,4 +684,5 @@ newly allocated string in left-to-right order and returns the
 string. If no characters are available before the end of file,
 an end-of-file object is returned." (typecheck "read-string" k "number") (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-string" port "input-port") (port.read_string k)))(define (list-copy obj) "(list-copy obj)
 
-Copy the object passed as argument but only if it's list" (typecheck "list-copy" obj #("pair" "nil")) (if (null? obj) obj (obj.clone #f)))
+Copy the object passed as argument but only if it's list. The car elements
+of the list are not copied, they are passed as is." (typecheck "list-copy" obj #("pair" "nil")) (if (null? obj) obj (obj.clone #f)))
