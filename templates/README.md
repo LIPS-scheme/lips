@@ -41,38 +41,27 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Installation
 
-To install you can use npm (or yarn):
+To install you can use npm (or yarn)<br/>
+**NOTE:** The version that is on NPM is heavily outdated, use beta version:
 
-```
-npm install @jcubic/lips
-```
-
-or yarn:
-
-```
-yarn add @jcubic/lips
-```
-
-To install 1.0.0 beta version use:
 
 ```
 npm install @jcubic/lips@beta
 ```
 
+or yarn:
+
+```
+yarn add @jcubic/lips@beta
+```
+
 then include the file in the script tag. You can grab the version from unpkg.com
 
 ```
-https://unpkg.com/@jcubic/lips
+https://unpkg.com/@jcubic/lips@beta
 ```
 
 or from jsdelivery
-
-```
-https://cdn.jsdelivr.net/npm/@jcubic/lips/dist/lips.min.js
-```
-
-and  beta version
-
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
@@ -191,7 +180,7 @@ Documentation about beta version can be found in
 If you install lips globally with:
 
 ```
-npm install -g @jcubic/lips
+npm install -g @jcubic/lips@beta
 ```
 
 you can run the interpreter from the terminal:

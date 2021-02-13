@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.11-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&e90dcac3b5fcfcd4c1fade75f9cf3aded52bacd5)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&4eb6aef06c11fa6034ea99a6ba933d0ee2498610)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&83772d306416614a34e010475a6264c0)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -41,38 +41,27 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Installation
 
-To install you can use npm (or yarn):
+To install you can use npm (or yarn)<br/>
+**NOTE:** The version that is on NPM is heavily outdated, use beta version:
 
-```
-npm install @jcubic/lips
-```
-
-or yarn:
-
-```
-yarn add @jcubic/lips
-```
-
-To install 1.0.0 beta version use:
 
 ```
 npm install @jcubic/lips@beta
 ```
 
+or yarn:
+
+```
+yarn add @jcubic/lips@beta
+```
+
 then include the file in the script tag. You can grab the version from unpkg.com
 
 ```
-https://unpkg.com/@jcubic/lips
+https://unpkg.com/@jcubic/lips@beta
 ```
 
 or from jsdelivery
-
-```
-https://cdn.jsdelivr.net/npm/@jcubic/lips/dist/lips.min.js
-```
-
-and  beta version
-
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
@@ -191,7 +180,7 @@ Documentation about beta version can be found in
 If you install lips globally with:
 
 ```
-npm install -g @jcubic/lips
+npm install -g @jcubic/lips@beta
 ```
 
 you can run the interpreter from the terminal:
