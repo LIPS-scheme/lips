@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 13 Feb 2021 17:31:35 +0000
+ * build: Sat, 13 Feb 2021 20:12:16 +0000
  */
 (function () {
   'use strict';
@@ -3701,7 +3701,7 @@
       exceptions: {
         specials: [
         /* eslint-disable max-len */
-        /^(?:#:)?(?:define(?:-values|-syntax|-macro|-class)?|lambda|let*|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax))$/
+        /^(?:#:)?(?:define(?:-values|-syntax|-macro|-class|-record-type)?|lambda|let*|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax))$/
         /* eslint-enable */
         ],
         shift: {
@@ -13045,10 +13045,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 13 Feb 2021 17:31:35 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 13 Feb 2021 20:12:16 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 13 Feb 2021 17:31:35 +0000').valueOf();
+      var date = LString('Sat, 13 Feb 2021 20:12:16 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13085,7 +13085,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 13 Feb 2021 17:31:35 +0000',
+      date: 'Sat, 13 Feb 2021 20:12:16 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
