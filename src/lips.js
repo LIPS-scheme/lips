@@ -5583,8 +5583,7 @@
         if (is_port(stdout)) {
             inter.set('stdout', stdout);
         }
-        this.constant('**internal-env**', inter);
-        global_env.set('**interaction-environment**', this.__env__);
+        set_interaction_env(this.__env__, inter);
     }
     // -------------------------------------------------------------------------
     Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
@@ -5660,7 +5659,7 @@
     // -------------------------------------------------------------------------
     // :: lookup function for variable doc strings
     // -------------------------------------------------------------------------
-    Environment.prototype.doc = function(name, value = null) {
+    Environment.prototype.doc = function(name, value = null, dump = false) {
         if (name instanceof LSymbol) {
             name = name.__name__;
         }
@@ -5668,6 +5667,9 @@
             name = name.valueOf();
         }
         if (value) {
+            if (!dump) {
+                value = trim_lines(value);
+            }
             this.__docs__.set(name, value);
             return this;
         }
@@ -6607,7 +6609,7 @@
                     LString.isString(code.cdr.cdr.car)) {
                     __doc__ = code.cdr.cdr.car.valueOf();
                 }
-                env.set(code.car, value, __doc__);
+                env.set(code.car, value, __doc__, true);
             });
         }), `(define name expression)
              (define (function-name . args) body)
@@ -8346,8 +8348,30 @@
             Function return negation of the argument.`)
     }, undefined, 'global');
     var user_env = global_env.inherit('user-env');
-    global_env.set('**interaction-environment**', user_env);
-    global_env.constant('**internal-env**', internal_env);
+    // -------------------------------------------------------------------------
+    function set_interaction_env(interaction, internal) {
+        interaction.constant('**internal-env**', internal);
+        interaction.doc(
+            '**internal-env**',
+            `**internal-env**
+
+            Constant used to hide stdin, stdout and stderr so they don't interfere
+            with variables with the same name. Constants are internal type
+            of variables that can't be redefined, defining variable with same name
+            will throw an error.`
+        );
+        global_env.set('**interaction-environment**', interaction);
+    }
+    // -------------------------------------------------------------------------
+    set_interaction_env(user_env, internal_env);
+    global_env.doc(
+        '**interaction-environment**',
+        `**interaction-environment**
+
+        Internal dynamic, global variable used to find interpreter environment.
+        It's used so the read and write functions can locate **internal-env**
+        that contain references to stdin, stdout and stderr.`
+    );
     // -------------------------------------------------------------------------
     (function() {
         var map = { ceil: 'ceiling' };

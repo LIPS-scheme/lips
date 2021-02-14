@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Feb 2021 11:28:22 +0000
+ * build: Sun, 14 Feb 2021 13:17:49 +0000
  */
 (function () {
   'use strict';
@@ -8837,8 +8837,7 @@
         inter.set('stdout', stdout);
       }
 
-      this.constant('**internal-env**', inter);
-      global_env.set('**interaction-environment**', this.__env__);
+      set_interaction_env(this.__env__, inter);
     } // -------------------------------------------------------------------------
 
 
@@ -8938,6 +8937,7 @@
 
     Environment.prototype.doc = function (name) {
       var value = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
+      var dump = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : false;
 
       if (name instanceof LSymbol) {
         name = name.__name__;
@@ -8948,6 +8948,10 @@
       }
 
       if (value) {
+        if (!dump) {
+          value = trim_lines(value);
+        }
+
         this.__docs__.set(name, value);
 
         return this;
@@ -10160,7 +10164,7 @@
             __doc__ = code.cdr.cdr.car.valueOf();
           }
 
-          env.set(code.car, value, __doc__);
+          env.set(code.car, value, __doc__, true);
         });
       }), "(define name expression)\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
       // ------------------------------------------------------------------
@@ -11879,9 +11883,17 @@
         return !value;
       }, "(not object)\n\n            Function return negation of the argument.")
     }, undefined$1, 'global');
-    var user_env = global_env.inherit('user-env');
-    global_env.set('**interaction-environment**', user_env);
-    global_env.constant('**internal-env**', internal_env); // -------------------------------------------------------------------------
+    var user_env = global_env.inherit('user-env'); // -------------------------------------------------------------------------
+
+    function set_interaction_env(interaction, internal) {
+      interaction.constant('**internal-env**', internal);
+      interaction.doc('**internal-env**', "**internal-env**\n\n            Constant used to hide stdin, stdout and stderr so they don't interfere\n            with variables with the same name. Constants are internal type\n            of variables that can't be redefined, defining variable with same name\n            will throw an error.");
+      global_env.set('**interaction-environment**', interaction);
+    } // -------------------------------------------------------------------------
+
+
+    set_interaction_env(user_env, internal_env);
+    global_env.doc('**interaction-environment**', "**interaction-environment**\n\n        Internal dynamic, global variable used to find interpreter environment.\n        It's used so the read and write functions can locate **internal-env**\n        that contain references to stdin, stdout and stderr."); // -------------------------------------------------------------------------
 
     (function () {
       var map = {
@@ -13054,10 +13066,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 14 Feb 2021 11:28:22 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 14 Feb 2021 13:17:49 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 14 Feb 2021 11:28:22 +0000').valueOf();
+      var date = LString('Sun, 14 Feb 2021 13:17:49 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13094,7 +13106,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 14 Feb 2021 11:28:22 +0000',
+      date: 'Sun, 14 Feb 2021 13:17:49 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

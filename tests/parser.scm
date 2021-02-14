@@ -1,7 +1,8 @@
 (set-special! "<>" 'html lips.specials.SPLICE)
+
 (define-macro (html . args)
-          (let ((str (--> (list->array (map symbol->string args)) (join "+"))))
-            `(string-append "<" ,str "/>")))
+  (let ((str (--> (list->array (map symbol->string args)) (join "+"))))
+    `(string-append "<" ,str "/>")))
 
 (define parser/t1 <>(foo bar))
 
