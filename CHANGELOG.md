@@ -8,6 +8,7 @@
 * add `escape-regex` function
 * make `apropos` accept symbol as argument
 * add doc strings for `**interaction-environment**` and `**internal-env**`
+* add `letrec*` that in LIPS is exactly the same as `letrec`
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string

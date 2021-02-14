@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Feb 2021 13:17:49 +0000
+ * build: Sun, 14 Feb 2021 14:08:11 +0000
  */
 (function () {
   'use strict';
@@ -10071,6 +10071,8 @@
       // ------------------------------------------------------------------
       'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy and next value can access to\n             previous values/names."),
       // ---------------------------------------------------------------------
+      'letrec*': doc(let_macro(Symbol["for"]('letrec')), "(letrec* ((a value-a) (b value-b)) body)\n\n             Same as letrec but the order of execution of the binding is guaranteed,\n             so use can use recursive code as well as reference previous binding.\n             In LIPS both letrec and letrec* behave the same."),
+      // ---------------------------------------------------------------------
       'let*': doc(let_macro(Symbol["for"]('let*')), "(let* ((a value-a) (b value-b)) body)\n\n             Macro similar to `let` but next argument get environment\n             from previous let variable, so they you can define one variable,\n             and use in next argument."),
       // ---------------------------------------------------------------------
       'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b)) body)\n\n             Macro that creates new environment, then evaluate and assign values to\n             names and then evaluate the body in context of that environment.\n             Values are evaluated sequentialy but you can't access\n             previous values/names when next are evaluated. You can only get them\n             from body of let expression."),
@@ -13066,10 +13068,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 14 Feb 2021 13:17:49 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 14 Feb 2021 14:08:11 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 14 Feb 2021 13:17:49 +0000').valueOf();
+      var date = LString('Sun, 14 Feb 2021 14:08:11 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13106,7 +13108,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 14 Feb 2021 13:17:49 +0000',
+      date: 'Sun, 14 Feb 2021 14:08:11 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

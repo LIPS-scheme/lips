@@ -6490,6 +6490,14 @@
              Values are evaluated sequentialy and next value can access to
              previous values/names.`),
         // ---------------------------------------------------------------------
+        'letrec*': doc(
+            let_macro(Symbol.for('letrec')),
+            `(letrec* ((a value-a) (b value-b)) body)
+
+             Same as letrec but the order of execution of the binding is guaranteed,
+             so use can use recursive code as well as reference previous binding.
+             In LIPS both letrec and letrec* behave the same.`),
+        // ---------------------------------------------------------------------
         'let*': doc(
             let_macro(Symbol.for('let*')),
             `(let* ((a value-a) (b value-b)) body)
