@@ -1,10 +1,16 @@
 ## 1.0.0-beta.12
+### Breaking
+* `env` now return symbols instead of strings
 ### Features
 * create minfied std scheme file for faster bootstrap
 * add `list-copy`
 * add `define-record-type`
+* add `escape-regex` function
+* make `apropos` accept symbol as argument
 ### Bugfix
 * fix prism highlighting of names (for new context help)
+* fix error when using help in node REPL and there are no doc string
+* fix escaping regex operators when using string with `apropos`
 
 ## 1.0.0-beta.11
 ### Breaking

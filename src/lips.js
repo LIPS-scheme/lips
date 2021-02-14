@@ -436,6 +436,9 @@
         } else {
             re = LNumber(0);
         }
+        if (im.cmp(0) === 0) {
+            return re;
+        }
         return LComplex({ im, re });
     }
     // ----------------------------------------------------------------------
@@ -568,14 +571,12 @@
     // ----------------------------------------------------------------------
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
     // ----------------------------------------------------------------------
-    /*
     function escape_regex(str) {
         if (typeof str === 'string') {
             var special = /([-\\^$[\]()+{}?*.|])/g;
             return str.replace(special, '\\$1');
         }
     }
-    */
     // ----------------------------------------------------------------------
     // Stack used in balanced function
     // TODO: use it in parser
@@ -7491,9 +7492,18 @@
 
             Function return string LIPS representation of an object as string.`),
         // ------------------------------------------------------------------
+        'escape-regex': doc('escape-regex', function(string) {
+            typecheck('escape-regex', string, 'string');
+            return escape_regex(string.valueOf());
+        }, `(escape-regex string)
+
+            Function return new string where all special operators used in regex,
+            are escaped with slash so they can be used in RegExp constructor
+            to match literal string`),
+        // ------------------------------------------------------------------
         env: doc(function env(env) {
             env = env || this;
-            var names = Object.keys(env.__env__);
+            var names = Object.keys(env.__env__).map(LSymbol);
             // TODO: get symbols
             var result;
             if (names.length) {
@@ -7509,7 +7519,7 @@
             (env obj)
 
             Function return list of values (functions, macros and variables)
-            inside environment.`),
+            inside environment and it's parents.`),
         // ------------------------------------------------------------------
         'new': doc('new', function(obj, ...args) {
             var instance = new (unbind(obj))(...args.map(x => unbox(x)));

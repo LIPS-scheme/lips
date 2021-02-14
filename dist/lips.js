@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Feb 2021 10:42:14 +0000
+ * build: Sun, 14 Feb 2021 11:28:22 +0000
  */
 (function () {
   'use strict';
@@ -1715,6 +1715,10 @@
         re = LNumber(0);
       }
 
+      if (im.cmp(0) === 0) {
+        return re;
+      }
+
       return LComplex({
         im: im,
         re: re
@@ -1881,18 +1885,16 @@
 
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g; // ----------------------------------------------------------------------
 
-    /*
     function escape_regex(str) {
-        if (typeof str === 'string') {
-            var special = /([-\\^$[\]()+{}?*.|])/g;
-            return str.replace(special, '\\$1');
-        }
-    }
-    */
-    // ----------------------------------------------------------------------
+      if (typeof str === 'string') {
+        var special = /([-\\^$[\]()+{}?*.|])/g;
+        return str.replace(special, '\\$1');
+      }
+    } // ----------------------------------------------------------------------
     // Stack used in balanced function
     // TODO: use it in parser
     // ----------------------------------------------------------------------
+
 
     function Stack() {
       this.data = [];
@@ -11100,9 +11102,14 @@
         return toString(obj, quote);
       }, "(repr obj)\n\n            Function return string LIPS representation of an object as string."),
       // ------------------------------------------------------------------
+      'escape-regex': doc('escape-regex', function (string) {
+        typecheck('escape-regex', string, 'string');
+        return escape_regex(string.valueOf());
+      }, "(escape-regex string)\n\n            Function return new string where all special operators used in regex,\n            are escaped with slash so they can be used in RegExp constructor\n            to match literal string"),
+      // ------------------------------------------------------------------
       env: doc(function env(env) {
         env = env || this;
-        var names = Object.keys(env.__env__); // TODO: get symbols
+        var names = Object.keys(env.__env__).map(LSymbol); // TODO: get symbols
 
         var result;
 
@@ -11117,7 +11124,7 @@
         }
 
         return result;
-      }, "(env)\n            (env obj)\n\n            Function return list of values (functions, macros and variables)\n            inside environment."),
+      }, "(env)\n            (env obj)\n\n            Function return list of values (functions, macros and variables)\n            inside environment and it's parents."),
       // ------------------------------------------------------------------
       'new': doc('new', function (obj) {
         for (var _len26 = arguments.length, args = new Array(_len26 > 1 ? _len26 - 1 : 0), _key26 = 1; _key26 < _len26; _key26++) {
@@ -13047,10 +13054,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 14 Feb 2021 10:42:14 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 14 Feb 2021 11:28:22 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 14 Feb 2021 10:42:14 +0000').valueOf();
+      var date = LString('Sun, 14 Feb 2021 11:28:22 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13087,7 +13094,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 14 Feb 2021 10:42:14 +0000',
+      date: 'Sun, 14 Feb 2021 11:28:22 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

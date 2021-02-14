@@ -1105,12 +1105,14 @@
   "(apropos name)
 
    Search environment and display names that match the given name.
-   name can be regex or string."
-  (typecheck "apropos" name '("string" "regex"))
-  (filter (if (string? name)
-              (new RegExp name)
-              name)
-          (env)))
+   name can be regex, string or symbol."
+  (typecheck "apropos" name '("string" "regex" "symbol"))
+  (let ((regex (lambda (string)
+                 (new RegExp (escape-regex string)))))
+    (filter (cond ((string? name) (regex name))
+                  ((symbol? name) (regex (symbol->string name)))
+                  (else name))
+            (env))))
 
 ;; ---------------------------------------------------------------------------------------
 ;; SRFI-10 https://srfi.schemers.org/srfi-10/srfi-10.html

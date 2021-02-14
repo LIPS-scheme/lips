@@ -236,6 +236,10 @@
 
 (test "numbers: complex"
       (lambda (t)
+        (t.is 10+0i 10)
+        (t.is 10+0.0i 10)
+        (t.is 10.0+0.0i 10.0)
+        (t.is 1/2+0i 1/2)
         (t.is (sqrt -1) +1.0i)
         (t.is (sqrt 0.5) 0.7071067811865476)
         (t.is (sqrt -0.5) +0.7071067811865476i)
@@ -430,3 +434,23 @@
 
         (t.snapshot (! 10))
         (t.snapshot (--> (! 8000) (toString)))))
+
+(test "numbers: positive?"
+      (lambda (t)
+        (t.is (positive? 10) #t)
+        (t.is (positive? 1/2) #t)
+        (t.is (positive? 0.5) #t)
+
+        (t.is (positive? -10) #f)
+        (t.is (positive? -1/2) #f)
+        (t.is (positive? -0.5) #f)))
+
+(test "numbers: negative?"
+      (lambda (t)
+        (t.is (negative? 10) #f)
+        (t.is (negative? 1/2) #f)
+        (t.is (negative? 0.5) #f)
+
+        (t.is (negative? -10) #t)
+        (t.is (negative? -1/2) #t)
+        (t.is (negative? -0.5) #t)))

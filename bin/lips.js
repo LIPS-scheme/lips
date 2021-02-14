@@ -190,7 +190,9 @@ var interp = Interpreter('repl', {
     help: doc(new Macro('help', function(code, { error }) {
         var new_code = new Pair(new LSymbol('__help'), code);
         var doc = evaluate(new_code, { env: this, error });
-        console.log(doc.toString());
+        if (doc) {
+            console.log(doc.toString());
+        }
     }), env.get('help').__doc__),
     '__help': env.get('help')
 });
