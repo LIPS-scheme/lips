@@ -33,7 +33,7 @@ var term = (function() {
     var term = terminal({ selector: 'body', lips, name: 'lisp' });
     term.echo(formatBaner(lips.banner, false), {formatters: false});
 
-    // load Standard libraries (only first two are required by Scheme)
+    // load Standard libraries
     var path = 'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/';
     term.exec('(load "' + path + 'dist/std.scm" lips.env.__parent__)', true);
     var repr = term.interpreter.get('repr');
