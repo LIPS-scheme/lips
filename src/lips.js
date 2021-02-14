@@ -2902,7 +2902,9 @@
             return Math.trunc;
         } else {
             return function(x) {
-                if (x < 0) {
+                if (x === 0) {
+                    return 0;
+                } else if (x < 0) {
                     return Math.ceil(x);
                 } else {
                     return Math.floor(x);
