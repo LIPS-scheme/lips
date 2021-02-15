@@ -8078,7 +8078,11 @@
              (define add1 (curry add 1))
              (define add12 (add 2))
              (display (add12 3 4))`),
+        // ------------------------------------------------------------------
+        // Numbers
+        // ------------------------------------------------------------------
         'gcd': doc(function gcd(...args) {
+            typecheck_args('lcm', args, 'number');
             return args.reduce(function(result, item) {
                 return result.gcd(item);
             });
@@ -8087,6 +8091,7 @@
             Function return the greatest common divisor of their arguments.`),
         // ------------------------------------------------------------------
         'lcm': doc(function lcm(...args) {
+            typecheck_args('lcm', args, 'number');
             // ref: https://rosettacode.org/wiki/Least_common_multiple#JavaScript
             var n = args.length, a = abs(args[0]);
             for (var i = 1; i < n; i++) {
@@ -8132,6 +8137,7 @@
             if (args.length === 0) {
                 throw new Error('-: procedure require at least one argument');
             }
+            typecheck_args('-', args, 'number');
             if (args.length === 1) {
                 return LNumber(args[0]).sub();
             }
@@ -8160,6 +8166,7 @@
              Function create absolute value from number.`),
         // ------------------------------------------------------------------
         truncate: doc('truncate', function(n) {
+            typecheck('truncate', n, 'number');
             if (LNumber.isFloat(n)) {
                 if (n instanceof LNumber) {
                     n = n.valueOf();
@@ -8201,6 +8208,7 @@
              Function substract 1 from the number and return result.`),
         // ------------------------------------------------------------------
         '%': doc('%', function(a, b) {
+            typecheck_args('%', [a, b], 'number');
             return LNumber(a).rem(b);
         }, `(% n1 n2)
 
@@ -8208,35 +8216,40 @@
         // ------------------------------------------------------------------
         // Booleans
         '==': doc('==', function(...args) {
+            typecheck_args('==', args, 'number');
             return seq_compare((a, b) => LNumber(a).cmp(b) === 0, args);
-        }, `(== x1 x2 x3 ...)
+        }, `(== x1 x2 ...)
 
             Function compare its numerical arguments and check if they are equal`),
         // ------------------------------------------------------------------
         '>': doc('>', function(...args) {
+            typecheck_args('>', args, 'number');
             return seq_compare((a, b) => LNumber(a).cmp(b) === 1, args);
-        }, `(> x1 x2 x3 ...)
+        }, `(> x1 x2 ...)
 
             Function compare its numerical arguments and check if they are
             monotonically increasing`),
         // ------------------------------------------------------------------
         '<': doc('<', function(...args) {
+            typecheck_args('<', args, 'number');
             return seq_compare((a, b) => LNumber(a).cmp(b) === -1, args);
-        }, `(< x1 x2 x3 ...)
+        }, `(< x1 x2 ...)
 
             Function compare its numerical arguments and check if they are
             monotonically decreasing`),
         // ------------------------------------------------------------------
         '<=': doc(function(...args) {
+            typecheck_args('<=', args, 'number');
             return seq_compare((a, b) => [0, -1].includes(LNumber(a).cmp(b)), args);
-        }, `(<= x1 x2 x3 ...)
+        }, `(<= x1 x2 ...)
 
             Function compare its numerical arguments and check if they are
             monotonically nonincreasing`),
         // ------------------------------------------------------------------
         '>=': doc('>=', function(...args) {
+            typecheck_args('>=', args, 'number');
             return seq_compare((a, b) => [0, 1].includes(LNumber(a).cmp(b)), args);
-        }, `(>= x1 x2 x3 ...)
+        }, `(>= x1 x2 ...)
 
             Function compare its numerical arguments and check if they are
             monotonically nondecreasing`),
@@ -8538,6 +8551,12 @@
             }
         }
         return `Expecting ${expected}, got ${got}${postfix}`;
+    }
+    // -------------------------------------------------------------------------
+    function typecheck_args(fn, args, expected) {
+        args.forEach((arg, i) => {
+            typecheck(fn, arg, expected, i + 1);
+        });
     }
     // -------------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
@@ -8912,8 +8931,13 @@
                 dynamic_scope,
                 error: (e, code) => {
                     if (e && e.message) {
-                        // clean duplicated Error: added by JS
-                        e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
+                        if (e.message.match(/^Error:/)) {
+                            // clean duplicated Error: added by JS
+                            e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
+                        } else {
+                            // add missing Error
+                            e.message = `Error: ${e.message}`;
+                        }
                         if (code) {
                             // LIPS stack trace
                             if (!(e.__code__ instanceof Array)) {
