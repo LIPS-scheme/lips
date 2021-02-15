@@ -862,17 +862,21 @@
                     (list first)))))))
 
 ;; ---------------------------------------------------------------------------------------
-(define-macro (sxml expr)
-  "(sxml expr)
+(define-macro (pragma->sxml pragma)
+  `(define-macro (sxml expr)
+     "(sxml expr)
 
-   Macro for JSX like syntax but with SXML.
-   e.g. usage:
+     Macro for JSX like syntax but with SXML.
+     e.g. usage:
 
-   (sxml (div (@ (data-foo \"hello\")
-                 (id \"foo\"))
-              (span \"hello\")
-              (span \"world\")))"
-  (%sxml 'h expr))
+     (sxml (div (@ (data-foo \"hello\")
+                   (id \"foo\"))
+                (span \"hello\")
+                (span \"world\")))"
+     (%sxml ',pragma expr)))
+
+;; ---------------------------------------------------------------------------------------
+(pragma->sxml h)
 
 ;; ---------------------------------------------------------------------------------------
 (define-macro (with-tags expr)

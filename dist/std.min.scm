@@ -182,15 +182,15 @@ Macro allow to create anonymous classes. See define-class for details.")(define 
 
 Function that return list structure of code with better syntax then raw LIPS" (quasiquote (h (unquote (let ((val (car expr))) (if (key? val) (key->string val) val))) (alist->object ((unquote (quote quasiquote)) (unquote (pair-map (lambda (car cdr) (quasiquote ((unquote (key->string car)) (unquote (quote unquote)) (unquote cdr)))) (cadr expr))))) (unquote (if (not (null? (cddr expr))) (if (and (pair? (caddr expr)) (let ((s (caaddr expr))) (and (symbol? s) (eq? s (quote list))))) (quasiquote (list->array (list (unquote-splicing (map make-tags (cdaddr expr)))))) (caddr expr)))))))(define (%sxml h expr) "(%sxml h expr)
 
-Helper function that render expression using create element function." (let* ((have-attrs (and (not (null? (cdr expr))) (pair? (cadr expr)) (eq? (caadr expr) (quote @)))) (attrs (if have-attrs (cdadr expr) ())) (rest (if have-attrs (cddr expr) (cdr expr)))) (quasiquote ((unquote h) (unquote (let* ((symbol (car expr)) (name (symbol->string symbol))) (if (char-lower-case? (car (string->list name))) name symbol))) (alist->object ((unquote (quote quasiquote)) (unquote (map (lambda (pair) (cons (symbol->string (car pair)) (list (quote unquote) (cadr pair)))) attrs)))) (unquote-splicing (if (null? rest) () (let ((first (car rest))) (if (pair? first) (map (lambda (expr) (%sxml h expr)) rest) (list first)))))))))(define-macro (sxml expr) "(sxml expr)
+Helper function that render expression using create element function." (let* ((have-attrs (and (not (null? (cdr expr))) (pair? (cadr expr)) (eq? (caadr expr) (quote @)))) (attrs (if have-attrs (cdadr expr) ())) (rest (if have-attrs (cddr expr) (cdr expr)))) (quasiquote ((unquote h) (unquote (let* ((symbol (car expr)) (name (symbol->string symbol))) (if (char-lower-case? (car (string->list name))) name symbol))) (alist->object ((unquote (quote quasiquote)) (unquote (map (lambda (pair) (cons (symbol->string (car pair)) (list (quote unquote) (cadr pair)))) attrs)))) (unquote-splicing (if (null? rest) () (let ((first (car rest))) (if (pair? first) (map (lambda (expr) (%sxml h expr)) rest) (list first)))))))))(define-macro (pragma->sxml pragma) (quasiquote (define-macro (sxml expr) "(sxml expr)
 
 Macro for JSX like syntax but with SXML.
 e.g. usage:
 
 (sxml (div (@ (data-foo \"hello\")
-              (id \"foo\"))
-           (span \"hello\")
-           (span \"world\")))" (%sxml (quote h) expr))(define-macro (with-tags expr) "(with-tags expression)
+             (id \"foo\"))
+          (span \"hello\")
+          (span \"world\")))" (%sxml (quote (unquote pragma)) expr))))(pragma->sxml h)(define-macro (with-tags expr) "(with-tags expression)
 
 Macro that evalute LIPS shorter code for S-Expression equivalent of JSX.
 e.g.:
