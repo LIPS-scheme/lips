@@ -91,7 +91,3 @@
       (and (not memo)
            (set! memo (detect:match-signature)))
       memo)))
-
-(if (and (not (null? (. self 'process))
-         (= process.argv.length 4))
-    (print (detect:name)))
