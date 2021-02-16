@@ -594,13 +594,17 @@
 (define delete-file
   (let ((unlink #f))
     (lambda (filename)
+      "(delete-file filename)
+
+       Function delete the file of given name."
       (typecheck "delete-file" filename "string")
-      (if (null? self.fs)
-          (throw (new Error "delete-file: fs not defined"))
-          (begin
-            (if (not (procedure? unlink))
-                (set! unlink (promisify fs.unlink)))
-            (unlink filename))))))
+      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+        (if (null? fs)
+            (throw (new Error "delete-file: fs not defined"))
+            (begin
+              (if (not (procedure? unlink))
+                  (set! unlink (promisify fs.unlink)))
+              (unlink filename)))))))
 
 ;; -----------------------------------------------------------------------------
 (define (call-with-port port proc)
