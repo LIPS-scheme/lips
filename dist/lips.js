@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Feb 2021 14:08:11 +0000
+ * build: Tue, 16 Feb 2021 11:31:03 +0000
  */
 (function () {
   'use strict';
@@ -2194,6 +2194,11 @@
 
     QuotedPromise.prototype.valueOf = function () {
       return this.__promise__;
+    }; // ----------------------------------------------------------------------
+
+
+    QuotedPromise.prototype.toString = function () {
+      return '#<promise>';
     }; // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
@@ -11605,30 +11610,39 @@
       compose: doc(compose, "(compose . fns)\n\n             Higher order function and create new function that apply all functions\n             From right to left and return it's value. Reverse of compose.\n             e.g.:\n             ((compose (curry + 2) (curry * 3)) 3)\n             11\n            "),
       pipe: doc(pipe, "(pipe . fns)\n\n             Higher order function and create new function that apply all functions\n             From left to right and return it's value. Reverse of compose.\n             e.g.:\n             ((pipe (curry + 2) (curry * 3)) 3)\n             15"),
       curry: doc(curry, "(curry fn . args)\n\n             Higher order function that create curried version of the function.\n             The result function will have parially applied arguments and it\n             will keep returning functions until all arguments are added\n\n             e.g.:\n             (define (add a b c d) (+ a b c d))\n             (define add1 (curry add 1))\n             (define add12 (add 2))\n             (display (add12 3 4))"),
+      // ------------------------------------------------------------------
+      // Numbers
+      // ------------------------------------------------------------------
       'gcd': doc(function gcd() {
         for (var _len33 = arguments.length, args = new Array(_len33), _key34 = 0; _key34 < _len33; _key34++) {
           args[_key34] = arguments[_key34];
         }
 
+        typecheck_args('lcm', args, 'number');
         return args.reduce(function (result, item) {
           return result.gcd(item);
         });
       }, "(gcd n1 n2 ...)\n\n            Function return the greatest common divisor of their arguments."),
       // ------------------------------------------------------------------
       'lcm': doc(function lcm() {
-        // ref: https://rosettacode.org/wiki/Least_common_multiple#JavaScript
-        var n = arguments.length,
-            a = abs(arguments.length <= 0 ? undefined$1 : arguments[0]);
+        for (var _len34 = arguments.length, args = new Array(_len34), _key35 = 0; _key35 < _len34; _key35++) {
+          args[_key35] = arguments[_key35];
+        }
+
+        typecheck_args('lcm', args, 'number'); // ref: https://rosettacode.org/wiki/Least_common_multiple#JavaScript
+
+        var n = args.length,
+            a = abs(args[0]);
 
         for (var i = 1; i < n; i++) {
-          var b = abs(i < 0 || arguments.length <= i ? undefined$1 : arguments[i]),
+          var b = abs(args[i]),
               c = a;
 
           while (a && b) {
             a > b ? a %= b : b %= a;
           }
 
-          a = abs(c * (i < 0 || arguments.length <= i ? undefined$1 : arguments[i])) / (a + b);
+          a = abs(c * args[i]) / (a + b);
         }
 
         return LNumber(a);
@@ -11652,13 +11666,15 @@
       }, LNumber(0)), "(+ . numbers)\n\n        Sum all numbers passed as arguments. If single value is passed it will\n        return that value."),
       // ------------------------------------------------------------------
       '-': doc('-', function () {
-        for (var _len34 = arguments.length, args = new Array(_len34), _key35 = 0; _key35 < _len34; _key35++) {
-          args[_key35] = arguments[_key35];
+        for (var _len35 = arguments.length, args = new Array(_len35), _key36 = 0; _key36 < _len35; _key36++) {
+          args[_key36] = arguments[_key36];
         }
 
         if (args.length === 0) {
           throw new Error('-: procedure require at least one argument');
         }
+
+        typecheck_args('-', args, 'number');
 
         if (args.length === 1) {
           return LNumber(args[0]).sub();
@@ -11680,6 +11696,8 @@
       }), "(abs number)\n\n             Function create absolute value from number."),
       // ------------------------------------------------------------------
       truncate: doc('truncate', function (n) {
+        typecheck('truncate', n, 'number');
+
         if (LNumber.isFloat(n)) {
           if (n instanceof LNumber) {
             n = n.valueOf();
@@ -11715,59 +11733,65 @@
       }), "(1- number)\n\n             Function substract 1 from the number and return result."),
       // ------------------------------------------------------------------
       '%': doc('%', function (a, b) {
+        typecheck_args('%', [a, b], 'number');
         return LNumber(a).rem(b);
       }, "(% n1 n2)\n\n             Function get reminder of it's arguments."),
       // ------------------------------------------------------------------
       // Booleans
       '==': doc('==', function () {
-        for (var _len35 = arguments.length, args = new Array(_len35), _key36 = 0; _key36 < _len35; _key36++) {
-          args[_key36] = arguments[_key36];
-        }
-
-        return seq_compare(function (a, b) {
-          return LNumber(a).cmp(b) === 0;
-        }, args);
-      }, "(== x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are equal"),
-      // ------------------------------------------------------------------
-      '>': doc('>', function () {
         for (var _len36 = arguments.length, args = new Array(_len36), _key37 = 0; _key37 < _len36; _key37++) {
           args[_key37] = arguments[_key37];
         }
 
+        typecheck_args('==', args, 'number');
         return seq_compare(function (a, b) {
-          return LNumber(a).cmp(b) === 1;
+          return LNumber(a).cmp(b) === 0;
         }, args);
-      }, "(> x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically increasing"),
+      }, "(== x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are equal"),
       // ------------------------------------------------------------------
-      '<': doc('<', function () {
+      '>': doc('>', function () {
         for (var _len37 = arguments.length, args = new Array(_len37), _key38 = 0; _key38 < _len37; _key38++) {
           args[_key38] = arguments[_key38];
         }
 
+        typecheck_args('>', args, 'number');
         return seq_compare(function (a, b) {
-          return LNumber(a).cmp(b) === -1;
+          return LNumber(a).cmp(b) === 1;
         }, args);
-      }, "(< x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically decreasing"),
+      }, "(> x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically increasing"),
       // ------------------------------------------------------------------
-      '<=': doc(function () {
+      '<': doc('<', function () {
         for (var _len38 = arguments.length, args = new Array(_len38), _key39 = 0; _key39 < _len38; _key39++) {
           args[_key39] = arguments[_key39];
         }
 
+        typecheck_args('<', args, 'number');
         return seq_compare(function (a, b) {
-          return [0, -1].includes(LNumber(a).cmp(b));
+          return LNumber(a).cmp(b) === -1;
         }, args);
-      }, "(<= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nonincreasing"),
+      }, "(< x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically decreasing"),
       // ------------------------------------------------------------------
-      '>=': doc('>=', function () {
+      '<=': doc(function () {
         for (var _len39 = arguments.length, args = new Array(_len39), _key40 = 0; _key40 < _len39; _key40++) {
           args[_key40] = arguments[_key40];
         }
 
+        typecheck_args('<=', args, 'number');
+        return seq_compare(function (a, b) {
+          return [0, -1].includes(LNumber(a).cmp(b));
+        }, args);
+      }, "(<= x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nonincreasing"),
+      // ------------------------------------------------------------------
+      '>=': doc('>=', function () {
+        for (var _len40 = arguments.length, args = new Array(_len40), _key41 = 0; _key41 < _len40; _key41++) {
+          args[_key41] = arguments[_key41];
+        }
+
+        typecheck_args('>=', args, 'number');
         return seq_compare(function (a, b) {
           return [0, 1].includes(LNumber(a).cmp(b));
         }, args);
-      }, "(>= x1 x2 x3 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nondecreasing"),
+      }, "(>= x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nondecreasing"),
       // ------------------------------------------------------------------
       'eq?': doc('eq?', equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
       // ------------------------------------------------------------------
@@ -12072,6 +12096,13 @@
     } // -------------------------------------------------------------------------
 
 
+    function typecheck_args(fn, args, expected) {
+      args.forEach(function (arg, i) {
+        typecheck(fn, arg, expected, i + 1);
+      });
+    } // -------------------------------------------------------------------------
+
+
     function typecheck(fn, arg, expected) {
       var position = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : null;
       fn = fn.valueOf();
@@ -12165,11 +12196,11 @@
 
       for (var _i5 = 0, _Object$entries2 = Object.entries(mapping); _i5 < _Object$entries2.length; _i5++) {
         var _Object$entries2$_i = slicedToArray(_Object$entries2[_i5], 2),
-            _key41 = _Object$entries2$_i[0],
+            _key42 = _Object$entries2$_i[0],
             value = _Object$entries2$_i[1];
 
         if (obj instanceof value) {
-          return _key41;
+          return _key42;
         }
       }
 
@@ -12203,10 +12234,6 @@
 
           return obj.constructor.name.toLowerCase();
         }
-      }
-
-      if (is_function(obj) && obj[Symbol["for"]('promise')]) {
-        return 'promise';
       }
 
       return _typeof_1(obj);
@@ -12422,8 +12449,8 @@
         args = args.map(function (arg) {
           if (is_lips_function(arg)) {
             var wrapper = function wrapper() {
-              for (var _len40 = arguments.length, args = new Array(_len40), _key42 = 0; _key42 < _len40; _key42++) {
-                args[_key42] = arguments[_key42];
+              for (var _len41 = arguments.length, args = new Array(_len41), _key43 = 0; _key43 < _len41; _key43++) {
+                args[_key43] = arguments[_key43];
               }
 
               return unpromise(arg.apply(this, args), unbox);
@@ -12639,8 +12666,13 @@
                   dynamic_scope: dynamic_scope,
                   error: function error(e, code) {
                     if (e && e.message) {
-                      // clean duplicated Error: added by JS
-                      e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
+                      if (e.message.match(/^Error:/)) {
+                        // clean duplicated Error: added by JS
+                        e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
+                      } else {
+                        // add missing Error
+                        e.message = "Error: ".concat(e.message);
+                      }
 
                       if (code) {
                         // LIPS stack trace
@@ -13068,10 +13100,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 14 Feb 2021 14:08:11 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 16 Feb 2021 11:31:03 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 14 Feb 2021 14:08:11 +0000').valueOf();
+      var date = LString('Tue, 16 Feb 2021 11:31:03 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13099,16 +13131,19 @@
     InputPort.__class__ = 'input-port';
     OutputPort.__class__ = 'output-port';
     OutputStringPort.__class__ = 'output-string-port';
-    InputStringPort.__class__ = 'input-string-port'; // types used for detect lips objects
+    InputStringPort.__class__ = 'input-string-port';
+    InputFilePort.__class__ = 'input-file-port';
+    OutputFilePort.__class__ = 'output-file-port'; // types used for detect lips objects
 
     LNumber.__class__ = 'number';
     LCharacter.__class__ = 'character';
-    LString.__class__ = 'string'; // -------------------------------------------------------------------------
+    LString.__class__ = 'string';
+    QuotedPromise.__class__ = 'promise'; // -------------------------------------------------------------------------
 
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 14 Feb 2021 14:08:11 +0000',
+      date: 'Tue, 16 Feb 2021 11:31:03 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

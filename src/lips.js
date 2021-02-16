@@ -816,6 +816,10 @@
         return this.__promise__;
     };
     // ----------------------------------------------------------------------
+    QuotedPromise.prototype.toString = function() {
+        return '#<promise>';
+    };
+    // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
     var specials = {
@@ -8667,9 +8671,6 @@
                 return obj.constructor.name.toLowerCase();
             }
         }
-        if (is_function(obj) && obj[Symbol.for('promise')]) {
-            return 'promise';
-        }
         return typeof obj;
     }
     // -------------------------------------------------------------------------
@@ -9272,10 +9273,13 @@ You can also use (help name) to display help for specic function or macro and
     OutputPort.__class__ = 'output-port';
     OutputStringPort.__class__ = 'output-string-port';
     InputStringPort.__class__ = 'input-string-port';
+    InputFilePort.__class__ = 'input-file-port';
+    OutputFilePort.__class__ = 'output-file-port';
     // types used for detect lips objects
     LNumber.__class__ = 'number';
     LCharacter.__class__ = 'character';
     LString.__class__ = 'string';
+    QuotedPromise.__class__ = 'promise';
     // -------------------------------------------------------------------------
     var lips = {
         version: '{{VER}}',
