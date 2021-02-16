@@ -5496,14 +5496,21 @@
             } else {
                 x = x.valueOf();
             }
-            root.fs.write(this._fd, x, function() { });
+            this.fs('write')(this._fd, x, function() { });
         };
     }
     OutputFilePort.prototype = Object.create(OutputPort.prototype);
     OutputFilePort.prototype.constructor = OutputFilePort;
+    OutputFilePort.prototype.fs = function(name) {
+        var fs = user_env.get('**internal-env**').get('fs');
+        if (!fs) {
+            throw new Error(`${name}: fs is not defined`);
+        }
+        return fs[name];
+    };
     OutputFilePort.prototype.close = function() {
         return new Promise((resolve, reject) => {
-            root.fs.close(this._fd, (err) => {
+            this.fs('close')(this._fd, (err) => {
                 if (err) {
                     reject(err);
                 } else {

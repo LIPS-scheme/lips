@@ -1212,16 +1212,15 @@
              (h (lambda args (apply (g g) args)))))))
 
 ;; ---------------------------------------------------------------------------------------
-(let ((fs (cond ((eq? self global) (require "fs"))
-                ((not (null? self.BrowserFS))
-                 (new Promise (lambda (resolve reject)
-                                (BrowserFS.configure &(:fs "IndexedDB"
-                                                       :options &())
-                                                     (lambda (e)
-                                                       (if (null? e)
-                                                           (resolve (BrowserFS.BFSRequire "fs"))
-                                                           (reject e))))))))))
+(let* ((fs (cond ((eq? self global) (require "fs"))
+                 ((not (null? self.BrowserFS))
+                  (new Promise (lambda (resolve reject)
+                                 (BrowserFS.configure &(:fs "IndexedDB"
+                                                            :options &())
+                                                      (lambda (e)
+                                                        (if (null? e)
+                                                            (resolve (BrowserFS.BFSRequire "fs"))
+                                                            (reject e))))))))))
   (if (not (null? fs))
       (--> lips.env (get '**internal-env**) (set "fs" fs))))
-
 ;; ---------------------------------------------------------------------------------------

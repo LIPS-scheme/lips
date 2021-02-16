@@ -270,7 +270,7 @@ throw exception that function is not yet implemented." (quasiquote (new lips.Env
 |     | |    |    /  \\    |  |  __|   |  |     | |    |  __|   |   |  |
 |     | |    |   / /\\ \\   |  | |      |  |     | |    | |      |   |  |
 +     |_|    +  /_/  \\_\\  +  |_|      +  +     |_|    |_|      +   +  +
- \\_           \\_           \\_       _/    \\_                 _/  _/ _/" ((lambda (x) (x x)) (lambda (g) (h (lambda args (apply (g g) args)))))))(let ((fs (cond ((eq? self global) (require "fs")) ((not (null? self.BrowserFS)) (new Promise (lambda (resolve reject) (BrowserFS.configure &(:options &() :fs "IndexedDB") (lambda (e) (if (null? e) (resolve (BrowserFS.BFSRequire "fs")) (reject e)))))))))) (if (not (null? fs)) (--> lips.env (get (quote **internal-env**)) (set "fs" fs))))(define string-append concat)(define = ==)(define remainder %)(define -inf.0 Number.NEGATIVE_INFINITY)(define +inf.0 Number.POSITIVE_INFINITY)(define procedure? function?)(define expt **)(define list->vector list->array)(define vector->list array->list)(define-macro (define-symbol-macro type spec . rest) "(define-symbol-macro type (name . args) . body)
+ \\_           \\_           \\_       _/    \\_                 _/  _/ _/" ((lambda (x) (x x)) (lambda (g) (h (lambda args (apply (g g) args)))))))(let* ((fs (cond ((eq? self global) (require "fs")) ((not (null? self.BrowserFS)) (new Promise (lambda (resolve reject) (BrowserFS.configure &(:options &() :fs "IndexedDB") (lambda (e) (if (null? e) (resolve (BrowserFS.BFSRequire "fs")) (reject e)))))))))) (if (not (null? fs)) (--> lips.env (get (quote **internal-env**)) (set "fs" fs))))(define string-append concat)(define = ==)(define remainder %)(define -inf.0 Number.NEGATIVE_INFINITY)(define +inf.0 Number.POSITIVE_INFINITY)(define procedure? function?)(define expt **)(define list->vector list->array)(define vector->list array->list)(define-macro (define-symbol-macro type spec . rest) "(define-symbol-macro type (name . args) . body)
 
 Macro that creates special symbol macro for evaluator similar to build in , or `.
 It's like alias for real macro. Similar to CL reader macros but it receive already
@@ -655,7 +655,9 @@ Function create new output port that can used to write string into
 and after finish get the whole string using `get-output-string`." (new lips.OutputStringPort repr))(define (get-output-string port) "(get-output-string port)
 
 Function get full string from string port. If nothing was wrote
-to given port it will return empty string." (if (not (instanceof lips.OutputStringPort port)) (throw (new Error (string-append "get-output-string: expecting output-string-port get " (type port)))) (port.getString)))(define delete-file (let ((unlink #f)) (lambda (filename) (typecheck "delete-file" filename "string") (if (null? self.fs) (throw (new Error "delete-file: fs not defined")) (begin (if (not (procedure? unlink)) (set! unlink (promisify fs.unlink))) (unlink filename))))))(define (call-with-port port proc) "(call-with-port port proc)
+to given port it will return empty string." (if (not (instanceof lips.OutputStringPort port)) (throw (new Error (string-append "get-output-string: expecting output-string-port get " (type port)))) (port.getString)))(define delete-file (let ((unlink #f)) (lambda (filename) "(delete-file filename)
+
+Function delete the file of given name." (typecheck "delete-file" filename "string") (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "delete-file: fs not defined")) (begin (if (not (procedure? unlink)) (set! unlink (promisify fs.unlink))) (unlink filename)))))))(define (call-with-port port proc) "(call-with-port port proc)
 
 Proc is executed with given port and after it returns, the port is closed." (try (proc port) (finally (if (procedure? port.close) (port.close)))))(define (close-port port) "(close-port port)
 

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 16 Feb 2021 15:59:40 +0000
+ * build: Tue, 16 Feb 2021 18:06:58 +0000
  */
 (function () {
   'use strict';
@@ -8714,18 +8714,28 @@
           x = x.valueOf();
         }
 
-        root.fs.write(_this8._fd, x, function () {});
+        _this8.fs('write')(_this8._fd, x, function () {});
       };
     }
 
     OutputFilePort.prototype = Object.create(OutputPort.prototype);
     OutputFilePort.prototype.constructor = OutputFilePort;
 
+    OutputFilePort.prototype.fs = function (name) {
+      var fs = user_env.get('**internal-env**').get('fs');
+
+      if (!fs) {
+        throw new Error("".concat(name, ": fs is not defined"));
+      }
+
+      return fs[name];
+    };
+
     OutputFilePort.prototype.close = function () {
       var _this9 = this;
 
       return new Promise(function (resolve, reject) {
-        root.fs.close(_this9._fd, function (err) {
+        _this9.fs('close')(_this9._fd, function (err) {
           if (err) {
             reject(err);
           } else {
@@ -13105,10 +13115,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 16 Feb 2021 15:59:40 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 16 Feb 2021 18:06:58 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 16 Feb 2021 15:59:40 +0000').valueOf();
+      var date = LString('Tue, 16 Feb 2021 18:06:58 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13148,7 +13158,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 16 Feb 2021 15:59:40 +0000',
+      date: 'Tue, 16 Feb 2021 18:06:58 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
