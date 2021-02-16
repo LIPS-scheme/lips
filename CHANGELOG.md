@@ -16,6 +16,7 @@
 * fix error when using help in node REPL and there are no doc string
 * fix escaping regex operators when using string with `apropos`
 * fix typechecking of number operators [#128](https://github.com/jcubic/lips/issues/128)
+* fix indent of call-with- (input-file output-file and port)
 
 ## 1.0.0-beta.11
 ### Breaking
