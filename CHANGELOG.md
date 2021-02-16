@@ -11,12 +11,14 @@
 * add doc strings for `**interaction-environment**` and `**internal-env**`
 * add `letrec*` that in LIPS is exactly the same as `letrec`
 * add `pragma->sxml` macro that define `sxml` macro (default is `h`)
+* hide `fs` in internal env
+* automatic bootstrapping of `fs` with BrowserFS if exists
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string
 * fix escaping regex operators when using string with `apropos`
 * fix typechecking of number operators [#128](https://github.com/jcubic/lips/issues/128)
-* fix indent of call-with- (input-file output-file and port)
+* fix indent of call-with- (input-file, output-file and port)
 
 ## 1.0.0-beta.11
 ### Breaking

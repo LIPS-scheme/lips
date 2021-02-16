@@ -1196,12 +1196,6 @@
     (port.char_ready)))
 
 ;; -----------------------------------------------------------------------------
-;; NodeJS filesystem functions
-;; -----------------------------------------------------------------------------
-(if (eq? global self)
-    (set! self.fs (require "fs")))
-
-;; -----------------------------------------------------------------------------
 (define open-input-file
   (let ((readFile #f))
     (lambda(filename)
@@ -1209,18 +1203,19 @@
 
        Function return new Input Port with given filename. In Browser user need to
        provide global fs variable that is instance of FS interface."
-      (if (null? self.fs)
-          (throw (new Error "open-input-file: fs not defined"))
-          (begin
-            (if (not (procedure? readFile))
-                (let ((_readFile (promisify fs.readFile)))
-                  (set! readFile (lambda (filename)
-                                   "(readFile filename)
+      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+        (if (null? fs)
+            (throw (new Error "open-input-file: fs not defined"))
+            (begin
+              (if (not (procedure? readFile))
+                  (let ((_readFile (promisify fs.readFile)))
+                    (set! readFile (lambda (filename)
+                                     "(readFile filename)
 
-                                    Helper function that return Promise. NodeJS function sometimes give warnings
-                                    when using fs.promises on Windows."
-                                   (--> (_readFile filename) (toString))))))
-            (new lips.InputFilePort (readFile filename) filename))))))
+                                      Helper function that return Promise. NodeJS function sometimes give warnings
+                                      when using fs.promises on Windows."
+                                     (--> (_readFile filename) (toString))))))
+              (new lips.InputFilePort (readFile filename) filename)))))))
 
 ;; -----------------------------------------------------------------------------
 (define (close-input-port port)
@@ -1298,12 +1293,15 @@
 ;; -----------------------------------------------------------------------------
 (define (file-exists? filename)
   (new Promise (lambda (resolve)
-                 (if (null? self.fs)
-                     (throw (new Error "file-exists?: fs not defined"))
-                     (fs.stat filename (lambda (err stat)
-                                         (if (null? err)
-                                             (resolve (stat.isFile))
-                                             (resolve #f))))))))
+                 (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+                   (if (null? fs)
+                       (throw (new Error "file-exists?: fs not defined"))
+                       (fs.stat filename (lambda (err stat)
+                                           (if (null? err)
+                                               (resolve (stat.isFile))
+                                               (resolve #f)))))))))
+
+
 
 ;; -----------------------------------------------------------------------------
 (define open-output-file
@@ -1314,14 +1312,15 @@
        Function open file and return port that can be used for writing. If file
        exists it will throw an Error."
       (typecheck "open-output-file" filename "string")
-      (if (null? self.fs)
-          (throw (new Error "open-output-file: fs not defined"))
-          (begin
-            (if (not (procedure? open))
-                (set! open (promisify fs.open)))
-            (if (file-exists? filename)
-                (throw (new Error "open-output-file: file exists"))
-                (lips.OutputFilePort filename (open filename "w"))))))))
+      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+        (if (null? fs)
+            (throw (new Error "open-output-file: fs not defined"))
+            (begin
+              (if (not (procedure? open))
+                  (set! open (promisify fs.open)))
+              (if (file-exists? filename)
+                  (throw (new Error "open-output-file: file exists"))
+                  (lips.OutputFilePort filename (open filename "w")))))))))
 
 ;; -----------------------------------------------------------------------------
 (define (scheme-report-environment version)

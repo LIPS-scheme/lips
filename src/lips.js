@@ -5641,6 +5641,10 @@
         return get_props(this.__env__);
     };
     // -------------------------------------------------------------------------
+    Environment.prototype.fs = function() {
+        return this.get('**fs**');
+    };
+    // -------------------------------------------------------------------------
     Environment.prototype.unset = function(name) {
         if (name instanceof LSymbol) {
             name = name.valueOf();
@@ -5996,7 +6000,7 @@
         'letter-unicode-regex': /\p{L}/u,
         'numeral-unicode-regex': /\p{N}/u,
         'space-unicode-regex': /\s/u
-    });
+    }, undefined, 'internal');
     // -------------------------------------------------------------------------
     var global_env = new Environment({
         nil,
