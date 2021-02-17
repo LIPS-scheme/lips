@@ -54,6 +54,10 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
         code = code.toString();
     }
     return interpreter.exec(code, dynamic, env).catch(function(e) {
+        if (!e) {
+            console.log('Error is null');
+            return;
+        }
         if (!stack) {
             console.error(e.message);
         }

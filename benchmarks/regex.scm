@@ -23,7 +23,6 @@
 
            (on "cycle" (lambda (e)
                            (print (string-append ">>> " (String e.target)))))
-                           
 
            (on "complete" (lambda (e)
                             (try
@@ -34,11 +33,4 @@
                             (catch (e)
                               (print e)))))
 
-
-
-
            (run &(:async true)))
-
-
-
-
