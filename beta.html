@@ -9,7 +9,7 @@
     <!--[if IE]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal@x.x.x/css/jquery.terminal.min.css,npm/terminal-prism@0.2.0/css/prism.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/combine/npm/jquery.terminal@x.x.x/css/jquery.terminal.min.css,npm/terminal-prism@0.2.0/css/prism.css,npm/@jcubic/lips@beta/lib/css/terminal.css" rel="stylesheet"/>
     <style>
      body {
          margin: 0;
@@ -21,24 +21,27 @@
 </head>
 <body>
     <script>
-var term = (function() {
-    var bold = '[[b;rgba(255,255,255,0.99);]';
-    function formatBaner(banner, dynamic) {
-        var entry = '   ' + bold + (dynamic ? 'dynamic' : 'lexical') + ' scope] $1';
-        return banner.replace(/(\((?:env|apropos|help)[^)]*\))/g, bold + '$1]')
-            .replace(/(\n\nLIPS.+)/m, entry)
-            .replace(/(Jakub T. Jankiewicz)/, '[[!;;;;https://jcubic.pl/me]$1]');
-    }
-    $.terminal.syntax('scheme');
-    var term = terminal({ selector: 'body', lips, name: 'lisp' });
-    term.echo(formatBaner(lips.banner, false), {formatters: false});
+     var term = (function() {
+       var bold = '[[b;rgba(255,255,255,0.99);]';
+       function format(code) {
+         return $.terminal.prism("scheme", code, {echo: true});
+       }
+       function formatBaner(banner, dynamic) {
+         var entry = '   ' + bold + (dynamic ? 'dynamic' : 'lexical') + ' scope] $1';
+         return banner.replace(/(\((?:env|dir|help|apropos)[^)]*\))/g, format)
+                      .replace(/(\n\nLIPS.+)/m, entry)
+                      .replace(/(Jakub T. Jankiewicz)/, '[[!;;;;https://jcubic.pl/me]$1]');
+       }
+       $.terminal.syntax('scheme');
+       var term = terminal({ selector: 'body', lips, name: 'lisp' });
+       term.echo(formatBaner(lips.banner, false), {formatters: false});
 
-    // load Standard libraries
-    var path = 'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/';
-    term.exec('(load "' + path + 'dist/std.scm" lips.env.__parent__)', true);
-    var repr = term.interpreter.get('repr');
-    return term;
-})();
+       // load Standard libraries
+       var path = 'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/';
+       term.exec('(load "' + path + 'dist/std.scm" lips.env.__parent__)', true);
+       var repr = term.interpreter.get('repr');
+       return term;
+     })();
 </script>
 <!-- Matomo -->
 <script type="text/javascript">
