@@ -1,7 +1,7 @@
 ## 1.0.0-beta.12
 ### Breaking
-* `env` now return symbols instead of strings
-* repr and type of quoted promises that show `#<promise>` and `promise`
+* `env` and `dir` now returns symbols instead of strings
+* `repr` and `type` of quoted promises now return `#<promise>` and `promise`
 ### Features
 * create minfied std scheme file for faster bootstrap
 * add `list-copy`

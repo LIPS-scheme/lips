@@ -375,7 +375,8 @@
               (set! names (--> names
                                (filter (lambda (name)
                                           (not (hidden.includes name))))))))
-        (append (array->list names) (dir (Object.getPrototypeOf obj) true)))))
+        (append (array->list (--> names (map (unary string->symbol))))
+                (dir (Object.getPrototypeOf obj) true)))))
 
 ;; ---------------------------------------------------------------------------------------
 (define (tree-map f tree)

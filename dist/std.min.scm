@@ -86,7 +86,7 @@ Function return hidden names of an object, for ES6 class prototype
 it return all methods since they are indistinguishable from hidden property
 created using defineProperty." (let* ((descriptors (Object.getOwnPropertyDescriptors obj)) (names (Object.keys descriptors))) (--> names (filter (lambda (name) (let ((descriptor (. descriptors name))) (eq? descriptor.enumerable #f)))))))(define (dir obj . rest) "(dir obj)
 
-Function return all props on the object including those in prototype chain." (if (or (null? obj) (eq? obj Object.prototype)) () (let ((proto (if (null? rest) #f (car rest))) (names (Object.getOwnPropertyNames obj))) (if (not proto) (let ((hidden (%hidden-props obj))) (set! names (--> names (filter (lambda (name) (not (hidden.includes name)))))))) (append (array->list names) (dir (Object.getPrototypeOf obj) #t)))))(define (tree-map f tree) "(tree-map fn tree)
+Function return all props on the object including those in prototype chain." (if (or (null? obj) (eq? obj Object.prototype)) () (let ((proto (if (null? rest) #f (car rest))) (names (Object.getOwnPropertyNames obj))) (if (not proto) (let ((hidden (%hidden-props obj))) (set! names (--> names (filter (lambda (name) (not (hidden.includes name)))))))) (append (array->list (--> names (map (unary string->symbol)))) (dir (Object.getPrototypeOf obj) #t)))))(define (tree-map f tree) "(tree-map fn tree)
 
 Tree version of map. Function is invoked on every leaf." (if (pair? tree) (cons (tree-map f (car tree)) (tree-map f (cdr tree))) (f tree)))(define (native.number x) "(native.number obj)
 
