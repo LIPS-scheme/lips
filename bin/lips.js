@@ -169,8 +169,7 @@ var interp = Interpreter('repl', {
             });
         });
     }),
-    __dirname: __dirname,
-    __filename: __filename,
+    // -------------------------------------------------------------------------
     stdout: OutputPort(function(x) {
         if (typeof x !== 'string') {
             x = this.get('repr')(x);
@@ -178,6 +177,10 @@ var interp = Interpreter('repl', {
         newline = !x.match(/\n$/);
         process.stdout.write(x);
     }),
+    // -------------------------------------------------------------------------
+    __dirname: __dirname,
+    __filename: __filename,
+    // -------------------------------------------------------------------------
     'stack-trace': doc(function() {
         if (strace) {
             console.log(strace);
@@ -185,12 +188,24 @@ var interp = Interpreter('repl', {
     }, `(stack-trace)
 
         Function display stack trace of last error`),
+    // -------------------------------------------------------------------------
     exit: doc(function(code) {
         process.exit(code);
     }, `(exit)
         (exit error-code)
 
         Function exits LIPS script or the REPL.`),
+    // -------------------------------------------------------------------------
+    pprint: doc(function(arg) {
+        if (arg instanceof Pair) {
+            arg = new Formatter(arg.toString(true)).break().format();
+            this.get('display').call(this, scheme(arg));
+        } else {
+            this.get('write').call(this, scheme(arg));
+        }
+        this.get('newline').call(this);
+    }, env.get('pprint').__doc__),
+    // -------------------------------------------------------------------------
     help: doc(new Macro('help', function(code, { error }) {
         var new_code = new Pair(new LSymbol('__help'), code);
         var doc = evaluate(new_code, { env: this, error });
@@ -198,6 +213,7 @@ var interp = Interpreter('repl', {
             console.log(doc.toString());
         }
     }), env.get('help').__doc__),
+    // -------------------------------------------------------------------------
     '__help': env.get('help')
 });
 
