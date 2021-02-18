@@ -13,6 +13,7 @@
 * add `pragma->sxml` macro that define `sxml` macro (default is `h`)
 * hide `fs` in internal env
 * automatic bootstrapping of `fs` with BrowserFS if exists
+* `pprint` in both REPLs now print in color [#33](https://github.com/jcubic/lips/issues/33)
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string
