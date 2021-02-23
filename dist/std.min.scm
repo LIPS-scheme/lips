@@ -469,7 +469,7 @@ Write newline character to standard output or given port" (let ((port (if (null?
 Write object to standard output or give port. For strings it will include
 wrap in quotes." (let ((port (if (null? rest) (current-output-port) (car rest)))) (display (repr obj #t) port)))(define (write-char char . rest) "(write-char char [port])
 
-Write single character to given port using write function." (typecheck "write-char" char "character") (apply display (cons (char.valueOf) rest)))(define fold-right reduce)(define fold-left fold)(define (make-vector n . rest) "(make-vector n [fill])
+Write single character to given port using write function." (typecheck "write-char" char "character") (if (not (null? rest)) (typecheck "write-char" (car rest) "output-port")) (apply display (cons (char.valueOf) rest)))(define fold-right reduce)(define fold-left fold)(define (make-vector n . rest) "(make-vector n [fill])
 
 Create new vector with n empty elements. If fill is specified it will set
 all elements of the vector to that value." (let ((result (new Array n))) (if (not (null? rest)) (--> result (fill (car rest))) result)))(define (vector? n) "(vector? n)

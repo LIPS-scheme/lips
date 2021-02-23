@@ -6143,6 +6143,8 @@
         display: doc(function display(arg, port = null) {
             if (port === null) {
                 port = internal(this, 'stdout');
+            } else {
+                typecheck('display', port, 'output-port');
             }
             const value = global_env.get('repr')(arg);
             port.write.call(global_env, value);

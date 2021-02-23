@@ -966,6 +966,8 @@
 
    Write single character to given port using write function."
   (typecheck "write-char" char "character")
+  (if (not (null? rest))
+      (typecheck "write-char" (car rest) "output-port"))
   (apply display (cons (char.valueOf) rest)))
 
 ;; -----------------------------------------------------------------------------
