@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 24 Feb 2021 13:06:06 +0000
+ * build: Wed, 24 Feb 2021 15:38:30 +0000
  */
 (function () {
   'use strict';
@@ -7211,9 +7211,9 @@
 
         return LBigInteger(new BN(n));
       } else if (parsable) {
-        this.value = parseInt(str, radix);
+        this.__value__ = parseInt(str, radix);
       } else {
-        this.value = n;
+        this.__value__ = n;
       }
     } // -------------------------------------------------------------------------
 
@@ -7348,10 +7348,10 @@
 
     LNumber.prototype.toString = LNumber.prototype.toJSON = function (radix) {
       if (radix > 2 && radix < 36) {
-        return this.value.toString(radix);
+        return this.__value__.toString(radix);
       }
 
-      return this.value.toString();
+      return this.__value__.toString();
     }; // -------------------------------------------------------------------------
 
 
@@ -7363,14 +7363,14 @@
 
 
     LNumber.prototype.isBigNumber = function () {
-      return typeof this.value === 'bigint' || typeof BN !== 'undefined' && !(this.value instanceof BN);
+      return typeof this.__value__ === 'bigint' || typeof BN !== 'undefined' && !(this.value instanceof BN);
     }; // -------------------------------------------------------------------------
 
 
     ['floor', 'ceil', 'round'].forEach(function (fn) {
       LNumber.prototype[fn] = function () {
-        if (this["float"] || LNumber.isFloat(this.value)) {
-          return LNumber(Math[fn](this.value));
+        if (this["float"] || LNumber.isFloat(this.__value__)) {
+          return LNumber(Math[fn](this.__value__));
         } else {
           return LNumber(Math[fn](this.valueOf()));
         }
@@ -7378,10 +7378,10 @@
     }); // -------------------------------------------------------------------------
 
     LNumber.prototype.valueOf = function () {
-      if (LNumber.isNative(this.value)) {
-        return Number(this.value);
-      } else if (LNumber.isBN(this.value)) {
-        return this.value.toNumber();
+      if (LNumber.isNative(this.__value__)) {
+        return Number(this.__value__);
+      } else if (LNumber.isBN(this.__value__)) {
+        return this.__value__.toNumber();
       }
     }; // -------------------------------------------------------------------------
 
@@ -7556,7 +7556,7 @@
 
 
     LNumber.prototype.isFloat = function () {
-      return !!(LNumber.isFloat(this.value) || this["float"]);
+      return !!(LNumber.isFloat(this.__value__) || this["float"]);
     }; // -------------------------------------------------------------------------
 
 
@@ -7661,10 +7661,10 @@
     LNumber.prototype.pow = function (n) {
       var value;
 
-      if (LNumber.isBN(this.value)) {
-        value = this.value.pow(n.value);
+      if (LNumber.isBN(this.__value__)) {
+        value = this.__value__.pow(n.__value__);
       } else {
-        value = pow(this.value, n.value);
+        value = pow(this.__value__, n.__value__);
       }
 
       return LNumber(value);
@@ -7672,9 +7672,9 @@
 
 
     LNumber.prototype.abs = function () {
-      var value = this.value;
+      var value = this.__value__;
 
-      if (LNumber.isNative(this.value)) {
+      if (LNumber.isNative(this.__value__)) {
         if (value < 0) {
           value = -value;
         }
@@ -7687,14 +7687,14 @@
 
 
     LNumber.prototype.isOdd = function () {
-      if (LNumber.isNative(this.value)) {
+      if (LNumber.isNative(this.__value__)) {
         if (this.isBigNumber()) {
-          return this.value % BigInt(2) === BigInt(1);
+          return this.__value__ % BigInt(2) === BigInt(1);
         }
 
-        return this.value % 2 === 1;
-      } else if (LNumber.isBN(this.value)) {
-        return this.value.isOdd();
+        return this.__value__ % 2 === 1;
+      } else if (LNumber.isBN(this.__value__)) {
+        return this.__value__.isOdd();
       }
     }; // -------------------------------------------------------------------------
 
@@ -7711,9 +7711,9 @@
           b = _this$coerce4[1];
 
       function cmp(a, b) {
-        if (a.value < b.value) {
+        if (a.__value__ < b.__value__) {
           return -1;
-        } else if (a.value === b.value) {
+        } else if (a.__value__ === b.__value__) {
           return 0;
         } else {
           return 1;
@@ -7721,10 +7721,10 @@
       }
 
       if (a.__type__ === 'bigint') {
-        if (LNumber.isNative(a.value)) {
+        if (LNumber.isNative(a.__value__)) {
           return cmp(a, b);
-        } else if (LNumber.isBN(a.value)) {
-          return this.value.cmp(b.value);
+        } else if (LNumber.isBN(a.__value__)) {
+          return this.__value__.cmp(b.__value__);
         }
       } else if (a instanceof LFloat) {
         return cmp(a, b);
@@ -8014,7 +8014,7 @@
       }
 
       if (typeof n === 'number') {
-        this.value = n;
+        this.__value__ = n;
         this.__type__ = 'float';
       }
     } // -------------------------------------------------------------------------
@@ -8024,9 +8024,9 @@
     LFloat.prototype.constructor = LFloat; // -------------------------------------------------------------------------
 
     LFloat.prototype.toString = function () {
-      var str = this.value.toString();
+      var str = this.__value__.toString();
 
-      if (!LNumber.isFloat(this.value) && !str.match(/e/i)) {
+      if (!LNumber.isFloat(this.__value__) && !str.match(/e/i)) {
         return str + '.0';
       }
 
@@ -8036,16 +8036,16 @@
 
     LFloat.prototype._op = function (op, n) {
       if (n instanceof LNumber) {
-        n = n.value;
+        n = n.__value__;
       }
 
       var fn = LNumber._ops[op];
 
-      if (op === '/' && this.value === 0 && n === 0) {
+      if (op === '/' && this.__value__ === 0 && n === 0) {
         return NaN;
       }
 
-      return LFloat(fn(this.value, n));
+      return LFloat(fn(this.__value__, n));
     }; // -------------------------------------------------------------------------
     // same aproximation as in guile scheme
 
@@ -8054,10 +8054,10 @@
       var n = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
 
       if (n === null) {
-        return toRational(this.value.valueOf());
+        return toRational(this.__value__.valueOf());
       }
 
-      return approxRatio(n.valueOf())(this.value.valueOf());
+      return approxRatio(n.valueOf())(this.__value__.valueOf());
     }; // -------------------------------------------------------------------------
     // ref: https://rosettacode.org/wiki/Convert_decimal_number_to_rational
     // -------------------------------------------------------------------------
@@ -8152,8 +8152,8 @@
         }
       }
 
-      this.num = num;
-      this.denom = denom;
+      this.__num__ = num;
+      this.__denom__ = denom;
       this.__type__ = 'rational';
     } // -------------------------------------------------------------------------
 
@@ -8170,8 +8170,11 @@
 
       if (cmp === -1) {
         n = n.sub();
-        var num = this.denom.pow(n);
-        var denom = this.num.pow(n);
+
+        var num = this.__denom__.pow(n);
+
+        var denom = this.__num__.pow(n);
+
         return LRational({
           num: num,
           denom: denom
@@ -8191,8 +8194,9 @@
 
 
     LRational.prototype.sqrt = function () {
-      var num = this.num.sqrt();
-      var denom = this.denom.sqrt();
+      var num = this.__num__.sqrt();
+
+      var denom = this.__denom__.sqrt();
 
       if (num instanceof LFloat) {
         num = (readOnlyError("num"), num.toRational());
@@ -8210,8 +8214,8 @@
 
 
     LRational.prototype.abs = function () {
-      var num = this.num;
-      var denom = this.denom;
+      var num = this.__num__;
+      var denom = this.__denom__;
 
       if (num.cmp(0) === -1) {
         num = num.sub();
@@ -8234,24 +8238,25 @@
 
 
     LRational.prototype.toString = function () {
-      var gcd = this.num.gcd(this.denom);
+      var gcd = this.__num__.gcd(this.__denom__);
+
       var num, denom;
 
       if (gcd.cmp(1) !== 0) {
-        num = this.num.div(gcd);
+        num = this.__num__.div(gcd);
 
         if (num instanceof LRational) {
           num = LNumber(num.valueOf(true));
         }
 
-        denom = this.denom.div(gcd);
+        denom = this.__denom__.div(gcd);
 
         if (denom instanceof LRational) {
           denom = LNumber(denom.valueOf(true));
         }
       } else {
-        num = this.num;
-        denom = this.denom;
+        num = this.__num__;
+        denom = this.__denom__;
       }
 
       var minus = this.cmp(0) < 0;
@@ -8269,8 +8274,8 @@
 
 
     LRational.prototype.valueOf = function (exact) {
-      if (this.denom.cmp(0) === 0) {
-        if (this.num.cmp(0) < 0) {
+      if (this.__denom__.cmp(0) === 0) {
+        if (this.__num__.cmp(0) < 0) {
           return Number.NEGATIVE_INFINITY;
         }
 
@@ -8278,10 +8283,10 @@
       }
 
       if (exact) {
-        return LNumber._ops['/'](this.num.value, this.denom.value);
+        return LNumber._ops['/'](this.__num__.value, this.__denom__.value);
       }
 
-      return LFloat(this.num.valueOf()).div(this.denom.valueOf());
+      return LFloat(this.__num__.valueOf()).div(this.__denom__.valueOf());
     }; // -------------------------------------------------------------------------
 
 
@@ -8291,8 +8296,10 @@
       }
 
       if (LNumber.isRational(n)) {
-        var num = this.num.mul(n.num);
-        var denom = this.denom.mul(n.denom);
+        var num = this.__num__.mul(n.__num__);
+
+        var denom = this.__denom__.mul(n.__denom__);
+
         return LRational({
           num: num,
           denom: denom
@@ -8314,8 +8321,10 @@
       }
 
       if (LNumber.isRational(n)) {
-        var num = this.num.mul(n.denom);
-        var denom = this.denom.mul(n.num);
+        var num = this.__num__.mul(n.__denom__);
+
+        var denom = this.__denom__.mul(n.__num__);
+
         return LRational({
           num: num,
           denom: denom
@@ -8347,8 +8356,9 @@
       }
 
       if (LNumber.isRational(n)) {
-        var num = n.num.sub();
-        var denom = n.denom;
+        var num = n.__num__.sub();
+
+        var denom = n.__denom__;
         return this.add(LRational({
           num: num,
           denom: denom
@@ -8376,10 +8386,10 @@
       }
 
       if (LNumber.isRational(n)) {
-        var a_denom = this.denom;
-        var b_denom = n.denom;
-        var a_num = this.num;
-        var b_num = n.num;
+        var a_denom = this.__denom__;
+        var b_denom = n.__denom__;
+        var a_num = this.__num__;
+        var b_num = n.__num__;
         var denom, num;
 
         if (a_denom !== b_denom) {
@@ -8415,15 +8425,17 @@
       }
 
       if (n instanceof LBigInteger) {
-        return LBigInteger(n.value, n._native);
+        return LBigInteger(n.__value__, n._native);
       }
 
       if (!LNumber.isBigInteger(n)) {
         throw new Error('Invalid constructor call for LBigInteger');
       }
 
-      this.value = n;
-      this._native = _native2;
+      this.__value__ = n;
+      Object.defineProperty(this, '_native', {
+        value: _native2
+      });
       this.__type__ = 'bigint';
     } // -------------------------------------------------------------------------
 
@@ -8446,20 +8458,20 @@
 
     LBigInteger.prototype._op = function (op, n) {
       if (typeof n === 'undefined') {
-        if (LNumber.isBN(this.value)) {
+        if (LNumber.isBN(this.__value__)) {
           op = LBigInteger.bn_op[op];
-          return LBigInteger(this.value.clone()[op](), false);
+          return LBigInteger(this.__value__.clone()[op](), false);
         }
 
-        return LBigInteger(LNumber._ops[op](this.value), true);
+        return LBigInteger(LNumber._ops[op](this.__value__), true);
       }
 
-      if (LNumber.isBN(this.value) && LNumber.isBN(n.value)) {
+      if (LNumber.isBN(this.__value__) && LNumber.isBN(n.__value__)) {
         op = LBigInteger.bn_op[op];
-        return LBigInteger(this.value.clone()[op](n), false);
+        return LBigInteger(this.__value__.clone()[op](n), false);
       }
 
-      var ret = LNumber._ops[op](this.value, n.value);
+      var ret = LNumber._ops[op](this.__value__, n.__value__);
 
       if (op === '/') {
         var is_integer = this.op('%', n).cmp(0) === 0;
@@ -8483,10 +8495,10 @@
       var value;
       var minus = this.cmp(0) < 0;
 
-      if (LNumber.isNative(this.value)) {
+      if (LNumber.isNative(this.__value__)) {
         value = LNumber(Math.sqrt(minus ? -this.valueOf() : this.valueOf()));
-      } else if (LNumber.isBN(this.value)) {
-        value = minus ? this.value.neg().sqrt() : this.value.sqrt();
+      } else if (LNumber.isBN(this.__value__)) {
+        value = minus ? this.__value__.neg().sqrt() : this.__value__.sqrt();
       }
 
       if (minus) {
@@ -13131,10 +13143,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 24 Feb 2021 13:06:06 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 24 Feb 2021 15:38:30 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 24 Feb 2021 13:06:06 +0000').valueOf();
+      var date = LString('Wed, 24 Feb 2021 15:38:30 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13174,7 +13186,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 24 Feb 2021 13:06:06 +0000',
+      date: 'Wed, 24 Feb 2021 15:38:30 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
