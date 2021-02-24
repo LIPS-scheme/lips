@@ -773,3 +773,37 @@
               fields))))
 
 ;; -----------------------------------------------------------------------------
+(define +nan.0 NaN)
+(define -nan.0 NaN)
+
+;; -----------------------------------------------------------------------------
+(define (nan? x)
+  "(nan? x)
+
+  Function check if argument x is Not a Number (NaN) value."
+  (or (eq? x NaN)
+      (and (%number-type "complex" x)
+           (or (nan? (real-part x))
+               (nan? (imag-part x))))))
+
+;; -----------------------------------------------------------------------------
+(define (infinite? x)
+  "(infinite? x)
+
+  Function check if value is infinite."
+  (or (eq? x Number.NEGATIVE_INFINITY)
+      (eq? x Number.POSITIVE_INFINITY)
+      (and (number? x)
+           (not (eq? x NaN))
+           (%number-type "complex" x)
+           (or (infinite? (real-part x))
+               (infinite? (imag-part x))))))
+
+;; -----------------------------------------------------------------------------
+(define (finite? x)
+  "(finite? x)
+
+  Function check if value is finite."
+  (not (infinite? x)))
+
+;; -----------------------------------------------------------------------------

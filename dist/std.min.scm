@@ -310,7 +310,15 @@ Function return true if value is boolean." (string=? (type x) "boolean"))(define
 
 Return i element from vector." (typecheck "number->string" vector "array" 1) (typecheck "number->string" i "number" 2) (. vector i))(define (vector-set! vector i obj) "(vector-set! vector i obj)
 
-Set obj as value in vector at position 1." (typecheck "vector-set!" vector "array" 1) (typecheck "vector-set!" i "number" 2) (set-obj! vector i obj))(define (%number-type type x) (typecheck "%number-type" type (vector "string" "pair")) (let* ((t x.__type__) (typeof (lambda (type) (string=? t type)))) (and (number? x) (if (pair? type) (some typeof type) (typeof type)))))(define integer? (%doc "" (curry %number-type "bigint")))(define complex? (%doc "" (curry %number-type "complex")))(define rational? (%doc "" (curry %number-type (quote ("rational" "bigint")))))(define (typecheck-args _type name _list) "(typecheck-args args type)
+Set obj as value in vector at position 1." (typecheck "vector-set!" vector "array" 1) (typecheck "vector-set!" i "number" 2) (set-obj! vector i obj))(define (%number-type type x) (typecheck "%number-type" type (vector "string" "pair")) (typecheck "%number-type" x "number") (let* ((t x.__type__) (typeof (lambda (type) (string=? t type)))) (and (number? x) (if (pair? type) (some typeof type) (typeof type)))))(define (real? x) "(real? x)
+
+Function check if argument x is real." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (and (%number-type "complex" x) (zero? (imag-part x))) (%number-type (quote ("float" "bigint" "rational")) x))))(define (integer? x) "(integer? x)
+
+Function check if argument x is integer." (and (number? x) (not (eq? x NaN)) (not (eq? x Number.NEGATIVE_INFINITY)) (not (eq? x Number.POSITIVE_INFINITY)) (or (%number-type "bigint" x) (and (real? x) (= (modulo x 2) 1)))))(define (complex? x) "(complex? x)
+
+Function check if argument x is complex." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (%number-type (quote ("complex" "float" "bigint" "rational")) x))))(define (rational? x) "(rational? x)
+
+Function check if value is rational." (and (number? x) (not (eq? x NaN)) (not (eq? x Number.NEGATIVE_INFINITY)) (not (eq? x Number.POSITIVE_INFINITY)) (or (%number-type "rational" x) (integer? x))))(define (typecheck-args _type name _list) "(typecheck-args args type)
 
 Function check if all items in array are of same type." (let iter ((n 1) (_list _list)) (if (pair? _list) (begin (typecheck name (car _list) _type n) (iter (+ n 1) (cdr _list))))))(define numbers? (curry typecheck-args "number"))(define (max . args) "(max n1 n2 ...)
 
@@ -318,11 +326,11 @@ Return maximum of it's arguments." (numbers? "max" args) (apply (.. Math.max) ar
 
 Return minimum of it's arguments." (numbers? "min" args) (apply (.. Math.min) args))(define (make-rectangular re im) "(make-rectangular im re)
 
-Create complex number from imaginary and real part." (let ((value (quasiquote ((re unquote re) (im unquote im))))) (lips.LComplex (--> value (toObject #t)))))(define (real? n) "(real? n)" (and (number? n) (let ((type n.__type__)) (or (string=? type "float") (string=? type "bigint")))))(define (exact? n) "(exact? n)" (typecheck "exact?" n "number") (let ((type n.__type__)) (or (string=? type "bigint") (string=? type "rational") (and (string=? type "complex") (exact? n.__im__) (exact? n.__re__)))))(define (inexact? n) "(inexact? n)" (typecheck "inexact?" n "number") (not (exact? n)))(define (exact->inexact n) "(exact->inexact n)
+Create complex number from imaginary and real part." (let ((value (quasiquote ((re unquote re) (im unquote im))))) (lips.LComplex (--> value (toObject #t)))))(define (exact? n) "(exact? n)" (typecheck "exact?" n "number") (let ((type n.__type__)) (or (string=? type "bigint") (string=? type "rational") (and (string=? type "complex") (exact? n.__im__) (exact? n.__re__)))))(define (inexact? n) "(inexact? n)" (typecheck "inexact?" n "number") (not (exact? n)))(define (exact->inexact n) "(exact->inexact n)
 
-Convert exact number to inexact." (typecheck "exact->inexact" n "number") (if (complex? n) (lips.LComplex (object :im (. n (quote im)) :re (. n (quote re)))) (if (or (rational? n) (integer? n)) (lips.LFloat (--> n (valueOf)) #t) n)))(define (inexact->exact n) "(inexact->exact number)
+Convert exact number to inexact." (typecheck "exact->inexact" n "number") (if (%number-type "complex" n) (lips.LComplex (object :im (. n (quote im)) :re (. n (quote re)))) (if (or (rational? n) (integer? n)) (lips.LFloat (--> n (valueOf)) #t) n)))(define (inexact->exact n) "(inexact->exact number)
 
-Funcion convert real number to exact ratioanl number." (typecheck "inexact->exact" n "number") (if (or (real? n) (complex? n)) (--> n (toRational)) n))(define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))(define _this_env (current-environment))(let iter ((fns _maths)) (if (not (null? fns)) (let* ((name (car fns)) (LNumber (.. lips.LNumber)) (op (. Math name)) (fn (lambda (n) (LNumber (op n))))) (--> _this_env (set name fn)) (set-obj! fn (quote __doc__) (concat "(" name " n)
+Funcion convert real number to exact ratioanl number." (typecheck "inexact->exact" n "number") (if (or (real? n) (%number-type "complex" n)) (--> n (toRational)) n))(define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))(define _this_env (current-environment))(let iter ((fns _maths)) (if (not (null? fns)) (let* ((name (car fns)) (LNumber (.. lips.LNumber)) (op (. Math name)) (fn (lambda (n) (LNumber (op n))))) (--> _this_env (set name fn)) (set-obj! fn (quote __doc__) (concat "(" name " n)
 
 Function calculate " name " math operation (it call JavaScript Math)." name " function.")) (iter (cdr fns)))))(define (modulo a b) "(modulo a b)
 
@@ -495,15 +503,15 @@ Return numberator of rational or same number if n is not rational." (typecheck "
 
 Return denominator of rational or same number if one is not rational." (typecheck "denominator" n "number") (if (and (rational? n) (not (integer? n))) n.denom (if (exact? n) 1 1.0)))(define (imag-part n) "(imag-part n)
 
-Return imaginary part of the complex number n." (typecheck "imag-part" n "number") (if (complex? n) n.__im__ 0))(define (real-part n) "(real-part n)
+Return imaginary part of the complex number n." (typecheck "imag-part" n "number") (if (%number-type "complex" n) n.__im__ 0))(define (real-part n) "(real-part n)
 
-Return real part of the complex number n." (typecheck "real-part" n "number") (if (complex? n) n.re n))(define (make-polar r angle) "(make-polar magnitude angle)
+Return real part of the complex number n." (typecheck "real-part" n "number") (if (%number-type "complex" n) n.__re__ n))(define (make-polar r angle) "(make-polar magnitude angle)
 
 Create new complex number from polar parameters." (typecheck "make-polar" r "number") (typecheck "make-polar" angle "number") (if (or (complex? r) (complex? angle)) (error "make-polar: argument can't be complex") (let ((re (* r (sin angle))) (im (* r (cos angle)))) (make-rectangular im re))))(define (angle x) "(angle x)
 
-Returns angle of the complex number in polar coordinate system." (if (not (complex? x)) (error "angle: number need to be complex") (Math.atan2 x.__im__ x.__re__)))(define (magnitude x) "(magnitude x)
+Returns angle of the complex number in polar coordinate system." (if (not (%number-type "complex" x)) (error "angle: number need to be complex") (Math.atan2 x.__im__ x.__re__)))(define (magnitude x) "(magnitude x)
 
-Returns magnitude of the complex number in polar coordinate system." (if (not (complex? x)) (error "magnitude: number need to be complex") (sqrt (+ (* x.__im__ x.__im__) (* x.__re__ x.__re__)))))(define random (let ((a 69069) (c 1) (m (expt 2 32)) (seed 19380110)) (lambda new-seed "(random)
+Returns magnitude of the complex number in polar coordinate system." (if (not (%number-type "complex" x)) (error "magnitude: number need to be complex") (sqrt (+ (* x.__im__ x.__im__) (* x.__re__ x.__re__)))))(define random (let ((a 69069) (c 1) (m (expt 2 32)) (seed 19380110)) (lambda new-seed "(random)
 (random seed)
 
 Function generate new random real number using Knuth algorithm." (if (pair? new-seed) (set! seed (car new-seed)) (set! seed (modulo (+ (* seed a) c) m))) (exact->inexact (/ seed m)))))(define (eof-object? obj) "(eof-object? arg)
@@ -705,4 +713,10 @@ Macro for defining records. Example of usage:
 ;; 1
 (set-kdr! p 3)
 (print (kdr p))
-;; 3" (let ((class-name (gensym)) (obj-name (gensym)) (value-name (gensym))) (quasiquote (begin (define (unquote class-name) (class Object (constructor (lambda (self (unquote-splicing (cdr constructor))) (unquote-splicing (map (lambda (field) (let* ((name (symbol->string field)) (prop (string-append "self." name))) (quasiquote (set! (unquote (string->symbol prop)) (unquote field))))) (cdr constructor))))) (toType (lambda (self) "record")) (toString (lambda (self) (unquote (symbol->string name)))))) (define (unquote constructor) (new (unquote class-name) (unquote-splicing (cdr constructor)))) (define ((unquote pred) obj) (instanceof (unquote class-name) obj)) (unquote-splicing (map (lambda (field) (let ((prop-name (car field)) (get (cadr field)) (set (if (null? (cddr field)) () (caddr field)))) (quasiquote (begin (define ((unquote get) (unquote obj-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (. (unquote obj-name) (quote (unquote prop-name))))) (unquote (if (not (null? set)) (quasiquote (define ((unquote set) (unquote obj-name) (unquote value-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (set-obj! (unquote obj-name) (quote (unquote prop-name)) (unquote value-name))))))))))) fields))))))
+;; 3" (let ((class-name (gensym)) (obj-name (gensym)) (value-name (gensym))) (quasiquote (begin (define (unquote class-name) (class Object (constructor (lambda (self (unquote-splicing (cdr constructor))) (unquote-splicing (map (lambda (field) (let* ((name (symbol->string field)) (prop (string-append "self." name))) (quasiquote (set! (unquote (string->symbol prop)) (unquote field))))) (cdr constructor))))) (toType (lambda (self) "record")) (toString (lambda (self) (unquote (symbol->string name)))))) (define (unquote constructor) (new (unquote class-name) (unquote-splicing (cdr constructor)))) (define ((unquote pred) obj) (instanceof (unquote class-name) obj)) (unquote-splicing (map (lambda (field) (let ((prop-name (car field)) (get (cadr field)) (set (if (null? (cddr field)) () (caddr field)))) (quasiquote (begin (define ((unquote get) (unquote obj-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (. (unquote obj-name) (quote (unquote prop-name))))) (unquote (if (not (null? set)) (quasiquote (define ((unquote set) (unquote obj-name) (unquote value-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (set-obj! (unquote obj-name) (quote (unquote prop-name)) (unquote value-name))))))))))) fields))))))(define +nan.0 NaN)(define -nan.0 NaN)(define (nan? x) "(nan? x)
+
+Function check if argument x is Not a Number (NaN) value." (or (eq? x NaN) (and (%number-type "complex" x) (or (nan? (real-part x)) (nan? (imag-part x))))))(define (infinite? x) "(infinite? x)
+
+Function check if value is infinite." (or (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (and (number? x) (not (eq? x NaN)) (%number-type "complex" x) (or (infinite? (real-part x)) (infinite? (imag-part x))))))(define (finite? x) "(finite? x)
+
+Function check if value is finite." (not (infinite? x)))

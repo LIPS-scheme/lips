@@ -2865,6 +2865,12 @@
             if (Number.isNaN(x)) {
                 return Number.isNaN(y);
             }
+            if (x === Number.NEGATIVE_INFINITY) {
+                return y === Number.NEGATIVE_INFINITY;
+            }
+            if (x === Number.POSITIVE_INFINITY) {
+                return y === Number.POSITIVE_INFINITY;
+            }
             x = LNumber(x);
             y = LNumber(y);
             return x.__type__ === y.__type__ && x.cmp(y) === 0;
@@ -7657,12 +7663,11 @@
 
             Function check if value is real number.`),
         // ------------------------------------------------------------------
-        'number?': doc(
-            'number?',
-            LNumber.isNumber,
-            `(number? expression)
+      'number?': doc('number?', function(x) {
+        return Number.isNaN(x) || LNumber.isNumber(x);
+      }, `(number? expression)
 
-             Function check if value is a number`),
+          Function check if value is a number or NaN value.`),
         // ------------------------------------------------------------------
         'string?': doc('string?', function(obj) {
             return LString.isString(obj);

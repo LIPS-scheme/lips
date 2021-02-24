@@ -1492,6 +1492,7 @@
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)
   (typecheck "%number-type" type (vector "string" "pair"))
+  (typecheck "%number-type" x "number")
   (let* ((t x.__type__)
          (typeof (lambda (type) (string=? t type))))
     (and (number? x)
@@ -1499,20 +1500,49 @@
              (some typeof type)
              (typeof type)))))
 
-;; -----------------------------------------------------------------------------
-(define integer? (%doc
-                  ""
-                  (curry %number-type "bigint")))
 
 ;; -----------------------------------------------------------------------------
-(define complex? (%doc
-                  ""
-                  (curry %number-type "complex")))
+(define (real? x)
+  "(real? x)
+
+   Function check if argument x is real."
+  (and (number? x) (or (eq? x NaN)
+                       (eq? x Number.NEGATIVE_INFINITY)
+                       (eq? x Number.POSITIVE_INFINITY)
+                       (and (%number-type "complex" x) (zero? (imag-part x)))
+                       (%number-type '("float" "bigint" "rational") x))))
 
 ;; -----------------------------------------------------------------------------
-(define rational? (%doc
-                  ""
-                  (curry %number-type '("rational" "bigint"))))
+(define (integer? x)
+  "(integer? x)
+
+  Function check if argument x is integer."
+  (and (number? x)
+       (not (eq? x NaN))
+       (not (eq? x Number.NEGATIVE_INFINITY))
+       (not (eq? x Number.POSITIVE_INFINITY))
+       (or (%number-type "bigint" x) (and (real? x) (= (modulo x 2) 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (complex? x)
+  "(complex? x)
+
+  Function check if argument x is complex."
+  (and (number? x) (or (eq? x NaN)
+                       (eq? x Number.NEGATIVE_INFINITY)
+                       (eq? x Number.POSITIVE_INFINITY)
+                       (%number-type '("complex" "float" "bigint" "rational") x))))
+
+;; -----------------------------------------------------------------------------
+(define (rational? x)
+  "(rational? x)
+
+  Function check if value is rational."
+  (and (number? x)
+       (not (eq? x NaN))
+       (not (eq? x Number.NEGATIVE_INFINITY))
+       (not (eq? x Number.POSITIVE_INFINITY))
+       (or (%number-type "rational" x) (integer? x))))
 
 ;; -----------------------------------------------------------------------------
 (define (typecheck-args _type name _list)
@@ -1553,13 +1583,6 @@
     (lips.LComplex (--> value (toObject true)))))
 
 ;; -----------------------------------------------------------------------------
-(define (real? n)
-  "(real? n)"
-  (and (number? n) (let ((type n.__type__))
-                     (or (string=? type "float")
-                         (string=? type "bigint")))))
-
-;; -----------------------------------------------------------------------------
 (define (exact? n)
   "(exact? n)"
   (typecheck "exact?" n "number")
@@ -1570,6 +1593,7 @@
              (exact? n.__im__)
              (exact? n.__re__)))))
 
+;; -----------------------------------------------------------------------------
 (define (inexact? n)
   "(inexact? n)"
   (typecheck "inexact?" n "number")
@@ -1581,7 +1605,7 @@
 
    Convert exact number to inexact."
   (typecheck "exact->inexact" n "number")
-  (if (complex? n)
+  (if (%number-type "complex" n)
       ;; make-object (&) will use valueOf so it will be float even if it was rational
       (lips.LComplex (object :im (. n 'im) :re (. n 're)))
       (if (or (rational? n) (integer? n))
@@ -1594,7 +1618,7 @@
 
    Funcion convert real number to exact ratioanl number."
   (typecheck "inexact->exact" n "number")
-  (if (or (real? n) (complex? n))
+  (if (or (real? n) (%number-type "complex" n))
       (--> n (toRational))
       n))
 
@@ -2330,7 +2354,7 @@
 
    Return imaginary part of the complex number n."
   (typecheck "imag-part" n "number")
-  (if (complex? n)
+  (if (%number-type "complex" n)
       n.__im__
       0))
 
@@ -2340,8 +2364,8 @@
 
    Return real part of the complex number n."
   (typecheck "real-part" n "number")
-  (if (complex? n)
-      n.re
+  (if (%number-type "complex" n)
+      n.__re__
       n))
 
 ;; -----------------------------------------------------------------------------
@@ -2362,7 +2386,7 @@
   "(angle x)
 
    Returns angle of the complex number in polar coordinate system."
-  (if (not (complex? x))
+  (if (not (%number-type "complex" x))
       (error "angle: number need to be complex")
       (Math.atan2 x.__im__ x.__re__)))
 
@@ -2371,7 +2395,7 @@
   "(magnitude x)
 
    Returns magnitude of the complex number in polar coordinate system."
-  (if (not (complex? x))
+  (if (not (%number-type "complex" x))
       (error "magnitude: number need to be complex")
       (sqrt (+ (* x.__im__ x.__im__) (* x.__re__ x.__re__)))))
 
@@ -3499,5 +3523,39 @@
                                                                    (symbol->string name))))
                                  (set-obj! ,obj-name ',prop-name ,value-name)))))))
               fields))))
+
+;; -----------------------------------------------------------------------------
+(define +nan.0 NaN)
+(define -nan.0 NaN)
+
+;; -----------------------------------------------------------------------------
+(define (nan? x)
+  "(nan? x)
+
+  Function check if argument x is Not a Number (NaN) value."
+  (or (eq? x NaN)
+      (and (%number-type "complex" x)
+           (or (nan? (real-part x))
+               (nan? (imag-part x))))))
+
+;; -----------------------------------------------------------------------------
+(define (infinite? x)
+  "(infinite? x)
+
+  Function check if value is infinite."
+  (or (eq? x Number.NEGATIVE_INFINITY)
+      (eq? x Number.POSITIVE_INFINITY)
+      (and (number? x)
+           (not (eq? x NaN))
+           (%number-type "complex" x)
+           (or (infinite? (real-part x))
+               (infinite? (imag-part x))))))
+
+;; -----------------------------------------------------------------------------
+(define (finite? x)
+  "(finite? x)
+
+  Function check if value is finite."
+  (not (infinite? x)))
 
 ;; -----------------------------------------------------------------------------

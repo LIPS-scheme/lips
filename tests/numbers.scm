@@ -460,3 +460,37 @@
         (t.is (eq? NaN NaN) true)
         (t.is (eq? 10 NaN) false)
         (t.is (eq? NaN 10) false)))
+
+(test "numbers: types"
+      (lambda (t)
+        (t.is (real? +nan.0) #t)
+        (t.is (rational? -inf.0) #f)
+        #;(t.is (rational? 3.5) #t)
+        (t.is (rational? 6/10) #t)
+        (t.is (rational? 6/3) #t)
+        (t.is (rational? 3.0) #t)
+        (t.is (integer? 3+0i) #t)
+        (t.is (integer? 3.0) #t)
+        (t.is (integer? 8/4) #t)
+
+        (t.is (complex? 3+4i) #t)
+        (t.is (complex? 3) #t)
+        (t.is (real? 3) #t)
+        (t.is (real? -2.5+0i) #t)
+        (t.is (real? -2.5+0.0i) #t)
+        (t.is (real? #e1e10) #t)
+        (t.is (real? +inf.0) #t)
+
+        (t.is (finite? 3) #t)
+        (t.is (finite? +inf.0) #f)
+        #;(t.is (finite? 3.0+inf.0i) #f)
+
+        (t.is (infinite? 3) #f)
+        (t.is (infinite? +inf.0) #t)
+        (t.is (infinite? +nan.0) #f)
+        #;(t.is (infinite? 3.0+inf.0i) #t)
+
+        (t.is (nan? +nan.0) #t)
+        (t.is (nan? 32) #f)
+        #;(t.is (nan? +nan.0+5.0i) #t)
+        (t.is (nan? 1+2i) #f)))

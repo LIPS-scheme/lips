@@ -14,6 +14,7 @@
 * hide `fs` in internal env
 * automatic bootstrapping of `fs` with BrowserFS if exists
 * `pprint` in both REPLs now print in color [#33](https://github.com/jcubic/lips/issues/33)
+* add `nan?`, `infinite?` and `finite?` functions
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string
@@ -21,6 +22,8 @@
 * fix typechecking of number operators [#128](https://github.com/jcubic/lips/issues/128)
 * fix indent of call-with- (input-file, output-file and port)
 * fix eq? and type of NaN [#130](https://github.com/jcubic/lips/issues/130)
+* fix number predicates
+* fix `real-part` function
 
 ## 1.0.0-beta.11
 ### Breaking
