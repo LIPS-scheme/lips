@@ -1509,7 +1509,9 @@
   (and (number? x) (or (eq? x NaN)
                        (eq? x Number.NEGATIVE_INFINITY)
                        (eq? x Number.POSITIVE_INFINITY)
-                       (and (%number-type "complex" x) (zero? (imag-part x)))
+                       (and (%number-type "complex" x)
+                            (let ((i (imag-part x)))
+                              (and (zero? i) (exact? i))))
                        (%number-type '("float" "bigint" "rational") x))))
 
 ;; -----------------------------------------------------------------------------
@@ -1521,7 +1523,9 @@
        (not (eq? x NaN))
        (not (eq? x Number.NEGATIVE_INFINITY))
        (not (eq? x Number.POSITIVE_INFINITY))
-       (or (%number-type "bigint" x) (and (real? x) (= (modulo x 2) 1)))))
+       (or (%number-type "bigint" x)
+           (and (%number-type "float" x)
+                (= (modulo x 2) 1)))))
 
 ;; -----------------------------------------------------------------------------
 (define (complex? x)

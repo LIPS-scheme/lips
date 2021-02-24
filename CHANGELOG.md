@@ -24,6 +24,7 @@
 * fix eq? and type of NaN [#130](https://github.com/jcubic/lips/issues/130)
 * fix number predicates
 * fix `real-part` function
+* fix parsing complex with 0 inexact imaginary part
 
 ## 1.0.0-beta.11
 ### Breaking

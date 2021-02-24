@@ -477,7 +477,7 @@
         (t.is (complex? 3) #t)
         (t.is (real? 3) #t)
         (t.is (real? -2.5+0i) #t)
-        (t.is (real? -2.5+0.0i) #t)
+        (t.is (real? -2.5+0.0i) #f)
         (t.is (real? #e1e10) #t)
         (t.is (real? +inf.0) #t)
 
@@ -493,4 +493,9 @@
         (t.is (nan? +nan.0) #t)
         (t.is (nan? 32) #f)
         #;(t.is (nan? +nan.0+5.0i) #t)
+        #;(t.is (nan? 5.0+nan.0i) #t)
+        #;(t.is (nan? +nan.0+nan.0i) #t)
+        #;(t.is (nan? -nan.0+5.0i) #t)
+        #;(t.is (nan? 5.0-nan.0i) #t)
+        #;(t.is (nan? -nan.0-nan.0i) #t)
         (t.is (nan? 1+2i) #f)))

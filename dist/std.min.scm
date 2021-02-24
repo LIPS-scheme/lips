@@ -312,9 +312,9 @@ Return i element from vector." (typecheck "number->string" vector "array" 1) (ty
 
 Set obj as value in vector at position 1." (typecheck "vector-set!" vector "array" 1) (typecheck "vector-set!" i "number" 2) (set-obj! vector i obj))(define (%number-type type x) (typecheck "%number-type" type (vector "string" "pair")) (typecheck "%number-type" x "number") (let* ((t x.__type__) (typeof (lambda (type) (string=? t type)))) (and (number? x) (if (pair? type) (some typeof type) (typeof type)))))(define (real? x) "(real? x)
 
-Function check if argument x is real." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (and (%number-type "complex" x) (zero? (imag-part x))) (%number-type (quote ("float" "bigint" "rational")) x))))(define (integer? x) "(integer? x)
+Function check if argument x is real." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (and (%number-type "complex" x) (let ((i (imag-part x))) (and (zero? i) (exact? i)))) (%number-type (quote ("float" "bigint" "rational")) x))))(define (integer? x) "(integer? x)
 
-Function check if argument x is integer." (and (number? x) (not (eq? x NaN)) (not (eq? x Number.NEGATIVE_INFINITY)) (not (eq? x Number.POSITIVE_INFINITY)) (or (%number-type "bigint" x) (and (real? x) (= (modulo x 2) 1)))))(define (complex? x) "(complex? x)
+Function check if argument x is integer." (and (number? x) (not (eq? x NaN)) (not (eq? x Number.NEGATIVE_INFINITY)) (not (eq? x Number.POSITIVE_INFINITY)) (or (%number-type "bigint" x) (and (%number-type "float" x) (= (modulo x 2) 1)))))(define (complex? x) "(complex? x)
 
 Function check if argument x is complex." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (%number-type (quote ("complex" "float" "bigint" "rational")) x))))(define (rational? x) "(rational? x)
 

@@ -436,7 +436,7 @@
         } else {
             re = LNumber(0);
         }
-        if (im.cmp(0) === 0) {
+        if (im.cmp(0) === 0 && im.__type__ === 'bigint') {
             return re;
         }
         return LComplex({ im, re });
@@ -7663,11 +7663,11 @@
 
             Function check if value is real number.`),
         // ------------------------------------------------------------------
-      'number?': doc('number?', function(x) {
-        return Number.isNaN(x) || LNumber.isNumber(x);
-      }, `(number? expression)
+        'number?': doc('number?', function(x) {
+            return Number.isNaN(x) || LNumber.isNumber(x);
+        }, `(number? expression)
 
-          Function check if value is a number or NaN value.`),
+            Function check if value is a number or NaN value.`),
         // ------------------------------------------------------------------
         'string?': doc('string?', function(obj) {
             return LString.isString(obj);
