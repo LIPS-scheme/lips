@@ -20,6 +20,7 @@
 * fix escaping regex operators when using string with `apropos`
 * fix typechecking of number operators [#128](https://github.com/jcubic/lips/issues/128)
 * fix indent of call-with- (input-file, output-file and port)
+* fix eq? and type of NaN [#130](https://github.com/jcubic/lips/issues/130)
 
 ## 1.0.0-beta.11
 ### Breaking

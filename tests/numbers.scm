@@ -454,3 +454,9 @@
         (t.is (negative? -10) #t)
         (t.is (negative? -1/2) #t)
         (t.is (negative? -0.5) #t)))
+
+(test "numbers: NaN"
+      (lambda (t)
+        (t.is (eq? NaN NaN) true)
+        (t.is (eq? 10 NaN) false)
+        (t.is (eq? NaN 10) false)))

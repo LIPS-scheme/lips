@@ -2862,6 +2862,9 @@
             if (typeof y !== 'number') {
                 return false;
             }
+            if (Number.isNaN(x)) {
+                return Number.isNaN(y);
+            }
             x = LNumber(x);
             y = LNumber(y);
             return x.__type__ === y.__type__ && x.cmp(y) === 0;
@@ -8646,7 +8649,7 @@
             'native-symbol': Symbol
         };
         if (Number.isNaN(obj)) {
-            return 'NaN ';
+            return 'NaN';
         }
         if (obj === nil) {
             return 'nil';
