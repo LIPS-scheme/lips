@@ -4203,31 +4203,38 @@
     // -------------------------------------------------------------------------
     // :: character object representation
     // -------------------------------------------------------------------------
-    function LCharacter(chr) {
+    function LCharacter(char) {
         if (typeof this !== 'undefined' && !(this instanceof LCharacter) ||
             typeof this === 'undefined') {
-            return new LCharacter(chr);
+            return new LCharacter(char);
         }
-        if (chr instanceof LString) {
-            chr = chr.valueOf();
+        if (char instanceof LString) {
+            char = char.valueOf();
         }
-        if (Array.from(chr).length > 1) {
+        var name;
+        if (Array.from(char).length > 1) {
             // this is name
-            chr = chr.toLowerCase();
-            if (LCharacter.__names__[chr]) {
-                this.__name__ = chr;
-                this.__char__ = LCharacter.__names__[chr];
+            char = char.toLowerCase();
+            if (LCharacter.__names__[char]) {
+                name = char;
+                char = LCharacter.__names__[char];
             } else {
                 // this should never happen
                 // parser don't alow not defined named characters
                 throw new Error('Internal: Unknown named character');
             }
         } else {
-            this.__char__ = chr;
-            const name = LCharacter.__rev_names__[chr];
-            if (name) {
-                this.__name__ = name;
-            }
+            name = LCharacter.__rev_names__[char];
+        }
+        Object.defineProperty(this, '__char__', {
+            value: char,
+            enumerable: true
+        });
+        if (name) {
+            Object.defineProperty(this, '__name__', {
+                value: name,
+                enumerable: true
+            });
         }
     }
     LCharacter.__names__ = characters;
@@ -4422,11 +4429,22 @@
             }
             return LBigInteger(new BN(n));
         } else if (parsable) {
-            this.__value__ = parseInt(str, radix);
+            this.constant(parseInt(str, radix), 'integer');
         } else {
-            this.__value__ = n;
+            this.constant(n, 'integer');
         }
     }
+    // -------------------------------------------------------------------------
+    LNumber.prototype.constant = function(value, type) {
+        Object.defineProperty(this, '__value__', {
+            value,
+            enumerable: true
+        });
+        Object.defineProperty(this, '__type__', {
+            value: type,
+            enumerable: true
+        });
+    };
     // -------------------------------------------------------------------------
     LNumber.types = {
         float: function(n, force = false) {
@@ -4838,13 +4856,26 @@
         }
         var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
         var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
-        this.__im__ = im;
-        this.__re__ = re;
-        this.__type__ = 'complex';
+        this.constant(im, re);
     }
     // -------------------------------------------------------------------------
     LComplex.prototype = Object.create(LNumber.prototype);
     LComplex.prototype.constructor = LComplex;
+    // -------------------------------------------------------------------------
+    LComplex.prototype.constant = function(im, re) {
+        Object.defineProperty(this, '__im__', {
+            value: im,
+            enumerable: true
+        });
+        Object.defineProperty(this, '__re__', {
+            value: re,
+            enumerable: true
+        });
+        Object.defineProperty(this, '__type__', {
+            value: 'complex',
+            enumerable: true
+        });
+    };
     // -------------------------------------------------------------------------
     LComplex.prototype.toRational = function(n) {
         if (LNumber.isFloat(this.__im__) && LNumber.isFloat(this.__re__)) {
@@ -5021,8 +5052,7 @@
             return LFloat(n.valueOf());
         }
         if (typeof n === 'number') {
-            this.__value__ = n;
-            this.__type__ = 'float';
+            this.constant(n, 'float');
         }
     }
     // -------------------------------------------------------------------------
@@ -5118,21 +5148,40 @@
         if (!LNumber.isRational(n)) {
             throw new Error('Invalid constructor call for LRational');
         }
-        var num = LNumber(n.num);
-        var denom = LNumber(n.denom);
+        var num, denom;
+        if (n instanceof LRational) {
+            num = LNumber(n.__num__);
+            denom = LNumber(n.__denom__);
+        } else {
+            num = LNumber(n.num);
+            denom = LNumber(n.denom);
+        }
         if (!force && denom.cmp(0) !== 0) {
             var is_integer = num.op('%', denom).cmp(0) === 0;
             if (is_integer) {
                 return LNumber(num.div(denom));
             }
         }
-        this.__num__ = num;
-        this.__denom__ = denom;
-        this.__type__ = 'rational';
+        this.constant(num, denom);
     }
     // -------------------------------------------------------------------------
     LRational.prototype = Object.create(LNumber.prototype);
     LRational.prototype.constructor = LRational;
+    // -------------------------------------------------------------------------
+    LRational.prototype.constant = function(num, denom) {
+        Object.defineProperty(this, '__num__', {
+            value: num,
+            enumerable: true
+        });
+        Object.defineProperty(this, '__denom__', {
+            value: denom,
+            enumerable: true
+        });
+        Object.defineProperty(this, '__type__', {
+            value: 'rational',
+            enumerable: true
+        });
+    };
     // -------------------------------------------------------------------------
     LRational.prototype.pow = function(n) {
         var cmp = n.cmp(0);
@@ -5311,11 +5360,10 @@
         if (!LNumber.isBigInteger(n)) {
             throw new Error('Invalid constructor call for LBigInteger');
         }
-        this.__value__ = n;
+        this.constant(n, 'bigint');
         Object.defineProperty(this, '_native', {
             value: native
         });
-        this.__type__ = 'bigint';
     }
     // -------------------------------------------------------------------------
     LBigInteger.prototype = Object.create(LNumber.prototype);

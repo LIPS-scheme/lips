@@ -2,6 +2,7 @@
 ### Breaking
 * `env` and `dir` now returns symbols instead of strings
 * `repr` and `type` of quoted promises now return `#<promise>` and `promise`
+* numbers and characters properties are immutable
 ### Features
 * create minfied std scheme file for faster bootstrap
 * add `list-copy`

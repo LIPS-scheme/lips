@@ -15,7 +15,6 @@
 
 (test "numbers: complex rational"
       (lambda (t)
-
         (t.is  (/ (make-rectangular 1 2) (make-rectangular 2 10))
                (/ 1+2i 2+10i))))
 

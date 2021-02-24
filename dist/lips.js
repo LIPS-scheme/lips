@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 24 Feb 2021 15:38:30 +0000
+ * build: Wed, 24 Feb 2021 16:22:48 +0000
  */
 (function () {
   'use strict';
@@ -6918,34 +6918,43 @@
     // -------------------------------------------------------------------------
 
 
-    function LCharacter(chr) {
+    function LCharacter(_char7) {
       if (typeof this !== 'undefined' && !(this instanceof LCharacter) || typeof this === 'undefined') {
-        return new LCharacter(chr);
+        return new LCharacter(_char7);
       }
 
-      if (chr instanceof LString) {
-        chr = chr.valueOf();
+      if (_char7 instanceof LString) {
+        _char7 = _char7.valueOf();
       }
 
-      if (Array.from(chr).length > 1) {
+      var name;
+
+      if (Array.from(_char7).length > 1) {
         // this is name
-        chr = chr.toLowerCase();
+        _char7 = _char7.toLowerCase();
 
-        if (LCharacter.__names__[chr]) {
-          this.__name__ = chr;
-          this.__char__ = LCharacter.__names__[chr];
+        if (LCharacter.__names__[_char7]) {
+          name = _char7;
+          _char7 = LCharacter.__names__[_char7];
         } else {
           // this should never happen
           // parser don't alow not defined named characters
           throw new Error('Internal: Unknown named character');
         }
       } else {
-        this.__char__ = chr;
-        var name = LCharacter.__rev_names__[chr];
+        name = LCharacter.__rev_names__[_char7];
+      }
 
-        if (name) {
-          this.__name__ = name;
-        }
+      Object.defineProperty(this, '__char__', {
+        value: _char7,
+        enumerable: true
+      });
+
+      if (name) {
+        Object.defineProperty(this, '__name__', {
+          value: name,
+          enumerable: true
+        });
       }
     }
 
@@ -7052,9 +7061,9 @@
       return LString(this.__string__.toUpperCase());
     };
 
-    LString.prototype.set = function (n, _char7) {
-      if (_char7 instanceof LCharacter) {
-        _char7 = _char7.__char__;
+    LString.prototype.set = function (n, _char8) {
+      if (_char8 instanceof LCharacter) {
+        _char8 = _char8.__char__;
       }
 
       var string = [];
@@ -7063,7 +7072,7 @@
         string.push(this.__string__.substring(0, n));
       }
 
-      string.push(_char7);
+      string.push(_char8);
 
       if (n < this.__string__.length - 1) {
         string.push(this.__string__.substring(n + 1));
@@ -7211,11 +7220,23 @@
 
         return LBigInteger(new BN(n));
       } else if (parsable) {
-        this.__value__ = parseInt(str, radix);
+        this.constant(parseInt(str, radix), 'integer');
       } else {
-        this.__value__ = n;
+        this.constant(n, 'integer');
       }
     } // -------------------------------------------------------------------------
+
+
+    LNumber.prototype.constant = function (value, type) {
+      Object.defineProperty(this, '__value__', {
+        value: value,
+        enumerable: true
+      });
+      Object.defineProperty(this, '__type__', {
+        value: type,
+        enumerable: true
+      });
+    }; // -------------------------------------------------------------------------
 
 
     LNumber.types = {
@@ -7758,14 +7779,28 @@
 
       var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
       var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
-      this.__im__ = im;
-      this.__re__ = re;
-      this.__type__ = 'complex';
+      this.constant(im, re);
     } // -------------------------------------------------------------------------
 
 
     LComplex.prototype = Object.create(LNumber.prototype);
     LComplex.prototype.constructor = LComplex; // -------------------------------------------------------------------------
+
+    LComplex.prototype.constant = function (im, re) {
+      Object.defineProperty(this, '__im__', {
+        value: im,
+        enumerable: true
+      });
+      Object.defineProperty(this, '__re__', {
+        value: re,
+        enumerable: true
+      });
+      Object.defineProperty(this, '__type__', {
+        value: 'complex',
+        enumerable: true
+      });
+    }; // -------------------------------------------------------------------------
+
 
     LComplex.prototype.toRational = function (n) {
       if (LNumber.isFloat(this.__im__) && LNumber.isFloat(this.__re__)) {
@@ -8014,8 +8049,7 @@
       }
 
       if (typeof n === 'number') {
-        this.__value__ = n;
-        this.__type__ = 'float';
+        this.constant(n, 'float');
       }
     } // -------------------------------------------------------------------------
 
@@ -8141,8 +8175,15 @@
         throw new Error('Invalid constructor call for LRational');
       }
 
-      var num = LNumber(n.num);
-      var denom = LNumber(n.denom);
+      var num, denom;
+
+      if (n instanceof LRational) {
+        num = LNumber(n.__num__);
+        denom = LNumber(n.__denom__);
+      } else {
+        num = LNumber(n.num);
+        denom = LNumber(n.denom);
+      }
 
       if (!force && denom.cmp(0) !== 0) {
         var is_integer = num.op('%', denom).cmp(0) === 0;
@@ -8152,14 +8193,28 @@
         }
       }
 
-      this.__num__ = num;
-      this.__denom__ = denom;
-      this.__type__ = 'rational';
+      this.constant(num, denom);
     } // -------------------------------------------------------------------------
 
 
     LRational.prototype = Object.create(LNumber.prototype);
     LRational.prototype.constructor = LRational; // -------------------------------------------------------------------------
+
+    LRational.prototype.constant = function (num, denom) {
+      Object.defineProperty(this, '__num__', {
+        value: num,
+        enumerable: true
+      });
+      Object.defineProperty(this, '__denom__', {
+        value: denom,
+        enumerable: true
+      });
+      Object.defineProperty(this, '__type__', {
+        value: 'rational',
+        enumerable: true
+      });
+    }; // -------------------------------------------------------------------------
+
 
     LRational.prototype.pow = function (n) {
       var cmp = n.cmp(0);
@@ -8432,11 +8487,10 @@
         throw new Error('Invalid constructor call for LBigInteger');
       }
 
-      this.__value__ = n;
+      this.constant(n, 'bigint');
       Object.defineProperty(this, '_native', {
         value: _native2
       });
-      this.__type__ = 'bigint';
     } // -------------------------------------------------------------------------
 
 
@@ -13143,10 +13197,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 24 Feb 2021 15:38:30 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 24 Feb 2021 16:22:48 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 24 Feb 2021 15:38:30 +0000').valueOf();
+      var date = LString('Wed, 24 Feb 2021 16:22:48 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13186,7 +13240,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 24 Feb 2021 15:38:30 +0000',
+      date: 'Wed, 24 Feb 2021 16:22:48 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
