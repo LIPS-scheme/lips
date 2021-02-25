@@ -187,7 +187,7 @@
     // TODO: float complex
     function gen_complex_re(mnemonic, range) {
         // [+-]i have (?=..) so it don't match +i from +inf.0
-        return `${num_mnemicic_re(mnemonic)}(?:[+-]?(?:${range}+/${range}+|${range}+))?(?:[+-]i|[+-]?(?:${range}+/${range}+|${range}+)i)(?=[()[\\]\\s]|$)`;
+        return `${num_mnemicic_re(mnemonic)}(?:[+-]?(?:${range}+/${range}+|nan.0|inf.0|${range}+))?(?:[+-]i|[+-]?(?:${range}+/${range}+|${range}+|nan.0|inf.0)i)(?=[()[\\]\\s]|$)`;
     }
     function gen_integer_re(mnemonic, range) {
         return `${num_mnemicic_re(mnemonic)}[+-]?${range}+`;
@@ -195,7 +195,7 @@
     var re_re = /^#\/((?:\\\/|[^/]|\[[^\]]*\/[^\]]*\])+)\/([gimyus]*)$/;
     var float_stre = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+)(?:[eE][-+]?[0-9]+)?)|[0-9]+\\.)';
     // TODO: extend to ([+-]1/2|float)([+-]1/2|float)
-    var complex_float_stre = `(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|${float_stre}|[+-]?[0-9]+))?(?:${float_stre}|[+-](?:[0-9]+/[0-9]+|[0-9]+))i`;
+    var complex_float_stre = `(?:#[ie])?(?:[+-]?(?:[0-9]+/[0-9]+|nan.0|inf.0|${float_stre}|[+-]?[0-9]+))?(?:${float_stre}|[+-](?:[0-9]+/[0-9]+|[0-9]+|nan.0|inf.0))i`;
     var float_re = new RegExp(`^(#[ie])?${float_stre}$`, 'i');
     function make_complex_match_re(mnemonic, range) {
         // complex need special treatment of 10e+1i when it's hex or decimal
@@ -204,7 +204,7 @@
         if (mnemonic === '') {
             fl = '(?:[-+]?(?:[0-9]+(?:[eE][-+]?[0-9]+)|(?:\\.[0-9]+|[0-9]+\\.[0-9]+(?![0-9]))(?:[eE][-+]?[0-9]+)?))';
         }
-        return new RegExp(`^((?:(?:${fl}|[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+)${neg})?)(${fl}|[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i$`, 'i');
+        return new RegExp(`^((?:(?:${fl}|[-+]?inf.0|[-+]?nan.0|[+-]?${range}+/${range}+(?!${range})|[+-]?${range}+)${neg})?)(${fl}|[-+]?inf.0|[-+]?nan.0|[+-]?${range}+/${range}+|[+-]?${range}+|[+-])i$`, 'i');
     }
     var complex_list_re = (function() {
         var result = {};
@@ -410,6 +410,13 @@
                     return float.toRational();
                 }
                 return float;
+            } else if (n.match(/nan.0$/)) {
+                return LNumber(NaN);
+            } else if (n.match(/inf.0$/)) {
+                if (n[0] === '-') {
+                    return LNumber(Number.NEGATIVE_INFINITY);
+                }
+                return LNumber(Number.POSITIVE_INFINITY);
             } else {
                 throw new Error('Internal Parser Error');
             }
@@ -2484,55 +2491,71 @@
         }
     }
     // ----------------------------------------------------------------------
+    // instances extracted to make cyclomatic complexity of toString smaller
+    const instances = new Map();
+    // ----------------------------------------------------------------------
+    [
+        [Error, function(e) {
+            return e.message;
+        }],
+        [Pair, function(pair, { quote, skip_cycles, pair_args }) {
+            // make sure that repr directly after update set the cycle ref
+            if (!skip_cycles) {
+                pair.markCycles();
+            }
+            return pair.toString(quote, ...pair_args);
+        }],
+        [LCharacter, function(chr, { quote }) {
+            if (quote) {
+                return chr.toString();
+            }
+            return chr.valueOf();
+        }],
+        [LString, function(str, { quote }) {
+            str = str.toString();
+            if (quote) {
+                return JSON.stringify(str).replace(/\\n/g, '\n');
+            }
+            return str;
+        }],
+        [RegExp, function(re) {
+            return '#' + re.toString();
+        }]
+    ].forEach(([cls, fn]) => {
+        instances.set(cls, fn);
+    });
+    // ----------------------------------------------------------------------
     function toString(obj, quote, skip_cycles, ...pair_args) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
             return '#<jQuery(' + obj.length + ')>';
         }
-        if (str_mapping.has(obj)) {
-            return str_mapping.get(obj);
+        var m_obj = obj instanceof LNumber ? obj.valueOf() : obj;
+        if (str_mapping.has(m_obj)) {
+            return str_mapping.get(m_obj);
         }
-        if (obj instanceof Error) {
-            return obj.message;
-        }
-        if (obj instanceof Pair) {
-            // make sure that repr directly after update set the cycle ref
-            if (!skip_cycles) {
-                obj.markCycles();
-            }
-            return obj.toString(quote, ...pair_args);
-        }
-        if (Number.isNaN(obj)) {
+        if (Number.isNaN(m_obj)) {
             return '+nan.0';
         }
-        if (obj instanceof LCharacter) {
-            if (quote) {
-                return obj.toString();
+        if (obj) {
+            var cls = obj.constructor;
+            if (instances.has(cls)) {
+                return instances.get(cls)(obj, { quote, skip_cycles, pair_args });
             }
-            return obj.valueOf();
         }
-        // constants
-        if ([nil, eof].includes(obj)) {
-            return obj.toString();
-        }
+        // standard objects that have toString
         var types = [LSymbol, LNumber, Macro, Values, InputPort, Environment];
         for (let type of types) {
             if (obj instanceof type) {
                 return obj.toString(quote);
             }
         }
-        if (obj instanceof RegExp) {
-            return '#' + obj.toString();
+        // constants
+        if ([nil, eof].includes(obj)) {
+            return obj.toString();
         }
         if (is_function(obj)) {
             return function_to_string(obj);
-        }
-        if (obj instanceof LString) {
-            obj = obj.toString();
-            if (quote) {
-                return JSON.stringify(obj).replace(/\\n/g, '\n');
-            }
-            return obj;
         }
         if (obj === root) {
             return '#<js:global>';
@@ -4390,7 +4413,9 @@
                 }
             }
         }
-        if (typeof BigInt !== 'undefined') {
+        if (Number.isNaN(n)) {
+            this.constant(n, 'integer');
+        } else if (typeof BigInt !== 'undefined') {
             if (typeof n !== 'bigint') {
                 if (parsable) {
                     let prefix;
@@ -4496,12 +4521,13 @@
     // -------------------------------------------------------------------------
     LNumber.isNumber = function(n) {
         return n instanceof LNumber ||
-            (!Number.isNaN(n) && LNumber.isNative(n) || LNumber.isBN(n));
+            (LNumber.isNative(n) || LNumber.isBN(n));
     };
     // -------------------------------------------------------------------------
     LNumber.isComplex = function(n) {
         var ret = n instanceof LComplex ||
-            (LNumber.isNumber(n.im) && LNumber.isNumber(n.re));
+            ((LNumber.isNumber(n.im) || Number.isNaN(n.im)) &&
+             (LNumber.isNumber(n.re) || Number.isNaN(n.re)));
         return ret;
     };
     // -------------------------------------------------------------------------
@@ -5034,12 +5060,19 @@
     LComplex.prototype.toString = function() {
         var result;
         if (this.__re__.cmp(0) !== 0) {
-            result = [this.__re__.toString()];
+            result = [toString(this.__re__)];
         } else {
             result = [];
         }
-        result.push(this.__im__.cmp(0) < 0 ? '-' : '+');
-        result.push(this.__im__.toString().replace(/^-/, ''));
+        // NaN and inf already have sign
+        var im = this.__im__.valueOf();
+        var inf = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY].includes(im);
+        var im_str = toString(this.__im__);
+        if (!inf && !Number.isNaN(im)) {
+            result.push(this.__im__.cmp(0) < 0 ? '-' : '+');
+            im_str = im_str.replace(/^-/, '');
+        }
+        result.push(im_str);
         result.push('i');
         return result.join('');
     };

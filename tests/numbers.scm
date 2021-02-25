@@ -18,6 +18,42 @@
         (t.is  (/ (make-rectangular 1 2) (make-rectangular 2 10))
                (/ 1+2i 2+10i))))
 
+(test "numbers: complex NaN"
+      (lambda (t)
+        (t.is (number->string +nan.0+10i) "+nan.0+10i")
+        (t.is (number->string +nan.0+10.0i) "+nan.0+10.0i")
+        (t.is (number->string +nan.0+1/2i) "+nan.0+1/2i")
+
+        (t.is (number->string 10+nan.0i) "10+nan.0i")
+        (t.is (number->string 10.0+nan.0i) "10.0+nan.0i")
+        (t.is (number->string 1/2+nan.0i) "1/2+nan.0i")
+
+        (t.is (number->string -nan.0+10i) "+nan.0+10i")
+        (t.is (number->string -nan.0+10.0i) "+nan.0+10.0i")
+        (t.is (number->string -nan.0+1/2i) "+nan.0+1/2i")
+
+        (t.is (number->string 10-nan.0i) "10+nan.0i")
+        (t.is (number->string 10.0-nan.0i) "10.0+nan.0i")
+        (t.is (number->string 1/2-nan.0i) "1/2+nan.0i")))
+
+(test "numbers: complex infinity"
+      (lambda (t)
+        (t.is (number->string +inf.0+10i) "+inf.0+10i")
+        (t.is (number->string +inf.0+10.0i) "+inf.0+10.0i")
+        (t.is (number->string +inf.0+1/2i) "+inf.0+1/2i")
+
+        (t.is (number->string 10+inf.0i) "10+inf.0i")
+        (t.is (number->string 10.0+inf.0i) "10.0+inf.0i")
+        (t.is (number->string 1/2+inf.0i) "1/2+inf.0i")
+
+        (t.is (number->string -inf.0+10i) "-inf.0+10i")
+        (t.is (number->string -inf.0+10.0i) "-inf.0+10.0i")
+        (t.is (number->string -inf.0+1/2i) "-inf.0+1/2i")
+
+        (t.is (number->string 10-inf.0i) "10-inf.0i")
+        (t.is (number->string 10.0-inf.0i) "10.0-inf.0i")
+        (t.is (number->string 1/2-inf.0i) "1/2-inf.0i")))
+
 (test "numbers: not numbers"
       (lambda (t)
         (t.is (. (lips.parse "0.1/0.1") 0) '0.1/0.1)
