@@ -545,6 +545,8 @@
             return parse_float(arg);
         } else if (arg === 'nil') {
             return nil;
+        } else if (['+nan.0', '-nan.0'].includes(arg)) {
+            return NaN;
         } else if (['true', '#t', '#true'].includes(arg)) {
             return true;
         } else if (['false', '#f', '#false'].includes(arg)) {

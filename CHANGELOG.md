@@ -16,6 +16,7 @@
 * automatic bootstrapping of `fs` with BrowserFS if exists
 * `pprint` in both REPLs now print in color [#33](https://github.com/jcubic/lips/issues/33)
 * add `nan?`, `infinite?` and `finite?` functions
+* add `+nan.0` and `-nan.0` (R7RS)
 * properly handle negative inexact zero
 ### Bugfix
 * fix prism highlighting of names (for new context help)
