@@ -1312,7 +1312,13 @@
    Function compare the values. It return true if they are the same, they
    need to have same type"
   (if (string=? (type a) (type b))
-      (cond ((number? a) (= a b))
+      (cond ((number? a)
+             (or (and (exact? a) (exact? b) (= a b))
+                 (and (inexact? a)
+                      (inexact? b)
+                      (if (and (zero? a) (zero? b))
+                          (eq? a._minus b._minus)
+                          (= a b)))))
             ((pair? a) (and (null? a) (null? b)))
             (else (eq? a b)))
       false))

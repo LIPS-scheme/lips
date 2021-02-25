@@ -236,10 +236,13 @@
 (test "numbers: complex"
       (lambda (t)
         (t.is 10+0i 10)
-        (t.is 10+0.0i 10)
-        (t.is 10.0+0.0i 10.0)
+        (t.is 10+0i 10)
+        (t.is 10.0+0i 10.0)
+        (t.is 10+0.0i 10+0.0i)
+        (t.is 10.0+0.0i 10.0+0.0i)
         (t.is 1/2+0i 1/2)
-        (t.is (sqrt -1) +1.0i)
+        (t.is 1/2+0.0i 1/2+0.0i)
+        (t.is (sqrt -1) +1i)
         (t.is (sqrt 0.5) 0.7071067811865476)
         (t.is (sqrt -0.5) +0.7071067811865476i)
         (t.is (number->string 10e+10i) "+100000000000i")
@@ -386,17 +389,17 @@
 (test "numbers: sqrt"
       (lambda (t)
         (for-each (lambda (x)
-                    (t.is (sqrt (* x x)) x))
+                    (t.is (= (sqrt (* x x)) x) #t))
                   '(5 5+2i 1/5+1/2i 1/2 5.0 8/9))
 
         (for-each (lambda (pair)
                     (let ((x (car pair)))
-                      (t.is (sqrt (* x x)) (cdr pair))))
+                      (t.is (= (sqrt (* x x)) (cdr pair)) #t)))
                   '((2.0+1/2i . 2+0.5i)))
 
         (for-each (lambda (pair)
                     (let ((x (car pair)))
-                      (t.is (sqrt (* x x)) (cdr pair))))
+                      (t.is (= (sqrt (* x x)) (cdr pair)) #t)))
                   '((2+1/2i . 2+0.5i)
                     (2+0.5i . 2+0.5i)
 
@@ -498,3 +501,28 @@
         #;(t.is (nan? 5.0-nan.0i) #t)
         #;(t.is (nan? -nan.0-nan.0i) #t)
         (t.is (nan? 1+2i) #f)))
+
+(test "numbers: zeros"
+      (lambda (t)
+        (let ((a 0) (b 0) (c 0.0) (d 0.0))
+          (t.is (eq? a b) #t)
+          (t.is (eq? c d) #t)
+          (t.is (eq? a c) #f)
+          (t.is (= a b) #t)
+          (t.is (= a c) #t))))
+
+(test "numbers: negative zero"
+      (lambda (t)
+        (let ((a 0) (b -0))
+          (t.is (eq? a b) #t)
+          (t.is (eqv? a b) #t)
+          (t.is (equal? a b) #t)
+          (t.is (= a b) #t)
+          (t.is (number->string b) "0"))
+        (let ((a 0.0) (b -0.0))
+          (t.is (eq? a b) #f)
+          (t.is (eqv? a b) #f)
+          (t.is (equal? a b) #f)
+          (t.is (= a b) #t)
+          (t.is (number->string b) "-0.0"))))
+

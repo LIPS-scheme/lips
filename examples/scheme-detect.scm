@@ -64,7 +64,7 @@
   (ikarus     (#f #f #f #t #f #t #f #t #f #f #f #f #t #f #f #t #t #t #f #f))
   (scheme48   (#f #f #f #t #t #t #f #t #t #t #t #t #t #t #t #t #t #f #f #f))
   (mit-scheme (#t #t #t #t #t #f #t #t #t #f #t #f #f #f #f #t #t #f #t #f))
-  (lips       (#t #f #f #t #f #t #f #t #t #f #f #f #t #t #t #t #t #t #t #f))
+  (lips       (#t #f #f #t #f #t #f #t #t #f #f #f #t #t #f #f #f #t #t #f))
   (gauche     (#f #f #f #t #f #f #f #t #t #f #f #f #f #f #f #t #t #f #f #f))))
 
 ;; DETECT:MATCH-SIGNATURE
@@ -73,15 +73,17 @@
 ;;    against a table of known signatures.
 (define (detect:match-signature)
   (let ((signature (detect:signature)))
-    ; Loop over the DETECT:KNOWN-SIGNATURES list
+    ;; Loop over the DETECT:KNOWN-SIGNATURES list
     (let test ((siglist detect:known-signatures))
       (if (equal? '() siglist)
-        ; Return 'UNKNOWN if we're stumped
-        'unknown
-        (let ((testsig (car siglist)))
-          (if (equal? (cadr testsig) signature)
-            (car testsig)
-            (test (cdr siglist))))))))
+          ;; Return 'UNKNOWN if we're stumped
+          (begin
+            (print signature)
+            'unknown)
+          (let ((testsig (car siglist)))
+            (if (equal? (cadr testsig) signature)
+                (car testsig)
+                (test (cdr siglist))))))))
 
 ;; DETECT:NAME
 ;; Memoized form of DETECT:MATCH-SIGNATURE

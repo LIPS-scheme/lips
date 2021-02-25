@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 24 Feb 2021 16:22:48 +0000
+ * build: Thu, 25 Feb 2021 11:23:00 +0000
  */
 (function () {
   'use strict';
@@ -5086,7 +5086,13 @@
             _type3 = true;
           }
 
-          return _type3 && x.cmp(y) === 0;
+          if (_type3 && x.cmp(y) === 0) {
+            if (x.valueOf() === 0) {
+              return Object.is(x.valueOf(), y.valueOf());
+            }
+
+            return true;
+          }
         }
 
         return false;
@@ -5107,9 +5113,7 @@
           return y === Number.POSITIVE_INFINITY;
         }
 
-        x = LNumber(x);
-        y = LNumber(y);
-        return x.__type__ === y.__type__ && x.cmp(y) === 0;
+        return equal(LNumber(x), LNumber(y));
       } else if (x instanceof LCharacter) {
         if (!(y instanceof LCharacter)) {
           return false;
@@ -7483,11 +7487,11 @@
           rational: i,
           complex: function complex(a, b) {
             return [{
-              im: coerce(a.__type__, b.__im__.__type__, 0),
-              re: coerce(a.__type__, b.__re__.__type__, a)
+              im: coerce(a.__type__, b.__im__.__type__, 0)[0],
+              re: coerce(a.__type__, b.__re__.__type__, a)[0]
             }, {
-              im: coerce(a.__type__, b.__im__.__type__, b.__im__),
-              re: coerce(a.__type__, b.__re__.__type__, b.__re__)
+              im: coerce(a.__type__, b.__im__.__type__, b.__im__)[0],
+              re: coerce(a.__type__, b.__re__.__type__, b.__re__)[0]
             }];
           }
         }
@@ -7496,19 +7500,19 @@
       function complex(type) {
         return function (a, b) {
           return [{
-            im: coerce(type, a.__im__.__type__, a.__im__),
-            re: coerce(type, a.__re__.__type__, a.__re__)
+            im: coerce(type, a.__im__.__type__, 0, a.__im__)[1],
+            re: coerce(type, a.__re__.__type__, 0, a.__re__)[1]
           }, {
-            im: coerce(type, a.__im__.__type__, 0),
-            re: coerce(type, b.__type__, b)
+            im: coerce(type, a.__im__.__type__, 0, 0)[1],
+            re: coerce(type, b.__type__, 0, b)[1]
           }];
         };
       }
     }(); // -------------------------------------------------------------------------
 
 
-    function coerce(type_a, type_b, a) {
-      return matrix[type_a][type_b](a)[0];
+    function coerce(type_a, type_b, a, b) {
+      return matrix[type_a][type_b](a, b);
     } // -------------------------------------------------------------------------
 
 
@@ -7530,7 +7534,8 @@
         throw new Error("LNumber::coerce unknown rhs type ".concat(b_type));
       }
 
-      return matrix[a_type][b_type](a, b).map(function (n) {
+      var tmp = matrix[a_type][b_type](a, b);
+      return tmp.map(function (n) {
         return LNumber(n, true);
       });
     }; // -------------------------------------------------------------------------
@@ -7907,7 +7912,7 @@
         re: b.__re__,
         im: b.__im__.sub()
       });
-      var denom = b.factor().valueOf();
+      var denom = b.factor();
       var num = a.mul(conj);
 
       var re = num.__re__.op('/', denom);
@@ -8049,6 +8054,12 @@
       }
 
       if (typeof n === 'number') {
+        if (Object.is(n, -0)) {
+          Object.defineProperty(this, '_minus', {
+            value: true
+          });
+        }
+
         this.constant(n, 'float');
       }
     } // -------------------------------------------------------------------------
@@ -8061,7 +8072,8 @@
       var str = this.__value__.toString();
 
       if (!LNumber.isFloat(this.__value__) && !str.match(/e/i)) {
-        return str + '.0';
+        var result = str + '.0';
+        return this._minus ? '-' + result : result;
       }
 
       return str.replace(/^([0-9]+)e/, '$1.0e');
@@ -13197,10 +13209,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 24 Feb 2021 16:22:48 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 25 Feb 2021 11:23:00 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 24 Feb 2021 16:22:48 +0000').valueOf();
+      var date = LString('Thu, 25 Feb 2021 11:23:00 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13240,7 +13252,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 24 Feb 2021 16:22:48 +0000',
+      date: 'Thu, 25 Feb 2021 11:23:00 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

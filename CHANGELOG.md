@@ -16,6 +16,7 @@
 * automatic bootstrapping of `fs` with BrowserFS if exists
 * `pprint` in both REPLs now print in color [#33](https://github.com/jcubic/lips/issues/33)
 * add `nan?`, `infinite?` and `finite?` functions
+* properly handle negative inexact zero
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string
@@ -26,6 +27,8 @@
 * fix number predicates
 * fix `real-part` function
 * fix parsing complex with 0 inexact imaginary part
+* fix option -t --trace in Node REPL
+* fix `eqv?` on exact and inexact numbers according to R7RS spec
 
 ## 1.0.0-beta.11
 ### Breaking
