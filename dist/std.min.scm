@@ -328,7 +328,7 @@ Return minimum of it's arguments." (numbers? "min" args) (apply (.. Math.min) ar
 
 Create complex number from imaginary and real part." (let ((value (quasiquote ((re unquote re) (im unquote im))))) (lips.LComplex (--> value (toObject #t)))))(define (exact? n) "(exact? n)" (typecheck "exact?" n "number") (let ((type n.__type__)) (or (string=? type "bigint") (string=? type "rational") (and (string=? type "complex") (exact? n.__im__) (exact? n.__re__)))))(define (inexact? n) "(inexact? n)" (typecheck "inexact?" n "number") (not (exact? n)))(define (exact->inexact n) "(exact->inexact n)
 
-Convert exact number to inexact." (typecheck "exact->inexact" n "number") (if (%number-type "complex" n) (lips.LComplex (object :im (. n (quote im)) :re (. n (quote re)))) (if (or (rational? n) (integer? n)) (lips.LFloat (--> n (valueOf)) #t) n)))(define (inexact->exact n) "(inexact->exact number)
+Convert exact number to inexact." (typecheck "exact->inexact" n "number") (if (%number-type "complex" n) (lips.LComplex (object :im (exact->inexact (. n (quote __im__))) :re (exact->inexact (. n (quote __re__))))) (if (or (rational? n) (integer? n)) (lips.LFloat (--> n (valueOf)) #t) n)))(define (inexact->exact n) "(inexact->exact number)
 
 Funcion convert real number to exact ratioanl number." (typecheck "inexact->exact" n "number") (if (or (real? n) (%number-type "complex" n)) (--> n (toRational)) n))(define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))(define _this_env (current-environment))(let iter ((fns _maths)) (if (not (null? fns)) (let* ((name (car fns)) (LNumber (.. lips.LNumber)) (op (. Math name)) (fn (lambda (n) (LNumber (op n))))) (--> _this_env (set name fn)) (set-obj! fn (quote __doc__) (concat "(" name " n)
 

@@ -1616,8 +1616,8 @@
    Convert exact number to inexact."
   (typecheck "exact->inexact" n "number")
   (if (%number-type "complex" n)
-      ;; make-object (&) will use valueOf so it will be float even if it was rational
-      (lips.LComplex (object :im (. n 'im) :re (. n 're)))
+      (lips.LComplex (object :im (exact->inexact (. n '__im__))
+                             :re (exact->inexact (. n '__re__))))
       (if (or (rational? n) (integer? n))
           (lips.LFloat (--> n (valueOf)) true)
           n)))

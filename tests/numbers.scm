@@ -526,3 +526,17 @@
           (t.is (= a b) #t)
           (t.is (number->string b) "-0.0"))))
 
+(test "numbers: exact->inexact"
+      (lambda (t)
+        (t.is (exact->inexact 10) 10.0)
+        (t.is (exact->inexact 1/2) 0.5)
+        (t.is (exact->inexact 0.5) 0.5)
+        (t.is (exact->inexact 10+10i) 10.0+10.0i)
+        (t.is (exact->inexact 1/2+1/2i) 0.5+0.5i)
+        (t.is (exact->inexact 10.0+10.0i) 10.0+10.0i)
+
+        (t.is (exact->inexact 10+1/2i) 10.0+0.5i)
+        (t.is (exact->inexact 10.0+1/2i) 10.0+0.5i)
+
+        (t.is (exact->inexact 1/2+10i) 0.5+10.0i)
+        (t.is (exact->inexact 1/2+10.0i) 0.5+10.0i)))
