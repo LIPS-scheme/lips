@@ -243,7 +243,7 @@ if (options.version || options.V) {
     bootstrap(interp).then(function() {
         const code = options.e || options.eval || options.c || options.code;
         const dynamic = options.d || options.dynamic;
-        return run(code, interp, dynamic).then(print);
+        return run(code, interp, dynamic, null, true).then(print);
     });
 } else if (options._.length >= 1) {
     // hack for node-gtk
@@ -373,7 +373,7 @@ function run_repl(err, rl) {
                     rl.setPrompt('');
                     rl.pause();
                     prev_eval = prev_eval.then(function() {
-                        var result = run(code, interp, dynamic);
+                        var result = run(code, interp, dynamic, null, options.t || options.trace);
                         code = '';
                         return result;
                     }).then(function(result) {
