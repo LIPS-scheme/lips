@@ -101,6 +101,62 @@
         (t.is (+ 1/2 +nan.0) +nan.0)
         (t.is (+ 10+10i +nan.0) +nan.0+10i)))
 
+(test "numbers: operators + with +inf.0"
+      (lambda (t)
+        (t.is (+ +inf.0+inf.0i 10) +inf.0+inf.0i)
+        (t.is (+ +inf.0+inf.0i 10.0) +inf.0+inf.0i)
+        (t.is (+ +inf.0+inf.0i 1/2) +inf.0+inf.0i)
+        (t.is (+ +inf.0+inf.0i +inf.0+inf.0i) +inf.0+inf.0i)
+
+        (t.is (+ +inf.0+inf.0i 1/2+1/2i) +inf.0+inf.0i)
+        (t.is (+ +inf.0+inf.0i 10+10i) +inf.0+inf.0i)
+        (t.is (+ +inf.0+inf.0i 10.0+10.0i) +inf.0+inf.0i)
+
+        (t.is (+ 10+inf.0i 10) 20+inf.0i)
+        (t.is (+ 10.0+inf.0i 10.0) 20.0+inf.0i)
+        (t.is (+ 1/2+inf.0i 1/2) 1+inf.0i)
+
+        (t.is (+ 10+inf.0i 10) 20+inf.0i)
+        (t.is (+ 10.0+inf.0i 10.0) 20.0+inf.0i)
+        (t.is (+ 1/2+inf.0i 1/2) 1+inf.0i)
+
+        (t.is (+ +inf.0i 10) 10+inf.0i)
+        (t.is (+ +inf.0i 10.0) 10.0+inf.0i)
+        (t.is (+ +inf.0i 1/2) 1/2+inf.0i)
+        (t.is (+ +inf.0i 10+10i) 10+inf.0i)
+
+        (t.is (+ +inf.0 10) +inf.0)
+        (t.is (+ +inf.0 10.0) +inf.0)
+        (t.is (+ +inf.0 1/2) +inf.0)
+        (t.is (+ +inf.0 10+10i) +inf.0+10i)
+        ;; reversed
+        (t.is (+ 10 +inf.0+inf.0i) +inf.0+inf.0i)
+        (t.is (+ 10.0 +inf.0+inf.0i) +inf.0+inf.0i)
+        (t.is (+ 1/2 +inf.0+inf.0i) +inf.0+inf.0i)
+        (t.is (+ +inf.0+inf.0i +inf.0+inf.0i) +inf.0+inf.0i)
+
+        (t.is (+ 1/2+1/2i +inf.0+inf.0i) +inf.0+inf.0i)
+        (t.is (+ 10+10i +inf.0+inf.0i) +inf.0+inf.0i)
+        (t.is (+ 10.0+10.0i +inf.0+inf.0i) +inf.0+inf.0i)
+
+        (t.is (+ 10 10+inf.0i) 20+inf.0i)
+        (t.is (+ 10.0 10.0+inf.0i) 20.0+inf.0i)
+        (t.is (+ 1/2 1/2+inf.0i) 1+inf.0i)
+
+        (t.is (+ 10 10+inf.0i) 20+inf.0i)
+        (t.is (+ 10.0 10.0+inf.0i) 20.0+inf.0i)
+        (t.is (+ 1/2 1/2+inf.0i) 1+inf.0i)
+
+        (t.is (+ 10 +inf.0i) 10+inf.0i)
+        (t.is (+ 10.0 +inf.0i) 10.0+inf.0i)
+        (t.is (+ 1/2 +inf.0i) 1/2+inf.0i)
+        (t.is (+ 10+10i +inf.0i) 10+inf.0i)
+
+        (t.is (+ 10 +inf.0) +inf.0)
+        (t.is (+ 10.0 +inf.0) +inf.0)
+        (t.is (+ 1/2 +inf.0) +inf.0)
+        (t.is (+ 10+10i +inf.0) +inf.0+10i)))
+
 (test "numbers: complex infinity"
       (lambda (t)
         (t.is (number->string +inf.0+10i) "+inf.0+10i")
