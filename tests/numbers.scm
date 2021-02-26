@@ -18,6 +18,15 @@
         (t.is  (/ (make-rectangular 1 2) (make-rectangular 2 10))
                (/ 1+2i 2+10i))))
 
+(test "numbers: NaN"
+      (lambda (t)
+        (t.is (= +nan.0 +nan.0) false)
+        (t.is (eq? +nan.0 +nan.0) false)
+        (t.is (eqv? +nan.0 +nan.0) true)
+        (t.is (equal? +nan.0 +nan.0) true)
+        (t.is (eq? 10 +nan.0) false)
+        (t.is (eq? +nan.0 10) false)))
+
 (test "numbers: complex NaN"
       (lambda (t)
         (t.is (number->string +nan.0+10i) "+nan.0+10i")
@@ -35,6 +44,62 @@
         (t.is (number->string 10-nan.0i) "10+nan.0i")
         (t.is (number->string 10.0-nan.0i) "10.0+nan.0i")
         (t.is (number->string 1/2-nan.0i) "1/2+nan.0i")))
+
+(test "numbers: operators + with NaN"
+      (lambda (t)
+        (t.is (+ +nan.0+nan.0i 10) +nan.0+nan.0i)
+        (t.is (+ +nan.0+nan.0i 10.0) +nan.0+nan.0i)
+        (t.is (+ +nan.0+nan.0i 1/2) +nan.0+nan.0i)
+        (t.is (+ +nan.0+nan.0i +nan.0+nan.0i) +nan.0+nan.0i)
+
+        (t.is (+ +nan.0+nan.0i 1/2+1/2i) +nan.0+nan.0i)
+        (t.is (+ +nan.0+nan.0i 10+10i) +nan.0+nan.0i)
+        (t.is (+ +nan.0+nan.0i 10.0+10.0i) +nan.0+nan.0i)
+
+        (t.is (+ 10+nan.0i 10) 20+nan.0i)
+        (t.is (+ 10.0+nan.0i 10.0) 20.0+nan.0i)
+        (t.is (+ 1/2+nan.0i 1/2) 1+nan.0i)
+
+        (t.is (+ 10+nan.0i 10) 20+nan.0i)
+        (t.is (+ 10.0+nan.0i 10.0) 20.0+nan.0i)
+        (t.is (+ 1/2+nan.0i 1/2) 1+nan.0i)
+
+        (t.is (+ +nan.0i 10) 10+nan.0i)
+        (t.is (+ +nan.0i 10.0) 10.0+nan.0i)
+        (t.is (+ +nan.0i 1/2) 1/2+nan.0i)
+        (t.is (+ +nan.0i 10+10i) 10+nan.0i)
+
+        (t.is (+ +nan.0 10) +nan.0)
+        (t.is (+ +nan.0 10.0) +nan.0)
+        (t.is (+ +nan.0 1/2) +nan.0)
+        (t.is (+ +nan.0 10+10i) +nan.0+10i)
+        ;; reversed
+        (t.is (+ 10 +nan.0+nan.0i) +nan.0+nan.0i)
+        (t.is (+ 10.0 +nan.0+nan.0i) +nan.0+nan.0i)
+        (t.is (+ 1/2 +nan.0+nan.0i) +nan.0+nan.0i)
+        (t.is (+ +nan.0+nan.0i +nan.0+nan.0i) +nan.0+nan.0i)
+
+        (t.is (+ 1/2+1/2i +nan.0+nan.0i) +nan.0+nan.0i)
+        (t.is (+ 10+10i +nan.0+nan.0i) +nan.0+nan.0i)
+        (t.is (+ 10.0+10.0i +nan.0+nan.0i) +nan.0+nan.0i)
+
+        (t.is (+ 10 10+nan.0i) 20+nan.0i)
+        (t.is (+ 10.0 10.0+nan.0i) 20.0+nan.0i)
+        (t.is (+ 1/2 1/2+nan.0i) 1+nan.0i)
+
+        (t.is (+ 10 10+nan.0i) 20+nan.0i)
+        (t.is (+ 10.0 10.0+nan.0i) 20.0+nan.0i)
+        (t.is (+ 1/2 1/2+nan.0i) 1+nan.0i)
+
+        (t.is (+ 10 +nan.0i) 10+nan.0i)
+        (t.is (+ 10.0 +nan.0i) 10.0+nan.0i)
+        (t.is (+ 1/2 +nan.0i) 1/2+nan.0i)
+        (t.is (+ 10+10i +nan.0i) 10+nan.0i)
+
+        (t.is (+ 10 +nan.0) +nan.0)
+        (t.is (+ 10.0 +nan.0) +nan.0)
+        (t.is (+ 1/2 +nan.0) +nan.0)
+        (t.is (+ 10+10i +nan.0) +nan.0+10i)))
 
 (test "numbers: complex infinity"
       (lambda (t)
@@ -91,8 +156,8 @@
         (t.is (number->string (. (lips.parse "#i100") 0)) "100.0")
         (t.is (number->string (. (lips.parse "#i100i") 0)) "+100.0i")
 
-        (t.is (number->string (. (lips.parse "#i1/0") 0)) "Infinity")
-        (t.is (number->string (. (lips.parse "#i-1/0") 0)) "-Infinity")
+        (t.is (number->string (. (lips.parse "#i1/0") 0)) "+inf.0")
+        (t.is (number->string (. (lips.parse "#i-1/0") 0)) "-inf.0")
 
         (t.is #b100+100i 4+4i)
         (t.is (number->string 100) "100")
@@ -492,12 +557,6 @@
         (t.is (negative? -10) #t)
         (t.is (negative? -1/2) #t)
         (t.is (negative? -0.5) #t)))
-
-(test "numbers: NaN"
-      (lambda (t)
-        (t.is (eq? NaN NaN) true)
-        (t.is (eq? 10 NaN) false)
-        (t.is (eq? NaN 10) false)))
 
 (test "numbers: types"
       (lambda (t)

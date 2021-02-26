@@ -777,10 +777,11 @@
   "(nan? x)
 
   Function check if argument x is Not a Number (NaN) value."
-  (or (eq? x NaN)
-      (and (%number-type "complex" x)
-           (or (nan? (real-part x))
-               (nan? (imag-part x))))))
+  (and (number? x)
+       (or (x.isNaN)
+           (and (%number-type "complex" x)
+                (or (nan? (real-part x))
+                    (nan? (imag-part x)))))))
 
 ;; -----------------------------------------------------------------------------
 (define (infinite? x)

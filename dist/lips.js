@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 26 Feb 2021 11:27:00 +0000
+ * build: Fri, 26 Feb 2021 13:31:05 +0000
  */
 (function () {
   'use strict';
@@ -1717,8 +1717,6 @@
 
       if (parts[1]) {
         re = parse_num(parts[1]);
-      } else if (im instanceof LFloat) {
-        re = LFloat(0);
       } else {
         re = LNumber(0);
       }
@@ -7197,7 +7195,7 @@
       }
 
       if (Number.isNaN(n)) {
-        this.constant(n, 'integer');
+        return LFloat(n);
       } else if (typeof BigInt !== 'undefined') {
         if (typeof n !== 'bigint') {
           if (parsable) {
@@ -7300,6 +7298,11 @@
         return new LRational(n, force);
       }
     }; // -------------------------------------------------------------------------
+
+    LNumber.prototype.isNaN = function () {
+      return Number.isNaN(this.__value__);
+    }; // -------------------------------------------------------------------------
+
 
     LNumber.prototype.gcd = function (b) {
       // ref: https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript
@@ -7440,6 +7443,8 @@
         return this.__value__.toNumber();
       }
     }; // -------------------------------------------------------------------------
+    // type coercion matrix
+    // -------------------------------------------------------------------------
 
 
     var matrix = function () {
@@ -7449,17 +7454,35 @@
 
       return {
         bigint: {
-          'bigint': i,
-          'float': function float(a, b) {
+          bigint: i,
+          "float": function float(a, b) {
             return [LFloat(a.valueOf()), b];
           },
-          'rational': function rational(a, b) {
+          rational: function rational(a, b) {
             return [{
               num: a,
               denom: 1
             }, b];
           },
-          'complex': function complex(a, b) {
+          complex: function complex(a, b) {
+            return [{
+              im: 0,
+              re: a
+            }, b];
+          }
+        },
+        integer: {
+          integer: i,
+          "float": function float(a, b) {
+            return [LFloat(a.valueOf()), b];
+          },
+          rational: function rational(a, b) {
+            return [{
+              num: a,
+              denom: 1
+            }, b];
+          },
+          complex: function complex(a, b) {
             return [{
               im: 0,
               re: a
@@ -7467,14 +7490,17 @@
           }
         },
         "float": {
-          'bigint': function bigint(a, b) {
+          bigint: function bigint(a, b) {
             return [a, b && LFloat(b.valueOf())];
           },
-          'float': i,
-          'rational': function rational(a, b) {
+          integer: function integer(a, b) {
             return [a, b && LFloat(b.valueOf())];
           },
-          'complex': function complex(a, b) {
+          "float": i,
+          rational: function rational(a, b) {
+            return [a, b && LFloat(b.valueOf())];
+          },
+          complex: function complex(a, b) {
             return [{
               re: a,
               im: LFloat(0)
@@ -7483,6 +7509,7 @@
         },
         complex: {
           bigint: complex('bigint'),
+          integer: complex('integer'),
           "float": complex('float'),
           rational: complex('rational'),
           complex: function complex(a, b) {
@@ -7507,6 +7534,12 @@
         },
         rational: {
           bigint: function bigint(a, b) {
+            return [a, b && {
+              num: b,
+              denom: 1
+            }];
+          },
+          integer: function integer(a, b) {
             return [a, b && {
               num: b,
               denom: 1
@@ -7548,16 +7581,8 @@
 
 
     LNumber.coerce = function (a, b) {
-      function clean(type) {
-        if (type === 'integer') {
-          return 'bigint';
-        }
-
-        return type;
-      }
-
-      var a_type = clean(LNumber.getType(a));
-      var b_type = clean(LNumber.getType(b));
+      var a_type = LNumber.getType(a);
+      var b_type = LNumber.getType(b);
 
       if (!matrix[a_type]) {
         throw new Error("LNumber::coerce unknown lhs type ".concat(a_type));
@@ -7684,7 +7709,7 @@
         n = LNumber(n);
       }
 
-      if (Number.isNaN(this.__value__) || Number.isNaN(n.__value__)) {
+      if (Number.isNaN(this.__value__) && !LNumber.isComplex(n) || !LNumber.isComplex(this) && Number.isNaN(n.__value__)) {
         return LNumber(NaN);
       }
 
@@ -8077,7 +8102,14 @@
       var im_str = toString(this.__im__);
 
       if (!inf && !Number.isNaN(im)) {
-        result.push(this.__im__.cmp(0) < 0 ? '-' : '+');
+        var zero_check = this.__im__.cmp(0);
+
+        if (zero_check < 0 || zero_check === 0 && this.__im__._minus) {
+          result.push('-');
+        } else {
+          result.push('+');
+        }
+
         im_str = im_str.replace(/^-/, '');
       }
 
@@ -8124,6 +8156,10 @@
 
       if (this.__value__ === Number.POSITIVE_INFINITY) {
         return '+inf.0';
+      }
+
+      if (Number.isNaN(this.__value__)) {
+        return '+nan.0';
       }
 
       var str = this.__value__.toString();
@@ -9514,7 +9550,7 @@
       'true': true,
       'false': false,
       'null': null,
-      'NaN': NaN,
+      'NaN': LNumber(NaN),
       // ------------------------------------------------------------------
       'peek-char': doc('peek-char', function (port) {
         if (port) {
@@ -13266,10 +13302,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 26 Feb 2021 11:27:00 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 26 Feb 2021 13:31:05 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 26 Feb 2021 11:27:00 +0000').valueOf();
+      var date = LString('Fri, 26 Feb 2021 13:31:05 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13309,7 +13345,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 26 Feb 2021 11:27:00 +0000',
+      date: 'Fri, 26 Feb 2021 13:31:05 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

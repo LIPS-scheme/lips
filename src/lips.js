@@ -438,8 +438,6 @@
         im = parse_num(parts[2]);
         if (parts[1]) {
             re = parse_num(parts[1]);
-        } else if (im instanceof LFloat) {
-            re = LFloat(0, true);
         } else {
             re = LNumber(0);
         }
@@ -4408,7 +4406,7 @@
             }
         }
         if (Number.isNaN(n)) {
-            this.constant(n, 'integer');
+            return LFloat(n);
         } else if (typeof BigInt !== 'undefined') {
             if (typeof n !== 'bigint') {
                 if (parsable) {
@@ -4486,6 +4484,10 @@
             }
             return new LRational(n, force);
         }
+    };
+    // -------------------------------------------------------------------------
+    LNumber.prototype.isNaN = function() {
+        return Number.isNaN(this.__value__);
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.gcd = function(b) {
@@ -4607,23 +4609,33 @@
         }
     };
     // -------------------------------------------------------------------------
-    var matrix = (function() {
+    // type coercion matrix
+    // -------------------------------------------------------------------------
+    const matrix = (function() {
         var i = (a, b) => [a, b];
         return {
             bigint: {
-                'bigint': i,
-                'float': (a, b) => [LFloat(a.valueOf(), true), b],
-                'rational': (a, b) => [{ num: a, denom: 1 }, b],
-                'complex': (a, b) => [{ im: 0, re: a }, b]
+                bigint: i,
+                float: (a, b) => [LFloat(a.valueOf(), true), b],
+                rational: (a, b) => [{ num: a, denom: 1 }, b],
+                complex: (a, b) => [{ im: 0, re: a }, b]
+            },
+            integer: {
+                integer: i,
+                float: (a, b) => [LFloat(a.valueOf(), true), b],
+                rational: (a, b) => [{ num: a, denom: 1 }, b],
+                complex: (a, b) => [{ im: 0, re: a }, b]
             },
             float: {
-                'bigint': (a, b) => [a, b && LFloat(b.valueOf(), true)],
-                'float': i,
-                'rational': (a, b) => [a, b && LFloat(b.valueOf(), true)],
-                'complex': (a, b) => [{ re: a, im: LFloat(0, true) }, b]
+                bigint: (a, b) => [a, b && LFloat(b.valueOf(), true)],
+                integer: (a, b) => [a, b && LFloat(b.valueOf(), true)],
+                float: i,
+                rational: (a, b) => [a, b && LFloat(b.valueOf(), true)],
+                complex: (a, b) => [{ re: a, im: LFloat(0, true) }, b]
             },
             complex: {
                 bigint: complex('bigint'),
+                integer: complex('integer'),
                 float: complex('float'),
                 rational: complex('rational'),
                 complex: (a, b) => {
@@ -4637,6 +4649,7 @@
             },
             rational: {
                 bigint: (a, b) => [a, b && { num: b, denom: 1 }],
+                integer: (a, b) => [a, b && { num: b, denom: 1 }],
                 float: (a, b) => [LFloat(a.valueOf()), b],
                 rational: i,
                 complex: (a, b) => {
@@ -4674,14 +4687,8 @@
     }
     // -------------------------------------------------------------------------
     LNumber.coerce = function(a, b) {
-        function clean(type) {
-            if (type === 'integer') {
-                return 'bigint';
-            }
-            return type;
-        }
-        const a_type = clean(LNumber.getType(a));
-        const b_type = clean(LNumber.getType(b));
+        const a_type = LNumber.getType(a);
+        const b_type = LNumber.getType(b);
         if (!matrix[a_type]) {
             throw new Error(`LNumber::coerce unknown lhs type ${a_type}`);
         } else if (!matrix[a_type][b_type]) {
@@ -4790,7 +4797,8 @@
         if (typeof n === 'number') {
             n = LNumber(n);
         }
-        if (Number.isNaN(this.__value__) || Number.isNaN(n.__value__)) {
+        if (Number.isNaN(this.__value__) && !LNumber.isComplex(n) ||
+            !LNumber.isComplex(this) && Number.isNaN(n.__value__)) {
             return LNumber(NaN);
         }
         const [a, b] = this.coerce(n);
@@ -5072,7 +5080,12 @@
         var inf = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY].includes(im);
         var im_str = toString(this.__im__);
         if (!inf && !Number.isNaN(im)) {
-            result.push(this.__im__.cmp(0) < 0 ? '-' : '+');
+            var zero_check = this.__im__.cmp(0);
+            if (zero_check < 0 || (zero_check === 0 && this.__im__._minus)) {
+                result.push('-');
+            } else {
+                result.push('+');
+            }
             im_str = im_str.replace(/^-/, '');
         }
         result.push(im_str);
@@ -5112,6 +5125,9 @@
         }
         if (this.__value__ === Number.POSITIVE_INFINITY) {
             return '+inf.0';
+        }
+        if (Number.isNaN(this.__value__)) {
+            return '+nan.0';
         }
         var str = this.__value__.toString();
         if (!LNumber.isFloat(this.__value__) && !str.match(/e/i)) {
@@ -6129,7 +6145,7 @@
         'true': true,
         'false': false,
         'null': null,
-        'NaN': NaN,
+        'NaN': LNumber(NaN),
         // ------------------------------------------------------------------
         'peek-char': doc('peek-char', function(port) {
             if (port) {
