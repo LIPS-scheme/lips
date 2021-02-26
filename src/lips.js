@@ -553,7 +553,7 @@
         } else if (arg === 'nil') {
             return nil;
         } else if (['+nan.0', '-nan.0'].includes(arg)) {
-            return NaN;
+            return LNumber(NaN);
         } else if (['true', '#t', '#true'].includes(arg)) {
             return true;
         } else if (['false', '#f', '#false'].includes(arg)) {
@@ -2413,8 +2413,6 @@
     // ----------------------------------------------------------------------
     var str_mapping = new Map();
     [
-        [Number.NEGATIVE_INFINITY, '-inf.0'],
-        [Number.POSITIVE_INFINITY, '+inf.0'],
         [true, '#t'],
         [false, '#f'],
         [null, 'null'],
@@ -2530,12 +2528,8 @@
             obj instanceof jQuery.fn.init) {
             return '#<jQuery(' + obj.length + ')>';
         }
-        var m_obj = obj instanceof LNumber ? obj.valueOf() : obj;
-        if (str_mapping.has(m_obj)) {
-            return str_mapping.get(m_obj);
-        }
-        if (Number.isNaN(m_obj)) {
-            return '+nan.0';
+        if (str_mapping.has(obj)) {
+            return str_mapping.get(obj);
         }
         if (obj) {
             var cls = obj.constructor;
@@ -4576,6 +4570,9 @@
     };
     // -------------------------------------------------------------------------
     LNumber.prototype.toString = LNumber.prototype.toJSON = function(radix) {
+        if (Number.isNaN(this.__value__)) {
+            return '+nan.0';
+        }
         if (radix > 2 && radix < 36) {
             return this.__value__.toString(radix);
         }
@@ -4789,6 +4786,12 @@
     LNumber.prototype.op = function(op, n) {
         if (typeof n === 'undefined') {
             return LNumber(LNumber._ops[op](this.valueOf()));
+        }
+        if (typeof n === 'number') {
+            n = LNumber(n);
+        }
+        if (Number.isNaN(this.__value__) || Number.isNaN(n.__value__)) {
+            return LNumber(NaN);
         }
         const [a, b] = this.coerce(n);
         if (a._op) {
@@ -5104,6 +5107,12 @@
     LFloat.prototype.constructor = LFloat;
     // -------------------------------------------------------------------------
     LFloat.prototype.toString = function() {
+        if (this.__value__ === Number.NEGATIVE_INFINITY) {
+            return '-inf.0';
+        }
+        if (this.__value__ === Number.POSITIVE_INFINITY) {
+            return '+inf.0';
+        }
         var str = this.__value__.toString();
         if (!LNumber.isFloat(this.__value__) && !str.match(/e/i)) {
             var result = str + '.0';

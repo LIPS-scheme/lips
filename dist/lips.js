@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 25 Feb 2021 15:22:55 +0000
+ * build: Fri, 26 Feb 2021 11:27:00 +0000
  */
 (function () {
   'use strict';
@@ -1868,7 +1868,7 @@
       } else if (arg === 'nil') {
         return nil;
       } else if (['+nan.0', '-nan.0'].includes(arg)) {
-        return NaN;
+        return LNumber(NaN);
       } else if (['true', '#t', '#true'].includes(arg)) {
         return true;
       } else if (['false', '#f', '#false'].includes(arg)) {
@@ -4522,7 +4522,7 @@
 
 
     var str_mapping = new Map();
-    [[Number.NEGATIVE_INFINITY, '-inf.0'], [Number.POSITIVE_INFINITY, '+inf.0'], [true, '#t'], [false, '#f'], [null, 'null'], [undefined$1, '#<undefined>']].forEach(function (_ref10) {
+    [[true, '#t'], [false, '#f'], [null, 'null'], [undefined$1, '#<undefined>']].forEach(function (_ref10) {
       var _ref11 = slicedToArray(_ref10, 2),
           key = _ref11[0],
           value = _ref11[1];
@@ -4665,14 +4665,8 @@
         return '#<jQuery(' + obj.length + ')>';
       }
 
-      var m_obj = obj instanceof LNumber ? obj.valueOf() : obj;
-
-      if (str_mapping.has(m_obj)) {
-        return str_mapping.get(m_obj);
-      }
-
-      if (Number.isNaN(m_obj)) {
-        return '+nan.0';
+      if (str_mapping.has(obj)) {
+        return str_mapping.get(obj);
       }
 
       if (obj) {
@@ -7405,6 +7399,10 @@
 
 
     LNumber.prototype.toString = LNumber.prototype.toJSON = function (radix) {
+      if (Number.isNaN(this.__value__)) {
+        return '+nan.0';
+      }
+
       if (radix > 2 && radix < 36) {
         return this.__value__.toString(radix);
       }
@@ -7680,6 +7678,14 @@
     LNumber.prototype.op = function (op, n) {
       if (typeof n === 'undefined') {
         return LNumber(LNumber._ops[op](this.valueOf()));
+      }
+
+      if (typeof n === 'number') {
+        n = LNumber(n);
+      }
+
+      if (Number.isNaN(this.__value__) || Number.isNaN(n.__value__)) {
+        return LNumber(NaN);
       }
 
       var _this$coerce = this.coerce(n),
@@ -8112,6 +8118,14 @@
     LFloat.prototype.constructor = LFloat; // -------------------------------------------------------------------------
 
     LFloat.prototype.toString = function () {
+      if (this.__value__ === Number.NEGATIVE_INFINITY) {
+        return '-inf.0';
+      }
+
+      if (this.__value__ === Number.POSITIVE_INFINITY) {
+        return '+inf.0';
+      }
+
       var str = this.__value__.toString();
 
       if (!LNumber.isFloat(this.__value__) && !str.match(/e/i)) {
@@ -13252,10 +13266,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 25 Feb 2021 15:22:55 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 26 Feb 2021 11:27:00 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 25 Feb 2021 15:22:55 +0000').valueOf();
+      var date = LString('Fri, 26 Feb 2021 11:27:00 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13295,7 +13309,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 25 Feb 2021 15:22:55 +0000',
+      date: 'Fri, 26 Feb 2021 11:27:00 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
