@@ -31,6 +31,7 @@
 * fix option -t --trace in Node REPL
 * fix `eqv?` on exact and inexact numbers according to R7RS spec
 * fix `exact->inexact` on complex numbers
+* fix - operator
 
 ## 1.0.0-beta.11
 ### Breaking

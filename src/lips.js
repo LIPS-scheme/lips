@@ -4521,6 +4521,9 @@
     };
     // -------------------------------------------------------------------------
     LNumber.isComplex = function(n) {
+        if (!n) {
+            return false;
+        }
         var ret = n instanceof LComplex ||
             ((LNumber.isNumber(n.im) || Number.isNaN(n.im)) &&
              (LNumber.isNumber(n.re) || Number.isNaN(n.re)));
@@ -4528,6 +4531,9 @@
     };
     // -------------------------------------------------------------------------
     LNumber.isRational = function(n) {
+        if (!n) {
+            return false;
+        }
         return n instanceof LRational ||
             (LNumber.isNumber(n.num) && LNumber.isNumber(n.denom));
     };
@@ -4930,7 +4936,7 @@
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.add = function(n) {
-        return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
+        return this.complex_op('add', n, function(a_re, b_re, a_im, b_im) {
             return {
                 re: a_re.add(b_re),
                 im: a_im.add(b_im)
@@ -4990,7 +4996,7 @@
         if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
             n = LComplex({ im: 0, re: n });
         } else if (!LNumber.isComplex(n)) {
-            throw new Error('[LComplex::add] Invalid value');
+            throw new Error('[LComplex::div] Invalid value');
         }
         const [ a, b ] = this.coerce(n);
         const conj = LComplex({ re: b.__re__, im: b.__im__.sub() });
@@ -5002,16 +5008,16 @@
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.sub = function(n) {
-        return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
+        return this.complex_op('sub', n, function(a_re, b_re, a_im, b_im) {
             return {
                 re: a_re.sub(b_re),
-                im: a_im.add(b_im)
+                im: a_im.sub(b_im)
             };
         });
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.mul = function(n) {
-        return this.complex_op(n, function(a_re, b_re, a_im, b_im) {
+        return this.complex_op('mul', n, function(a_re, b_re, a_im, b_im) {
             var ret = {
                 re: a_re.mul(b_re).sub(a_im.mul(b_im)),
                 im: a_re.mul(b_im).add(b_re.mul(a_im))
@@ -5020,7 +5026,17 @@
         });
     };
     // -------------------------------------------------------------------------
-    LComplex.prototype.complex_op = function(n, fn) {
+    LComplex.prototype.complex_op = function(name, n, fn) {
+        const calc = (re, im) => {
+            var ret = fn(this.__re__, re, this.__im__, im);
+            if ('im' in ret && 're' in ret) {
+                return LComplex(ret, true);
+            }
+            return ret;
+        };
+        if (typeof n === 'undefined') {
+            return calc();
+        }
         if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
             if (!(n instanceof LNumber)) {
                 n = LNumber(n);
@@ -5028,16 +5044,11 @@
             const im = n.asType(0);
             n = { __im__: im, __re__: n };
         } else if (!LNumber.isComplex(n)) {
-            throw new Error('[LComplex::add] Invalid value');
+            throw new Error(`[LComplex::${name}] Invalid value`);
         }
         var re = n.__re__ instanceof LNumber ? n.__re__ : this.__re__.asType(n.__re__);
         var im = n.__im__ instanceof LNumber ? n.__im__ : this.__im__.asType(n.__im__);
-        var ret = fn(this.__re__, re, this.__im__, im);
-        if ('im' in ret && 're' in ret) {
-            var x = LComplex(ret, true);
-            return x;
-        }
-        return ret;
+        return calc(re, im);
     };
     // -------------------------------------------------------------------------
     LComplex._op = {

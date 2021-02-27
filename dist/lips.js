@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 26 Feb 2021 13:31:05 +0000
+ * build: Sat, 27 Feb 2021 11:06:51 +0000
  */
 (function () {
   'use strict';
@@ -7342,12 +7342,20 @@
 
 
     LNumber.isComplex = function (n) {
+      if (!n) {
+        return false;
+      }
+
       var ret = n instanceof LComplex || (LNumber.isNumber(n.im) || Number.isNaN(n.im)) && (LNumber.isNumber(n.re) || Number.isNaN(n.re));
       return ret;
     }; // -------------------------------------------------------------------------
 
 
     LNumber.isRational = function (n) {
+      if (!n) {
+        return false;
+      }
+
       return n instanceof LRational || LNumber.isNumber(n.num) && LNumber.isNumber(n.denom);
     }; // -------------------------------------------------------------------------
 
@@ -7886,7 +7894,7 @@
 
 
     LComplex.prototype.add = function (n) {
-      return this.complex_op(n, function (a_re, b_re, a_im, b_im) {
+      return this.complex_op('add', n, function (a_re, b_re, a_im, b_im) {
         return {
           re: a_re.add(b_re),
           im: a_im.add(b_im)
@@ -7964,7 +7972,10 @@
           re: n
         });
       } else if (!LNumber.isComplex(n)) {
-        throw new Error('[LComplex::add] Invalid value');
+        console.log({
+          n: n
+        });
+        throw new Error('[LComplex::div] Invalid value');
       }
 
       var _this$coerce5 = this.coerce(n),
@@ -7991,17 +8002,17 @@
 
 
     LComplex.prototype.sub = function (n) {
-      return this.complex_op(n, function (a_re, b_re, a_im, b_im) {
+      return this.complex_op('sub', n, function (a_re, b_re, a_im, b_im) {
         return {
           re: a_re.sub(b_re),
-          im: a_im.add(b_im)
+          im: a_im.sub(b_im)
         };
       });
     }; // -------------------------------------------------------------------------
 
 
     LComplex.prototype.mul = function (n) {
-      return this.complex_op(n, function (a_re, b_re, a_im, b_im) {
+      return this.complex_op('mul', n, function (a_re, b_re, a_im, b_im) {
         var ret = {
           re: a_re.mul(b_re).sub(a_im.mul(b_im)),
           im: a_re.mul(b_im).add(b_re.mul(a_im))
@@ -8011,7 +8022,23 @@
     }; // -------------------------------------------------------------------------
 
 
-    LComplex.prototype.complex_op = function (n, fn) {
+    LComplex.prototype.complex_op = function (name, n, fn) {
+      var _this5 = this;
+
+      var calc = function calc(re, im) {
+        var ret = fn(_this5.__re__, re, _this5.__im__, im);
+
+        if ('im' in ret && 're' in ret) {
+          return LComplex(ret, true);
+        }
+
+        return ret;
+      };
+
+      if (typeof n === 'undefined') {
+        return calc();
+      }
+
       if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
         if (!(n instanceof LNumber)) {
           n = LNumber(n);
@@ -8024,19 +8051,12 @@
           __re__: n
         };
       } else if (!LNumber.isComplex(n)) {
-        throw new Error('[LComplex::add] Invalid value');
+        throw new Error("[LComplex::".concat(name, "] Invalid value"));
       }
 
       var re = n.__re__ instanceof LNumber ? n.__re__ : this.__re__.asType(n.__re__);
       var im = n.__im__ instanceof LNumber ? n.__im__ : this.__im__.asType(n.__im__);
-      var ret = fn(this.__re__, re, this.__im__, im);
-
-      if ('im' in ret && 're' in ret) {
-        var x = LComplex(ret, true);
-        return x;
-      }
-
-      return ret;
+      return calc(re, im);
     }; // -------------------------------------------------------------------------
 
 
@@ -8674,7 +8694,7 @@
 
 
     function InputPort(read) {
-      var _this5 = this;
+      var _this6 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputPort) || typeof this === 'undefined') {
         return new InputPort(read);
@@ -8688,22 +8708,22 @@
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                if (_this5.char_ready()) {
+                if (_this6.char_ready()) {
                   _context9.next = 5;
                   break;
                 }
 
                 _context9.next = 3;
-                return _this5._read();
+                return _this6._read();
 
               case 3:
                 line = _context9.sent;
-                _this5.__parser__ = new Parser(line, {
-                  env: _this5
+                _this6.__parser__ = new Parser(line, {
+                  env: _this6
                 });
 
               case 5:
-                return _context9.abrupt("return", _this5.__parser__);
+                return _context9.abrupt("return", _this6.__parser__);
 
               case 6:
               case "end":
@@ -8789,14 +8809,14 @@
     };
 
     InputPort.prototype.close = function () {
-      var _this6 = this;
+      var _this7 = this;
 
       delete this.__parser__; // make content garbage collected, we assign null,
       // because the value is in prototype
 
       this._with_parser = null;
       ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
-        _this6[name] = function () {
+        _this7[name] = function () {
           throw new Error('input-port: port is closed');
         };
       });
@@ -8845,7 +8865,7 @@
 
 
     function OutputStringPort(toString) {
-      var _this7 = this;
+      var _this8 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
         return new OutputStringPort(toString);
@@ -8861,7 +8881,7 @@
           x = x.valueOf();
         }
 
-        _this7._buffer.push(x);
+        _this8._buffer.push(x);
       };
     }
 
@@ -8880,7 +8900,7 @@
     OutputStringPort.prototype.constructor = OutputStringPort; // -------------------------------------------------------------------------
 
     function OutputFilePort(filename, fd) {
-      var _this8 = this;
+      var _this9 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) || typeof this === 'undefined') {
         return new OutputFilePort(filename, fd);
@@ -8897,7 +8917,7 @@
           x = x.valueOf();
         }
 
-        _this8.fs('write')(_this8._fd, x, function () {});
+        _this9.fs('write')(_this9._fd, x, function () {});
       };
     }
 
@@ -8915,15 +8935,15 @@
     };
 
     OutputFilePort.prototype.close = function () {
-      var _this9 = this;
+      var _this10 = this;
 
       return new Promise(function (resolve, reject) {
-        _this9.fs('close')(_this9._fd, function (err) {
+        _this10.fs('close')(_this10._fd, function (err) {
           if (err) {
             reject(err);
           } else {
-            _this9._fd = null;
-            OutputPort.prototype.close.call(_this9);
+            _this10._fd = null;
+            OutputPort.prototype.close.call(_this10);
             resolve();
           }
         });
@@ -8936,7 +8956,7 @@
 
 
     function InputStringPort(string, env) {
-      var _this10 = this;
+      var _this11 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
         return new InputStringPort(string);
@@ -8946,13 +8966,13 @@
       env = env || global_env;
       string = string.valueOf();
       this._with_parser = this._with_init_parser.bind(this, function () {
-        if (!_this10.__parser__) {
-          _this10.__parser__ = new Parser(string, {
+        if (!_this11.__parser__) {
+          _this11.__parser__ = new Parser(string, {
             env: env
           });
         }
 
-        return _this10.__parser__;
+        return _this11.__parser__;
       });
 
       this._make_defaults();
@@ -9223,13 +9243,13 @@
 
 
     Environment.prototype.clone = function () {
-      var _this11 = this;
+      var _this12 = this;
 
       // duplicate refs
       var env = {}; // TODO: duplicated Symbols
 
       Object.keys(this.__env__).forEach(function (key) {
-        env[key] = _this11.__env__[key];
+        env[key] = _this12.__env__[key];
       });
       return new Environment(env, this.__parent__, this.__name__);
     }; // -------------------------------------------------------------------------
@@ -9386,7 +9406,7 @@
 
 
     Environment.prototype.constant = function (name, value) {
-      var _this12 = this;
+      var _this13 = this;
 
       if (this.__env__.hasOwnProperty(name)) {
         throw new Error("Environment::constant: ".concat(name, " already exists"));
@@ -9395,7 +9415,7 @@
       if (arguments.length === 1 && is_plain_object(arguments[0])) {
         var obj = arguments[0];
         Object.keys(obj).forEach(function (key) {
-          _this12.constant(name, obj[key]);
+          _this13.constant(name, obj[key]);
         });
       } else {
         Object.defineProperty(this.__env__, name, {
@@ -9855,7 +9875,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this13 = this;
+        var _this14 = this;
 
         var _ref28 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref28.dynamic_scope,
@@ -9930,7 +9950,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this13.get(name, {
+              var obj = _this14.get(name, {
                 throwError: false
               });
 
@@ -10435,7 +10455,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this14 = this;
+        var _this15 = this;
 
         env = env || this;
         return evaluate(code, {
@@ -10443,13 +10463,13 @@
           //dynamic_scope: this,
           error: function error(e) {
             var error = global_env.get('error');
-            error.call(_this14, e.message);
+            error.call(_this15, e.message);
 
             if (e.code) {
               var stack = e.code.map(function (line, i) {
                 return "[".concat(i + 1, "]: ").concat(line);
               }).join('\n');
-              error.call(_this14, stack);
+              error.call(_this15, stack);
             }
           }
         });
@@ -11511,7 +11531,7 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref38) {
-        var _this15 = this;
+        var _this16 = this;
 
         var dynamic_scope = _ref38.dynamic_scope,
             _error = _ref38.error;
@@ -11545,9 +11565,9 @@
           }
 
           var args = {
-            env: _this15,
+            env: _this16,
             error: function error(e) {
-              var env = _this15.inherit('try');
+              var env = _this16.inherit('try');
 
               if (catch_clause) {
                 env.set(catch_clause.cdr.car.car, e);
@@ -11557,7 +11577,7 @@
                 };
 
                 if (dynamic_scope) {
-                  args.dynamic_scope = _this15;
+                  args.dynamic_scope = _this16;
                 }
 
                 unpromise(evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
@@ -11570,7 +11590,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this15;
+            args.dynamic_scope = _this16;
           }
 
           var result = evaluate(code.car, args);
@@ -11630,7 +11650,7 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this16 = this;
+        var _this17 = this;
 
         for (var _len29 = arguments.length, lists = new Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
           lists[_key29 - 1] = arguments[_key29];
@@ -11641,7 +11661,7 @@
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this16, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this17, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -11663,7 +11683,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this16, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this17, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -11759,7 +11779,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this17 = this;
+        var _this18 = this;
 
         for (var _len32 = arguments.length, lists = new Array(_len32 > 3 ? _len32 - 3 : 0), _key33 = 3; _key33 < _len32; _key33++) {
           lists[_key33 - 3] = arguments[_key33];
@@ -11779,7 +11799,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this17, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this18, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -13302,10 +13322,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 26 Feb 2021 13:31:05 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 27 Feb 2021 11:06:51 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 26 Feb 2021 13:31:05 +0000').valueOf();
+      var date = LString('Sat, 27 Feb 2021 11:06:51 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13345,7 +13365,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 26 Feb 2021 13:31:05 +0000',
+      date: 'Sat, 27 Feb 2021 11:06:51 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
