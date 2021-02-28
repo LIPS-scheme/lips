@@ -149,3 +149,41 @@
                                        (match #/<title>([^<]+)<\\/title>/)
                                        1)"))
         (t.is (eval (. code 0)) "hello-world")))
+
+
+(test "tokenizer: should create tokens for simple list"
+      (lambda (t)
+        (t.is (lips.tokenize "(foo bar baz)")
+              #("(" "foo" "bar" "baz" ")"))))
+
+(test "tokenizer: should create tokens for numbers string and regexes"
+      (lambda (t)
+        (t.is (lips.tokenize "(foo #/( \\/)/g \"bar baz\" 10 1.1 10e2
+                              10+10i +inf.0+inf.0i +nan.0+nan.0i 1/2+1/2i)")
+              #("(" "foo" "#/( \\/)/g" "\"bar baz\"" "10" "1.1" "10e2"
+                "10+10i" "+inf.0+inf.0i" "+nan.0+nan.0i" "1/2+1/2i" ")"))))
+
+(test "tokenizer: should create token for alist"
+      (lambda (t)
+        (t.is (lips.tokenize "((foo . 10) (bar . 20) (baz . 30))")
+              #("(" "(" "foo" "." "10" ")" "(" "bar" "." "20" ")" "("
+                "baz" "." "30" ")" ")"))))
+
+(test "tokenizer: should ignore comments"
+      (lambda (t)
+        (let ((code "(foo bar baz); (baz quux)"))
+          (t.is (lips.tokenize code)
+                #("(" "foo" "bar" "baz" ")")))))
+
+(test "tokenizer: should handle semicolon in regexes and strings"
+      (lambda (t)
+        (let ((code "(\";()\" #/;;;/g baz); (baz quux)"))
+          (t.is (lips.tokenize code)
+                #("(" "\";()\"" "#/;;;/g" "baz" ")")))))
+
+(test "tokenizer: with meta data"
+      (lambda (t)
+        (let* ((fs (require "fs"))
+               (code (--> (fs.promises.readFile "./tests/stubs/macro.txt")
+                          (toString))))
+          (t.snapshot (lips.tokenize code true)))))

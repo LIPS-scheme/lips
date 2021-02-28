@@ -1216,6 +1216,7 @@
         [/#/, Lexer.boundary, /\//, null, Lexer.regex],
         [/[ \t]/, null, null, Lexer.regex, Lexer.regex],
         [/[()[\]]/, null, null, Lexer.regex, Lexer.regex],
+        [/\//, /\\/, null, Lexer.regex, Lexer.regex],
         [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null],
         [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null],
         [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex],

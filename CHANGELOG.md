@@ -33,6 +33,7 @@
 * fix `eqv?` on exact and inexact numbers according to R7RS spec
 * fix `exact->inexact` on complex numbers
 * fix arithmetic with single complex value
+* fix parsing regex that have escape slash and parenthesis (`#/( \\/)/g`)
 
 ## 1.0.0-beta.11
 ### Breaking

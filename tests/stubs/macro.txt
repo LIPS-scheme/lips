@@ -1,0 +1,10 @@
+(define-macro (defstruct name . fields)
+  "First Line." "word" 10
+  "Second Line."    "word" #/regex/
+  "Third Line."     "word"
+  10 10+10i +inf.0 +inf.0+inf.0i +nan.0 +nan.0+nan.0i
+  1/2+1/2i 10.10+1/2i 1/2+10.0i
+  (let ((names (map (lambda (symbol) (gensym)) fields))
+        (struct (gensym))
+        (field-arg (gensym)))
+

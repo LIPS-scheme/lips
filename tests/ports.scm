@@ -1,4 +1,4 @@
-(test "ports: scheme repr (output-string)"
+(test "ports: scheme repr using output-string"
       (lambda (t)
         (define (repr x . rest)
           (let ((port (open-output-string))

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 28 Feb 2021 10:53:40 +0000
+ * build: Sun, 28 Feb 2021 14:26:21 +0000
  */
 (function () {
   'use strict';
@@ -2698,7 +2698,7 @@
     [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
     [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null], // brackets
     [/[()[\]]/, null, null, null, null], // regex
-    [/#/, Lexer.boundary, /\//, null, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null]]; // ----------------------------------------------------------------------
+    [/#/, Lexer.boundary, /\//, null, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /\\/, null, Lexer.regex, Lexer.regex], [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null]]; // ----------------------------------------------------------------------
     // :: symbols should be matched last
     // ----------------------------------------------------------------------
 
@@ -13319,10 +13319,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 28 Feb 2021 10:53:40 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 28 Feb 2021 14:26:21 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 28 Feb 2021 10:53:40 +0000').valueOf();
+      var date = LString('Sun, 28 Feb 2021 14:26:21 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13362,7 +13362,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 28 Feb 2021 10:53:40 +0000',
+      date: 'Sun, 28 Feb 2021 14:26:21 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
