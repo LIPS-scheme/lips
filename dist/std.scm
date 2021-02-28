@@ -3675,6 +3675,21 @@
     lib))
 
 ;; -----------------------------------------------------------------------------
+(define (%export module namespace specs)
+  `(begin
+     ,@(map (lambda (expr)
+              (cond ((symbol? expr)
+                     `(--> ,module (set ',namespace
+                                        ',expr
+                                         ,expr)))
+                    ((and (pair? expr) (symbol=? (car expr)
+                                                 'rename))
+                     `(--> ,module (set ',namespace
+                                        ',(cadr expr)
+                                        ,(caddr expr))))))
+              specs)))
+
+;; -----------------------------------------------------------------------------
 (define-macro (define-library spec . body)
   "(define-library (library (name namespace) . body)
 
@@ -3689,18 +3704,7 @@
                                      ,(symbol->string namespace)))
            (,namespace-var ',namespace))
        (define-macro (export . body)
-         `(begin
-            ,@(map (lambda (expr)
-                     (cond ((symbol? expr)
-                            `(--> ,,module-var (set ',,namespace-var
-                                                    ',expr
-                                                    ,expr)))
-                           ((and (pair? expr) (symbol=? (car expr)
-                                                        'rename))
-                            `(--> ,,module-var (set ',,namespace-var
-                                                    ',(cadr expr)
-                                                    ,(caddr expr))))))
-                   body)))
+         (%export ,module-var ,namespace-var body))
        ,@body
        (--> ,parent (set ',name ,module-var)))))
 
