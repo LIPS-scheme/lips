@@ -18,6 +18,7 @@
 * add `nan?`, `infinite?` and `finite?` functions
 * add `+nan.0` and `-nan.0` (R7RS)
 * properly handle negative inexact zero
+* new `environment?` function
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string

@@ -1225,6 +1225,13 @@
   (if (not (null? fs))
       (--> lips.env (get '**internal-env**) (set "fs" fs))))
 ;; ---------------------------------------------------------------------------------------
+(define (environment? obj)
+  "(environment? obj)
+
+   Function check if object is LIPS environment."
+  (instanceof lips.Environment obj))
+
+;; ---------------------------------------------------------------------------------------
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
@@ -3583,5 +3590,118 @@
 
   Function check if value is finite."
   (not (infinite? x)))
+
+;; -----------------------------------------------------------------------------
+(define-class %Library Object
+  (constructor
+    (lambda (self name)
+      (set! self.__namespace__ &())
+      (set! self.__name__ name)))
+  (append
+   (lambda (self namespace env)
+     (if (environment? (. self.__namespace__ namespace))
+         (throw (new Error (string-append "namespace " namespace
+                                          " already exists in library "
+                                          self.__name__)))
+         (set-obj! self.__namespace__ namespace env))))
+  (env
+   (lambda (self namespace)
+     (let ((env (. self.__namespace__ namespace)))
+        (if (not (environment? env))
+            (throw (new Error (string-append "namespace " namespace " sdon't exists")))
+            env))))
+  (get
+    (lambda (self namespace name)
+      (--> (self.env namespace) (get name))))
+  (set
+    (lambda (self namespace name value)
+      (--> (self.env namespace) (set name value))))
+  (toString
+     (lambda (self)
+       (string-append "#<Library(" self.__name__ ")>"))))
+
+;; -----------------------------------------------------------------------------
+(define (%import-name library namespace names)
+  `(begin
+    ,@(map (lambda (name)
+             `(define ,name (--> ,library (get ',namespace ',name))))
+           names)))
+
+;; -----------------------------------------------------------------------------
+(define-macro (import . specs)
+  "(import (library namespace))
+   (import (only (library namespace) name1 name2))
+
+   Macro for importing names from library."
+  (let ((parent (current-environment)))
+    `(begin
+       ,@(map (lambda (spec)
+                (if (not (pair? spec))
+                    (throw (new Error "import: invalid syntax"))
+                    (cond ((symbol=? (car spec)
+                                     'only)
+                           (let ((lib (caadr spec))
+                                 (namespace (caaddr spec)))
+                             (if (pair? (cadr spec))
+                                 (%import-name ,lib
+                                               ',namespace
+                                               ',(caddr spec))
+                                 (throw (new Error "import: invalid syntax")))))
+                          (else
+                           (let* ((lib-name (car spec))
+                                  (lib (parent.get lib-name))
+                                  (namespace (cadr spec)))
+                             (%import-name lib-name
+                                           namespace
+                                           (env (lib.env namespace))))))))
+              specs))))
+
+;; -----------------------------------------------------------------------------
+(define (new-library name namespace)
+  "(new-library name)
+
+   Create new empty library object with empty namespace."
+  (let* ((parent (. (current-environment) '__parent__))
+         (lib (let ((lib (--> parent (get name &(:throwError false)))))
+                (if (null? lib)
+                    (new %Library name)
+                    lib)))
+         (x (new lips.Environment
+                 (string-append "library-"
+                                (--> name (toLowerCase))
+                                "-"
+                                (--> namespace (toLowerCase))))))
+    (lib.append namespace x)
+    lib))
+
+;; -----------------------------------------------------------------------------
+(define-macro (define-library spec . body)
+  "(define-library (library (name namespace) . body)
+
+   Macro for defining modules inside you can use define to create functions.
+   And use export name to add that name to defined environment."
+  (let ((parent (. (current-environment) '__parent__))
+        (module-var (gensym))
+        (namespace-var (gensym))
+        (name (car spec))
+        (namespace (cadr spec)))
+    `(let ((,module-var (new-library ,(symbol->string name)
+                                     ,(symbol->string namespace)))
+           (,namespace-var ',namespace))
+       (define-macro (export . body)
+         `(begin
+            ,@(map (lambda (expr)
+                     (cond ((symbol? expr)
+                            `(--> ,,module-var (set ',,namespace-var
+                                                    ',expr
+                                                    ,expr)))
+                           ((and (pair? expr) (symbol=? (car expr)
+                                                        'rename))
+                            `(--> ,,module-var (set ',,namespace-var
+                                                    ',(cadr expr)
+                                                    ,(caddr expr))))))
+                   body)))
+       ,@body
+       (--> ,parent (set ',name ,module-var)))))
 
 ;; -----------------------------------------------------------------------------

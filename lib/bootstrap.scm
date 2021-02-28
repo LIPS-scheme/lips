@@ -1225,3 +1225,10 @@
   (if (not (null? fs))
       (--> lips.env (get '**internal-env**) (set "fs" fs))))
 ;; ---------------------------------------------------------------------------------------
+(define (environment? obj)
+  "(environment? obj)
+
+   Function check if object is LIPS environment."
+  (instanceof lips.Environment obj))
+
+;; ---------------------------------------------------------------------------------------
