@@ -591,6 +591,59 @@
       (port.getString)))
 
 ;; -----------------------------------------------------------------------------
+(define (open-input-bytevector bytevector)
+  "(open-input-bytevector bytevector)
+
+   Create new input binary port with given bytevector"
+  (typecheck "open-input-bytevector" bytevector "uint8array")
+  (new lips.InputByteVectorPort bytevector))
+
+;; -----------------------------------------------------------------------------
+;; temporary solution for tests
+;; -----------------------------------------------------------------------------
+(define (binary-port? port)
+  (instanceof lips.InputByteVectorPort port))
+
+(define (textual-port? port)
+  (and (port? port) (not (binary-port? port))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (%define-binary-input-lambda name docstring fn)
+  (let ((port (gensym))
+        (name-str (symbol->string name)))
+    `(define (,name . rest)
+       ,docstring
+       (let ((,port (if (null? rest)
+                        (current-input-port)
+                        (car rest))))
+         (typecheck ,name-str ,port "input-port")
+         (if (not (binary-port? ,port))
+             (throw (new Error (string-append ,name-str " invalid port")))
+             (,fn ,port))))))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-input-lambda
+ peek-u8
+ "(peek-u8)
+  (peek-u8 port)
+
+  Return next byte from input-binary port. If there are no more bytes
+  it return eof object."
+ (lambda (port)
+   (port.peek_u8)))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-input-lambda
+ read-u8
+ "(read-u8)
+  (read-u8 port)
+
+  Read next byte from input-binary port. If there are no more bytes
+  it return eof object."
+ (lambda (port)
+   (port.read_u8)))
+
+;; -----------------------------------------------------------------------------
 (define delete-file
   (let ((unlink #f))
     (lambda (filename)

@@ -5691,7 +5691,71 @@
         return `#<input-port <string>>`;
     };
     // -------------------------------------------------------------------------
+    function InputByteVectorPort(bytevectors) {
+        if (typeof this !== 'undefined' && !(this instanceof InputByteVectorPort) ||
+            typeof this === 'undefined') {
+            return new InputByteVectorPort(bytevectors);
+        }
+        typecheck('InputByteVectorPort', bytevectors, 'uint8array');
+        Object.defineProperty(this, '_vector', {
+            enumerable: true,
+            value: bytevectors
+        });
+        // TODO: Consider _index read/write typechecked property
+        this._index = 0;
+    }
+    InputByteVectorPort.prototype = Object.create(InputPort.prototype);
+    InputByteVectorPort.prototype.constructor = InputByteVectorPort;
+    InputByteVectorPort.prototype.toString = function() {
+        return `#<input-port <bytevector>>`;
+    };
+    InputByteVectorPort.prototype.peek_u8 = function() {
+        if (this._index >= this._vector.length) {
+            return eof;
+        }
+        return this._vector[this._index];
+    };
+    InputByteVectorPort.prototype.skip = function() {
+        if (this._index <= this._vector.length) {
+            ++this._index;
+        }
+    };
+    InputByteVectorPort.prototype.read_u8 = function() {
+        const byte = this.peek_u8();
+        this.skip();
+        return byte;
+    };
+    InputByteVectorPort.prototype.read_u8_vector = function(len) {
+        if (typeof len === 'undefined') {
+            len = this._vector.length;
+        } else if (len > this._index + this._vector.length) {
+            len = this._index + this._vector.length;
+        }
+        if (this.peek() === eof) {
+            return eof;
+        }
+        return this._vector.slice(this._index, len);
+    };
+    // -------------------------------------------------------------------------
     function InputFilePort(content, filename) {
+        if (typeof this !== 'undefined' && !(this instanceof InputFilePort) ||
+            typeof this === 'undefined') {
+            return new InputFilePort(content, filename);
+        }
+        InputStringPort.call(this, content);
+        typecheck('InputFilePort', filename, 'string');
+        Object.defineProperty(this, '_text', {
+            value: true
+        });
+        this.__filename__ = filename;
+    }
+    InputFilePort.prototype = Object.create(InputStringPort.prototype);
+    InputFilePort.prototype.constructor = InputFilePort;
+    InputFilePort.prototype.toString = function() {
+        return `#<input-port ${this.__filename__}>`;
+    };
+    // -------------------------------------------------------------------------
+    function InputFileBinaryPort(content, filename) {
         if (typeof this !== 'undefined' && !(this instanceof InputFilePort) ||
             typeof this === 'undefined') {
             return new InputFilePort(content, filename);
@@ -5700,11 +5764,6 @@
         typecheck('InputFilePort', filename, 'string');
         this.__filename__ = filename;
     }
-    InputFilePort.prototype = Object.create(InputStringPort.prototype);
-    InputFilePort.prototype.constructor = InputFilePort;
-    InputFilePort.prototype.toString = function() {
-        return `#<input-port ${this.__filename__}>`;
-    };
     // -------------------------------------------------------------------------
     var eof = new EOF();
     function EOF() {}
@@ -9470,6 +9529,7 @@ You can also use (help name) to display help for specic function or macro and
         OutputFilePort,
         InputStringPort,
         OutputStringPort,
+        InputByteVectorPort,
 
         Formatter,
         Parser,

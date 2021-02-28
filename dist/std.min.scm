@@ -665,7 +665,17 @@ Function create new output port that can used to write string into
 and after finish get the whole string using `get-output-string`." (new lips.OutputStringPort repr))(define (get-output-string port) "(get-output-string port)
 
 Function get full string from string port. If nothing was wrote
-to given port it will return empty string." (if (not (instanceof lips.OutputStringPort port)) (throw (new Error (string-append "get-output-string: expecting output-string-port get " (type port)))) (port.getString)))(define delete-file (let ((unlink #f)) (lambda (filename) "(delete-file filename)
+to given port it will return empty string." (if (not (instanceof lips.OutputStringPort port)) (throw (new Error (string-append "get-output-string: expecting output-string-port get " (type port)))) (port.getString)))(define (open-input-bytevector bytevector) "(open-input-bytevector bytevector)
+
+Create new input binary port with given bytevector" (typecheck "open-input-bytevector" bytevector "uint8array") (new lips.InputByteVectorPort bytevector))(define (binary-port? port) (instanceof lips.InputByteVectorPort port))(define (textual-port? port) (and (port? port) (not (binary-port? port))))(define-macro (%define-binary-input-lambda name docstring fn) (let ((port (gensym)) (name-str (symbol->string name))) (quasiquote (define ((unquote name) . rest) (unquote docstring) (let (((unquote port) (if (null? rest) (current-input-port) (car rest)))) (typecheck (unquote name-str) (unquote port) "input-port") (if (not (binary-port? (unquote port))) (throw (new Error (string-append (unquote name-str) " invalid port"))) ((unquote fn) (unquote port))))))))(%define-binary-input-lambda peek-u8 "(peek-u8)
+(peek-u8 port)
+
+Return next byte from input-binary port. If there are no more bytes
+it return eof object." (lambda (port) (port.peek_u8)))(%define-binary-input-lambda read-u8 "(read-u8)
+(read-u8 port)
+
+Read next byte from input-binary port. If there are no more bytes
+it return eof object." (lambda (port) (port.read_u8)))(define delete-file (let ((unlink #f)) (lambda (filename) "(delete-file filename)
 
 Function delete the file of given name." (typecheck "delete-file" filename "string") (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "delete-file: fs not defined")) (begin (if (not (procedure? unlink)) (set! unlink (promisify fs.unlink))) (unlink filename)))))))(define (call-with-port port proc) "(call-with-port port proc)
 

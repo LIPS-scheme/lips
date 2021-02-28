@@ -195,3 +195,22 @@
         (let ((p (open-input-string "123456")))
           (t.is (list (read-string 2 p) (read-string 2 p) (read-string 10 p))
                 '("12" "34" "56")))))
+
+(test "port: open-input-bytevector"
+      (lambda (t)
+        (let ((p (open-input-bytevector #u8(100 200 300 400 500))))
+          (t.is (binary-port? p) true)
+          (t.is (textual-port? p) false))))
+
+(test "port: read from open-input-bytevector"
+      (lambda (t)
+        (let ((p (open-input-bytevector #u8(#x10 #x20 #xFF #xFF #xFF))))
+          (t.is (peek-u8 p) #x10)
+          (t.is (read-u8 p) #x10)
+          (t.is (peek-u8 p) #x20)
+          (t.is (peek-u8 p) #x20)
+          (t.is (peek-u8 p) #x20)
+          (let ((result (vector)))
+            (while (not (eof-object? (peek-u8 p)))
+              (result.push (read-u8 p)))
+            (t.is result #(#x20 #xFF #xFF #xFF))))))

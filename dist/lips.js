@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 28 Feb 2021 14:26:21 +0000
+ * build: Sun, 28 Feb 2021 16:26:26 +0000
  */
 (function () {
   'use strict';
@@ -8987,6 +8987,63 @@
     }; // -------------------------------------------------------------------------
 
 
+    function InputByteVectorPort(bytevectors) {
+      if (typeof this !== 'undefined' && !(this instanceof InputByteVectorPort) || typeof this === 'undefined') {
+        return new InputByteVectorPort(bytevectors);
+      }
+
+      typecheck('InputByteVectorPort', bytevectors, 'uint8array');
+      Object.defineProperty(this, '_vector', {
+        enumerable: true,
+        value: bytevectors
+      }); // TODO: Consider _index read/write typechecked property
+
+      this._index = 0;
+    }
+
+    InputByteVectorPort.prototype = Object.create(InputPort.prototype);
+    InputByteVectorPort.prototype.constructor = InputByteVectorPort;
+
+    InputByteVectorPort.prototype.toString = function () {
+      return "#<input-port <bytevector>>";
+    };
+
+    InputByteVectorPort.prototype.peek_u8 = function () {
+      if (this._index >= this._vector.length) {
+        return eof;
+      }
+
+      return this._vector[this._index];
+    };
+
+    InputByteVectorPort.prototype.skip = function () {
+      if (this._index <= this._vector.length) {
+        ++this._index;
+      }
+    };
+
+    InputByteVectorPort.prototype.read_u8 = function () {
+      var _byte = this.peek_u8();
+
+      this.skip();
+      return _byte;
+    };
+
+    InputByteVectorPort.prototype.read_u8_vector = function (len) {
+      if (typeof len === 'undefined') {
+        len = this._vector.length;
+      } else if (len > this._index + this._vector.length) {
+        len = this._index + this._vector.length;
+      }
+
+      if (this.peek() === eof) {
+        return eof;
+      }
+
+      return this._vector.slice(this._index, len);
+    }; // -------------------------------------------------------------------------
+
+
     function InputFilePort(content, filename) {
       if (typeof this !== 'undefined' && !(this instanceof InputFilePort) || typeof this === 'undefined') {
         return new InputFilePort(content, filename);
@@ -8994,6 +9051,9 @@
 
       InputStringPort.call(this, content);
       typecheck('InputFilePort', filename, 'string');
+      Object.defineProperty(this, '_text', {
+        value: true
+      });
       this.__filename__ = filename;
     }
 
@@ -13319,10 +13379,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 28 Feb 2021 14:26:21 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 28 Feb 2021 16:26:26 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 28 Feb 2021 14:26:21 +0000').valueOf();
+      var date = LString('Sun, 28 Feb 2021 16:26:26 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13362,7 +13422,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 28 Feb 2021 14:26:21 +0000',
+      date: 'Sun, 28 Feb 2021 16:26:26 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
@@ -13388,6 +13448,7 @@
       OutputFilePort: OutputFilePort,
       InputStringPort: InputStringPort,
       OutputStringPort: OutputStringPort,
+      InputByteVectorPort: InputByteVectorPort,
       Formatter: Formatter,
       Parser: Parser,
       Lexer: Lexer,
