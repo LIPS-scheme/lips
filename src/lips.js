@@ -5774,7 +5774,7 @@
                 parent = null;
             } else if (typeof arguments[0] === 'string') {
                 obj = {};
-                parent = {};
+                parent = null;
                 name = arguments[0];
             }
         }
