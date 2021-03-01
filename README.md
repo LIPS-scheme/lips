@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.11-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&2580adf9a4633a1263a0915305033bb254045fcb)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&df23d954e272b794f73c708e69caee1e46d8aed2)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&73fdd331a2b532845b0f720c2d24e906)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -184,6 +184,24 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 * [Gitter Chat](https://gitter.im/jcubic/lips)
 * [Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
+
+## Roadmap
+
+### 1.0
+- [x] Full support for R5RS
+- [ ] Full support for R7RS
+- [ ] Continuations.
+- [ ] Tail Call Optimization (TCO).
+- [ ] Fully tested Numerical Tower.
+- [ ] R7RS libraries (`import`/`export`/`define-library`).
+- [ ] All recursive function in JS don't consume stack.
+- [ ] Finish `syntax-rules` (ignore limitations of current approach).
+  - [ ] Objects.
+  - [ ] Vectors.
+
+### 1.1
+- [ ] Proper expansion time for both macro system.
+- [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 
 ## Acknowledgments
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
