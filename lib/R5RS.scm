@@ -1265,10 +1265,6 @@
               (if (not (procedure? readFile))
                   (let ((_readFile (promisify fs.readFile)))
                     (set! readFile (lambda (filename)
-                                     "(readFile filename)
-
-                                      Helper function that return Promise. NodeJS function sometimes give warnings
-                                      when using fs.promises on Windows."
                                      (--> (_readFile filename) (toString))))))
               (new lips.InputFilePort (readFile filename) filename)))))))
 

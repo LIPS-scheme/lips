@@ -531,10 +531,7 @@ for interactive ports that return false if it would wait for user input.
 It return false if port is closed." (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "char-ready?" port "input-port") (port.char_ready)))(define open-input-file (let ((readFile #f)) (lambda (filename) "(open-input-file filename)
 
 Function return new Input Port with given filename. In Browser user need to
-provide global fs variable that is instance of FS interface." (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-input-file: fs not defined")) (begin (if (not (procedure? readFile)) (let ((_readFile (promisify fs.readFile))) (set! readFile (lambda (filename) "(readFile filename)
-
-Helper function that return Promise. NodeJS function sometimes give warnings
-when using fs.promises on Windows." (--> (_readFile filename) (toString)))))) (new lips.InputFilePort (readFile filename) filename)))))))(define (close-input-port port) "(close-input-port port)
+provide global fs variable that is instance of FS interface." (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-input-file: fs not defined")) (begin (if (not (procedure? readFile)) (let ((_readFile (promisify fs.readFile))) (set! readFile (lambda (filename) (--> (_readFile filename) (toString)))))) (new lips.InputFilePort (readFile filename) filename)))))))(define (close-input-port port) "(close-input-port port)
 
 Procedure close port that was opened with open-input-file. After that
 it no longer accept reading from that port." (typecheck "close-input-port" port "input-port") (port.close))(define (close-output-port port) "(close-output-port port)
@@ -667,7 +664,14 @@ and after finish get the whole string using `get-output-string`." (new lips.Outp
 Function get full string from string port. If nothing was wrote
 to given port it will return empty string." (if (not (instanceof lips.OutputStringPort port)) (throw (new Error (string-append "get-output-string: expecting output-string-port get " (type port)))) (port.getString)))(define (open-input-bytevector bytevector) "(open-input-bytevector bytevector)
 
-Create new input binary port with given bytevector" (typecheck "open-input-bytevector" bytevector "uint8array") (new lips.InputByteVectorPort bytevector))(define (binary-port? port) (instanceof lips.InputByteVectorPort port))(define (textual-port? port) (and (port? port) (not (binary-port? port))))(define-macro (%define-binary-input-lambda name docstring fn) (let ((port (gensym)) (name-str (symbol->string name))) (quasiquote (define ((unquote name) . rest) (unquote docstring) (let (((unquote port) (if (null? rest) (current-input-port) (car rest)))) (typecheck (unquote name-str) (unquote port) "input-port") (if (not (binary-port? (unquote port))) (throw (new Error (string-append (unquote name-str) " invalid port"))) ((unquote fn) (unquote port))))))))(%define-binary-input-lambda peek-u8 "(peek-u8)
+Create new input binary port with given bytevector" (typecheck "open-input-bytevector" bytevector "uint8array") (new lips.InputByteVectorPort bytevector))(define open-binary-input-file (let ((readFile #f)) (lambda (filename) "(open-binary-input-file filename)
+
+Function return new Input Binary Port with given filename. In Browser
+user need to provide global fs variable that is instance of FS interface." (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-binary-input-file: fs not defined")) (begin (if (not (procedure? readFile)) (let ((_readFile (promisify fs.readFile))) (set! readFile (lambda (filename) (Uint8Array.from (_readFile filename)))))) (new lips.InputBinaryFilePort (readFile filename) filename)))))))(define (binary-port? port) "(binary-port? port)
+
+Function test if argument is binary port." (and (port? port) (eq? port.__type__ (Symbol.for "binary"))))(define (textual-port? port) "(textual-port? port)
+
+Function test if argument is string port." (and (port? port) (eq? port.__type__ (Symbol.for "text"))))(define-macro (%define-binary-input-lambda name docstring fn) (let ((port (gensym)) (name-str (symbol->string name))) (quasiquote (define ((unquote name) . rest) (unquote docstring) (let (((unquote port) (if (null? rest) (current-input-port) (car rest)))) (typecheck (unquote name-str) (unquote port) "input-port") (if (not (binary-port? (unquote port))) (throw (new Error (string-append (unquote name-str) " invalid port"))) ((unquote fn) (unquote port))))))))(%define-binary-input-lambda peek-u8 "(peek-u8)
 (peek-u8 port)
 
 Return next byte from input-binary port. If there are no more bytes

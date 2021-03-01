@@ -2501,10 +2501,6 @@
               (if (not (procedure? readFile))
                   (let ((_readFile (promisify fs.readFile)))
                     (set! readFile (lambda (filename)
-                                     "(readFile filename)
-
-                                      Helper function that return Promise. NodeJS function sometimes give warnings
-                                      when using fs.promises on Windows."
                                      (--> (_readFile filename) (toString))))))
               (new lips.InputFilePort (readFile filename) filename)))))))
 
@@ -2826,11 +2822,6 @@
   (list-match? (lambda (a b)
                  (and (symbol? a) (symbol? b) (equal? a b)))
                args))
-
-;;(define (read-line . rest)
-;;  (let ((port (if (null? rest) (current-input-port) (car rest))))
-;;    (while (let ((char (peek-char port)))
-;;             (and (not (string?
 
 ;; -----------------------------------------------------------------------------
 ;; function for Gauche code
@@ -3389,13 +3380,36 @@
   (new lips.InputByteVectorPort bytevector))
 
 ;; -----------------------------------------------------------------------------
-;; temporary solution for tests
+(define open-binary-input-file
+  (let ((readFile #f))
+    (lambda(filename)
+      "(open-binary-input-file filename)
+
+       Function return new Input Binary Port with given filename. In Browser
+       user need to provide global fs variable that is instance of FS interface."
+      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+        (if (null? fs)
+            (throw (new Error "open-binary-input-file: fs not defined"))
+            (begin
+              (if (not (procedure? readFile))
+                  (let ((_readFile (promisify fs.readFile)))
+                    (set! readFile (lambda (filename)
+                                     (Uint8Array.from (_readFile filename))))))
+              (new lips.InputBinaryFilePort (readFile filename) filename)))))))
+
 ;; -----------------------------------------------------------------------------
 (define (binary-port? port)
-  (instanceof lips.InputByteVectorPort port))
+  "(binary-port? port)
 
+   Function test if argument is binary port."
+  (and (port? port) (eq? port.__type__ (Symbol.for "binary"))))
+
+;; -----------------------------------------------------------------------------
 (define (textual-port? port)
-  (and (port? port) (not (binary-port? port))))
+  "(textual-port? port)
+
+   Function test if argument is string port."
+  (and (port? port) (eq? port.__type__ (Symbol.for "text"))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (%define-binary-input-lambda name docstring fn)

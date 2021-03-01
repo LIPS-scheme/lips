@@ -198,7 +198,7 @@
 
 (test "port: open-input-bytevector"
       (lambda (t)
-        (let ((p (open-input-bytevector #u8(100 200 300 400 500))))
+        (let ((p (open-input-bytevector #u8(#x10 #x20 #xFF #xFF #xFF))))
           (t.is (binary-port? p) true)
           (t.is (textual-port? p) false))))
 
@@ -214,3 +214,29 @@
             (while (not (eof-object? (peek-u8 p)))
               (result.push (read-u8 p)))
             (t.is result #(#x20 #xFF #xFF #xFF))))))
+
+(test "port: textual-port?"
+      (lambda (t)
+        (let* ((closable (list (open-input-file "./tests/ports.scm")
+                               (open-input-string "xxx")
+                               (open-output-string)
+                               (open-output-file "./tests/__x6__.scm")))
+               (ports (append (list (current-input-port)
+                                    (current-output-port))
+                              closable)))
+          (for-each (lambda (p)
+                      (t.is (textual-port? p) true))
+                    ports)
+          (for-each close-port closable)
+          (delete-file "./tests/__x6__.scm"))))
+
+(test "port: read binary"
+      (lambda (t)
+        (let* ((fname "./tests/stubs/test.txt")
+               (p (open-binary-input-file fname))
+               (result (vector))
+               (fs (require "fs")))
+          (while (not (eof-object? (peek-u8 p)))
+            (result.push (string (integer->char (read-u8 p)))))
+          (t.is (result.join "") (--> (fs.promises.readFile fname)
+                                      (toString))))))

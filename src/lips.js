@@ -1526,6 +1526,12 @@
             }
         }
         return fn(value);
+    }// ----------------------------------------------------------------------
+    function read_only(object, property, value, hidden = false) {
+        Object.defineProperty(object, property, {
+            value,
+            enumerable: !hidden
+        });
     }
     // ----------------------------------------------------------------------
     // :: Function similar to Array.from that work on async iterators
@@ -5510,6 +5516,7 @@
             return new InputPort(read);
         }
         typecheck('InputPort', read, 'function');
+        read_only(this, '__type__', text_port);
         this._read = read;
         this._with_parser = this._with_init_parser.bind(this, async () => {
             if (!this.char_ready()) {
@@ -5578,6 +5585,7 @@
             return new OutputPort(write);
         }
         typecheck('OutputPort', write, 'function');
+        read_only(this, '__type__', text_port);
         this.write = write;
     }
     OutputPort.prototype.is_open = function() {
@@ -5604,6 +5612,7 @@
             return new OutputStringPort(toString);
         }
         typecheck('OutputStringPort', toString, 'function');
+        read_only(this, '__type__', text_port);
         this._buffer = [];
         this.write = (x) => {
             if (!LString.isString(x)) {
@@ -5631,6 +5640,7 @@
         typecheck('OutputFilePort', filename, 'string');
         this._filename = filename;
         this._fd = fd.valueOf();
+        read_only(this, '__type__', text_port);
         this.write = (x) => {
             if (!LString.isString(x)) {
                 x = toString(x);
@@ -5680,6 +5690,7 @@
             }
             return this.__parser__;
         });
+        read_only(this, '__type__', text_port);
         this._make_defaults();
     }
     InputStringPort.prototype.char_ready = function() {
@@ -5697,12 +5708,29 @@
             return new InputByteVectorPort(bytevectors);
         }
         typecheck('InputByteVectorPort', bytevectors, 'uint8array');
-        Object.defineProperty(this, '_vector', {
+        read_only(this, '__vector__', bytevectors);
+        read_only(this, '__type__', binary_port);
+        var index = 0;
+        Object.defineProperty(this, '__index__', {
             enumerable: true,
-            value: bytevectors
+            get: function() {
+                return index;
+            },
+            set: function(value) {
+                typecheck('InputByteVectorPort::__index__', value, 'number');
+                if (value instanceof LNumber) {
+                    value = value.valueOf();
+                }
+                if (typeof value === 'bigint') {
+                    value = Number(value);
+                }
+                if (Math.floor(value) !== value) {
+                    throw new Error('InputByteVectorPort::__index__ value is ' +
+                                    'not integer');
+                }
+                index = value;
+            }
         });
-        // TODO: Consider _index read/write typechecked property
-        this._index = 0;
     }
     InputByteVectorPort.prototype = Object.create(InputPort.prototype);
     InputByteVectorPort.prototype.constructor = InputByteVectorPort;
@@ -5710,14 +5738,14 @@
         return `#<input-port <bytevector>>`;
     };
     InputByteVectorPort.prototype.peek_u8 = function() {
-        if (this._index >= this._vector.length) {
+        if (this.__index__ >= this.__vector__.length) {
             return eof;
         }
-        return this._vector[this._index];
+        return this.__vector__[this.__index__];
     };
     InputByteVectorPort.prototype.skip = function() {
-        if (this._index <= this._vector.length) {
-            ++this._index;
+        if (this.__index__ <= this.__vector__.length) {
+            ++this.__index__;
         }
     };
     InputByteVectorPort.prototype.read_u8 = function() {
@@ -5727,14 +5755,14 @@
     };
     InputByteVectorPort.prototype.read_u8_vector = function(len) {
         if (typeof len === 'undefined') {
-            len = this._vector.length;
-        } else if (len > this._index + this._vector.length) {
-            len = this._index + this._vector.length;
+            len = this.__vector__.length;
+        } else if (len > this.__index__ + this.__vector__.length) {
+            len = this.__index__ + this.__vector__.length;
         }
         if (this.peek() === eof) {
             return eof;
         }
-        return this._vector.slice(this._index, len);
+        return this.__vector__.slice(this.__index__, len);
     };
     // -------------------------------------------------------------------------
     function InputFilePort(content, filename) {
@@ -5744,10 +5772,7 @@
         }
         InputStringPort.call(this, content);
         typecheck('InputFilePort', filename, 'string');
-        Object.defineProperty(this, '_text', {
-            value: true
-        });
-        this.__filename__ = filename;
+        read_only(this, '__filename__', filename);
     }
     InputFilePort.prototype = Object.create(InputStringPort.prototype);
     InputFilePort.prototype.constructor = InputFilePort;
@@ -5755,16 +5780,23 @@
         return `#<input-port ${this.__filename__}>`;
     };
     // -------------------------------------------------------------------------
-    function InputFileBinaryPort(content, filename) {
-        if (typeof this !== 'undefined' && !(this instanceof InputFilePort) ||
+    function InputBinaryFilePort(content, filename) {
+        if (typeof this !== 'undefined' && !(this instanceof InputBinaryFilePort) ||
             typeof this === 'undefined') {
-            return new InputFilePort(content, filename);
+            return new InputBinaryFilePort(content, filename);
         }
-        InputStringPort.call(this, content);
-        typecheck('InputFilePort', filename, 'string');
-        this.__filename__ = filename;
+        InputByteVectorPort.call(this, content);
+        typecheck('InputBinaryFilePort', filename, 'string');
+        read_only(this, '__filename__', filename);
     }
+    InputBinaryFilePort.prototype = Object.create(InputByteVectorPort.prototype);
+    InputBinaryFilePort.prototype.constructor = InputBinaryFilePort;
+    InputBinaryFilePort.prototype.toString = function() {
+        return `#<input-binary-port ${this.__filename__}>`;
+    };
     // -------------------------------------------------------------------------
+    const binary_port = Symbol.for('binary');
+    const text_port = Symbol.for('text');
     var eof = new EOF();
     function EOF() {}
     EOF.prototype.toString = function() {
@@ -9530,6 +9562,7 @@ You can also use (help name) to display help for specic function or macro and
         InputStringPort,
         OutputStringPort,
         InputByteVectorPort,
+        InputBinaryFilePort,
 
         Formatter,
         Parser,

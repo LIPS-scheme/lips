@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 28 Feb 2021 16:26:26 +0000
+ * build: Mon, 01 Mar 2021 17:56:17 +0000
  */
 (function () {
   'use strict';
@@ -3349,6 +3349,15 @@
       }
 
       return fn(value);
+    } // ----------------------------------------------------------------------
+
+
+    function read_only(object, property, value) {
+      var hidden = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : false;
+      Object.defineProperty(object, property, {
+        value: value,
+        enumerable: !hidden
+      });
     } // ----------------------------------------------------------------------
     // :: Function similar to Array.from that work on async iterators
     // ----------------------------------------------------------------------
@@ -8698,6 +8707,7 @@
       }
 
       typecheck('InputPort', read, 'function');
+      read_only(this, '__type__', text_port);
       this._read = read;
       this._with_parser = this._with_init_parser.bind(this, /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9() {
         var line;
@@ -8834,6 +8844,7 @@
       }
 
       typecheck('OutputPort', write, 'function');
+      read_only(this, '__type__', text_port);
       this.write = write;
     }
 
@@ -8869,6 +8880,7 @@
       }
 
       typecheck('OutputStringPort', toString, 'function');
+      read_only(this, '__type__', text_port);
       this._buffer = [];
 
       this.write = function (x) {
@@ -8906,6 +8918,7 @@
       typecheck('OutputFilePort', filename, 'string');
       this._filename = filename;
       this._fd = fd.valueOf();
+      read_only(this, '__type__', text_port);
 
       this.write = function (x) {
         if (!LString.isString(x)) {
@@ -8971,6 +8984,7 @@
 
         return _this11.__parser__;
       });
+      read_only(this, '__type__', text_port);
 
       this._make_defaults();
     }
@@ -8993,12 +9007,32 @@
       }
 
       typecheck('InputByteVectorPort', bytevectors, 'uint8array');
-      Object.defineProperty(this, '_vector', {
+      read_only(this, '__vector__', bytevectors);
+      read_only(this, '__type__', binary_port);
+      var index = 0;
+      Object.defineProperty(this, '__index__', {
         enumerable: true,
-        value: bytevectors
-      }); // TODO: Consider _index read/write typechecked property
+        get: function get() {
+          return index;
+        },
+        set: function set(value) {
+          typecheck('InputByteVectorPort::__index__', value, 'number');
 
-      this._index = 0;
+          if (value instanceof LNumber) {
+            value = value.valueOf();
+          }
+
+          if (typeof value === 'bigint') {
+            value = Number(value);
+          }
+
+          if (Math.floor(value) !== value) {
+            throw new Error('InputByteVectorPort::__index__ value is ' + 'not integer');
+          }
+
+          index = value;
+        }
+      });
     }
 
     InputByteVectorPort.prototype = Object.create(InputPort.prototype);
@@ -9009,16 +9043,16 @@
     };
 
     InputByteVectorPort.prototype.peek_u8 = function () {
-      if (this._index >= this._vector.length) {
+      if (this.__index__ >= this.__vector__.length) {
         return eof;
       }
 
-      return this._vector[this._index];
+      return this.__vector__[this.__index__];
     };
 
     InputByteVectorPort.prototype.skip = function () {
-      if (this._index <= this._vector.length) {
-        ++this._index;
+      if (this.__index__ <= this.__vector__.length) {
+        ++this.__index__;
       }
     };
 
@@ -9031,16 +9065,16 @@
 
     InputByteVectorPort.prototype.read_u8_vector = function (len) {
       if (typeof len === 'undefined') {
-        len = this._vector.length;
-      } else if (len > this._index + this._vector.length) {
-        len = this._index + this._vector.length;
+        len = this.__vector__.length;
+      } else if (len > this.__index__ + this.__vector__.length) {
+        len = this.__index__ + this.__vector__.length;
       }
 
       if (this.peek() === eof) {
         return eof;
       }
 
-      return this._vector.slice(this._index, len);
+      return this.__vector__.slice(this.__index__, len);
     }; // -------------------------------------------------------------------------
 
 
@@ -9051,10 +9085,7 @@
 
       InputStringPort.call(this, content);
       typecheck('InputFilePort', filename, 'string');
-      Object.defineProperty(this, '_text', {
-        value: true
-      });
-      this.__filename__ = filename;
+      read_only(this, '__filename__', filename);
     }
 
     InputFilePort.prototype = Object.create(InputStringPort.prototype);
@@ -9065,6 +9096,26 @@
     }; // -------------------------------------------------------------------------
 
 
+    function InputBinaryFilePort(content, filename) {
+      if (typeof this !== 'undefined' && !(this instanceof InputBinaryFilePort) || typeof this === 'undefined') {
+        return new InputBinaryFilePort(content, filename);
+      }
+
+      InputByteVectorPort.call(this, content);
+      typecheck('InputBinaryFilePort', filename, 'string');
+      read_only(this, '__filename__', filename);
+    }
+
+    InputBinaryFilePort.prototype = Object.create(InputByteVectorPort.prototype);
+    InputBinaryFilePort.prototype.constructor = InputBinaryFilePort;
+
+    InputBinaryFilePort.prototype.toString = function () {
+      return "#<input-binary-port ".concat(this.__filename__, ">");
+    }; // -------------------------------------------------------------------------
+
+
+    var binary_port = Symbol["for"]('binary');
+    var text_port = Symbol["for"]('text');
     var eof = new EOF();
 
     function EOF() {}
@@ -13379,10 +13430,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 28 Feb 2021 16:26:26 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Mon, 01 Mar 2021 17:56:17 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 28 Feb 2021 16:26:26 +0000').valueOf();
+      var date = LString('Mon, 01 Mar 2021 17:56:17 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13422,7 +13473,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 28 Feb 2021 16:26:26 +0000',
+      date: 'Mon, 01 Mar 2021 17:56:17 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
@@ -13449,6 +13500,7 @@
       InputStringPort: InputStringPort,
       OutputStringPort: OutputStringPort,
       InputByteVectorPort: InputByteVectorPort,
+      InputBinaryFilePort: InputBinaryFilePort,
       Formatter: Formatter,
       Parser: Parser,
       Lexer: Lexer,
