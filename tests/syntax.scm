@@ -937,3 +937,40 @@
         (t.is (let*-values (((a b c) (values 1 2 3)))
                            (+ a b c))
               6)))
+
+(test_ "syntax: nested _"
+       (lambda (t)
+         (define-syntax foo
+           (syntax-rules ()
+             ((_)
+              (let ()
+                (define-syntax %foo
+                  (syntax-rules (foo bar)
+                    ((_ (foo))
+                     "foo")
+                    ((_) "bar")
+                    ((_ x)
+                     'x)))
+                (list (%foo (foo))
+                      (%foo (10))
+                      (%foo bar)
+                      (%foo))))))
+
+         (t.is (foo) '("foo" (10) bar "bar"))))
+
+(test_ "syntax: nesting, renaming and scope"
+       (lambda (t)
+         (let ((result 10))
+           (define-syntax foo
+             (syntax-rules ()
+               ((_)
+                (let ()
+                  (define-syntax %foo
+                    (syntax-rules (foo bar)
+                      ((__ (foo))
+                       (set! result '(foo)))
+                      ((__ x)
+                       (set! result 'x))))
+                  (%foo (foo))))))
+           (foo)
+           (t.is result '(foo)))))
