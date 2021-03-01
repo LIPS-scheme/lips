@@ -110,7 +110,7 @@
                     (string->list (repr input)))
           (t.is (get-output-string port) input))))
 
-(test "port: write-char to output file"
+(test "ports: write-char to output file"
       (lambda (t)
         (let ((filename "./tests/__x2__.scm"))
           (if (file-exists? filename)
@@ -127,7 +127,7 @@
               (delete-file filename)
               (t.is result input))))))
 
-(test "port: call-with-?-ports"
+(test "ports: call-with-?-ports"
       (lambda (t)
         (let ((filename "./tests/__x3__.scm")
               (input '(hello world)))
@@ -138,7 +138,7 @@
             (delete-file filename)
             (t.is result input)))))
 
-(test "port: close-output-port for output-string"
+(test "ports: close-output-port for output-string"
       (lambda (t)
         (let ((input '(hello)))
           (let ((p (open-output-string)))
@@ -149,7 +149,7 @@
             (t.is (output-port-open? p) false)
             (t.is (get-output-string p) (repr input))))))
 
-(test "port: close-output-port for output-file"
+(test "ports: close-output-port for output-file"
       (lambda (t)
         (let ((input '(hello)))
           (let ((filename "./tests/__x4__.scm"))
@@ -166,7 +166,7 @@
               (delete-file filename))))))
 
 
-(test "port: close-input-port for input-string"
+(test "ports: close-input-port for input-string"
       (lambda (t)
         (let* ((input '(hello))
                (port (open-input-string (repr input))))
@@ -176,7 +176,7 @@
           (t.is (to.throw (read port)) true)
           (t.is (input-port-open? port) false))))
 
-(test "port: close-input-port for input-file"
+(test "ports: close-input-port for input-file"
       (lambda (t)
         (let* ((input '(hello))
                (filename "./tests/__x5__.scm"))
@@ -190,19 +190,19 @@
             (t.is (input-port-open? port) false)
             (delete-file filename)))))
 
-(test "port: read-string for input-string"
+(test "ports: read-string for input-string"
       (lambda (t)
         (let ((p (open-input-string "123456")))
           (t.is (list (read-string 2 p) (read-string 2 p) (read-string 10 p))
                 '("12" "34" "56")))))
 
-(test "port: open-input-bytevector"
+(test "ports: open-input-bytevector"
       (lambda (t)
         (let ((p (open-input-bytevector #u8(#x10 #x20 #xFF #xFF #xFF))))
           (t.is (binary-port? p) true)
           (t.is (textual-port? p) false))))
 
-(test "port: read from open-input-bytevector"
+(test "ports: read from open-input-bytevector"
       (lambda (t)
         (let ((p (open-input-bytevector #u8(#x10 #x20 #xFF #xFF #xFF))))
           (t.is (peek-u8 p) #x10)
@@ -215,7 +215,7 @@
               (result.push (read-u8 p)))
             (t.is result #(#x20 #xFF #xFF #xFF))))))
 
-(test "port: textual-port?"
+(test "ports: textual-port?"
       (lambda (t)
         (let* ((closable (list (open-input-file "./tests/ports.scm")
                                (open-input-string "xxx")
@@ -230,7 +230,7 @@
           (for-each close-port closable)
           (delete-file "./tests/__x6__.scm"))))
 
-(test "port: read binary"
+(test "ports: read binary"
       (lambda (t)
         (let* ((fname "./tests/stubs/test.txt")
                (p (open-binary-input-file fname))
@@ -240,3 +240,9 @@
             (result.push (string (integer->char (read-u8 p)))))
           (t.is (result.join "") (--> (fs.promises.readFile fname)
                                       (toString))))))
+
+(test "ports: read bytevector"
+      (lambda (t)
+        (let ((p (open-binary-input-file "./tests/stubs/test.txt")))
+          (t.is (utf8->string (read-bytevector 10 p))
+                "Hello this"))))

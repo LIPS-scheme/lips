@@ -3448,6 +3448,22 @@
    (port.read_u8)))
 
 ;; -----------------------------------------------------------------------------
+(define (read-bytevector k . rest)
+  "(read-bytevector k)
+   (read-bytevector k port)
+
+   Read next n bytes from input-binary port. If there are no more bytes
+   it returns eof object. If there are less then n bytes in port it
+   return the only bytes that are available"
+  (let ((port (if (null? rest)
+                  (current-input-port)
+                  (car rest))))
+    (typecheck "read-bytevector" port "input-port")
+    (if (not (binary-port? port))
+        (throw (new Error "read-bytevector: invalid port"))
+        (port.read_u8_vector k))))
+
+;; -----------------------------------------------------------------------------
 (define delete-file
   (let ((unlink #f))
     (lambda (filename)

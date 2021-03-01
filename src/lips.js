@@ -5759,7 +5759,7 @@
         } else if (len > this.__index__ + this.__vector__.length) {
             len = this.__index__ + this.__vector__.length;
         }
-        if (this.peek() === eof) {
+        if (this.peek_u8() === eof) {
             return eof;
         }
         return this.__vector__.slice(this.__index__, len);

@@ -679,7 +679,12 @@ it return eof object." (lambda (port) (port.peek_u8)))(%define-binary-input-lamb
 (read-u8 port)
 
 Read next byte from input-binary port. If there are no more bytes
-it return eof object." (lambda (port) (port.read_u8)))(define delete-file (let ((unlink #f)) (lambda (filename) "(delete-file filename)
+it return eof object." (lambda (port) (port.read_u8)))(define (read-bytevector k . rest) "(read-bytevector k)
+(read-bytevector k port)
+
+Read next n bytes from input-binary port. If there are no more bytes
+it returns eof object. If there are less then n bytes in port it
+return the only bytes that are available" (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-bytevector" port "input-port") (if (not (binary-port? port)) (throw (new Error "read-bytevector: invalid port")) (port.read_u8_vector k))))(define delete-file (let ((unlink #f)) (lambda (filename) "(delete-file filename)
 
 Function delete the file of given name." (typecheck "delete-file" filename "string") (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "delete-file: fs not defined")) (begin (if (not (procedure? unlink)) (set! unlink (promisify fs.unlink))) (unlink filename)))))))(define (call-with-port port proc) "(call-with-port port proc)
 
