@@ -671,7 +671,7 @@ user need to provide global fs variable that is instance of FS interface." (let 
 
 Function test if argument is binary port." (and (port? port) (eq? port.__type__ (Symbol.for "binary"))))(define (textual-port? port) "(textual-port? port)
 
-Function test if argument is string port." (and (port? port) (eq? port.__type__ (Symbol.for "text"))))(define-macro (%define-binary-input-lambda name docstring fn) (let ((port (gensym)) (name-str (symbol->string name))) (quasiquote (define ((unquote name) . rest) (unquote docstring) (let (((unquote port) (if (null? rest) (current-input-port) (car rest)))) (typecheck (unquote name-str) (unquote port) "input-port") (if (not (binary-port? (unquote port))) (throw (new Error (string-append (unquote name-str) " invalid port"))) ((unquote fn) (unquote port))))))))(%define-binary-input-lambda peek-u8 "(peek-u8)
+Function test if argument is string port." (and (port? port) (eq? port.__type__ (Symbol.for "text"))))(define-macro (%define-binary-input-lambda name docstring fn) (let ((port (gensym)) (name-str (symbol->string name))) (quasiquote (define ((unquote name) . rest) (unquote docstring) (let (((unquote port) (if (null? rest) (current-input-port) (car rest)))) (typecheck (unquote name-str) (unquote port) "input-port") (if (not (binary-port? (unquote port))) (throw (new Error (string-append (unquote name-str) " invalid port. Binary port required."))) ((unquote fn) (unquote port))))))))(%define-binary-input-lambda peek-u8 "(peek-u8)
 (peek-u8 port)
 
 Return next byte from input-binary port. If there are no more bytes
@@ -679,7 +679,12 @@ it return eof object." (lambda (port) (port.peek_u8)))(%define-binary-input-lamb
 (read-u8 port)
 
 Read next byte from input-binary port. If there are no more bytes
-it return eof object." (lambda (port) (port.read_u8)))(define (read-bytevector k . rest) "(read-bytevector k)
+it return eof object." (lambda (port) (port.read_u8)))(%define-binary-input-lambda u8-ready? "(u8-ready?)
+(u8-ready? port)
+
+Returns #t if a byte is ready on the binary input port and returns #f otherwise.
+If u8-ready? returns #t then the next read-u8 operation on the given port is
+guaranteed not to hang. If the port is at end of file then u8-ready? returns #t." (lambda (port) (port.u8_ready)))(define (read-bytevector k . rest) "(read-bytevector k)
 (read-bytevector k port)
 
 Read next n bytes from input-binary port. If there are no more bytes

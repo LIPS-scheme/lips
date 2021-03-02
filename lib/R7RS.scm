@@ -636,7 +636,8 @@
                         (car rest))))
          (typecheck ,name-str ,port "input-port")
          (if (not (binary-port? ,port))
-             (throw (new Error (string-append ,name-str " invalid port")))
+             (throw (new Error (string-append ,name-str
+                                              " invalid port. Binary port required.")))
              (,fn ,port))))))
 
 ;; -----------------------------------------------------------------------------
@@ -660,6 +661,18 @@
   it return eof object."
  (lambda (port)
    (port.read_u8)))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-input-lambda
+ u8-ready?
+ "(u8-ready?)
+  (u8-ready? port)
+
+  Returns #t if a byte is ready on the binary input port and returns #f otherwise.
+  If u8-ready? returns #t then the next read-u8 operation on the given port is
+  guaranteed not to hang. If the port is at end of file then u8-ready? returns #t."
+ (lambda (port)
+   (port.u8_ready)))
 
 ;; -----------------------------------------------------------------------------
 (define (read-bytevector k . rest)

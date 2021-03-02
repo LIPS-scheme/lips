@@ -5517,16 +5517,27 @@
         }
         typecheck('InputPort', read, 'function');
         read_only(this, '__type__', text_port);
+        var parser;
+        Object.defineProperty(this, '__parser__', {
+            enumerable: true,
+            get: function() {
+                return parser;
+            },
+            set: function(value) {
+                typecheck('InputPort::__parser__', value, 'parser');
+                parser = value;
+            }
+        });
         this._read = read;
         this._with_parser = this._with_init_parser.bind(this, async () => {
             if (!this.char_ready()) {
                 const line = await this._read();
-                this.__parser__ = new Parser(line, { env: this });
+                parser = new Parser(line, { env: this });
             }
             return this.__parser__;
         });
         this.char_ready = function() {
-            return this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
+            return !!this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
         };
         this._make_defaults();
     }
@@ -5562,7 +5573,7 @@
         return this._with_parser !== null;
     };
     InputPort.prototype.close = function() {
-        delete this.__parser__;
+        this.__parser__ = null;
         // make content garbage collected, we assign null,
         // because the value is in prototype
         this._with_parser = null;
@@ -5625,7 +5636,7 @@
     }
     OutputStringPort.prototype = Object.create(OutputPort.prototype);
     OutputStringPort.prototype.toString = function() {
-        return '#<output-port <string>>';
+        return '#<output-port (string)>';
     };
     OutputStringPort.prototype.getString = function() {
         return this._buffer.map(x => x.valueOf()).join('');
@@ -5699,7 +5710,7 @@
     InputStringPort.prototype = Object.create(InputPort.prototype);
     InputStringPort.prototype.constructor = InputStringPort;
     InputStringPort.prototype.toString = function() {
-        return `#<input-port <string>>`;
+        return `#<input-port (string)>`;
     };
     // -------------------------------------------------------------------------
     function InputByteVectorPort(bytevectors) {
@@ -5735,7 +5746,21 @@
     InputByteVectorPort.prototype = Object.create(InputPort.prototype);
     InputByteVectorPort.prototype.constructor = InputByteVectorPort;
     InputByteVectorPort.prototype.toString = function() {
-        return `#<input-port <bytevector>>`;
+        return `#<input-port (bytevector)>`;
+    };
+    InputByteVectorPort.prototype.close = function() {
+        read_only(this, '__vector__', nil);
+        ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(name => {
+            this[name] = function() {
+                throw new Error('Input-binary-port: port is closed');
+            };
+        });
+        this.char_ready = function() {
+            return false;
+        };
+    };
+    InputByteVectorPort.prototype.u8_ready = function() {
+        return true;
     };
     InputByteVectorPort.prototype.peek_u8 = function() {
         if (this.__index__ >= this.__vector__.length) {
@@ -5777,7 +5802,7 @@
     InputFilePort.prototype = Object.create(InputStringPort.prototype);
     InputFilePort.prototype.constructor = InputFilePort;
     InputFilePort.prototype.toString = function() {
-        return `#<input-port ${this.__filename__}>`;
+        return `#<input-port (${this.__filename__})>`;
     };
     // -------------------------------------------------------------------------
     function InputBinaryFilePort(content, filename) {
@@ -5792,7 +5817,7 @@
     InputBinaryFilePort.prototype = Object.create(InputByteVectorPort.prototype);
     InputBinaryFilePort.prototype.constructor = InputBinaryFilePort;
     InputBinaryFilePort.prototype.toString = function() {
-        return `#<input-binary-port ${this.__filename__}>`;
+        return `#<input-binary-port (${this.__filename__})>`;
     };
     // -------------------------------------------------------------------------
     const binary_port = Symbol.for('binary');

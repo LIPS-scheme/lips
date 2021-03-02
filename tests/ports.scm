@@ -38,9 +38,14 @@
 (test "ports: port repr"
       (lambda (t)
         (t.is (repr (current-input-port)) "#<input-port>")
-        (t.is (repr (open-input-string "xxx")) "#<input-port <string>>")
-        (t.is (repr (open-input-string "xxx")) "#<input-port <string>>")
-        (t.is (repr (open-input-file "./tests/ports.scm")) "#<input-port ./tests/ports.scm>")))
+        (t.is (repr (open-input-string "xxx")) "#<input-port (string)>")
+        (t.is (repr (open-input-string "xxx")) "#<input-port (string)>")
+        (t.is (repr (open-input-file "./tests/ports.scm"))
+              "#<input-port (./tests/ports.scm)>")
+        (t.is (repr (open-binary-input-file "./tests/ports.scm"))
+              "#<input-binary-port (./tests/ports.scm)>")
+        (t.is (repr (open-input-bytevector #u8(10)))
+              "#<input-port (bytevector)>")))
 
 (test "ports: syntax extensions"
       (lambda (t)
@@ -76,7 +81,8 @@
         (define f (open-input-file "./tests/ports.scm"))
         (read f)
         (close-input-port f)
-        (t.is (repr (open-input-file "./tests/ports.scm")) "#<input-port ./tests/ports.scm>")
+        (t.is (repr (open-input-file "./tests/ports.scm"))
+              "#<input-port (./tests/ports.scm)>")
         (t.is (to.throw (read f)) true)))
 
 (test "ports: with-input-from-file"

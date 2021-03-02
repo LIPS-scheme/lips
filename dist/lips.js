@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 01 Mar 2021 18:29:03 +0000
+ * build: Tue, 02 Mar 2021 08:30:00 +0000
  */
 (function () {
   'use strict';
@@ -8708,6 +8708,17 @@
 
       typecheck('InputPort', read, 'function');
       read_only(this, '__type__', text_port);
+      var parser;
+      Object.defineProperty(this, '__parser__', {
+        enumerable: true,
+        get: function get() {
+          return parser;
+        },
+        set: function set(value) {
+          typecheck('InputPort::__parser__', value, 'parser');
+          parser = value;
+        }
+      });
       this._read = read;
       this._with_parser = this._with_init_parser.bind(this, /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9() {
         var line;
@@ -8725,7 +8736,7 @@
 
               case 3:
                 line = _context9.sent;
-                _this6.__parser__ = new Parser(line, {
+                parser = new Parser(line, {
                   env: _this6
                 });
 
@@ -8741,7 +8752,7 @@
       })));
 
       this.char_ready = function () {
-        return this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
+        return !!this.__parser__ && this.__parser__.__lexer__.peek() !== eof;
       };
 
       this._make_defaults();
@@ -8818,7 +8829,7 @@
     InputPort.prototype.close = function () {
       var _this7 = this;
 
-      delete this.__parser__; // make content garbage collected, we assign null,
+      this.__parser__ = null; // make content garbage collected, we assign null,
       // because the value is in prototype
 
       this._with_parser = null;
@@ -8897,7 +8908,7 @@
     OutputStringPort.prototype = Object.create(OutputPort.prototype);
 
     OutputStringPort.prototype.toString = function () {
-      return '#<output-port <string>>';
+      return '#<output-port (string)>';
     };
 
     OutputStringPort.prototype.getString = function () {
@@ -8997,7 +9008,7 @@
     InputStringPort.prototype.constructor = InputStringPort;
 
     InputStringPort.prototype.toString = function () {
-      return "#<input-port <string>>";
+      return "#<input-port (string)>";
     }; // -------------------------------------------------------------------------
 
 
@@ -9039,7 +9050,26 @@
     InputByteVectorPort.prototype.constructor = InputByteVectorPort;
 
     InputByteVectorPort.prototype.toString = function () {
-      return "#<input-port <bytevector>>";
+      return "#<input-port (bytevector)>";
+    };
+
+    InputByteVectorPort.prototype.close = function () {
+      var _this12 = this;
+
+      read_only(this, '__vector__', nil);
+      ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(function (name) {
+        _this12[name] = function () {
+          throw new Error('Input-binary-port: port is closed');
+        };
+      });
+
+      this.char_ready = function () {
+        return false;
+      };
+    };
+
+    InputByteVectorPort.prototype.u8_ready = function () {
+      return true;
     };
 
     InputByteVectorPort.prototype.peek_u8 = function () {
@@ -9092,7 +9122,7 @@
     InputFilePort.prototype.constructor = InputFilePort;
 
     InputFilePort.prototype.toString = function () {
-      return "#<input-port ".concat(this.__filename__, ">");
+      return "#<input-port (".concat(this.__filename__, ")>");
     }; // -------------------------------------------------------------------------
 
 
@@ -9110,7 +9140,7 @@
     InputBinaryFilePort.prototype.constructor = InputBinaryFilePort;
 
     InputBinaryFilePort.prototype.toString = function () {
-      return "#<input-binary-port ".concat(this.__filename__, ">");
+      return "#<input-binary-port (".concat(this.__filename__, ")>");
     }; // -------------------------------------------------------------------------
 
 
@@ -9351,13 +9381,13 @@
 
 
     Environment.prototype.clone = function () {
-      var _this12 = this;
+      var _this13 = this;
 
       // duplicate refs
       var env = {}; // TODO: duplicated Symbols
 
       Object.keys(this.__env__).forEach(function (key) {
-        env[key] = _this12.__env__[key];
+        env[key] = _this13.__env__[key];
       });
       return new Environment(env, this.__parent__, this.__name__);
     }; // -------------------------------------------------------------------------
@@ -9514,7 +9544,7 @@
 
 
     Environment.prototype.constant = function (name, value) {
-      var _this13 = this;
+      var _this14 = this;
 
       if (this.__env__.hasOwnProperty(name)) {
         throw new Error("Environment::constant: ".concat(name, " already exists"));
@@ -9523,7 +9553,7 @@
       if (arguments.length === 1 && is_plain_object(arguments[0])) {
         var obj = arguments[0];
         Object.keys(obj).forEach(function (key) {
-          _this13.constant(name, obj[key]);
+          _this14.constant(name, obj[key]);
         });
       } else {
         Object.defineProperty(this.__env__, name, {
@@ -9983,7 +10013,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this14 = this;
+        var _this15 = this;
 
         var _ref28 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref28.dynamic_scope,
@@ -10058,7 +10088,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this14.get(name, {
+              var obj = _this15.get(name, {
                 throwError: false
               });
 
@@ -10563,7 +10593,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this15 = this;
+        var _this16 = this;
 
         env = env || this;
         return evaluate(code, {
@@ -10571,13 +10601,13 @@
           //dynamic_scope: this,
           error: function error(e) {
             var error = global_env.get('error');
-            error.call(_this15, e.message);
+            error.call(_this16, e.message);
 
             if (e.code) {
               var stack = e.code.map(function (line, i) {
                 return "[".concat(i + 1, "]: ").concat(line);
               }).join('\n');
-              error.call(_this15, stack);
+              error.call(_this16, stack);
             }
           }
         });
@@ -11639,7 +11669,7 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref38) {
-        var _this16 = this;
+        var _this17 = this;
 
         var dynamic_scope = _ref38.dynamic_scope,
             _error = _ref38.error;
@@ -11673,9 +11703,9 @@
           }
 
           var args = {
-            env: _this16,
+            env: _this17,
             error: function error(e) {
-              var env = _this16.inherit('try');
+              var env = _this17.inherit('try');
 
               if (catch_clause) {
                 env.set(catch_clause.cdr.car.car, e);
@@ -11685,7 +11715,7 @@
                 };
 
                 if (dynamic_scope) {
-                  args.dynamic_scope = _this16;
+                  args.dynamic_scope = _this17;
                 }
 
                 unpromise(evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
@@ -11698,7 +11728,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this16;
+            args.dynamic_scope = _this17;
           }
 
           var result = evaluate(code.car, args);
@@ -11758,7 +11788,7 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this17 = this;
+        var _this18 = this;
 
         for (var _len29 = arguments.length, lists = new Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
           lists[_key29 - 1] = arguments[_key29];
@@ -11769,7 +11799,7 @@
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this17, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this18, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -11791,7 +11821,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this17, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this18, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -11887,7 +11917,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this18 = this;
+        var _this19 = this;
 
         for (var _len32 = arguments.length, lists = new Array(_len32 > 3 ? _len32 - 3 : 0), _key33 = 3; _key33 < _len32; _key33++) {
           lists[_key33 - 3] = arguments[_key33];
@@ -11907,7 +11937,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this18, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this19, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -13430,10 +13460,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Mon, 01 Mar 2021 18:29:03 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 02 Mar 2021 08:30:00 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Mon, 01 Mar 2021 18:29:03 +0000').valueOf();
+      var date = LString('Tue, 02 Mar 2021 08:30:00 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13473,7 +13503,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Mon, 01 Mar 2021 18:29:03 +0000',
+      date: 'Tue, 02 Mar 2021 08:30:00 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
