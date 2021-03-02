@@ -272,7 +272,32 @@ throw exception that function is not yet implemented." (quasiquote (new lips.Env
 +     |_|    +  /_/  \\_\\  +  |_|      +  +     |_|    |_|      +   +  +
  \\_           \\_           \\_       _/    \\_                 _/  _/ _/" ((lambda (x) (x x)) (lambda (g) (h (lambda args (apply (g g) args)))))))(let* ((fs (cond ((eq? self global) (require "fs")) ((not (null? self.BrowserFS)) (new Promise (lambda (resolve reject) (BrowserFS.configure &(:options &() :fs "IndexedDB") (lambda (e) (if (null? e) (resolve (BrowserFS.BFSRequire "fs")) (reject e)))))))))) (if (not (null? fs)) (--> lips.env (get (quote **internal-env**)) (set "fs" fs))))(define (environment? obj) "(environment? obj)
 
-Function check if object is LIPS environment." (instanceof lips.Environment obj))(define string-append concat)(define = ==)(define remainder %)(define -inf.0 Number.NEGATIVE_INFINITY)(define +inf.0 Number.POSITIVE_INFINITY)(define procedure? function?)(define expt **)(define list->vector list->array)(define vector->list array->list)(define-macro (define-symbol-macro type spec . rest) "(define-symbol-macro type (name . args) . body)
+Function check if object is LIPS environment." (instanceof lips.Environment obj))(define %read-file (let ((readFile #f) (fetch-url #f)) (lambda (binary path) "(%read-file binary path)
+
+Read file from url or file system. If binary is false it will return
+string that contain all the content. For HTTP requests, If binary
+is false it will: when in browser return ArrayBuffer and in Node
+it will return Buffer object. When reading from file system
+in both cases it will return Buffer objects.
+
+The code that use those function, in binary mode, need to check
+if the result is ArrayBuffer or Node.js/BrowserFS Buffer object." (if (not readFile) (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-input-file: fs not defined")) (let ((_readFile (promisify fs.readFile))) (set! readFile (lambda (path binary) (let ((buff (_readFile path))) (if binary (if (eq? self window) (new Blob (vector buff)) buff) (--> buff (toString)))))))))) (if (not fetch-url) (set! fetch-url (lambda (url binary) (if (eq? self window) (let ((res (fetch url))) (if binary (res.arrayBuffer) (res.text))) (http-get url binary))))) (cond ((char=? (string-ref path 0) #\/) (if (not (file-exists? path)) (throw (new Error (string-append "file " path " don't exists"))) (readFile path binary))) ((--> path (match #/^https?:\/\//)) (fetch-url path binary)) (else (%read-file binary (string-append (current-directory) path)))))))(define %read-binary-file (curry %read-file #t))(define %read-text-file (curry %read-file #f))(define (response->content binary res) "(response->text binary res)
+
+Function read all text from Node.js HTTP response object. If binary argument is
+true it will return Buffer object that can be converted to u8vector.
+
+***Warrning:*** it may overflow the stack (part of Node) when converting
+whole buffer to u8vector." (let ((result (vector))) (res.setEncoding (if binary "binary" "utf8")) (new Promise (lambda (resolve) (res.on "data" (lambda (chunk) (result.push (Buffer.from chunk "binary")))) (res.on "end" (lambda () (if binary (resolve (Buffer.concat result)) (resolve (result.join "")))))))))(define response->buffer (curry response->content #t))(define response->text (curry response->content #f))(define http-get (if (eq? self window) (lambda (url binary) "(http-get url)
+
+Node.js Function that send HTTP Request and return string or
+binary Buffer object." (throw (new Error "http-get: function is Node.js only."))) (let* ((http (. (require "http") (quote get))) (https (. (require "https") (quote get)))) (lambda (url binary) "(http-get url)
+
+Node.js Function that send HTTP Request and return string or
+binary Buffer object." (let ((request (if (null? (url.match #/^https/)) http https))) (new Promise (lambda (resolve reject) (--> (request url (lambda (res) (if (= res.statusCode 200) (resolve (response->content binary res)) (let ((code res.statusCode)) (res.resume) (reject (string-append "Request return " (number->string code))))))) (on "error" reject)))))))))(define (buffer->u8vector bin) "(buffer->u8vector bin)
+
+Cross platform function that can be used in both Node and Browser.
+It can be used together with %read-file or %read-binary-file and convert
+the result ArrayBuffer or Buffer to u8vector." (if (instanceof ArrayBuffer bin) (new Uint8Array bin) (Uint8Array.from bin)))(define string-append concat)(define = ==)(define remainder %)(define -inf.0 Number.NEGATIVE_INFINITY)(define +inf.0 Number.POSITIVE_INFINITY)(define procedure? function?)(define expt **)(define list->vector list->array)(define vector->list array->list)(define-macro (define-symbol-macro type spec . rest) "(define-symbol-macro type (name . args) . body)
 
 Macro that creates special symbol macro for evaluator similar to build in , or `.
 It's like alias for real macro. Similar to CL reader macros but it receive already
