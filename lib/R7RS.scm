@@ -1021,3 +1021,35 @@
        (--> ,parent (set ',name ,module-var)))))
 
 ;; -----------------------------------------------------------------------------
+(define-values (current-directory set-current-directory!)
+  (if (eq? self window)
+      (let ((cwd (string-append location.origin (--> location.pathname
+                                                     (replace #/\/[^/]+$/ "/")))))
+        (values
+         (lambda ()
+           "(current-directory)
+
+            Return corrent working directory, default it's corrent URL."
+           cwd)
+         (lambda (value)
+           "(set-current-directory! string)
+
+            Function change current working directory to provided string."
+           (typecheck "set-current-directory!" value "string")
+           (set! cwd value))))
+      (let ((process (require "process")))
+        (values
+         (lambda ()
+           "(current-directory)
+
+            Return corrent working directory, default it's path from where
+            the script was executed."
+          (string-append (process.cwd) "/"))
+         (lambda (value)
+           "(set-current-directory! string)
+
+            Function change current working directory to provided string."
+           (typecheck "set-current-directory!" value "string")
+           (process.chdir value))))))
+
+;; -----------------------------------------------------------------------------
