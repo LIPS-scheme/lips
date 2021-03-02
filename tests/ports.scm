@@ -219,7 +219,8 @@
           (let ((result (vector)))
             (while (not (eof-object? (peek-u8 p)))
               (result.push (read-u8 p)))
-            (t.is result #(#x20 #xFF #xFF #xFF))))))
+            (t.is result #(#x20 #xFF #xFF #xFF))
+            (t.is (eof-object? (peek-u8 p)) true)))))
 
 (test "ports: textual-port?"
       (lambda (t)
