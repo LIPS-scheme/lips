@@ -20,6 +20,7 @@
 * properly handle negative inexact zero
 * new `environment?` function
 * add `current-directory` and `set-...` from SRFI-170
+* add gensym literals (e.g. `#:foo`)
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string

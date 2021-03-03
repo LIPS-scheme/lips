@@ -47,7 +47,9 @@ Function check if argument is list with single element" (and (pair? list) (not (
 
  Function check if value is JavaScript iterator object" (and (object? x) (procedure? (. x Symbol.iterator))))(define-macro (.. expr) "(.. foo.bar.baz)
 
-Macro that gets value from nested object where argument is comma separated symbol" (if (not (symbol? expr)) expr (let ((parts (split "." (symbol->string expr)))) (if (single parts) expr (quasiquote (. (unquote (string->symbol (car parts))) (unquote-splicing (cdr parts))))))))(define (plain-object? x) "(plain-object? x)
+Macro that gets value from nested object where argument is comma separated symbol" (if (not (symbol? expr)) expr (let ((parts (split "." (symbol->string expr)))) (if (single parts) expr (quasiquote (. (unquote (string->symbol (car parts))) (unquote-splicing (cdr parts))))))))(set-special! "#:" (quote gensym-interal) lips.specials.LITERAL)(define (gensym-interal symbol) "(gensym-interal symbol)
+
+Parser extension that create new quoted named gensym." (quasiquote (quote (unquote (gensym symbol)))))(define (plain-object? x) "(plain-object? x)
 
 Function check if value is plain JavaScript object. Created using object macro." (and (== (--> (type x) (cmp "object")) 0) (eq? (. x (quote constructor)) Object)))(define typed-array? (let ((TypedArray (Object.getPrototypeOf Uint8Array))) (lambda (o) "(typed-array? o)
 

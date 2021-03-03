@@ -171,6 +171,16 @@
             `(. ,(string->symbol (car parts)) ,@(cdr parts))))))
 
 ;; -----------------------------------------------------------------------------
+(set-special! "#:" 'gensym-interal lips.specials.LITERAL)
+
+;; -----------------------------------------------------------------------------
+(define (gensym-interal symbol)
+  "(gensym-interal symbol)
+
+   Parser extension that create new quoted named gensym."
+  `(quote ,(gensym symbol)))
+
+;; -----------------------------------------------------------------------------
 (define (plain-object? x)
   "(plain-object? x)
 
@@ -351,7 +361,7 @@
 ;; -----------------------------------------------------------------------------
 (define (%hidden-props obj)
   "(%hidden-props obj)
-  
+
    Function return hidden names of an object, for ES6 class prototype
    it return all methods since they are indistinguishable from hidden property
    created using defineProperty."
