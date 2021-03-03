@@ -1245,7 +1245,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define %read-file
-  (let ((readFile #f) (fetch-url #f))
+  (let ((read-file #f) (fetch-url #f))
     (lambda (binary path)
       "(%read-file binary path)
 
@@ -1257,13 +1257,13 @@
 
        The code that use those function, in binary mode, need to check
        if the result is ArrayBuffer or Node.js/BrowserFS Buffer object."
-      (if (not readFile)
+      (if (not read-file)
           (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
             (if (null? fs)
                 (throw (new Error "open-input-file: fs not defined"))
-                (let ((_readFile (promisify fs.readFile)))
-                  (set! readFile (lambda (path binary)
-                                   (let ((buff (_readFile path)))
+                (let ((*read-file* (promisify fs.readFile)))
+                  (set! read-file (lambda (path binary)
+                                   (let ((buff (*read-file* path)))
                                      (if binary
                                          (if (eq? self window)
                                              (new Blob (vector buff))
@@ -1282,8 +1282,8 @@
                  (throw (new Error (string-append "file "
                                                   path
                                                   " don't exists")))
-                 (readFile path binary)))
-            ((--> path (match #/^https?:\/\//))
+                 (read-file path binary)))
+            ((--> #/^https?:\/\// (test path))
              (fetch-url path binary))
             (else
              (%read-file binary (string-append (current-directory) path)))))))
