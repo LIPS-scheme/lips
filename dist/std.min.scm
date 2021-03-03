@@ -678,7 +678,17 @@ whole vector is copied and returned." (if (null? rest) (new Uint8Array v) (let (
 (bytevector-copy! to at from start end)
 
 Copies the bytes of bytevector from between start and end to bytevector to,
-starting at at." (typecheck "bytevector-copy!" to "uint8array") (typecheck "bytevector-copy!" from "uint8array") (cond ((< at 0) (throw (new Error "bytevector-copy! `at` need to be positive"))) ((> at (bytevector-length to)) (throw (new Error "bytevector-copy! `at` need to be less then byte vector length")))) (let* ((start (if (null? rest) 0 (car rest))) (end (if (or (null? rest) (null? (cdr rest))) (- (bytevector-length from) start) (cadr rest)))) (let ((i at) (j start)) (while (and (< i (bytevector-length to)) (< i (bytevector-length from)) (< j (+ start end))) (bytevector-u8-set! to i (bytevector-u8-ref from j)) (set! i (+ i 1)) (set! j (+ j 1))))))(define string->utf8 (let ((encoder (new TextEncoder "utf-8"))) (lambda (string . rest) (if (null? rest) (encoder.encode string) (let* ((start (car rest)) (len (--> (Array.from string) (quote length))) (end (if (null? (cdr rest)) len (cadr rest)))) (encoder.encode (substring string start end)))))))(define utf8->string (let ((decoder (new TextDecoder "utf-8"))) (lambda (v . rest) (if (null? rest) (decoder.decode v) (let* ((start (car rest)) (len (--> (Array.from string) (quote length))) (end (if (null? (cdr rest)) len (cadr rest)))) (decoder.decode (v.slice start end)))))))(define (open-input-string string) "(open-input-string string)
+starting at at." (typecheck "bytevector-copy!" to "uint8array") (typecheck "bytevector-copy!" from "uint8array") (cond ((< at 0) (throw (new Error "bytevector-copy! `at` need to be positive"))) ((> at (bytevector-length to)) (throw (new Error "bytevector-copy! `at` need to be less then byte vector length")))) (let* ((start (if (null? rest) 0 (car rest))) (end (if (or (null? rest) (null? (cdr rest))) (- (bytevector-length from) start) (cadr rest)))) (let ((i at) (j start)) (while (and (< i (bytevector-length to)) (< i (bytevector-length from)) (< j (+ start end))) (bytevector-u8-set! to i (bytevector-u8-ref from j)) (set! i (+ i 1)) (set! j (+ j 1))))))(define string->utf8 (let ((encoder (new TextEncoder "utf-8"))) (lambda (string . rest) "(string->utf8 string)
+(string->utf8 string start)
+(string->utf8 string start end)
+
+Function converts string into u8 bytevector using utf8 encoding.
+The start and end is the range of the input string for the conversion." (if (null? rest) (encoder.encode string) (let* ((start (car rest)) (len (--> (Array.from string) (quote length))) (end (if (null? (cdr rest)) len (cadr rest)))) (encoder.encode (substring string start end)))))))(define utf8->string (let ((decoder (new TextDecoder "utf-8"))) (lambda (v . rest) "(utf8->string u8vector)
+(utf8->string u8vector start)
+(utf8->string u8vector start end)
+
+Function converts u8 bytevector into string using utf8 encoding.
+The start and end is the range of the input byte vector for the conversion." (if (null? rest) (decoder.decode v) (let* ((start (car rest)) (len (--> (Array.from string) (quote length))) (end (if (null? (cdr rest)) len (cadr rest)))) (decoder.decode (v.slice start end)))))))(define (open-input-string string) "(open-input-string string)
 
 Function create new string port as input that can be used to
 read S-exressions from this port using `read` function." (typecheck "open-input-string" string "string") (new lips.InputStringPort string (interaction-environment)))(define (open-output-string) "(open-output-string)

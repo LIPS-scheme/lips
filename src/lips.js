@@ -1530,9 +1530,10 @@
         }
         return fn(value);
     }// ----------------------------------------------------------------------
-    function read_only(object, property, value, hidden = false) {
+    function read_only(object, property, value, { hidden = false } = {}) {
         Object.defineProperty(object, property, {
             value,
+            configurable: true,
             enumerable: !hidden
         });
     }

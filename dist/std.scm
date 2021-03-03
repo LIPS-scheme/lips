@@ -3438,6 +3438,12 @@
 (define string->utf8
   (let ((encoder (new TextEncoder "utf-8")))
     (lambda (string . rest)
+      "(string->utf8 string)
+       (string->utf8 string start)
+       (string->utf8 string start end)
+
+      Function converts string into u8 bytevector using utf8 encoding.
+      The start and end is the range of the input string for the conversion."
       (if (null? rest)
           (encoder.encode string)
           (let* ((start (car rest))
@@ -3449,6 +3455,12 @@
 (define utf8->string
   (let ((decoder (new TextDecoder "utf-8")))
     (lambda (v . rest)
+      "(utf8->string u8vector)
+       (utf8->string u8vector start)
+       (utf8->string u8vector start end)
+
+      Function converts u8 bytevector into string using utf8 encoding.
+      The start and end is the range of the input byte vector for the conversion."
       (if (null? rest)
           (decoder.decode v)
           (let* ((start (car rest))
