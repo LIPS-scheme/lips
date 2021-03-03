@@ -1641,14 +1641,17 @@
     // ----------------------------------------------------------------------
     // :: token based pattern matching (used by formatter)
     // ----------------------------------------------------------------------
+    /*
     function nested_pattern(pattern) {
         return pattern instanceof Array ||
                 pattern instanceof Pattern;
     }
+    */
     // ----------------------------------------------------------------------
     function match(pattern, input) {
         return inner_match(pattern, input) === input.length;
         function inner_match(pattern, input) {
+            /*
             function empty_match() {
                 if (p <= 0 && i <= 0) {
                     return false;
@@ -1664,6 +1667,7 @@
                 return match(prev_pattern, [input[i - 1]]) &&
                     (!next_pattern || match(next_pattern, [input[i]]));
             }
+            */
             function not_symbol_match() {
                 return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
             }
@@ -1677,7 +1681,6 @@
             var p = 0;
             var glob = {};
             for (var i = 0; i < input.length; ++i) {
-                log({input: input[i], pattern: pattern[p]});
                 if (typeof pattern[p] === 'undefined') {
                     return i;
                 }
@@ -1920,7 +1923,7 @@
     var p_e = /[\])]/;
     var not_p = /[^()[\]]/;
     const not_close = new Ahead(/[^)\]]/);
-    const open = new Ahead(/[([]/);
+    //const open = new Ahead(/[([]/);
     const glob = Symbol.for('*');
     const sexp = new Pattern([p_o, glob, p_e], '+');
     const symbol = new Pattern([Symbol.for('symbol')], '?');
@@ -1971,9 +1974,6 @@
                 continue;
             }
             var sub = tokens.slice(0, i);
-            if (sub.join('') === '(let ((xxx (if (null? rest) (current-input-port) (car rest))) ') {
-                //debugger;
-            }
             var sexp = {};
             rules.map(b => b[1]).forEach(count => {
                 count = count.valueOf();

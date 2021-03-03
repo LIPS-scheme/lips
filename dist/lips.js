@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 03 Mar 2021 12:42:34 +0000
+ * build: Wed, 03 Mar 2021 15:41:17 +0000
  */
 (function () {
   'use strict';
@@ -3576,13 +3576,39 @@
 
       return 0;
     } // ----------------------------------------------------------------------
+    // :: token based pattern matching (used by formatter)
+    // ----------------------------------------------------------------------
+
+    /*
+    function nested_pattern(pattern) {
+        return pattern instanceof Array ||
+                pattern instanceof Pattern;
+    }
+    */
+    // ----------------------------------------------------------------------
 
 
     function match(pattern, input) {
       return inner_match(pattern, input) === input.length;
 
       function inner_match(pattern, input) {
-
+        /*
+        function empty_match() {
+            if (p <= 0 && i <= 0) {
+                return false;
+            }
+            var prev_pattern = pattern[p - 1];
+            if (!nested_pattern(prev_pattern)) {
+                prev_pattern = [prev_pattern];
+            }
+            var next_pattern = pattern[p + 1];
+            if (next_pattern && !nested_pattern(next_pattern)) {
+                next_pattern = [next_pattern];
+            }
+            return match(prev_pattern, [input[i - 1]]) &&
+                (!next_pattern || match(next_pattern, [input[i]]));
+        }
+        */
         function not_symbol_match() {
           return pattern[p] === Symbol["for"]('symbol') && !is_symbol_string(input[i]);
         }
@@ -3600,11 +3626,6 @@
         var glob = {};
 
         for (var i = 0; i < input.length; ++i) {
-          log({
-            input: input[i],
-            pattern: pattern[p]
-          });
-
           if (typeof pattern[p] === 'undefined') {
             return i;
           }
@@ -3906,7 +3927,8 @@
     var p_o = /[[(]/;
     var p_e = /[\])]/;
     var not_p = /[^()[\]]/;
-    var not_close = new Ahead(/[^)\]]/);
+    var not_close = new Ahead(/[^)\]]/); //const open = new Ahead(/[([]/);
+
     var glob = Symbol["for"]('*');
     var sexp = new Pattern([p_o, glob, p_e], '+');
     var symbol = new Pattern([Symbol["for"]('symbol')], '?');
@@ -3957,9 +3979,6 @@
         }
 
         var sub = tokens.slice(0, i);
-
-        if (sub.join('') === '(let ((xxx (if (null? rest) (current-input-port) (car rest))) ') ;
-
         var sexp = {};
         rules.map(function (b) {
           return b[1];
@@ -13451,10 +13470,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 03 Mar 2021 12:42:34 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 03 Mar 2021 15:41:17 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 03 Mar 2021 12:42:34 +0000').valueOf();
+      var date = LString('Wed, 03 Mar 2021 15:41:17 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13494,7 +13513,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 03 Mar 2021 12:42:34 +0000',
+      date: 'Wed, 03 Mar 2021 15:41:17 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
