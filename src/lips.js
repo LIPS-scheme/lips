@@ -569,7 +569,7 @@
     }
     // ----------------------------------------------------------------------
     function is_symbol_string(str) {
-        return !(['(', ')'].includes(str) || str.match(re_re) ||
+        return !(['(', ')', '[', ']'].includes(str) || str.match(re_re) ||
                  str.match(/^"[\s\S]*"$/) || str.match(int_re) ||
                  str.match(float_re) || str.match(complex_re) ||
                  str.match(rational_re) || str.match(char_re) ||
@@ -1677,6 +1677,7 @@
             var p = 0;
             var glob = {};
             for (var i = 0; i < input.length; ++i) {
+                log({input: input[i], pattern: pattern[p]});
                 if (typeof pattern[p] === 'undefined') {
                     return i;
                 }
@@ -1714,15 +1715,13 @@
                     if (pattern[p] === Symbol.for('*')) {
                         // ignore S-expressions inside for case when next pattern is )
                         glob[p] = glob[p] || 0;
-                        var zero_match = empty_match();
+                        //var zero_match = empty_match();
                         if (['(', '['].includes(input[i])) {
                             glob[p]++;
-                        } else if ([')', ']'].includes(input[i]) && !zero_match) {
+                        } else if ([')', ']'].includes(input[i])) {
                             glob[p]--;
                         }
-                        if (zero_match) {
-                            i -= 1;
-                        } else if ((typeof pattern[p + 1] !== 'undefined' &&
+                        if ((typeof pattern[p + 1] !== 'undefined' &&
                                     glob[p] === 0 && match_next() === -1) ||
                                    glob[p] > 0) {
                             continue;
@@ -1941,10 +1940,12 @@
     Formatter.rules = [
         [[p_o, keywords_re('begin')], 1],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
-        [[p_o, let_re, p_o, let_value, p_e, sexp], 1, not_close],
+        //[[p_o, let_re, p_o, let_value], 1, not_close],
+        //s[[p_o, let_re, p_o, let_value, p_e, sexp], 0, not_close],
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
         [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
-        [[p_o, sexp], 1, open],
+        [[p_o, sexp], 1, not_close],
+        [[p_o, let_re, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
         [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
         [[p_o, keywords_re('if'), not_p, glob], 1],
@@ -1970,20 +1971,28 @@
                 continue;
             }
             var sub = tokens.slice(0, i);
+            if (sub.join('') === '(let ((xxx (if (null? rest) (current-input-port) (car rest))) ') {
+                //debugger;
+            }
             var sexp = {};
             rules.map(b => b[1]).forEach(count => {
                 count = count.valueOf();
-                if (!sexp[count]) {
+                if (count > 0 && !sexp[count]) {
                     sexp[count] = previousSexp(sub, count);
                 }
             });
             for (let [pattern, count, ext] of rules) {
                 count = count.valueOf();
-                var m = match(pattern, sexp[count].filter(t => t.trim()));
+                var test_sexp = count > 0 ? sexp[count] : sub;
+                var m = match(pattern, test_sexp.filter(t => t.trim()));
                 var next = tokens.slice(i).find(t => t.trim());
                 if (m && (ext instanceof Ahead && ext.match(next) || !ext)) {
-                    tokens.splice(i, 0, '\n');
-                    i++;
+                    if (!tokens[i - 1].trim()) {
+                        tokens[i - 1] = '\n';
+                    } else {
+                        tokens.splice(i, 0, '\n');
+                        i++;
+                    }
                     continue;
                 }
             }

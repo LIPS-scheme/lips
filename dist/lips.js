@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 03 Mar 2021 09:46:12 +0000
+ * build: Wed, 03 Mar 2021 12:42:34 +0000
  */
 (function () {
   'use strict';
@@ -1887,7 +1887,7 @@
 
 
     function is_symbol_string(str) {
-      return !(['(', ')'].includes(str) || str.match(re_re) || str.match(/^"[\s\S]*"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || str.match(char_re) || ['#t', '#f', 'nil', 'true', 'false'].includes(str));
+      return !(['(', ')', '[', ']'].includes(str) || str.match(re_re) || str.match(/^"[\s\S]*"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || str.match(char_re) || ['#t', '#f', 'nil', 'true', 'false'].includes(str));
     } // ----------------------------------------------------------------------
 
 
@@ -3576,38 +3576,12 @@
 
       return 0;
     } // ----------------------------------------------------------------------
-    // :: token based pattern matching (used by formatter)
-    // ----------------------------------------------------------------------
-
-
-    function nested_pattern(pattern) {
-      return pattern instanceof Array || pattern instanceof Pattern;
-    } // ----------------------------------------------------------------------
 
 
     function match(pattern, input) {
       return inner_match(pattern, input) === input.length;
 
       function inner_match(pattern, input) {
-        function empty_match() {
-          if (p <= 0 && i <= 0) {
-            return false;
-          }
-
-          var prev_pattern = pattern[p - 1];
-
-          if (!nested_pattern(prev_pattern)) {
-            prev_pattern = [prev_pattern];
-          }
-
-          var next_pattern = pattern[p + 1];
-
-          if (next_pattern && !nested_pattern(next_pattern)) {
-            next_pattern = [next_pattern];
-          }
-
-          return match(prev_pattern, [input[i - 1]]) && (!next_pattern || match(next_pattern, [input[i]]));
-        }
 
         function not_symbol_match() {
           return pattern[p] === Symbol["for"]('symbol') && !is_symbol_string(input[i]);
@@ -3626,6 +3600,11 @@
         var glob = {};
 
         for (var i = 0; i < input.length; ++i) {
+          log({
+            input: input[i],
+            pattern: pattern[p]
+          });
+
           if (typeof pattern[p] === 'undefined') {
             return i;
           }
@@ -3669,18 +3648,15 @@
           } else if (_typeof_1(pattern[p]) === 'symbol') {
             if (pattern[p] === Symbol["for"]('*')) {
               // ignore S-expressions inside for case when next pattern is )
-              glob[p] = glob[p] || 0;
-              var zero_match = empty_match();
+              glob[p] = glob[p] || 0; //var zero_match = empty_match();
 
               if (['(', '['].includes(input[i])) {
                 glob[p]++;
-              } else if ([')', ']'].includes(input[i]) && !zero_match) {
+              } else if ([')', ']'].includes(input[i])) {
                 glob[p]--;
               }
 
-              if (zero_match) {
-                i -= 1;
-              } else if (typeof pattern[p + 1] !== 'undefined' && glob[p] === 0 && match_next() === -1 || glob[p] > 0) {
+              if (typeof pattern[p + 1] !== 'undefined' && glob[p] === 0 && match_next() === -1 || glob[p] > 0) {
                 continue;
               }
             } else if (not_symbol_match()) {
@@ -3931,7 +3907,6 @@
     var p_e = /[\])]/;
     var not_p = /[^()[\]]/;
     var not_close = new Ahead(/[^)\]]/);
-    var open = new Ahead(/[([]/);
     var glob = Symbol["for"]('*');
     var sexp = new Pattern([p_o, glob, p_e], '+');
     var symbol = new Pattern([Symbol["for"]('symbol')], '?');
@@ -3956,7 +3931,9 @@
     } // line breaking rules
 
 
-    Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, p_o, let_value, p_e, sexp], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, open], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close], [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]]; // ----------------------------------------------------------------------
+    Formatter.rules = [[[p_o, keywords_re('begin')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], //[[p_o, let_re, p_o, let_value], 1, not_close],
+    //s[[p_o, let_re, p_o, let_value, p_e, sexp], 0, not_close],
+    [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, let_re, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close], [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]]; // ----------------------------------------------------------------------
 
     Formatter.prototype["break"] = function () {
       var code = this.__code__.replace(/\n[ \t]*/g, '\n ');
@@ -3980,13 +3957,16 @@
         }
 
         var sub = tokens.slice(0, i);
+
+        if (sub.join('') === '(let ((xxx (if (null? rest) (current-input-port) (car rest))) ') ;
+
         var sexp = {};
         rules.map(function (b) {
           return b[1];
         }).forEach(function (count) {
           count = count.valueOf();
 
-          if (!sexp[count]) {
+          if (count > 0 && !sexp[count]) {
             sexp[count] = previousSexp(sub, count);
           }
         });
@@ -4002,7 +3982,8 @@
                 ext = _step6$value[2];
 
             count = count.valueOf();
-            var m = match(pattern, sexp[count].filter(function (t) {
+            var test_sexp = count > 0 ? sexp[count] : sub;
+            var m = match(pattern, test_sexp.filter(function (t) {
               return t.trim();
             }));
             var next = tokens.slice(i).find(function (t) {
@@ -4010,8 +3991,13 @@
             });
 
             if (m && (ext instanceof Ahead && ext.match(next) || !ext)) {
-              tokens.splice(i, 0, '\n');
-              i++;
+              if (!tokens[i - 1].trim()) {
+                tokens[i - 1] = '\n';
+              } else {
+                tokens.splice(i, 0, '\n');
+                i++;
+              }
+
               continue;
             }
           }
@@ -13465,10 +13451,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 03 Mar 2021 09:46:12 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 03 Mar 2021 12:42:34 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 03 Mar 2021 09:46:12 +0000').valueOf();
+      var date = LString('Wed, 03 Mar 2021 12:42:34 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13508,7 +13494,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 03 Mar 2021 09:46:12 +0000',
+      date: 'Wed, 03 Mar 2021 12:42:34 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

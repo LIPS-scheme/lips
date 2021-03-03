@@ -10,12 +10,12 @@
                                             (display "not zero")
                                             (newline))))))))
 
+
 (test "formatter: named let"
       (lambda (t)
         (t.snapshot (pretty-format '(let iter ((x 10))
                                       (if (not (zero? x))
                                           (iter (- x 1))))))))
-
 
 (test "formatter: let"
       (lambda (t)
@@ -25,7 +25,26 @@
 
         (t.snapshot (pretty-format '(let ((x))
                                       (print x)
-                                      (print x))))))
+                                      (print x))))
+
+        (t.snapshot (pretty-format '(let ((bar (foo bar (baz)))
+                                          (foo 10))
+                                      (foo bar)
+                                      (print0))))
+
+        (t.snapshot (pretty-format '(let ((bar)
+                                          (foo (baz quux))
+                                          (foo 10))
+                                      (foo bar)
+                                      (print0))))
+
+        (t.snapshot (pretty-format '(let ((foo 10)
+                                          (xxx (if (null? rest)
+                                                   (current-input-port)
+                                                   (car rest)))
+                                          (bar foo))
+                                      (foo bar)
+                                      (print0))))))
 
 (test "formatter: cond"
       (lambda (t)
