@@ -539,6 +539,12 @@
 (define string->utf8
   (let ((encoder (new TextEncoder "utf-8")))
     (lambda (string . rest)
+      "(string->utf8 string)
+       (string->utf8 string start)
+       (string->utf8 string start end)
+
+      Function converts string into u8 bytevector using utf8 encoding.
+      The start and end is the range of the input string for the conversion."
       (if (null? rest)
           (encoder.encode string)
           (let* ((start (car rest))
@@ -550,6 +556,12 @@
 (define utf8->string
   (let ((decoder (new TextDecoder "utf-8")))
     (lambda (v . rest)
+      "(utf8->string u8vector)
+       (utf8->string u8vector start)
+       (utf8->string u8vector start end)
+
+      Function converts u8 bytevector into string using utf8 encoding.
+      The start and end is the range of the input byte vector for the conversion."
       (if (null? rest)
           (decoder.decode v)
           (let* ((start (car rest))
@@ -594,22 +606,13 @@
   (new lips.InputByteVectorPort bytevector))
 
 ;; -----------------------------------------------------------------------------
-(define open-binary-input-file
-  (let ((readFile #f))
-    (lambda(filename)
-      "(open-binary-input-file filename)
+(define (open-binary-input-file filename)
+  "(open-binary-input-file filename)
 
-       Function return new Input Binary Port with given filename. In Browser
-       user need to provide global fs variable that is instance of FS interface."
-      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
-        (if (null? fs)
-            (throw (new Error "open-binary-input-file: fs not defined"))
-            (begin
-              (if (not (procedure? readFile))
-                  (let ((_readFile (promisify fs.readFile)))
-                    (set! readFile (lambda (filename)
-                                     (Uint8Array.from (_readFile filename))))))
-              (new lips.InputBinaryFilePort (readFile filename) filename)))))))
+  Function return new Input Binary Port with given filename. In Browser
+  user need to provide global fs variable that is instance of FS interface."
+  (let ((u8vector (buffer->u8vector (%read-binary-file filename))))
+    (new lips.InputBinaryFilePort u8vector filename)))
 
 ;; -----------------------------------------------------------------------------
 (define (binary-port? port)

@@ -3493,22 +3493,13 @@
   (new lips.InputByteVectorPort bytevector))
 
 ;; -----------------------------------------------------------------------------
-(define open-binary-input-file
-  (let ((readFile #f))
-    (lambda(filename)
-      "(open-binary-input-file filename)
+(define (open-binary-input-file filename)
+  "(open-binary-input-file filename)
 
-       Function return new Input Binary Port with given filename. In Browser
-       user need to provide global fs variable that is instance of FS interface."
-      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
-        (if (null? fs)
-            (throw (new Error "open-binary-input-file: fs not defined"))
-            (begin
-              (if (not (procedure? readFile))
-                  (let ((_readFile (promisify fs.readFile)))
-                    (set! readFile (lambda (filename)
-                                     (Uint8Array.from (_readFile filename))))))
-              (new lips.InputBinaryFilePort (readFile filename) filename)))))))
+  Function return new Input Binary Port with given filename. In Browser
+  user need to provide global fs variable that is instance of FS interface."
+  (let ((u8vector (buffer->u8vector (%read-binary-file filename))))
+    (new lips.InputBinaryFilePort u8vector filename)))
 
 ;; -----------------------------------------------------------------------------
 (define (binary-port? port)
