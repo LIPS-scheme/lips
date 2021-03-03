@@ -1,802 +1,342 @@
-(define (%doc string fn) (typecheck "%doc" fn "function") (typecheck "%doc" string "string") (set-obj! fn (quote __doc__) (--> string (replace #/^ +/gm ""))) fn)(define-macro (let-syntax vars . body) "(let-syntax ((name fn)) body)
-
- Macro works like combination of let and define-syntax. It creaates
- local macros and evaluate body in context of those macros.
- The macro to letrec-syntax is like letrec is to let." (quasiquote (let (unquote vars) (unquote-splicing (map (lambda (rule) (quasiquote (typecheck "let-syntax" (unquote (car rule)) "syntax"))) vars)) (unquote-splicing body))))(define-macro (letrec-syntax vars . body) "(letrec-syntax ((name fn)) body)
-
- Macro works like combination of letrec and define-syntax. It creaates
- local macros and evaluate body in context of those macros." (quasiquote (letrec (unquote vars) (unquote-splicing (map (lambda (rule) (quasiquote (typecheck "letrec-syntax" (unquote (car rule)) "syntax"))) vars)) (unquote-splicing body))))(define-macro (define-syntax name expr . rest) "(define-syntax name expression [__doc__])
-
-Macro define new hygienic macro using syntax-rules with optional documentation" (let ((expr-name (gensym "expr-name"))) (quasiquote (define (unquote name) (let (((unquote expr-name) (unquote expr))) (typecheck "define-syntax" (unquote expr-name) "syntax") (unquote expr-name)) (unquote-splicing rest)))))(define (quoted-symbol? x) "(quoted-symbol? code)
-
-Helper function that test if value is quoted symbol. To be used in macros
-that pass literal code that is transformed by parser.
-
-usage:
-
-  (define-macro (test x)
-     (if (quoted-symbol? x)
-         `',(cadr x)))
-
-  (list 'hello (test 'world))" (and (pair? x) (eq? (car x) (quote quote)) (symbol? (cadr x)) (null? (cddr x))))(define-macro (--> expr . code) "Helper macro that simplify calling methods on objects. It work with chaining
-
-usage: (--> ($ \"body\")
-            (css \"color\" \"red\")
-            (on \"click\" (lambda () (display \"click\"))))
-
-       (--> document (querySelectorAll \"div\"))
-       (--> (fetch \"https://jcubic.pl\")
-            (text)
-            (match #/<title>([^<]+)<\\/title>/)
-            1)
-       (--> document
-            (querySelectorAll \".cmd-prompt\")
-            0
-            \"innerText\")
-       (--> document.body
-            (style.setProperty \"--color\" \"red\"))" (let ((obj (gensym "obj"))) (quasiquote (let* (((unquote obj) (unquote expr))) (unquote-splicing (map (lambda (code) (let ((value (gensym "value"))) (quasiquote (let* (((unquote value) (unquote (let ((name (cond ((quoted-symbol? code) (symbol->string (cadr code))) ((pair? code) (symbol->string (car code))) (#t code)))) (if (string? name) (quasiquote (. (unquote obj) (unquote-splicing (split "." name)))) (quasiquote (. (unquote obj) (unquote name)))))))) (unquote (if (and (pair? code) (not (quoted-symbol? code))) (quasiquote (set! (unquote obj) ((unquote value) (unquote-splicing (cdr code))))) (quasiquote (set! (unquote obj) (unquote value))))))))) code)) (unquote obj)))))(define-macro (define-global first . rest) "(define-global var value)
-(define-global (name . args) body)
-
-Macro that define functions or variables in global context, so they can be used
-inside let and get let variables in closure, Useful for universal macros." (if (pair? first) (let ((name (car first))) (quasiquote (--> lips.env (set (unquote (symbol->string name)) (lambda (unquote (cdr first)) (unquote-splicing rest)))))) (quasiquote (--> lips.env (set (unquote (symbol->string first)) (unquote (car rest)))))))(define-macro (globalize expr . rest) "(globalize expr)
-
- Macro will get the value of the expression and add each method as function to global
- scope." (let* ((env (current-environment)) (obj (eval expr env)) (name (gensym "name")) (env-name (gensym "env-name")) (make-name (if (pair? rest) (let ((pre (symbol->string (car rest)))) (lambda (name) (string->symbol (concat pre name)))) string->symbol))) (quasiquote (let (((unquote name) (unquote expr))) (unquote-splicing (filter pair? (map (lambda (key) (if (and (not (match /^_/ key)) (function? (. obj key))) (let* ((args (gensym "args"))) (quasiquote (define-global ((unquote (make-name key)) unquote args) (apply (. (unquote name) (unquote key)) (unquote args))))))) (array->list (--> Object (keys obj))))))))))(define (single list) "(single list)
-
-Function check if argument is list with single element" (and (pair? list) (not (cdr list))))(define (iterator? x) "(iterator? x)
-
- Function check if value is JavaScript iterator object" (and (object? x) (procedure? (. x Symbol.iterator))))(define-macro (.. expr) "(.. foo.bar.baz)
-
-Macro that gets value from nested object where argument is comma separated symbol" (if (not (symbol? expr)) expr (let ((parts (split "." (symbol->string expr)))) (if (single parts) expr (quasiquote (. (unquote (string->symbol (car parts))) (unquote-splicing (cdr parts))))))))(set-special! "#:" (quote gensym-interal) lips.specials.LITERAL)(define (gensym-interal symbol) "(gensym-interal symbol)
-
-Parser extension that create new quoted named gensym." (quasiquote (quote (unquote (gensym symbol)))))(define (plain-object? x) "(plain-object? x)
-
-Function check if value is plain JavaScript object. Created using object macro." (and (== (--> (type x) (cmp "object")) 0) (eq? (. x (quote constructor)) Object)))(define typed-array? (let ((TypedArray (Object.getPrototypeOf Uint8Array))) (lambda (o) "(typed-array? o)
-
-Function test if argumnet is JavaScript typed array (Scheme byte vector)." (instanceof TypedArray o))))(define (symbol->string s) "(symbol->string symbol)
-
-Function convert LIPS symbol to string." (if (symbol? s) (let ((name s.__name__)) (if (string? name) name (--> name (toString))))))(define (string->symbol string) "(string->symbol string)
-
-Function convert string to LIPS symbol." (and (string? string) (%as.data (new (. lips "LSymbol") string))))(define (alist->object alist) "(alist->object alist)
-
-Function convert alist pairs to JavaScript object." (if (pair? alist) (alist.toObject) (alist->object (new lips.Pair undefined ()))))(define (parent.frames) "(parent.frames)
-
-Funcion return list of environments from parent frames (lambda function calls)" (let iter ((result (quote ())) (frame (parent.frame 1))) (if (eq? frame (interaction-environment)) (cons frame result) (if (null? frame) result (let ((parent.frame (--> frame (get (quote parent.frame) (object :throwError #f))))) (if (function? parent.frame) (iter (cons frame result) (parent.frame 0)) result))))))(define-macro (wait time . expr) "(wait time . expr)
-
-Function return promise that will resolve with evaluating the expression after delay." (quasiquote (promise (timer (unquote time) (resolve (begin (unquote-splicing expr)))))))(define (pair-map fn seq-list) "(pair-map fn list)
-
-Function call fn argument for pairs in a list and return combined list with
-values returned from function fn. It work like the map but take two items from list" (let iter ((seq-list seq-list) (result (quote ()))) (if (null? seq-list) result (if (and (pair? seq-list) (pair? (cdr seq-list))) (let* ((first (car seq-list)) (second (cadr seq-list)) (value (fn first second))) (if (null? value) (iter (cddr seq-list) result) (iter (cddr seq-list) (cons value result))))))))(define (object-expander readonly expr . rest) "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
-
-Recursive function helper for defining LIPS code for create objects
-using key like syntax." (let ((name (gensym "name")) (quot (if (null? rest) #f (car rest)))) (if (null? expr) (quasiquote (alist->object ())) (quasiquote (let (((unquote name) (alist->object (quote ())))) (unquote-splicing (pair-map (lambda (key value) (if (not (key? key)) (let ((msg (string-append (type key) " " (repr key) " is not a symbol!"))) (throw msg)) (let ((prop (key->string key))) (if (and (pair? value) (key? (car value))) (quasiquote (set-obj! (unquote name) (unquote prop) (unquote (object-expander readonly value)))) (if quot (quasiquote (set-obj! (unquote name) (unquote prop) (quote (unquote value)))) (quasiquote (set-obj! (unquote name) (unquote prop) (unquote value)))))))) expr)) (unquote (if readonly (quasiquote (Object.freeze (unquote name))))) (unquote name))))))(define-macro (object . expr) "(object :name value)
-
-Macro that create JavaScript object using key like syntax." (try (object-expander #f expr) (catch (e) (error e.message))))(define-macro (object-literal . expr) "(object-literal :name value)
-
-Macro that create JavaScript object using key like syntax. This is similar,
-to object but all values are quoted. This macro is used with & object literal." (try (object-expander #t expr #t) (catch (e) (error e.message))))(define (alist->assign desc . sources) "(alist->assign alist . list-of-alists)
-
-Function that work like Object.assign but for LIPS alist." (for-each (lambda (source) (for-each (lambda (pair) (let* ((key (car pair)) (value (cdr pair)) (d-pair (assoc key desc))) (if (pair? d-pair) (set-cdr! d-pair value) (append! desc (list pair))))) source)) sources) desc)(define (key? symbol) "(key? symbol)
-
-Function check if symbol is key symbol, have colon as first character." (and (symbol? symbol) (== (--> (substring (symbol->string symbol) 0 1) (cmp ":")) 0)))(define (key->string symbol) "(key->string symbol)
-
-If symbol is key it convert that to string - remove colon." (if (key? symbol) (substring (symbol->string symbol) 1)))(define (%as.data obj) "(%as.data obj)
-
-Mark object as data to stop evaluation." (if (object? obj) (begin (set-obj! obj (quote data) #t) obj)))(define (%hidden-props obj) "(%hidden-props obj)
-
-Function return hidden names of an object, for ES6 class prototype
-it return all methods since they are indistinguishable from hidden property
-created using defineProperty." (let* ((descriptors (Object.getOwnPropertyDescriptors obj)) (names (Object.keys descriptors))) (--> names (filter (lambda (name) (let ((descriptor (. descriptors name))) (eq? descriptor.enumerable #f)))))))(define (dir obj . rest) "(dir obj)
-
-Function return all props on the object including those in prototype chain." (if (or (null? obj) (eq? obj Object.prototype)) () (let ((proto (if (null? rest) #f (car rest))) (names (Object.getOwnPropertyNames obj))) (if (not proto) (let ((hidden (%hidden-props obj))) (set! names (--> names (filter (lambda (name) (not (hidden.includes name)))))))) (append (array->list (--> names (map (unary string->symbol)))) (dir (Object.getPrototypeOf obj) #t)))))(define (tree-map f tree) "(tree-map fn tree)
-
-Tree version of map. Function is invoked on every leaf." (if (pair? tree) (cons (tree-map f (car tree)) (tree-map f (cdr tree))) (f tree)))(define (native.number x) "(native.number obj)
-
-If argument is number it will convert to native number." (if (number? x) (value x) x))(define (value obj) "(value obj)
-
-Function unwrap LNumbers and convert nil value to undefined." (if (eq? obj ()) undefined (if (number? obj) ((. obj "valueOf")) obj)))(define-macro (define-formatter-rule . patterns) "(rule-pattern pattern)
-
-Anaphoric Macro for defining patterns for formatter. With Ahead, Pattern and * defined values." (let ((rules (gensym "rules"))) (quasiquote (let (((unquote rules) lips.Formatter.rules) (Ahead (lambda (pattern) (let ((Ahead (.. lips.Formatter.Ahead))) (new Ahead (if (string? pattern) (new RegExp pattern) pattern))))) (* (Symbol.for "*")) (Pattern (lambda (pattern flag) (new lips.Formatter.Pattern (list->array pattern) (if (null? flag) undefined flag))))) (unquote-splicing (map (lambda (pattern) (quasiquote (--> (unquote rules) (push (tree->array (tree-map native.number (unquote-splicing pattern))))))) patterns))))))(define-syntax cond (syntax-rules (=> else) ((cond (else else1 else2 ...)) (if #t (begin else1 else2 ...))) ((cond (test => receiver) more-clause ...) (let ((t test)) (cond/maybe-more t (receiver t) more-clause ...))) ((cond (generator guard => receiver) more-clause ...) (call-with-values (lambda () generator) (lambda t (cond/maybe-more (apply guard t) (apply receiver t) more-clause ...)))) ((cond (test) more-clause ...) (let ((t test)) (cond/maybe-more t t more-clause ...))) ((cond (test body1 body2 ...) more-clause ...) (cond/maybe-more test (begin body1 body2 ...) more-clause ...))) "(cond (predicate? . body)
-      (predicate? . body)
-      (else . body))
-
-Macro for condition checks. For usage instead of nested ifs.")(define-syntax cond/maybe-more (syntax-rules () ((cond/maybe-more test consequent) (if test consequent)) ((cond/maybe-more test consequent clause ...) (if test consequent (cond clause ...)))) "(cond/maybe-more test consequent ...)
-
-Helper macro used by cond.")(define-macro (cond . list) "(cond (predicate? . body)
-      (predicate? . body))
-Macro for condition check. For usage instead of nested ifs." (if (pair? list) (let* ((item (car list)) (first (car item)) (forms (cdr item)) (rest (cdr list))) (quasiquote (if (unquote first) (begin (unquote-splicing forms)) (unquote (if (and (pair? rest) (or (eq? (caar rest) #t) (eq? (caar rest) (quote else)))) (quasiquote (begin (unquote-splicing (cdar rest)))) (if (not (null? rest)) (quasiquote (cond (unquote-splicing rest))))))))) ()))(define (%r re . rest) "(%r re)
-
-Create new regular expression from string, to not break Emacs formatting" (if (null? rest) (new RegExp re) (new RegExp re (car rest))))(define (interaction-environment) "(interaction-environment)
-
-Function return interaction environement equal to lips.env can be overwritten,
-when creating new interpreter with lips.Interpreter." **interaction-environment**)(define (current-output-port) "(current-output-port)
-
-Function return default stdout port." (let-env (interaction-environment) (--> **internal-env** (get (quote stdout)))))(define (current-error-port) "(current-output-port)
-
-Function return default stdout port." (let-env (interaction-environment) (--> **internal-env** (get (quote stderr)))))(define (current-input-port) "current-input-port)
-
-Function return default stdin port." (let-env (interaction-environment) (--> **internal-env** (get (quote stdin)))))(define (regex? x) "(regex? x)
-
-Function return true of value is regular expression, it return false otherwise." (== (--> (type x) (cmp "regex")) 0))(define (set-repr! type fn) "(add-repr! type fn)
-
-Function add string represention to the type, which should be constructor function.
-
-Function fn should have args (obj q) and it should return string, obj is vlaue that
-need to be converted to string, if the object is nested and you need to use `repr`,
-it should pass second parameter q to repr, so string will be quoted when it's true.
-
-e.g.: (lambda (obj q) (string-append \"<\" (repr obj q) \">\"))" (typecheck "add-repr!" type "function") (typecheck "add-repr!" fn "function") (ignore (--> lips.repr (set type fn))))(define (unset-repr! type) "(unset-repr! type)
-
-Function remove string represention to the type, which should be constructor function,
-added by add-repr! function." (typecheck "unset-repr!" type "function") (ignore (--> lips.repr (delete type))))(set-special! "&" (quote object-literal) lips.specials.SPLICE)(set-repr! Object (lambda (x q) (concat "&(" (--> (Object.getOwnPropertyNames x) (map (lambda (key) (concat ":" key " " (repr (. x key) q)))) (join " ")) ")")))(define (bound? x . rest) "(bound? x [env])
-
-Function check if variable is defined in given environement or interaction environment
-if not specified." (let ((env (if (null? rest) (interaction-environment) (car rest)))) (try (begin (--> env (get x)) #t) (catch (e) #f))))(define (environment-bound? env x) "(environment-bound? env symbol)
-
-Function check if symbol is bound variable similar to bound?." (typecheck "environment-bound?" env "environment" 1) (typecheck "environment-bound?" x "symbol" 2) (bound? x env))(define (qsort e predicate) "(qsort list predicate)
-
-Sort the list using quick sort alorithm according to predicate." (if (or (null? e) (<= (length e) 1)) e (let loop ((left ()) (right ()) (pivot (car e)) (rest (cdr e))) (if (null? rest) (append (append (qsort left predicate) (list pivot)) (qsort right predicate)) (if (predicate (car rest) pivot) (loop (append left (list (car rest))) right pivot (cdr rest)) (loop left (append right (list (car rest))) pivot (cdr rest)))))))(define (sort list . rest) "(sort list [predicate])
-
-Sort the list using optional predicate function. if not function is specified
-it will use <= and sort in increasing order." (let ((predicate (if (null? rest) <= (car rest)))) (typecheck "sort" list "pair") (typecheck "sort" predicate "function") (qsort list predicate)))(define (every fn list) "(every fn list)
-
-Function call function fn on each item of the list, if every value is true
-it will return true otherwise it return false." (if (null? list) #t (and (fn (car list)) (every fn (cdr list)))))(define (zip . args) "(zip list1 list2 ...)
-
-Create one list by taking each element of each list." (if (null? args) () (if (some null? args) () (cons (map car args) (apply zip (map cdr args))))))(define-macro (promise . body) "(promise . body)
-
-Anaphoric macro that expose resolve and reject functions from JS promise" (quasiquote (new Promise (lambda (resolve reject) (try (begin (unquote-splicing body)) (catch (e) (error (.. e.message))))))))(define-macro (timer time . body) "(timer time . body)
-
-Macro evaluate expression after delay, it return timer. To clear the timer you can use
-native JS clearTimeout function." (quasiquote (setTimeout (lambda () (try (begin (unquote-splicing body)) (catch (e) (error (.. e.message))))) (unquote time))))(define (defmacro? obj) "(defmacro? expression)
-
-Function check if object is macro and it's expandable." (and (macro? obj) (. obj (quote defmacro))))(define (n-ary n fn) "(n-ary n fn)
-
-Return new function that limit number of arguments to n." (lambda args (apply fn (take n args))))(define (take n lst) "(take n list)
-
-Return n first values of the list." (let iter ((result (quote ())) (i n) (lst lst)) (if (or (null? lst) (<= i 0)) (reverse result) (iter (cons (car lst) result) (- i 1) (cdr lst)))))(define unary (%doc "(unary fn)
-
-Function return new function with arguments limited to one." (curry n-ary 1)))(define binary (%doc "(binary fn)
-
-Function return new function with arguments limited to two." (curry n-ary 2)))(define (%class-lambda expr) "(class-lambda expr)
-
-Return lambda expression where input expression lambda have `this` as first argument." (let ((args (gensym (quote args)))) (quasiquote (lambda (unquote args) (apply (unquote (cadr expr)) this (unquote args))))))(define (%class-lambda expr) "(%class-lambda expr)
-
-Define lambda that have self is first argument. The expr is in a form:
-(constructor (lambda (self ...) . body)) as given by define-class macro." (let ((args (cdadadr expr))) (quasiquote (lambda ((unquote-splicing args)) ((unquote (cadr expr)) this (unquote-splicing args))))))(define (%class-method-name expr) "(%class-method-name expr)
-
-Helper function that allow to use [Symbol.asyncIterator] inside method name." (if (pair? expr) (car expr) (list (quote quote) expr)))(define-macro (define-class name parent . body) "(define-class name parent . body)
-
-Define class - JavaScript function constructor with prototype.
-
-usage:
-
-  (define-class Person Object
-      (constructor (lambda (self name)
-                     (set-obj! self '_name name)))
-      (hi (lambda (self)
-            (display (string-append self._name \" say hi\"))
-            (newline))))
-  (define jack (new Person \"Jack\"))
-  (jack.hi)" (let iter ((functions (quote ())) (constructor (quote ())) (lst body)) (if (null? lst) (quasiquote (begin (define (unquote name) (unquote (if (null? constructor) (quasiquote (lambda ())) (%class-lambda constructor)))) (set-obj! (unquote name) (Symbol.for "__class__") #t) (unquote (if (and (not (null? parent)) (not (eq? parent (quote Object)))) (quasiquote (begin (set-obj! (unquote name) (quote prototype) (Object.create (. (unquote parent) (quote prototype)))) (set-obj! (. (unquote name) (quote prototype)) (quote constructor) (unquote name)))))) (unquote-splicing (map (lambda (fn) (quasiquote (set-obj! (. (unquote name) (quote prototype)) (unquote (%class-method-name (car fn))) (unquote (%class-lambda fn))))) functions)))) (let ((item (car lst))) (if (eq? (car item) (quote constructor)) (iter functions item (cdr lst)) (iter (cons item functions) constructor (cdr lst)))))))(define-syntax class (syntax-rules () ((_) (error "class: parent required")) ((_ parent body ...) (let () (define-class temp parent body ...) temp))) "(class <parent> body ...)
-
-Macro allow to create anonymous classes. See define-class for details.")(define (make-tags expr) "(make-tags expression)
-
-Function that return list structure of code with better syntax then raw LIPS" (quasiquote (h (unquote (let ((val (car expr))) (if (key? val) (key->string val) val))) (alist->object ((unquote (quote quasiquote)) (unquote (pair-map (lambda (car cdr) (quasiquote ((unquote (key->string car)) (unquote (quote unquote)) (unquote cdr)))) (cadr expr))))) (unquote (if (not (null? (cddr expr))) (if (and (pair? (caddr expr)) (let ((s (caaddr expr))) (and (symbol? s) (eq? s (quote list))))) (quasiquote (list->array (list (unquote-splicing (map make-tags (cdaddr expr)))))) (caddr expr)))))))(define (%sxml h expr) "(%sxml h expr)
-
-Helper function that render expression using create element function." (let* ((have-attrs (and (not (null? (cdr expr))) (pair? (cadr expr)) (eq? (caadr expr) (quote @)))) (attrs (if have-attrs (cdadr expr) ())) (rest (if have-attrs (cddr expr) (cdr expr)))) (quasiquote ((unquote h) (unquote (let* ((symbol (car expr)) (name (symbol->string symbol))) (if (char-lower-case? (car (string->list name))) name symbol))) (alist->object ((unquote (quote quasiquote)) (unquote (map (lambda (pair) (cons (symbol->string (car pair)) (list (quote unquote) (cadr pair)))) attrs)))) (unquote-splicing (if (null? rest) () (let ((first (car rest))) (if (pair? first) (map (lambda (expr) (%sxml h expr)) rest) (list first)))))))))(define-macro (pragma->sxml pragma) (quasiquote (define-macro (sxml expr) "(sxml expr)
-
-Macro for JSX like syntax but with SXML.
-e.g. usage:
-
-(sxml (div (@ (data-foo \"hello\")
-             (id \"foo\"))
-          (span \"hello\")
-          (span \"world\")))" (%sxml (quote (unquote pragma)) expr))))(pragma->sxml h)(define-macro (with-tags expr) "(with-tags expression)
-
-Macro that evalute LIPS shorter code for S-Expression equivalent of JSX.
-e.g.:
-
-(with-tags (:div (:class \"item\" :id \"item-1\")
-                 (list (:span () \"Random Item\")
-                       (:a (:onclick (lambda (e) (alert \"close\")))
-                           \"close\"))))
-
-Above expression can be passed to function that renders JSX (like render in React, Preact)
-To get the string from the macro you can use vhtml library from npm." (make-tags expr))(define (get-script url) "(get-script url)
-
-Load JavaScript file in browser by adding script tag to head of the current document." (if (not (bound? (quote document))) (throw (new Error "get-script: document not defined")) (let ((script (document.createElement "script"))) (new Promise (lambda (resolve reject) (set-obj! script (quote src) url) (set-obj! script (quote onload) (lambda () (resolve))) (set-obj! script (quote onerror) (lambda () (reject "get-script: Failed to load"))) (if document.head (document.head.appendChild script)))))))(define (gensym? value) "(gensym? value)
-
-Function return #t if value is symbol and it's gensym. It returns #f otherwise." (and (symbol? value) (--> value (is_gensym))))(define (degree->radians x) "(degree->radians x)
-
-Convert degree to radians." (* x (/ Math.PI 180)))(define (radians->degree x) "(radians->degree x)
-
-Convert radians to degree." (* x (/ 180 Math.PI)))(define-syntax while (syntax-rules () ((_ predicate body ...) (do () ((not predicate)) body ...))) "(while cond . body)
-
-Macro that create a loop, it exectue body until cond expression is false.")(define-syntax ++ (syntax-rules () ((++ x) (let ((tmp (+ x 1))) (set! x tmp) tmp))) "(++ variable)
-
-Macro that work only on variables and increment the value by one.")(define-syntax -- (syntax-rules () ((-- x) (let ((tmp (- x 1))) (set! x tmp) tmp))) "(-- variable)
-
-Macro that decrement the value it work only on symbols")(define (pretty-format pair) "(pretty-format pair)
-
-Function return pretty printed string from pair expression." (typecheck "pretty-pair" pair "pair") (--> (new lips.Formatter (repr pair #t)) (break) (format)))(define (reset) "(reset)
-
-Function reset environment and remove all user defined variables." (let-env **interaction-environment** (let ((defaults **interaction-environment-defaults**) (env **interaction-environment**)) (--> env (list) (forEach (lambda (name) (if (not (--> defaults (includes name))) (--> env (unset name)))))))))(define (make-list n . rest) (if (or (not (integer? n)) (<= n 0)) (throw (new Error "make-list: first argument need to be integer larger then 0")) (let ((fill (if (null? rest) undefined (car rest)))) (array->list (--> (new Array n) (fill fill))))))(define (range n) "(range n)
-
-Function return list of n numbers from 0 to n - 1" (typecheck "range" n "number") (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))(define-macro (do-iterator spec cond . body) "(do-iterator (var expr) (test) body ...)
-
-Macro iterate over iterators (e.g. create with JavaScript generator function)
-it works with normal and async iterators. You can loop over infinite iterators
-and break the loop if you want, using expression like in do macro, long sync iterators
-will block main thread (you can't print 1000 numbers from inf iterators,
-because it will freeze the browser), but if you use async iterators you can process
-the values as they are generated." (let ((gen (gensym "name")) (name (car spec)) (async (gensym "async")) (sync (gensym "sync")) (iterator (gensym "iterator")) (test (if (null? cond) #f (car cond))) (next (gensym "next")) (stop (gensym "stop")) (item (gensym "item"))) (quasiquote (let* (((unquote gen) (unquote (cadr spec))) ((unquote sync) (. (unquote gen) Symbol.iterator)) ((unquote async) (. (unquote gen) Symbol.asyncIterator)) ((unquote iterator)) ((unquote next) (lambda () ((. (unquote iterator) "next"))))) (if (or (procedure? (unquote sync)) (procedure? (unquote async))) (begin (set! (unquote iterator) (if (procedure? (unquote sync)) ((unquote sync)) ((unquote async)))) (let* (((unquote item) ((unquote next))) ((unquote stop) #f) ((unquote name) (. (unquote item) "value"))) (while (not (or (eq? (. (unquote item) "done") #t) (unquote stop))) (if (unquote test) (set! (unquote stop) #t) (begin (unquote-splicing body))) (set! (unquote item) ((unquote next))) (set! (unquote name) (. (unquote item) "value"))))))))))(set-repr! Set (lambda () "#<Set>"))(set-repr! Map (lambda () "#<Met>"))(define (native-symbol? x) "(native-symbol? object)
-
-Function check if value is JavaScript symbol." (and (string=? (type x) "symbol") (not (symbol? x))))(set-special! "’" (quote warn-quote))(define-macro (warn-quote) "(warn-quote)
-
-Simple macro that throw error, when you try to use ’ symbol as quote in code" (throw (new Error (string-append "You're using invalid quote character run: " "(set-special! \"’\" 'quote)" " to allow running this type of quote"))))(define-macro (quote-promise expr) "(quote-promise expr)
-'>expr
-
-Macro used to escape promise the whole expression, will be wrapped
-with JavaScript class that behave like Promise but will not
-auto resolve like normal promise." (quasiquote (let ((env)) (set! env (current-environment)) (env.set (Symbol.for "__promise__") #t) (unquote expr))))(define (await value) (if (instanceof lips.QuotedPromise value) (value.valueOf) value))(define-macro (let-env-values env spec . body) "(let-env-values env ((name var)) . body)
-
-Macro add mapping for variables var from specified env,
-Macro work similar to let-env but lexical scope is working with it." (let ((env-name (gensym (quote env)))) (quasiquote (let (((unquote env-name) (unquote env))) (let (unquote (map (lambda (pair) (quasiquote ((unquote (car pair)) (--> (unquote env-name) (get (quote (unquote (cadr pair)))))))) spec)) (unquote-splicing body))))))(define-macro (let-std spec . body) "(let-std ((name var)) . body)
-
-Macro that create aliases for variables in global environment.
-This is needed so user don't change constants like stdin or stdout
-that use taken from lexical scope. The function still can use those
-from interaction-environment." (quasiquote (let-env-values lips.env.__parent__ (unquote spec) (unquote-splicing body))))(define (apropos name) "(apropos name)
-
-Search environment and display names that match the given name.
-name can be regex, string or symbol." (typecheck "apropos" name (quote ("string" "regex" "symbol"))) (let ((regex (lambda (string) (new RegExp (escape-regex string))))) (filter (cond ((string? name) (regex name)) ((symbol? name) (regex (symbol->string name))) (else name)) (env))))(set-special! "#," (quote sharp-comma))(define **reader-ctor-list** (quote ()))(define (define-reader-ctor symbol fn) (let ((node (assoc symbol **reader-ctor-list**))) (if (pair? node) (set-cdr! node fn) (set! **reader-ctor-list** (cons (cons symbol fn) **reader-ctor-list**)))))(define-syntax sharp-comma (syntax-rules () ((_ (fn arg ...)) (let ((node (assoc (quote fn) **reader-ctor-list**))) (if (pair? node) ((cdr node) (quote arg) ...) (syntax-error (string-append "Invalid symbol " (symbol->string (quote fn)) " in expression " (repr (quote (fn arg ...))))))))))(define (promisify fn) "(promisify fn)
-
-Simple function for adding promises to NodeJS callback based function.
-Function tested only with fs module." (lambda args (new Promise (lambda (resolve reject) (apply fn (append args (list (lambda (err data) (if (null? err) (resolve data) (reject err))))))))))(define-macro (list* . args) "(list* arg1 ...)
-
-Parallel version of list." (let ((result (gensym "result"))) (quasiquote (let (((unquote result) (vector))) (unquote-splicing (map (lambda (arg) (quasiquote (--> (unquote result) (push (quote-promise (unquote arg)))))) args)) (map await (vector->list (unquote result)))))))(define-macro (%not-implemented name) "(not-implemented name)
-
-Returns new function taht throw exception that function is not implmeneted" (let ((str-name (symbol->string name))) (quasiquote (lambda () (unquote (string-append "(" str-name ")
-
-This function is not yet implemented.")) (throw (new Error (unquote (string-append str-name " has not beed implemented"))))))))(define-macro (%make-env name . names) "(%make-env name f1 f2 ...)
-
-Create new Environment with given name and defined symbols in it from global env.
-If given function name f1 f2 ... don't exists, it will define function that
-throw exception that function is not yet implemented." (quasiquote (new lips.Environment (alist->object (list (unquote-splicing (map (lambda (name) (quasiquote (cons (quote (unquote name)) (unquote (let ((ref (lips.env.ref name))) (if (null? ref) (quasiquote (%not-implemented (unquote name))) (quasiquote (lips.env.get (quote (unquote name)))))))))) names)))) null (unquote name))))(define Y (lambda (h) "(Y f)
-
-  _ __   __    _            _       _      _ __   __         _   _  _
- /  \\ \\ / /   /  __        /   ____  \\    /  \\ \\ / /    ____  \\   \\  \\
-+    \\ v /   +   \\ \\      +   / ___|  +  +    \\ v /    / ___|  +   +  +
-|     \\ /    |    \\ \\     |  | |__    |  |     \\ /    | |__    |   |  |
-|     | |    |    /  \\    |  |  __|   |  |     | |    |  __|   |   |  |
-|     | |    |   / /\\ \\   |  | |      |  |     | |    | |      |   |  |
-+     |_|    +  /_/  \\_\\  +  |_|      +  +     |_|    |_|      +   +  +
- \\_           \\_           \\_       _/    \\_                 _/  _/ _/" ((lambda (x) (x x)) (lambda (g) (h (lambda args (apply (g g) args)))))))(let* ((fs (cond ((eq? self global) (require "fs")) ((not (null? self.BrowserFS)) (new Promise (lambda (resolve reject) (BrowserFS.configure &(:options &() :fs "IndexedDB") (lambda (e) (if (null? e) (resolve (BrowserFS.BFSRequire "fs")) (reject e)))))))))) (if (not (null? fs)) (--> lips.env (get (quote **internal-env**)) (set "fs" fs))))(define (environment? obj) "(environment? obj)
-
-Function check if object is LIPS environment." (instanceof lips.Environment obj))(define %read-file (let ((read-file #f) (fetch-url #f)) (lambda (binary path) "(%read-file binary path)
-
-Read file from url or file system. If binary is false it will return
-string that contain all the content. For HTTP requests, If binary
-is false it will: when in browser return ArrayBuffer and in Node
-it will return Buffer object. When reading from file system
-in both cases it will return Buffer objects.
-
-The code that use those function, in binary mode, need to check
-if the result is ArrayBuffer or Node.js/BrowserFS Buffer object." (if (not read-file) (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-input-file: fs not defined")) (let ((*read-file* (promisify fs.readFile))) (set! read-file (lambda (path binary) (let ((buff (*read-file* path))) (if binary (if (eq? self window) (new Blob (vector buff)) buff) (--> buff (toString)))))))))) (if (not fetch-url) (set! fetch-url (lambda (url binary) (if (eq? self window) (let ((res (fetch url))) (if binary (res.arrayBuffer) (res.text))) (http-get url binary))))) (cond ((char=? (string-ref path 0) #\/) (if (not (file-exists? path)) (throw (new Error (string-append "file " path " don't exists"))) (read-file path binary))) ((--> #/^https?:\/\// (test path)) (fetch-url path binary)) (else (%read-file binary (string-append (current-directory) path)))))))(define %read-binary-file (curry %read-file #t))(define %read-text-file (curry %read-file #f))(define (response->content binary res) "(response->text binary res)
-
-Function read all text from Node.js HTTP response object. If binary argument is
-true it will return Buffer object that can be converted to u8vector.
-
-***Warrning:*** it may overflow the stack (part of Node) when converting
-whole buffer to u8vector." (let ((result (vector))) (res.setEncoding (if binary "binary" "utf8")) (new Promise (lambda (resolve) (res.on "data" (lambda (chunk) (result.push (Buffer.from chunk "binary")))) (res.on "end" (lambda () (if binary (resolve (Buffer.concat result)) (resolve (result.join "")))))))))(define response->buffer (curry response->content #t))(define response->text (curry response->content #f))(define http-get (if (eq? self window) (lambda (url binary) "(http-get url)
-
-Node.js Function that send HTTP Request and return string or
-binary Buffer object." (throw (new Error "http-get: function is Node.js only."))) (let* ((http (. (require "http") (quote get))) (https (. (require "https") (quote get)))) (lambda (url binary) "(http-get url)
-
-Node.js Function that send HTTP Request and return string or
-binary Buffer object." (let ((request (if (null? (url.match #/^https/)) http https))) (new Promise (lambda (resolve reject) (--> (request url (lambda (res) (if (= res.statusCode 200) (resolve (response->content binary res)) (let ((code res.statusCode)) (res.resume) (reject (string-append "Request return " (number->string code))))))) (on "error" reject)))))))))(define (buffer->u8vector bin) "(buffer->u8vector bin)
-
-Cross platform function that can be used in both Node and Browser.
-It can be used together with %read-file or %read-binary-file and convert
-the result ArrayBuffer or Buffer to u8vector." (if (instanceof ArrayBuffer bin) (new Uint8Array bin) (Uint8Array.from bin)))(define string-append concat)(define = ==)(define remainder %)(define -inf.0 Number.NEGATIVE_INFINITY)(define +inf.0 Number.POSITIVE_INFINITY)(define procedure? function?)(define expt **)(define list->vector list->array)(define vector->list array->list)(define-macro (define-symbol-macro type spec . rest) "(define-symbol-macro type (name . args) . body)
-
-Macro that creates special symbol macro for evaluator similar to build in , or `.
-It's like alias for real macro. Similar to CL reader macros but it receive already
-parsed code like normal macros. Type can be SPLICE or LITERAL symbols.
-ALL default symbol macros are literal." (let* ((name (car spec)) (symbol (cadr spec)) (args (cddr spec))) (quasiquote (begin (set-special! (unquote symbol) (quote (unquote name)) (unquote (string->symbol (concat "lips.specials." (symbol->string type))))) (define-macro ((unquote name) (unquote-splicing args)) (unquote-splicing rest))))))(set-special! "#" (quote vector-literal) lips.specials.SPLICE)(define-macro (vector-literal . args) (if (not (or (pair? args) (eq? args ()))) (throw (new Error (concat "Parse Error: vector require pair got " (type args) " in " (repr args)))) (let ((v (list->array args))) (Object.freeze v) v)))(define-syntax vector (syntax-rules () ((_ arg ...) (list->array (list arg ...)))) "(vector 1 2 3 (+ 3 1))
-#(1 2 3 4)
-
-Macro for defining vectors (JavaScript arrays). Vectors literals are
-automatically quoted. So you can use expressions inside them. Only other
-literals, like other vectors or object.")(set-repr! Array (lambda (x q) (let ((arr (--> x (map (lambda (x) (repr x q)))))) (concat "#(" (--> arr (join " ")) ")"))))(define (eqv? a b) "(eqv? a b)
-
-Function compare the values. It return true if they are the same, they
-need to have same type" (if (string=? (type a) (type b)) (cond ((number? a) (or (and (exact? a) (exact? b) (= a b)) (and (inexact? a) (inexact? b) (cond ((a.isNaN) (b.isNaN)) ((and (zero? a) (zero? b)) (eq? a._minus b._minus)) ((and (complex? a) (complex? b)) (let ((re.a (real-part a)) (re.b (real-part b)) (im.a (imag-part a)) (im.b (imag-part b))) (and (if (and (zero? re.a) (zero? re.b)) (eq? (. re.a (quote _minus)) (. re.b (quote _minus))) #t) (if (and (zero? im.a) (zero? im.b)) (eq? (. im.a (quote _minus)) (. im.b (quote _minus))) #t) (or (= re.a re.b) (and (--> re.a (isNaN)) (--> re.b (isNaN)))) (or (= im.a im.b) (and (--> im.a (isNaN)) (--> im.b (isNaN))))))) (else (= a b)))))) ((pair? a) (and (null? a) (null? b))) (else (eq? a b))) #f))(define (equal? a b) "(equal? a b)
-
-Function check if values are equal if both are pair or array
-it compares the their elements recursivly." (cond ((and (pair? a)) (and (pair? b) (equal? (car a) (car b)) (equal? (cdr a) (cdr b)))) ((symbol? a) (and (symbol? b) (equal? a.__name__ b.__name__))) ((regex? a) (and (regex? b) (equal? (. a (quote source)) (. b (quote source))))) ((typed-array? a) (and (typed-array? b) (equal? (Array.from a) (Array.from b)))) ((vector? a) (and (vector? b) (= (length a) (length b)) (--> a (every (lambda (item i) (equal? item (vector-ref b i))))))) ((string? a) (and (string? b) (string=? a b))) ((function? a) (and (function? b) (%same-functions a b))) ((array? a) (and (array? b) (eq? (length a) (length b)) (= (--> a (filter (lambda (item i) (equal? item (. b i)))) (quote length)) (length a)))) ((plain-object? a) (and (plain-object? b) (let ((keys_a (--> (Object.keys a) (sort))) (keys_b (--> (Object.keys b) (sort)))) (and (= (length keys_a) (length keys_b)) (equal? keys_a keys_b) (equal? (--> keys_a (map (lambda (key) (. a key)))) (--> keys_b (map (lambda (key) (. b key))))))))) (else (eqv? a b))))(define make-promise (lambda (proc) "(make-promise fn)
-
-Function create promise from a function." (typecheck "make-promise" proc "function") (let ((result-ready? #f) (result #f)) (let ((promise (lambda () (if result-ready? result (let ((x (proc))) (if result-ready? result (begin (set! result-ready? #t) (set! result x) result))))))) (set-obj! promise (Symbol.for "promise") #t) (set! promise.toString (lambda () (string-append "#<promise - " (if result-ready? (string-append "forced with " (type result)) "not forced") ">"))) promise))))(define-macro (delay expression) "(delay expression)
-
-Macro will create a promise from expression that can be forced with (force)." (quasiquote (make-promise (lambda () (unquote expression)))))(define (force promise) "(force promise)
-
-Function force the promise and evaluate delayed expression." (promise))(define (promise? obj) "(promise? obj)
-
-Function check if value is a promise created with delay or make-promise." (string=? (type obj) "promise"))(define (positive? x) "(positive? x)
-
-Function check if number is larger then 0" (typecheck "positive?" x "number") (> x 0))(define (negative? x) "(negative? x)
-
-Function check if number is smaller then 0" (typecheck "negative?" x "number") (< x 0))(define (zero? x) "(zero? x)
-
-Function check if number is equal to 0" (typecheck "zero?" x "number") (= x 0))(define (quotient a b) "(quotient a b)
-
-Return quotient from divition as integer." (typecheck "quotient" a "number") (typecheck "quotient" b "number") (if (zero? b 0) (throw (new Error "quotient: divition by zero")) (let ((quotient (/ a b))) (if (integer? quotient) quotient (if (> quotient 0) (floor quotient) (ceiling quotient))))))(define (number->string x . rest) "(number->string x [radix])
-
-Function convert number to string with optional radix (number base)." (typecheck "number->string" x "number" 1) (let ((radix (if (null? rest) 10 (car rest)))) (typecheck "number->string" radix "number" 2) (--> x (toString (--> radix (valueOf))))))(define (boolean? x) "(boolean? x)
-
-Function return true if value is boolean." (string=? (type x) "boolean"))(define (vector-ref vector i) "(vector-ref vector i)
-
-Return i element from vector." (typecheck "number->string" vector "array" 1) (typecheck "number->string" i "number" 2) (. vector i))(define (vector-set! vector i obj) "(vector-set! vector i obj)
-
-Set obj as value in vector at position 1." (typecheck "vector-set!" vector "array" 1) (typecheck "vector-set!" i "number" 2) (set-obj! vector i obj))(define (%number-type type x) (typecheck "%number-type" type (vector "string" "pair")) (typecheck "%number-type" x "number") (let* ((t x.__type__) (typeof (lambda (type) (string=? t type)))) (and (number? x) (if (pair? type) (some typeof type) (typeof type)))))(define (real? x) "(real? x)
-
-Function check if argument x is real." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (and (%number-type "complex" x) (let ((i (imag-part x))) (and (zero? i) (exact? i)))) (%number-type (quote ("float" "bigint" "rational")) x))))(define (integer? x) "(integer? x)
-
-Function check if argument x is integer." (and (number? x) (not (eq? x NaN)) (not (eq? x Number.NEGATIVE_INFINITY)) (not (eq? x Number.POSITIVE_INFINITY)) (or (%number-type "bigint" x) (and (%number-type "float" x) (= (modulo x 2) 1)))))(define (complex? x) "(complex? x)
-
-Function check if argument x is complex." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (%number-type (quote ("complex" "float" "bigint" "rational")) x))))(define (rational? x) "(rational? x)
-
-Function check if value is rational." (and (number? x) (not (eq? x NaN)) (not (eq? x Number.NEGATIVE_INFINITY)) (not (eq? x Number.POSITIVE_INFINITY)) (or (%number-type "rational" x) (integer? x))))(define (typecheck-args _type name _list) "(typecheck-args args type)
-
-Function check if all items in array are of same type." (let iter ((n 1) (_list _list)) (if (pair? _list) (begin (typecheck name (car _list) _type n) (iter (+ n 1) (cdr _list))))))(define numbers? (curry typecheck-args "number"))(define (max . args) "(max n1 n2 ...)
-
-Return maximum of it's arguments." (numbers? "max" args) (apply (.. Math.max) args))(define (min . args) "(min n1 n2 ...)
-
-Return minimum of it's arguments." (numbers? "min" args) (apply (.. Math.min) args))(define (make-rectangular re im) "(make-rectangular im re)
-
-Create complex number from imaginary and real part." (let ((value (quasiquote ((re unquote re) (im unquote im))))) (lips.LComplex (--> value (toObject #t)))))(define (exact? n) "(exact? n)" (typecheck "exact?" n "number") (let ((type n.__type__)) (or (string=? type "bigint") (string=? type "rational") (and (string=? type "complex") (exact? n.__im__) (exact? n.__re__)))))(define (inexact? n) "(inexact? n)" (typecheck "inexact?" n "number") (not (exact? n)))(define (exact->inexact n) "(exact->inexact n)
-
-Convert exact number to inexact." (typecheck "exact->inexact" n "number") (if (%number-type "complex" n) (lips.LComplex (object :im (exact->inexact (. n (quote __im__))) :re (exact->inexact (. n (quote __re__))))) (if (or (rational? n) (integer? n)) (lips.LFloat (--> n (valueOf)) #t) n)))(define (inexact->exact n) "(inexact->exact number)
-
-Funcion convert real number to exact ratioanl number." (typecheck "inexact->exact" n "number") (if (or (real? n) (%number-type "complex" n)) (--> n (toRational)) n))(define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))(define _this_env (current-environment))(let iter ((fns _maths)) (if (not (null? fns)) (let* ((name (car fns)) (LNumber (.. lips.LNumber)) (op (. Math name)) (fn (lambda (n) (LNumber (op n))))) (--> _this_env (set name fn)) (set-obj! fn (quote __doc__) (concat "(" name " n)
-
-Function calculate " name " math operation (it call JavaScript Math)." name " function.")) (iter (cdr fns)))))(define (modulo a b) "(modulo a b)
-
-Function return modulo operation on it's argumennts." (typecheck "modulo" a "number" 1) (typecheck "modulo" b "number" 2) (- a (* b (floor (/ a b)))))(define (remainder__ a b) "(modulo a b)
-
-Function return reminder from division operation." (typecheck "remainder" a "number" 1) (typecheck "remainder" b "number" 2) (- a (* b (truncate (/ a b)))))(define (list-tail l k) "(list-tail list k)
-
-Returns the sublist of list obtained by omitting the first k elements." (typecheck "list-tail" l (quote ("pair" "nil"))) (if (< k 0) (throw (new Error "list-ref: index out of range")) (let ((l l) (k k)) (while (> k 0) (if (null? l) (throw (new Error "list-tail: not enough elements in the list"))) (set! l (cdr l)) (set! k (- k 1))) l)))(define (list-ref l k) "(list-ref list n)
-
-Returns n element of a list." (typecheck "list-ref" l (quote ("pair" "nil"))) (if (< k 0) (throw (new Error "list-ref: index out of range")) (let ((l l) (k k)) (while (> k 0) (if (null? l) (throw (new Error "list-ref: not enough elements in the list"))) (set! l (cdr l)) (set! k (- k 1))) (if (null? l) l (car l)))))(define (not x) "(not x)
-
-Function return true if value is false and false otherwise." (if x #f #t))(define (rationalize number tolerance) "(rationalize number tolerance)
-
-Function returns simplest rational number differing from number by no more
-than the tolerance." (typecheck "rationalize" number "number" 1) (typecheck "rationalize" tolerance "number" 2) (lips.rationalize number tolerance))(define (%mem/search access op obj list) "(%member obj list function)
-
-Helper method to get first list where car equal to obj
-using provied functions as comparator." (if (null? list) #f (if (op (access list) obj) list (%mem/search access op obj (cdr list)))))(define (memq obj list) "(memq obj list)
-
-Function return first object in the list that match using eq? function." (typecheck "memq" list (quote ("nil" "pair"))) (%mem/search car eq? obj list))(define (memv obj list) "(memv obj list)
-
-Function return first object in the list that match using eqv? function." (typecheck "memv" list (quote ("nil" "pair"))) (%mem/search car eqv? obj list))(define (member obj list) "(member obj list)
-
-Function return first object in the list that match using equal? function." (typecheck "member" list (quote ("nil" "pair"))) (%mem/search car equal? obj list))(define (%assoc/acessor name) "(%assoc/acessor name)
-
-Function return carr with typecheck using give name." (lambda (x) (typecheck name x "pair") (caar x)))(define (%assoc/search op obj alist) "(%assoc/search op obj alist)
-
-Generic function that used in assoc functions with defined comparator
-function." (typecheck "assoc" alist (vector "nil" "pair")) (let ((ret (%mem/search (%assoc/acessor "assoc") op obj alist))) (if ret (car ret) ret)))(define assoc (%doc "(assoc obj alist)
-
-Function return pair from alist that match given key using equal? check." (curry %assoc/search equal?)))(define assq (%doc "(assq obj alist)
-
-Function return pair from alist that match given key using eq? check." (curry %assoc/search eq?)))(define assv (%doc "(assv obj alist)
-
-Function return pair from alist that match given key using eqv? check." (curry %assoc/search eqv?)))(define (make-string k . rest) "(make-string k [char])
-
-Function return new string with k elements, if char is provied
-it's filled with that character." (let ((char (if (null? rest) #\space (car rest)))) (typecheck "make-string" k "number" 1) (typecheck "make-string" char "character" 2) (let iter ((result (quote ())) (k k)) (if (<= k 0) (list->string result) (iter (cons char result) (- k 1))))))(define (string . args) "(string chr1 chr2 ...)
-
-Function create new string from it's arguments. Each argument
-Need to be a character object." (for-each (lambda (x) (typecheck "string" x "character")) args) (list->string args))(define (string-copy string) "(string-copy string)
-
-Returns a copy of the given string." (typecheck "string-copy" string "string") (--> string (clone)))(define (string-fill! string char) "(string-fill! symbol char)
-
-Function destructively fill the string with given character." (typecheck "string-fill!" string "string" 1) (typecheck "string-fill!" char "character" 2) (--> string (fill char)))(define (identity n) "(identity n)
-
-No op function. it just returns its argument." n)(define (string-copy x) "(string-copy x)
-
-Create new string based of given argument." (typecheck "string-copy" x "string") (lips.LString x))(define (list->string _list) "(list->string _list)
-
-Function return string from list of characters." (let ((array (list->array (map (lambda (x) (typecheck "list->string" x "character") (x.valueOf)) _list)))) (--> array (join ""))))(define (string->list string) "(string->list string)
-
-Function return list of characters created from string." (typecheck "string->list" string "string") (array->list (--> string (split "") (map (lambda (x) (lips.LCharacter x))))))(define-macro (string-set! object index char) "(string-set! object index char)
-
-Macro that replace character in string in given index, it create new JavaScript
-string and replace old value. Object need to be symbol that point to variable
-that hold the string." (typecheck "string-set!" object "symbol") (let ((chars (gensym "chars"))) (quasiquote (begin (typecheck "string-set!" (unquote object) "string") (typecheck "string-set!" (unquote index) "number") (typecheck "string-set!" (unquote char) "character") (let (((unquote chars) (list->vector (string->list (unquote object))))) (set-obj! (unquote chars) (unquote index) (unquote char)) (set! (unquote object) (list->string (vector->list (unquote chars)))))))))(define (string-length string) "(string-length string)
-
-Function return length of the string." (typecheck "string-ref" string "string") (. string (quote length)))(define (string-ref string k) "(string-ref string k)
-
-Function return character inside string at given zero-based index." (typecheck "string-ref" string "string" 1) (typecheck "string-ref" k "number" 2) (lips.LCharacter (--> string (get k))))(define (%string-cmp name string1 string2) "(%string-cmp name a b)
-
-Function compare two strings and return 0 if they are equal,
--1 second is smaller and 1 if is larget. The function compare
-the codepoints of the character." (typecheck name string1 "string" 1) (typecheck name string2 "string" 2) (--> string1 (cmp string2)))(define (string=? string1 string2) "(string=? string1 string2)
-
-Function check if two string s are equal." (= (%string-cmp "string=?" string1 string2) 0))(define (string<? string1 string2) "(string<? string1 string2)
-
-Function return true if second string is smaller then the first one." (= (%string-cmp "string<?" string1 string2) -1))(define (string>? string1 string2) "(string<? string1 string2)
-
-Function return true if second string is larger then the first one." (= (%string-cmp "string>?" string1 string2) 1))(define (string<=? string1 string2) "(string<? string1 string2)
-
-Function return true if second string is not larger then the first one." (< (%string-cmp "string<=?" string1 string2) 1))(define (string>=? string1 string2) "(string<? string1 string2)
-
-Function return true if second character is not smaller then the first one." (> (%string-cmp "string>=?" string1 string2) -1))(define (%string-ci-cmp name string1 string2) "(%string-ci-cmp name a b)
-
-Function compare two strings ingoring case and return 0 if they are equal,
--1 second is smaller and 1 if is larget. The function compare
-the codepoints of the character." (typecheck name string1 "string" 1) (typecheck name string2 "string" 2) (--> string1 (lower) (cmp (--> string2 (lower)))))(define (string-ci=? string1 string2) "(string-ci=? string1 string2)
-
-Function check if two string s are equal." (= (%string-ci-cmp "string-ci=?" string1 string2) 0))(define (string-ci<? string1 string2) "(string-ci<? string1 string2)
-
-Function return true if second string is smaller then the first one." (= (%string-ci-cmp "string-ci<?" string1 string2) -1))(define (string-ci>? string1 string2) "(string-ci<? string1 string2)
-
-Function return true if second string is larger then the first one." (= (%string-ci-cmp "string-ci>?" string1 string2) 1))(define (string-ci<=? string1 string2) "(string-ci<? string1 string2)
-
-Function return true if second string is not larger then the first one." (< (%string-ci-cmp "string-ci<=?" string1 string2) 1))(define (string-ci>=? string1 string2) "(string-ci>=? string1 string2)
-
-Function return true if second character is not smaller then the first one." (> (%string-ci-cmp "string-ci>=?" string1 string2) -1))(define char? (%doc "(char? obj)
-
-Function check if object is character." (curry instanceof lips.LCharacter)))(define (char->integer chr) "(char->integer chr)
-
-Function return codepoint of Unicode character." (typecheck "char->integer" chr "character") (--> chr.__char__ (codePointAt 0)))(define (integer->char n) "(integer->char chr)
-
-Function convert number argument to chararacter." (typecheck "integer->char" n "number") (if (integer? n) (string-ref (String.fromCodePoint n) 0) (throw "argument to integer->char need to be integer.")))(define-macro (%define-chr-re spec str re) "(%define-chr-re (name chr) sring re)
-
-Macro define procedure that test character agains regular expression." (quasiquote (define (unquote spec) (unquote str) (typecheck (unquote (symbol->string (car spec))) (unquote (cadr spec)) "character") (not (null? (--> chr (toString) (match (unquote re))))))))(%define-chr-re (char-whitespace? chr) "(char-whitespace? chr)
-
-Function return true if character is whitespace." (let-env (interaction-environment) (--> **internal-env** (get (quote space-unicode-regex)))))(%define-chr-re (char-numeric? chr) "(char-numeric? chr)
-
-Function return true if character is number." (let-env (interaction-environment) (--> **internal-env** (get (quote numeral-unicode-regex)))))(%define-chr-re (char-alphabetic? chr) "(char-alphabetic? chr)
-
-Function return true if character is leter of the ASCII alphabet." (let-env (interaction-environment) (--> **internal-env** (get (quote letter-unicode-regex)))))(define (%char-cmp name chr1 chr2) "(%char-cmp name a b)
-
-Function compare two characters and return 0 if they are equal,
--1 second is smaller and 1 if is larget. The function compare
-the codepoints of the character." (typecheck name chr1 "character" 1) (typecheck name chr2 "character" 2) (let ((a (char->integer chr1)) (b (char->integer chr2))) (cond ((= a b) 0) ((< a b) -1) (else 1))))(define (char=? chr1 chr2) "(char=? chr1 chr2)
-
-Function check if two characters are equal." (= (%char-cmp "char=?" chr1 chr2) 0))(define (char<? chr1 chr2) "(char<? chr1 chr2)
-
-Function return true if second character is smaller then the first one." (= (%char-cmp "char<?" chr1 chr2) -1))(define (char>? chr1 chr2) "(char<? chr1 chr2)
-
-Function return true if second character is larger then the first one." (= (%char-cmp "char>?" chr1 chr2) 1))(define (char<=? chr1 chr2) "(char<? chr1 chr2)
-
-Function return true if second character is not larger then the first one." (< (%char-cmp "char<=?" chr1 chr2) 1))(define (char>=? chr1 chr2) "(char<? chr1 chr2)
-
-Function return true if second character is not smaller then the first one." (> (%char-cmp "char>=?" chr1 chr2) -1))(define (%char-ci-cmp name chr1 chr2) "(%char-cmp name a b)
-
-Function compare two characters and return 0 if they are equal,
--1 second is smaller and 1 if is larget. The function compare
-the codepoints of the character." (typecheck name chr1 "character" 1) (typecheck name chr2 "character" 2) (%char-cmp name (char-downcase chr1) (char-downcase chr2)))(define (char-ci=? chr1 chr2) "(char-ci=? chr1 chr2)
-
-Function check if two characters are equal." (= (%char-ci-cmp "char-ci=?" chr1 chr2) 0))(define (char-ci<? chr1 chr2) "(char-ci<? chr1 chr2)
-
-Function return true if second character is smaller then the first one." (= (%char-ci-cmp "char-ci<?" chr1 chr2) -1))(define (char-ci>? chr1 chr2) "(char-ci<? chr1 chr2)
-
-Function return true if second character is larger then the first one." (= (%char-ci-cmp "char-ci>?" chr1 chr2) 1))(define (char-ci<=? chr1 chr2) "(char-ci<? chr1 chr2)
-
-Function return true if second character is not larger then the first one." (< (%char-ci-cmp "char-ci<=?" chr1 chr2) 1))(define (char-ci>=? chr1 chr2) "(char-ci<? chr1 chr2)
-
-Function return true if second character is not smaller then the first one." (> (%char-ci-cmp "char-ci>=?" chr1 chr2) -1))(define (char-upcase char) "(char-upcase char)
-
-Create uppercase version of the character." (typecheck "char-upcase" char "character") (char.toUpperCase))(define (char-downcase char) "(char-downcase chr)
-
-Create lowercase version of the character." (typecheck "char-upcase" char "character") (char.toLowerCase))(define (char-upper-case? char) "(char-upper-case? char)
-
-Function check if character is upper case." (typecheck "char-upper-case?" char "character") (and (char-alphabetic? char) (char=? (char-upcase char) char)))(define (char-lower-case? char) "(char-upper-case? char)
-
-Function check if character is lower case." (typecheck "char-lower-case?" char "character") (and (char-alphabetic? char) (char=? (char-downcase char) char)))(define (newline . rest) "(newline [port])
-
-Write newline character to standard output or given port" (let ((port (if (null? rest) (current-output-port) (car rest)))) (display "
-" port)))(define (write obj . rest) "(write obj [port])
-
-Write object to standard output or give port. For strings it will include
-wrap in quotes." (let ((port (if (null? rest) (current-output-port) (car rest)))) (display (repr obj #t) port)))(define (write-char char . rest) "(write-char char [port])
-
-Write single character to given port using write function." (typecheck "write-char" char "character") (if (not (null? rest)) (typecheck "write-char" (car rest) "output-port")) (apply display (cons (char.valueOf) rest)))(define fold-right reduce)(define fold-left fold)(define (make-vector n . rest) "(make-vector n [fill])
-
-Create new vector with n empty elements. If fill is specified it will set
-all elements of the vector to that value." (let ((result (new Array n))) (if (not (null? rest)) (--> result (fill (car rest))) result)))(define (vector? n) "(vector? n)
-
-Function return true of value is vector and false if not." (string=? (type n) "array"))(define (vector-ref vec n) "(vector-ref vec n)
-
-Function return nth element of the vector vec." (typecheck "vector-ref" vec "array" 1) (typecheck "vector-ref" n "number" 2) (. vec n))(define (vector-set! vec n value) "(vector-set! vec n value)
-
-Function set nth item of the vector to value." (typecheck "vector-ref" vec "array" 1) (typecheck "vector-ref" n "number" 2) (set-obj! vec n value))(define (vector-fill! vec value) "(vector-fill! vec value)
-
-Set every element of the vector to given value." (typecheck "vector-ref" vec "array") (let recur ((n (- (length vec) 1))) (if (>= n 0) (begin (set-obj! vec n value) (recur (- n 1))))))(define (vector-length vec) "(vector-length vec)
-
-Function return length of the vector. If argument is not vector it throw exception." (typecheck "vector-length" vec "array") (length vec))(define-syntax case (syntax-rules (else =>) ((case (key ...) clauses ...) (let ((atom-key (key ...))) (case atom-key clauses ...))) ((case key (else => result)) (result key)) ((case key (else result1 result2 ...)) (begin result1 result2 ...)) ((case key ((atoms ...) result1 result2 ...)) (if (memv key (quote (atoms ...))) (begin result1 result2 ...))) ((case key ((atoms ...) => result)) (if (memv key (quote (atoms ...))) (result key))) ((case key ((atoms ...) => result) clause clauses ...) (if (memv key (quote (atoms ...))) (result key) (case key clause clauses ...))) ((case key ((atoms ...) result1 result2 ...) clause clauses ...) (if (memv key (quote (atoms ...))) (begin result1 result2 ...) (case key clause clauses ...)))) "(case value
-     ((<items>) result1)
-     ((<items>) result2)
-     [else result3])
-
-Macro for switch case statement. It test if value is any of the item. If
-item match the value it will return coresponding result expression value.
-If no value match and there is else it will return that result.")(--> lips.Formatter.defaults.exceptions.specials (push "case"))(define (numerator n) "(numerator n)
-
-Return numberator of rational or same number if n is not rational." (typecheck "numerator" n "number") (if (and (rational? n) (not (integer? n))) n.num n))(define (denominator n) "(denominator n)
-
-Return denominator of rational or same number if one is not rational." (typecheck "denominator" n "number") (if (and (rational? n) (not (integer? n))) n.denom (if (exact? n) 1 1.0)))(define (imag-part n) "(imag-part n)
-
-Return imaginary part of the complex number n." (typecheck "imag-part" n "number") (if (%number-type "complex" n) n.__im__ 0))(define (real-part n) "(real-part n)
-
-Return real part of the complex number n." (typecheck "real-part" n "number") (if (%number-type "complex" n) n.__re__ n))(define (make-polar r angle) "(make-polar magnitude angle)
-
-Create new complex number from polar parameters." (typecheck "make-polar" r "number") (typecheck "make-polar" angle "number") (if (or (complex? r) (complex? angle)) (error "make-polar: argument can't be complex") (let ((re (* r (sin angle))) (im (* r (cos angle)))) (make-rectangular im re))))(define (angle x) "(angle x)
-
-Returns angle of the complex number in polar coordinate system." (if (not (%number-type "complex" x)) (error "angle: number need to be complex") (Math.atan2 x.__im__ x.__re__)))(define (magnitude x) "(magnitude x)
-
-Returns magnitude of the complex number in polar coordinate system." (if (not (%number-type "complex" x)) (error "magnitude: number need to be complex") (sqrt (+ (* x.__im__ x.__im__) (* x.__re__ x.__re__)))))(define random (let ((a 69069) (c 1) (m (expt 2 32)) (seed 19380110)) (lambda new-seed "(random)
-(random seed)
-
-Function generate new random real number using Knuth algorithm." (if (pair? new-seed) (set! seed (car new-seed)) (set! seed (modulo (+ (* seed a) c) m))) (exact->inexact (/ seed m)))))(define (eof-object? obj) "(eof-object? arg)
-
-Function check if value is eof object, returned from input string
-port when there are no more data to read." (eq? obj eof))(define (output-port? obj) "(output-port? arg)
-
-Function return true if argument is output port." (instanceof lips.OutputPort obj))(define (input-port? obj) "(input-port? arg)
-
-Function return true if argument is input port." (instanceof lips.InputPort obj))(define (char-ready? . rest) "(char-ready?)
-(char-ready? port)
-
-Function check it characters is ready in input port. This is usefull mostly
-for interactive ports that return false if it would wait for user input.
-It return false if port is closed." (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "char-ready?" port "input-port") (port.char_ready)))(define open-input-file (let ((readFile #f)) (lambda (filename) "(open-input-file filename)
-
-Function return new Input Port with given filename. In Browser user need to
-provide global fs variable that is instance of FS interface." (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-input-file: fs not defined")) (begin (if (not (procedure? readFile)) (let ((_readFile (promisify fs.readFile))) (set! readFile (lambda (filename) (--> (_readFile filename) (toString)))))) (new lips.InputFilePort (readFile filename) filename)))))))(define (close-input-port port) "(close-input-port port)
-
-Procedure close port that was opened with open-input-file. After that
-it no longer accept reading from that port." (typecheck "close-input-port" port "input-port") (port.close))(define (close-output-port port) "(close-output-port port)
-
-Procedure close port that was opened with open-output-file. After that
-it no longer accept write to that port." (typecheck "close-output-port" port "output-port") (port.close))(define (call-with-input-file filename proc) "(call-with-input-file filename proc)
-
-Procedure open file for reading, call user defined procedure with given port
-and then close the port. It return value that was returned by user proc
-and it close the port even if user proc throw exception." (let ((p (open-input-file filename))) (try (proc p) (finally (close-input-port p)))))(define (call-with-output-file filename proc) "(call-with-output-file filename proc)
-
-Procedure open file for writing, call user defined procedure with port
-and then close the port. It return value that was returned by user proc and it close the port
-even if user proc throw exception." (let ((p (open-output-file filename))) (try (proc p) (finally (close-output-port p)))))(define (with-input-from-file string thunk) "(with-input-from-file string thunk)
-
-Procedure open file and make it current-input-port then thunk is executed.
-After thunk is executed current-input-port is restored and file port
-is closed." (let* ((port (open-input-file string)) (env **interaction-environment**) (internal-env (env.get (quote **internal-env**))) (old-stdin (internal-env.get "stdin"))) (internal-env.set "stdin" port) (try (thunk) (finally (internal-env.set "stdin" old-stdin) (close-input-port port)))))(define (with-output-to-file string thunk) (let* ((port (open-output-file string)) (env **interaction-environment**) (internal-env (env.get (quote **internal-env**))) (old-stdout (internal-env.get "stdout"))) (internal-env.set "stdout" port) (try (thunk) (finally (internal-env.set "stdout" old-stdout) (close-output-port port)))))(define (file-exists? filename) (new Promise (lambda (resolve) (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "file-exists?: fs not defined")) (fs.stat filename (lambda (err stat) (if (null? err) (resolve (stat.isFile)) (resolve #f)))))))))(define open-output-file (let ((open)) (lambda (filename) "(open-output-file filename)
-
-Function open file and return port that can be used for writing. If file
-exists it will throw an Error." (typecheck "open-output-file" filename "string") (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-output-file: fs not defined")) (begin (if (not (procedure? open)) (set! open (promisify fs.open))) (if (file-exists? filename) (throw (new Error "open-output-file: file exists")) (lips.OutputFilePort filename (open filename "w")))))))))(define (scheme-report-environment version) "(scheme-report-environment version)
-
-Function return new Environment object for given Scheme Spec version.
-Only argument 5 is supported that create environemnt for R5RS." (typecheck "scheme-report-environment" version "number") (case version ((5) (%make-env "R5RS" * + - / < <= = > >= abs acos and angle append apply asin assoc assq assv atan begin boolean? caaaar caaadr caaar caadar caaddr caadr caar cadaar cadadr cadar caddar cadddr caddr cadr call-with-current-continuation call-with-input-file call-with-output-file call-with-values car case cdaaar cdaadr cdaar cdadar cdaddr cdadr cdar cddaar cddadr cddar cdddar cddddr cdddr cddr cdr ceiling char->integer char-alphabetic? char-ci<=? char-ci<? char-ci=? char-ci>=? char-ci>? char-downcase char-lower-case? char-numeric? char-ready? char-upcase char-upper-case? char-whitespace? char<=? char<? char=? char>=? char>? char? close-input-port close-output-port complex? cond cons cos current-input-port current-output-port define define-syntax delay denominator display do dynamic-wind eof-object? eq? equal? eqv? eval even? exact->inexact exact? exp expt floor for-each force gcd if imag-part inexact->exact inexact? input-port? integer->char integer? interaction-environment lambda lcm length let let* let-syntax letrec letrec-syntax list list->string list->vector list-ref list-tail list? load log magnitude make-polar make-rectangular make-string make-vector map max member memq memv min modulo negative? newline not null-environment null? number->string number? numerator odd? open-input-file open-output-file or output-port? pair? peek-char positive? procedure? quasiquote quote quotient rational? rationalize read read-char real-part real? remainder reverse round scheme-report-environment set! set-car! set-cdr! sin sqrt string string->list string->number string->symbol string-append string-ci<=? string-ci<? string-ci=? string-ci>=? string-ci>? string-copy string-fill! string-length string-ref string-set! string<=? string<? string=? string>=? string>? string? substring symbol->string symbol? tan truncate values vector vector->list vector-fill! vector-length vector-ref vector-set! vector? with-input-from-file with-output-to-file write write-char zero?)) ((7) (throw (new Error "not yet implemented"))) (else (throw (new Error (string-append "scheme-report-environment: version " (number->string version) " not supported"))))))(define-macro (%make-vector prefix type help) "(%make-vector prefix type help)
-
-Mega helper macro that create list of functions for single byte vector
-based on typed array from JavaScript" (letrec ((prefix-str (symbol->string prefix)) (type-str (symbol->string type)) (l-type (--> type-str (toLowerCase))) (static (lambda (name) (string->symbol (format "~a.~a" type-str name)))) (TypedArray.from (static "from")) (fn-name (lambda (str) (string->symbol (format str prefix-str)))) (type-vector (fn-name "~avector")) (make-vector (fn-name "make-~avector")) (vector? (fn-name "~avector?")) (vector-in-range? (fn-name "%~avector-in-range?")) (vector-ref (fn-name "~avector-ref")) (repr-str (format "#~a" prefix-str)) (vector-length (fn-name "~avector-length")) (vector->list (fn-name "~avector->list")) (vector-set! (fn-name "~avector-set!")) (list->tvector (fn-name "list->~avector")) (vector->tvector (fn-name "vector->~avector"))) (quasiquote (begin (define ((unquote type-vector) . args) (unquote (format "(~a v1 v2 ...)
-
-Create ~a from give arguments." type-vector help)) ((unquote TypedArray.from) (list->vector args))) (define ((unquote vector-length) v) (unquote (format "(~a v)
-
-return length of ~a." vector-length help)) (typecheck (unquote (symbol->string vector-length)) v (unquote l-type)) v.length) (define ((unquote make-vector) k . fill) (unquote (format "(~a v1 v2 ...)
-
-Allocate new ~a of length k, with optional initial values." make-vector help)) (let ((v (new (unquote type) k))) (if (not (null? fill)) (--> v (fill (car fill)))) v)) (define ((unquote vector?) x) (unquote (format "(~a x)
-
-Function return #t of argument is ~a otherwise it return #f." vector? help)) (and (object? x) (equal? (. x (quote constructor)) (unquote type)))) (define ((unquote vector-in-range?) vector k) (unquote (format "(~a vector k)
-
-Function test if index is range for ~a." vector-in-range? help)) (typecheck (unquote (symbol->string vector-in-range?)) vector (unquote l-type)) (typecheck (unquote (symbol->string vector-in-range?)) k "number") (let ((len (length vector))) (and (>= k 0) (< k len)))) (define ((unquote vector-ref) vector k) (unquote (format "(~a vector k)
-
-Function return value frome vector at index k. If index is out of range it throw exception." vector-ref help)) (typecheck (unquote (symbol->string vector-ref)) vector (unquote l-type)) (typecheck (unquote (symbol->string vector-ref)) k "number") (if (not ((unquote vector-in-range?) vector k)) (throw (new Error (unquote (format "~a index out of range" vector-ref)))) (. vector k))) (define ((unquote vector->list) vector) (typecheck (unquote (symbol->string vector->list)) vector (unquote l-type)) (vector->list (Array.from vector))) (define ((unquote vector-set!) vector k v) (unquote (format "(~a vector k)
-
-Function set value of ~a at index k. If index is out of range it throw exception." vector-set! help)) (typecheck (unquote (symbol->string vector-set!)) vector (unquote l-type)) (typecheck (unquote (symbol->string vector-set!)) k "number") (if (not ((unquote vector-in-range?) vector k)) (throw (new Error (unquote (format "~a index out of range" vector-set!)))) (set-obj! vector k v))) (define ((unquote list->tvector) lst) (typecheck (unquote (symbol->string list->tvector)) lst "pair") (apply (unquote vector) lst)) (define ((unquote vector->tvector) vector) (typecheck (unquote (symbol->string vector->tvector)) vector "array") ((unquote TypedArray.from) vector)) (set-special! (unquote repr-str) (quote (unquote type-vector)) lips.specials.SPLICE) (set-repr! (unquote type) (lambda (x _quote) (string-append (unquote repr-str) (repr ((unquote vector->list) x) _quote))))))))(%make-vector u8 Uint8Array "usigned 8-bit integer vector")(%make-vector s8 Int8Array "signed 8-bit integer vector")(%make-vector u16 Uint16Array "usigned 16-bit integer vector")(%make-vector s16 Int16Array "signed 16-bit integer vector")(%make-vector u32 Uint16Array "usigned 32-bit integer vector")(%make-vector s32 Int16Array "signed 32-bit integer vector")(%make-vector f32 Float32Array "32-bit IEEE floating point number vector")(%make-vector f64 Float64Array "64-bit IEEE floating point number vector")(define (list-match? predicate list) "(list-match? predicate list)
-
-Function check if consecutive elements of the list match the predicate function." (typecheck "list-match?" predicate #("function" "macro")) (typecheck "list-match?" list "pair") (or (or (null? list) (null? (cdr list))) (and (predicate (car list) (cadr list)) (list-match? predicate (cdr list)))))(define (symbol=? . args) "(symbol=? s1 s2 ...)
-
-Function check if each value is symbol and it's the same acording to string=? predicate." (list-match? (lambda (a b) (and (symbol? a) (symbol? b) (equal? a b))) args))(define (values-ref values n) "(values-ref values n)
-
-Function return n value of values object which is result of value function." (typecheck "values-ref" values "values" 1) (typecheck "values-ref" n "number" 1) (--> values (valueOf) n))(define-syntax let-values (syntax-rules () ((_ ()) ()) ((_ () body ...) (begin body ...)) ((_ (((x ...) values) ...) body ...) (apply (lambda (x ... ...) body ...) (vector->list (apply vector-append (map (lambda (x) ((. x "valueOf"))) (list values ...))))))) "(let-values binding body ...)
-
-The macro work similar to let but variable is list of values and value
-need to evaluate to result of calling values.")(define (vector-append . args) "(vector-append v1 v2 ...)
-
-Function return new vector by combining it's arguments that should be vectors." (if (null? args) (vector) (begin (typecheck "vector-append" (car args) "array") (--> (car args) (concat (apply vector-append (cdr args)))))))(define-syntax let*-values (syntax-rules () ((_ ()) ()) ((_ () body ...) (begin body ...)) ((_ ((bind values) rest ...) . body) (apply (lambda bind (let*-values (rest ...) . body)) (vector->list ((. values "valueOf")))))) "(let*-values binding body ...)
-
-The macro work similar to let* but variable is list of values and value
-need to evaluate to result of calling values.")(define (quotient&remainder x y) (values (quotient x y) (remainder x y)))(define (floor/ x y) (let ((q (quotient x y)) (r (remainder x y))) (if (>= x 0) (if (or (> y 0) (zero? r)) (values q r) (values (- q 1) (+ r y))) (if (and (> y 0) (not (zero? r))) (values (- q 1) (+ r y)) (values q r)))))(define (floor-quotient x y) (values-ref (floor/ x y) 0))(define (floor-remainder x y) (modulo x y))(define (truncate/ x y) (quotient&remainder x y))(define (truncate-quotient x y) (quotient x y))(define (truncate-remainder x y) (remainder x y))(define-syntax case-lambda (syntax-rules () ((case-lambda (params body0 ...) ...) (lambda args (let ((len (length args))) (letrec-syntax ((cl (syntax-rules ::: () ((cl) (error "no matching clause")) ((cl ((p :::) . body) . rest) (if (= len (length (quote (p :::)))) (apply (lambda (p :::) . body) args) (cl . rest))) ((cl ((p ::: . tail) . body) . rest) (if (>= len (length (quote (p :::)))) (apply (lambda (p ::: . tail) . body) args) (cl . rest)))))) (cl (params body0 ...) ...)))))) "(case-lambda expr ...)
-
-Macro create new function with different version of the function depend on
-number of arguments. Each expression is similar to single lambda.
-
-e.g.:
-
-    (define sum
-       (case-lambda
-         ((x) x)
-         ((x y) (+ x y))
-         ((x y z) (+ x y z))))
-
-    (sum 1)
-    (sum 1 2)
-    (sum 1 2 3)
-
-More arguments will give error.")(define (boolean=? . args) "(boolean=? b1 b2 ...)
-
-Function check if all arguments are boolean and if they are the same." (if (< (length args) 2) (error "boolean=?: too few arguments") (reduce (lambda (acc item) (and (boolean? item) (eq? acc item))) (car args) (cdr args))))(define (port? x) "(port? x)
-
-Function return true of argumet is nput or output port port object." (or (output-port? x) (input-port? x)))(define (square x) "(square z)
-
-Returns the square of z. This is equivalent to (* z z)." (* x x))(define-syntax when (syntax-rules () ((when test result1 result2 ...) (if test (begin result1 result2 ...)))) "(when test body ...)
-
-Macro execute body when test expression is true.")(define-syntax unless (syntax-rules () ((unless test result1 result2 ...) (if (not test) (begin result1 result2 ...)))) "(unless test body ...)
-
-Macro execute body when test expression is false.")(define inexact exact->inexact)(define exact inexact->exact)(define (exact-integer? n) "(exact-integer? n)
-
-Function returns #t if z is both exact and an integer; otherwise
-returns #f." (and (integer? n) (exact? n)))(define (string->vector s) "(string->vector string)
-
-Function return vector of characters created from string." (typecheck "string->list" s "string") (--> s (split "") (map (lambda (x) (lips.LCharacter x)))))(define (vector->string v) "(vector->string vector)
-
-Function return new string created from vector of characters." (typecheck "vector->list" v "array") (--> v (map (lambda (char) (char.valueOf))) (join "")))(define (vector-map fn . rest) "(vector-map fn vector1 vector2 ...)
-
-Function return new vector from applying function fn to each element
-of the vectors, similar to map for lists." (if (or (= (length rest) 0) (not (every vector? rest))) (error "vector-map: function require at least 1 vector") (let ((len (apply min (map vector-length rest))) (result (vector))) (do ((i 0 (+ i 1))) ((= i len) result) (let* ((args (map (lambda (v) (vector-ref v i)) rest)) (value (apply fn args))) (--> result (push value)))))))(define (string-map fn . rest) "(string-map fn string1 stringr2 ...)
-
-Function return new string from applying function fn to each element
-of the strings, similar to map for lists." (if (or (= (length rest) 0) (not (every string? rest))) (error "string-map: function require at least 1 string") (vector->string (apply vector-map fn (map string->vector rest)))))(define (dynamic-wind before thunk after) "(dynamic-wind before thunk after)
-
-Function accept 3 procedures/lambdas and execute thunk with before and always
-after even if error accur" (before) (let ((result (try (thunk) (catch (e) (error e))))) (after) result))(define (with-exception-handler handler thunk) "(with-exception-handler handler thunk)
-
-Procedure call and return value of thunk function, if exception happen
-it call handler procedure." (try (thunk) (catch (e) (handler e))))(define raise throw)(define-syntax define-values (syntax-rules () ((define-values () expr) (define dummy (call-with-values (lambda () expr) (lambda args #f)))) ((define-values (var) expr) (define var expr)) ((define-values (var0 var1 ... varn) expr) (begin (define var0 (call-with-values (lambda () expr) list)) (define var1 (let ((v (cadr var0))) (set-cdr! var0 (cddr var0)) v)) ... (define varn (let ((v (cadr var0))) (set! var0 (car var0)) v)))) ((define-values (var0 var1 ... . varn) expr) (begin (define var0 (call-with-values (lambda () expr) list)) (define var1 (let ((v (cadr var0))) (set-cdr! var0 (cddr var0)) v)) ... (define varn (let ((v (cdr var0))) (set! var0 (car var0)) v)))) ((define-values var expr) (define var (call-with-values (lambda () expr) list)))) "(define-values (a b ...) expr)
-
-Function evaluate expression expr and if it evaluates to result of values
-then it will defined each value as variable like with define.")(define-macro (include . files) "(include file ...)
-
-Macro that load at least one file content and insert them into one,
-body expression." (if (null? files) (throw (new Error "include: at least one file path required")) (let ((result (vector)) (env (interaction-environment))) (if (eq? self global) (let* ((fs (require "fs")) (readFile (lambda (file) (new Promise (lambda (resolve reject) (fs.readFile file (lambda (err data) (if (null? err) (resolve (--> data (toString))) (reject err))))))))) (for-each (lambda (file) (let* ((expr (lips.parse (readFile file) env))) (set! result (--> result (concat expr))))) files)) (for-each (lambda (file) (let* ((text (--> (fetch file) (text))) (expr (lips.parse text env))) (set! result (--> result (concat expr))))) files)) (if (> result.length 0) (quasiquote (begin (unquote-splicing (vector->list result))))))))(define-syntax syntax-error (syntax-rules () ((_ "step" arg ...) (join " " (vector->list (vector (repr arg) ...)))) ((_ message arg ...) (raise (new Error (format "~a ~a" message (_ "step" arg ...)))))))(define-syntax cond-expand (syntax-rules (and or not else r7rs srfi-0 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips complex full-unicode ieee-float ratios exact-complex full-numeric-tower) ((cond-expand) (syntax-error "Unfulfilled cond-expand")) ((cond-expand (else body ...)) (begin body ...)) ((cond-expand ((and) body ...) more-clauses ...) (begin body ...)) ((cond-expand ((and req1 req2 ...) body ...) more-clauses ...) (cond-expand (req1 (cond-expand ((and req2 ...) body ...) more-clauses ...)) more-clauses ...)) ((cond-expand ((or) body ...) more-clauses ...) (cond-expand more-clauses ...)) ((cond-expand ((or req1 req2 ...) body ...) more-clauses ...) (cond-expand (req1 (begin body ...)) (else (cond-expand ((or req2 ...) body ...) more-clauses ...)))) ((cond-expand ((not req) body ...) more-clauses ...) (cond-expand (req (cond-expand more-clauses ...)) (else body ...))) ((cond-expand (r7rs body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-0 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-4 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-6 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-10 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-22 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-23 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-46 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-176 body ...) more-clauses ...) (begin body ...)) ((cond-expand (lips body ...) more-clauses ...) (begin body ...)) ((cond-expand (complex body ...) more-clauses ...) (begin body ...)) ((cond-expand (full-unicode body ...) more-clauses ...) (begin body ...)) ((cond-expand (ieee-float body ...) more-clauses ...) (begin body ...)) ((cond-expand (ratios body ...) more-clauses ...) (begin body ...)) ((cond-expand (exact-complex body ...) more-clauses ...) (begin body ...)) ((cond-expand (full-numeric-tower body ...) more-clauses ...) (begin body ...))))(define (features) (quote (r7rs srfi-0 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips complex full-unicode ieee-float ratios exact-complex full-numeric-tower)))(define *zero-number-chars* #(48 1632 1776 1984 2406 2534 2662 2790 2918 3046 3174 3302 3430 3558 3664 3792 3872 4160 4240 6112 6160 6470 6608 6784 6800 6992 7088 7232 7248 42528 43216 43264 43472 43504 43600 44016 65296 66720 68912 69734 69872 69942 70096 70384 70736 70864 71248 71360 71472 71904 72016 72784 73040 73120 92768 93008 120782 120792 120802 120812 120822 123200 123632 125264 130032))(define (digit-value chr) "(digit-value chr)
-
-Return digit number if character is numeral (as per char-numeric?)
-or #f otherwise." (typecheck "digit-value" chr "character") (if (char-numeric? chr) (let ((ord (char->integer chr))) (do ((i (vector-length *zero-number-chars*) (- i 1)) (found #f) (result #f)) ((or (zero? i) found) result) (let* ((zero (vector-ref *zero-number-chars* (- i 1))) (diff (- ord zero))) (if (and (>= diff 0) (<= diff 9)) (begin (set! result diff) (set! found #t)))))) #f))(define make-bytevector make-u8vector)(define bytevector u8vector)(define bytevector? u8vector?)(define bytevector-length u8vector-length)(define bytevector-u8-ref u8vector-ref)(define bytevector-u8-set! u8vector-set!)(define (bytevector-append v1 . rest) "(bytevector-append v1 ...)
-
-Create new bytevector u8vector that is created from joining each argument." (typecheck "bytevector-append" v1 "uint8array" 1) (map (lambda (arg) (typecheck "bytevector-append" arg "uint8array")) rest) (if (null? rest) v1 (new Uint8Array (apply vector-append (Array.from v1) (map Array.from rest)))))(define (bytevector-copy v . rest) "(bytevector-copy v)
-(bytevector-copy v start)
-(bytevector-copy v start end)
-
-Function and return new vector from start to end. If no start and end is provided
-whole vector is copied and returned." (if (null? rest) (new Uint8Array v) (let ((start (car rest))) (if (null? (cdr rest)) (v.slice start) (v.slice start (cadr rest))))))(define (bytevector-copy! to at from . rest) "(bytevector-copy! to at from)
-(bytevector-copy! to at from start)
-(bytevector-copy! to at from start end)
-
-Copies the bytes of bytevector from between start and end to bytevector to,
-starting at at." (typecheck "bytevector-copy!" to "uint8array") (typecheck "bytevector-copy!" from "uint8array") (cond ((< at 0) (throw (new Error "bytevector-copy! `at` need to be positive"))) ((> at (bytevector-length to)) (throw (new Error "bytevector-copy! `at` need to be less then byte vector length")))) (let* ((start (if (null? rest) 0 (car rest))) (end (if (or (null? rest) (null? (cdr rest))) (- (bytevector-length from) start) (cadr rest)))) (let ((i at) (j start)) (while (and (< i (bytevector-length to)) (< i (bytevector-length from)) (< j (+ start end))) (bytevector-u8-set! to i (bytevector-u8-ref from j)) (set! i (+ i 1)) (set! j (+ j 1))))))(define string->utf8 (let ((encoder (new TextEncoder "utf-8"))) (lambda (string . rest) "(string->utf8 string)
-(string->utf8 string start)
-(string->utf8 string start end)
-
-Function converts string into u8 bytevector using utf8 encoding.
-The start and end is the range of the input string for the conversion." (if (null? rest) (encoder.encode string) (let* ((start (car rest)) (len (--> (Array.from string) (quote length))) (end (if (null? (cdr rest)) len (cadr rest)))) (encoder.encode (substring string start end)))))))(define utf8->string (let ((decoder (new TextDecoder "utf-8"))) (lambda (v . rest) "(utf8->string u8vector)
-(utf8->string u8vector start)
-(utf8->string u8vector start end)
-
-Function converts u8 bytevector into string using utf8 encoding.
-The start and end is the range of the input byte vector for the conversion." (if (null? rest) (decoder.decode v) (let* ((start (car rest)) (len (--> (Array.from string) (quote length))) (end (if (null? (cdr rest)) len (cadr rest)))) (decoder.decode (v.slice start end)))))))(define (open-input-string string) "(open-input-string string)
-
-Function create new string port as input that can be used to
-read S-exressions from this port using `read` function." (typecheck "open-input-string" string "string") (new lips.InputStringPort string (interaction-environment)))(define (open-output-string) "(open-output-string)
-
-Function create new output port that can used to write string into
-and after finish get the whole string using `get-output-string`." (new lips.OutputStringPort repr))(define (get-output-string port) "(get-output-string port)
-
-Function get full string from string port. If nothing was wrote
-to given port it will return empty string." (if (not (instanceof lips.OutputStringPort port)) (throw (new Error (string-append "get-output-string: expecting output-string-port get " (type port)))) (port.getString)))(define (open-input-bytevector bytevector) "(open-input-bytevector bytevector)
-
-Create new input binary port with given bytevector" (typecheck "open-input-bytevector" bytevector "uint8array") (new lips.InputByteVectorPort bytevector))(define (open-binary-input-file filename) "(open-binary-input-file filename)
-
-Function return new Input Binary Port with given filename. In Browser
-user need to provide global fs variable that is instance of FS interface." (let ((u8vector (buffer->u8vector (%read-binary-file filename)))) (new lips.InputBinaryFilePort u8vector filename)))(define (binary-port? port) "(binary-port? port)
-
-Function test if argument is binary port." (and (port? port) (eq? port.__type__ (Symbol.for "binary"))))(define (textual-port? port) "(textual-port? port)
-
-Function test if argument is string port." (and (port? port) (eq? port.__type__ (Symbol.for "text"))))(define-macro (%define-binary-input-lambda name docstring fn) (let ((port (gensym)) (name-str (symbol->string name))) (quasiquote (define ((unquote name) . rest) (unquote docstring) (let (((unquote port) (if (null? rest) (current-input-port) (car rest)))) (typecheck (unquote name-str) (unquote port) "input-port") (if (not (binary-port? (unquote port))) (throw (new Error (string-append (unquote name-str) " invalid port. Binary port required."))) ((unquote fn) (unquote port))))))))(%define-binary-input-lambda peek-u8 "(peek-u8)
-(peek-u8 port)
-
-Return next byte from input-binary port. If there are no more bytes
-it return eof object." (lambda (port) (port.peek_u8)))(%define-binary-input-lambda read-u8 "(read-u8)
-(read-u8 port)
-
-Read next byte from input-binary port. If there are no more bytes
-it return eof object." (lambda (port) (port.read_u8)))(%define-binary-input-lambda u8-ready? "(u8-ready?)
-(u8-ready? port)
-
-Returns #t if a byte is ready on the binary input port and returns #f otherwise.
-If u8-ready? returns #t then the next read-u8 operation on the given port is
-guaranteed not to hang. If the port is at end of file then u8-ready? returns #t." (lambda (port) (port.u8_ready)))(define (read-bytevector k . rest) "(read-bytevector k)
-(read-bytevector k port)
-
-Read next n bytes from input-binary port. If there are no more bytes
-it returns eof object. If there are less then n bytes in port it
-return the only bytes that are available" (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-bytevector" port "input-port") (if (not (binary-port? port)) (throw (new Error "read-bytevector: invalid port")) (port.read_u8_vector k))))(define delete-file (let ((unlink #f)) (lambda (filename) "(delete-file filename)
-
-Function delete the file of given name." (typecheck "delete-file" filename "string") (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "delete-file: fs not defined")) (begin (if (not (procedure? unlink)) (set! unlink (promisify fs.unlink))) (unlink filename)))))))(define (call-with-port port proc) "(call-with-port port proc)
-
-Proc is executed with given port and after it returns, the port is closed." (try (proc port) (finally (if (procedure? port.close) (port.close)))))(define (close-port port) "(close-port port)
-
-Close input or output port." (typecheck "close-port" port #("input-port" "output-port")) (port.close))(define (eof-object) "(eof-object)
-
-Procedure returns eof object that indicate end of the port" lips.eof)(define (output-port-open? port) "(output-port-open? port)
-
-Function check if argument is output-port and if you can write to it." (and (output-port? port) (port.is_open)))(define (input-port-open? port) "(input-port-open? port)
-
-Function check if argument is input-port and if you can read from it." (and (input-port? port) (port.is_open)))(define (flush-output-port port) "(flush-output-port port)
-
-Functio do nothing, flush is not needed in LIPS in both NodeJS and Browser.
-The function is added, so it don't throw exception when using R7RS code." (if #f #f))(define (write-string string . rest) "(write-string string)
-(write-string string port)
-(write-string string port start)
-(write-string string port start end)
-
-Writes the characters of string from start to end in left-toright order
-to the textual output port." (typecheck "write-string" string "string") (let ((port (if (null? rest) (current-output-port) (car rest))) (start (if (or (null? rest) (null? (cdr rest))) 0 (cadr rest))) (end (if (or (null? rest) (null? (cdr rest)) (null? (cddr rest))) (string-length string) (caddr rest)))) (typecheck "write-string" port "output-port") (typecheck "write-string" start "number") (typecheck "write-string" end "number") (display (substring string start end) port)))(define (write-char char . rest) "(write-char string)
-(write-char string port)
-
-Writes the character char (not an external representation of the character)
-to the given textual output port and returns an unspecified value." (typecheck "write-char" char "character") (let ((port (if (null? rest) (current-output-port) (car rest)))) (typecheck "write-char" port "output-port") (display (string char) port)))(define (read-string k . rest) "(read-string k)
-(read-string k port)
-
-Reads the next k characters, or as many as are available
-before the end of file, from the textual input port into a
-newly allocated string in left-to-right order and returns the
-string. If no characters are available before the end of file,
-an end-of-file object is returned." (typecheck "read-string" k "number") (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-string" port "input-port") (port.read_string k)))(define (list-copy obj) "(list-copy obj)
-
-Copy the object passed as argument but only if it's list. The car elements
-of the list are not copied, they are passed as is." (typecheck "list-copy" obj #("pair" "nil")) (if (null? obj) obj (obj.clone #f)))(define-macro (define-record-type name constructor pred . fields) "(define-record-type name constructor pred . fields)
-
-Macro for defining records. Example of usage:
-
-   (define-record-type <pare>
-     (kons x y)
-     pare?
-     (x kar set-kar!)
-     (y kdr set-kdr!))
-
-(define p (kons 1 2))
-(print (kar p))
-;; 1
-(set-kdr! p 3)
-(print (kdr p))
-;; 3" (let ((class-name (gensym)) (obj-name (gensym)) (value-name (gensym))) (quasiquote (begin (define (unquote class-name) (class Object (constructor (lambda (self (unquote-splicing (cdr constructor))) (unquote-splicing (map (lambda (field) (let* ((name (symbol->string field)) (prop (string-append "self." name))) (quasiquote (set! (unquote (string->symbol prop)) (unquote field))))) (cdr constructor))))) (toType (lambda (self) "record")) (toString (lambda (self) (unquote (symbol->string name)))))) (define (unquote constructor) (new (unquote class-name) (unquote-splicing (cdr constructor)))) (define ((unquote pred) obj) (instanceof (unquote class-name) obj)) (unquote-splicing (map (lambda (field) (let ((prop-name (car field)) (get (cadr field)) (set (if (null? (cddr field)) () (caddr field)))) (quasiquote (begin (define ((unquote get) (unquote obj-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (. (unquote obj-name) (quote (unquote prop-name))))) (unquote (if (not (null? set)) (quasiquote (define ((unquote set) (unquote obj-name) (unquote value-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (set-obj! (unquote obj-name) (quote (unquote prop-name)) (unquote value-name))))))))))) fields))))))(define (nan? x) "(nan? x)
-
-Function check if argument x is Not a Number (NaN) value." (and (number? x) (or (x.isNaN) (and (%number-type "complex" x) (or (nan? (real-part x)) (nan? (imag-part x)))))))(define (infinite? x) "(infinite? x)
-
-Function check if value is infinite." (or (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (and (number? x) (not (eq? x NaN)) (%number-type "complex" x) (or (infinite? (real-part x)) (infinite? (imag-part x))))))(define (finite? x) "(finite? x)
-
-Function check if value is finite." (not (infinite? x)))(define-class %Library Object (constructor (lambda (self name) (set! self.__namespace__ &()) (set! self.__name__ name))) (append (lambda (self namespace env) (if (environment? (. self.__namespace__ namespace)) (throw (new Error (string-append "namespace " namespace " already exists in library " self.__name__))) (set-obj! self.__namespace__ namespace env)))) (env (lambda (self namespace) (let ((env (. self.__namespace__ namespace))) (if (not (environment? env)) (throw (new Error (string-append "namespace " namespace " sdon't exists"))) env)))) (get (lambda (self namespace name) (--> (self.env namespace) (get name)))) (set (lambda (self namespace name value) (--> (self.env namespace) (set name value)))) (toString (lambda (self) (string-append "#<Library(" self.__name__ ")>"))))(define (%import-name library namespace names) (quasiquote (begin (unquote-splicing (map (lambda (name) (quasiquote (define (unquote name) (--> (unquote library) (get (quote (unquote namespace)) (quote (unquote name))))))) names)))))(define-macro (import . specs) "(import (library namespace))
-(import (only (library namespace) name1 name2))
-
-Macro for importing names from library." (let ((parent (current-environment))) (quasiquote (begin (unquote-splicing (map (lambda (spec) (if (not (pair? spec)) (throw (new Error "import: invalid syntax")) (cond ((symbol=? (car spec) (quote only)) (let ((lib (caadr spec)) (namespace (caaddr spec))) (if (pair? (cadr spec)) (%import-name (unquote lib) (quote (unquote namespace)) (quote (unquote (caddr spec)))) (throw (new Error "import: invalid syntax"))))) (else (let* ((lib-name (car spec)) (lib (parent.get lib-name)) (namespace (cadr spec))) (%import-name lib-name namespace (env (lib.env namespace)))))))) specs))))))(define (new-library name namespace) "(new-library name)
-
-Create new empty library object with empty namespace." (let* ((parent (. (current-environment) (quote __parent__))) (lib (let ((lib (--> parent (get name &(:throwError #f))))) (if (null? lib) (new %Library name) lib))) (x (new lips.Environment (string-append "library-" (--> name (toLowerCase)) "-" (--> namespace (toLowerCase)))))) (lib.append namespace x) lib))(define (%export module namespace specs) (quasiquote (begin (unquote-splicing (map (lambda (expr) (cond ((symbol? expr) (quasiquote (--> (unquote module) (set (quote (unquote namespace)) (quote (unquote expr)) (unquote expr))))) ((and (pair? expr) (symbol=? (car expr) (quote rename))) (quasiquote (--> (unquote module) (set (quote (unquote namespace)) (quote (unquote (cadr expr))) (unquote (caddr expr)))))))) specs)))))(define-macro (define-library spec . body) "(define-library (library (name namespace) . body)
-
-Macro for defining modules inside you can use define to create functions.
-And use export name to add that name to defined environment." (let ((parent (. (current-environment) (quote __parent__))) (module-var (gensym)) (namespace-var (gensym)) (name (car spec)) (namespace (cadr spec))) (quasiquote (let (((unquote module-var) (new-library (unquote (symbol->string name)) (unquote (symbol->string namespace)))) ((unquote namespace-var) (quote (unquote namespace)))) (define-macro (export . body) (%export (unquote module-var) (unquote namespace-var) body)) (unquote-splicing body) (--> (unquote parent) (set (quote (unquote name)) (unquote module-var)))))))(define-values (current-directory set-current-directory!) (if (eq? self window) (let ((cwd (string-append location.origin (--> location.pathname (replace #/\/[^/]+$/ "/"))))) (values (lambda () "(current-directory)
-
-Return corrent working directory, default it's corrent URL." cwd) (lambda (value) "(set-current-directory! string)
-
-Function change current working directory to provided string." (typecheck "set-current-directory!" value "string") (set! cwd value)))) (let ((process (require "process"))) (values (lambda () "(current-directory)
-
-Return corrent working directory, default it's path from where
-the script was executed." (string-append (process.cwd) "/")) (lambda (value) "(set-current-directory! string)
-
-Function change current working directory to provided string." (typecheck "set-current-directory!" value "string") (process.chdir value))))))
+(define (%doc string fn) (typecheck "%doc" fn "function") (typecheck "%doc" string "string") (set-obj! fn (quote __doc__) (--> string (replace #/^ +/gm ""))) fn)
+(define-macro (let-syntax vars . body) "(let-syntax ((name fn)) body)\u000A\u000A Macro works like combination of let and define-syntax. It creaates\u000A local macros and evaluate body in context of those macros.\u000A The macro to letrec-syntax is like letrec is to let." (quasiquote (let (unquote vars) (unquote-splicing (map (lambda (rule) (quasiquote (typecheck "let-syntax" (unquote (car rule)) "syntax"))) vars)) (unquote-splicing body))))
+(define-macro (letrec-syntax vars . body) "(letrec-syntax ((name fn)) body)\u000A\u000A Macro works like combination of letrec and define-syntax. It creaates\u000A local macros and evaluate body in context of those macros." (quasiquote (letrec (unquote vars) (unquote-splicing (map (lambda (rule) (quasiquote (typecheck "letrec-syntax" (unquote (car rule)) "syntax"))) vars)) (unquote-splicing body))))
+(define-macro (define-syntax name expr . rest) "(define-syntax name expression [__doc__])\u000A\u000AMacro define new hygienic macro using syntax-rules with optional documentation" (let ((expr-name (gensym "expr-name"))) (quasiquote (define (unquote name) (let (((unquote expr-name) (unquote expr))) (typecheck "define-syntax" (unquote expr-name) "syntax") (unquote expr-name)) (unquote-splicing rest)))))
+(define (quoted-symbol? x) "(quoted-symbol? code)\u000A\u000AHelper function that test if value is quoted symbol. To be used in macros\u000Athat pass literal code that is transformed by parser.\u000A\u000Ausage:\u000A\u000A  (define-macro (test x)\u000A     (if (quoted-symbol? x)\u000A         `',(cadr x)))\u000A\u000A  (list 'hello (test 'world))" (and (pair? x) (eq? (car x) (quote quote)) (symbol? (cadr x)) (null? (cddr x))))
+(define-macro (--> expr . code) "Helper macro that simplify calling methods on objects. It work with chaining\u000A\u000Ausage: (--> ($ \"body\")\u000A            (css \"color\" \"red\")\u000A            (on \"click\" (lambda () (display \"click\"))))\u000A\u000A       (--> document (querySelectorAll \"div\"))\u000A       (--> (fetch \"https://jcubic.pl\")\u000A            (text)\u000A            (match #/<title>([^<]+)<\\/title>/)\u000A            1)\u000A       (--> document\u000A            (querySelectorAll \".cmd-prompt\")\u000A            0\u000A            \"innerText\")\u000A       (--> document.body\u000A            (style.setProperty \"--color\" \"red\"))" (let ((obj (gensym "obj"))) (quasiquote (let* (((unquote obj) (unquote expr))) (unquote-splicing (map (lambda (code) (let ((value (gensym "value"))) (quasiquote (let* (((unquote value) (unquote (let ((name (cond ((quoted-symbol? code) (symbol->string (cadr code))) ((pair? code) (symbol->string (car code))) (#t code)))) (if (string? name) (quasiquote (. (unquote obj) (unquote-splicing (split "." name)))) (quasiquote (. (unquote obj) (unquote name)))))))) (unquote (if (and (pair? code) (not (quoted-symbol? code))) (quasiquote (set! (unquote obj) ((unquote value) (unquote-splicing (cdr code))))) (quasiquote (set! (unquote obj) (unquote value))))))))) code)) (unquote obj)))))
+(define-macro (define-global first . rest) "(define-global var value)\u000A(define-global (name . args) body)\u000A\u000AMacro that define functions or variables in global context, so they can be used\u000Ainside let and get let variables in closure, Useful for universal macros." (if (pair? first) (let ((name (car first))) (quasiquote (--> lips.env (set (unquote (symbol->string name)) (lambda (unquote (cdr first)) (unquote-splicing rest)))))) (quasiquote (--> lips.env (set (unquote (symbol->string first)) (unquote (car rest)))))))
+(define-macro (globalize expr . rest) "(globalize expr)\u000A\u000A Macro will get the value of the expression and add each method as function to global\u000A scope." (let* ((env (current-environment)) (obj (eval expr env)) (name (gensym "name")) (env-name (gensym "env-name")) (make-name (if (pair? rest) (let ((pre (symbol->string (car rest)))) (lambda (name) (string->symbol (concat pre name)))) string->symbol))) (quasiquote (let (((unquote name) (unquote expr))) (unquote-splicing (filter pair? (map (lambda (key) (if (and (not (match /^_/ key)) (function? (. obj key))) (let* ((args (gensym "args"))) (quasiquote (define-global ((unquote (make-name key)) unquote args) (apply (. (unquote name) (unquote key)) (unquote args))))))) (array->list (--> Object (keys obj))))))))))
+(define (single list) "(single list)\u000A\u000AFunction check if argument is list with single element" (and (pair? list) (not (cdr list))))
+(define (iterator? x) "(iterator? x)\u000A\u000A Function check if value is JavaScript iterator object" (and (object? x) (procedure? (. x Symbol.iterator))))
+(define-macro (.. expr) "(.. foo.bar.baz)\u000A\u000AMacro that gets value from nested object where argument is comma separated symbol" (if (not (symbol? expr)) expr (let ((parts (split "." (symbol->string expr)))) (if (single parts) expr (quasiquote (. (unquote (string->symbol (car parts))) (unquote-splicing (cdr parts))))))))
+(set-special! "#:" (quote gensym-interal) lips.specials.LITERAL)
+(define (gensym-interal symbol) "(gensym-interal symbol)\u000A\u000AParser extension that create new quoted named gensym." (quasiquote (quote (unquote (gensym symbol)))))
+(define (plain-object? x) "(plain-object? x)\u000A\u000AFunction check if value is plain JavaScript object. Created using object macro." (and (== (--> (type x) (cmp "object")) 0) (eq? (. x (quote constructor)) Object)))
+(define typed-array? (let ((TypedArray (Object.getPrototypeOf Uint8Array))) (lambda (o) "(typed-array? o)\u000A\u000AFunction test if argumnet is JavaScript typed array (Scheme byte vector)." (instanceof TypedArray o))))
+(define (symbol->string s) "(symbol->string symbol)\u000A\u000AFunction convert LIPS symbol to string." (if (symbol? s) (let ((name s.__name__)) (if (string? name) name (--> name (toString))))))
+(define (string->symbol string) "(string->symbol string)\u000A\u000AFunction convert string to LIPS symbol." (and (string? string) (%as.data (new (. lips "LSymbol") string))))
+(define (alist->object alist) "(alist->object alist)\u000A\u000AFunction convert alist pairs to JavaScript object." (if (pair? alist) (alist.toObject) (alist->object (new lips.Pair undefined ()))))
+(define (parent.frames) "(parent.frames)\u000A\u000AFuncion return list of environments from parent frames (lambda function calls)" (let iter ((result (quote ())) (frame (parent.frame 1))) (if (eq? frame (interaction-environment)) (cons frame result) (if (null? frame) result (let ((parent.frame (--> frame (get (quote parent.frame) (object :throwError #f))))) (if (function? parent.frame) (iter (cons frame result) (parent.frame 0)) result))))))
+(define-macro (wait time . expr) "(wait time . expr)\u000A\u000AFunction return promise that will resolve with evaluating the expression after delay." (quasiquote (promise (timer (unquote time) (resolve (begin (unquote-splicing expr)))))))
+(define (pair-map fn seq-list) "(pair-map fn list)\u000A\u000AFunction call fn argument for pairs in a list and return combined list with\u000Avalues returned from function fn. It work like the map but take two items from list" (let iter ((seq-list seq-list) (result (quote ()))) (if (null? seq-list) result (if (and (pair? seq-list) (pair? (cdr seq-list))) (let* ((first (car seq-list)) (second (cadr seq-list)) (value (fn first second))) (if (null? value) (iter (cddr seq-list) result) (iter (cddr seq-list) (cons value result))))))))
+(define (object-expander readonly expr . rest) "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))\u000A\u000ARecursive function helper for defining LIPS code for create objects\u000Ausing key like syntax." (let ((name (gensym "name")) (quot (if (null? rest) #f (car rest)))) (if (null? expr) (quasiquote (alist->object ())) (quasiquote (let (((unquote name) (alist->object (quote ())))) (unquote-splicing (pair-map (lambda (key value) (if (not (key? key)) (let ((msg (string-append (type key) " " (repr key) " is not a symbol!"))) (throw msg)) (let ((prop (key->string key))) (if (and (pair? value) (key? (car value))) (quasiquote (set-obj! (unquote name) (unquote prop) (unquote (object-expander readonly value)))) (if quot (quasiquote (set-obj! (unquote name) (unquote prop) (quote (unquote value)))) (quasiquote (set-obj! (unquote name) (unquote prop) (unquote value)))))))) expr)) (unquote (if readonly (quasiquote (Object.freeze (unquote name))))) (unquote name))))))
+(define-macro (object . expr) "(object :name value)\u000A\u000AMacro that create JavaScript object using key like syntax." (try (object-expander #f expr) (catch (e) (error e.message))))
+(define-macro (object-literal . expr) "(object-literal :name value)\u000A\u000AMacro that create JavaScript object using key like syntax. This is similar,\u000Ato object but all values are quoted. This macro is used with & object literal." (try (object-expander #t expr #t) (catch (e) (error e.message))))
+(define (alist->assign desc . sources) "(alist->assign alist . list-of-alists)\u000A\u000AFunction that work like Object.assign but for LIPS alist." (for-each (lambda (source) (for-each (lambda (pair) (let* ((key (car pair)) (value (cdr pair)) (d-pair (assoc key desc))) (if (pair? d-pair) (set-cdr! d-pair value) (append! desc (list pair))))) source)) sources) desc)
+(define (key? symbol) "(key? symbol)\u000A\u000AFunction check if symbol is key symbol, have colon as first character." (and (symbol? symbol) (== (--> (substring (symbol->string symbol) 0 1) (cmp ":")) 0)))
+(define (key->string symbol) "(key->string symbol)\u000A\u000AIf symbol is key it convert that to string - remove colon." (if (key? symbol) (substring (symbol->string symbol) 1)))
+(define (%as.data obj) "(%as.data obj)\u000A\u000AMark object as data to stop evaluation." (if (object? obj) (begin (set-obj! obj (quote data) #t) obj)))
+(define (%hidden-props obj) "(%hidden-props obj)\u000A\u000AFunction return hidden names of an object, for ES6 class prototype\u000Ait return all methods since they are indistinguishable from hidden property\u000Acreated using defineProperty." (let* ((descriptors (Object.getOwnPropertyDescriptors obj)) (names (Object.keys descriptors))) (--> names (filter (lambda (name) (let ((descriptor (. descriptors name))) (eq? descriptor.enumerable #f)))))))
+(define (dir obj . rest) "(dir obj)\u000A\u000AFunction return all props on the object including those in prototype chain." (if (or (null? obj) (eq? obj Object.prototype)) () (let ((proto (if (null? rest) #f (car rest))) (names (Object.getOwnPropertyNames obj))) (if (not proto) (let ((hidden (%hidden-props obj))) (set! names (--> names (filter (lambda (name) (not (hidden.includes name)))))))) (append (array->list (--> names (map (unary string->symbol)))) (dir (Object.getPrototypeOf obj) #t)))))
+(define (tree-map f tree) "(tree-map fn tree)\u000A\u000ATree version of map. Function is invoked on every leaf." (if (pair? tree) (cons (tree-map f (car tree)) (tree-map f (cdr tree))) (f tree)))
+(define (native.number x) "(native.number obj)\u000A\u000AIf argument is number it will convert to native number." (if (number? x) (value x) x))
+(define (value obj) "(value obj)\u000A\u000AFunction unwrap LNumbers and convert nil value to undefined." (if (eq? obj ()) undefined (if (number? obj) ((. obj "valueOf")) obj)))
+(define-macro (define-formatter-rule . patterns) "(rule-pattern pattern)\u000A\u000AAnaphoric Macro for defining patterns for formatter. With Ahead, Pattern and * defined values." (let ((rules (gensym "rules"))) (quasiquote (let (((unquote rules) lips.Formatter.rules) (Ahead (lambda (pattern) (let ((Ahead (.. lips.Formatter.Ahead))) (new Ahead (if (string? pattern) (new RegExp pattern) pattern))))) (* (Symbol.for "*")) (Pattern (lambda (pattern flag) (new lips.Formatter.Pattern (list->array pattern) (if (null? flag) undefined flag))))) (unquote-splicing (map (lambda (pattern) (quasiquote (--> (unquote rules) (push (tree->array (tree-map native.number (unquote-splicing pattern))))))) patterns))))))
+(define-syntax cond (syntax-rules (=> else) ((cond (else else1 else2 ...)) (if #t (begin else1 else2 ...))) ((cond (test => receiver) more-clause ...) (let ((t test)) (cond/maybe-more t (receiver t) more-clause ...))) ((cond (generator guard => receiver) more-clause ...) (call-with-values (lambda () generator) (lambda t (cond/maybe-more (apply guard t) (apply receiver t) more-clause ...)))) ((cond (test) more-clause ...) (let ((t test)) (cond/maybe-more t t more-clause ...))) ((cond (test body1 body2 ...) more-clause ...) (cond/maybe-more test (begin body1 body2 ...) more-clause ...))) "(cond (predicate? . body)\u000A      (predicate? . body)\u000A      (else . body))\u000A\u000AMacro for condition checks. For usage instead of nested ifs.")
+(define-syntax cond/maybe-more (syntax-rules () ((cond/maybe-more test consequent) (if test consequent)) ((cond/maybe-more test consequent clause ...) (if test consequent (cond clause ...)))) "(cond/maybe-more test consequent ...)\u000A\u000AHelper macro used by cond.")
+(define-macro (cond . list) "(cond (predicate? . body)\u000A      (predicate? . body))\u000AMacro for condition check. For usage instead of nested ifs." (if (pair? list) (let* ((item (car list)) (first (car item)) (forms (cdr item)) (rest (cdr list))) (quasiquote (if (unquote first) (begin (unquote-splicing forms)) (unquote (if (and (pair? rest) (or (eq? (caar rest) #t) (eq? (caar rest) (quote else)))) (quasiquote (begin (unquote-splicing (cdar rest)))) (if (not (null? rest)) (quasiquote (cond (unquote-splicing rest))))))))) ()))
+(define (%r re . rest) "(%r re)\u000A\u000ACreate new regular expression from string, to not break Emacs formatting" (if (null? rest) (new RegExp re) (new RegExp re (car rest))))
+(define (interaction-environment) "(interaction-environment)\u000A\u000AFunction return interaction environement equal to lips.env can be overwritten,\u000Awhen creating new interpreter with lips.Interpreter." **interaction-environment**)
+(define (current-output-port) "(current-output-port)\u000A\u000AFunction return default stdout port." (let-env (interaction-environment) (--> **internal-env** (get (quote stdout)))))
+(define (current-error-port) "(current-output-port)\u000A\u000AFunction return default stdout port." (let-env (interaction-environment) (--> **internal-env** (get (quote stderr)))))
+(define (current-input-port) "current-input-port)\u000A\u000AFunction return default stdin port." (let-env (interaction-environment) (--> **internal-env** (get (quote stdin)))))
+(define (regex? x) "(regex? x)\u000A\u000AFunction return true of value is regular expression, it return false otherwise." (== (--> (type x) (cmp "regex")) 0))
+(define (set-repr! type fn) "(add-repr! type fn)\u000A\u000AFunction add string represention to the type, which should be constructor function.\u000A\u000AFunction fn should have args (obj q) and it should return string, obj is vlaue that\u000Aneed to be converted to string, if the object is nested and you need to use `repr`,\u000Ait should pass second parameter q to repr, so string will be quoted when it's true.\u000A\u000Ae.g.: (lambda (obj q) (string-append \"<\" (repr obj q) \">\"))" (typecheck "add-repr!" type "function") (typecheck "add-repr!" fn "function") (ignore (--> lips.repr (set type fn))))
+(define (unset-repr! type) "(unset-repr! type)\u000A\u000AFunction remove string represention to the type, which should be constructor function,\u000Aadded by add-repr! function." (typecheck "unset-repr!" type "function") (ignore (--> lips.repr (delete type))))
+(set-special! "&" (quote object-literal) lips.specials.SPLICE)
+(set-repr! Object (lambda (x q) (concat "&(" (--> (Object.getOwnPropertyNames x) (map (lambda (key) (concat ":" key " " (repr (. x key) q)))) (join " ")) ")")))
+(define (bound? x . rest) "(bound? x [env])\u000A\u000AFunction check if variable is defined in given environement or interaction environment\u000Aif not specified." (let ((env (if (null? rest) (interaction-environment) (car rest)))) (try (begin (--> env (get x)) #t) (catch (e) #f))))
+(define (environment-bound? env x) "(environment-bound? env symbol)\u000A\u000AFunction check if symbol is bound variable similar to bound?." (typecheck "environment-bound?" env "environment" 1) (typecheck "environment-bound?" x "symbol" 2) (bound? x env))
+(define (qsort e predicate) "(qsort list predicate)\u000A\u000ASort the list using quick sort alorithm according to predicate." (if (or (null? e) (<= (length e) 1)) e (let loop ((left ()) (right ()) (pivot (car e)) (rest (cdr e))) (if (null? rest) (append (append (qsort left predicate) (list pivot)) (qsort right predicate)) (if (predicate (car rest) pivot) (loop (append left (list (car rest))) right pivot (cdr rest)) (loop left (append right (list (car rest))) pivot (cdr rest)))))))
+(define (sort list . rest) "(sort list [predicate])\u000A\u000ASort the list using optional predicate function. if not function is specified\u000Ait will use <= and sort in increasing order." (let ((predicate (if (null? rest) <= (car rest)))) (typecheck "sort" list "pair") (typecheck "sort" predicate "function") (qsort list predicate)))
+(define (every fn list) "(every fn list)\u000A\u000AFunction call function fn on each item of the list, if every value is true\u000Ait will return true otherwise it return false." (if (null? list) #t (and (fn (car list)) (every fn (cdr list)))))
+(define (zip . args) "(zip list1 list2 ...)\u000A\u000ACreate one list by taking each element of each list." (if (null? args) () (if (some null? args) () (cons (map car args) (apply zip (map cdr args))))))
+(define-macro (promise . body) "(promise . body)\u000A\u000AAnaphoric macro that expose resolve and reject functions from JS promise" (quasiquote (new Promise (lambda (resolve reject) (try (begin (unquote-splicing body)) (catch (e) (error (.. e.message))))))))
+(define-macro (timer time . body) "(timer time . body)\u000A\u000AMacro evaluate expression after delay, it return timer. To clear the timer you can use\u000Anative JS clearTimeout function." (quasiquote (setTimeout (lambda () (try (begin (unquote-splicing body)) (catch (e) (error (.. e.message))))) (unquote time))))
+(define (defmacro? obj) "(defmacro? expression)\u000A\u000AFunction check if object is macro and it's expandable." (and (macro? obj) (. obj (quote defmacro))))
+(define (n-ary n fn) "(n-ary n fn)\u000A\u000AReturn new function that limit number of arguments to n." (lambda args (apply fn (take n args))))
+(define (take n lst) "(take n list)\u000A\u000AReturn n first values of the list." (let iter ((result (quote ())) (i n) (lst lst)) (if (or (null? lst) (<= i 0)) (reverse result) (iter (cons (car lst) result) (- i 1) (cdr lst)))))
+(define unary (%doc "(unary fn)\u000A\u000AFunction return new function with arguments limited to one." (curry n-ary 1)))
+(define binary (%doc "(binary fn)\u000A\u000AFunction return new function with arguments limited to two." (curry n-ary 2)))
+(define (%class-lambda expr) "(class-lambda expr)\u000A\u000AReturn lambda expression where input expression lambda have `this` as first argument." (let ((args (gensym (quote args)))) (quasiquote (lambda (unquote args) (apply (unquote (cadr expr)) this (unquote args))))))
+(define (%class-lambda expr) "(%class-lambda expr)\u000A\u000ADefine lambda that have self is first argument. The expr is in a form:\u000A(constructor (lambda (self ...) . body)) as given by define-class macro." (let ((args (cdadadr expr))) (quasiquote (lambda ((unquote-splicing args)) ((unquote (cadr expr)) this (unquote-splicing args))))))
+(define (%class-method-name expr) "(%class-method-name expr)\u000A\u000AHelper function that allow to use [Symbol.asyncIterator] inside method name." (if (pair? expr) (car expr) (list (quote quote) expr)))
+(define-macro (define-class name parent . body) "(define-class name parent . body)\u000A\u000ADefine class - JavaScript function constructor with prototype.\u000A\u000Ausage:\u000A\u000A  (define-class Person Object\u000A      (constructor (lambda (self name)\u000A                     (set-obj! self '_name name)))\u000A      (hi (lambda (self)\u000A            (display (string-append self._name \" say hi\"))\u000A            (newline))))\u000A  (define jack (new Person \"Jack\"))\u000A  (jack.hi)" (let iter ((functions (quote ())) (constructor (quote ())) (lst body)) (if (null? lst) (quasiquote (begin (define (unquote name) (unquote (if (null? constructor) (quasiquote (lambda ())) (%class-lambda constructor)))) (set-obj! (unquote name) (Symbol.for "__class__") #t) (unquote (if (and (not (null? parent)) (not (eq? parent (quote Object)))) (quasiquote (begin (set-obj! (unquote name) (quote prototype) (Object.create (. (unquote parent) (quote prototype)))) (set-obj! (. (unquote name) (quote prototype)) (quote constructor) (unquote name)))))) (unquote-splicing (map (lambda (fn) (quasiquote (set-obj! (. (unquote name) (quote prototype)) (unquote (%class-method-name (car fn))) (unquote (%class-lambda fn))))) functions)))) (let ((item (car lst))) (if (eq? (car item) (quote constructor)) (iter functions item (cdr lst)) (iter (cons item functions) constructor (cdr lst)))))))
+(define-syntax class (syntax-rules () ((_) (error "class: parent required")) ((_ parent body ...) (let () (define-class temp parent body ...) temp))) "(class <parent> body ...)\u000A\u000AMacro allow to create anonymous classes. See define-class for details.")
+(define (make-tags expr) "(make-tags expression)\u000A\u000AFunction that return list structure of code with better syntax then raw LIPS" (quasiquote (h (unquote (let ((val (car expr))) (if (key? val) (key->string val) val))) (alist->object ((unquote (quote quasiquote)) (unquote (pair-map (lambda (car cdr) (quasiquote ((unquote (key->string car)) (unquote (quote unquote)) (unquote cdr)))) (cadr expr))))) (unquote (if (not (null? (cddr expr))) (if (and (pair? (caddr expr)) (let ((s (caaddr expr))) (and (symbol? s) (eq? s (quote list))))) (quasiquote (list->array (list (unquote-splicing (map make-tags (cdaddr expr)))))) (caddr expr)))))))
+(define (%sxml h expr) "(%sxml h expr)\u000A\u000AHelper function that render expression using create element function." (let* ((have-attrs (and (not (null? (cdr expr))) (pair? (cadr expr)) (eq? (caadr expr) (quote @)))) (attrs (if have-attrs (cdadr expr) ())) (rest (if have-attrs (cddr expr) (cdr expr)))) (quasiquote ((unquote h) (unquote (let* ((symbol (car expr)) (name (symbol->string symbol))) (if (char-lower-case? (car (string->list name))) name symbol))) (alist->object ((unquote (quote quasiquote)) (unquote (map (lambda (pair) (cons (symbol->string (car pair)) (list (quote unquote) (cadr pair)))) attrs)))) (unquote-splicing (if (null? rest) () (let ((first (car rest))) (if (pair? first) (map (lambda (expr) (%sxml h expr)) rest) (list first)))))))))
+(define-macro (pragma->sxml pragma) (quasiquote (define-macro (sxml expr) "(sxml expr)\u000A\u000AMacro for JSX like syntax but with SXML.\u000Ae.g. usage:\u000A\u000A(sxml (div (@ (data-foo \"hello\")\u000A             (id \"foo\"))\u000A          (span \"hello\")\u000A          (span \"world\")))" (%sxml (quote (unquote pragma)) expr))))
+(pragma->sxml h)
+(define-macro (with-tags expr) "(with-tags expression)\u000A\u000AMacro that evalute LIPS shorter code for S-Expression equivalent of JSX.\u000Ae.g.:\u000A\u000A(with-tags (:div (:class \"item\" :id \"item-1\")\u000A                 (list (:span () \"Random Item\")\u000A                       (:a (:onclick (lambda (e) (alert \"close\")))\u000A                           \"close\"))))\u000A\u000AAbove expression can be passed to function that renders JSX (like render in React, Preact)\u000ATo get the string from the macro you can use vhtml library from npm." (make-tags expr))
+(define (get-script url) "(get-script url)\u000A\u000ALoad JavaScript file in browser by adding script tag to head of the current document." (if (not (bound? (quote document))) (throw (new Error "get-script: document not defined")) (let ((script (document.createElement "script"))) (new Promise (lambda (resolve reject) (set-obj! script (quote src) url) (set-obj! script (quote onload) (lambda () (resolve))) (set-obj! script (quote onerror) (lambda () (reject "get-script: Failed to load"))) (if document.head (document.head.appendChild script)))))))
+(define (gensym? value) "(gensym? value)\u000A\u000AFunction return #t if value is symbol and it's gensym. It returns #f otherwise." (and (symbol? value) (--> value (is_gensym))))
+(define (degree->radians x) "(degree->radians x)\u000A\u000AConvert degree to radians." (* x (/ Math.PI 180)))
+(define (radians->degree x) "(radians->degree x)\u000A\u000AConvert radians to degree." (* x (/ 180 Math.PI)))
+(define-syntax while (syntax-rules () ((_ predicate body ...) (do () ((not predicate)) body ...))) "(while cond . body)\u000A\u000AMacro that create a loop, it exectue body until cond expression is false.")
+(define-syntax ++ (syntax-rules () ((++ x) (let ((tmp (+ x 1))) (set! x tmp) tmp))) "(++ variable)\u000A\u000AMacro that work only on variables and increment the value by one.")
+(define-syntax -- (syntax-rules () ((-- x) (let ((tmp (- x 1))) (set! x tmp) tmp))) "(-- variable)\u000A\u000AMacro that decrement the value it work only on symbols")
+(define (pretty-format pair) "(pretty-format pair)\u000A\u000AFunction return pretty printed string from pair expression." (typecheck "pretty-pair" pair "pair") (--> (new lips.Formatter (repr pair #t)) (break) (format)))
+(define (reset) "(reset)\u000A\u000AFunction reset environment and remove all user defined variables." (let-env **interaction-environment** (let ((defaults **interaction-environment-defaults**) (env **interaction-environment**)) (--> env (list) (forEach (lambda (name) (if (not (--> defaults (includes name))) (--> env (unset name)))))))))
+(define (make-list n . rest) (if (or (not (integer? n)) (<= n 0)) (throw (new Error "make-list: first argument need to be integer larger then 0")) (let ((fill (if (null? rest) undefined (car rest)))) (array->list (--> (new Array n) (fill fill))))))
+(define (range n) "(range n)\u000A\u000AFunction return list of n numbers from 0 to n - 1" (typecheck "range" n "number") (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
+(define-macro (do-iterator spec cond . body) "(do-iterator (var expr) (test) body ...)\u000A\u000AMacro iterate over iterators (e.g. create with JavaScript generator function)\u000Ait works with normal and async iterators. You can loop over infinite iterators\u000Aand break the loop if you want, using expression like in do macro, long sync iterators\u000Awill block main thread (you can't print 1000 numbers from inf iterators,\u000Abecause it will freeze the browser), but if you use async iterators you can process\u000Athe values as they are generated." (let ((gen (gensym "name")) (name (car spec)) (async (gensym "async")) (sync (gensym "sync")) (iterator (gensym "iterator")) (test (if (null? cond) #f (car cond))) (next (gensym "next")) (stop (gensym "stop")) (item (gensym "item"))) (quasiquote (let* (((unquote gen) (unquote (cadr spec))) ((unquote sync) (. (unquote gen) Symbol.iterator)) ((unquote async) (. (unquote gen) Symbol.asyncIterator)) ((unquote iterator)) ((unquote next) (lambda () ((. (unquote iterator) "next"))))) (if (or (procedure? (unquote sync)) (procedure? (unquote async))) (begin (set! (unquote iterator) (if (procedure? (unquote sync)) ((unquote sync)) ((unquote async)))) (let* (((unquote item) ((unquote next))) ((unquote stop) #f) ((unquote name) (. (unquote item) "value"))) (while (not (or (eq? (. (unquote item) "done") #t) (unquote stop))) (if (unquote test) (set! (unquote stop) #t) (begin (unquote-splicing body))) (set! (unquote item) ((unquote next))) (set! (unquote name) (. (unquote item) "value"))))))))))
+(set-repr! Set (lambda () "#<Set>"))
+(set-repr! Map (lambda () "#<Met>"))
+(define (native-symbol? x) "(native-symbol? object)\u000A\u000AFunction check if value is JavaScript symbol." (and (string=? (type x) "symbol") (not (symbol? x))))
+(set-special! "’" (quote warn-quote))
+(define-macro (warn-quote) "(warn-quote)\u000A\u000ASimple macro that throw error, when you try to use ’ symbol as quote in code" (throw (new Error (string-append "You're using invalid quote character run: " "(set-special! \"’\" 'quote)" " to allow running this type of quote"))))
+(define-macro (quote-promise expr) "(quote-promise expr)\u000A'>expr\u000A\u000AMacro used to escape promise the whole expression, will be wrapped\u000Awith JavaScript class that behave like Promise but will not\u000Aauto resolve like normal promise." (quasiquote (let ((env)) (set! env (current-environment)) (env.set (Symbol.for "__promise__") #t) (unquote expr))))
+(define (await value) (if (instanceof lips.QuotedPromise value) (value.valueOf) value))
+(define-macro (let-env-values env spec . body) "(let-env-values env ((name var)) . body)\u000A\u000AMacro add mapping for variables var from specified env,\u000AMacro work similar to let-env but lexical scope is working with it." (let ((env-name (gensym (quote env)))) (quasiquote (let (((unquote env-name) (unquote env))) (let (unquote (map (lambda (pair) (quasiquote ((unquote (car pair)) (--> (unquote env-name) (get (quote (unquote (cadr pair)))))))) spec)) (unquote-splicing body))))))
+(define-macro (let-std spec . body) "(let-std ((name var)) . body)\u000A\u000AMacro that create aliases for variables in global environment.\u000AThis is needed so user don't change constants like stdin or stdout\u000Athat use taken from lexical scope. The function still can use those\u000Afrom interaction-environment." (quasiquote (let-env-values lips.env.__parent__ (unquote spec) (unquote-splicing body))))
+(define (apropos name) "(apropos name)\u000A\u000ASearch environment and display names that match the given name.\u000Aname can be regex, string or symbol." (typecheck "apropos" name (quote ("string" "regex" "symbol"))) (let ((regex (lambda (string) (new RegExp (escape-regex string))))) (filter (cond ((string? name) (regex name)) ((symbol? name) (regex (symbol->string name))) (else name)) (env))))
+(set-special! "#," (quote sharp-comma))
+(define **reader-ctor-list** (quote ()))
+(define (define-reader-ctor symbol fn) (let ((node (assoc symbol **reader-ctor-list**))) (if (pair? node) (set-cdr! node fn) (set! **reader-ctor-list** (cons (cons symbol fn) **reader-ctor-list**)))))
+(define-syntax sharp-comma (syntax-rules () ((_ (fn arg ...)) (let ((node (assoc (quote fn) **reader-ctor-list**))) (if (pair? node) ((cdr node) (quote arg) ...) (syntax-error (string-append "Invalid symbol " (symbol->string (quote fn)) " in expression " (repr (quote (fn arg ...))))))))))
+(define (promisify fn) "(promisify fn)\u000A\u000ASimple function for adding promises to NodeJS callback based function.\u000AFunction tested only with fs module." (lambda args (new Promise (lambda (resolve reject) (apply fn (append args (list (lambda (err data) (if (null? err) (resolve data) (reject err))))))))))
+(define-macro (list* . args) "(list* arg1 ...)\u000A\u000AParallel version of list." (let ((result (gensym "result"))) (quasiquote (let (((unquote result) (vector))) (unquote-splicing (map (lambda (arg) (quasiquote (--> (unquote result) (push (quote-promise (unquote arg)))))) args)) (map await (vector->list (unquote result)))))))
+(define-macro (%not-implemented name) "(not-implemented name)\u000A\u000AReturns new function taht throw exception that function is not implmeneted" (let ((str-name (symbol->string name))) (quasiquote (lambda () (unquote (string-append "(" str-name ")\u000A\u000AThis function is not yet implemented.")) (throw (new Error (unquote (string-append str-name " has not beed implemented"))))))))
+(define-macro (%make-env name . names) "(%make-env name f1 f2 ...)\u000A\u000ACreate new Environment with given name and defined symbols in it from global env.\u000AIf given function name f1 f2 ... don't exists, it will define function that\u000Athrow exception that function is not yet implemented." (quasiquote (new lips.Environment (alist->object (list (unquote-splicing (map (lambda (name) (quasiquote (cons (quote (unquote name)) (unquote (let ((ref (lips.env.ref name))) (if (null? ref) (quasiquote (%not-implemented (unquote name))) (quasiquote (lips.env.get (quote (unquote name)))))))))) names)))) null (unquote name))))
+(define Y (lambda (h) "(Y f)\u000A\u000A  _ __   __    _            _       _      _ __   __         _   _  _\u000A /  \\ \\ / /   /  __        /   ____  \\    /  \\ \\ / /    ____  \\   \\  \\\u000A+    \\ v /   +   \\ \\      +   / ___|  +  +    \\ v /    / ___|  +   +  +\u000A|     \\ /    |    \\ \\     |  | |__    |  |     \\ /    | |__    |   |  |\u000A|     | |    |    /  \\    |  |  __|   |  |     | |    |  __|   |   |  |\u000A|     | |    |   / /\\ \\   |  | |      |  |     | |    | |      |   |  |\u000A+     |_|    +  /_/  \\_\\  +  |_|      +  +     |_|    |_|      +   +  +\u000A \\_           \\_           \\_       _/    \\_                 _/  _/ _/" ((lambda (x) (x x)) (lambda (g) (h (lambda args (apply (g g) args)))))))
+(let* ((fs (cond ((eq? self global) (require "fs")) ((not (null? self.BrowserFS)) (new Promise (lambda (resolve reject) (BrowserFS.configure &(:options &() :fs "IndexedDB") (lambda (e) (if (null? e) (resolve (BrowserFS.BFSRequire "fs")) (reject e)))))))))) (if (not (null? fs)) (--> lips.env (get (quote **internal-env**)) (set "fs" fs))))
+(define (environment? obj) "(environment? obj)\u000A\u000AFunction check if object is LIPS environment." (instanceof lips.Environment obj))
+(define %read-file (let ((read-file #f) (fetch-url #f)) (lambda (binary path) "(%read-file binary path)\u000A\u000ARead file from url or file system. If binary is false it will return\u000Astring that contain all the content. For HTTP requests, If binary\u000Ais false it will: when in browser return ArrayBuffer and in Node\u000Ait will return Buffer object. When reading from file system\u000Ain both cases it will return Buffer objects.\u000A\u000AThe code that use those function, in binary mode, need to check\u000Aif the result is ArrayBuffer or Node.js/BrowserFS Buffer object." (if (not read-file) (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-input-file: fs not defined")) (let ((*read-file* (promisify fs.readFile))) (set! read-file (lambda (path binary) (let ((buff (*read-file* path))) (if binary (if (eq? self window) (new Blob (vector buff)) buff) (--> buff (toString)))))))))) (if (not fetch-url) (set! fetch-url (lambda (url binary) (if (eq? self window) (let ((res (fetch url))) (if binary (res.arrayBuffer) (res.text))) (http-get url binary))))) (cond ((char=? (string-ref path 0) #\/) (if (not (file-exists? path)) (throw (new Error (string-append "file " path " don't exists"))) (read-file path binary))) ((--> #/^https?:\/\// (test path)) (fetch-url path binary)) (else (%read-file binary (string-append (current-directory) path)))))))
+(define %read-binary-file (curry %read-file #t))
+(define %read-text-file (curry %read-file #f))
+(define (response->content binary res) "(response->text binary res)\u000A\u000AFunction read all text from Node.js HTTP response object. If binary argument is\u000Atrue it will return Buffer object that can be converted to u8vector.\u000A\u000A***Warrning:*** it may overflow the stack (part of Node) when converting\u000Awhole buffer to u8vector." (let ((result (vector))) (res.setEncoding (if binary "binary" "utf8")) (new Promise (lambda (resolve) (res.on "data" (lambda (chunk) (result.push (Buffer.from chunk "binary")))) (res.on "end" (lambda () (if binary (resolve (Buffer.concat result)) (resolve (result.join "")))))))))
+(define response->buffer (curry response->content #t))
+(define response->text (curry response->content #f))
+(define http-get (if (eq? self window) (lambda (url binary) "(http-get url)\u000A\u000ANode.js Function that send HTTP Request and return string or\u000Abinary Buffer object." (throw (new Error "http-get: function is Node.js only."))) (let* ((http (. (require "http") (quote get))) (https (. (require "https") (quote get)))) (lambda (url binary) "(http-get url)\u000A\u000ANode.js Function that send HTTP Request and return string or\u000Abinary Buffer object." (let ((request (if (null? (url.match #/^https/)) http https))) (new Promise (lambda (resolve reject) (--> (request url (lambda (res) (if (= res.statusCode 200) (resolve (response->content binary res)) (let ((code res.statusCode)) (res.resume) (reject (string-append "Request return " (number->string code))))))) (on "error" reject)))))))))
+(define (buffer->u8vector bin) "(buffer->u8vector bin)\u000A\u000ACross platform function that can be used in both Node and Browser.\u000AIt can be used together with %read-file or %read-binary-file and convert\u000Athe result ArrayBuffer or Buffer to u8vector." (if (instanceof ArrayBuffer bin) (new Uint8Array bin) (Uint8Array.from bin)))
+(define string-append concat)
+(define = ==)
+(define remainder %)
+(define -inf.0 Number.NEGATIVE_INFINITY)
+(define +inf.0 Number.POSITIVE_INFINITY)
+(define procedure? function?)
+(define expt **)
+(define list->vector list->array)
+(define vector->list array->list)
+(define-macro (define-symbol-macro type spec . rest) "(define-symbol-macro type (name . args) . body)\u000A\u000AMacro that creates special symbol macro for evaluator similar to build in , or `.\u000AIt's like alias for real macro. Similar to CL reader macros but it receive already\u000Aparsed code like normal macros. Type can be SPLICE or LITERAL symbols.\u000AALL default symbol macros are literal." (let* ((name (car spec)) (symbol (cadr spec)) (args (cddr spec))) (quasiquote (begin (set-special! (unquote symbol) (quote (unquote name)) (unquote (string->symbol (concat "lips.specials." (symbol->string type))))) (define-macro ((unquote name) (unquote-splicing args)) (unquote-splicing rest))))))
+(set-special! "#" (quote vector-literal) lips.specials.SPLICE)
+(define-macro (vector-literal . args) (if (not (or (pair? args) (eq? args ()))) (throw (new Error (concat "Parse Error: vector require pair got " (type args) " in " (repr args)))) (let ((v (list->array args))) (Object.freeze v) v)))
+(define-syntax vector (syntax-rules () ((_ arg ...) (list->array (list arg ...)))) "(vector 1 2 3 (+ 3 1))\u000A#(1 2 3 4)\u000A\u000AMacro for defining vectors (JavaScript arrays). Vectors literals are\u000Aautomatically quoted. So you can use expressions inside them. Only other\u000Aliterals, like other vectors or object.")
+(set-repr! Array (lambda (x q) (let ((arr (--> x (map (lambda (x) (repr x q)))))) (concat "#(" (--> arr (join " ")) ")"))))
+(define (eqv? a b) "(eqv? a b)\u000A\u000AFunction compare the values. It return true if they are the same, they\u000Aneed to have same type" (if (string=? (type a) (type b)) (cond ((number? a) (or (and (exact? a) (exact? b) (= a b)) (and (inexact? a) (inexact? b) (cond ((a.isNaN) (b.isNaN)) ((and (zero? a) (zero? b)) (eq? a._minus b._minus)) ((and (complex? a) (complex? b)) (let ((re.a (real-part a)) (re.b (real-part b)) (im.a (imag-part a)) (im.b (imag-part b))) (and (if (and (zero? re.a) (zero? re.b)) (eq? (. re.a (quote _minus)) (. re.b (quote _minus))) #t) (if (and (zero? im.a) (zero? im.b)) (eq? (. im.a (quote _minus)) (. im.b (quote _minus))) #t) (or (= re.a re.b) (and (--> re.a (isNaN)) (--> re.b (isNaN)))) (or (= im.a im.b) (and (--> im.a (isNaN)) (--> im.b (isNaN))))))) (else (= a b)))))) ((pair? a) (and (null? a) (null? b))) (else (eq? a b))) #f))
+(define (equal? a b) "(equal? a b)\u000A\u000AFunction check if values are equal if both are pair or array\u000Ait compares the their elements recursivly." (cond ((and (pair? a)) (and (pair? b) (equal? (car a) (car b)) (equal? (cdr a) (cdr b)))) ((symbol? a) (and (symbol? b) (equal? a.__name__ b.__name__))) ((regex? a) (and (regex? b) (equal? (. a (quote source)) (. b (quote source))))) ((typed-array? a) (and (typed-array? b) (equal? (Array.from a) (Array.from b)))) ((vector? a) (and (vector? b) (= (length a) (length b)) (--> a (every (lambda (item i) (equal? item (vector-ref b i))))))) ((string? a) (and (string? b) (string=? a b))) ((function? a) (and (function? b) (%same-functions a b))) ((array? a) (and (array? b) (eq? (length a) (length b)) (= (--> a (filter (lambda (item i) (equal? item (. b i)))) (quote length)) (length a)))) ((plain-object? a) (and (plain-object? b) (let ((keys_a (--> (Object.keys a) (sort))) (keys_b (--> (Object.keys b) (sort)))) (and (= (length keys_a) (length keys_b)) (equal? keys_a keys_b) (equal? (--> keys_a (map (lambda (key) (. a key)))) (--> keys_b (map (lambda (key) (. b key))))))))) (else (eqv? a b))))
+(define make-promise (lambda (proc) "(make-promise fn)\u000A\u000AFunction create promise from a function." (typecheck "make-promise" proc "function") (let ((result-ready? #f) (result #f)) (let ((promise (lambda () (if result-ready? result (let ((x (proc))) (if result-ready? result (begin (set! result-ready? #t) (set! result x) result))))))) (set-obj! promise (Symbol.for "promise") #t) (set! promise.toString (lambda () (string-append "#<promise - " (if result-ready? (string-append "forced with " (type result)) "not forced") ">"))) promise))))
+(define-macro (delay expression) "(delay expression)\u000A\u000AMacro will create a promise from expression that can be forced with (force)." (quasiquote (make-promise (lambda () (unquote expression)))))
+(define (force promise) "(force promise)\u000A\u000AFunction force the promise and evaluate delayed expression." (promise))
+(define (promise? obj) "(promise? obj)\u000A\u000AFunction check if value is a promise created with delay or make-promise." (string=? (type obj) "promise"))
+(define (positive? x) "(positive? x)\u000A\u000AFunction check if number is larger then 0" (typecheck "positive?" x "number") (> x 0))
+(define (negative? x) "(negative? x)\u000A\u000AFunction check if number is smaller then 0" (typecheck "negative?" x "number") (< x 0))
+(define (zero? x) "(zero? x)\u000A\u000AFunction check if number is equal to 0" (typecheck "zero?" x "number") (= x 0))
+(define (quotient a b) "(quotient a b)\u000A\u000AReturn quotient from divition as integer." (typecheck "quotient" a "number") (typecheck "quotient" b "number") (if (zero? b 0) (throw (new Error "quotient: divition by zero")) (let ((quotient (/ a b))) (if (integer? quotient) quotient (if (> quotient 0) (floor quotient) (ceiling quotient))))))
+(define (number->string x . rest) "(number->string x [radix])\u000A\u000AFunction convert number to string with optional radix (number base)." (typecheck "number->string" x "number" 1) (let ((radix (if (null? rest) 10 (car rest)))) (typecheck "number->string" radix "number" 2) (--> x (toString (--> radix (valueOf))))))
+(define (boolean? x) "(boolean? x)\u000A\u000AFunction return true if value is boolean." (string=? (type x) "boolean"))
+(define (vector-ref vector i) "(vector-ref vector i)\u000A\u000AReturn i element from vector." (typecheck "number->string" vector "array" 1) (typecheck "number->string" i "number" 2) (. vector i))
+(define (vector-set! vector i obj) "(vector-set! vector i obj)\u000A\u000ASet obj as value in vector at position 1." (typecheck "vector-set!" vector "array" 1) (typecheck "vector-set!" i "number" 2) (set-obj! vector i obj))
+(define (%number-type type x) (typecheck "%number-type" type (vector "string" "pair")) (typecheck "%number-type" x "number") (let* ((t x.__type__) (typeof (lambda (type) (string=? t type)))) (and (number? x) (if (pair? type) (some typeof type) (typeof type)))))
+(define (real? x) "(real? x)\u000A\u000AFunction check if argument x is real." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (and (%number-type "complex" x) (let ((i (imag-part x))) (and (zero? i) (exact? i)))) (%number-type (quote ("float" "bigint" "rational")) x))))
+(define (integer? x) "(integer? x)\u000A\u000AFunction check if argument x is integer." (and (number? x) (not (eq? x NaN)) (not (eq? x Number.NEGATIVE_INFINITY)) (not (eq? x Number.POSITIVE_INFINITY)) (or (%number-type "bigint" x) (and (%number-type "float" x) (= (modulo x 2) 1)))))
+(define (complex? x) "(complex? x)\u000A\u000AFunction check if argument x is complex." (and (number? x) (or (eq? x NaN) (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (%number-type (quote ("complex" "float" "bigint" "rational")) x))))
+(define (rational? x) "(rational? x)\u000A\u000AFunction check if value is rational." (and (number? x) (not (eq? x NaN)) (not (eq? x Number.NEGATIVE_INFINITY)) (not (eq? x Number.POSITIVE_INFINITY)) (or (%number-type "rational" x) (integer? x))))
+(define (typecheck-args _type name _list) "(typecheck-args args type)\u000A\u000AFunction check if all items in array are of same type." (let iter ((n 1) (_list _list)) (if (pair? _list) (begin (typecheck name (car _list) _type n) (iter (+ n 1) (cdr _list))))))
+(define numbers? (curry typecheck-args "number"))
+(define (max . args) "(max n1 n2 ...)\u000A\u000AReturn maximum of it's arguments." (numbers? "max" args) (apply (.. Math.max) args))
+(define (min . args) "(min n1 n2 ...)\u000A\u000AReturn minimum of it's arguments." (numbers? "min" args) (apply (.. Math.min) args))
+(define (make-rectangular re im) "(make-rectangular im re)\u000A\u000ACreate complex number from imaginary and real part." (let ((value (quasiquote ((re unquote re) (im unquote im))))) (lips.LComplex (--> value (toObject #t)))))
+(define (exact? n) "(exact? n)" (typecheck "exact?" n "number") (let ((type n.__type__)) (or (string=? type "bigint") (string=? type "rational") (and (string=? type "complex") (exact? n.__im__) (exact? n.__re__)))))
+(define (inexact? n) "(inexact? n)" (typecheck "inexact?" n "number") (not (exact? n)))
+(define (exact->inexact n) "(exact->inexact n)\u000A\u000AConvert exact number to inexact." (typecheck "exact->inexact" n "number") (if (%number-type "complex" n) (lips.LComplex (object :im (exact->inexact (. n (quote __im__))) :re (exact->inexact (. n (quote __re__))))) (if (or (rational? n) (integer? n)) (lips.LFloat (--> n (valueOf)) #t) n)))
+(define (inexact->exact n) "(inexact->exact number)\u000A\u000AFuncion convert real number to exact ratioanl number." (typecheck "inexact->exact" n "number") (if (or (real? n) (%number-type "complex" n)) (--> n (toRational)) n))
+(define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+(define _this_env (current-environment))
+(let iter ((fns _maths)) (if (not (null? fns)) (let* ((name (car fns)) (LNumber (.. lips.LNumber)) (op (. Math name)) (fn (lambda (n) (LNumber (op n))))) (--> _this_env (set name fn)) (set-obj! fn (quote __doc__) (concat "(" name " n)\u000A\u000AFunction calculate " name " math operation (it call JavaScript Math)." name " function.")) (iter (cdr fns)))))
+(define (modulo a b) "(modulo a b)\u000A\u000AFunction return modulo operation on it's argumennts." (typecheck "modulo" a "number" 1) (typecheck "modulo" b "number" 2) (- a (* b (floor (/ a b)))))
+(define (remainder__ a b) "(modulo a b)\u000A\u000AFunction return reminder from division operation." (typecheck "remainder" a "number" 1) (typecheck "remainder" b "number" 2) (- a (* b (truncate (/ a b)))))
+(define (list-tail l k) "(list-tail list k)\u000A\u000AReturns the sublist of list obtained by omitting the first k elements." (typecheck "list-tail" l (quote ("pair" "nil"))) (if (< k 0) (throw (new Error "list-ref: index out of range")) (let ((l l) (k k)) (while (> k 0) (if (null? l) (throw (new Error "list-tail: not enough elements in the list"))) (set! l (cdr l)) (set! k (- k 1))) l)))
+(define (list-ref l k) "(list-ref list n)\u000A\u000AReturns n element of a list." (typecheck "list-ref" l (quote ("pair" "nil"))) (if (< k 0) (throw (new Error "list-ref: index out of range")) (let ((l l) (k k)) (while (> k 0) (if (null? l) (throw (new Error "list-ref: not enough elements in the list"))) (set! l (cdr l)) (set! k (- k 1))) (if (null? l) l (car l)))))
+(define (not x) "(not x)\u000A\u000AFunction return true if value is false and false otherwise." (if x #f #t))
+(define (rationalize number tolerance) "(rationalize number tolerance)\u000A\u000AFunction returns simplest rational number differing from number by no more\u000Athan the tolerance." (typecheck "rationalize" number "number" 1) (typecheck "rationalize" tolerance "number" 2) (lips.rationalize number tolerance))
+(define (%mem/search access op obj list) "(%member obj list function)\u000A\u000AHelper method to get first list where car equal to obj\u000Ausing provied functions as comparator." (if (null? list) #f (if (op (access list) obj) list (%mem/search access op obj (cdr list)))))
+(define (memq obj list) "(memq obj list)\u000A\u000AFunction return first object in the list that match using eq? function." (typecheck "memq" list (quote ("nil" "pair"))) (%mem/search car eq? obj list))
+(define (memv obj list) "(memv obj list)\u000A\u000AFunction return first object in the list that match using eqv? function." (typecheck "memv" list (quote ("nil" "pair"))) (%mem/search car eqv? obj list))
+(define (member obj list) "(member obj list)\u000A\u000AFunction return first object in the list that match using equal? function." (typecheck "member" list (quote ("nil" "pair"))) (%mem/search car equal? obj list))
+(define (%assoc/acessor name) "(%assoc/acessor name)\u000A\u000AFunction return carr with typecheck using give name." (lambda (x) (typecheck name x "pair") (caar x)))
+(define (%assoc/search op obj alist) "(%assoc/search op obj alist)\u000A\u000AGeneric function that used in assoc functions with defined comparator\u000Afunction." (typecheck "assoc" alist (vector "nil" "pair")) (let ((ret (%mem/search (%assoc/acessor "assoc") op obj alist))) (if ret (car ret) ret)))
+(define assoc (%doc "(assoc obj alist)\u000A\u000AFunction return pair from alist that match given key using equal? check." (curry %assoc/search equal?)))
+(define assq (%doc "(assq obj alist)\u000A\u000AFunction return pair from alist that match given key using eq? check." (curry %assoc/search eq?)))
+(define assv (%doc "(assv obj alist)\u000A\u000AFunction return pair from alist that match given key using eqv? check." (curry %assoc/search eqv?)))
+(define (make-string k . rest) "(make-string k [char])\u000A\u000AFunction return new string with k elements, if char is provied\u000Ait's filled with that character." (let ((char (if (null? rest) #\space (car rest)))) (typecheck "make-string" k "number" 1) (typecheck "make-string" char "character" 2) (let iter ((result (quote ())) (k k)) (if (<= k 0) (list->string result) (iter (cons char result) (- k 1))))))
+(define (string . args) "(string chr1 chr2 ...)\u000A\u000AFunction create new string from it's arguments. Each argument\u000ANeed to be a character object." (for-each (lambda (x) (typecheck "string" x "character")) args) (list->string args))
+(define (string-copy string) "(string-copy string)\u000A\u000AReturns a copy of the given string." (typecheck "string-copy" string "string") (--> string (clone)))
+(define (string-fill! string char) "(string-fill! symbol char)\u000A\u000AFunction destructively fill the string with given character." (typecheck "string-fill!" string "string" 1) (typecheck "string-fill!" char "character" 2) (--> string (fill char)))
+(define (identity n) "(identity n)\u000A\u000ANo op function. it just returns its argument." n)
+(define (string-copy x) "(string-copy x)\u000A\u000ACreate new string based of given argument." (typecheck "string-copy" x "string") (lips.LString x))
+(define (list->string _list) "(list->string _list)\u000A\u000AFunction return string from list of characters." (let ((array (list->array (map (lambda (x) (typecheck "list->string" x "character") (x.valueOf)) _list)))) (--> array (join ""))))
+(define (string->list string) "(string->list string)\u000A\u000AFunction return list of characters created from string." (typecheck "string->list" string "string") (array->list (--> string (split "") (map (lambda (x) (lips.LCharacter x))))))
+(define-macro (string-set! object index char) "(string-set! object index char)\u000A\u000AMacro that replace character in string in given index, it create new JavaScript\u000Astring and replace old value. Object need to be symbol that point to variable\u000Athat hold the string." (typecheck "string-set!" object "symbol") (let ((chars (gensym "chars"))) (quasiquote (begin (typecheck "string-set!" (unquote object) "string") (typecheck "string-set!" (unquote index) "number") (typecheck "string-set!" (unquote char) "character") (let (((unquote chars) (list->vector (string->list (unquote object))))) (set-obj! (unquote chars) (unquote index) (unquote char)) (set! (unquote object) (list->string (vector->list (unquote chars)))))))))
+(define (string-length string) "(string-length string)\u000A\u000AFunction return length of the string." (typecheck "string-ref" string "string") (. string (quote length)))
+(define (string-ref string k) "(string-ref string k)\u000A\u000AFunction return character inside string at given zero-based index." (typecheck "string-ref" string "string" 1) (typecheck "string-ref" k "number" 2) (lips.LCharacter (--> string (get k))))
+(define (%string-cmp name string1 string2) "(%string-cmp name a b)\u000A\u000AFunction compare two strings and return 0 if they are equal,\u000A-1 second is smaller and 1 if is larget. The function compare\u000Athe codepoints of the character." (typecheck name string1 "string" 1) (typecheck name string2 "string" 2) (--> string1 (cmp string2)))
+(define (string=? string1 string2) "(string=? string1 string2)\u000A\u000AFunction check if two string s are equal." (= (%string-cmp "string=?" string1 string2) 0))
+(define (string<? string1 string2) "(string<? string1 string2)\u000A\u000AFunction return true if second string is smaller then the first one." (= (%string-cmp "string<?" string1 string2) -1))
+(define (string>? string1 string2) "(string<? string1 string2)\u000A\u000AFunction return true if second string is larger then the first one." (= (%string-cmp "string>?" string1 string2) 1))
+(define (string<=? string1 string2) "(string<? string1 string2)\u000A\u000AFunction return true if second string is not larger then the first one." (< (%string-cmp "string<=?" string1 string2) 1))
+(define (string>=? string1 string2) "(string<? string1 string2)\u000A\u000AFunction return true if second character is not smaller then the first one." (> (%string-cmp "string>=?" string1 string2) -1))
+(define (%string-ci-cmp name string1 string2) "(%string-ci-cmp name a b)\u000A\u000AFunction compare two strings ingoring case and return 0 if they are equal,\u000A-1 second is smaller and 1 if is larget. The function compare\u000Athe codepoints of the character." (typecheck name string1 "string" 1) (typecheck name string2 "string" 2) (--> string1 (lower) (cmp (--> string2 (lower)))))
+(define (string-ci=? string1 string2) "(string-ci=? string1 string2)\u000A\u000AFunction check if two string s are equal." (= (%string-ci-cmp "string-ci=?" string1 string2) 0))
+(define (string-ci<? string1 string2) "(string-ci<? string1 string2)\u000A\u000AFunction return true if second string is smaller then the first one." (= (%string-ci-cmp "string-ci<?" string1 string2) -1))
+(define (string-ci>? string1 string2) "(string-ci<? string1 string2)\u000A\u000AFunction return true if second string is larger then the first one." (= (%string-ci-cmp "string-ci>?" string1 string2) 1))
+(define (string-ci<=? string1 string2) "(string-ci<? string1 string2)\u000A\u000AFunction return true if second string is not larger then the first one." (< (%string-ci-cmp "string-ci<=?" string1 string2) 1))
+(define (string-ci>=? string1 string2) "(string-ci>=? string1 string2)\u000A\u000AFunction return true if second character is not smaller then the first one." (> (%string-ci-cmp "string-ci>=?" string1 string2) -1))
+(define char? (%doc "(char? obj)\u000A\u000AFunction check if object is character." (curry instanceof lips.LCharacter)))
+(define (char->integer chr) "(char->integer chr)\u000A\u000AFunction return codepoint of Unicode character." (typecheck "char->integer" chr "character") (--> chr.__char__ (codePointAt 0)))
+(define (integer->char n) "(integer->char chr)\u000A\u000AFunction convert number argument to chararacter." (typecheck "integer->char" n "number") (if (integer? n) (string-ref (String.fromCodePoint n) 0) (throw "argument to integer->char need to be integer.")))
+(define-macro (%define-chr-re spec str re) "(%define-chr-re (name chr) sring re)\u000A\u000AMacro define procedure that test character agains regular expression." (quasiquote (define (unquote spec) (unquote str) (typecheck (unquote (symbol->string (car spec))) (unquote (cadr spec)) "character") (not (null? (--> chr (toString) (match (unquote re))))))))
+(%define-chr-re (char-whitespace? chr) "(char-whitespace? chr)\u000A\u000AFunction return true if character is whitespace." (let-env (interaction-environment) (--> **internal-env** (get (quote space-unicode-regex)))))
+(%define-chr-re (char-numeric? chr) "(char-numeric? chr)\u000A\u000AFunction return true if character is number." (let-env (interaction-environment) (--> **internal-env** (get (quote numeral-unicode-regex)))))
+(%define-chr-re (char-alphabetic? chr) "(char-alphabetic? chr)\u000A\u000AFunction return true if character is leter of the ASCII alphabet." (let-env (interaction-environment) (--> **internal-env** (get (quote letter-unicode-regex)))))
+(define (%char-cmp name chr1 chr2) "(%char-cmp name a b)\u000A\u000AFunction compare two characters and return 0 if they are equal,\u000A-1 second is smaller and 1 if is larget. The function compare\u000Athe codepoints of the character." (typecheck name chr1 "character" 1) (typecheck name chr2 "character" 2) (let ((a (char->integer chr1)) (b (char->integer chr2))) (cond ((= a b) 0) ((< a b) -1) (else 1))))
+(define (char=? chr1 chr2) "(char=? chr1 chr2)\u000A\u000AFunction check if two characters are equal." (= (%char-cmp "char=?" chr1 chr2) 0))
+(define (char<? chr1 chr2) "(char<? chr1 chr2)\u000A\u000AFunction return true if second character is smaller then the first one." (= (%char-cmp "char<?" chr1 chr2) -1))
+(define (char>? chr1 chr2) "(char<? chr1 chr2)\u000A\u000AFunction return true if second character is larger then the first one." (= (%char-cmp "char>?" chr1 chr2) 1))
+(define (char<=? chr1 chr2) "(char<? chr1 chr2)\u000A\u000AFunction return true if second character is not larger then the first one." (< (%char-cmp "char<=?" chr1 chr2) 1))
+(define (char>=? chr1 chr2) "(char<? chr1 chr2)\u000A\u000AFunction return true if second character is not smaller then the first one." (> (%char-cmp "char>=?" chr1 chr2) -1))
+(define (%char-ci-cmp name chr1 chr2) "(%char-cmp name a b)\u000A\u000AFunction compare two characters and return 0 if they are equal,\u000A-1 second is smaller and 1 if is larget. The function compare\u000Athe codepoints of the character." (typecheck name chr1 "character" 1) (typecheck name chr2 "character" 2) (%char-cmp name (char-downcase chr1) (char-downcase chr2)))
+(define (char-ci=? chr1 chr2) "(char-ci=? chr1 chr2)\u000A\u000AFunction check if two characters are equal." (= (%char-ci-cmp "char-ci=?" chr1 chr2) 0))
+(define (char-ci<? chr1 chr2) "(char-ci<? chr1 chr2)\u000A\u000AFunction return true if second character is smaller then the first one." (= (%char-ci-cmp "char-ci<?" chr1 chr2) -1))
+(define (char-ci>? chr1 chr2) "(char-ci<? chr1 chr2)\u000A\u000AFunction return true if second character is larger then the first one." (= (%char-ci-cmp "char-ci>?" chr1 chr2) 1))
+(define (char-ci<=? chr1 chr2) "(char-ci<? chr1 chr2)\u000A\u000AFunction return true if second character is not larger then the first one." (< (%char-ci-cmp "char-ci<=?" chr1 chr2) 1))
+(define (char-ci>=? chr1 chr2) "(char-ci<? chr1 chr2)\u000A\u000AFunction return true if second character is not smaller then the first one." (> (%char-ci-cmp "char-ci>=?" chr1 chr2) -1))
+(define (char-upcase char) "(char-upcase char)\u000A\u000ACreate uppercase version of the character." (typecheck "char-upcase" char "character") (char.toUpperCase))
+(define (char-downcase char) "(char-downcase chr)\u000A\u000ACreate lowercase version of the character." (typecheck "char-upcase" char "character") (char.toLowerCase))
+(define (char-upper-case? char) "(char-upper-case? char)\u000A\u000AFunction check if character is upper case." (typecheck "char-upper-case?" char "character") (and (char-alphabetic? char) (char=? (char-upcase char) char)))
+(define (char-lower-case? char) "(char-upper-case? char)\u000A\u000AFunction check if character is lower case." (typecheck "char-lower-case?" char "character") (and (char-alphabetic? char) (char=? (char-downcase char) char)))
+(define (newline . rest) "(newline [port])\u000A\u000AWrite newline character to standard output or given port" (let ((port (if (null? rest) (current-output-port) (car rest)))) (display "\u000A" port)))
+(define (write obj . rest) "(write obj [port])\u000A\u000AWrite object to standard output or give port. For strings it will include\u000Awrap in quotes." (let ((port (if (null? rest) (current-output-port) (car rest)))) (display (repr obj #t) port)))
+(define (write-char char . rest) "(write-char char [port])\u000A\u000AWrite single character to given port using write function." (typecheck "write-char" char "character") (if (not (null? rest)) (typecheck "write-char" (car rest) "output-port")) (apply display (cons (char.valueOf) rest)))
+(define fold-right reduce)
+(define fold-left fold)
+(define (make-vector n . rest) "(make-vector n [fill])\u000A\u000ACreate new vector with n empty elements. If fill is specified it will set\u000Aall elements of the vector to that value." (let ((result (new Array n))) (if (not (null? rest)) (--> result (fill (car rest))) result)))
+(define (vector? n) "(vector? n)\u000A\u000AFunction return true of value is vector and false if not." (string=? (type n) "array"))
+(define (vector-ref vec n) "(vector-ref vec n)\u000A\u000AFunction return nth element of the vector vec." (typecheck "vector-ref" vec "array" 1) (typecheck "vector-ref" n "number" 2) (. vec n))
+(define (vector-set! vec n value) "(vector-set! vec n value)\u000A\u000AFunction set nth item of the vector to value." (typecheck "vector-ref" vec "array" 1) (typecheck "vector-ref" n "number" 2) (set-obj! vec n value))
+(define (vector-fill! vec value) "(vector-fill! vec value)\u000A\u000ASet every element of the vector to given value." (typecheck "vector-ref" vec "array") (let recur ((n (- (length vec) 1))) (if (>= n 0) (begin (set-obj! vec n value) (recur (- n 1))))))
+(define (vector-length vec) "(vector-length vec)\u000A\u000AFunction return length of the vector. If argument is not vector it throw exception." (typecheck "vector-length" vec "array") (length vec))
+(define-syntax case (syntax-rules (else =>) ((case (key ...) clauses ...) (let ((atom-key (key ...))) (case atom-key clauses ...))) ((case key (else => result)) (result key)) ((case key (else result1 result2 ...)) (begin result1 result2 ...)) ((case key ((atoms ...) result1 result2 ...)) (if (memv key (quote (atoms ...))) (begin result1 result2 ...))) ((case key ((atoms ...) => result)) (if (memv key (quote (atoms ...))) (result key))) ((case key ((atoms ...) => result) clause clauses ...) (if (memv key (quote (atoms ...))) (result key) (case key clause clauses ...))) ((case key ((atoms ...) result1 result2 ...) clause clauses ...) (if (memv key (quote (atoms ...))) (begin result1 result2 ...) (case key clause clauses ...)))) "(case value\u000A     ((<items>) result1)\u000A     ((<items>) result2)\u000A     [else result3])\u000A\u000AMacro for switch case statement. It test if value is any of the item. If\u000Aitem match the value it will return coresponding result expression value.\u000AIf no value match and there is else it will return that result.")
+(--> lips.Formatter.defaults.exceptions.specials (push "case"))
+(define (numerator n) "(numerator n)\u000A\u000AReturn numberator of rational or same number if n is not rational." (typecheck "numerator" n "number") (if (and (rational? n) (not (integer? n))) n.num n))
+(define (denominator n) "(denominator n)\u000A\u000AReturn denominator of rational or same number if one is not rational." (typecheck "denominator" n "number") (if (and (rational? n) (not (integer? n))) n.denom (if (exact? n) 1 1.0)))
+(define (imag-part n) "(imag-part n)\u000A\u000AReturn imaginary part of the complex number n." (typecheck "imag-part" n "number") (if (%number-type "complex" n) n.__im__ 0))
+(define (real-part n) "(real-part n)\u000A\u000AReturn real part of the complex number n." (typecheck "real-part" n "number") (if (%number-type "complex" n) n.__re__ n))
+(define (make-polar r angle) "(make-polar magnitude angle)\u000A\u000ACreate new complex number from polar parameters." (typecheck "make-polar" r "number") (typecheck "make-polar" angle "number") (if (or (complex? r) (complex? angle)) (error "make-polar: argument can't be complex") (let ((re (* r (sin angle))) (im (* r (cos angle)))) (make-rectangular im re))))
+(define (angle x) "(angle x)\u000A\u000AReturns angle of the complex number in polar coordinate system." (if (not (%number-type "complex" x)) (error "angle: number need to be complex") (Math.atan2 x.__im__ x.__re__)))
+(define (magnitude x) "(magnitude x)\u000A\u000AReturns magnitude of the complex number in polar coordinate system." (if (not (%number-type "complex" x)) (error "magnitude: number need to be complex") (sqrt (+ (* x.__im__ x.__im__) (* x.__re__ x.__re__)))))
+(define random (let ((a 69069) (c 1) (m (expt 2 32)) (seed 19380110)) (lambda new-seed "(random)\u000A(random seed)\u000A\u000AFunction generate new random real number using Knuth algorithm." (if (pair? new-seed) (set! seed (car new-seed)) (set! seed (modulo (+ (* seed a) c) m))) (exact->inexact (/ seed m)))))
+(define (eof-object? obj) "(eof-object? arg)\u000A\u000AFunction check if value is eof object, returned from input string\u000Aport when there are no more data to read." (eq? obj eof))
+(define (output-port? obj) "(output-port? arg)\u000A\u000AFunction return true if argument is output port." (instanceof lips.OutputPort obj))
+(define (input-port? obj) "(input-port? arg)\u000A\u000AFunction return true if argument is input port." (instanceof lips.InputPort obj))
+(define (char-ready? . rest) "(char-ready?)\u000A(char-ready? port)\u000A\u000AFunction check it characters is ready in input port. This is usefull mostly\u000Afor interactive ports that return false if it would wait for user input.\u000AIt return false if port is closed." (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "char-ready?" port "input-port") (port.char_ready)))
+(define open-input-file (let ((readFile #f)) (lambda (filename) "(open-input-file filename)\u000A\u000AFunction return new Input Port with given filename. In Browser user need to\u000Aprovide global fs variable that is instance of FS interface." (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-input-file: fs not defined")) (begin (if (not (procedure? readFile)) (let ((_readFile (promisify fs.readFile))) (set! readFile (lambda (filename) (--> (_readFile filename) (toString)))))) (new lips.InputFilePort (readFile filename) filename)))))))
+(define (close-input-port port) "(close-input-port port)\u000A\u000AProcedure close port that was opened with open-input-file. After that\u000Ait no longer accept reading from that port." (typecheck "close-input-port" port "input-port") (port.close))
+(define (close-output-port port) "(close-output-port port)\u000A\u000AProcedure close port that was opened with open-output-file. After that\u000Ait no longer accept write to that port." (typecheck "close-output-port" port "output-port") (port.close))
+(define (call-with-input-file filename proc) "(call-with-input-file filename proc)\u000A\u000AProcedure open file for reading, call user defined procedure with given port\u000Aand then close the port. It return value that was returned by user proc\u000Aand it close the port even if user proc throw exception." (let ((p (open-input-file filename))) (try (proc p) (finally (close-input-port p)))))
+(define (call-with-output-file filename proc) "(call-with-output-file filename proc)\u000A\u000AProcedure open file for writing, call user defined procedure with port\u000Aand then close the port. It return value that was returned by user proc and it close the port\u000Aeven if user proc throw exception." (let ((p (open-output-file filename))) (try (proc p) (finally (close-output-port p)))))
+(define (with-input-from-file string thunk) "(with-input-from-file string thunk)\u000A\u000AProcedure open file and make it current-input-port then thunk is executed.\u000AAfter thunk is executed current-input-port is restored and file port\u000Ais closed." (let* ((port (open-input-file string)) (env **interaction-environment**) (internal-env (env.get (quote **internal-env**))) (old-stdin (internal-env.get "stdin"))) (internal-env.set "stdin" port) (try (thunk) (finally (internal-env.set "stdin" old-stdin) (close-input-port port)))))
+(define (with-output-to-file string thunk) (let* ((port (open-output-file string)) (env **interaction-environment**) (internal-env (env.get (quote **internal-env**))) (old-stdout (internal-env.get "stdout"))) (internal-env.set "stdout" port) (try (thunk) (finally (internal-env.set "stdout" old-stdout) (close-output-port port)))))
+(define (file-exists? filename) (new Promise (lambda (resolve) (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "file-exists?: fs not defined")) (fs.stat filename (lambda (err stat) (if (null? err) (resolve (stat.isFile)) (resolve #f)))))))))
+(define open-output-file (let ((open)) (lambda (filename) "(open-output-file filename)\u000A\u000AFunction open file and return port that can be used for writing. If file\u000Aexists it will throw an Error." (typecheck "open-output-file" filename "string") (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "open-output-file: fs not defined")) (begin (if (not (procedure? open)) (set! open (promisify fs.open))) (if (file-exists? filename) (throw (new Error "open-output-file: file exists")) (lips.OutputFilePort filename (open filename "w")))))))))
+(define (scheme-report-environment version) "(scheme-report-environment version)\u000A\u000AFunction return new Environment object for given Scheme Spec version.\u000AOnly argument 5 is supported that create environemnt for R5RS." (typecheck "scheme-report-environment" version "number") (case version ((5) (%make-env "R5RS" * + - / < <= = > >= abs acos and angle append apply asin assoc assq assv atan begin boolean? caaaar caaadr caaar caadar caaddr caadr caar cadaar cadadr cadar caddar cadddr caddr cadr call-with-current-continuation call-with-input-file call-with-output-file call-with-values car case cdaaar cdaadr cdaar cdadar cdaddr cdadr cdar cddaar cddadr cddar cdddar cddddr cdddr cddr cdr ceiling char->integer char-alphabetic? char-ci<=? char-ci<? char-ci=? char-ci>=? char-ci>? char-downcase char-lower-case? char-numeric? char-ready? char-upcase char-upper-case? char-whitespace? char<=? char<? char=? char>=? char>? char? close-input-port close-output-port complex? cond cons cos current-input-port current-output-port define define-syntax delay denominator display do dynamic-wind eof-object? eq? equal? eqv? eval even? exact->inexact exact? exp expt floor for-each force gcd if imag-part inexact->exact inexact? input-port? integer->char integer? interaction-environment lambda lcm length let let* let-syntax letrec letrec-syntax list list->string list->vector list-ref list-tail list? load log magnitude make-polar make-rectangular make-string make-vector map max member memq memv min modulo negative? newline not null-environment null? number->string number? numerator odd? open-input-file open-output-file or output-port? pair? peek-char positive? procedure? quasiquote quote quotient rational? rationalize read read-char real-part real? remainder reverse round scheme-report-environment set! set-car! set-cdr! sin sqrt string string->list string->number string->symbol string-append string-ci<=? string-ci<? string-ci=? string-ci>=? string-ci>? string-copy string-fill! string-length string-ref string-set! string<=? string<? string=? string>=? string>? string? substring symbol->string symbol? tan truncate values vector vector->list vector-fill! vector-length vector-ref vector-set! vector? with-input-from-file with-output-to-file write write-char zero?)) ((7) (throw (new Error "not yet implemented"))) (else (throw (new Error (string-append "scheme-report-environment: version " (number->string version) " not supported"))))))
+(define-macro (%make-vector prefix type help) "(%make-vector prefix type help)\u000A\u000AMega helper macro that create list of functions for single byte vector\u000Abased on typed array from JavaScript" (letrec ((prefix-str (symbol->string prefix)) (type-str (symbol->string type)) (l-type (--> type-str (toLowerCase))) (static (lambda (name) (string->symbol (format "~a.~a" type-str name)))) (TypedArray.from (static "from")) (fn-name (lambda (str) (string->symbol (format str prefix-str)))) (type-vector (fn-name "~avector")) (make-vector (fn-name "make-~avector")) (vector? (fn-name "~avector?")) (vector-in-range? (fn-name "%~avector-in-range?")) (vector-ref (fn-name "~avector-ref")) (repr-str (format "#~a" prefix-str)) (vector-length (fn-name "~avector-length")) (vector->list (fn-name "~avector->list")) (vector-set! (fn-name "~avector-set!")) (list->tvector (fn-name "list->~avector")) (vector->tvector (fn-name "vector->~avector"))) (quasiquote (begin (define ((unquote type-vector) . args) (unquote (format "(~a v1 v2 ...)\u000A\u000ACreate ~a from give arguments." type-vector help)) ((unquote TypedArray.from) (list->vector args))) (define ((unquote vector-length) v) (unquote (format "(~a v)\u000A\u000Areturn length of ~a." vector-length help)) (typecheck (unquote (symbol->string vector-length)) v (unquote l-type)) v.length) (define ((unquote make-vector) k . fill) (unquote (format "(~a v1 v2 ...)\u000A\u000AAllocate new ~a of length k, with optional initial values." make-vector help)) (let ((v (new (unquote type) k))) (if (not (null? fill)) (--> v (fill (car fill)))) v)) (define ((unquote vector?) x) (unquote (format "(~a x)\u000A\u000AFunction return #t of argument is ~a otherwise it return #f." vector? help)) (and (object? x) (equal? (. x (quote constructor)) (unquote type)))) (define ((unquote vector-in-range?) vector k) (unquote (format "(~a vector k)\u000A\u000AFunction test if index is range for ~a." vector-in-range? help)) (typecheck (unquote (symbol->string vector-in-range?)) vector (unquote l-type)) (typecheck (unquote (symbol->string vector-in-range?)) k "number") (let ((len (length vector))) (and (>= k 0) (< k len)))) (define ((unquote vector-ref) vector k) (unquote (format "(~a vector k)\u000A\u000AFunction return value frome vector at index k. If index is out of range it throw exception." vector-ref help)) (typecheck (unquote (symbol->string vector-ref)) vector (unquote l-type)) (typecheck (unquote (symbol->string vector-ref)) k "number") (if (not ((unquote vector-in-range?) vector k)) (throw (new Error (unquote (format "~a index out of range" vector-ref)))) (. vector k))) (define ((unquote vector->list) vector) (typecheck (unquote (symbol->string vector->list)) vector (unquote l-type)) (vector->list (Array.from vector))) (define ((unquote vector-set!) vector k v) (unquote (format "(~a vector k)\u000A\u000AFunction set value of ~a at index k. If index is out of range it throw exception." vector-set! help)) (typecheck (unquote (symbol->string vector-set!)) vector (unquote l-type)) (typecheck (unquote (symbol->string vector-set!)) k "number") (if (not ((unquote vector-in-range?) vector k)) (throw (new Error (unquote (format "~a index out of range" vector-set!)))) (set-obj! vector k v))) (define ((unquote list->tvector) lst) (typecheck (unquote (symbol->string list->tvector)) lst "pair") (apply (unquote vector) lst)) (define ((unquote vector->tvector) vector) (typecheck (unquote (symbol->string vector->tvector)) vector "array") ((unquote TypedArray.from) vector)) (set-special! (unquote repr-str) (quote (unquote type-vector)) lips.specials.SPLICE) (set-repr! (unquote type) (lambda (x _quote) (string-append (unquote repr-str) (repr ((unquote vector->list) x) _quote))))))))
+(%make-vector u8 Uint8Array "usigned 8-bit integer vector")
+(%make-vector s8 Int8Array "signed 8-bit integer vector")
+(%make-vector u16 Uint16Array "usigned 16-bit integer vector")
+(%make-vector s16 Int16Array "signed 16-bit integer vector")
+(%make-vector u32 Uint16Array "usigned 32-bit integer vector")
+(%make-vector s32 Int16Array "signed 32-bit integer vector")
+(%make-vector f32 Float32Array "32-bit IEEE floating point number vector")
+(%make-vector f64 Float64Array "64-bit IEEE floating point number vector")
+(define (list-match? predicate list) "(list-match? predicate list)\u000A\u000AFunction check if consecutive elements of the list match the predicate function." (typecheck "list-match?" predicate #("function" "macro")) (typecheck "list-match?" list "pair") (or (or (null? list) (null? (cdr list))) (and (predicate (car list) (cadr list)) (list-match? predicate (cdr list)))))
+(define (symbol=? . args) "(symbol=? s1 s2 ...)\u000A\u000AFunction check if each value is symbol and it's the same acording to string=? predicate." (list-match? (lambda (a b) (and (symbol? a) (symbol? b) (equal? a b))) args))
+(define (values-ref values n) "(values-ref values n)\u000A\u000AFunction return n value of values object which is result of value function." (typecheck "values-ref" values "values" 1) (typecheck "values-ref" n "number" 1) (--> values (valueOf) n))
+(define-syntax let-values (syntax-rules () ((_ ()) ()) ((_ () body ...) (begin body ...)) ((_ (((x ...) values) ...) body ...) (apply (lambda (x ... ...) body ...) (vector->list (apply vector-append (map (lambda (x) ((. x "valueOf"))) (list values ...))))))) "(let-values binding body ...)\u000A\u000AThe macro work similar to let but variable is list of values and value\u000Aneed to evaluate to result of calling values.")
+(define (vector-append . args) "(vector-append v1 v2 ...)\u000A\u000AFunction return new vector by combining it's arguments that should be vectors." (if (null? args) (vector) (begin (typecheck "vector-append" (car args) "array") (--> (car args) (concat (apply vector-append (cdr args)))))))
+(define-syntax let*-values (syntax-rules () ((_ ()) ()) ((_ () body ...) (begin body ...)) ((_ ((bind values) rest ...) . body) (apply (lambda bind (let*-values (rest ...) . body)) (vector->list ((. values "valueOf")))))) "(let*-values binding body ...)\u000A\u000AThe macro work similar to let* but variable is list of values and value\u000Aneed to evaluate to result of calling values.")
+(define (quotient&remainder x y) (values (quotient x y) (remainder x y)))
+(define (floor/ x y) (let ((q (quotient x y)) (r (remainder x y))) (if (>= x 0) (if (or (> y 0) (zero? r)) (values q r) (values (- q 1) (+ r y))) (if (and (> y 0) (not (zero? r))) (values (- q 1) (+ r y)) (values q r)))))
+(define (floor-quotient x y) (values-ref (floor/ x y) 0))
+(define (floor-remainder x y) (modulo x y))
+(define (truncate/ x y) (quotient&remainder x y))
+(define (truncate-quotient x y) (quotient x y))
+(define (truncate-remainder x y) (remainder x y))
+(define-syntax case-lambda (syntax-rules () ((case-lambda (params body0 ...) ...) (lambda args (let ((len (length args))) (letrec-syntax ((cl (syntax-rules ::: () ((cl) (error "no matching clause")) ((cl ((p :::) . body) . rest) (if (= len (length (quote (p :::)))) (apply (lambda (p :::) . body) args) (cl . rest))) ((cl ((p ::: . tail) . body) . rest) (if (>= len (length (quote (p :::)))) (apply (lambda (p ::: . tail) . body) args) (cl . rest)))))) (cl (params body0 ...) ...)))))) "(case-lambda expr ...)\u000A\u000AMacro create new function with different version of the function depend on\u000Anumber of arguments. Each expression is similar to single lambda.\u000A\u000Ae.g.:\u000A\u000A    (define sum\u000A       (case-lambda\u000A         ((x) x)\u000A         ((x y) (+ x y))\u000A         ((x y z) (+ x y z))))\u000A\u000A    (sum 1)\u000A    (sum 1 2)\u000A    (sum 1 2 3)\u000A\u000AMore arguments will give error.")
+(define (boolean=? . args) "(boolean=? b1 b2 ...)\u000A\u000AFunction check if all arguments are boolean and if they are the same." (if (< (length args) 2) (error "boolean=?: too few arguments") (reduce (lambda (acc item) (and (boolean? item) (eq? acc item))) (car args) (cdr args))))
+(define (port? x) "(port? x)\u000A\u000AFunction return true of argumet is nput or output port port object." (or (output-port? x) (input-port? x)))
+(define (square x) "(square z)\u000A\u000AReturns the square of z. This is equivalent to (* z z)." (* x x))
+(define-syntax when (syntax-rules () ((when test result1 result2 ...) (if test (begin result1 result2 ...)))) "(when test body ...)\u000A\u000AMacro execute body when test expression is true.")
+(define-syntax unless (syntax-rules () ((unless test result1 result2 ...) (if (not test) (begin result1 result2 ...)))) "(unless test body ...)\u000A\u000AMacro execute body when test expression is false.")
+(define inexact exact->inexact)
+(define exact inexact->exact)
+(define (exact-integer? n) "(exact-integer? n)\u000A\u000AFunction returns #t if z is both exact and an integer; otherwise\u000Areturns #f." (and (integer? n) (exact? n)))
+(define (string->vector s) "(string->vector string)\u000A\u000AFunction return vector of characters created from string." (typecheck "string->list" s "string") (--> s (split "") (map (lambda (x) (lips.LCharacter x)))))
+(define (vector->string v) "(vector->string vector)\u000A\u000AFunction return new string created from vector of characters." (typecheck "vector->list" v "array") (--> v (map (lambda (char) (char.valueOf))) (join "")))
+(define (vector-map fn . rest) "(vector-map fn vector1 vector2 ...)\u000A\u000AFunction return new vector from applying function fn to each element\u000Aof the vectors, similar to map for lists." (if (or (= (length rest) 0) (not (every vector? rest))) (error "vector-map: function require at least 1 vector") (let ((len (apply min (map vector-length rest))) (result (vector))) (do ((i 0 (+ i 1))) ((= i len) result) (let* ((args (map (lambda (v) (vector-ref v i)) rest)) (value (apply fn args))) (--> result (push value)))))))
+(define (string-map fn . rest) "(string-map fn string1 stringr2 ...)\u000A\u000AFunction return new string from applying function fn to each element\u000Aof the strings, similar to map for lists." (if (or (= (length rest) 0) (not (every string? rest))) (error "string-map: function require at least 1 string") (vector->string (apply vector-map fn (map string->vector rest)))))
+(define (dynamic-wind before thunk after) "(dynamic-wind before thunk after)\u000A\u000AFunction accept 3 procedures/lambdas and execute thunk with before and always\u000Aafter even if error accur" (before) (let ((result (try (thunk) (catch (e) (error e))))) (after) result))
+(define (with-exception-handler handler thunk) "(with-exception-handler handler thunk)\u000A\u000AProcedure call and return value of thunk function, if exception happen\u000Ait call handler procedure." (try (thunk) (catch (e) (handler e))))
+(define raise throw)
+(define-syntax define-values (syntax-rules () ((define-values () expr) (define dummy (call-with-values (lambda () expr) (lambda args #f)))) ((define-values (var) expr) (define var expr)) ((define-values (var0 var1 ... varn) expr) (begin (define var0 (call-with-values (lambda () expr) list)) (define var1 (let ((v (cadr var0))) (set-cdr! var0 (cddr var0)) v)) ... (define varn (let ((v (cadr var0))) (set! var0 (car var0)) v)))) ((define-values (var0 var1 ... . varn) expr) (begin (define var0 (call-with-values (lambda () expr) list)) (define var1 (let ((v (cadr var0))) (set-cdr! var0 (cddr var0)) v)) ... (define varn (let ((v (cdr var0))) (set! var0 (car var0)) v)))) ((define-values var expr) (define var (call-with-values (lambda () expr) list)))) "(define-values (a b ...) expr)\u000A\u000AFunction evaluate expression expr and if it evaluates to result of values\u000Athen it will defined each value as variable like with define.")
+(define-macro (include . files) "(include file ...)\u000A\u000AMacro that load at least one file content and insert them into one,\u000Abody expression." (if (null? files) (throw (new Error "include: at least one file path required")) (let ((result (vector)) (env (interaction-environment))) (if (eq? self global) (let* ((fs (require "fs")) (readFile (lambda (file) (new Promise (lambda (resolve reject) (fs.readFile file (lambda (err data) (if (null? err) (resolve (--> data (toString))) (reject err))))))))) (for-each (lambda (file) (let* ((expr (lips.parse (readFile file) env))) (set! result (--> result (concat expr))))) files)) (for-each (lambda (file) (let* ((text (--> (fetch file) (text))) (expr (lips.parse text env))) (set! result (--> result (concat expr))))) files)) (if (> result.length 0) (quasiquote (begin (unquote-splicing (vector->list result))))))))
+(define-syntax syntax-error (syntax-rules () ((_ "step" arg ...) (join " " (vector->list (vector (repr arg) ...)))) ((_ message arg ...) (raise (new Error (format "~a ~a" message (_ "step" arg ...)))))))
+(define-syntax cond-expand (syntax-rules (and or not else r7rs srfi-0 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips complex full-unicode ieee-float ratios exact-complex full-numeric-tower) ((cond-expand) (syntax-error "Unfulfilled cond-expand")) ((cond-expand (else body ...)) (begin body ...)) ((cond-expand ((and) body ...) more-clauses ...) (begin body ...)) ((cond-expand ((and req1 req2 ...) body ...) more-clauses ...) (cond-expand (req1 (cond-expand ((and req2 ...) body ...) more-clauses ...)) more-clauses ...)) ((cond-expand ((or) body ...) more-clauses ...) (cond-expand more-clauses ...)) ((cond-expand ((or req1 req2 ...) body ...) more-clauses ...) (cond-expand (req1 (begin body ...)) (else (cond-expand ((or req2 ...) body ...) more-clauses ...)))) ((cond-expand ((not req) body ...) more-clauses ...) (cond-expand (req (cond-expand more-clauses ...)) (else body ...))) ((cond-expand (r7rs body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-0 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-4 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-6 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-10 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-22 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-23 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-46 body ...) more-clauses ...) (begin body ...)) ((cond-expand (srfi-176 body ...) more-clauses ...) (begin body ...)) ((cond-expand (lips body ...) more-clauses ...) (begin body ...)) ((cond-expand (complex body ...) more-clauses ...) (begin body ...)) ((cond-expand (full-unicode body ...) more-clauses ...) (begin body ...)) ((cond-expand (ieee-float body ...) more-clauses ...) (begin body ...)) ((cond-expand (ratios body ...) more-clauses ...) (begin body ...)) ((cond-expand (exact-complex body ...) more-clauses ...) (begin body ...)) ((cond-expand (full-numeric-tower body ...) more-clauses ...) (begin body ...))))
+(define (features) (quote (r7rs srfi-0 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips complex full-unicode ieee-float ratios exact-complex full-numeric-tower)))
+(define *zero-number-chars* #(48 1632 1776 1984 2406 2534 2662 2790 2918 3046 3174 3302 3430 3558 3664 3792 3872 4160 4240 6112 6160 6470 6608 6784 6800 6992 7088 7232 7248 42528 43216 43264 43472 43504 43600 44016 65296 66720 68912 69734 69872 69942 70096 70384 70736 70864 71248 71360 71472 71904 72016 72784 73040 73120 92768 93008 120782 120792 120802 120812 120822 123200 123632 125264 130032))
+(define (digit-value chr) "(digit-value chr)\u000A\u000AReturn digit number if character is numeral (as per char-numeric?)\u000Aor #f otherwise." (typecheck "digit-value" chr "character") (if (char-numeric? chr) (let ((ord (char->integer chr))) (do ((i (vector-length *zero-number-chars*) (- i 1)) (found #f) (result #f)) ((or (zero? i) found) result) (let* ((zero (vector-ref *zero-number-chars* (- i 1))) (diff (- ord zero))) (if (and (>= diff 0) (<= diff 9)) (begin (set! result diff) (set! found #t)))))) #f))
+(define make-bytevector make-u8vector)
+(define bytevector u8vector)
+(define bytevector? u8vector?)
+(define bytevector-length u8vector-length)
+(define bytevector-u8-ref u8vector-ref)
+(define bytevector-u8-set! u8vector-set!)
+(define (bytevector-append v1 . rest) "(bytevector-append v1 ...)\u000A\u000ACreate new bytevector u8vector that is created from joining each argument." (typecheck "bytevector-append" v1 "uint8array" 1) (map (lambda (arg) (typecheck "bytevector-append" arg "uint8array")) rest) (if (null? rest) v1 (new Uint8Array (apply vector-append (Array.from v1) (map Array.from rest)))))
+(define (bytevector-copy v . rest) "(bytevector-copy v)\u000A(bytevector-copy v start)\u000A(bytevector-copy v start end)\u000A\u000AFunction and return new vector from start to end. If no start and end is provided\u000Awhole vector is copied and returned." (if (null? rest) (new Uint8Array v) (let ((start (car rest))) (if (null? (cdr rest)) (v.slice start) (v.slice start (cadr rest))))))
+(define (bytevector-copy! to at from . rest) "(bytevector-copy! to at from)\u000A(bytevector-copy! to at from start)\u000A(bytevector-copy! to at from start end)\u000A\u000ACopies the bytes of bytevector from between start and end to bytevector to,\u000Astarting at at." (typecheck "bytevector-copy!" to "uint8array") (typecheck "bytevector-copy!" from "uint8array") (cond ((< at 0) (throw (new Error "bytevector-copy! `at` need to be positive"))) ((> at (bytevector-length to)) (throw (new Error "bytevector-copy! `at` need to be less then byte vector length")))) (let* ((start (if (null? rest) 0 (car rest))) (end (if (or (null? rest) (null? (cdr rest))) (- (bytevector-length from) start) (cadr rest)))) (let ((i at) (j start)) (while (and (< i (bytevector-length to)) (< i (bytevector-length from)) (< j (+ start end))) (bytevector-u8-set! to i (bytevector-u8-ref from j)) (set! i (+ i 1)) (set! j (+ j 1))))))
+(define string->utf8 (let ((encoder (new TextEncoder "utf-8"))) (lambda (string . rest) "(string->utf8 string)\u000A(string->utf8 string start)\u000A(string->utf8 string start end)\u000A\u000AFunction converts string into u8 bytevector using utf8 encoding.\u000AThe start and end is the range of the input string for the conversion." (if (null? rest) (encoder.encode string) (let* ((start (car rest)) (len (--> (Array.from string) (quote length))) (end (if (null? (cdr rest)) len (cadr rest)))) (encoder.encode (substring string start end)))))))
+(define utf8->string (let ((decoder (new TextDecoder "utf-8"))) (lambda (v . rest) "(utf8->string u8vector)\u000A(utf8->string u8vector start)\u000A(utf8->string u8vector start end)\u000A\u000AFunction converts u8 bytevector into string using utf8 encoding.\u000AThe start and end is the range of the input byte vector for the conversion." (if (null? rest) (decoder.decode v) (let* ((start (car rest)) (len (--> (Array.from string) (quote length))) (end (if (null? (cdr rest)) len (cadr rest)))) (decoder.decode (v.slice start end)))))))
+(define (open-input-string string) "(open-input-string string)\u000A\u000AFunction create new string port as input that can be used to\u000Aread S-exressions from this port using `read` function." (typecheck "open-input-string" string "string") (new lips.InputStringPort string (interaction-environment)))
+(define (open-output-string) "(open-output-string)\u000A\u000AFunction create new output port that can used to write string into\u000Aand after finish get the whole string using `get-output-string`." (new lips.OutputStringPort repr))
+(define (get-output-string port) "(get-output-string port)\u000A\u000AFunction get full string from string port. If nothing was wrote\u000Ato given port it will return empty string." (if (not (instanceof lips.OutputStringPort port)) (throw (new Error (string-append "get-output-string: expecting output-string-port get " (type port)))) (port.getString)))
+(define (open-input-bytevector bytevector) "(open-input-bytevector bytevector)\u000A\u000ACreate new input binary port with given bytevector" (typecheck "open-input-bytevector" bytevector "uint8array") (new lips.InputByteVectorPort bytevector))
+(define (open-binary-input-file filename) "(open-binary-input-file filename)\u000A\u000AFunction return new Input Binary Port with given filename. In Browser\u000Auser need to provide global fs variable that is instance of FS interface." (let ((u8vector (buffer->u8vector (%read-binary-file filename)))) (new lips.InputBinaryFilePort u8vector filename)))
+(define (binary-port? port) "(binary-port? port)\u000A\u000AFunction test if argument is binary port." (and (port? port) (eq? port.__type__ (Symbol.for "binary"))))
+(define (textual-port? port) "(textual-port? port)\u000A\u000AFunction test if argument is string port." (and (port? port) (eq? port.__type__ (Symbol.for "text"))))
+(define-macro (%define-binary-input-lambda name docstring fn) (let ((port (gensym)) (name-str (symbol->string name))) (quasiquote (define ((unquote name) . rest) (unquote docstring) (let (((unquote port) (if (null? rest) (current-input-port) (car rest)))) (typecheck (unquote name-str) (unquote port) "input-port") (if (not (binary-port? (unquote port))) (throw (new Error (string-append (unquote name-str) " invalid port. Binary port required."))) ((unquote fn) (unquote port))))))))
+(%define-binary-input-lambda peek-u8 "(peek-u8)\u000A(peek-u8 port)\u000A\u000AReturn next byte from input-binary port. If there are no more bytes\u000Ait return eof object." (lambda (port) (port.peek_u8)))
+(%define-binary-input-lambda read-u8 "(read-u8)\u000A(read-u8 port)\u000A\u000ARead next byte from input-binary port. If there are no more bytes\u000Ait return eof object." (lambda (port) (port.read_u8)))
+(%define-binary-input-lambda u8-ready? "(u8-ready?)\u000A(u8-ready? port)\u000A\u000AReturns #t if a byte is ready on the binary input port and returns #f otherwise.\u000AIf u8-ready? returns #t then the next read-u8 operation on the given port is\u000Aguaranteed not to hang. If the port is at end of file then u8-ready? returns #t." (lambda (port) (port.u8_ready)))
+(define (read-bytevector k . rest) "(read-bytevector k)\u000A(read-bytevector k port)\u000A\u000ARead next n bytes from input-binary port. If there are no more bytes\u000Ait returns eof object. If there are less then n bytes in port it\u000Areturn the only bytes that are available" (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-bytevector" port "input-port") (if (not (binary-port? port)) (throw (new Error "read-bytevector: invalid port")) (port.read_u8_vector k))))
+(define delete-file (let ((unlink #f)) (lambda (filename) "(delete-file filename)\u000A\u000AFunction delete the file of given name." (typecheck "delete-file" filename "string") (let ((fs (--> lips.env (get (quote **internal-env**)) (get (quote fs))))) (if (null? fs) (throw (new Error "delete-file: fs not defined")) (begin (if (not (procedure? unlink)) (set! unlink (promisify fs.unlink))) (unlink filename)))))))
+(define (call-with-port port proc) "(call-with-port port proc)\u000A\u000AProc is executed with given port and after it returns, the port is closed." (try (proc port) (finally (if (procedure? port.close) (port.close)))))
+(define (close-port port) "(close-port port)\u000A\u000AClose input or output port." (typecheck "close-port" port #("input-port" "output-port")) (port.close))
+(define (eof-object) "(eof-object)\u000A\u000AProcedure returns eof object that indicate end of the port" lips.eof)
+(define (output-port-open? port) "(output-port-open? port)\u000A\u000AFunction check if argument is output-port and if you can write to it." (and (output-port? port) (port.is_open)))
+(define (input-port-open? port) "(input-port-open? port)\u000A\u000AFunction check if argument is input-port and if you can read from it." (and (input-port? port) (port.is_open)))
+(define (flush-output-port port) "(flush-output-port port)\u000A\u000AFunctio do nothing, flush is not needed in LIPS in both NodeJS and Browser.\u000AThe function is added, so it don't throw exception when using R7RS code." (if #f #f))
+(define (write-string string . rest) "(write-string string)\u000A(write-string string port)\u000A(write-string string port start)\u000A(write-string string port start end)\u000A\u000AWrites the characters of string from start to end in left-toright order\u000Ato the textual output port." (typecheck "write-string" string "string") (let ((port (if (null? rest) (current-output-port) (car rest))) (start (if (or (null? rest) (null? (cdr rest))) 0 (cadr rest))) (end (if (or (null? rest) (null? (cdr rest)) (null? (cddr rest))) (string-length string) (caddr rest)))) (typecheck "write-string" port "output-port") (typecheck "write-string" start "number") (typecheck "write-string" end "number") (display (substring string start end) port)))
+(define (write-char char . rest) "(write-char string)\u000A(write-char string port)\u000A\u000AWrites the character char (not an external representation of the character)\u000Ato the given textual output port and returns an unspecified value." (typecheck "write-char" char "character") (let ((port (if (null? rest) (current-output-port) (car rest)))) (typecheck "write-char" port "output-port") (display (string char) port)))
+(define (read-string k . rest) "(read-string k)\u000A(read-string k port)\u000A\u000AReads the next k characters, or as many as are available\u000Abefore the end of file, from the textual input port into a\u000Anewly allocated string in left-to-right order and returns the\u000Astring. If no characters are available before the end of file,\u000Aan end-of-file object is returned." (typecheck "read-string" k "number") (let ((port (if (null? rest) (current-input-port) (car rest)))) (typecheck "read-string" port "input-port") (port.read_string k)))
+(define (list-copy obj) "(list-copy obj)\u000A\u000ACopy the object passed as argument but only if it's list. The car elements\u000Aof the list are not copied, they are passed as is." (typecheck "list-copy" obj #("pair" "nil")) (if (null? obj) obj (obj.clone #f)))
+(define-macro (define-record-type name constructor pred . fields) "(define-record-type name constructor pred . fields)\u000A\u000AMacro for defining records. Example of usage:\u000A\u000A   (define-record-type <pare>\u000A     (kons x y)\u000A     pare?\u000A     (x kar set-kar!)\u000A     (y kdr set-kdr!))\u000A\u000A(define p (kons 1 2))\u000A(print (kar p))\u000A;; 1\u000A(set-kdr! p 3)\u000A(print (kdr p))\u000A;; 3" (let ((class-name (gensym)) (obj-name (gensym)) (value-name (gensym))) (quasiquote (begin (define (unquote class-name) (class Object (constructor (lambda (self (unquote-splicing (cdr constructor))) (unquote-splicing (map (lambda (field) (let* ((name (symbol->string field)) (prop (string-append "self." name))) (quasiquote (set! (unquote (string->symbol prop)) (unquote field))))) (cdr constructor))))) (toType (lambda (self) "record")) (toString (lambda (self) (unquote (symbol->string name)))))) (define (unquote constructor) (new (unquote class-name) (unquote-splicing (cdr constructor)))) (define ((unquote pred) obj) (instanceof (unquote class-name) obj)) (unquote-splicing (map (lambda (field) (let ((prop-name (car field)) (get (cadr field)) (set (if (null? (cddr field)) () (caddr field)))) (quasiquote (begin (define ((unquote get) (unquote obj-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (. (unquote obj-name) (quote (unquote prop-name))))) (unquote (if (not (null? set)) (quasiquote (define ((unquote set) (unquote obj-name) (unquote value-name)) (typecheck (unquote (symbol->string get)) (unquote obj-name) "record") (if (not ((unquote pred) (unquote obj-name))) (throw (new Error (unquote (string-append "object is not record of type " (symbol->string name))))) (set-obj! (unquote obj-name) (quote (unquote prop-name)) (unquote value-name))))))))))) fields))))))
+(define (nan? x) "(nan? x)\u000A\u000AFunction check if argument x is Not a Number (NaN) value." (and (number? x) (or (x.isNaN) (and (%number-type "complex" x) (or (nan? (real-part x)) (nan? (imag-part x)))))))
+(define (infinite? x) "(infinite? x)\u000A\u000AFunction check if value is infinite." (or (eq? x Number.NEGATIVE_INFINITY) (eq? x Number.POSITIVE_INFINITY) (and (number? x) (not (eq? x NaN)) (%number-type "complex" x) (or (infinite? (real-part x)) (infinite? (imag-part x))))))
+(define (finite? x) "(finite? x)\u000A\u000AFunction check if value is finite." (not (infinite? x)))
+(define-class %Library Object (constructor (lambda (self name) (set! self.__namespace__ &()) (set! self.__name__ name))) (append (lambda (self namespace env) (if (environment? (. self.__namespace__ namespace)) (throw (new Error (string-append "namespace " namespace " already exists in library " self.__name__))) (set-obj! self.__namespace__ namespace env)))) (env (lambda (self namespace) (let ((env (. self.__namespace__ namespace))) (if (not (environment? env)) (throw (new Error (string-append "namespace " namespace " sdon't exists"))) env)))) (get (lambda (self namespace name) (--> (self.env namespace) (get name)))) (set (lambda (self namespace name value) (--> (self.env namespace) (set name value)))) (toString (lambda (self) (string-append "#<Library(" self.__name__ ")>"))))
+(define (%import-name library namespace names) (quasiquote (begin (unquote-splicing (map (lambda (name) (quasiquote (define (unquote name) (--> (unquote library) (get (quote (unquote namespace)) (quote (unquote name))))))) names)))))
+(define-macro (import . specs) "(import (library namespace))\u000A(import (only (library namespace) name1 name2))\u000A\u000AMacro for importing names from library." (let ((parent (current-environment))) (quasiquote (begin (unquote-splicing (map (lambda (spec) (if (not (pair? spec)) (throw (new Error "import: invalid syntax")) (cond ((symbol=? (car spec) (quote only)) (let ((lib (caadr spec)) (namespace (caaddr spec))) (if (pair? (cadr spec)) (%import-name (unquote lib) (quote (unquote namespace)) (quote (unquote (caddr spec)))) (throw (new Error "import: invalid syntax"))))) (else (let* ((lib-name (car spec)) (lib (parent.get lib-name)) (namespace (cadr spec))) (%import-name lib-name namespace (env (lib.env namespace)))))))) specs))))))
+(define (new-library name namespace) "(new-library name)\u000A\u000ACreate new empty library object with empty namespace." (let* ((parent (. (current-environment) (quote __parent__))) (lib (let ((lib (--> parent (get name &(:throwError #f))))) (if (null? lib) (new %Library name) lib))) (x (new lips.Environment (string-append "library-" (--> name (toLowerCase)) "-" (--> namespace (toLowerCase)))))) (lib.append namespace x) lib))
+(define (%export module namespace specs) (quasiquote (begin (unquote-splicing (map (lambda (expr) (cond ((symbol? expr) (quasiquote (--> (unquote module) (set (quote (unquote namespace)) (quote (unquote expr)) (unquote expr))))) ((and (pair? expr) (symbol=? (car expr) (quote rename))) (quasiquote (--> (unquote module) (set (quote (unquote namespace)) (quote (unquote (cadr expr))) (unquote (caddr expr)))))))) specs)))))
+(define-macro (define-library spec . body) "(define-library (library (name namespace) . body)\u000A\u000AMacro for defining modules inside you can use define to create functions.\u000AAnd use export name to add that name to defined environment." (let ((parent (. (current-environment) (quote __parent__))) (module-var (gensym)) (namespace-var (gensym)) (name (car spec)) (namespace (cadr spec))) (quasiquote (let (((unquote module-var) (new-library (unquote (symbol->string name)) (unquote (symbol->string namespace)))) ((unquote namespace-var) (quote (unquote namespace)))) (define-macro (export . body) (%export (unquote module-var) (unquote namespace-var) body)) (unquote-splicing body) (--> (unquote parent) (set (quote (unquote name)) (unquote module-var)))))))
+(define-values (current-directory set-current-directory!) (if (eq? self window) (let ((cwd (string-append location.origin (--> location.pathname (replace #/\/[^/]+$/ "/"))))) (values (lambda () "(current-directory)\u000A\u000AReturn corrent working directory, default it's corrent URL." cwd) (lambda (value) "(set-current-directory! string)\u000A\u000AFunction change current working directory to provided string." (typecheck "set-current-directory!" value "string") (set! cwd value)))) (let ((process (require "process"))) (values (lambda () "(current-directory)\u000A\u000AReturn corrent working directory, default it's path from where\u000Athe script was executed." (string-append (process.cwd) "/")) (lambda (value) "(set-current-directory! string)\u000A\u000AFunction change current working directory to provided string." (typecheck "set-current-directory!" value "string") (process.chdir value))))))

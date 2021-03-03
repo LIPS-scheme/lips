@@ -1,9 +1,15 @@
 #!/usr/bin/env lips
 
+(define (dump expr)
+  (let ((result (open-output-string)))
+    (write expr result)
+    (display (--> (get-output-string result)
+                  (replace #/\n/g "\\xA;")))
+    (newline)
+    (close-port result)))
+
 (if (= process.argv.length 4)
-  (let* ((fs (require "fs"))
-         (buff (fs.promises.readFile (. process.argv 3)))
-         (port (open-input-string (--> buff (toString)))))
-    (do ((expr (read port) (read port)))
-      ((eq? expr eof))
-      (write expr))))
+    (let ((port (open-input-file (. process.argv 3))))
+      (do ((expr (read port) (read port)))
+        ((eof-object? expr))
+        (dump expr))))
