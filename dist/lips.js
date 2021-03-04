@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 04 Mar 2021 11:05:36 +0000
+ * build: Thu, 04 Mar 2021 11:45:43 +0000
  */
 (function () {
   'use strict';
@@ -7955,6 +7955,14 @@
     }; // -------------------------------------------------------------------------
 
 
+    LComplex.prototype.conjugate = function () {
+      return LComplex({
+        re: this.__re__,
+        im: this.__im__.sub()
+      });
+    }; // -------------------------------------------------------------------------
+
+
     LComplex.prototype.sqrt = function () {
       var r = this.modulus(); // code based ok Kawa Scheme source code (file DComplex.java)
       // Copyright (c) 1997  Per M.A. Bothner.
@@ -8007,12 +8015,8 @@
           a = _this$coerce6[0],
           b = _this$coerce6[1];
 
-      var conj = LComplex({
-        re: b.__re__,
-        im: b.__im__.sub()
-      });
       var denom = b.factor();
-      var num = a.mul(conj);
+      var num = a.mul(b.conjugate());
 
       var re = num.__re__.op('/', denom);
 
@@ -8050,13 +8054,17 @@
       var _this5 = this;
 
       var calc = function calc(re, im) {
-        var ret = fn(_this5.__re__, re, _this5.__im__, im);
+        var result = fn(_this5.__re__, re, _this5.__im__, im);
 
-        if ('im' in ret && 're' in ret) {
-          return LComplex(ret, true);
+        if ('im' in result && 're' in result) {
+          if (result.im.cmp(0) === 0 && !LNumber.isFloat(result.im)) {
+            return result.re;
+          }
+
+          return LComplex(result, true);
         }
 
-        return ret;
+        return result;
       };
 
       if (typeof n === 'undefined') {
@@ -13494,10 +13502,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 04 Mar 2021 11:05:36 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 04 Mar 2021 11:45:43 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 04 Mar 2021 11:05:36 +0000').valueOf();
+      var date = LString('Thu, 04 Mar 2021 11:45:43 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13537,7 +13545,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 04 Mar 2021 11:05:36 +0000',
+      date: 'Thu, 04 Mar 2021 11:45:43 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

@@ -4991,6 +4991,10 @@
         return this.factor().sqrt();
     };
     // -------------------------------------------------------------------------
+    LComplex.prototype.conjugate = function() {
+        return LComplex({ re: this.__re__, im: this.__im__.sub() });
+    };
+    // -------------------------------------------------------------------------
     LComplex.prototype.sqrt = function() {
         const r = this.modulus();
         // code based ok Kawa Scheme source code (file DComplex.java)
@@ -5024,9 +5028,8 @@
             throw new Error('[LComplex::div] Invalid value');
         }
         const [ a, b ] = this.coerce(n);
-        const conj = LComplex({ re: b.__re__, im: b.__im__.sub() });
         const denom = b.factor();
-        const num = a.mul(conj);
+        const num = a.mul(b.conjugate());
         const re = num.__re__.op('/', denom);
         const im = num.__im__.op('/', denom);
         return LComplex({ re, im });
@@ -5053,11 +5056,14 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.complex_op = function(name, n, fn) {
         const calc = (re, im) => {
-            var ret = fn(this.__re__, re, this.__im__, im);
-            if ('im' in ret && 're' in ret) {
-                return LComplex(ret, true);
+            var result = fn(this.__re__, re, this.__im__, im);
+            if ('im' in result && 're' in result) {
+                if (result.im.cmp(0) === 0 && !LNumber.isFloat(result.im)) {
+                    return result.re;
+                }
+                return LComplex(result, true);
             }
-            return ret;
+            return result;
         };
         if (typeof n === 'undefined') {
             return calc();

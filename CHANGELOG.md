@@ -39,6 +39,7 @@
 * fix parsing regex that have escape slash and parenthesis (`#/( \\/)/g`)
 * fix parsing regex that have single slash in class brackets (`#/\/[^/]+$/`)
 * fix division on single argument (now `(/ n)` == `(/ 1 n)`)
+* fix complex operation that result in real (e.g. multiplication over conjugation)
 
 ## 1.0.0-beta.11
 ### Breaking

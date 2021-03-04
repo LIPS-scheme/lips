@@ -661,7 +661,11 @@
 
         (t.is (* 1.0 1/2+1/2i) 0.5+0.5i)
         (t.is (* 1.0 1/2+1.0i) 0.5+1.0i)
-        (t.is (* 1.0 1/2+1i) 0.5+1.0i)))
+        (t.is (* 1.0 1/2+1i) 0.5+1.0i)
+        ;; complex multiplication over conjugation
+        (t.is (* 10+10i 10-10i) 200)
+        (t.is (* 10+10.0i 10-10.0i) 200.0+0.0i)
+        (t.is (* 10+1/2i 10-1/2i) 401/4)))
 
 (test "numbers: sqrt"
       (lambda (t)
