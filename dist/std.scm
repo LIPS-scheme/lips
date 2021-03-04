@@ -82,14 +82,18 @@
                (on \"click\" (lambda () (display \"click\"))))
 
           (--> document (querySelectorAll \"div\"))
+
           (--> (fetch \"https://jcubic.pl\")
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
+          
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
-               \"innerText\")
+               'innerHTML
+               (replace #/<(\"[^\"]+\"|[^>])+>/g \"\"))
+
           (--> document.body
                (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
