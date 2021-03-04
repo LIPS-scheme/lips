@@ -5014,7 +5014,12 @@
     // -------------------------------------------------------------------------
     LComplex.prototype.div = function(n) {
         if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
-            n = LComplex({ im: 0, re: n });
+            if (!(n instanceof LNumber)) {
+                n = LNumber(n);
+            }
+            const re = this.__re__.div(n);
+            const im = this.__im__.div(n);
+            return LComplex({ re, im });
         } else if (!LNumber.isComplex(n)) {
             throw new Error('[LComplex::div] Invalid value');
         }

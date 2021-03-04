@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 03 Mar 2021 15:41:17 +0000
+ * build: Thu, 04 Mar 2021 08:46:05 +0000
  */
 (function () {
   'use strict';
@@ -7986,9 +7986,17 @@
 
     LComplex.prototype.div = function (n) {
       if (LNumber.isNumber(n) && !LNumber.isComplex(n)) {
-        n = LComplex({
-          im: 0,
-          re: n
+        if (!(n instanceof LNumber)) {
+          n = LNumber(n);
+        }
+
+        var _re = this.__re__.div(n);
+
+        var _im = this.__im__.div(n);
+
+        return LComplex({
+          re: _re,
+          im: _im
         });
       } else if (!LNumber.isComplex(n)) {
         throw new Error('[LComplex::div] Invalid value');
@@ -8060,10 +8068,10 @@
           n = LNumber(n);
         }
 
-        var _im = n.asType(0);
+        var _im2 = n.asType(0);
 
         n = {
-          __im__: _im,
+          __im__: _im2,
           __re__: n
         };
       } else if (!LNumber.isComplex(n)) {
@@ -13470,10 +13478,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 03 Mar 2021 15:41:17 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 04 Mar 2021 08:46:05 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 03 Mar 2021 15:41:17 +0000').valueOf();
+      var date = LString('Thu, 04 Mar 2021 08:46:05 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13513,7 +13521,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Wed, 03 Mar 2021 15:41:17 +0000',
+      date: 'Thu, 04 Mar 2021 08:46:05 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
