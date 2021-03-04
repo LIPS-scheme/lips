@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 04 Mar 2021 08:46:05 +0000
+ * build: Thu, 04 Mar 2021 11:05:36 +0000
  */
 (function () {
   'use strict';
@@ -12063,11 +12063,27 @@
             return LNumber(a).sub(b);
           }));
         }
-      }, "(- n1 n2 ...)\n            (- n1)\n\n            Substract number passed as argument. If only one argument is passed\n            it will negate the value."),
+      }, "(- n1 n2 ...)\n            (- n)\n\n            Substract number passed as argument. If only one argument is passed\n            it will negate the value."),
       // ------------------------------------------------------------------
-      '/': doc('/', reduceMathOp(function (a, b) {
-        return LNumber(a).div(b);
-      }), "(/ . numbers)\n\n             Divide number passed as arguments one by one. If single argument\n             is passed it will return that value."),
+      '/': doc('/', function () {
+        for (var _len36 = arguments.length, args = new Array(_len36), _key37 = 0; _key37 < _len36; _key37++) {
+          args[_key37] = arguments[_key37];
+        }
+
+        if (args.length === 0) {
+          throw new Error('/: procedure require at least one argument');
+        }
+
+        typecheck_args('/', args, 'number');
+
+        if (args.length === 1) {
+          return LNumber(1).div(args[0]);
+        }
+
+        return args.reduce(binaryMathOp(function (a, b) {
+          return LNumber(a).div(b);
+        }));
+      }, "(/ n1 n2 ...)\n            (/ n)\n\n            Divide number passed as arguments one by one. If single argument\n            is passed it will calculate (/ 1 n1)."),
       // ------------------------------------------------------------------
       abs: doc('abs', singleMathOp(function (n) {
         return LNumber(n).abs();
@@ -12117,8 +12133,8 @@
       // ------------------------------------------------------------------
       // Booleans
       '==': doc('==', function () {
-        for (var _len36 = arguments.length, args = new Array(_len36), _key37 = 0; _key37 < _len36; _key37++) {
-          args[_key37] = arguments[_key37];
+        for (var _len37 = arguments.length, args = new Array(_len37), _key38 = 0; _key38 < _len37; _key38++) {
+          args[_key38] = arguments[_key38];
         }
 
         typecheck_args('==', args, 'number');
@@ -12128,8 +12144,8 @@
       }, "(== x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are equal"),
       // ------------------------------------------------------------------
       '>': doc('>', function () {
-        for (var _len37 = arguments.length, args = new Array(_len37), _key38 = 0; _key38 < _len37; _key38++) {
-          args[_key38] = arguments[_key38];
+        for (var _len38 = arguments.length, args = new Array(_len38), _key39 = 0; _key39 < _len38; _key39++) {
+          args[_key39] = arguments[_key39];
         }
 
         typecheck_args('>', args, 'number');
@@ -12139,8 +12155,8 @@
       }, "(> x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically increasing"),
       // ------------------------------------------------------------------
       '<': doc('<', function () {
-        for (var _len38 = arguments.length, args = new Array(_len38), _key39 = 0; _key39 < _len38; _key39++) {
-          args[_key39] = arguments[_key39];
+        for (var _len39 = arguments.length, args = new Array(_len39), _key40 = 0; _key40 < _len39; _key40++) {
+          args[_key40] = arguments[_key40];
         }
 
         typecheck_args('<', args, 'number');
@@ -12150,8 +12166,8 @@
       }, "(< x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically decreasing"),
       // ------------------------------------------------------------------
       '<=': doc(function () {
-        for (var _len39 = arguments.length, args = new Array(_len39), _key40 = 0; _key40 < _len39; _key40++) {
-          args[_key40] = arguments[_key40];
+        for (var _len40 = arguments.length, args = new Array(_len40), _key41 = 0; _key41 < _len40; _key41++) {
+          args[_key41] = arguments[_key41];
         }
 
         typecheck_args('<=', args, 'number');
@@ -12161,8 +12177,8 @@
       }, "(<= x1 x2 ...)\n\n            Function compare its numerical arguments and check if they are\n            monotonically nonincreasing"),
       // ------------------------------------------------------------------
       '>=': doc('>=', function () {
-        for (var _len40 = arguments.length, args = new Array(_len40), _key41 = 0; _key41 < _len40; _key41++) {
-          args[_key41] = arguments[_key41];
+        for (var _len41 = arguments.length, args = new Array(_len41), _key42 = 0; _key42 < _len41; _key42++) {
+          args[_key42] = arguments[_key42];
         }
 
         typecheck_args('>=', args, 'number');
@@ -12574,11 +12590,11 @@
 
       for (var _i5 = 0, _Object$entries2 = Object.entries(mapping); _i5 < _Object$entries2.length; _i5++) {
         var _Object$entries2$_i = slicedToArray(_Object$entries2[_i5], 2),
-            _key42 = _Object$entries2$_i[0],
+            _key43 = _Object$entries2$_i[0],
             value = _Object$entries2$_i[1];
 
         if (obj instanceof value) {
-          return _key42;
+          return _key43;
         }
       }
 
@@ -12827,8 +12843,8 @@
         args = args.map(function (arg) {
           if (is_lips_function(arg)) {
             var wrapper = function wrapper() {
-              for (var _len41 = arguments.length, args = new Array(_len41), _key43 = 0; _key43 < _len41; _key43++) {
-                args[_key43] = arguments[_key43];
+              for (var _len42 = arguments.length, args = new Array(_len42), _key44 = 0; _key44 < _len42; _key44++) {
+                args[_key44] = arguments[_key44];
               }
 
               return unpromise(arg.apply(this, args), unbox);
@@ -13478,10 +13494,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 04 Mar 2021 08:46:05 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 04 Mar 2021 11:05:36 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 04 Mar 2021 08:46:05 +0000').valueOf();
+      var date = LString('Thu, 04 Mar 2021 11:05:36 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13521,7 +13537,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 04 Mar 2021 08:46:05 +0000',
+      date: 'Thu, 04 Mar 2021 11:05:36 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

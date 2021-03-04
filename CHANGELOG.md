@@ -21,6 +21,7 @@
 * new `environment?` function
 * add `current-directory` and `set-...` from SRFI-170
 * add gensym literals (e.g. `#:foo`)
+* fix pretty print of different cases of `let`
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string
@@ -37,6 +38,7 @@
 * fix arithmetic with single complex value
 * fix parsing regex that have escape slash and parenthesis (`#/( \\/)/g`)
 * fix parsing regex that have single slash in class brackets (`#/\/[^/]+$/`)
+* fix division on single argument (now `(/ n)` == `(/ 1 n)`)
 
 ## 1.0.0-beta.11
 ### Breaking

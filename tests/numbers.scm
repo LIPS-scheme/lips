@@ -555,6 +555,12 @@
 
 (test "numbers: operators /"
       (lambda (t)
+        ;; single arg
+        (t.is (/ 10) 1/10)
+        (t.is (/ 10.0) 0.1)
+        (t.is (/ 1/10) 10)
+        (t.is (/ 10+10i) 1/20-1/20i)
+
         (t.is (/ 10 10) 1)
         (t.is (/ 10 1/10) 100)
         (t.is (/ 10 2) 5)

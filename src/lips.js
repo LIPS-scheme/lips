@@ -8438,17 +8438,27 @@
                 }));
             }
         }, `(- n1 n2 ...)
-            (- n1)
+            (- n)
 
             Substract number passed as argument. If only one argument is passed
             it will negate the value.`),
         // ------------------------------------------------------------------
-        '/': doc('/', reduceMathOp(function(a, b) {
-            return LNumber(a).div(b);
-        }), `(/ . numbers)
+        '/': doc('/', function(...args) {
+            if (args.length === 0) {
+                throw new Error('/: procedure require at least one argument');
+            }
+            typecheck_args('/', args, 'number');
+            if (args.length === 1) {
+                return LNumber(1).div(args[0]);
+            }
+            return args.reduce(binaryMathOp(function(a, b) {
+                return LNumber(a).div(b);
+            }));
+        }, `(/ n1 n2 ...)
+            (/ n)
 
-             Divide number passed as arguments one by one. If single argument
-             is passed it will return that value.`),
+            Divide number passed as arguments one by one. If single argument
+            is passed it will calculate (/ 1 n1).`),
         // ------------------------------------------------------------------
         abs: doc('abs', singleMathOp(function(n) {
             return LNumber(n).abs();
