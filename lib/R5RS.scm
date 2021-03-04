@@ -487,13 +487,14 @@
       (throw (new Error "list-ref: index out of range"))
       (let ((l l) (k k))
         (while (> k 0)
-          (if (null? l)
+          (if (or (null? (cdr l)) (null? l))
               (throw (new Error "list-ref: not enough elements in the list")))
           (set! l (cdr l))
           (set! k (- k 1)))
         (if (null? l)
             l
             (car l)))))
+
 ;; -----------------------------------------------------------------------------
 (define (not x)
   "(not x)
