@@ -39,7 +39,7 @@
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
-/* global define, jQuery, BigInt, Map, Set, Symbol, importScripts */
+/* global define, jQuery, BigInt, Map, Set, Symbol, importScripts, Uint8Array */
 
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {

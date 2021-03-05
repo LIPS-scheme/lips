@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 05 Mar 2021 19:10:37 +0000
+ * build: Fri, 05 Mar 2021 19:17:29 +0000
  */
 (function () {
   'use strict';
@@ -1234,7 +1234,7 @@
    * TODO: consider using exec in env.eval or use different maybe_async code
    */
 
-  /* global define, jQuery, BigInt, Map, Set, Symbol, importScripts */
+  /* global define, jQuery, BigInt, Map, Set, Symbol, importScripts, Uint8Array */
   (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
       // AMD. Register as an anonymous module.
@@ -13550,10 +13550,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 05 Mar 2021 19:10:37 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 05 Mar 2021 19:17:29 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 05 Mar 2021 19:10:37 +0000').valueOf();
+      var date = LString('Fri, 05 Mar 2021 19:17:29 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13593,7 +13593,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 05 Mar 2021 19:10:37 +0000',
+      date: 'Fri, 05 Mar 2021 19:17:29 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
