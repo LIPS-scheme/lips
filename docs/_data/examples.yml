@@ -1,17 +1,36 @@
 -
   description: "Filter function accept, regex or function. Curry is higher order function that create new function with defaults."
-  code: >
-    " (print (filter number? '(foo 10 bar 20 baz 30)))
+  code: |
+     (print (filter number? '(foo 10 bar 20 baz 30)))
      ;; ==> (10 20 30)
      (print (filter #/foo|bar/ '(foo bar baz quux)))
      ;; ==> (foo bar)
      (define foo_or_bar (curry filter #/foo|bar/))
      (print (foo_or_bar '(foo bar baz)))
-     ;; ==> (foo bar)"
+     ;; ==> (foo bar)
+-
+  description: "Automagic async/await like resolving of promises and explicit promise quotation."
+  code: |
+     (define h1-re #/<h1>([^>]+)<\/h1>/)
+     ;; automagic promise resolving
+     (let ((msg (--> (fetch "https://api.scheme.org/")
+                     (text)
+                     (match h1-re)
+                     1)))
+       (print msg))
+
+     ;; explicit promise handling with quotation
+     (let ((promise (--> '>(fetch "https://api.scheme.org/")
+                         (then (lambda (res)
+                                 (res.text)))
+                         (then (lambda (x)
+                                 (. (x.match h1-re) 1))))))
+       (print (await promise)))
+
 -
   description: "Scheme hygienic macro that creates assoc list, with macroexpand."
-  code: >
-    " (define-syntax alist
+  code: |
+     (define-syntax alist
        (syntax-rules ()
           ((_) ())
           ((_ x y z ...)
@@ -22,20 +41,20 @@
      (macroexpand (alist "foo" 10 "bar" 20))
      ;; ==> (#:cons (#:cons "foo" 10)
      ;;             (#:cons (#:cons "bar" 20)
-     ;;                     ()))"
+     ;;                     ()))
 -
   description: "Y Combinator and factorial function."
-  code: >
-    " (define Y
+  code: |
+     (define Y
        (lambda (h)
          ((lambda (x) (x x))
           (lambda (g)
             (h (lambda args (apply (g g) args)))))))
-      
+
      ((Y (lambda (f)
           (lambda (n)
             (cond ((< n 0)
                    (throw (new Error "Invalid factorial")))
                   ((zero? n) 1)
                   (else (* n (f (- n 1))))))))
-      10)"
+      10)
