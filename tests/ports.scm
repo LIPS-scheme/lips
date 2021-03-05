@@ -253,3 +253,15 @@
         (let ((p (open-binary-input-file "./tests/stubs/test.txt")))
           (t.is (utf8->string (read-bytevector 10 p))
                 "Hello this"))))
+
+(test "ports: binary output port"
+      (lambda (t)
+        (let ((port (open-output-bytevector))
+              (v (string->utf8 "hello")))
+          (for-each (lambda (byte)
+                      (write-u8 byte port))
+                    (u8vector->list v))
+          (write-u8 (char->integer #\space) port)
+          (write-bytevector (string->utf8 "world") port)
+          (let ((u8 (get-output-bytevector port)))
+            (t.is (utf8->string u8) "hello world")))))

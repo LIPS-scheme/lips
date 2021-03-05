@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 04 Mar 2021 11:45:43 +0000
+ * build: Fri, 05 Mar 2021 19:10:37 +0000
  */
 (function () {
   'use strict';
@@ -8918,7 +8918,7 @@
 
       typecheck('OutputStringPort', toString, 'function');
       read_only(this, '__type__', text_port);
-      this._buffer = [];
+      read_only(this, '__buffer__', []);
 
       this.write = function (x) {
         if (!LString.isString(x)) {
@@ -8927,23 +8927,23 @@
           x = x.valueOf();
         }
 
-        _this8._buffer.push(x);
+        _this8.__buffer__.push(x);
       };
     }
 
     OutputStringPort.prototype = Object.create(OutputPort.prototype);
+    OutputStringPort.prototype.constructor = OutputStringPort;
 
     OutputStringPort.prototype.toString = function () {
       return '#<output-port (string)>';
     };
 
-    OutputStringPort.prototype.getString = function () {
-      return this._buffer.map(function (x) {
+    OutputStringPort.prototype.valueOf = function () {
+      return this.__buffer__.map(function (x) {
         return x.valueOf();
       }).join('');
-    };
+    }; // -------------------------------------------------------------------------
 
-    OutputStringPort.prototype.constructor = OutputStringPort; // -------------------------------------------------------------------------
 
     function OutputFilePort(filename, fd) {
       var _this9 = this;
@@ -8953,8 +8953,10 @@
       }
 
       typecheck('OutputFilePort', filename, 'string');
-      this._filename = filename;
-      this._fd = fd.valueOf();
+      read_only(this, '__filename__', filename);
+      read_only(this, '_fd', fd.valueOf(), {
+        hidden: true
+      });
       read_only(this, '__type__', text_port);
 
       this.write = function (x) {
@@ -8989,7 +8991,9 @@
           if (err) {
             reject(err);
           } else {
-            _this10._fd = null;
+            read_only(_this10, '_fd', null, {
+              hidden: true
+            });
             OutputPort.prototype.close.call(_this10);
             resolve();
           }
@@ -8998,7 +9002,7 @@
     };
 
     OutputFilePort.prototype.toString = function () {
-      return "#<output-port ".concat(this._filename, ">");
+      return "#<output-port ".concat(this.__filename__, ">");
     }; // -------------------------------------------------------------------------
 
 
@@ -9131,6 +9135,50 @@
       }
 
       return this.__vector__.slice(this.__index__, len);
+    }; // -------------------------------------------------------------------------
+
+
+    function OutputByteVectorPort() {
+      if (typeof this !== 'undefined' && !(this instanceof OutputByteVectorPort) || typeof this === 'undefined') {
+        return new OutputByteVectorPort();
+      }
+
+      read_only(this, '__type__', binary_port);
+      read_only(this, '_buffer', [], {
+        hidden: true
+      });
+      Object.defineProperty(this, '__buffer__', {
+        enumerable: true,
+        get: function get() {
+          return Uint8Array.from(this._buffer);
+        }
+      });
+    }
+
+    OutputByteVectorPort.prototype = Object.create(OutputPort.prototype);
+    OutputByteVectorPort.prototype.constructor = OutputByteVectorPort;
+
+    OutputByteVectorPort.prototype.write_u8 = function (_byte2) {
+      var name = 'OutputByteVectorPort::write_u8';
+      typecheck(name, _byte2, 'number');
+
+      this._buffer.push(_byte2.valueOf());
+    };
+
+    OutputByteVectorPort.prototype.write_u8_vector = function (vector) {
+      var _this$_buffer;
+
+      typecheck('OutputByteVectorPort::write_u8_vector', vector, 'uint8array');
+
+      (_this$_buffer = this._buffer).push.apply(_this$_buffer, toConsumableArray(Array.from(vector)));
+    };
+
+    OutputByteVectorPort.prototype.toString = function () {
+      return '#<output-port (bytevector)>';
+    };
+
+    OutputByteVectorPort.prototype.valueOf = function () {
+      return this.__buffer__;
     }; // -------------------------------------------------------------------------
 
 
@@ -13502,10 +13550,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 04 Mar 2021 11:45:43 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 05 Mar 2021 19:10:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 04 Mar 2021 11:45:43 +0000').valueOf();
+      var date = LString('Fri, 05 Mar 2021 19:10:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13545,7 +13593,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 04 Mar 2021 11:45:43 +0000',
+      date: 'Fri, 05 Mar 2021 19:10:37 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
@@ -13572,6 +13620,7 @@
       InputStringPort: InputStringPort,
       OutputStringPort: OutputStringPort,
       InputByteVectorPort: InputByteVectorPort,
+      OutputByteVectorPort: OutputByteVectorPort,
       InputBinaryFilePort: InputBinaryFilePort,
       Formatter: Formatter,
       Parser: Parser,

@@ -3503,6 +3503,27 @@
   (new lips.OutputStringPort repr))
 
 ;; -----------------------------------------------------------------------------
+(define (open-output-bytevector)
+  "(open-output-bytevector)
+
+   Create new output port that can be used to write binary data.
+   After done with the data the output buffer can be obtained by calling
+   `get-output-bytevector` function."
+  (new lips.OutputByteVectorPort))
+
+;; -----------------------------------------------------------------------------
+(define (get-output-bytevector port)
+  "(get-output-string port)
+
+   Function get full string from string port. If nothing was wrote
+   to given port it will return empty string."
+  (if (not (instanceof lips.OutputByteVectorPort port))
+      (throw (new Error (string-append
+                         "get-output-bytevector: expecting output-bytevector-port get "
+                         (type port))))
+      (port.valueOf)))
+
+;; -----------------------------------------------------------------------------
 (define (get-output-string port)
   "(get-output-string port)
 
@@ -3511,7 +3532,7 @@
   (if (not (instanceof lips.OutputStringPort port))
       (throw (new Error (string-append "get-output-string: expecting output-string-port get "
                                        (type port))))
-      (port.getString)))
+      (port.valueOf)))
 
 ;; -----------------------------------------------------------------------------
 (define (open-input-bytevector bytevector)
@@ -3608,6 +3629,46 @@
     (if (not (binary-port? port))
         (throw (new Error "read-bytevector: invalid port"))
         (port.read_u8_vector k))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (%define-binary-output-lambda name type docstring fn)
+  (let ((port (gensym 'port))
+        (data (gensym 'data))
+        (name-str (symbol->string name)))
+    `(define (,name ,data . rest)
+       ,docstring
+       (let ((,port (if (null? rest)
+                        (current-output-port)
+                        (car rest))))
+         (typecheck ,name-str ,port "output-port")
+         (typecheck ,name-str ,data ,type)
+         (if (not (binary-port? ,port))
+             (throw (new Error (string-append ,name-str
+                                              " invalid port. Binary port required.")))
+             (,fn ,data ,port))))))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-output-lambda
+ write-u8
+ "number"
+ "(write-u8 byte)
+  (write-u8 byte port)
+
+  Write byte into binary output port."
+ (lambda (data port)
+   (port.write_u8 data)))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-output-lambda
+ write-bytevector
+ "uint8array"
+ "(write-bytevector bytevector)
+  (write-bytevector bytevector port)
+
+  Write byte vector into binary output port."
+ (lambda (data port)
+   (port.write_u8_vector data)))
+
 
 ;; -----------------------------------------------------------------------------
 (define delete-file

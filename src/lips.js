@@ -5648,24 +5648,24 @@
         }
         typecheck('OutputStringPort', toString, 'function');
         read_only(this, '__type__', text_port);
-        this._buffer = [];
+        read_only(this, '__buffer__', []);
         this.write = (x) => {
             if (!LString.isString(x)) {
                 x = toString(x);
             } else {
                 x = x.valueOf();
             }
-            this._buffer.push(x);
+            this.__buffer__.push(x);
         };
     }
     OutputStringPort.prototype = Object.create(OutputPort.prototype);
+    OutputStringPort.prototype.constructor = OutputStringPort;
     OutputStringPort.prototype.toString = function() {
         return '#<output-port (string)>';
     };
-    OutputStringPort.prototype.getString = function() {
-        return this._buffer.map(x => x.valueOf()).join('');
+    OutputStringPort.prototype.valueOf = function() {
+        return this.__buffer__.map(x => x.valueOf()).join('');
     };
-    OutputStringPort.prototype.constructor = OutputStringPort;
     // -------------------------------------------------------------------------
     function OutputFilePort(filename, fd) {
         if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) ||
@@ -5673,8 +5673,8 @@
             return new OutputFilePort(filename, fd);
         }
         typecheck('OutputFilePort', filename, 'string');
-        this._filename = filename;
-        this._fd = fd.valueOf();
+        read_only(this, '__filename__', filename);
+        read_only(this, '_fd', fd.valueOf(), { hidden: true });
         read_only(this, '__type__', text_port);
         this.write = (x) => {
             if (!LString.isString(x)) {
@@ -5700,7 +5700,7 @@
                 if (err) {
                     reject(err);
                 } else {
-                    this._fd = null;
+                    read_only(this, '_fd', null, { hidden: true });
                     OutputPort.prototype.close.call(this);
                     resolve();
                 }
@@ -5708,7 +5708,7 @@
         });
     };
     OutputFilePort.prototype.toString = function() {
-        return `#<output-port ${this._filename}>`;
+        return `#<output-port ${this.__filename__}>`;
     };
     // -------------------------------------------------------------------------
     function InputStringPort(string, env) {
@@ -5812,6 +5812,38 @@
             return eof;
         }
         return this.__vector__.slice(this.__index__, len);
+    };
+    // -------------------------------------------------------------------------
+    function OutputByteVectorPort() {
+        if (typeof this !== 'undefined' && !(this instanceof OutputByteVectorPort) ||
+            typeof this === 'undefined') {
+            return new OutputByteVectorPort();
+        }
+        read_only(this, '__type__', binary_port);
+        read_only(this, '_buffer', [], { hidden: true });
+        Object.defineProperty(this, '__buffer__', {
+            enumerable: true,
+            get: function() {
+                return Uint8Array.from(this._buffer);
+            }
+        });
+    }
+    OutputByteVectorPort.prototype = Object.create(OutputPort.prototype);
+    OutputByteVectorPort.prototype.constructor = OutputByteVectorPort;
+    OutputByteVectorPort.prototype.write_u8 = function(byte) {
+        var name = 'OutputByteVectorPort::write_u8';
+        typecheck(name, byte, 'number');
+        this._buffer.push(byte.valueOf());
+    };
+    OutputByteVectorPort.prototype.write_u8_vector = function(vector) {
+        typecheck('OutputByteVectorPort::write_u8_vector', vector, 'uint8array');
+        this._buffer.push(...Array.from(vector));
+    };
+    OutputByteVectorPort.prototype.toString = function() {
+        return '#<output-port (bytevector)>';
+    };
+    OutputByteVectorPort.prototype.valueOf = function() {
+        return this.__buffer__;
     };
     // -------------------------------------------------------------------------
     function InputFilePort(content, filename) {
@@ -9621,6 +9653,7 @@ You can also use (help name) to display help for specic function or macro and
         InputStringPort,
         OutputStringPort,
         InputByteVectorPort,
+        OutputByteVectorPort,
         InputBinaryFilePort,
 
         Formatter,
