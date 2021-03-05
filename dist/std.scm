@@ -175,7 +175,7 @@
             `(. ,(string->symbol (car parts)) ,@(cdr parts))))))
 
 ;; -----------------------------------------------------------------------------
-(set-special! "#:" 'gensym-interal lips.specials.LITERAL)
+(set-special! "#:" 'gensym-interal)
 
 ;; -----------------------------------------------------------------------------
 (define (gensym-interal symbol)

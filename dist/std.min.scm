@@ -9,7 +9,7 @@
 (define (single list) "(single list)\u000A\u000AFunction check if argument is list with single element" (and (pair? list) (not (cdr list))))
 (define (iterator? x) "(iterator? x)\u000A\u000A Function check if value is JavaScript iterator object" (and (object? x) (procedure? (. x Symbol.iterator))))
 (define-macro (.. expr) "(.. foo.bar.baz)\u000A\u000AMacro that gets value from nested object where argument is comma separated symbol" (if (not (symbol? expr)) expr (let ((parts (split "." (symbol->string expr)))) (if (single parts) expr (quasiquote (. (unquote (string->symbol (car parts))) (unquote-splicing (cdr parts))))))))
-(set-special! "#:" (quote gensym-interal) lips.specials.LITERAL)
+(set-special! "#:" (quote gensym-interal))
 (define (gensym-interal symbol) "(gensym-interal symbol)\u000A\u000AParser extension that create new quoted named gensym." (quasiquote (quote (unquote (gensym symbol)))))
 (define (plain-object? x) "(plain-object? x)\u000A\u000AFunction check if value is plain JavaScript object. Created using object macro." (and (== (--> (type x) (cmp "object")) 0) (eq? (. x (quote constructor)) Object)))
 (define typed-array? (let ((TypedArray (Object.getPrototypeOf Uint8Array))) (lambda (o) "(typed-array? o)\u000A\u000AFunction test if argumnet is JavaScript typed array (Scheme byte vector)." (instanceof TypedArray o))))
