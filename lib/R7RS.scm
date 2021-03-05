@@ -545,6 +545,7 @@
 
       Function converts string into u8 bytevector using utf8 encoding.
       The start and end is the range of the input string for the conversion."
+      (typecheck "string->utf8" string "string")
       (if (null? rest)
           (encoder.encode string)
           (let* ((start (car rest))
@@ -562,6 +563,7 @@
 
       Function converts u8 bytevector into string using utf8 encoding.
       The start and end is the range of the input byte vector for the conversion."
+      (typecheck "utf8->string" v "uint8array")
       (if (null? rest)
           (decoder.decode v)
           (let* ((start (car rest))
