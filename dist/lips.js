@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 06 Mar 2021 11:33:45 +0000
+ * build: Sat, 06 Mar 2021 15:00:04 +0000
  */
 (function () {
   'use strict';
@@ -9870,135 +9870,151 @@
       'null': null,
       'NaN': LNumber(NaN),
       // ------------------------------------------------------------------
-      'peek-char': doc('peek-char', function (port) {
-        if (port) {
-          typecheck('peek-char', port, ['input-port']);
-        } else {
+      'peek-char': doc('peek-char', function () {
+        var port = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
+
+        if (port === null) {
           port = internal(this, 'stdin');
         }
 
+        typecheck_text_port('peek-char', port, 'input-port');
         return port.peek_char();
       }, "(peek-char port)\n\n            Function get character from string port or EOF object if no more\n            data in string port."),
       // ------------------------------------------------------------------
-      'read-line': doc('read-line', function (port) {
-        if (typeof port === 'undefined') {
+      'read-line': doc('read-line', function () {
+        var port = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
+
+        if (port === null) {
           port = internal(this, 'stdin');
         }
 
-        typecheck('read-line', port, ['input-port']);
+        typecheck_text_port('read-line', port, 'input-port');
         return port.read_line();
       }, "(read-char port)\n\n            Function read next character from input port."),
       // ------------------------------------------------------------------
-      'read-char': doc('read-char', function (port) {
-        if (typeof port === 'undefined') {
+      'read-char': doc('read-char', function () {
+        var port = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
+
+        if (port === null) {
           port = internal(this, 'stdin');
         }
 
-        typecheck('read-char', port, ['input-port', 'input-string-port']);
+        typecheck_text_port('read-char', port, 'input-port');
         return port.read_char();
       }, "(read-char port)\n\n            Function read next character from input port."),
       // ------------------------------------------------------------------
       read: doc( /*#__PURE__*/function () {
-        var _read2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(arg) {
-          var _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _value2, value, port;
+        var _read2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11() {
+          var arg,
+              _iteratorNormalCompletion2,
+              _didIteratorError2,
+              _iteratorError2,
+              _iterator2,
+              _step2,
+              _value2,
+              value,
+              port,
+              _args13 = arguments;
 
           return regenerator.wrap(function _callee11$(_context11) {
             while (1) {
               switch (_context11.prev = _context11.next) {
                 case 0:
+                  arg = _args13.length > 0 && _args13[0] !== undefined$1 ? _args13[0] : null;
+
                   if (!LString.isString(arg)) {
-                    _context11.next = 34;
+                    _context11.next = 35;
                     break;
                   }
 
                   _iteratorNormalCompletion2 = true;
                   _didIteratorError2 = false;
-                  _context11.prev = 3;
+                  _context11.prev = 4;
                   _iterator2 = asyncIterator(parse(arg, this));
 
-                case 5:
-                  _context11.next = 7;
+                case 6:
+                  _context11.next = 8;
                   return _iterator2.next();
 
-                case 7:
+                case 8:
                   _step2 = _context11.sent;
                   _iteratorNormalCompletion2 = _step2.done;
-                  _context11.next = 11;
+                  _context11.next = 12;
                   return _step2.value;
 
-                case 11:
+                case 12:
                   _value2 = _context11.sent;
 
                   if (_iteratorNormalCompletion2) {
-                    _context11.next = 18;
+                    _context11.next = 19;
                     break;
                   }
 
                   value = _value2;
                   return _context11.abrupt("return", value);
 
-                case 15:
+                case 16:
                   _iteratorNormalCompletion2 = true;
-                  _context11.next = 5;
+                  _context11.next = 6;
                   break;
 
-                case 18:
-                  _context11.next = 24;
+                case 19:
+                  _context11.next = 25;
                   break;
 
-                case 20:
-                  _context11.prev = 20;
-                  _context11.t0 = _context11["catch"](3);
+                case 21:
+                  _context11.prev = 21;
+                  _context11.t0 = _context11["catch"](4);
                   _didIteratorError2 = true;
                   _iteratorError2 = _context11.t0;
 
-                case 24:
-                  _context11.prev = 24;
+                case 25:
                   _context11.prev = 25;
+                  _context11.prev = 26;
 
                   if (!(!_iteratorNormalCompletion2 && _iterator2["return"] != null)) {
-                    _context11.next = 29;
+                    _context11.next = 30;
                     break;
                   }
 
-                  _context11.next = 29;
+                  _context11.next = 30;
                   return _iterator2["return"]();
 
-                case 29:
-                  _context11.prev = 29;
+                case 30:
+                  _context11.prev = 30;
 
                   if (!_didIteratorError2) {
-                    _context11.next = 32;
+                    _context11.next = 33;
                     break;
                   }
 
                   throw _iteratorError2;
 
-                case 32:
-                  return _context11.finish(29);
-
                 case 33:
-                  return _context11.finish(24);
+                  return _context11.finish(30);
 
                 case 34:
-                  if (arg) {
-                    typecheck('read', arg, 'input-port');
-                    port = arg;
-                  } else {
+                  return _context11.finish(25);
+
+                case 35:
+                  if (arg === null) {
                     port = internal(this, 'stdin');
+                  } else {
+                    port = arg;
                   }
 
+                  typecheck_text_port('read', arg, 'input-port');
                   return _context11.abrupt("return", port.read.call(this));
 
-                case 36:
+                case 38:
                 case "end":
                   return _context11.stop();
               }
             }
-          }, _callee11, this, [[3, 20, 24, 34], [25,, 29, 33]]);
+          }, _callee11, this, [[4, 21, 25, 35], [26,, 30, 34]]);
         }));
 
-        function read(_x9) {
+        function read() {
           return _read2.apply(this, arguments);
         }
 
@@ -10529,7 +10545,7 @@
           }, _callee13, this);
         }));
 
-        return function (_x10, _x11) {
+        return function (_x9, _x10) {
           return _ref30.apply(this, arguments);
         };
       }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
@@ -12639,6 +12655,15 @@
     } // -------------------------------------------------------------------------
 
 
+    function typecheck_text_port(fn, arg, type) {
+      typecheck(fn, arg, type);
+
+      if (arg.__type__ === binary_port) {
+        throw new Error(typeErrorMessage(fn, 'binary-port', 'textual-port'));
+      }
+    } // -------------------------------------------------------------------------
+
+
     function typecheck(fn, arg, expected) {
       var position = arguments.length > 3 && arguments[3] !== undefined$1 ? arguments[3] : null;
       fn = fn.valueOf();
@@ -12805,7 +12830,7 @@
         }
       }
 
-      function promise(_x12) {
+      function promise(_x11) {
         return _promise.apply(this, arguments);
       }
 
@@ -13151,7 +13176,7 @@
     } // -------------------------------------------------------------------------
 
 
-    function exec(_x13, _x14, _x15) {
+    function exec(_x12, _x13, _x14) {
       return _exec.apply(this, arguments);
     } // -------------------------------------------------------------------------
 
@@ -13636,10 +13661,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sat, 06 Mar 2021 11:33:45 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 06 Mar 2021 15:00:04 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sat, 06 Mar 2021 11:33:45 +0000').valueOf();
+      var date = LString('Sat, 06 Mar 2021 15:00:04 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13679,7 +13704,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sat, 06 Mar 2021 11:33:45 +0000',
+      date: 'Sat, 06 Mar 2021 15:00:04 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

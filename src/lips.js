@@ -6399,51 +6399,50 @@
         'null': null,
         'NaN': LNumber(NaN),
         // ------------------------------------------------------------------
-        'peek-char': doc('peek-char', function(port) {
-            if (port) {
-                typecheck('peek-char', port, ['input-port']);
-            } else {
+        'peek-char': doc('peek-char', function(port = null) {
+            if (port === null) {
                 port = internal(this, 'stdin');
             }
+            typecheck_text_port('peek-char', port, 'input-port');
             return port.peek_char();
         }, `(peek-char port)
 
             Function get character from string port or EOF object if no more
             data in string port.`),
         // ------------------------------------------------------------------
-        'read-line': doc('read-line', function(port) {
-            if (typeof port === 'undefined') {
+        'read-line': doc('read-line', function(port = null) {
+            if (port === null) {
                 port = internal(this, 'stdin');
             }
-            typecheck('read-line', port, ['input-port']);
+            typecheck_text_port('read-line', port, 'input-port');
             return port.read_line();
         }, `(read-char port)
 
             Function read next character from input port.`),
         // ------------------------------------------------------------------
-        'read-char': doc('read-char', function(port) {
-            if (typeof port === 'undefined') {
+        'read-char': doc('read-char', function(port = null) {
+            if (port === null) {
                 port = internal(this, 'stdin');
             }
-            typecheck('read-char', port, ['input-port', 'input-string-port']);
+            typecheck_text_port('read-char', port, 'input-port');
             return port.read_char();
         }, `(read-char port)
 
             Function read next character from input port.`),
         // ------------------------------------------------------------------
-        read: doc(async function read(arg) {
+        read: doc(async function read(arg = null) {
             if (LString.isString(arg)) {
                 for await (let value of parse(arg, this)) {
                     return value;
                 }
             }
             var port;
-            if (arg) {
-                typecheck('read', arg, 'input-port');
-                port = arg;
-            } else {
+            if (arg === null) {
                 port = internal(this, 'stdin');
+            } else {
+                port = arg;
             }
+            typecheck_text_port('read', arg, 'input-port');
             return port.read.call(this);
         }, `(read [string])
 
@@ -8964,6 +8963,17 @@
         args.forEach((arg, i) => {
             typecheck(fn, arg, expected, i + 1);
         });
+    }
+    // -------------------------------------------------------------------------
+    function typecheck_text_port(fn, arg, type) {
+        typecheck(fn, arg, type);
+        if (arg.__type__ === binary_port) {
+            throw new Error(typeErrorMessage(
+                fn,
+                'binary-port',
+                'textual-port'
+            ));
+        }
     }
     // -------------------------------------------------------------------------
     function typecheck(fn, arg, expected, position = null) {
