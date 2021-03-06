@@ -755,6 +755,20 @@
  (lambda (data port)
    (port.write_u8_vector data)))
 
+;; -----------------------------------------------------------------------------
+(define open-binary-output-file
+  (let ((open))
+    (lambda (filename)
+      "(open-binary-output-file filename)
+
+       Function open file and return port that can be used for writing. If file
+       exists it will throw an Error."
+      (typecheck "open-output-file" filename "string")
+      (if (not (procedure? open))
+          (set! open (%fs-promisify-proc 'open "open-binary-output-file")))
+      (if (file-exists? filename)
+          (throw (new Error "open-binary-output-file: file exists"))
+          (lips.OutputBinaryFilePort filename (open filename "w"))))))
 
 ;; -----------------------------------------------------------------------------
 (define delete-file
@@ -764,13 +778,9 @@
 
        Function delete the file of given name."
       (typecheck "delete-file" filename "string")
-      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
-        (if (null? fs)
-            (throw (new Error "delete-file: fs not defined"))
-            (begin
-              (if (not (procedure? unlink))
-                  (set! unlink (promisify fs.unlink)))
-              (unlink filename)))))))
+      (if (not (procedure? unlink))
+          (set! unlink (%fs-promisify-proc 'unlink "delete-file")))
+      (unlink filename))))
 
 ;; -----------------------------------------------------------------------------
 (define (call-with-port port proc)

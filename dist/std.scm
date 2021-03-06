@@ -1236,9 +1236,16 @@
                                   (lambda (e)
                                     (if (null? e)
                                         (resolve (BrowserFS.BFSRequire "fs"))
-                                        (reject e))))))))))
-  (if (not (null? fs))
-      (--> lips.env (get '**internal-env**) (set "fs" fs))))
+                                        (reject e)))))))))
+       (Buffer (cond ((eq? self global)
+                      self.Buffer)
+                     ((not (null? self.BrowserFS))
+                      (. (BrowserFS.BFSRequire "buffer") 'Buffer)))))
+  (let ((internal (lips.env.get '**internal-env**)))
+    (if (not (null? Buffer))
+        (internal.set "Buffer" Buffer))
+    (if (not (null? fs))
+        (internal.set "fs" fs))))
 
 ;; -----------------------------------------------------------------------------
 (define (environment? obj)
@@ -1295,6 +1302,17 @@
 ;; -----------------------------------------------------------------------------
 (define %read-binary-file (curry %read-file true))
 (define %read-text-file (curry %read-file false))
+
+;; -----------------------------------------------------------------------------
+(define (%fs-promisify-proc fn message)
+  "(%fs-promisify-proc fn string)
+
+   Function return promisified version of fs function or throw exception
+   if fs is not available."
+  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+    (if (null? fs)
+        (throw (new Error (string-append message ": fs not defined")))
+        (promisify (. fs fn)))))
 
 ;; -----------------------------------------------------------------------------
 (define (response->content binary res)
@@ -2727,15 +2745,11 @@
        Function open file and return port that can be used for writing. If file
        exists it will throw an Error."
       (typecheck "open-output-file" filename "string")
-      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
-        (if (null? fs)
-            (throw (new Error "open-output-file: fs not defined"))
-            (begin
-              (if (not (procedure? open))
-                  (set! open (promisify fs.open)))
-              (if (file-exists? filename)
-                  (throw (new Error "open-output-file: file exists"))
-                  (lips.OutputFilePort filename (open filename "w")))))))))
+      (if (not (procedure? open))
+          (set! open (%fs-promisify-proc 'open "open-output-file")))
+      (if (file-exists? filename)
+          (throw (new Error "open-output-file: file exists"))
+          (lips.OutputFilePort filename (open filename "w"))))))
 
 ;; -----------------------------------------------------------------------------
 (define (scheme-report-environment version)
@@ -3669,6 +3683,20 @@
  (lambda (data port)
    (port.write_u8_vector data)))
 
+;; -----------------------------------------------------------------------------
+(define open-binary-output-file
+  (let ((open))
+    (lambda (filename)
+      "(open-binary-output-file filename)
+
+       Function open file and return port that can be used for writing. If file
+       exists it will throw an Error."
+      (typecheck "open-output-file" filename "string")
+      (if (not (procedure? open))
+          (set! open (%fs-promisify-proc 'open "open-binary-output-file")))
+      (if (file-exists? filename)
+          (throw (new Error "open-binary-output-file: file exists"))
+          (lips.OutputBinaryFilePort filename (open filename "w"))))))
 
 ;; -----------------------------------------------------------------------------
 (define delete-file
@@ -3678,13 +3706,9 @@
 
        Function delete the file of given name."
       (typecheck "delete-file" filename "string")
-      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
-        (if (null? fs)
-            (throw (new Error "delete-file: fs not defined"))
-            (begin
-              (if (not (procedure? unlink))
-                  (set! unlink (promisify fs.unlink)))
-              (unlink filename)))))))
+      (if (not (procedure? unlink))
+          (set! unlink (%fs-promisify-proc 'unlink "delete-file")))
+      (unlink filename))))
 
 ;; -----------------------------------------------------------------------------
 (define (call-with-port port proc)

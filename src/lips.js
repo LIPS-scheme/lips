@@ -5682,21 +5682,27 @@
             } else {
                 x = x.valueOf();
             }
-            this.fs('write')(this._fd, x, function() { });
+            this.fs().write(this._fd, x, function(err) {
+                if (err) {
+                    throw err;
+                }
+            });
         };
     }
     OutputFilePort.prototype = Object.create(OutputPort.prototype);
     OutputFilePort.prototype.constructor = OutputFilePort;
-    OutputFilePort.prototype.fs = function(name) {
-        var fs = user_env.get('**internal-env**').get('fs');
-        if (!fs) {
-            throw new Error(`${name}: fs is not defined`);
+    OutputFilePort.prototype.fs = function() {
+        if (!this._fs) {
+            this._fs = this.internal('fs');
         }
-        return fs[name];
+        return this._fs;
+    };
+    OutputFilePort.prototype.internal = function(name) {
+        return user_env.get('**internal-env**').get(name);
     };
     OutputFilePort.prototype.close = function() {
         return new Promise((resolve, reject) => {
-            this.fs('close')(this._fd, (err) => {
+            this.fs().close(this._fd, (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -5821,6 +5827,14 @@
         }
         read_only(this, '__type__', binary_port);
         read_only(this, '_buffer', [], { hidden: true });
+        this.write = function(x) {
+            typecheck('write', x, ['number', 'uint8array']);
+            if (LNumber.isNumber(x)) {
+                this._buffer.push(x.valueOf());
+            } else {
+                this._buffer.push(...Array.from(x));
+            }
+        };
         Object.defineProperty(this, '__buffer__', {
             enumerable: true,
             get: function() {
@@ -5830,14 +5844,22 @@
     }
     OutputByteVectorPort.prototype = Object.create(OutputPort.prototype);
     OutputByteVectorPort.prototype.constructor = OutputByteVectorPort;
+    OutputByteVectorPort.prototype.close = function() {
+        OutputPort.prototype.close.call(this);
+        read_only(this, '_buffer', null, { hidden: true });
+    };
+    OutputByteVectorPort.prototype._close_guard = function() {
+        if (this._closed) {
+            throw new Error('output-port: binary port is closed');
+        }
+    };
     OutputByteVectorPort.prototype.write_u8 = function(byte) {
-        var name = 'OutputByteVectorPort::write_u8';
-        typecheck(name, byte, 'number');
-        this._buffer.push(byte.valueOf());
+        typecheck('OutputByteVectorPort::write_u8', byte, 'number');
+        this.write(byte);
     };
     OutputByteVectorPort.prototype.write_u8_vector = function(vector) {
         typecheck('OutputByteVectorPort::write_u8_vector', vector, 'uint8array');
-        this._buffer.push(...Array.from(vector));
+        this.write(vector);
     };
     OutputByteVectorPort.prototype.toString = function() {
         return '#<output-port (bytevector)>';
@@ -5874,6 +5896,52 @@
     InputBinaryFilePort.prototype.constructor = InputBinaryFilePort;
     InputBinaryFilePort.prototype.toString = function() {
         return `#<input-binary-port (${this.__filename__})>`;
+    };
+    // -------------------------------------------------------------------------
+    function OutputBinaryFilePort(filename, fd) {
+        if (typeof this !== 'undefined' && !(this instanceof OutputBinaryFilePort) ||
+            typeof this === 'undefined') {
+            return new OutputBinaryFilePort(filename, fd);
+        }
+        typecheck('OutputBinaryFilePort', filename, 'string');
+        read_only(this, '__filename__', filename);
+        read_only(this, '_fd', fd.valueOf(), { hidden: true });
+        read_only(this, '__type__', binary_port);
+        var fs, Buffer;
+        this.write = function(x) {
+            typecheck('write', x, ['number', 'uint8array']);
+            var buffer;
+            if (!fs) {
+                fs = this.internal('fs');
+            }
+            if (!Buffer) {
+                Buffer = this.internal('Buffer');
+            }
+            if (LNumber.isNumber(x)) {
+                buffer = Buffer.from([x.valueOf()]);
+            } else {
+                buffer = Buffer.from(Array.from(x));
+            }
+            return new Promise((resolve, reject) => {
+                fs.write(this._fd, buffer, function(err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        };
+    }
+    OutputBinaryFilePort.prototype = Object.create(OutputFilePort.prototype);
+    OutputBinaryFilePort.prototype.constructor = OutputBinaryFilePort;
+    OutputBinaryFilePort.prototype.write_u8 = function(byte) {
+        typecheck('OutputByteVectorPort::write_u8', byte, 'number');
+        this.write(byte);
+    };
+    OutputBinaryFilePort.prototype.write_u8_vector = function(vector) {
+        typecheck('OutputByteVectorPort::write_u8_vector', vector, 'uint8array');
+        this.write(vector);
     };
     // -------------------------------------------------------------------------
     const binary_port = Symbol.for('binary');
@@ -9655,6 +9723,7 @@ You can also use (help name) to display help for specic function or macro and
         InputByteVectorPort,
         OutputByteVectorPort,
         InputBinaryFilePort,
+        OutputBinaryFilePort,
 
         Formatter,
         Parser,

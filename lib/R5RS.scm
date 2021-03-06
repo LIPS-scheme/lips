@@ -1364,15 +1364,11 @@
        Function open file and return port that can be used for writing. If file
        exists it will throw an Error."
       (typecheck "open-output-file" filename "string")
-      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
-        (if (null? fs)
-            (throw (new Error "open-output-file: fs not defined"))
-            (begin
-              (if (not (procedure? open))
-                  (set! open (promisify fs.open)))
-              (if (file-exists? filename)
-                  (throw (new Error "open-output-file: file exists"))
-                  (lips.OutputFilePort filename (open filename "w")))))))))
+      (if (not (procedure? open))
+          (set! open (%fs-promisify-proc 'open "open-output-file")))
+      (if (file-exists? filename)
+          (throw (new Error "open-output-file: file exists"))
+          (lips.OutputFilePort filename (open filename "w"))))))
 
 ;; -----------------------------------------------------------------------------
 (define (scheme-report-environment version)

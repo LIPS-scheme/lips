@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 05 Mar 2021 19:17:29 +0000
+ * build: Sat, 06 Mar 2021 11:33:45 +0000
  */
 (function () {
   'use strict';
@@ -8966,28 +8966,34 @@
           x = x.valueOf();
         }
 
-        _this9.fs('write')(_this9._fd, x, function () {});
+        _this9.fs().write(_this9._fd, x, function (err) {
+          if (err) {
+            throw err;
+          }
+        });
       };
     }
 
     OutputFilePort.prototype = Object.create(OutputPort.prototype);
     OutputFilePort.prototype.constructor = OutputFilePort;
 
-    OutputFilePort.prototype.fs = function (name) {
-      var fs = user_env.get('**internal-env**').get('fs');
-
-      if (!fs) {
-        throw new Error("".concat(name, ": fs is not defined"));
+    OutputFilePort.prototype.fs = function () {
+      if (!this._fs) {
+        this._fs = this.internal('fs');
       }
 
-      return fs[name];
+      return this._fs;
+    };
+
+    OutputFilePort.prototype.internal = function (name) {
+      return user_env.get('**internal-env**').get(name);
     };
 
     OutputFilePort.prototype.close = function () {
       var _this10 = this;
 
       return new Promise(function (resolve, reject) {
-        _this10.fs('close')(_this10._fd, function (err) {
+        _this10.fs().close(_this10._fd, function (err) {
           if (err) {
             reject(err);
           } else {
@@ -9147,6 +9153,19 @@
       read_only(this, '_buffer', [], {
         hidden: true
       });
+
+      this.write = function (x) {
+        typecheck('write', x, ['number', 'uint8array']);
+
+        if (LNumber.isNumber(x)) {
+          this._buffer.push(x.valueOf());
+        } else {
+          var _this$_buffer;
+
+          (_this$_buffer = this._buffer).push.apply(_this$_buffer, toConsumableArray(Array.from(x)));
+        }
+      };
+
       Object.defineProperty(this, '__buffer__', {
         enumerable: true,
         get: function get() {
@@ -9158,19 +9177,27 @@
     OutputByteVectorPort.prototype = Object.create(OutputPort.prototype);
     OutputByteVectorPort.prototype.constructor = OutputByteVectorPort;
 
-    OutputByteVectorPort.prototype.write_u8 = function (_byte2) {
-      var name = 'OutputByteVectorPort::write_u8';
-      typecheck(name, _byte2, 'number');
+    OutputByteVectorPort.prototype.close = function () {
+      OutputPort.prototype.close.call(this);
+      read_only(this, '_buffer', null, {
+        hidden: true
+      });
+    };
 
-      this._buffer.push(_byte2.valueOf());
+    OutputByteVectorPort.prototype._close_guard = function () {
+      if (this._closed) {
+        throw new Error('output-port: binary port is closed');
+      }
+    };
+
+    OutputByteVectorPort.prototype.write_u8 = function (_byte2) {
+      typecheck('OutputByteVectorPort::write_u8', _byte2, 'number');
+      this.write(_byte2);
     };
 
     OutputByteVectorPort.prototype.write_u8_vector = function (vector) {
-      var _this$_buffer;
-
       typecheck('OutputByteVectorPort::write_u8_vector', vector, 'uint8array');
-
-      (_this$_buffer = this._buffer).push.apply(_this$_buffer, toConsumableArray(Array.from(vector)));
+      this.write(vector);
     };
 
     OutputByteVectorPort.prototype.toString = function () {
@@ -9215,6 +9242,65 @@
 
     InputBinaryFilePort.prototype.toString = function () {
       return "#<input-binary-port (".concat(this.__filename__, ")>");
+    }; // -------------------------------------------------------------------------
+
+
+    function OutputBinaryFilePort(filename, fd) {
+      if (typeof this !== 'undefined' && !(this instanceof OutputBinaryFilePort) || typeof this === 'undefined') {
+        return new OutputBinaryFilePort(filename, fd);
+      }
+
+      typecheck('OutputBinaryFilePort', filename, 'string');
+      read_only(this, '__filename__', filename);
+      read_only(this, '_fd', fd.valueOf(), {
+        hidden: true
+      });
+      read_only(this, '__type__', binary_port);
+      var fs, Buffer;
+
+      this.write = function (x) {
+        var _this13 = this;
+
+        typecheck('write', x, ['number', 'uint8array']);
+        var buffer;
+
+        if (!fs) {
+          fs = this.internal('fs');
+        }
+
+        if (!Buffer) {
+          Buffer = this.internal('Buffer');
+        }
+
+        if (LNumber.isNumber(x)) {
+          buffer = Buffer.from([x.valueOf()]);
+        } else {
+          buffer = Buffer.from(Array.from(x));
+        }
+
+        return new Promise(function (resolve, reject) {
+          fs.write(_this13._fd, buffer, function (err) {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        });
+      };
+    }
+
+    OutputBinaryFilePort.prototype = Object.create(OutputFilePort.prototype);
+    OutputBinaryFilePort.prototype.constructor = OutputBinaryFilePort;
+
+    OutputBinaryFilePort.prototype.write_u8 = function (_byte3) {
+      typecheck('OutputByteVectorPort::write_u8', _byte3, 'number');
+      this.write(_byte3);
+    };
+
+    OutputBinaryFilePort.prototype.write_u8_vector = function (vector) {
+      typecheck('OutputByteVectorPort::write_u8_vector', vector, 'uint8array');
+      this.write(vector);
     }; // -------------------------------------------------------------------------
 
 
@@ -9455,13 +9541,13 @@
 
 
     Environment.prototype.clone = function () {
-      var _this13 = this;
+      var _this14 = this;
 
       // duplicate refs
       var env = {}; // TODO: duplicated Symbols
 
       Object.keys(this.__env__).forEach(function (key) {
-        env[key] = _this13.__env__[key];
+        env[key] = _this14.__env__[key];
       });
       return new Environment(env, this.__parent__, this.__name__);
     }; // -------------------------------------------------------------------------
@@ -9618,7 +9704,7 @@
 
 
     Environment.prototype.constant = function (name, value) {
-      var _this14 = this;
+      var _this15 = this;
 
       if (this.__env__.hasOwnProperty(name)) {
         throw new Error("Environment::constant: ".concat(name, " already exists"));
@@ -9627,7 +9713,7 @@
       if (arguments.length === 1 && is_plain_object(arguments[0])) {
         var obj = arguments[0];
         Object.keys(obj).forEach(function (key) {
-          _this14.constant(name, obj[key]);
+          _this15.constant(name, obj[key]);
         });
       } else {
         Object.defineProperty(this.__env__, name, {
@@ -10087,7 +10173,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this15 = this;
+        var _this16 = this;
 
         var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref29.dynamic_scope,
@@ -10162,7 +10248,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this15.get(name, {
+              var obj = _this16.get(name, {
                 throwError: false
               });
 
@@ -10667,7 +10753,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this16 = this;
+        var _this17 = this;
 
         env = env || this;
         return evaluate(code, {
@@ -10675,13 +10761,13 @@
           //dynamic_scope: this,
           error: function error(e) {
             var error = global_env.get('error');
-            error.call(_this16, e.message);
+            error.call(_this17, e.message);
 
             if (e.code) {
               var stack = e.code.map(function (line, i) {
                 return "[".concat(i + 1, "]: ").concat(line);
               }).join('\n');
-              error.call(_this16, stack);
+              error.call(_this17, stack);
             }
           }
         });
@@ -11743,7 +11829,7 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref39) {
-        var _this17 = this;
+        var _this18 = this;
 
         var dynamic_scope = _ref39.dynamic_scope,
             _error = _ref39.error;
@@ -11777,9 +11863,9 @@
           }
 
           var args = {
-            env: _this17,
+            env: _this18,
             error: function error(e) {
-              var env = _this17.inherit('try');
+              var env = _this18.inherit('try');
 
               if (catch_clause) {
                 env.set(catch_clause.cdr.car.car, e);
@@ -11789,7 +11875,7 @@
                 };
 
                 if (dynamic_scope) {
-                  args.dynamic_scope = _this17;
+                  args.dynamic_scope = _this18;
                 }
 
                 unpromise(evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
@@ -11802,7 +11888,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this17;
+            args.dynamic_scope = _this18;
           }
 
           var result = evaluate(code.car, args);
@@ -11862,7 +11948,7 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this18 = this;
+        var _this19 = this;
 
         for (var _len29 = arguments.length, lists = new Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
           lists[_key29 - 1] = arguments[_key29];
@@ -11873,7 +11959,7 @@
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this18, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this19, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -11895,7 +11981,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this18, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this19, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -11991,7 +12077,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this19 = this;
+        var _this20 = this;
 
         for (var _len32 = arguments.length, lists = new Array(_len32 > 3 ? _len32 - 3 : 0), _key33 = 3; _key33 < _len32; _key33++) {
           lists[_key33 - 3] = arguments[_key33];
@@ -12011,7 +12097,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this19, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this20, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -13550,10 +13636,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 05 Mar 2021 19:17:29 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sat, 06 Mar 2021 11:33:45 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 05 Mar 2021 19:17:29 +0000').valueOf();
+      var date = LString('Sat, 06 Mar 2021 11:33:45 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13593,7 +13679,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 05 Mar 2021 19:17:29 +0000',
+      date: 'Sat, 06 Mar 2021 11:33:45 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
@@ -13622,6 +13708,7 @@
       InputByteVectorPort: InputByteVectorPort,
       OutputByteVectorPort: OutputByteVectorPort,
       InputBinaryFilePort: InputBinaryFilePort,
+      OutputBinaryFilePort: OutputBinaryFilePort,
       Formatter: Formatter,
       Parser: Parser,
       Lexer: Lexer,

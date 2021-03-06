@@ -1236,9 +1236,16 @@
                                   (lambda (e)
                                     (if (null? e)
                                         (resolve (BrowserFS.BFSRequire "fs"))
-                                        (reject e))))))))))
-  (if (not (null? fs))
-      (--> lips.env (get '**internal-env**) (set "fs" fs))))
+                                        (reject e)))))))))
+       (Buffer (cond ((eq? self global)
+                      self.Buffer)
+                     ((not (null? self.BrowserFS))
+                      (. (BrowserFS.BFSRequire "buffer") 'Buffer)))))
+  (let ((internal (lips.env.get '**internal-env**)))
+    (if (not (null? Buffer))
+        (internal.set "Buffer" Buffer))
+    (if (not (null? fs))
+        (internal.set "fs" fs))))
 
 ;; -----------------------------------------------------------------------------
 (define (environment? obj)
@@ -1295,6 +1302,17 @@
 ;; -----------------------------------------------------------------------------
 (define %read-binary-file (curry %read-file true))
 (define %read-text-file (curry %read-file false))
+
+;; -----------------------------------------------------------------------------
+(define (%fs-promisify-proc fn message)
+  "(%fs-promisify-proc fn string)
+
+   Function return promisified version of fs function or throw exception
+   if fs is not available."
+  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+    (if (null? fs)
+        (throw (new Error (string-append message ": fs not defined")))
+        (promisify (. fs fn)))))
 
 ;; -----------------------------------------------------------------------------
 (define (response->content binary res)
