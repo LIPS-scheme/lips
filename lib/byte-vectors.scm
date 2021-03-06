@@ -51,7 +51,7 @@
          v.length)
        ;; -----------------------------------------------------------------------------
        (define (,make-vector k . fill)
-         ,(format "(~a v1 v2 ...)
+         ,(format "(~a k fill)
 
                    Allocate new ~a of length k, with optional initial values."
                   make-vector

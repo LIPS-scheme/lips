@@ -771,6 +771,31 @@
           (lips.OutputBinaryFilePort filename (open filename "w"))))))
 
 ;; -----------------------------------------------------------------------------
+(define (read-bytevector! vector . rest)
+  "(read-bytevector! bytevector)
+   (read-bytevector! bytevector port)
+   (read-bytevector! bytevector port start)
+   (read-bytevector! bytevector port start end)
+
+   Function read next bytes from binary input port and write them into byte vector.
+   if not start is specified it start to write into 0 position of the vector until
+   the end or end the vector if no end is specified."
+  (typecheck "read-bytevector!" vector "uint8array")
+  (let ((port (if (null? rest) (current-input-port) (car rest)))
+        (start (if (or (null? rest) (null? (cdr rest))) 0 (cadr rest)))
+        (end (if (or (null? rest) (null? (cdr rest)) (null? (cddr rest)))
+                 (bytevector-length vector)
+                 (caddr rest))))
+    (typecheck "read-bytevector!" port "input-port")
+    (if (not (binary-port? port))
+        (throw (new Error "read-bytevector!: invalid port. Binary port required."))
+        (begin
+          (typecheck "read-bytevector!" start "number")
+          (typecheck "read-bytevector!" end "number")
+          (let ((out (read-bytevector (- end start) port)))
+            (vector.set out start end))))))
+
+;; -----------------------------------------------------------------------------
 (define delete-file
   (let ((unlink #f))
     (lambda (filename)
