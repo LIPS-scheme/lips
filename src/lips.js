@@ -6442,7 +6442,7 @@
             } else {
                 port = arg;
             }
-            typecheck_text_port('read', arg, 'input-port');
+            typecheck_text_port('read', port, 'input-port');
             return port.read.call(this);
         }, `(read [string])
 
