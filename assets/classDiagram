@@ -20,8 +20,8 @@ Formatter *-- Pattern
 Interpreter *-- Environment
 
 class LRational {
-  LNumber num
-  LNumber denom
+  LNumber __num__
+  LNumber __denom__
   pow()
   abs()
   cmp()
@@ -34,19 +34,19 @@ class LRational {
 }
 
 class LBigInteger {
-  BigInt value
+  BigInt __value__
   sqrt()
   gcd()
   sqrt()
 
 }
 class LFloat {
-  Number value
+  Number __value__
   toRational()
   toString()
 }
 class LNumber {
-  Number value
+  Number __value__
   isFloat()
   isNumber()
   isComplex()
