@@ -117,7 +117,7 @@
     // ----------------------------------------------------------------------
     /* istanbul ignore next */
     function is_debug() {
-        return user_env.get('DEBUG', { throwError: false });
+        return user_env && user_env.get('DEBUG', { throwError: false });
     }
     if (!root.fetch) {
         /* istanbul ignore next */
@@ -1070,7 +1070,7 @@
                         // we don't want to check inside the token (e.g. strings)
                         this._newline = i + 1;
                     }
-                    if (this._whitespace) {
+                    if (this._whitespace && this._state === null) {
                         this._next = i + 1;
                         this._col = this._i - newline;
                         return true;
@@ -1668,6 +1668,15 @@
                     (!next_pattern || match(next_pattern, [input[i]]));
             }
             */
+            function get_first_match(patterns, input) {
+                for (let p of patterns) {
+                    const m = inner_match(p, input);
+                    if (m !== -1) {
+                        return m;
+                    }
+                }
+                return -1;
+            }
             function not_symbol_match() {
                 return pattern[p] === Symbol.for('symbol') && !is_symbol_string(input[i]);
             }
@@ -1688,7 +1697,7 @@
                     var m;
                     if (['+', '*'].includes(pattern[p].flag)) {
                         while (i < input.length) {
-                            m = inner_match(pattern[p].pattern, input.slice(i));
+                            m = get_first_match(pattern[p].patterns, input.slice(i));
                             if (m === -1) {
                                 break;
                             }
@@ -1698,7 +1707,7 @@
                         p++;
                         continue;
                     } else if (pattern[p].flag === '?') {
-                        m = inner_match(pattern[p].pattern, input.slice(i));
+                        m = get_first_match(pattern[p].patterns, input.slice(i));
                         if (m === -1) {
                             i -= 2; // if not found use same test on same input again
                         } else {
@@ -1908,23 +1917,28 @@
         return string.match(this.pattern);
     };
     // ----------------------------------------------------------------------
-    function Pattern(pattern, flag) {
-        this.pattern = pattern;
+    // Pattern have any number of patterns that is match using OR operator
+    // pattern is in form of array with regular expressions
+    // ----------------------------------------------------------------------
+    function Pattern(...args) {
+        var flag = args.pop();
+        this.patterns = args;
         this.flag = flag;
     }
-    // TODO: make it print
     Pattern.prototype.toString = function() {
-        return `#<pattern(${this.pattern} ${this.flag})>`;
+        var patterns = this.patterns.map(x => toString(x)).join('|');
+        return `#<pattern(${patterns} ${this.flag})>`;
     };
     // ----------------------------------------------------------------------
     Formatter.Pattern = Pattern;
     Formatter.Ahead = Ahead;
-    var p_o = /[[(]/;
-    var p_e = /[\])]/;
+    var p_o = /^[[(]$/;
+    var p_e = /^[\])]$/;
     var not_p = /[^()[\]]/;
     const not_close = new Ahead(/[^)\]]/);
     //const open = new Ahead(/[([]/);
     const glob = Symbol.for('*');
+    const sexp_or_atom = new Pattern([p_o, glob, p_e], [not_p], '+');
     const sexp = new Pattern([p_o, glob, p_e], '+');
     const symbol = new Pattern([Symbol.for('symbol')], '?');
     const symbols = new Pattern([Symbol.for('symbol')], '*');
@@ -1936,6 +1950,7 @@
     var non_def = /^(?!.*\b(?:[()[\]]|define|let(?:\*|rec|-env|-syntax)?|lambda|syntax-rules)\b).*$/;
     /* eslint-enable */
     var let_re = /^(?:#:)?(let(?:\*|rec|-env|-syntax)?)$/;
+    // match keyword if it's normal token or gensym (prefixed with #:)
     function keywords_re(...args) {
         return new RegExp(`^(?:#:)?(?:${args.join('|')})$`);
     }
@@ -1943,8 +1958,8 @@
     Formatter.rules = [
         [[p_o, keywords_re('begin')], 1],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
+        [[p_o, let_re, symbol, sexp, sexp_or_atom], 0, not_close],
         //[[p_o, let_re, p_o, let_value], 1, not_close],
-        //s[[p_o, let_re, p_o, let_value, p_e, sexp], 0, not_close],
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
         [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
         [[p_o, sexp], 1, not_close],
@@ -1960,13 +1975,16 @@
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
         var code = this.__code__.replace(/\n[ \t]*/g, '\n ');
+        // function that work when calling tokenize with meta data or not
         const token = t => {
-            if (t.token.match(string_re)) {
+            if (t.token.match(string_re) || t.token.match(re_re)) {
                 return t.token;
             } else {
                 return t.token.replace(/\s+/, ' ');
             }
         };
+        // tokenize is part of the parser/lexer that split code into tokens and inclue
+        // meta data like number of column or line
         var tokens = tokenize(code, true).map(token).filter(t => t !== '\n');
         const { rules } = Formatter;
         for (let i = 1; i < tokens.length; ++i) {
@@ -1977,12 +1995,15 @@
             var sexp = {};
             rules.map(b => b[1]).forEach(count => {
                 count = count.valueOf();
+                // some patterns require to check what was before like
+                // if inside let binding
                 if (count > 0 && !sexp[count]) {
                     sexp[count] = previousSexp(sub, count);
                 }
             });
             for (let [pattern, count, ext] of rules) {
                 count = count.valueOf();
+                // 0 count mean ignore the previous S-Expression
                 var test_sexp = count > 0 ? sexp[count] : sub;
                 var m = match(pattern, test_sexp.filter(t => t.trim()));
                 var next = tokens.slice(i).find(t => t.trim());

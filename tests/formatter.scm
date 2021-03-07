@@ -24,11 +24,19 @@
                                       (print x))))
 
         (t.snapshot (pretty-format '(let ((x))
+                                      10
+                                      20
+                                      "xx
+                                       yy"
                                       (print x)
                                       (print x))))
 
         (t.snapshot (pretty-format '(let ((bar (foo bar (baz)))
                                           (foo 10))
+                                      10
+                                      20
+                                      "xx
+                                       yy"
                                       (foo bar)
                                       (print0))))
 
@@ -67,15 +75,20 @@
 (test "formatter: define"
       (lambda (t)
 
-        (t.snapshot (pretty-format '(define (foo (x) (+ x x)))))
+        (t.snapshot (pretty-format '(define (foo x) (+ x x))))
 
-        (t.snapshot (pretty-format '(define (foo (x) "xxx" (+ x x)))))
+        (t.snapshot (pretty-format '(define (foo x) "xxx" (+ x x))))
 
         (t.snapshot (pretty-format '(define foo (lambda (x) (+ x x)))))
 
         (t.snapshot (pretty-format '(define foo (lambda (x) "xxx" (+ x x)))))
 
         (t.snapshot (pretty-format '(define foo (list 1 2 3))))
+
+        (t.snapshot (pretty-format '(define (foo x)
+                                      "foo
+                                       bar"
+                                      (+ x x))))
 
         (t.snapshot (pretty-format '(define foo 10)))))
 
