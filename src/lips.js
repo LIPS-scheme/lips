@@ -1169,7 +1169,6 @@
     Lexer.b_symbol = Symbol.for('b_symbol');
     Lexer.b_comment = Symbol.for('b_comment');
     Lexer.i_comment = Symbol.for('i_comment');
-    Lexer.character = Symbol.for('character');
     // ----------------------------------------------------------------------
     Lexer.boundary = /^$|[\s()[\]]/;
     // ----------------------------------------------------------------------
@@ -1296,10 +1295,10 @@
             if (arg instanceof LString) {
                 arg = arg.toString();
             }
-            this._formatter = formatter;
-            this._meta = meta;
-            this.__lexer__ = new Lexer(arg);
-            this.__env__ = env;
+            read_only(this, '_formatter', formatter, { hidden: true });
+            read_only(this, '_meta', meta, { hidden: true });
+            read_only(this, '__lexer__', new Lexer(arg));
+            read_only(this, '__env__', env);
         }
         resolve(name) {
             return this.__env__ && this.__env__.get(name, { throwError: false });
@@ -1334,10 +1333,10 @@
         skip() {
             this.__lexer__.skip();
         }
-        special(token) {
+        is_special(token) {
             return specials.names().includes(token);
         }
-        builtin(token) {
+        is_builtin(token) {
             return specials.builtin.includes(token);
         }
         async read() {
@@ -1387,7 +1386,7 @@
         is_comment(token) {
             return token.match(/^;/) || (token.match(/^#\|/) && token.match(/\|#$/));
         }
-        _eval(code) {
+        evaluate(code) {
             return evaluate(code, { env: this.__env__, error: (e) => {
                 throw e;
             } });
@@ -1397,7 +1396,7 @@
             if (token === eof) {
                 return token;
             }
-            if (this.special(token)) {
+            if (this.is_special(token)) {
                 // bultin parser extensions are mapping short symbol to longer symbol
                 // that can be function or macro, parser don't care
                 // if it's not bultin then the extension can be macro or function
@@ -1406,7 +1405,7 @@
                 // MACRO: if macros are used they are evaluated in place and
                 // result is returned by parser but they are quoted
                 const special = specials.get(token);
-                const bultin = this.builtin(token);
+                const bultin = this.is_builtin(token);
                 this.skip();
                 let expr;
                 const object = await this.read_object();
@@ -1416,7 +1415,7 @@
                         if (is_literal(token)) {
                             return extension.call(this.__env__, object);
                         } else if (object instanceof Pair) {
-                            return extension.apply(this.__env__, object.toArray(false));
+                            return extension.apply(this.__env__, object.to_array(false));
                         }
                         throw new Error('Parser: Invalid parser extension ' +
                                         `invocation ${special.symbol}`);
@@ -1442,7 +1441,7 @@
                 }
                 // evaluate parser extension at parse time
                 if (extension instanceof Macro) {
-                    var result = await this._eval(expr);
+                    var result = await this.evaluate(expr);
                     // we need literal quote to make macro that return pair works
                     // because after parser return the value it will be evaluated again
                     // by the interpreter, so we create quoted expression
@@ -2112,13 +2111,13 @@
                      'This is probably not what you want.');
         return undefined;
     };
-    Nil.prototype.toObject = function() {
+    Nil.prototype.to_object = function() {
         return {};
     };
     Nil.prototype.append = function(x) {
         return new Pair(x, nil);
     };
-    Nil.prototype.toArray = function() {
+    Nil.prototype.to_array = function() {
         return [];
     };
     var nil = new Nil();
@@ -2134,7 +2133,7 @@
         this.cdr = cdr;
     }
     // ----------------------------------------------------------------------
-    function toArray(name, deep) {
+    function to_array(name, deep) {
         return function recur(list) {
             typecheck(name, list, ['pair', 'nil']);
             if (list === nil) {
@@ -2164,7 +2163,7 @@
     }
     // ----------------------------------------------------------------------
     Pair.prototype.flatten = function() {
-        return Pair.fromArray(flatten(this.toArray()));
+        return Pair.fromArray(flatten(this.to_array()));
     };
     // ----------------------------------------------------------------------
     Pair.prototype.length = function() {
@@ -2227,7 +2226,7 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.prototype.lastPair = function() {
+    Pair.prototype.last_pair = function() {
         let node = this;
         while (true) {
             if (node.cdr === nil) {
@@ -2238,11 +2237,11 @@
     };
 
     // ----------------------------------------------------------------------
-    Pair.prototype.toArray = function(deep = true) {
+    Pair.prototype.to_array = function(deep = true) {
         var result = [];
         if (this.car instanceof Pair) {
             if (deep) {
-                result.push(this.car.toArray());
+                result.push(this.car.to_array());
             } else {
                 result.push(this.car);
             }
@@ -2250,7 +2249,7 @@
             result.push(this.car.valueOf());
         }
         if (this.cdr instanceof Pair) {
-            result = result.concat(this.cdr.toArray());
+            result = result.concat(this.cdr.to_array());
         }
         return result;
     };
@@ -2287,11 +2286,11 @@
     };
 
     // ----------------------------------------------------------------------
-    // by default toObject was created to create JavaScript objects,
+    // by default to_object was created to create JavaScript objects,
     // so it use valueOf to get native values
     // literal parameter was a hack to allow create LComplex from LIPS code
     // ----------------------------------------------------------------------
-    Pair.prototype.toObject = function(literal = false) {
+    Pair.prototype.to_object = function(literal = false) {
         var node = this;
         var result = {};
         while (true) {
@@ -2306,7 +2305,7 @@
                 }
                 var cdr = pair.cdr;
                 if (cdr instanceof Pair) {
-                    cdr = cdr.toObject(literal);
+                    cdr = cdr.to_object(literal);
                 }
                 if (is_native(cdr)) {
                     if (!literal) {
@@ -3183,7 +3182,7 @@
                         if (pattern.car.cdr instanceof Pair &&
                             LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
                             let name = pattern.car.car.valueOf();
-                            const last = pattern.lastPair();
+                            const last = pattern.last_pair();
                             if (LSymbol.is(last.car, ellipsis_symbol)) {
                                 bindings['...'].symbols[name] = null;
                                 return true;
@@ -7501,7 +7500,7 @@
                         if (!(result instanceof Pair)) {
                             throw new Error(`Expecting list ${type(x)} found`);
                         }
-                        return acc.concat(result.toArray());
+                        return acc.concat(result.to_array());
                     }
                     acc.push(recur(x, unquote_cnt, max_unq));
                     return acc;
@@ -8134,14 +8133,14 @@
         // ------------------------------------------------------------------
         'tree->array': doc(
             'tree->array',
-            toArray('tree->array', true),
+            to_array('tree->array', true),
             `(tree->array list)
 
              Function convert LIPS list structure into JavaScript array.`),
         // ------------------------------------------------------------------
         'list->array': doc(
             'list->array',
-            toArray('list->array'),
+            to_array('list->array'),
             `(list->array list)
 
              Function convert LIPS list into JavaScript array.`),
@@ -9004,7 +9003,7 @@
         const arg_type = type(arg).toLowerCase();
         var match = false;
         if (expected instanceof Pair) {
-            expected = expected.toArray();
+            expected = expected.to_array();
         }
         if (expected instanceof Array) {
             expected = expected.map(x => x.valueOf());

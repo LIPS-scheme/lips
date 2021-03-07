@@ -207,7 +207,7 @@
          (data `((activeTodoCount . ,active-count)
                  (activeTodoWord . ,(pluralize active-count "item"))
                  (completedTodos . ,(- todo-count active-count))))
-         (template (footer-template (--> data (toObject)))))
+         (template (footer-template (--> data (to_object)))))
     (--> ($ ".footer")
          (toggle (> todo-count 0))
          (html template))))
@@ -216,7 +216,7 @@
 (define (render)
   "render the app"
   (let* ((todos (get-todos))
-         (data (--> (map (lambda (e) (--> e (toObject))) todos) (toArray))))
+         (data (--> (map (lambda (e) (--> e (to_object))) todos) (to_array))))
     (--> ($ ".todo-list")
          (html (todo-template data)))
     (--> ($ ".main") (toggle (> (length data) 0)))
@@ -248,7 +248,7 @@
   (let* ((routes `(("/:filter" . ,(lambda (filter)
                                     (set! selected-filter filter)
                                     (render)))))
-         (router (new Router (--> routes (toObject)))))
+         (router (new Router (--> routes (to_object)))))
     (--> router (init "/all"))))
 
 (init)

@@ -225,7 +225,7 @@
 
    Function convert alist pairs to JavaScript object."
   (if (pair? alist)
-      (alist.toObject)
+      (alist.to_object)
       (alist->object (new lips.Pair undefined nil))))
 
 ;; -----------------------------------------------------------------------------

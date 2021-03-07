@@ -389,7 +389,7 @@
 
    Create complex number from imaginary and real part."
   (let ((value `((re . ,re) (im . ,im))))
-    (lips.LComplex (--> value (toObject true)))))
+    (lips.LComplex (--> value (to_object true)))))
 
 ;; -----------------------------------------------------------------------------
 (define (exact? n)

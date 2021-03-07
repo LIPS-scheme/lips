@@ -137,7 +137,7 @@ class Worker {
   exec(code, [dynamic]): Promise
 }
 class LCharacter {
-  string __name__ 
+  string __name__
   string __char__
   toUpperCase(): LCharacter
   toLowerCase(): LCharacter
@@ -145,10 +145,36 @@ class LCharacter {
   valueOf(): string
 }
 class Lexer {
-  string _input
+  string __input__
+  token(meta)
+  peek(meta)
+  skip()
+  read_line()
+  read_rest()
+  read_string(num)
+  peek_char()
+  read_char()
+  skip_char()
+  match_rule()
+  next_token()
+  static rules
 }
 class Parser {
   Lexer __lexer__
+  Environent __env__
+  resolve()
+  peek()
+  skip()
+  read()
+  is_special(token)
+  is_builtin(token)
+  is_open(token)
+  is_close(token)
+  read_list()
+  read_value()
+  read_object()
+  is_ccomment(token)
+  evaluate(code)
 }
 class LSymbol {
   string __name__
@@ -204,9 +230,9 @@ class Pair {
   length()
   find(any)
   clone()
-  lastPair()
-  toArray()
-  toObject()
+  last_pair()
+  to_array()
+  to_object()
   reduce(Function)
   reverse(): Pair
   transform(Function)

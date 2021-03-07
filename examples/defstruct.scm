@@ -34,7 +34,7 @@
 (define (defstruct:alist->object arg)
   "Function create JavaScript object from AList"
   (typecheck "defstruct:every" arg "pair")
-  (--> arg (toObject)))
+  (--> arg (to_object)))
 
 (define (defstruct:every fn list)
   "return true if every element return true for a function applied to every element"

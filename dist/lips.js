@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 07 Mar 2021 13:06:05 +0000
+ * build: Sun, 07 Mar 2021 16:47:22 +0000
  */
 (function () {
   'use strict';
@@ -2682,8 +2682,7 @@
     Lexer.bracket = Symbol["for"]('bracket');
     Lexer.b_symbol = Symbol["for"]('b_symbol');
     Lexer.b_comment = Symbol["for"]('b_comment');
-    Lexer.i_comment = Symbol["for"]('i_comment');
-    Lexer.character = Symbol["for"]('character'); // ----------------------------------------------------------------------
+    Lexer.i_comment = Symbol["for"]('i_comment'); // ----------------------------------------------------------------------
 
     Lexer.boundary = /^$|[\s()[\]]/; // ----------------------------------------------------------------------
 
@@ -2781,10 +2780,14 @@
           arg = arg.toString();
         }
 
-        this._formatter = formatter;
-        this._meta = meta;
-        this.__lexer__ = new Lexer(arg);
-        this.__env__ = env;
+        read_only(this, '_formatter', formatter, {
+          hidden: true
+        });
+        read_only(this, '_meta', meta, {
+          hidden: true
+        });
+        read_only(this, '__lexer__', new Lexer(arg));
+        read_only(this, '__env__', env);
       }
 
       createClass(Parser, [{
@@ -2880,13 +2883,13 @@
           this.__lexer__.skip();
         }
       }, {
-        key: "special",
-        value: function special(token) {
+        key: "is_special",
+        value: function is_special(token) {
           return specials.names().includes(token);
         }
       }, {
-        key: "builtin",
-        value: function builtin(token) {
+        key: "is_builtin",
+        value: function is_builtin(token) {
           return specials.builtin.includes(token);
         }
       }, {
@@ -3064,9 +3067,9 @@
           return token.match(/^;/) || token.match(/^#\|/) && token.match(/\|#$/);
         }
       }, {
-        key: "_eval",
-        value: function _eval(code) {
-          return evaluate(code, {
+        key: "evaluate",
+        value: function evaluate(code) {
+          return _evaluate(code, {
             env: this.__env__,
             error: function error(e) {
               throw e;
@@ -3096,7 +3099,7 @@
                     return _context5.abrupt("return", token);
 
                   case 5:
-                    if (!this.special(token)) {
+                    if (!this.is_special(token)) {
                       _context5.next = 35;
                       break;
                     }
@@ -3109,7 +3112,7 @@
                     // MACRO: if macros are used they are evaluated in place and
                     // result is returned by parser but they are quoted
                     special = specials.get(token);
-                    bultin = this.builtin(token);
+                    bultin = this.is_builtin(token);
                     this.skip();
                     _context5.next = 11;
                     return this.read_object();
@@ -3142,7 +3145,7 @@
                       break;
                     }
 
-                    return _context5.abrupt("return", extension.apply(this.__env__, object.toArray(false)));
+                    return _context5.abrupt("return", extension.apply(this.__env__, object.to_array(false)));
 
                   case 21:
                     throw new Error('Parser: Invalid parser extension ' + "invocation ".concat(special.symbol));
@@ -3169,7 +3172,7 @@
                     }
 
                     _context5.next = 28;
-                    return this._eval(expr);
+                    return this.evaluate(expr);
 
                   case 28:
                     result = _context5.sent;
@@ -4175,7 +4178,7 @@
       return undefined$1;
     };
 
-    Nil.prototype.toObject = function () {
+    Nil.prototype.to_object = function () {
       return {};
     };
 
@@ -4183,7 +4186,7 @@
       return new Pair(x, nil);
     };
 
-    Nil.prototype.toArray = function () {
+    Nil.prototype.to_array = function () {
       return [];
     };
 
@@ -4201,7 +4204,7 @@
     } // ----------------------------------------------------------------------
 
 
-    function toArray$1(name, deep) {
+    function to_array(name, deep) {
       return function recur(list) {
         typecheck(name, list, ['pair', 'nil']);
 
@@ -4239,7 +4242,7 @@
 
 
     Pair.prototype.flatten = function () {
-      return Pair.fromArray(flatten(this.toArray()));
+      return Pair.fromArray(flatten(this.to_array()));
     }; // ----------------------------------------------------------------------
 
 
@@ -4315,7 +4318,7 @@
     }; // ----------------------------------------------------------------------
 
 
-    Pair.prototype.lastPair = function () {
+    Pair.prototype.last_pair = function () {
       var node = this;
 
       while (true) {
@@ -4328,13 +4331,13 @@
     }; // ----------------------------------------------------------------------
 
 
-    Pair.prototype.toArray = function () {
+    Pair.prototype.to_array = function () {
       var deep = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : true;
       var result = [];
 
       if (this.car instanceof Pair) {
         if (deep) {
-          result.push(this.car.toArray());
+          result.push(this.car.to_array());
         } else {
           result.push(this.car);
         }
@@ -4343,7 +4346,7 @@
       }
 
       if (this.cdr instanceof Pair) {
-        result = result.concat(this.cdr.toArray());
+        result = result.concat(this.cdr.to_array());
       }
 
       return result;
@@ -4391,13 +4394,13 @@
 
       return result;
     }; // ----------------------------------------------------------------------
-    // by default toObject was created to create JavaScript objects,
+    // by default to_object was created to create JavaScript objects,
     // so it use valueOf to get native values
     // literal parameter was a hack to allow create LComplex from LIPS code
     // ----------------------------------------------------------------------
 
 
-    Pair.prototype.toObject = function () {
+    Pair.prototype.to_object = function () {
       var literal = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : false;
       var node = this;
       var result = {};
@@ -4418,7 +4421,7 @@
           var cdr = pair.cdr;
 
           if (cdr instanceof Pair) {
-            cdr = cdr.toObject(literal);
+            cdr = cdr.to_object(literal);
           }
 
           if (is_native(cdr)) {
@@ -5623,7 +5626,7 @@
               if (pattern.car.cdr instanceof Pair && LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
                 var _name2 = pattern.car.car.valueOf();
 
-                var last = pattern.lastPair();
+                var last = pattern.last_pair();
 
                 if (LSymbol.is(last.car, ellipsis_symbol)) {
                   bindings['...'].symbols[_name2] = null;
@@ -6754,7 +6757,7 @@
 
         function exec() {
           var output = new Pair(new LSymbol('begin'), code.cdr);
-          return evaluate(output, {
+          return _evaluate(output, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
@@ -6799,7 +6802,7 @@
               var_body_env = env;
             }
 
-            var value = evaluate(pair.cdr.car, {
+            var value = _evaluate(pair.cdr.car, {
               env: var_body_env,
               dynamic_scope: dynamic_scope,
               error: error
@@ -6843,7 +6846,7 @@
         var results = [];
 
         while (node instanceof Pair) {
-          results.push(evaluate(node.car, {
+          results.push(_evaluate(node.car, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
@@ -10179,7 +10182,7 @@
             dynamic_scope = this;
           }
 
-          var ret = evaluate(code.car, {
+          var ret = _evaluate(code.car, {
             env: env,
             error: error,
             dynamic_scope: dynamic_scope
@@ -10239,11 +10242,13 @@
 
         var env = this;
         var ref;
-        var value = evaluate(code.cdr.car, {
+
+        var value = _evaluate(code.cdr.car, {
           env: this,
           dynamic_scope: dynamic_scope,
           error: error
         });
+
         value = resolve_promises(value);
 
         function set(object, key, value) {
@@ -10272,16 +10277,19 @@
         if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
           var second = code.car.cdr.car;
           var thrid = code.car.cdr.cdr.car;
-          var object = evaluate(second, {
+
+          var object = _evaluate(second, {
             env: this,
             dynamic_scope: dynamic_scope,
             error: error
           });
-          var key = evaluate(thrid, {
+
+          var key = _evaluate(thrid, {
             env: this,
             dynamic_scope: dynamic_scope,
             error: error
           });
+
           return set(object, key, value);
         }
 
@@ -10470,7 +10478,7 @@
                   _context13.t0 = scope;
                   _context13.t1 = item.car;
                   _context13.next = 16;
-                  return evaluate(item.cdr.car, eval_args);
+                  return _evaluate(item.cdr.car, eval_args);
 
                 case 16:
                   _context13.t2 = _context13.sent;
@@ -10520,7 +10528,7 @@
                             }
 
                             _context12.next = 10;
-                            return evaluate(_item.cdr.cdr.car, eval_args);
+                            return _evaluate(_item.cdr.cdr.car, eval_args);
 
                           case 10:
                             value = _context12.sent;
@@ -10547,7 +10555,7 @@
 
                 case 23:
                   _context13.next = 25;
-                  return evaluate(test.car, eval_args);
+                  return _evaluate(test.car, eval_args);
 
                 case 25:
                   _context13.t3 = _context13.sent;
@@ -10570,7 +10578,7 @@
                   }
 
                   _context13.next = 33;
-                  return evaluate(test.cdr.car, eval_args);
+                  return _evaluate(test.cdr.car, eval_args);
 
                 case 33:
                   return _context13.abrupt("return", _context13.sent);
@@ -10600,13 +10608,13 @@
 
         var resolve = function resolve(cond) {
           if (cond === false) {
-            return evaluate(code.cdr.cdr.car, {
+            return _evaluate(code.cdr.cdr.car, {
               env: env,
               dynamic_scope: dynamic_scope,
               error: error
             });
           } else {
-            return evaluate(code.cdr.car, {
+            return _evaluate(code.cdr.car, {
               env: env,
               dynamic_scope: dynamic_scope,
               error: error
@@ -10618,11 +10626,12 @@
           throw new Error('too few expressions for `if`');
         }
 
-        var cond = evaluate(code.car, {
+        var cond = _evaluate(code.car, {
           env: env,
           dynamic_scope: dynamic_scope,
           error: error
         });
+
         return unpromise(cond, resolve);
       }), "(if cond true-expr false-expr)\n\n            Macro evaluate condition expression and if the value is true, it\n            evaluate and return true expression if not it evaluate and return\n            false expression"),
       // ------------------------------------------------------------------
@@ -10631,14 +10640,16 @@
         var dynamic_scope = options.dynamic_scope,
             error = options.error;
         typecheck('let-env', code, 'pair');
-        var ret = evaluate(code.car, {
+
+        var ret = _evaluate(code.car, {
           env: this,
           dynamic_scope: dynamic_scope,
           error: error
         });
+
         return unpromise(ret, function (value) {
           typecheck('let-env', value, 'environment');
-          return evaluate(Pair(LSymbol('begin'), code.cdr), {
+          return _evaluate(Pair(LSymbol('begin'), code.cdr), {
             env: value,
             dynamic_scope: dynamic_scope,
             error: error
@@ -10671,7 +10682,9 @@
         return function loop() {
           if (arr.length) {
             var code = arr.shift();
-            var ret = evaluate(code, args);
+
+            var ret = _evaluate(code, args);
+
             return unpromise(ret, function (value) {
               result = value;
               return loop();
@@ -10694,7 +10707,7 @@
           args.dynamic_scope = this;
         }
 
-        evaluate(new Pair(new LSymbol('begin'), code), args);
+        _evaluate(new Pair(new LSymbol('begin'), code), args);
       }, "(ignore expression)\n\n            Macro that will evaluate expression and swallow any promises that may\n            be created. It wil run and ignore any value that may be returned by\n            expression. The code should have side effects and/or when it's promise\n            it should resolve to undefined."),
       // ------------------------------------------------------------------
       define: doc(Macro.defmacro('define', function (code, eval_args) {
@@ -10717,7 +10730,7 @@
         var new_expr;
 
         if (value instanceof Pair) {
-          value = evaluate(value, eval_args);
+          value = _evaluate(value, eval_args);
           new_expr = true;
         } else if (value instanceof LSymbol) {
           value = env.get(value);
@@ -10810,7 +10823,7 @@
         var _this17 = this;
 
         env = env || this;
-        return evaluate(code, {
+        return _evaluate(code, {
           env: env,
           //dynamic_scope: this,
           error: function error(e) {
@@ -10923,7 +10936,7 @@
 
           var rest = __doc__ ? code.cdr.cdr : code.cdr;
           var output = new Pair(new LSymbol('begin'), rest);
-          return evaluate(output, {
+          return _evaluate(output, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
@@ -11007,7 +11020,7 @@
               // this eval will return lips code
               var rest = __doc__ ? macro.cdr.cdr : macro.cdr;
               var result = rest.reduce(function (result, node) {
-                return evaluate(node, eval_args);
+                return _evaluate(node, eval_args);
               });
               return unpromise(result, function (result) {
                 if (_typeof_1(result) === 'object') {
@@ -11138,12 +11151,13 @@
                 };
               }
 
-              var result = evaluate(expr, _objectSpread(_objectSpread({}, eval_args), {}, {
+              var result = _evaluate(expr, _objectSpread(_objectSpread({}, eval_args), {}, {
                 env: new_env
               })); // Hack: update the result if there are generated
               //       gensyms that should be literal symbols
               // TODO: maybe not the part move when literal elisps may
               //       be generated, maybe they will need to be mark somehow
+
 
               return clear_gensyms(result, names);
             }
@@ -11248,7 +11262,7 @@
               if (unquote_cnt + 1 < max_unq) {
                 result = recur(x.cdr, unquote_cnt + 1, max_unq);
               } else {
-                result = evaluate(x.cdr.car, {
+                result = _evaluate(x.cdr.car, {
                   env: self,
                   dynamic_scope: dynamic_scope,
                   error: error
@@ -11259,7 +11273,7 @@
                 throw new Error("Expecting list ".concat(type(x), " found"));
               }
 
-              return acc.concat(result.toArray());
+              return acc.concat(result.to_array());
             }
 
             acc.push(recur(x, unquote_cnt, max_unq));
@@ -11284,7 +11298,7 @@
               if (unquote_cnt < max_unq) {
                 output = recur(value.cdr.car, unquote_cnt, max_unq);
               } else {
-                output = evaluate(value.cdr.car, {
+                output = _evaluate(value.cdr.car, {
                   env: self,
                   dynamic_scope: dynamic_scope,
                   error: error
@@ -11312,11 +11326,12 @@
 
           var lists = [];
           return function next(node) {
-            var value = evaluate(node.car, {
+            var value = _evaluate(node.car, {
               env: self,
               dynamic_scope: dynamic_scope,
               error: error
             });
+
             lists.push(value);
 
             if (node.cdr instanceof Pair) {
@@ -11407,7 +11422,7 @@
                       return Pair.fromArray(result);
                     }
 
-                    return unpromise(evaluate(node.car, {
+                    return unpromise(_evaluate(node.car, {
                       env: self,
                       dynamic_scope: dynamic_scope,
                       error: error
@@ -11454,7 +11469,7 @@
                         return Pair.fromArray(_result3);
                       }
 
-                      return unpromise(evaluate(node.car, {
+                      return unpromise(_evaluate(node.car, {
                         env: self,
                         dynamic_scope: dynamic_scope,
                         error: error
@@ -11468,7 +11483,7 @@
                     return pair.cdr;
                   }
                 } else {
-                  return evaluate(pair.cdr.car, {
+                  return _evaluate(pair.cdr.car, {
                     env: self,
                     dynamic_scope: dynamic_scope,
                     error: error
@@ -11826,9 +11841,9 @@
         return Pair.fromArray(array);
       }, "(array->list array)\n\n            Function convert JavaScript array to LIPS list."),
       // ------------------------------------------------------------------
-      'tree->array': doc('tree->array', toArray$1('tree->array', true), "(tree->array list)\n\n             Function convert LIPS list structure into JavaScript array."),
+      'tree->array': doc('tree->array', to_array('tree->array', true), "(tree->array list)\n\n             Function convert LIPS list structure into JavaScript array."),
       // ------------------------------------------------------------------
-      'list->array': doc('list->array', toArray$1('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
+      'list->array': doc('list->array', to_array('list->array'), "(list->array list)\n\n             Function convert LIPS list into JavaScript array."),
       // ------------------------------------------------------------------
       apply: doc(function apply(fn) {
         for (var _len28 = arguments.length, args = new Array(_len28 > 1 ? _len28 - 1 : 0), _key28 = 1; _key28 < _len28; _key28++) {
@@ -11910,7 +11925,7 @@
             _next = function next(result, cont) {
               // prevent infinite loop when finally throw exception
               _next = reject;
-              unpromise(evaluate(new Pair(new LSymbol('begin'), finally_clause.cdr), args), function () {
+              unpromise(_evaluate(new Pair(new LSymbol('begin'), finally_clause.cdr), args), function () {
                 cont(result);
               });
             };
@@ -11932,7 +11947,7 @@
                   args.dynamic_scope = _this18;
                 }
 
-                unpromise(evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
+                unpromise(_evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
                   _next(result, resolve);
                 });
               } else {
@@ -11945,7 +11960,7 @@
             args.dynamic_scope = _this18;
           }
 
-          var result = evaluate(code.car, args);
+          var result = _evaluate(code.car, args);
 
           if (is_promise(result)) {
             result.then(function (result) {
@@ -12419,11 +12434,13 @@
             }
           } else {
             var arg = args.shift();
-            var value = evaluate(arg, {
+
+            var value = _evaluate(arg, {
               env: self,
               dynamic_scope: dynamic_scope,
               error: error
             });
+
             return unpromise(value, next);
           }
         }();
@@ -12466,11 +12483,12 @@
               return false;
             }
           } else {
-            var value = evaluate(arg, {
+            var value = _evaluate(arg, {
               env: self,
               dynamic_scope: dynamic_scope,
               error: error
             });
+
             return unpromise(value, next);
           }
         }();
@@ -12709,7 +12727,7 @@
       var match = false;
 
       if (expected instanceof Pair) {
-        expected = expected.toArray();
+        expected = expected.to_array();
       }
 
       if (expected instanceof Array) {
@@ -12964,7 +12982,7 @@
 
       return function loop() {
         if (node instanceof Pair) {
-          var arg = evaluate(node.car, {
+          var arg = _evaluate(node.car, {
             env: env,
             dynamic_scope: dynamic_scope,
             error: error
@@ -13026,7 +13044,7 @@
         if (value && value[__data__] || !value || self_evaluated(value)) {
           return value;
         } else {
-          return unpromise(evaluate(value, eval_args), finalize);
+          return unpromise(_evaluate(value, eval_args), finalize);
         }
       });
     } // -------------------------------------------------------------------------
@@ -13120,7 +13138,7 @@
     } // -------------------------------------------------------------------------
 
 
-    function evaluate(code) {
+    function _evaluate(code) {
       var _ref44 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
           env = _ref44.env,
           dynamic_scope = _ref44.dynamic_scope,
@@ -13159,11 +13177,11 @@
         var rest = code.cdr;
 
         if (first instanceof Pair) {
-          value = resolve_promises(evaluate(first, eval_args));
+          value = resolve_promises(_evaluate(first, eval_args));
 
           if (is_promise(value)) {
             return value.then(function (value) {
-              return evaluate(new Pair(value, code.cdr), eval_args);
+              return _evaluate(new Pair(value, code.cdr), eval_args);
             }); // else is later in code
           } else if (!is_function(value)) {
             throw new Error(type(value) + ' ' + env.get('repr')(value) + ' is not a function while evaluating ' + code.toString());
@@ -13260,7 +13278,7 @@
                 }
 
                 code = _value3;
-                value = evaluate(code, {
+                value = _evaluate(code, {
                   env: env,
                   dynamic_scope: dynamic_scope,
                   error: function error(e, code) {
@@ -13699,10 +13717,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 07 Mar 2021 13:06:05 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 07 Mar 2021 16:47:22 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 07 Mar 2021 13:06:05 +0000').valueOf();
+      var date = LString('Sun, 07 Mar 2021 16:47:22 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13742,12 +13760,12 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 07 Mar 2021 13:06:05 +0000',
+      date: 'Sun, 07 Mar 2021 16:47:22 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
       tokenize: tokenize,
-      evaluate: evaluate,
+      evaluate: _evaluate,
       bootstrap: bootstrap,
       Environment: Environment,
       env: user_env,

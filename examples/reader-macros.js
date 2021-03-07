@@ -45,7 +45,7 @@
                 return obj;
             });
             return new Pair(car, cdr);
-        }).toObject();
+        }).to_object();
     }));
     env.set('object->string', function(obj) {
         return JSON.stringify(obj);
