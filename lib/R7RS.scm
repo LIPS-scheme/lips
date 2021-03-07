@@ -134,7 +134,7 @@
   (typecheck "vector->string" vector "array")
   (--> vector
        (slice start end)
-       (map (lambda (char.valueOf)))
+       (map (lambda (char) (char.valueOf)))
        (join "")))
 
 ;; -----------------------------------------------------------------------------
