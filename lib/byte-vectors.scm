@@ -1,11 +1,11 @@
 ;; Implementation of byte vector functions - SRFI-4
 ;;
-;; original code was ased on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
+;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
 ;; it use JavaScript typed arrays
 ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 
