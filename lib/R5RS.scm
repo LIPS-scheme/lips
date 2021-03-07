@@ -74,9 +74,16 @@
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
-           (lambda (x q)
-             (let ((arr (--> x (map (lambda (x) (repr x q))))))
-               (concat "#(" (--> arr (join " ")) ")"))))
+           (lambda (arr q)
+             ;; Array.from is used to convert emtpy to undefined
+             ;; but we can't use the value because Array.from call
+             ;; valueOf on its arguments
+             (let ((result (--> (Array.from arr)
+                                (map (lambda (x i)
+                                       (if (not (in i arr))
+                                           "#<empty>"
+                                           (repr (. arr i) q)))))))
+               (concat "#(" (--> result (join " ")) ")"))))
 
 ;; -----------------------------------------------------------------------------
 (define (eqv? a b)

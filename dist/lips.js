@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 07 Mar 2021 12:25:17 +0000
+ * build: Sun, 07 Mar 2021 13:06:05 +0000
  */
 (function () {
   'use strict';
@@ -11749,11 +11749,11 @@
       }, "(debugger)\n\n            Function stop JavaScript code in debugger."),
       // ------------------------------------------------------------------
       'in': doc('in', function (a, b) {
-        if (a instanceof LSymbol || a instanceof LString) {
+        if (a instanceof LSymbol || a instanceof LString || a instanceof LNumber) {
           a = a.valueOf();
         }
 
-        return a in b;
+        return a in unbox(b);
       }, "(in key value)\n\n            Function use is in operator to check if value is in object."),
       // ------------------------------------------------------------------
       'instanceof': doc('instanceof', function (type, obj) {
@@ -13699,10 +13699,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 07 Mar 2021 12:25:17 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Sun, 07 Mar 2021 13:06:05 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 07 Mar 2021 12:25:17 +0000').valueOf();
+      var date = LString('Sun, 07 Mar 2021 13:06:05 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13742,7 +13742,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 07 Mar 2021 12:25:17 +0000',
+      date: 'Sun, 07 Mar 2021 13:06:05 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

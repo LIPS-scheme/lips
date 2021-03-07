@@ -1455,9 +1455,16 @@
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
-           (lambda (x q)
-             (let ((arr (--> x (map (lambda (x) (repr x q))))))
-               (concat "#(" (--> arr (join " ")) ")"))))
+           (lambda (arr q)
+             ;; Array.from is used to convert emtpy to undefined
+             ;; but we can't use the value because Array.from call
+             ;; valueOf on its arguments
+             (let ((result (--> (Array.from arr)
+                                (map (lambda (x i)
+                                       (if (not (in i arr))
+                                           "#<empty>"
+                                           (repr (. arr i) q)))))))
+               (concat "#(" (--> result (join " ")) ")"))))
 
 ;; -----------------------------------------------------------------------------
 (define (eqv? a b)
@@ -3036,8 +3043,6 @@
  (array->list (vector.slice start end)))
 
 ;; -----------------------------------------------------------------------------
-
-;; -----------------------------------------------------------------------------
 (%range-function
  (string->vector string)
  "(string->list string)
@@ -3066,6 +3071,22 @@
        (slice start end)
        (map (lambda (char.valueOf)))
        (join "")))
+
+;; -----------------------------------------------------------------------------
+(%range-function
+ (vector-fill! vector fill)
+ "(vector-fill! vector fill)
+  (vector-fill! vector fill start)
+  (vector-fill! vector fill start end)
+
+  Fill vector with a given value in given range. If start is not given is start
+  at 0. If end is not given it fill till the end if the vector."
+ (typecheck "vector->fill!" vector "array")
+ (let recur ((n (- end start)))
+    (if (>= n start)
+        (begin
+          (set-obj! vector n fill)
+          (recur (- n 1))))))
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let*-values

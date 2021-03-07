@@ -8009,10 +8009,12 @@
             Function stop JavaScript code in debugger.`),
         // ------------------------------------------------------------------
         'in': doc('in', function(a, b) {
-            if (a instanceof LSymbol || a instanceof LString) {
+            if (a instanceof LSymbol ||
+                a instanceof LString ||
+                a instanceof LNumber) {
                 a = a.valueOf();
             }
-            return a in b;
+            return a in unbox(b);
         }, `(in key value)
 
             Function use is in operator to check if value is in object.`),

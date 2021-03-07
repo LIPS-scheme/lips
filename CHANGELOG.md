@@ -44,6 +44,7 @@
 * fix complex operation that result in real (e.g. multiplication over conjugation)
 * fix `list-ref` according to R7RS errata
 * fix formatter (pretty print) on multiline strings and atoms
+* fix repr of vectors (arrays with empty value)
 
 ## 1.0.0-beta.11
 ### Breaking
