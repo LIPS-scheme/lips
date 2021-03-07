@@ -3003,6 +3003,71 @@
         (--> (car args) (concat (apply vector-append (cdr args)))))))
 
 ;; -----------------------------------------------------------------------------
+(define-macro (%range-function spec . body)
+  "(%range-function spec . body)
+
+   Macro that creates R7RS vector functions that have range start end."
+  (let* ((name (car spec))
+         (name-str (symbol->string name))
+         (args (append (cdr spec) 'rest)))
+    `(define (,name ,@args)
+       ,(if (string? (car body))
+            (car body))
+       (let ((start (if (null? rest) 0 (car rest)))
+             (end (if (or (null? rest) (null? (cdr rest)))
+                      (. ,(car args) 'length)
+                      (cadr rest))))
+         (typecheck ,name-str start "number")
+         (typecheck ,name-str end "number")
+         ,@(if (string? (car body))
+               (cdr body)
+               body)))))
+
+;; -----------------------------------------------------------------------------
+(%range-function
+ (vector->list vector)
+ "(vector->list vector)
+  (vector->list vector start)
+  (vector->list vector start end)
+
+  Function copy given range of vector to list. If no start is specified it use
+  start of the vector, if no end is specified it convert to the end of the vector."
+ (typecheck "vector->list" vector "array")
+ (array->list (vector.slice start end)))
+
+;; -----------------------------------------------------------------------------
+
+;; -----------------------------------------------------------------------------
+(%range-function
+ (string->vector string)
+ "(string->list string)
+  (string->list string start)
+  (string->list string start end)
+
+  Function copy given range of string to list. If no start is specified it use
+  start of the string, if no end is specified it convert to the end of the string."
+ (typecheck "string->vector" string "string")
+ (--> (string.substring start end)
+      (split "")
+      (map (unary lips.LCharacter))))
+
+;; -----------------------------------------------------------------------------
+(%range-function
+ (vector->string vector)
+  "(vector->string vector)
+   (vector->string vector start)
+   (vector->string vector start end)
+
+   Function return new string created from vector of characters in given range.
+   If no start is given it create string from 0, if no end is given it return
+   string to the end."
+  (typecheck "vector->string" vector "array")
+  (--> vector
+       (slice start end)
+       (map (lambda (char.valueOf)))
+       (join "")))
+
+;; -----------------------------------------------------------------------------
 (define-syntax let*-values
   (syntax-rules ()
     ((_ ()) nil)
@@ -3139,22 +3204,6 @@
    Function returns #t if z is both exact and an integer; otherwise
    returns #f."
   (and (integer? n) (exact? n)))
-
-;; -----------------------------------------------------------------------------
-(define (string->vector s)
-  "(string->vector string)
-
-   Function return vector of characters created from string."
-  (typecheck "string->list" s "string")
-  (--> s (split "") (map (lambda (x) (lips.LCharacter x)))))
-
-;; -----------------------------------------------------------------------------
-(define (vector->string v)
-  "(vector->string vector)
-
-   Function return new string created from vector of characters."
-  (typecheck "vector->list" v "array")
-  (--> v (map (lambda (char) (char.valueOf))) (join "")))
 
 ;; -----------------------------------------------------------------------------
 (define (vector-map fn . rest)

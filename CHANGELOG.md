@@ -23,6 +23,7 @@
 * add gensym literals (e.g. `#:foo`)
 * fix pretty print of different cases of `let`
 * add binary input/output procedures from R7RS
+* update vector functions that in R7RS get start and end arguments
 ### Bugfix
 * fix prism highlighting of names (for new context help)
 * fix error when using help in node REPL and there are no doc string
