@@ -8,6 +8,10 @@ InputPort <|-- InputStringPort
 InputStringPort <|-- InputFilePort
 OutputPort <|-- OutputStringPort
 OutputPort <|-- OutputFilePort
+OutputPort <|-- OutputByteVectorPort
+InputPort <|-- InputByteVectorPort
+InputByteVectorPort <|-- InputBinaryFilePort
+OutputFilePort <|-- OutputBinaryFilePort
 
 Parser *-- Lexer
 Macro <|-- Syntax
@@ -25,12 +29,12 @@ class LRational {
   pow()
   abs()
   cmp()
-  valueOf()
-  toString()
   mul()
   div()
   sub()
   add()
+  valueOf()
+  toString()
 }
 
 class LBigInteger {
@@ -38,13 +42,14 @@ class LBigInteger {
   sqrt()
   gcd()
   sqrt()
-
 }
+
 class LFloat {
   Number __value__
   toRational()
   toString()
 }
+
 class LNumber {
   Number __value__
   isFloat()
@@ -63,8 +68,8 @@ class LNumber {
   isOdd()
   isEven()
   cmp()
-  
 }
+
 class LComplex {
   LNumber __im__
   LNumber __re__
@@ -82,7 +87,7 @@ class LComplex {
 }
 
 class InputPort {
-  Function _read
+  Parser __parser__
   read_char()
   skip_char()
   read_line()
@@ -92,19 +97,84 @@ class InputPort {
   close()
   toString()
 }
+
 class OutputPort {
+  symbol __type__
+  write()
   is_open()
   close()
   toString()
 }
 
 class OutputStringPort {
-  string[] _buffer
+  string[] __buffer__
+  symbol __type__
+  write()
+  valueOf()
+  toString()
 }
+
+class InputBinaryFilePort {
+  string __filename__
+  toString()
+}
+
+class InputStringPort {
+  symbol __type__
+  char_ready()
+  toString()
+}
+
+class InputFilePort {
+  string __filename__
+  toStgring()
+}
+
 class OutputFilePort {
-  string _filename
-  number _fd
+  string __filename__
+  symbol __type__
+  fs()
+  internal()
+  close()
+  toString()
 }
+
+class InputByteVectorPort {
+  symbol __type__
+  Uint8Array __vector__
+  integer __index__
+  toString()
+  u8_ready()
+  peek_u8()
+  skip()
+  read_u8()
+  read_u8_vector(integer)
+}
+
+class OutputByteVectorPort {
+  Uin8Array __buffer__
+  symbol __type__
+  write(any)
+  close()
+  write_u8(byte)
+  write_u8_vector(Uint8Array)
+  toString()
+  valueOf()
+}
+
+class InputByteVectorPort {
+  string __filename__
+  toString()
+}
+
+class OutputBinaryFilePort {
+  string __filename__
+  symbol __type__
+  write(any)
+  write_u8(byte)
+  write_u8_vector(Uint8Array)
+}
+
 class Formatter {
   string __code__
   indent(object): number
@@ -130,12 +200,14 @@ class LString {
   clone(): LString
   fill(LCharacter)
 }
+
 class Worker {
   string url
   Worker worker
   rpc(method, params): Promise
   exec(code, [dynamic]): Promise
 }
+
 class LCharacter {
   string __name__
   string __char__
@@ -144,6 +216,7 @@ class LCharacter {
   toString(): string
   valueOf(): string
 }
+
 class Lexer {
   string __input__
   token(meta)
@@ -159,6 +232,7 @@ class Lexer {
   next_token()
   static rules
 }
+
 class Parser {
   Lexer __lexer__
   Environent __env__
@@ -176,9 +250,11 @@ class Parser {
   is_ccomment(token)
   evaluate(code)
 }
+
 class LSymbol {
   string __name__
 }
+
 class Environment {
   string __name__
   Map __docs__
@@ -199,11 +275,13 @@ class Environment {
   merge(): Environment
   toString(): string
 }
+
 class Values {
   any[] __values__
   valueOf()
   toString()
 }
+
 class Macro {
   string __doc__
   string __name__
@@ -213,16 +291,19 @@ class Macro {
   invoke()
   toString()
 }
+
 class Syntax {
   invoke()
   toString()
 }
+
 class QuotedPromise {
   Promise __promise__
   then()
   catch()
   valueOf()
 }
+
 class Pair {
   any car
   any cdr
@@ -238,6 +319,7 @@ class Pair {
   transform(Function)
   map(Function)
 }
+
 class Interpreter {
   Environment __env__
   get(symbol)
