@@ -73,7 +73,7 @@
             {% assign code = example.code %}
             <li>
               <div class="example">
-                <pre>{{ code }}</pre>
+                <pre>{{ code | xml_escape }}</pre>
               </div>
               <div class="description">
                 {{ example.description }}
