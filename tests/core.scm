@@ -230,6 +230,13 @@
           (await p)
           (t.is result #(10)))))
 
+(test "core: quoted promise of object with then method"
+      (lambda (t)
+        (let ((p '>(object :then (lambda () 10))))
+          (--> p (then (lambda (result)
+                         (t.is result 10))))
+          (t.is (await p) 10))))
+
 (test "core: regex"
       (lambda (t)
         (let* ((str "#/(\\((?:env|dir|help|apropos)[^)]*\\))/g")

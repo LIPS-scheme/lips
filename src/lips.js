@@ -805,21 +805,26 @@
     // class used to escape promises feature #54
     // ----------------------------------------------------------------------
     function QuotedPromise(promise) {
-        // prevent exception on unhandled rejecting when using
-        // '>(Promise.reject (new Error "zonk")) in REPL
-        promise.catch(() => {});
+        if (is_function(promise.catch)) {
+            // prevent exception on unhandled rejecting when using
+            // '>(Promise.reject (new Error "zonk")) in REPL
+            promise.catch(() => {});
+        }
         this.__promise__ = promise;
     }
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.then = function(fn) {
-        return new QuotedPromise(this.__promise__.then(fn));
+        return new QuotedPromise(this.valueOf().then(fn));
     };
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.catch = function(fn) {
-        return new QuotedPromise(this.__promise__.catch(fn));
+        return new QuotedPromise(this.valueOf().catch(fn));
     };
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.valueOf = function() {
+        if (!this.__promise__) {
+            throw new Error('QuotedPromise: invalid promise created');
+        }
         return this.__promise__;
     };
     // ----------------------------------------------------------------------
@@ -9344,6 +9349,15 @@
             // escape promise feature #54
             var __promise__ = env.get(Symbol.for('__promise__'), { throwError: false });
             if (__promise__ === true && is_promise(result)) {
+                // fix #139 evaluate the code inside the promise that is not data.
+                // When promise is not quoted it happen automatically, when returing
+                // promise from evaluate.
+                result = result.then(result => {
+                    if (result instanceof Pair && !value[__data__]) {
+                        return evaluate(result, eval_args);
+                    }
+                    return result;
+                });
                 return new QuotedPromise(result);
             }
             return result;

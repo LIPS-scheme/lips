@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 07 Mar 2021 16:47:22 +0000
+ * build: Thu, 11 Mar 2021 21:22:59 +0000
  */
 (function () {
   'use strict';
@@ -2183,24 +2183,31 @@
 
 
     function QuotedPromise(promise) {
-      // prevent exception on unhandled rejecting when using
-      // '>(Promise.reject (new Error "zonk")) in REPL
-      promise["catch"](function () {});
+      if (is_function(promise["catch"])) {
+        // prevent exception on unhandled rejecting when using
+        // '>(Promise.reject (new Error "zonk")) in REPL
+        promise["catch"](function () {});
+      }
+
       this.__promise__ = promise;
     } // ----------------------------------------------------------------------
 
 
     QuotedPromise.prototype.then = function (fn) {
-      return new QuotedPromise(this.__promise__.then(fn));
+      return new QuotedPromise(this.valueOf().then(fn));
     }; // ----------------------------------------------------------------------
 
 
     QuotedPromise.prototype["catch"] = function (fn) {
-      return new QuotedPromise(this.__promise__["catch"](fn));
+      return new QuotedPromise(this.valueOf()["catch"](fn));
     }; // ----------------------------------------------------------------------
 
 
     QuotedPromise.prototype.valueOf = function () {
+      if (!this.__promise__) {
+        throw new Error('QuotedPromise: invalid promise created');
+      }
+
       return this.__promise__;
     }; // ----------------------------------------------------------------------
 
@@ -13222,6 +13229,16 @@
         });
 
         if (__promise__ === true && is_promise(result)) {
+          // fix #139 evaluate the code inside the promise that is not data.
+          // When promise is not quoted it happen automatically, when returing
+          // promise from evaluate.
+          result = result.then(function (result) {
+            if (result instanceof Pair && !value[__data__]) {
+              return _evaluate(result, eval_args);
+            }
+
+            return result;
+          });
           return new QuotedPromise(result);
         }
 
@@ -13717,10 +13734,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 07 Mar 2021 16:47:22 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 11 Mar 2021 21:22:59 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 07 Mar 2021 16:47:22 +0000').valueOf();
+      var date = LString('Thu, 11 Mar 2021 21:22:59 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13760,7 +13777,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 07 Mar 2021 16:47:22 +0000',
+      date: 'Thu, 11 Mar 2021 21:22:59 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
