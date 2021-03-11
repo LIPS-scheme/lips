@@ -1227,8 +1227,36 @@
              (h (lambda args (apply (g g) args)))))))
 
 ;; -----------------------------------------------------------------------------
+(define (indexed-db?)
+  "(indexed-db?)
+
+   Function test if indexedDB is available."
+  (let* ((any (lambda args
+                (let iter ((args args))
+                  (if (null? args)
+                      false
+                      (if (not (null? (car args)))
+                          (car args)
+                          (iter (cdr args)))))))
+         (indexedDB (any window.indexedDB
+                         window.indexedDB
+                         window.mozIndexedDB
+                         window.webkitIndexedDB)))
+    (if (not (null? indexedDB))
+        (try
+         (begin
+           ;; open will fail in about:blank
+           (window.indexedDB.open "MyTestDatabase" 3)
+           true)
+         (catch (e)
+                false))
+        false)))
+
+;; -----------------------------------------------------------------------------
+;; init internal fs for LIPS Scheme Input/Output functions
+;; -----------------------------------------------------------------------------
 (let* ((fs (cond ((eq? self global) (require "fs"))
-                 ((not (null? self.BrowserFS))
+                 ((and (not (null? self.BrowserFS)) (indexed-db?))
                   (new Promise (lambda (resolve reject)
                                  (BrowserFS.configure
                                   &(:fs "IndexedDB"
