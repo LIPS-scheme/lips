@@ -44,6 +44,7 @@ section#head .actions-wrapper {
 }
 section#head .intro .actions {
     padding: 0;
+    maring: 0;
     list-style: none;
     display: flex;
     position: absolute;
