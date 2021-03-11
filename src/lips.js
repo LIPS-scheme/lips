@@ -805,28 +805,33 @@
     // class used to escape promises feature #54
     // ----------------------------------------------------------------------
     function QuotedPromise(promise) {
-        if (promise instanceof QuotedPromise) {
-            return promise;
-        }
         var internal = {
             pending: true,
             rejected: false,
             fulfilled: false,
+            reason: undefined,
             type: undefined
         };
-        if (is_function(promise.catch)) {
-            // prevent exception on unhandled rejecting when using
-            // '>(Promise.reject (new Error "zonk")) in REPL
-            promise.catch(() => {
-                internal.rejected = true;
-                internal.pending = false;
-            });
-        }
-        promise.then(v => {
+        // then added to __promise__ is needed otherwise rejection
+        // will give UnhandledPromiseRejectionWarning in Node.js
+        promise = promise.then(v => {
             internal.type = type(v);
             internal.fulfilled = true;
             internal.pending = false;
+            return v;
         });
+        // promise without catch, used for valueOf - for rejecting
+        // that should throw an error when used with await
+        read_only(this, '_promise', promise, { hidden: true });
+        if (is_function(promise.catch)) {
+            // prevent exception on unhandled rejecting when using
+            // '>(Promise.reject (new Error "zonk")) in REPL
+            promise = promise.catch((err) => {
+                internal.rejected = true;
+                internal.pending = false;
+                internal.reason = err;
+            });
+        }
         Object.keys(internal).forEach(name => {
             Object.defineProperty(this, `__${name}__`, {
                 enumerable: true,
@@ -845,10 +850,10 @@
     };
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.valueOf = function() {
-        if (!this.__promise__) {
+        if (!this._promise) {
             throw new Error('QuotedPromise: invalid promise created');
         }
-        return this.__promise__;
+        return this._promise;
     };
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.toString = function() {

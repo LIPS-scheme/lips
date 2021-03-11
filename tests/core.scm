@@ -237,6 +237,22 @@
                          (t.is result 10))))
           (t.is (await p) 10))))
 
+(test "core: quoted promise repr"
+      (lambda (t)
+        (let ((resolve))
+          (define promise '>(new Promise (lambda (r) (set! resolve r))))
+          (t.is (repr promise) "#<js-promise (pending)>")
+          (resolve "xx")
+          (t.is (await promise) "xx")
+          (t.is (repr promise) "#<js-promise resolved (string)>"))
+        (let ((reject))
+          (define promise '>(new Promise (lambda (_ r) (set! reject r))))
+          (t.is (repr promise) "#<js-promise (pending)>")
+          (reject (new Error "ZONK"))
+          (t.is (to.throw (await promise)) true)
+          (t.is (repr promise) "#<js-promise (rejected)>")
+          (t.is (not (null? (promise.__reason__.message.match #/ZONK/))) true))))
+
 (test "core: regex"
       (lambda (t)
         (let* ((str "#/(\\((?:env|dir|help|apropos)[^)]*\\))/g")

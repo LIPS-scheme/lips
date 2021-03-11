@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 11 Mar 2021 22:31:09 +0000
+ * build: Thu, 11 Mar 2021 23:11:48 +0000
  */
 (function () {
   'use strict';
@@ -2185,31 +2185,37 @@
     function QuotedPromise(promise) {
       var _this = this;
 
-      if (promise instanceof QuotedPromise) {
-        return promise;
-      }
-
       var internal = {
         pending: true,
         rejected: false,
         fulfilled: false,
+        reason: undefined$1,
         type: undefined$1
-      };
+      }; // then added to __promise__ is needed otherwise rejection
+      // will give UnhandledPromiseRejectionWarning in Node.js
+
+      promise = promise.then(function (v) {
+        internal.type = type(v);
+        internal.fulfilled = true;
+        internal.pending = false;
+        return v;
+      }); // promise without catch, used for valueOf - for rejecting
+      // that should throw an error when used with await
+
+      read_only(this, '_promise', promise, {
+        hidden: true
+      });
 
       if (is_function(promise["catch"])) {
         // prevent exception on unhandled rejecting when using
         // '>(Promise.reject (new Error "zonk")) in REPL
-        promise["catch"](function () {
+        promise = promise["catch"](function (err) {
           internal.rejected = true;
           internal.pending = false;
+          internal.reason = err;
         });
       }
 
-      promise.then(function (v) {
-        internal.type = type(v);
-        internal.fulfilled = true;
-        internal.pending = false;
-      });
       Object.keys(internal).forEach(function (name) {
         Object.defineProperty(_this, "__".concat(name, "__"), {
           enumerable: true,
@@ -2233,11 +2239,11 @@
 
 
     QuotedPromise.prototype.valueOf = function () {
-      if (!this.__promise__) {
+      if (!this._promise) {
         throw new Error('QuotedPromise: invalid promise created');
       }
 
-      return this.__promise__;
+      return this._promise;
     }; // ----------------------------------------------------------------------
 
 
@@ -13782,10 +13788,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 11 Mar 2021 22:31:09 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 11 Mar 2021 23:11:48 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 11 Mar 2021 22:31:09 +0000').valueOf();
+      var date = LString('Thu, 11 Mar 2021 23:11:48 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13825,7 +13831,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 11 Mar 2021 22:31:09 +0000',
+      date: 'Thu, 11 Mar 2021 23:11:48 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
