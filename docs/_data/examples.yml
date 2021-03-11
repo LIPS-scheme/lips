@@ -43,7 +43,7 @@
      ;;             (#:cons (#:cons "bar" 20)
      ;;                     ()))
 -
-  description: "Y Combinator and factorial function."
+  description: "Y Combinator and inline factorial function."
   code: |
      (define Y
        (lambda (h)
@@ -58,3 +58,4 @@
                   ((zero? n) 1)
                   (else (* n (f (- n 1))))))))
       10)
+      ;; ==> 3628800
