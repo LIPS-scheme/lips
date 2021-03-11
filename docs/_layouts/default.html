@@ -20,12 +20,18 @@
     <meta name="twitter:creator" content="@jcubic"/>
 
     {% include base_head.html %}
-    
 </head>
 <body>
   <!-- cx -->
   <main>
     <section id="head">
+      <div class="top-bar">
+        {% include nav.html %}
+        <ul class="icons">
+          <li class="twitter"><a href="https://twitter.com/lips_lang">Twitter</a></li>
+          <li class="github"><a href="https://github.com/jcubic/lips">GitHb</a></li>
+        </ul>
+      </div>
       <header>
         {% include logo.html %}
         {% if page.layout == 'post' %}
@@ -36,6 +42,9 @@
       </header>
       {% if page.layout != 'post' %}
       <div class="intro">
+        <div class="loader">
+          <div></div><div></div><div></div><div></div>
+        </div>
         <div class="actions-wrapper">
           <ul class="actions cloak">
             <li class="zoom-in icon">
@@ -81,13 +90,6 @@
         </div>
       </div>
       {% endif %}
-      <div class="top-bar">
-        {% include nav.html %}
-        <ul class="icons">
-          <li class="twitter"><a href="https://twitter.com/lips_lang">Twitter</a></li>
-          <li class="github"><a href="https://github.com/jcubic/lips">GitHb</a></li>
-        </ul>
-      </div>
     </section>
     <section id="content">
       {{ content }}

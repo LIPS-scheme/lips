@@ -13,6 +13,9 @@ section#head > header {
     padding-top: 70px;
     position: relative;
 }
+section#head .intro {
+    position: relative;
+}
 section#head .terminal {
     --background: #14232d;
     --color: white;
@@ -253,6 +256,12 @@ section#head .examples .list > li.active {
 .examples .pagination li + li {
     margin-left: 10px;
 }
+.examples .pagination a {
+    display: block;
+    height: 100%;
+    padding: 2px;
+    box-sizing: border-box;
+}
 .examples .pagination li,
 .examples .pagination a,
 .examples .pagination a:visited {
@@ -265,4 +274,69 @@ s}
 examples .pagination li.active a:visited {
     background: white;
     color: #1d6aa1;
+}
+/* LOADER */
+.loader {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+  position: absolute;
+  left: 50%;
+  top: 100px;
+  transform: translateX(-50%);
+}
+.loader div {
+  box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  margin: 8px;
+  border: 8px solid #fff;
+  border-radius: 50%;
+  -webkit-animation: loader 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+     -moz-animation: loader 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+          animation: loader 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: #fff transparent transparent transparent;
+}
+.loader div:nth-child(1) {
+  animation-delay: -0.45s;
+}
+.loader div:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.loader div:nth-child(3) {
+  animation-delay: -0.15s;
+}
+@-webkit-keyframes loader {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@-ms-keyframes loader {
+  0% {
+    -ms-transform: rotate(0deg);
+  }
+  100% {
+    -ms-transform: rotate(360deg);
+  }
+}
+@-moz-keyframes loader {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes loader {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
