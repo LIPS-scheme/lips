@@ -1350,16 +1350,20 @@
 (define (response->content binary res)
   "(response->text binary res)
 
-   Function read all text from Node.js HTTP response object. If binary argument is
-   true it will return Buffer object that can be converted to u8vector.
+   Function read all text from Node.js HTTP response object. If binary argument
+   is true it will return Buffer object that can be converted to u8vector.
 
    ***Warrning:*** it may overflow the stack (part of Node) when converting
    whole buffer to u8vector."
-  (let ((result (vector)))
+  (let ((result (vector))
+        (append (if binary
+                    (lambda (chunk)
+                      (result.push (Buffer.from chunk "binary")))
+                    (lambda (chunk)
+                      (result.push chunk)))))
     (res.setEncoding (if binary "binary" "utf8"))
     (new Promise (lambda (resolve)
-                   (res.on "data" (lambda (chunk)
-                                    (result.push (Buffer.from chunk "binary"))))
+                   (res.on "data" append)
                    (res.on "end" (lambda ()
                                    (if binary
                                        (resolve (Buffer.concat result))
