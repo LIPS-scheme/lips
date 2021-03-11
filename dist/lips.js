@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 11 Mar 2021 21:38:59 +0000
+ * build: Thu, 11 Mar 2021 22:31:09 +0000
  */
 (function () {
   'use strict';
@@ -2183,12 +2183,41 @@
 
 
     function QuotedPromise(promise) {
+      var _this = this;
+
+      if (promise instanceof QuotedPromise) {
+        return promise;
+      }
+
+      var internal = {
+        pending: true,
+        rejected: false,
+        fulfilled: false,
+        type: undefined$1
+      };
+
       if (is_function(promise["catch"])) {
         // prevent exception on unhandled rejecting when using
         // '>(Promise.reject (new Error "zonk")) in REPL
-        promise["catch"](function () {});
+        promise["catch"](function () {
+          internal.rejected = true;
+          internal.pending = false;
+        });
       }
 
+      promise.then(function (v) {
+        internal.type = type(v);
+        internal.fulfilled = true;
+        internal.pending = false;
+      });
+      Object.keys(internal).forEach(function (name) {
+        Object.defineProperty(_this, "__".concat(name, "__"), {
+          enumerable: true,
+          get: function get() {
+            return internal[name];
+          }
+        });
+      });
       this.__promise__ = promise;
     } // ----------------------------------------------------------------------
 
@@ -2213,11 +2242,21 @@
 
 
     QuotedPromise.prototype.toString = function () {
-      return '#<promise>';
-    }; // ----------------------------------------------------------------------
+      if (this.__pending__) {
+        return QuotedPromise.pending_str;
+      }
+
+      if (this.__rejected__) {
+        return QuotedPromise.rejected_str;
+      }
+
+      return "#<js-promise resolved (".concat(this.__type__, ")>");
+    };
+
+    QuotedPromise.pending_str = '#<js-promise (pending)>';
+    QuotedPromise.rejected_str = '#<js-promise (rejected)>'; // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
-
 
     var specials = {
       LITERAL: Symbol["for"]('literal'),
@@ -2234,13 +2273,13 @@
       },
       // events are used in Lexer dynamic rules
       off: function off(name) {
-        var _this = this;
+        var _this2 = this;
 
         var fn = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : null;
 
         if (Array.isArray(name)) {
           name.forEach(function (name) {
-            return _this.off(name, fn);
+            return _this2.off(name, fn);
           });
         } else if (fn === null) {
           delete this._events[name];
@@ -2251,11 +2290,11 @@
         }
       },
       on: function on(name, fn) {
-        var _this2 = this;
+        var _this3 = this;
 
         if (Array.isArray(name)) {
           name.forEach(function (name) {
-            return _this2.on(name, fn);
+            return _this3.on(name, fn);
           });
         } else if (!this._events[name]) {
           this._events[name] = [fn];
@@ -2324,7 +2363,7 @@
 
     var Lexer = /*#__PURE__*/function () {
       function Lexer(input) {
-        var _this3 = this;
+        var _this4 = this;
 
         var _ref7 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             _ref7$whitespace = _ref7.whitespace,
@@ -2338,7 +2377,7 @@
         });
         var internals = {};
         ['_i', '_whitespace', '_col', '_newline', '_line', '_state', '_next', '_token', '_prev_char'].forEach(function (name) {
-          Object.defineProperty(_this3, name, {
+          Object.defineProperty(_this4, name, {
             configurable: false,
             enumerable: false,
             get: function get() {
@@ -4725,6 +4764,8 @@
       instances.set(cls, fn);
     }); // ----------------------------------------------------------------------
 
+    var native_types = [LSymbol, LNumber, Macro, Values, InputPort, OutputPort, Environment, QuotedPromise]; // ----------------------------------------------------------------------
+
     function toString(obj, quote, skip_cycles) {
       if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
         return '#<jQuery(' + obj.length + ')>';
@@ -4751,16 +4792,23 @@
       } // standard objects that have toString
 
 
-      var types = [LSymbol, LNumber, Macro, Values, InputPort, Environment];
+      var _iterator8 = _createForOfIteratorHelper(native_types),
+          _step8;
 
-      for (var _i4 = 0, _types = types; _i4 < _types.length; _i4++) {
-        var _type2 = _types[_i4];
+      try {
+        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+          var _type2 = _step8.value;
 
-        if (obj instanceof _type2) {
-          return obj.toString(quote);
-        }
-      } // constants
+          if (obj instanceof _type2) {
+            return obj.toString(quote);
+          }
+        } // constants
 
+      } catch (err) {
+        _iterator8.e(err);
+      } finally {
+        _iterator8.f();
+      }
 
       if ([nil, eof].includes(obj)) {
         return obj.toString();
@@ -6885,7 +6933,7 @@
 
 
     function pipe() {
-      var _this4 = this;
+      var _this5 = this;
 
       for (var _len7 = arguments.length, fns = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
         fns[_key7] = arguments[_key7];
@@ -6900,7 +6948,7 @@
         }
 
         return fns.reduce(function (args, f) {
-          return [f.apply(_this4, args)];
+          return [f.apply(_this5, args)];
         }, args)[0];
       };
     } // -------------------------------------------------------------------------
@@ -7110,18 +7158,18 @@
         };
       };
 
-      var _iterator8 = _createForOfIteratorHelper(_keys),
-          _step8;
+      var _iterator9 = _createForOfIteratorHelper(_keys),
+          _step9;
 
       try {
-        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-          var key = _step8.value;
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var key = _step9.value;
           LString.prototype[key] = wrap(String.prototype[key]);
         }
       } catch (err) {
-        _iterator8.e(err);
+        _iterator9.e(err);
       } finally {
-        _iterator8.f();
+        _iterator9.f();
       }
     }
 
@@ -8099,10 +8147,10 @@
 
 
     LComplex.prototype.complex_op = function (name, n, fn) {
-      var _this5 = this;
+      var _this6 = this;
 
       var calc = function calc(re, im) {
-        var result = fn(_this5.__re__, re, _this5.__im__, im);
+        var result = fn(_this6.__re__, re, _this6.__im__, im);
 
         if ('im' in result && 're' in result) {
           if (result.im.cmp(0) === 0 && !LNumber.isFloat(result.im)) {
@@ -8774,7 +8822,7 @@
 
 
     function InputPort(read) {
-      var _this6 = this;
+      var _this7 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputPort) || typeof this === 'undefined') {
         return new InputPort(read);
@@ -8800,22 +8848,22 @@
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                if (_this6.char_ready()) {
+                if (_this7.char_ready()) {
                   _context9.next = 5;
                   break;
                 }
 
                 _context9.next = 3;
-                return _this6._read();
+                return _this7._read();
 
               case 3:
                 line = _context9.sent;
                 parser = new Parser(line, {
-                  env: _this6
+                  env: _this7
                 });
 
               case 5:
-                return _context9.abrupt("return", _this6.__parser__);
+                return _context9.abrupt("return", _this7.__parser__);
 
               case 6:
               case "end":
@@ -8901,14 +8949,14 @@
     };
 
     InputPort.prototype.close = function () {
-      var _this7 = this;
+      var _this8 = this;
 
       this.__parser__ = null; // make content garbage collected, we assign null,
       // because the value is in prototype
 
       this._with_parser = null;
       ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
-        _this7[name] = function () {
+        _this8[name] = function () {
           throw new Error('input-port: port is closed');
         };
       });
@@ -8958,7 +9006,7 @@
 
 
     function OutputStringPort(toString) {
-      var _this8 = this;
+      var _this9 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
         return new OutputStringPort(toString);
@@ -8975,7 +9023,7 @@
           x = x.valueOf();
         }
 
-        _this8.__buffer__.push(x);
+        _this9.__buffer__.push(x);
       };
     }
 
@@ -8994,7 +9042,7 @@
 
 
     function OutputFilePort(filename, fd) {
-      var _this9 = this;
+      var _this10 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) || typeof this === 'undefined') {
         return new OutputFilePort(filename, fd);
@@ -9014,7 +9062,7 @@
           x = x.valueOf();
         }
 
-        _this9.fs().write(_this9._fd, x, function (err) {
+        _this10.fs().write(_this10._fd, x, function (err) {
           if (err) {
             throw err;
           }
@@ -9038,17 +9086,17 @@
     };
 
     OutputFilePort.prototype.close = function () {
-      var _this10 = this;
+      var _this11 = this;
 
       return new Promise(function (resolve, reject) {
-        _this10.fs().close(_this10._fd, function (err) {
+        _this11.fs().close(_this11._fd, function (err) {
           if (err) {
             reject(err);
           } else {
-            read_only(_this10, '_fd', null, {
+            read_only(_this11, '_fd', null, {
               hidden: true
             });
-            OutputPort.prototype.close.call(_this10);
+            OutputPort.prototype.close.call(_this11);
             resolve();
           }
         });
@@ -9061,7 +9109,7 @@
 
 
     function InputStringPort(string, env) {
-      var _this11 = this;
+      var _this12 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
         return new InputStringPort(string);
@@ -9071,13 +9119,13 @@
       env = env || global_env;
       string = string.valueOf();
       this._with_parser = this._with_init_parser.bind(this, function () {
-        if (!_this11.__parser__) {
-          _this11.__parser__ = new Parser(string, {
+        if (!_this12.__parser__) {
+          _this12.__parser__ = new Parser(string, {
             env: env
           });
         }
 
-        return _this11.__parser__;
+        return _this12.__parser__;
       });
       read_only(this, '__type__', text_port);
 
@@ -9138,11 +9186,11 @@
     };
 
     InputByteVectorPort.prototype.close = function () {
-      var _this12 = this;
+      var _this13 = this;
 
       read_only(this, '__vector__', nil);
       ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(function (name) {
-        _this12[name] = function () {
+        _this13[name] = function () {
           throw new Error('Input-binary-port: port is closed');
         };
       });
@@ -9307,7 +9355,7 @@
       var fs, Buffer;
 
       this.write = function (x) {
-        var _this13 = this;
+        var _this14 = this;
 
         typecheck('write', x, ['number', 'uint8array']);
         var buffer;
@@ -9327,7 +9375,7 @@
         }
 
         return new Promise(function (resolve, reject) {
-          fs.write(_this13._fd, buffer, function (err) {
+          fs.write(_this14._fd, buffer, function (err) {
             if (err) {
               reject(err);
             } else {
@@ -9589,13 +9637,13 @@
 
 
     Environment.prototype.clone = function () {
-      var _this14 = this;
+      var _this15 = this;
 
       // duplicate refs
       var env = {}; // TODO: duplicated Symbols
 
       Object.keys(this.__env__).forEach(function (key) {
-        env[key] = _this14.__env__[key];
+        env[key] = _this15.__env__[key];
       });
       return new Environment(env, this.__parent__, this.__name__);
     }; // -------------------------------------------------------------------------
@@ -9752,7 +9800,7 @@
 
 
     Environment.prototype.constant = function (name, value) {
-      var _this15 = this;
+      var _this16 = this;
 
       if (this.__env__.hasOwnProperty(name)) {
         throw new Error("Environment::constant: ".concat(name, " already exists"));
@@ -9761,7 +9809,7 @@
       if (arguments.length === 1 && is_plain_object(arguments[0])) {
         var obj = arguments[0];
         Object.keys(obj).forEach(function (key) {
-          _this15.constant(name, obj[key]);
+          _this16.constant(name, obj[key]);
         });
       } else {
         Object.defineProperty(this.__env__, name, {
@@ -10237,7 +10285,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this16 = this;
+        var _this17 = this;
 
         var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref29.dynamic_scope,
@@ -10317,7 +10365,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this16.get(name, {
+              var obj = _this17.get(name, {
                 throwError: false
               });
 
@@ -10827,7 +10875,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this17 = this;
+        var _this18 = this;
 
         env = env || this;
         return _evaluate(code, {
@@ -10835,13 +10883,13 @@
           //dynamic_scope: this,
           error: function error(e) {
             var error = global_env.get('error');
-            error.call(_this17, e.message);
+            error.call(_this18, e.message);
 
             if (e.code) {
               var stack = e.code.map(function (line, i) {
                 return "[".concat(i + 1, "]: ").concat(line);
               }).join('\n');
-              error.call(_this17, stack);
+              error.call(_this18, stack);
             }
           }
         });
@@ -11905,7 +11953,7 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref39) {
-        var _this18 = this;
+        var _this19 = this;
 
         var dynamic_scope = _ref39.dynamic_scope,
             _error = _ref39.error;
@@ -11939,9 +11987,9 @@
           }
 
           var args = {
-            env: _this18,
+            env: _this19,
             error: function error(e) {
-              var env = _this18.inherit('try');
+              var env = _this19.inherit('try');
 
               if (catch_clause) {
                 env.set(catch_clause.cdr.car.car, e);
@@ -11951,7 +11999,7 @@
                 };
 
                 if (dynamic_scope) {
-                  args.dynamic_scope = _this18;
+                  args.dynamic_scope = _this19;
                 }
 
                 unpromise(_evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
@@ -11964,7 +12012,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this18;
+            args.dynamic_scope = _this19;
           }
 
           var result = _evaluate(code.car, args);
@@ -12024,7 +12072,7 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this19 = this;
+        var _this20 = this;
 
         for (var _len30 = arguments.length, lists = new Array(_len30 > 1 ? _len30 - 1 : 0), _key30 = 1; _key30 < _len30; _key30++) {
           lists[_key30 - 1] = arguments[_key30];
@@ -12035,7 +12083,7 @@
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this19, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this20, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -12057,7 +12105,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this19, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this20, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -12153,7 +12201,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this20 = this;
+        var _this21 = this;
 
         for (var _len33 = arguments.length, lists = new Array(_len33 > 3 ? _len33 - 3 : 0), _key34 = 3; _key34 < _len33; _key34++) {
           lists[_key34 - 3] = arguments[_key34];
@@ -12173,7 +12221,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this20, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this21, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -12818,8 +12866,8 @@
         return 'null';
       }
 
-      for (var _i5 = 0, _Object$entries2 = Object.entries(mapping); _i5 < _Object$entries2.length; _i5++) {
-        var _Object$entries2$_i = slicedToArray(_Object$entries2[_i5], 2),
+      for (var _i4 = 0, _Object$entries2 = Object.entries(mapping); _i4 < _Object$entries2.length; _i4++) {
+        var _Object$entries2$_i = slicedToArray(_Object$entries2[_i4], 2),
             _key44 = _Object$entries2$_i[0],
             value = _Object$entries2$_i[1];
 
@@ -13419,12 +13467,12 @@
       });
       var stack = new Stack();
 
-      var _iterator9 = _createForOfIteratorHelper(tokens),
-          _step9;
+      var _iterator10 = _createForOfIteratorHelper(tokens),
+          _step10;
 
       try {
-        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-          var token = _step9.value;
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var token = _step10.value;
 
           if (open_tokens.includes(token)) {
             stack.push(token);
@@ -13445,9 +13493,9 @@
           }
         }
       } catch (err) {
-        _iterator9.e(err);
+        _iterator10.e(err);
       } finally {
-        _iterator9.f();
+        _iterator10.f();
       }
 
       return stack.is_empty();
@@ -13734,10 +13782,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 11 Mar 2021 21:38:59 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 11 Mar 2021 22:31:09 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 11 Mar 2021 21:38:59 +0000').valueOf();
+      var date = LString('Thu, 11 Mar 2021 22:31:09 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13777,7 +13825,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 11 Mar 2021 21:38:59 +0000',
+      date: 'Thu, 11 Mar 2021 22:31:09 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

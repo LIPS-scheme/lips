@@ -805,11 +805,34 @@
     // class used to escape promises feature #54
     // ----------------------------------------------------------------------
     function QuotedPromise(promise) {
+        if (promise instanceof QuotedPromise) {
+            return promise;
+        }
+        var internal = {
+            pending: true,
+            rejected: false,
+            fulfilled: false,
+            type: undefined
+        };
         if (is_function(promise.catch)) {
             // prevent exception on unhandled rejecting when using
             // '>(Promise.reject (new Error "zonk")) in REPL
-            promise.catch(() => {});
+            promise.catch(() => {
+                internal.rejected = true;
+                internal.pending = false;
+            });
         }
+        promise.then(v => {
+            internal.type = type(v);
+            internal.fulfilled = true;
+            internal.pending = false;
+        });
+        Object.keys(internal).forEach(name => {
+            Object.defineProperty(this, `__${name}__`, {
+                enumerable: true,
+                get: () => internal[name]
+            });
+        });
         this.__promise__ = promise;
     }
     // ----------------------------------------------------------------------
@@ -829,8 +852,16 @@
     };
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.toString = function() {
-        return '#<promise>';
+        if (this.__pending__) {
+            return QuotedPromise.pending_str;
+        }
+        if (this.__rejected__) {
+            return QuotedPromise.rejected_str;
+        }
+        return `#<js-promise resolved (${this.__type__})>`;
     };
+    QuotedPromise.pending_str = '#<js-promise (pending)>';
+    QuotedPromise.rejected_str = '#<js-promise (rejected)>';
     // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
@@ -2566,6 +2597,17 @@
         instances.set(cls, fn);
     });
     // ----------------------------------------------------------------------
+    const native_types = [
+        LSymbol,
+        LNumber,
+        Macro,
+        Values,
+        InputPort,
+        OutputPort,
+        Environment,
+        QuotedPromise
+    ];
+    // ----------------------------------------------------------------------
     function toString(obj, quote, skip_cycles, ...pair_args) {
         if (typeof jQuery !== 'undefined' &&
             obj instanceof jQuery.fn.init) {
@@ -2581,8 +2623,7 @@
             }
         }
         // standard objects that have toString
-        var types = [LSymbol, LNumber, Macro, Values, InputPort, Environment];
-        for (let type of types) {
+        for (let type of native_types) {
             if (obj instanceof type) {
                 return obj.toString(quote);
             }
