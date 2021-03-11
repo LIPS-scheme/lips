@@ -7481,7 +7481,7 @@
             function unquoted_arr(arr) {
                 return !!arr.filter(value => {
                     return value instanceof Pair &&
-                        LSymbol.is(value.car, 'unquote');
+                        LSymbol.is(value.car, /^(unquote|unquote-splicing)$/);
                 }).length;
             }
             // -----------------------------------------------------------------

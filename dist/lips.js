@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 11 Mar 2021 21:22:59 +0000
+ * build: Thu, 11 Mar 2021 21:38:59 +0000
  */
 (function () {
   'use strict';
@@ -11251,7 +11251,7 @@
 
         function unquoted_arr(arr) {
           return !!arr.filter(function (value) {
-            return value instanceof Pair && LSymbol.is(value.car, 'unquote');
+            return value instanceof Pair && LSymbol.is(value.car, /^(unquote|unquote-splicing)$/);
           }).length;
         } // -----------------------------------------------------------------
 
@@ -13734,10 +13734,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 11 Mar 2021 21:22:59 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 11 Mar 2021 21:38:59 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 11 Mar 2021 21:22:59 +0000').valueOf();
+      var date = LString('Thu, 11 Mar 2021 21:38:59 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13777,7 +13777,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 11 Mar 2021 21:22:59 +0000',
+      date: 'Thu, 11 Mar 2021 21:38:59 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
