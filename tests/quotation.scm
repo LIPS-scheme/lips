@@ -327,3 +327,14 @@
       (lambda (t)
         (t.is `(foo &(:foo ,(+ 1 2) :bar 10))
               (list 'foo &(:foo 3 :bar 10)))))
+
+(test "quasiquote: should create list from improper list"
+      (lambda (t)
+        (t.is (let ((x '(1 2 3)))
+                `(foo . ,x))
+              '(foo 1 2 3))))
+
+(test "quasiquote: should create list with unquote-splicing and improper list"
+      (lambda (t)
+        (let ((result `((foo ,(- 10 3)) ,@(cdr '(c)) . ,(car '(cons)))))
+          (t.is result '((foo 7) . cons)))))
