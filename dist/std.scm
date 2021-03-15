@@ -4188,3 +4188,22 @@
            (process.chdir value))))))
 
 ;; -----------------------------------------------------------------------------
+(define-syntax and-let*
+  (syntax-rules ()
+    ((_ ()) #t)
+    ((_ () body ...)
+     (let () body ...))
+    ((_ ((expression))) expression) ;; last expression
+    ((_ ((symbol expression)) body ...)
+     (let ((symbol expression))
+       (if symbol (begin body ...))))  ;; last pair
+    ((_ ((symbol expression) expr ...) body ...)
+     (let ((symbol expression))
+       (and symbol (and-let* (expr ...) body ...)))) ;; lead pair
+    ((_ ((expression) expr ...) body ...)
+     (and expression (and-let* (expr ...) body ...)))) ;; lead expression
+  "(and-let* ((name expression) expression ...) body)
+
+   Macro that combine let and and. First expression need to be in form of let.
+   Symbol expression the rest can be boolean expression or name expreession.
+   This is implementation of SRFI-2.")

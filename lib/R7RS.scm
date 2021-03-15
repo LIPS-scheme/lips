@@ -434,8 +434,8 @@
 ;; based on https://srfi.schemers.org/srfi-0/srfi-0.html
 ;; -----------------------------------------------------------------------------
 (define-syntax cond-expand
-  (syntax-rules (and or not else r7rs srfi-0 srfi-4 srfi-6 srfi-10 srfi-22
-                     srfi-23 srfi-46 srfi-176 lips complex full-unicode
+  (syntax-rules (and or not else r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10
+                     srfi-22 srfi-23 srfi-46 srfi-176 lips complex full-unicode
                      ieee-float ratios exact-complex full-numeric-tower)
     ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
     ((cond-expand (else body ...))
@@ -468,6 +468,8 @@
        (begin body ...))
     ((cond-expand (srfi-0  body ...) more-clauses ...)
        (begin body ...))
+    ((cond-expand (srfi-2  body ...) more-clauses ...)
+       (begin body ...))
     ((cond-expand (srfi-4  body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (srfi-6  body ...) more-clauses ...)
@@ -499,7 +501,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define (features)
-  '(r7rs srfi-0 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips
+  '(r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips
          complex full-unicode ieee-float ratios exact-complex full-numeric-tower))
 
 ;; -----------------------------------------------------------------------------
