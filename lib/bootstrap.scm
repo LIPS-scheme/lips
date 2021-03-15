@@ -1110,16 +1110,6 @@
          ,@body))))
 
 ;; -----------------------------------------------------------------------------
-(define-macro (let-std spec . body)
-  "(let-std ((name var)) . body)
-
-   Macro that create aliases for variables in global environment.
-   This is needed so user don't change constants like stdin or stdout
-   that use taken from lexical scope. The function still can use those
-   from interaction-environment."
-  `(let-env-values lips.env.__parent__ ,spec ,@body))
-
-;; -----------------------------------------------------------------------------
 (define (apropos name)
   "(apropos name)
 
@@ -1132,31 +1122,6 @@
                   ((symbol? name) (regex (symbol->string name)))
                   (else name))
             (env))))
-
-;; -----------------------------------------------------------------------------
-;; SRFI-10 https://srfi.schemers.org/srfi-10/srfi-10.html
-;; -----------------------------------------------------------------------------
-(set-special! "#," 'sharp-comma)
-
-(define **reader-ctor-list** '())
-
-;; -----------------------------------------------------------------------------
-(define (define-reader-ctor symbol fn)
-  (let ((node (assoc symbol **reader-ctor-list**)))
-    (if (pair? node)
-        (set-cdr! node fn)
-        (set! **reader-ctor-list** (cons (cons symbol fn)
-                                         **reader-ctor-list**)))))
-
-;; -----------------------------------------------------------------------------
-(define-syntax sharp-comma
-  (syntax-rules ()
-    ((_ (fn arg ...))
-     (let ((node (assoc 'fn **reader-ctor-list**)))
-       (if (pair? node)
-           ((cdr node) 'arg ...)
-           (syntax-error (string-append "Invalid symbol " (symbol->string 'fn)
-                                        " in expression " (repr '(fn arg ...)))))))))
 
 ;; -----------------------------------------------------------------------------
 (define (promisify fn)
