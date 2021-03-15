@@ -22,24 +22,21 @@
 <body>
     <script>
      var term = (function() {
-       var bold = '[[b;rgba(255,255,255,0.99);]';
+       lips.bootstrap();
+
        function format(code) {
          return $.terminal.prism("scheme", code, {echo: true});
        }
-       function formatBaner(banner, dynamic) {
-         var entry = '   ' + bold + (dynamic ? 'dynamic' : 'lexical') + ' scope] $1';
+
+       function formatBaner(banner) {
          return banner.replace(/(\((?:env|dir|help|apropos)[^)]*\))/g, format)
-                      .replace(/(\n\nLIPS.+)/m, entry)
                       .replace(/(Jakub T. Jankiewicz)/, '[[!;;;;https://jcubic.pl/me]$1]');
        }
        $.terminal.syntax('scheme');
        var term = terminal({ selector: 'body', lips, name: 'lisp' });
-       term.echo(formatBaner(lips.banner, false), {formatters: false});
 
-       // load Standard libraries
-       var path = 'https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/';
-       term.exec('(load "' + path + 'dist/std.scm" lips.env.__parent__)', true);
-       var repr = term.interpreter.get('repr');
+       term.echo(formatBaner(lips.banner), {formatters: false});
+
        return term;
      })();
 </script>
