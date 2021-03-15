@@ -16,6 +16,9 @@ section#head > header {
 section#head .intro {
     position: relative;
 }
+.full-screen section#head .intro {
+    position: initial;
+}
 section#head .terminal {
     --background: #14232d;
     --color: white;
@@ -129,7 +132,7 @@ h1, h2, main header nav, main header p, .top-bars, section#head .description {
     top: 10px;
     height: 40px;
     font-size: 20px;
-    z-index: 200;
+    z-index: 50;
 }
 .top-bar ul {
     list-style: none;
