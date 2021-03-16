@@ -45,6 +45,7 @@
 * fix complex operation that result in real (e.g. multiplication over conjugation)
 * fix `list-ref` according to R7RS errata
 * fix formatter (pretty print) on multiline strings and atoms
+* fix formatter indent of `let*`
 * fix repr of vectors (arrays with empty value)
 * fix promise quotation of object macro call [#139](https://github.com/jcubic/lips/issues/139)
 * fix unquote-splicing inside direct quasiquote vector [#140](https://github.com/jcubic/lips/issues/140)

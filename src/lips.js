@@ -583,6 +583,7 @@
             var special = /([-\\^$[\]()+{}?*.|])/g;
             return str.replace(special, '\\$1');
         }
+        return str;
     }
     // ----------------------------------------------------------------------
     // Stack used in balanced function
@@ -1818,7 +1819,7 @@
         exceptions: {
             specials: [
                 /* eslint-disable max-len */
-                /^(?:#:)?(?:define(?:-values|-syntax|-macro|-class|-record-type)?|(?:call-with-(?:input-file|output-file|port))|lambda|let*|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax))$/
+                /^(?:#:)?(?:define(?:-values|-syntax|-macro|-class|-record-type)?|(?:call-with-(?:input-file|output-file|port))|lambda|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax|\*)?)$/
                 /* eslint-enable */
             ],
             shift: {
