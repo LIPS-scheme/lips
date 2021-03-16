@@ -942,7 +942,7 @@
         specials.append(seq, symbol, type);
     });
     // ----------------------------------------------------------------------
-    // :: State based incremental Lexer
+    // :: Finite State Machine based incremental Lexer
     // ----------------------------------------------------------------------
     /* Lexer debugger
     var DEBUG = false;
@@ -954,11 +954,9 @@
     */
     class Lexer {
         constructor(input, { whitespace = false } = {}) {
-            Object.defineProperty(this, '__input__', {
-                value: input.replace(/\r/g, ''),
-                enumerable: true
-            });
+            read_only(this, '__input__', input.replace(/\r/g, ''));
             var internals = {};
+            // hide internals from introspection
             [
                 '_i', '_whitespace', '_col', '_newline', '_line',
                 '_state', '_next', '_token', '_prev_char'
@@ -1211,6 +1209,7 @@
     Lexer.b_symbol = Symbol.for('b_symbol');
     Lexer.b_comment = Symbol.for('b_comment');
     Lexer.i_comment = Symbol.for('i_comment');
+    Lexer.l_datum = Symbol.for('l_datum');
     // ----------------------------------------------------------------------
     Lexer.boundary = /^$|[\s()[\]]/;
     // ----------------------------------------------------------------------
@@ -1234,6 +1233,11 @@
         // inline commentss
         [/#/, null, /;/, null, Lexer.i_comment],
         [/;/, /#/, null, Lexer.i_comment, null],
+
+        // datum label
+        [/#/, null, /[0-9]/, null, Lexer.l_datum],
+        [/=/, /[0-9]/, Lexer.boundary, Lexer.l_datum, null],
+        [/#/, /[0-9]/, Lexer.boundary, Lexer.l_datum, null],
 
         // block symbols
         [/\|/, null, null, null, Lexer.b_symbol],

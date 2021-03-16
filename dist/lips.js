@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 16 Mar 2021 12:53:59 +0000
+ * build: Tue, 16 Mar 2021 19:55:58 +0000
  */
 (function () {
   'use strict';
@@ -2357,7 +2357,7 @@
 
       specials.append(seq, symbol, type);
     }); // ----------------------------------------------------------------------
-    // :: State based incremental Lexer
+    // :: Finite State Machine based incremental Lexer
     // ----------------------------------------------------------------------
 
     /* Lexer debugger
@@ -2379,11 +2379,9 @@
 
         classCallCheck(this, Lexer);
 
-        Object.defineProperty(this, '__input__', {
-          value: input.replace(/\r/g, ''),
-          enumerable: true
-        });
-        var internals = {};
+        read_only(this, '__input__', input.replace(/\r/g, ''));
+        var internals = {}; // hide internals from introspection
+
         ['_i', '_whitespace', '_col', '_newline', '_line', '_state', '_next', '_token', '_prev_char'].forEach(function (name) {
           Object.defineProperty(_this4, name, {
             configurable: false,
@@ -2736,7 +2734,8 @@
     Lexer.bracket = Symbol["for"]('bracket');
     Lexer.b_symbol = Symbol["for"]('b_symbol');
     Lexer.b_comment = Symbol["for"]('b_comment');
-    Lexer.i_comment = Symbol["for"]('i_comment'); // ----------------------------------------------------------------------
+    Lexer.i_comment = Symbol["for"]('i_comment');
+    Lexer.l_datum = Symbol["for"]('l_datum'); // ----------------------------------------------------------------------
 
     Lexer.boundary = /^$|[\s()[\]]/; // ----------------------------------------------------------------------
 
@@ -2746,7 +2745,8 @@
     [/"/, /^$|[^\\]/, null, null, Lexer.string], [/"/, /^$|[^\\]/, null, Lexer.string, null], // comment
     [/;/, /^$|[^#]/, null, null, Lexer.comment], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment], // block comment
     [/#/, null, /\|/, null, Lexer.b_comment], [/\s/, null, null, Lexer.b_comment, Lexer.b_comment], [/#/, /\|/, null, Lexer.b_comment, null], // inline commentss
-    [/#/, null, /;/, null, Lexer.i_comment], [/;/, /#/, null, Lexer.i_comment, null], // block symbols
+    [/#/, null, /;/, null, Lexer.i_comment], [/;/, /#/, null, Lexer.i_comment, null], // datum label
+    [/#/, null, /[0-9]/, null, Lexer.l_datum], [/=/, /[0-9]/, Lexer.boundary, Lexer.l_datum, null], [/#/, /[0-9]/, Lexer.boundary, Lexer.l_datum, null], // block symbols
     [/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], // hash special symbols, lexer don't need to distingiush those
     // we only care if it's not pick up by vectors literals
     [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
@@ -13790,10 +13790,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 16 Mar 2021 12:53:59 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 16 Mar 2021 19:55:58 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 16 Mar 2021 12:53:59 +0000').valueOf();
+      var date = LString('Tue, 16 Mar 2021 19:55:58 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13833,7 +13833,7 @@
     var lips = {
       version: '1.0.0-beta.12',
       banner: banner,
-      date: 'Tue, 16 Mar 2021 12:53:59 +0000',
+      date: 'Tue, 16 Mar 2021 19:55:58 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
