@@ -82,14 +82,18 @@
                (on \"click\" (lambda () (display \"click\"))))
 
           (--> document (querySelectorAll \"div\"))
+
           (--> (fetch \"https://jcubic.pl\")
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
+          
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
-               \"innerText\")
+               'innerHTML
+               (replace #/<(\"[^\"]+\"|[^>])+>/g \"\"))
+
           (--> document.body
                (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
@@ -170,7 +174,17 @@
             expr
             `(. ,(string->symbol (car parts)) ,@(cdr parts))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
+(set-special! "#:" 'gensym-interal)
+
+;; -----------------------------------------------------------------------------
+(define (gensym-interal symbol)
+  "(gensym-interal symbol)
+
+   Parser extension that create new quoted named gensym."
+  `(quote ,(gensym symbol)))
+
+;; -----------------------------------------------------------------------------
 (define (plain-object? x)
   "(plain-object? x)
 
@@ -178,7 +192,7 @@
   ;; here we don't use string=? or equal? because it may not be defined
   (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define typed-array?
   (let ((TypedArray (Object.getPrototypeOf Uint8Array)))
     (lambda (o)
@@ -211,7 +225,7 @@
 
    Function convert alist pairs to JavaScript object."
   (if (pair? alist)
-      (alist.toObject)
+      (alist.to_object)
       (alist->object (new lips.Pair undefined nil))))
 
 ;; -----------------------------------------------------------------------------
@@ -351,7 +365,7 @@
 ;; -----------------------------------------------------------------------------
 (define (%hidden-props obj)
   "(%hidden-props obj)
-  
+
    Function return hidden names of an object, for ES6 class prototype
    it return all methods since they are indistinguishable from hidden property
    created using defineProperty."
@@ -375,9 +389,10 @@
               (set! names (--> names
                                (filter (lambda (name)
                                           (not (hidden.includes name))))))))
-        (append (array->list names) (dir (Object.getPrototypeOf obj) true)))))
+        (append (array->list (--> names (map (unary string->symbol))))
+                (dir (Object.getPrototypeOf obj) true)))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (tree-map f tree)
   "(tree-map fn tree)
 
@@ -485,7 +500,7 @@
 
    Helper macro used by cond.")
 
-
+;; -----------------------------------------------------------------------------
 (define-macro (cond . list)
   "(cond (predicate? . body)
          (predicate? . body))
@@ -675,7 +690,7 @@
          nil
          (cons (map car args) (apply zip (map cdr args))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (promise . body)
   "(promise . body)
 
@@ -685,7 +700,7 @@
                        (catch (e)
                               (error (.. e.message)))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (timer time . body)
   "(timer time . body)
 
@@ -693,14 +708,14 @@
    native JS clearTimeout function."
   `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (defmacro? obj)
   "(defmacro? expression)
 
    Function check if object is macro and it's expandable."
   (and (macro? obj) (. obj 'defmacro)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (n-ary n fn)
   "(n-ary n fn)
 
@@ -708,7 +723,7 @@
   (lambda args
     (apply fn (take n args))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (take n lst)
   "(take n list)
 
@@ -718,21 +733,21 @@
         (reverse result)
         (iter (cons (car lst) result) (- i 1) (cdr lst)))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define unary (%doc "(unary fn)
 
                      Function return new function with arguments limited to one."
                     (curry n-ary 1)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define binary (%doc "(binary fn)
 
                       Function return new function with arguments limited to two."
                       (curry n-ary 2)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 ;; LIPS Object System
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 
 (define (%class-lambda expr)
   "(class-lambda expr)
@@ -755,7 +770,7 @@
     `(lambda (,@args)
        (,(cadr expr) this ,@args))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (%class-method-name expr)
   "(%class-method-name expr)
 
@@ -764,7 +779,7 @@
       (car expr)
       (list 'quote expr)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (define-class name parent . body)
   "(define-class name parent . body)
 
@@ -801,7 +816,7 @@
               (iter functions item (cdr lst))
               (iter (cons item functions) constructor (cdr lst)))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-syntax class
   (syntax-rules ()
     ((_)
@@ -814,7 +829,7 @@
 
    Macro allow to create anonymous classes. See define-class for details.")
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (make-tags expr)
   "(make-tags expression)
 
@@ -829,7 +844,7 @@
                `(list->array (list ,@(map make-tags (cdaddr expr))))
                (caddr expr)))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (%sxml h expr)
   "(%sxml h expr)
 
@@ -861,20 +876,24 @@
                          rest)
                     (list first)))))))
 
-;; ---------------------------------------------------------------------------------------
-(define-macro (sxml expr)
-  "(sxml expr)
+;; -----------------------------------------------------------------------------
+(define-macro (pragma->sxml pragma)
+  `(define-macro (sxml expr)
+     "(sxml expr)
 
-   Macro for JSX like syntax but with SXML.
-   e.g. usage:
+     Macro for JSX like syntax but with SXML.
+     e.g. usage:
 
-   (sxml (div (@ (data-foo \"hello\")
-                 (id \"foo\"))
-              (span \"hello\")
-              (span \"world\")))"
-  (%sxml 'h expr))
+     (sxml (div (@ (data-foo \"hello\")
+                   (id \"foo\"))
+                (span \"hello\")
+                (span \"world\")))"
+     (%sxml ',pragma expr)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
+(pragma->sxml h)
+
+;; -----------------------------------------------------------------------------
 (define-macro (with-tags expr)
   "(with-tags expression)
 
@@ -890,7 +909,7 @@
    To get the string from the macro you can use vhtml library from npm."
   (make-tags expr))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (get-script url)
   "(get-script url)
 
@@ -907,28 +926,28 @@
                         (if document.head
                             (document.head.appendChild script)))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (gensym? value)
   "(gensym? value)
 
    Function return #t if value is symbol and it's gensym. It returns #f otherwise."
   (and (symbol? value) (--> value (is_gensym))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (degree->radians x)
   "(degree->radians x)
 
    Convert degree to radians."
   (* x (/ Math.PI 180)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (radians->degree x)
   "(radians->degree x)
 
    Convert radians to degree."
   (* x (/ 180 Math.PI)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-syntax while
   (syntax-rules ()
     ((_ predicate body ...)
@@ -939,7 +958,7 @@
 
    Macro that create a loop, it exectue body until cond expression is false.")
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-syntax ++
   (syntax-rules ()
     ((++ x)
@@ -950,7 +969,7 @@
 
    Macro that work only on variables and increment the value by one.")
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-syntax --
   (syntax-rules ()
     ((-- x)
@@ -961,7 +980,7 @@
 
    Macro that decrement the value it work only on symbols")
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (pretty-format pair)
   "(pretty-format pair)
 
@@ -969,7 +988,7 @@
   (typecheck "pretty-pair" pair "pair")
   (--> (new lips.Formatter (repr pair true)) (break) (format)))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (reset)
   "(reset)
 
@@ -981,14 +1000,14 @@
                                         (if (not (--> defaults (includes name)))
                                             (--> env (unset name)))))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (make-list n . rest)
   (if (or (not (integer? n)) (<= n 0))
       (throw (new Error "make-list: first argument need to be integer larger then 0"))
       (let ((fill (if (null? rest) undefined (car rest))))
         (array->list (--> (new Array n) (fill fill))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (range n)
   "(range n)
 
@@ -996,7 +1015,7 @@
   (typecheck "range" n "number")
   (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (do-iterator spec cond . body)
   "(do-iterator (var expr) (test) body ...)
 
@@ -1035,21 +1054,21 @@
                       (set! ,item (,next))
                       (set! ,name (. ,item "value")))))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (set-repr! Set (lambda () "#<Set>"))
 (set-repr! Map (lambda () "#<Met>"))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (native-symbol? x)
   "(native-symbol? object)
 
    Function check if value is JavaScript symbol."
   (and (string=? (type x) "symbol") (not (symbol? x))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (set-special! "’" 'warn-quote)
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (warn-quote)
   "(warn-quote)
 
@@ -1058,7 +1077,7 @@
                                    "(set-special! \"’\" 'quote)"
                                    " to allow running this type of quote"))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (quote-promise expr)
   "(quote-promise expr)
    '>expr
@@ -1071,13 +1090,13 @@
       (env.set (Symbol.for "__promise__") true)
       ,expr))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (await value)
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)
       value))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (let-env-values env spec . body)
   "(let-env-values env ((name var)) . body)
 
@@ -1090,52 +1109,19 @@
                   spec)
          ,@body))))
 
-;; ---------------------------------------------------------------------------------------
-(define-macro (let-std spec . body)
-  "(let-std ((name var)) . body)
-
-   Macro that create aliases for variables in global environment.
-   This is needed so user don't change constants like stdin or stdout
-   that use taken from lexical scope. The function still can use those
-   from interaction-environment."
-  `(let-env-values lips.env.__parent__ ,spec ,@body))
-
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define (apropos name)
   "(apropos name)
 
    Search environment and display names that match the given name.
-   name can be regex or string."
-  (typecheck "apropos" name '("string" "regex"))
-  (filter (if (string? name)
-              (new RegExp name)
-              name)
-          (env)))
-
-;; ---------------------------------------------------------------------------------------
-;; SRFI-10 https://srfi.schemers.org/srfi-10/srfi-10.html
-;; ---------------------------------------------------------------------------------------
-(set-special! "#," 'sharp-comma)
-
-(define **reader-ctor-list** '())
-
-;; ---------------------------------------------------------------------------------------
-(define (define-reader-ctor symbol fn)
-  (let ((node (assoc symbol **reader-ctor-list**)))
-    (if (pair? node)
-        (set-cdr! node fn)
-        (set! **reader-ctor-list** (cons (cons symbol fn)
-                                         **reader-ctor-list**)))))
-
-;; ---------------------------------------------------------------------------------------
-(define-syntax sharp-comma
-  (syntax-rules ()
-    ((_ (fn arg ...))
-     (let ((node (assoc 'fn **reader-ctor-list**)))
-       (if (pair? node)
-           ((cdr node) 'arg ...)
-           (syntax-error (string-append "Invalid symbol " (symbol->string 'fn)
-                                        " in expression " (repr '(fn arg ...)))))))))
+   name can be regex, string or symbol."
+  (typecheck "apropos" name '("string" "regex" "symbol"))
+  (let ((regex (lambda (string)
+                 (new RegExp (escape-regex string)))))
+    (filter (cond ((string? name) (regex name))
+                  ((symbol? name) (regex (symbol->string name)))
+                  (else name))
+            (env))))
 
 ;; -----------------------------------------------------------------------------
 (define (promisify fn)
@@ -1150,7 +1136,7 @@
                                                       (resolve data)
                                                       (reject err))))))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (list* . args)
   "(list* arg1 ...)
 
@@ -1162,7 +1148,7 @@
                args)
         (map await (vector->list ,result)))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (%not-implemented name)
   "(not-implemented name)
 
@@ -1172,7 +1158,7 @@
        ,(string-append "(" str-name ")\n\nThis function is not yet implemented.")
        (throw (new Error ,(string-append str-name " has not beed implemented"))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define-macro (%make-env name . names)
   "(%make-env name f1 f2 ...)
 
@@ -1188,7 +1174,7 @@
         null
         ,name))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (define Y
   (lambda (h)
     "(Y f)
@@ -1205,4 +1191,192 @@
            (lambda (g)
              (h (lambda args (apply (g g) args)))))))
 
-;; ---------------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
+(define (indexed-db?)
+  "(indexed-db?)
+
+   Function test if indexedDB is available."
+  (let* ((any (lambda args
+                (let iter ((args args))
+                  (if (null? args)
+                      false
+                      (if (not (null? (car args)))
+                          (car args)
+                          (iter (cdr args)))))))
+         (indexedDB (any window.indexedDB
+                         window.indexedDB
+                         window.mozIndexedDB
+                         window.webkitIndexedDB)))
+    (if (not (null? indexedDB))
+        (try
+         (begin
+           ;; open will fail in about:blank
+           (window.indexedDB.open "MyTestDatabase" 3)
+           true)
+         (catch (e)
+                false))
+        false)))
+
+;; -----------------------------------------------------------------------------
+;; init internal fs for LIPS Scheme Input/Output functions
+;; -----------------------------------------------------------------------------
+(let* ((fs (cond ((eq? self global) (require "fs"))
+                 ((and (not (null? self.BrowserFS)) (indexed-db?))
+                  (new Promise (lambda (resolve reject)
+                                 (BrowserFS.configure
+                                  &(:fs "IndexedDB"
+                                        :options &())
+                                  (lambda (e)
+                                    (if (null? e)
+                                        (resolve (BrowserFS.BFSRequire "fs"))
+                                        (reject e)))))))
+                 ((not (null? self.BrowserFS))
+                  (console.warn (string-append "BrowserFS not initilalized "
+                                               "IndexedDB is not available"))
+                  nil)))
+       (Buffer (cond ((eq? self global)
+                      self.Buffer)
+                     ((not (null? self.BrowserFS))
+                      (. (BrowserFS.BFSRequire "buffer") 'Buffer)))))
+  (let ((internal (lips.env.get '**internal-env**)))
+    (if (not (null? Buffer))
+        (internal.set "Buffer" Buffer))
+    (if (not (null? fs))
+        (internal.set "fs" fs))))
+
+;; -----------------------------------------------------------------------------
+(define (environment? obj)
+  "(environment? obj)
+
+   Function check if object is LIPS environment."
+  (instanceof lips.Environment obj))
+
+;; -----------------------------------------------------------------------------
+(define %read-file
+  (let ((read-file #f) (fetch-url #f))
+    (lambda (binary path)
+      "(%read-file binary path)
+
+       Read file from url or file system. If binary is false it will return
+       string that contain all the content. For HTTP requests, If binary
+       is false it will: when in browser return ArrayBuffer and in Node
+       it will return Buffer object. When reading from file system
+       in both cases it will return Buffer objects.
+
+       The code that use those function, in binary mode, need to check
+       if the result is ArrayBuffer or Node.js/BrowserFS Buffer object."
+      (if (not read-file)
+          (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+            (if (null? fs)
+                (throw (new Error "open-input-file: fs not defined"))
+                (let ((*read-file* (promisify fs.readFile)))
+                  (set! read-file (lambda (path binary)
+                                   (let ((buff (*read-file* path)))
+                                     (if binary
+                                         (if (eq? self window)
+                                             (new Blob (vector buff))
+                                             buff)
+                                         (--> buff (toString))))))))))
+      (if (not fetch-url)
+          (set! fetch-url (lambda (url binary)
+                            (if (eq? self window)
+                                (let ((res (fetch url)))
+                                  (if binary
+                                      (res.arrayBuffer)
+                                      (res.text)))
+                                (http-get url binary)))))
+      (cond ((char=? (string-ref path 0) #\/)
+             (if (not (file-exists? path))
+                 (throw (new Error (string-append "file "
+                                                  path
+                                                  " don't exists")))
+                 (read-file path binary)))
+            ((--> #/^https?:\/\// (test path))
+             (fetch-url path binary))
+            (else
+             (%read-file binary (string-append (current-directory) path)))))))
+
+;; -----------------------------------------------------------------------------
+(define %read-binary-file (curry %read-file true))
+(define %read-text-file (curry %read-file false))
+
+;; -----------------------------------------------------------------------------
+(define (%fs-promisify-proc fn message)
+  "(%fs-promisify-proc fn string)
+
+   Function return promisified version of fs function or throw exception
+   if fs is not available."
+  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+    (if (null? fs)
+        (throw (new Error (string-append message ": fs not defined")))
+        (promisify (. fs fn)))))
+
+;; -----------------------------------------------------------------------------
+(define (response->content binary res)
+  "(response->text binary res)
+
+   Function read all text from Node.js HTTP response object. If binary argument
+   is true it will return Buffer object that can be converted to u8vector.
+
+   ***Warrning:*** it may overflow the stack (part of Node) when converting
+   whole buffer to u8vector."
+  (let ((result (vector))
+        (append (if binary
+                    (lambda (chunk)
+                      (result.push (Buffer.from chunk "binary")))
+                    (lambda (chunk)
+                      (result.push chunk)))))
+    (res.setEncoding (if binary "binary" "utf8"))
+    (new Promise (lambda (resolve)
+                   (res.on "data" append)
+                   (res.on "end" (lambda ()
+                                   (if binary
+                                       (resolve (Buffer.concat result))
+                                       (resolve (result.join "")))))))))
+
+;; -----------------------------------------------------------------------------
+(define response->buffer (curry response->content true))
+(define response->text (curry response->content false))
+
+;; -----------------------------------------------------------------------------
+(define http-get
+  (if (eq? self window)
+      (lambda (url binary)
+        "(http-get url)
+
+         Node.js Function that send HTTP Request and return string or
+         binary Buffer object."
+        (throw (new Error "http-get: function is Node.js only.")))
+      (let* ((http (. (require "http") 'get))
+             (https (. (require "https") 'get)))
+        (lambda (url binary)
+          "(http-get url)
+
+           Node.js Function that send HTTP Request and return string or
+           binary Buffer object."
+          (let ((request (if (null? (url.match #/^https/)) http https)))
+            (new Promise
+                 (lambda (resolve reject)
+                   (--> (request url
+                                 (lambda (res)
+                                   (if (= res.statusCode 200)
+                                       (resolve (response->content binary res))
+                                       (let ((code res.statusCode))
+                                         (res.resume)
+                                         (reject (string-append
+                                                  "Request return "
+                                                  (number->string code)))))))
+                        (on "error" reject)))))))))
+
+;; -----------------------------------------------------------------------------
+(define (buffer->u8vector bin)
+  "(buffer->u8vector bin)
+
+   Cross platform function that can be used in both Node and Browser.
+   It can be used together with %read-file or %read-binary-file and convert
+   the result ArrayBuffer or Buffer to u8vector."
+  (if (instanceof ArrayBuffer bin)
+      (new Uint8Array bin)
+      (Uint8Array.from bin)))
+
+;; -----------------------------------------------------------------------------

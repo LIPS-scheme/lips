@@ -29,8 +29,9 @@ MERMAID=./node_modules/.bin/mmdc
 NPM=npm
 UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
+LIPS=./bin/lips.js
 
-ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.scm
+ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.min.scm
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
@@ -45,8 +46,11 @@ dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
 
-dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm
-	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm > dist/std.scm
+dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/srfi.scm
+	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/srfi.scm > dist/std.scm
+
+dist/std.min.scm: dist/std.scm
+	$(LIPS) ./scripts/minify.scm dist/std.scm > dist/std.min.scm
 
 Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/g" templates/Makefile > Makefile
@@ -82,10 +86,10 @@ publish:
 jest-test: dist/lips.js
 	@$(JEST) --coverage spec/*.spec.js
 
-test: dist/lips.js dist/std.scm
+test: dist/lips.js dist/std.min.scm
 	@$(NPM) run test
 
-test-file: dist/lips.js dist/std.scm
+test-file: dist/lips.js dist/std.min.scm
 	@$(NPM) run test -- -- -f $(FILE)
 
 test-update: dist/lips.js dist/std.scm

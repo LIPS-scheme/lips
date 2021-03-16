@@ -185,6 +185,24 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 * [Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 
+## Roadmap
+
+### 1.0
+- [x] Full support for R5RS
+- [ ] Full support for R7RS
+- [ ] Continuations.
+- [ ] Tail Call Optimization (TCO).
+- [ ] Fully tested Numerical Tower.
+- [ ] R7RS libraries (`import`/`export`/`define-library`).
+- [ ] All recursive function in JS don't consume stack.
+- [ ] Finish `syntax-rules` (ignore limitations of current approach).
+  - [ ] Objects.
+  - [ ] Vectors.
+
+### 1.1
+- [ ] Proper expansion time for both macro system.
+- [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
+
 ## Acknowledgments
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
 * Current parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).

@@ -1,3 +1,55 @@
+## 1.0.0-beta.12
+### Breaking
+* `env` and `dir` now returns symbols instead of strings
+* `repr` and `type` of quoted promises now return `#<promise>` and `promise`
+* numbers and characters properties are immutable
+### Features
+* create minfied std scheme file for faster bootstrap
+* add `list-copy`
+* add `define-record-type`
+* add `escape-regex` function
+* make `apropos` accept symbol as argument
+* add doc strings for `**interaction-environment**` and `**internal-env**`
+* add `letrec*` that in LIPS is exactly the same as `letrec`
+* add `pragma->sxml` macro that define `sxml` macro (default is `h`)
+* hide `fs` in internal env
+* automatic bootstrapping of `fs` with BrowserFS if exists
+* `pprint` in both REPLs now print in color [#33](https://github.com/jcubic/lips/issues/33)
+* add `nan?`, `infinite?` and `finite?` functions
+* add `+nan.0` and `-nan.0` (R7RS)
+* properly handle negative inexact zero
+* new `environment?` function
+* add `current-directory` and `set-...` from SRFI-170
+* add gensym literals (e.g. `#:foo`)
+* fix pretty print of different cases of `let`
+* add binary input/output procedures from R7RS
+* update vector functions that in R7RS get start and end arguments
+* add state props and better repr to quotedPromise
+### Bugfix
+* fix prism highlighting of names (for new context help)
+* fix error when using help in node REPL and there are no doc string
+* fix escaping regex operators when using string with `apropos`
+* fix typechecking of number operators [#128](https://github.com/jcubic/lips/issues/128)
+* fix indent of call-with- (input-file, output-file and port)
+* fix eq? and type of NaN [#130](https://github.com/jcubic/lips/issues/130)
+* fix number predicates
+* fix `real-part` function
+* fix parsing complex with 0 inexact imaginary part
+* fix option -t --trace in Node REPL
+* fix `eqv?` on exact and inexact numbers according to R7RS spec
+* fix `exact->inexact` on complex numbers
+* fix arithmetic with single complex value
+* fix parsing regex that have escape slash and parenthesis (`#/( \\/)/g`)
+* fix parsing regex that have single slash in class brackets (`#/\/[^/]+$/`)
+* fix division on single argument (now `(/ n)` == `(/ 1 n)`)
+* fix complex operation that result in real (e.g. multiplication over conjugation)
+* fix `list-ref` according to R7RS errata
+* fix formatter (pretty print) on multiline strings and atoms
+* fix formatter indent of `let*`
+* fix repr of vectors (arrays with empty value)
+* fix promise quotation of object macro call [#139](https://github.com/jcubic/lips/issues/139)
+* fix unquote-splicing inside direct quasiquote vector [#140](https://github.com/jcubic/lips/issues/140)
+
 ## 1.0.0-beta.11
 ### Breaking
 * remove repr of HTMLElement (it's now default instance of a class)

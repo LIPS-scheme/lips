@@ -74,9 +74,16 @@
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
-           (lambda (x q)
-             (let ((arr (--> x (map (lambda (x) (repr x q))))))
-               (concat "#(" (--> arr (join " ")) ")"))))
+           (lambda (arr q)
+             ;; Array.from is used to convert emtpy to undefined
+             ;; but we can't use the value because Array.from call
+             ;; valueOf on its arguments
+             (let ((result (--> (Array.from arr)
+                                (map (lambda (x i)
+                                       (if (not (in i arr))
+                                           "#<empty>"
+                                           (repr (. arr i) q)))))))
+               (concat "#(" (--> result (join " ")) ")"))))
 
 ;; -----------------------------------------------------------------------------
 (define (eqv? a b)
@@ -85,7 +92,32 @@
    Function compare the values. It return true if they are the same, they
    need to have same type"
   (if (string=? (type a) (type b))
-      (cond ((number? a) (= a b))
+      (cond ((number? a)
+             (or (and (exact? a) (exact? b) (= a b))
+                 (and (inexact? a)
+                      (inexact? b)
+                      (cond ((a.isNaN) (b.isNaN))
+                            ((and (zero? a) (zero? b))
+                             (eq? a._minus b._minus))
+                            ((and (complex? a) (complex? b))
+                             (let ((re.a (real-part a))
+                                   (re.b (real-part b))
+                                   (im.a (imag-part a))
+                                   (im.b (imag-part b)))
+                               (and
+                                (if (and (zero? re.a) (zero? re.b))
+                                    (eq? (. re.a '_minus) (. re.b '_minus))
+                                    true)
+                                (if (and (zero? im.a) (zero? im.b))
+                                    (eq? (. im.a '_minus) (. im.b '_minus))
+                                    true)
+                                (or (= re.a re.b)
+                                    (and (--> re.a (isNaN))
+                                         (--> re.b (isNaN))))
+                                (or (= im.a im.b)
+                                    (and (--> im.a (isNaN))
+                                         (--> im.b (isNaN)))))))
+                            (else (= a b))))))
             ((pair? a) (and (null? a) (null? b)))
             (else (eq? a b)))
       false))
@@ -265,6 +297,7 @@
 ;; -----------------------------------------------------------------------------
 (define (%number-type type x)
   (typecheck "%number-type" type (vector "string" "pair"))
+  (typecheck "%number-type" x "number")
   (let* ((t x.__type__)
          (typeof (lambda (type) (string=? t type))))
     (and (number? x)
@@ -272,20 +305,53 @@
              (some typeof type)
              (typeof type)))))
 
-;; -----------------------------------------------------------------------------
-(define integer? (%doc
-                  ""
-                  (curry %number-type "bigint")))
 
 ;; -----------------------------------------------------------------------------
-(define complex? (%doc
-                  ""
-                  (curry %number-type "complex")))
+(define (real? x)
+  "(real? x)
+
+   Function check if argument x is real."
+  (and (number? x) (or (eq? x NaN)
+                       (eq? x Number.NEGATIVE_INFINITY)
+                       (eq? x Number.POSITIVE_INFINITY)
+                       (and (%number-type "complex" x)
+                            (let ((i (imag-part x)))
+                              (and (zero? i) (exact? i))))
+                       (%number-type '("float" "bigint" "rational") x))))
 
 ;; -----------------------------------------------------------------------------
-(define rational? (%doc
-                  ""
-                  (curry %number-type '("rational" "bigint"))))
+(define (integer? x)
+  "(integer? x)
+
+  Function check if argument x is integer."
+  (and (number? x)
+       (not (eq? x NaN))
+       (not (eq? x Number.NEGATIVE_INFINITY))
+       (not (eq? x Number.POSITIVE_INFINITY))
+       (or (%number-type "bigint" x)
+           (and (%number-type "float" x)
+                (= (modulo x 2) 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (complex? x)
+  "(complex? x)
+
+  Function check if argument x is complex."
+  (and (number? x) (or (eq? x NaN)
+                       (eq? x Number.NEGATIVE_INFINITY)
+                       (eq? x Number.POSITIVE_INFINITY)
+                       (%number-type '("complex" "float" "bigint" "rational") x))))
+
+;; -----------------------------------------------------------------------------
+(define (rational? x)
+  "(rational? x)
+
+  Function check if value is rational."
+  (and (number? x)
+       (not (eq? x NaN))
+       (not (eq? x Number.NEGATIVE_INFINITY))
+       (not (eq? x Number.POSITIVE_INFINITY))
+       (or (%number-type "rational" x) (integer? x))))
 
 ;; -----------------------------------------------------------------------------
 (define (typecheck-args _type name _list)
@@ -323,14 +389,7 @@
 
    Create complex number from imaginary and real part."
   (let ((value `((re . ,re) (im . ,im))))
-    (lips.LComplex (--> value (toObject true)))))
-
-;; -----------------------------------------------------------------------------
-(define (real? n)
-  "(real? n)"
-  (and (number? n) (let ((type n.__type__))
-                     (or (string=? type "float")
-                         (string=? type "bigint")))))
+    (lips.LComplex (--> value (to_object true)))))
 
 ;; -----------------------------------------------------------------------------
 (define (exact? n)
@@ -343,6 +402,7 @@
              (exact? n.__im__)
              (exact? n.__re__)))))
 
+;; -----------------------------------------------------------------------------
 (define (inexact? n)
   "(inexact? n)"
   (typecheck "inexact?" n "number")
@@ -354,9 +414,9 @@
 
    Convert exact number to inexact."
   (typecheck "exact->inexact" n "number")
-  (if (complex? n)
-      ;; make-object (&) will use valueOf so it will be float even if it was rational
-      (lips.LComplex (object :im (. n 'im) :re (. n 're)))
+  (if (%number-type "complex" n)
+      (lips.LComplex (object :im (exact->inexact (. n '__im__))
+                             :re (exact->inexact (. n '__re__))))
       (if (or (rational? n) (integer? n))
           (lips.LFloat (--> n (valueOf)) true)
           n)))
@@ -367,7 +427,7 @@
 
    Funcion convert real number to exact ratioanl number."
   (typecheck "inexact->exact" n "number")
-  (if (or (real? n) (complex? n))
+  (if (or (real? n) (%number-type "complex" n))
       (--> n (toRational))
       n))
 
@@ -434,13 +494,14 @@
       (throw (new Error "list-ref: index out of range"))
       (let ((l l) (k k))
         (while (> k 0)
-          (if (null? l)
+          (if (or (null? (cdr l)) (null? l))
               (throw (new Error "list-ref: not enough elements in the list")))
           (set! l (cdr l))
           (set! k (- k 1)))
         (if (null? l)
             l
             (car l)))))
+
 ;; -----------------------------------------------------------------------------
 (define (not x)
   "(not x)
@@ -966,6 +1027,8 @@
 
    Write single character to given port using write function."
   (typecheck "write-char" char "character")
+  (if (not (null? rest))
+      (typecheck "write-char" (car rest) "output-port"))
   (apply display (cons (char.valueOf) rest)))
 
 ;; -----------------------------------------------------------------------------
@@ -1101,7 +1164,7 @@
 
    Return imaginary part of the complex number n."
   (typecheck "imag-part" n "number")
-  (if (complex? n)
+  (if (%number-type "complex" n)
       n.__im__
       0))
 
@@ -1111,8 +1174,8 @@
 
    Return real part of the complex number n."
   (typecheck "real-part" n "number")
-  (if (complex? n)
-      n.re
+  (if (%number-type "complex" n)
+      n.__re__
       n))
 
 ;; -----------------------------------------------------------------------------
@@ -1133,7 +1196,7 @@
   "(angle x)
 
    Returns angle of the complex number in polar coordinate system."
-  (if (not (complex? x))
+  (if (not (%number-type "complex" x))
       (error "angle: number need to be complex")
       (Math.atan2 x.__im__ x.__re__)))
 
@@ -1142,7 +1205,7 @@
   "(magnitude x)
 
    Returns magnitude of the complex number in polar coordinate system."
-  (if (not (complex? x))
+  (if (not (%number-type "complex" x))
       (error "magnitude: number need to be complex")
       (sqrt (+ (* x.__im__ x.__im__) (* x.__re__ x.__re__)))))
 
@@ -1196,12 +1259,6 @@
     (port.char_ready)))
 
 ;; -----------------------------------------------------------------------------
-;; NodeJS filesystem functions
-;; -----------------------------------------------------------------------------
-(if (eq? global self)
-    (set! self.fs (require "fs")))
-
-;; -----------------------------------------------------------------------------
 (define open-input-file
   (let ((readFile #f))
     (lambda(filename)
@@ -1209,18 +1266,15 @@
 
        Function return new Input Port with given filename. In Browser user need to
        provide global fs variable that is instance of FS interface."
-      (if (null? self.fs)
-          (throw (new Error "open-input-file: fs not defined"))
-          (begin
-            (if (not (procedure? readFile))
-                (let ((_readFile (promisify fs.readFile)))
-                  (set! readFile (lambda (filename)
-                                   "(readFile filename)
-
-                                    Helper function that return Promise. NodeJS function sometimes give warnings
-                                    when using fs.promises on Windows."
-                                   (--> (_readFile filename) (toString))))))
-            (new lips.InputFilePort (readFile filename) filename))))))
+      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+        (if (null? fs)
+            (throw (new Error "open-input-file: fs not defined"))
+            (begin
+              (if (not (procedure? readFile))
+                  (let ((_readFile (promisify fs.readFile)))
+                    (set! readFile (lambda (filename)
+                                     (--> (_readFile filename) (toString))))))
+              (new lips.InputFilePort (readFile filename) filename)))))))
 
 ;; -----------------------------------------------------------------------------
 (define (close-input-port port)
@@ -1298,12 +1352,15 @@
 ;; -----------------------------------------------------------------------------
 (define (file-exists? filename)
   (new Promise (lambda (resolve)
-                 (if (null? self.fs)
-                     (throw (new Error "file-exists?: fs not defined"))
-                     (fs.stat filename (lambda (err stat)
-                                         (if (null? err)
-                                             (resolve (stat.isFile))
-                                             (resolve #f))))))))
+                 (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+                   (if (null? fs)
+                       (throw (new Error "file-exists?: fs not defined"))
+                       (fs.stat filename (lambda (err stat)
+                                           (if (null? err)
+                                               (resolve (stat.isFile))
+                                               (resolve #f)))))))))
+
+
 
 ;; -----------------------------------------------------------------------------
 (define open-output-file
@@ -1314,17 +1371,18 @@
        Function open file and return port that can be used for writing. If file
        exists it will throw an Error."
       (typecheck "open-output-file" filename "string")
-      (if (null? self.fs)
-          (throw (new Error "open-output-file: fs not defined"))
-          (begin
-            (if (not (procedure? open))
-                (set! open (promisify fs.open)))
-            (if (file-exists? filename)
-                (throw (new Error "open-output-file: file exists"))
-                (lips.OutputFilePort filename (open filename "w"))))))))
+      (if (not (procedure? open))
+          (set! open (%fs-promisify-proc 'open "open-output-file")))
+      (if (file-exists? filename)
+          (throw (new Error "open-output-file: file exists"))
+          (lips.OutputFilePort filename (open filename "w"))))))
 
 ;; -----------------------------------------------------------------------------
 (define (scheme-report-environment version)
+  "(scheme-report-environment version)
+
+   Function return new Environment object for given Scheme Spec version.
+   Only argument 5 is supported that create environemnt for R5RS."
   (typecheck "scheme-report-environment" version "number")
   (case version
     ((5) (%make-env "R5RS" * + - / < <= = > >= abs acos and angle append apply asin assoc assq assv

@@ -37,11 +37,6 @@
                  (and (symbol? a) (symbol? b) (equal? a b)))
                args))
 
-;;(define (read-line . rest)
-;;  (let ((port (if (null? rest) (current-input-port) (car rest))))
-;;    (while (let ((char (peek-char port)))
-;;             (and (not (string?
-
 ;; -----------------------------------------------------------------------------
 ;; function for Gauche code
 ;; -----------------------------------------------------------------------------
@@ -78,6 +73,85 @@
       (begin
         (typecheck "vector-append" (car args) "array")
         (--> (car args) (concat (apply vector-append (cdr args)))))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (%range-function spec . body)
+  "(%range-function spec . body)
+
+   Macro that creates R7RS vector functions that have range start end."
+  (let* ((name (car spec))
+         (name-str (symbol->string name))
+         (args (append (cdr spec) 'rest)))
+    `(define (,name ,@args)
+       ,(if (string? (car body))
+            (car body))
+       (let ((start (if (null? rest) 0 (car rest)))
+             (end (if (or (null? rest) (null? (cdr rest)))
+                      (. ,(car args) 'length)
+                      (cadr rest))))
+         (typecheck ,name-str start "number")
+         (typecheck ,name-str end "number")
+         ,@(if (string? (car body))
+               (cdr body)
+               body)))))
+
+;; -----------------------------------------------------------------------------
+(%range-function
+ (vector->list vector)
+ "(vector->list vector)
+  (vector->list vector start)
+  (vector->list vector start end)
+
+  Function copy given range of vector to list. If no start is specified it use
+  start of the vector, if no end is specified it convert to the end of the vector."
+ (typecheck "vector->list" vector "array")
+ (array->list (vector.slice start end)))
+
+;; -----------------------------------------------------------------------------
+(%range-function
+ (string->vector string)
+ "(string->list string)
+  (string->list string start)
+  (string->list string start end)
+
+  Function copy given range of string to list. If no start is specified it use
+  start of the string, if no end is specified it convert to the end of the string."
+ (typecheck "string->vector" string "string")
+ (--> (string.substring start end)
+      (split "")
+      (map (unary lips.LCharacter))))
+
+;; -----------------------------------------------------------------------------
+(%range-function
+ (vector->string vector)
+  "(vector->string vector)
+   (vector->string vector start)
+   (vector->string vector start end)
+
+   Function return new string created from vector of characters in given range.
+   If no start is given it create string from 0, if no end is given it return
+   string to the end."
+  (typecheck "vector->string" vector "array")
+  (--> vector
+       (slice start end)
+       (map (lambda (char) (char.valueOf)))
+       (join "")))
+
+;; -----------------------------------------------------------------------------
+(%range-function
+ (vector-fill! vector fill)
+ "(vector-fill! vector fill)
+  (vector-fill! vector fill start)
+  (vector-fill! vector fill start end)
+
+  Fill vector with a given value in given range. If start is not given is start
+  at 0. If end is not given it fill till the end if the vector."
+ (typecheck "vector->fill!" vector "array")
+ (let recur ((n (- end start)))
+    (if (>= n start)
+        (begin
+          (set-obj! vector n fill)
+          (recur (- n 1))))))
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let*-values
@@ -216,22 +290,6 @@
    Function returns #t if z is both exact and an integer; otherwise
    returns #f."
   (and (integer? n) (exact? n)))
-
-;; -----------------------------------------------------------------------------
-(define (string->vector s)
-  "(string->vector string)
-
-   Function return vector of characters created from string."
-  (typecheck "string->list" s "string")
-  (--> s (split "") (map (lambda (x) (lips.LCharacter x)))))
-
-;; -----------------------------------------------------------------------------
-(define (vector->string v)
-  "(vector->string vector)
-
-   Function return new string created from vector of characters."
-  (typecheck "vector->list" v "array")
-  (--> v (map (lambda (char) (char.valueOf))) (join "")))
 
 ;; -----------------------------------------------------------------------------
 (define (vector-map fn . rest)
@@ -376,8 +434,8 @@
 ;; based on https://srfi.schemers.org/srfi-0/srfi-0.html
 ;; -----------------------------------------------------------------------------
 (define-syntax cond-expand
-  (syntax-rules (and or not else r7rs srfi-0 srfi-4 srfi-6 srfi-10 srfi-22
-                     srfi-23 srfi-46 srfi-176 lips complex full-unicode
+  (syntax-rules (and or not else r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10
+                     srfi-22 srfi-23 srfi-46 srfi-176 lips complex full-unicode
                      ieee-float ratios exact-complex full-numeric-tower)
     ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
     ((cond-expand (else body ...))
@@ -410,6 +468,8 @@
        (begin body ...))
     ((cond-expand (srfi-0  body ...) more-clauses ...)
        (begin body ...))
+    ((cond-expand (srfi-2  body ...) more-clauses ...)
+       (begin body ...))
     ((cond-expand (srfi-4  body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (srfi-6  body ...) more-clauses ...)
@@ -441,7 +501,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define (features)
-  '(r7rs srfi-0 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips
+  '(r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-176 lips
          complex full-unicode ieee-float ratios exact-complex full-numeric-tower))
 
 ;; -----------------------------------------------------------------------------
@@ -544,6 +604,13 @@
 (define string->utf8
   (let ((encoder (new TextEncoder "utf-8")))
     (lambda (string . rest)
+      "(string->utf8 string)
+       (string->utf8 string start)
+       (string->utf8 string start end)
+
+      Function converts string into u8 bytevector using utf8 encoding.
+      The start and end is the range of the input string for the conversion."
+      (typecheck "string->utf8" string "string")
       (if (null? rest)
           (encoder.encode string)
           (let* ((start (car rest))
@@ -555,6 +622,13 @@
 (define utf8->string
   (let ((decoder (new TextDecoder "utf-8")))
     (lambda (v . rest)
+      "(utf8->string u8vector)
+       (utf8->string u8vector start)
+       (utf8->string u8vector start end)
+
+      Function converts u8 bytevector into string using utf8 encoding.
+      The start and end is the range of the input byte vector for the conversion."
+      (typecheck "utf8->string" v "uint8array")
       (if (null? rest)
           (decoder.decode v)
           (let* ((start (car rest))
@@ -580,6 +654,27 @@
   (new lips.OutputStringPort repr))
 
 ;; -----------------------------------------------------------------------------
+(define (open-output-bytevector)
+  "(open-output-bytevector)
+
+   Create new output port that can be used to write binary data.
+   After done with the data the output buffer can be obtained by calling
+   `get-output-bytevector` function."
+  (new lips.OutputByteVectorPort))
+
+;; -----------------------------------------------------------------------------
+(define (get-output-bytevector port)
+  "(get-output-string port)
+
+   Function get full string from string port. If nothing was wrote
+   to given port it will return empty string."
+  (if (not (instanceof lips.OutputByteVectorPort port))
+      (throw (new Error (string-append
+                         "get-output-bytevector: expecting output-bytevector-port get "
+                         (type port))))
+      (port.valueOf)))
+
+;; -----------------------------------------------------------------------------
 (define (get-output-string port)
   "(get-output-string port)
 
@@ -588,19 +683,194 @@
   (if (not (instanceof lips.OutputStringPort port))
       (throw (new Error (string-append "get-output-string: expecting output-string-port get "
                                        (type port))))
-      (port.getString)))
+      (port.valueOf)))
+
+;; -----------------------------------------------------------------------------
+(define (open-input-bytevector bytevector)
+  "(open-input-bytevector bytevector)
+
+   Create new input binary port with given bytevector"
+  (typecheck "open-input-bytevector" bytevector "uint8array")
+  (new lips.InputByteVectorPort bytevector))
+
+;; -----------------------------------------------------------------------------
+(define (open-binary-input-file filename)
+  "(open-binary-input-file filename)
+
+  Function return new Input Binary Port with given filename. In Browser
+  user need to provide global fs variable that is instance of FS interface."
+  (let ((u8vector (buffer->u8vector (%read-binary-file filename))))
+    (new lips.InputBinaryFilePort u8vector filename)))
+
+;; -----------------------------------------------------------------------------
+(define (binary-port? port)
+  "(binary-port? port)
+
+   Function test if argument is binary port."
+  (and (port? port) (eq? port.__type__ (Symbol.for "binary"))))
+
+;; -----------------------------------------------------------------------------
+(define (textual-port? port)
+  "(textual-port? port)
+
+   Function test if argument is string port."
+  (and (port? port) (eq? port.__type__ (Symbol.for "text"))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (%define-binary-input-lambda name docstring fn)
+  (let ((port (gensym))
+        (name-str (symbol->string name)))
+    `(define (,name . rest)
+       ,docstring
+       (let ((,port (if (null? rest)
+                        (current-input-port)
+                        (car rest))))
+         (typecheck ,name-str ,port "input-port")
+         (if (not (binary-port? ,port))
+             (throw (new Error (string-append ,name-str
+                                              " invalid port. Binary port required.")))
+             (,fn ,port))))))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-input-lambda
+ peek-u8
+ "(peek-u8)
+  (peek-u8 port)
+
+  Return next byte from input-binary port. If there are no more bytes
+  it return eof object."
+ (lambda (port)
+   (port.peek_u8)))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-input-lambda
+ read-u8
+ "(read-u8)
+  (read-u8 port)
+
+  Read next byte from input-binary port. If there are no more bytes
+  it return eof object."
+ (lambda (port)
+   (port.read_u8)))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-input-lambda
+ u8-ready?
+ "(u8-ready?)
+  (u8-ready? port)
+
+  Returns #t if a byte is ready on the binary input port and returns #f otherwise.
+  If u8-ready? returns #t then the next read-u8 operation on the given port is
+  guaranteed not to hang. If the port is at end of file then u8-ready? returns #t."
+ (lambda (port)
+   (port.u8_ready)))
+
+;; -----------------------------------------------------------------------------
+(define (read-bytevector k . rest)
+  "(read-bytevector k)
+   (read-bytevector k port)
+
+   Read next n bytes from input-binary port. If there are no more bytes
+   it returns eof object. If there are less then n bytes in port it
+   return the only bytes that are available"
+  (let ((port (if (null? rest)
+                  (current-input-port)
+                  (car rest))))
+    (typecheck "read-bytevector" port "input-port")
+    (if (not (binary-port? port))
+        (throw (new Error "read-bytevector: invalid port"))
+        (port.read_u8_vector k))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (%define-binary-output-lambda name type docstring fn)
+  (let ((port (gensym 'port))
+        (data (gensym 'data))
+        (name-str (symbol->string name)))
+    `(define (,name ,data . rest)
+       ,docstring
+       (let ((,port (if (null? rest)
+                        (current-output-port)
+                        (car rest))))
+         (typecheck ,name-str ,port "output-port")
+         (typecheck ,name-str ,data ,type)
+         (if (not (binary-port? ,port))
+             (throw (new Error (string-append ,name-str
+                                              " invalid port. Binary port required.")))
+             (,fn ,data ,port))))))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-output-lambda
+ write-u8
+ "number"
+ "(write-u8 byte)
+  (write-u8 byte port)
+
+  Write byte into binary output port."
+ (lambda (data port)
+   (port.write_u8 data)))
+
+;; -----------------------------------------------------------------------------
+(%define-binary-output-lambda
+ write-bytevector
+ "uint8array"
+ "(write-bytevector bytevector)
+  (write-bytevector bytevector port)
+
+  Write byte vector into binary output port."
+ (lambda (data port)
+   (port.write_u8_vector data)))
+
+;; -----------------------------------------------------------------------------
+(define open-binary-output-file
+  (let ((open))
+    (lambda (filename)
+      "(open-binary-output-file filename)
+
+       Function open file and return port that can be used for writing. If file
+       exists it will throw an Error."
+      (typecheck "open-output-file" filename "string")
+      (if (not (procedure? open))
+          (set! open (%fs-promisify-proc 'open "open-binary-output-file")))
+      (if (file-exists? filename)
+          (throw (new Error "open-binary-output-file: file exists"))
+          (lips.OutputBinaryFilePort filename (open filename "w"))))))
+
+;; -----------------------------------------------------------------------------
+(define (read-bytevector! vector . rest)
+  "(read-bytevector! bytevector)
+   (read-bytevector! bytevector port)
+   (read-bytevector! bytevector port start)
+   (read-bytevector! bytevector port start end)
+
+   Function read next bytes from binary input port and write them into byte vector.
+   if not start is specified it start to write into 0 position of the vector until
+   the end or end the vector if no end is specified."
+  (typecheck "read-bytevector!" vector "uint8array")
+  (let ((port (if (null? rest) (current-input-port) (car rest)))
+        (start (if (or (null? rest) (null? (cdr rest))) 0 (cadr rest)))
+        (end (if (or (null? rest) (null? (cdr rest)) (null? (cddr rest)))
+                 (bytevector-length vector)
+                 (caddr rest))))
+    (typecheck "read-bytevector!" port "input-port")
+    (if (not (binary-port? port))
+        (throw (new Error "read-bytevector!: invalid port. Binary port required."))
+        (begin
+          (typecheck "read-bytevector!" start "number")
+          (typecheck "read-bytevector!" end "number")
+          (let ((out (read-bytevector (- end start) port)))
+            (vector.set out start end))))))
 
 ;; -----------------------------------------------------------------------------
 (define delete-file
   (let ((unlink #f))
     (lambda (filename)
+      "(delete-file filename)
+
+       Function delete the file of given name."
       (typecheck "delete-file" filename "string")
-      (if (null? self.fs)
-          (throw (new Error "delete-file: fs not defined"))
-          (begin
-            (if (not (procedure? unlink))
-                (set! unlink (promisify fs.unlink)))
-            (unlink filename))))))
+      (if (not (procedure? unlink))
+          (set! unlink (%fs-promisify-proc 'unlink "delete-file")))
+      (unlink filename))))
 
 ;; -----------------------------------------------------------------------------
 (define (call-with-port port proc)
@@ -683,7 +953,6 @@
     (display (string char) port)))
 
 ;; -----------------------------------------------------------------------------
-
 (define (read-string k . rest)
   "(read-string k)
    (read-string k port)
@@ -697,3 +966,256 @@
   (let ((port (if (null? rest) (current-input-port) (car rest))))
     (typecheck "read-string" port "input-port")
     (port.read_string k)))
+
+;; -----------------------------------------------------------------------------
+(define (list-copy obj)
+  "(list-copy obj)
+
+   Copy the object passed as argument but only if it's list. The car elements
+   of the list are not copied, they are passed as is."
+  (typecheck "list-copy" obj #("pair" "nil"))
+  (if (null? obj)
+      obj
+      (obj.clone false)))
+
+;; -----------------------------------------------------------------------------
+(define-macro (define-record-type name constructor pred . fields)
+  "(define-record-type name constructor pred . fields)
+
+   Macro for defining records. Example of usage:
+
+      (define-record-type <pare>
+        (kons x y)
+        pare?
+        (x kar set-kar!)
+        (y kdr set-kdr!))
+
+   (define p (kons 1 2))
+   (print (kar p))
+   ;; 1
+   (set-kdr! p 3)
+   (print (kdr p))
+   ;; 3"
+  (let ((class-name (gensym))
+        (obj-name (gensym))
+        (value-name (gensym)))
+    `(begin
+       (define ,class-name (class Object
+                                  (constructor (lambda (self ,@(cdr constructor))
+                                                 ,@(map (lambda (field)
+                                                          (let* ((name (symbol->string field))
+                                                                 (prop (string-append "self."
+                                                                                      name)))
+                                                            `(set! ,(string->symbol prop) ,field)))
+                                                        (cdr constructor))))
+                                  (toType (lambda (self)
+                                            "record"))
+                                  (toString (lambda (self)
+                                              ,(symbol->string name)))))
+       (define ,constructor
+         (new ,class-name ,@(cdr constructor)))
+       (define (,pred obj)
+         (instanceof ,class-name obj))
+       ,@(map (lambda (field)
+                (let ((prop-name (car field))
+                      (get (cadr field))
+                      (set (if (null? (cddr field))
+                               nil
+                               (caddr field))))
+                  `(begin
+                     (define (,get ,obj-name)
+                       (typecheck ,(symbol->string get) ,obj-name "record")
+                       (if (not (,pred ,obj-name))
+                           (throw (new Error ,(string-append "object is not record of type "
+                                                             (symbol->string name))))
+                           (. ,obj-name ',prop-name)))
+                     ,(if (not (null? set))
+                          `(define (,set ,obj-name ,value-name)
+                             (typecheck ,(symbol->string get) ,obj-name "record")
+                             (if (not (,pred ,obj-name))
+                                 (throw (new Error ,(string-append "object is not record of type "
+                                                                   (symbol->string name))))
+                                 (set-obj! ,obj-name ',prop-name ,value-name)))))))
+              fields))))
+
+;; -----------------------------------------------------------------------------
+(define (nan? x)
+  "(nan? x)
+
+  Function check if argument x is Not a Number (NaN) value."
+  (and (number? x)
+       (or (x.isNaN)
+           (and (%number-type "complex" x)
+                (or (nan? (real-part x))
+                    (nan? (imag-part x)))))))
+
+;; -----------------------------------------------------------------------------
+(define (infinite? x)
+  "(infinite? x)
+
+  Function check if value is infinite."
+  (or (eq? x Number.NEGATIVE_INFINITY)
+      (eq? x Number.POSITIVE_INFINITY)
+      (and (number? x)
+           (not (eq? x NaN))
+           (%number-type "complex" x)
+           (or (infinite? (real-part x))
+               (infinite? (imag-part x))))))
+
+;; -----------------------------------------------------------------------------
+(define (finite? x)
+  "(finite? x)
+
+  Function check if value is finite."
+  (not (infinite? x)))
+
+;; -----------------------------------------------------------------------------
+(define-class %Library Object
+  (constructor
+    (lambda (self name)
+      (set! self.__namespace__ &())
+      (set! self.__name__ name)))
+  (append
+   (lambda (self namespace env)
+     (if (environment? (. self.__namespace__ namespace))
+         (throw (new Error (string-append "namespace " namespace
+                                          " already exists in library "
+                                          self.__name__)))
+         (set-obj! self.__namespace__ namespace env))))
+  (env
+   (lambda (self namespace)
+     (let ((env (. self.__namespace__ namespace)))
+        (if (not (environment? env))
+            (throw (new Error (string-append "namespace " namespace " sdon't exists")))
+            env))))
+  (get
+    (lambda (self namespace name)
+      (--> (self.env namespace) (get name))))
+  (set
+    (lambda (self namespace name value)
+      (--> (self.env namespace) (set name value))))
+  (toString
+     (lambda (self)
+       (string-append "#<Library(" self.__name__ ")>"))))
+
+;; -----------------------------------------------------------------------------
+(define (%import-name library namespace names)
+  `(begin
+    ,@(map (lambda (name)
+             `(define ,name (--> ,library (get ',namespace ',name))))
+           names)))
+
+;; -----------------------------------------------------------------------------
+(define-macro (import . specs)
+  "(import (library namespace))
+   (import (only (library namespace) name1 name2))
+
+   Macro for importing names from library."
+  (let ((parent (current-environment)))
+    `(begin
+       ,@(map (lambda (spec)
+                (if (not (pair? spec))
+                    (throw (new Error "import: invalid syntax"))
+                    (cond ((symbol=? (car spec)
+                                     'only)
+                           (let ((lib (caadr spec))
+                                 (namespace (caaddr spec)))
+                             (if (pair? (cadr spec))
+                                 (%import-name ,lib
+                                               ',namespace
+                                               ',(caddr spec))
+                                 (throw (new Error "import: invalid syntax")))))
+                          (else
+                           (let* ((lib-name (car spec))
+                                  (lib (parent.get lib-name))
+                                  (namespace (cadr spec)))
+                             (%import-name lib-name
+                                           namespace
+                                           (env (lib.env namespace))))))))
+              specs))))
+
+;; -----------------------------------------------------------------------------
+(define (new-library name namespace)
+  "(new-library name)
+
+   Create new empty library object with empty namespace."
+  (let* ((parent (. (current-environment) '__parent__))
+         (lib (let ((lib (--> parent (get name &(:throwError false)))))
+                (if (null? lib)
+                    (new %Library name)
+                    lib)))
+         (x (new lips.Environment
+                 (string-append "library-"
+                                (--> name (toLowerCase))
+                                "-"
+                                (--> namespace (toLowerCase))))))
+    (lib.append namespace x)
+    lib))
+
+;; -----------------------------------------------------------------------------
+(define (%export module namespace specs)
+  `(begin
+     ,@(map (lambda (expr)
+              (cond ((symbol? expr)
+                     `(--> ,module (set ',namespace
+                                        ',expr
+                                         ,expr)))
+                    ((and (pair? expr) (symbol=? (car expr)
+                                                 'rename))
+                     `(--> ,module (set ',namespace
+                                        ',(cadr expr)
+                                        ,(caddr expr))))))
+              specs)))
+
+;; -----------------------------------------------------------------------------
+(define-macro (define-library spec . body)
+  "(define-library (library (name namespace) . body)
+
+   Macro for defining modules inside you can use define to create functions.
+   And use export name to add that name to defined environment."
+  (let ((parent (. (current-environment) '__parent__))
+        (module-var (gensym))
+        (namespace-var (gensym))
+        (name (car spec))
+        (namespace (cadr spec)))
+    `(let ((,module-var (new-library ,(symbol->string name)
+                                     ,(symbol->string namespace)))
+           (,namespace-var ',namespace))
+       (define-macro (export . body)
+         (%export ,module-var ,namespace-var body))
+       ,@body
+       (--> ,parent (set ',name ,module-var)))))
+
+;; -----------------------------------------------------------------------------
+(define-values (current-directory set-current-directory!)
+  (if (eq? self window)
+      (let ((cwd (string-append location.origin (--> location.pathname
+                                                     (replace #/\/[^/]+$/ "/")))))
+        (values
+         (lambda ()
+           "(current-directory)
+
+            Return corrent working directory, default it's corrent URL."
+           cwd)
+         (lambda (value)
+           "(set-current-directory! string)
+
+            Function change current working directory to provided string."
+           (typecheck "set-current-directory!" value "string")
+           (set! cwd value))))
+      (let ((process (require "process")))
+        (values
+         (lambda ()
+           "(current-directory)
+
+            Return corrent working directory, default it's path from where
+            the script was executed."
+          (string-append (process.cwd) "/"))
+         (lambda (value)
+           "(set-current-directory! string)
+
+            Function change current working directory to provided string."
+           (typecheck "set-current-directory!" value "string")
+           (process.chdir value))))))
+
+;; -----------------------------------------------------------------------------
