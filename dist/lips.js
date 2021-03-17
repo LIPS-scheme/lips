@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.12
+ *  \_\ /_/ \_\                     /_/ v. DEV
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 16 Mar 2021 19:55:58 +0000
+ * build: Wed, 17 Mar 2021 13:20:37 +0000
  */
 (function () {
   'use strict';
@@ -2746,7 +2746,7 @@
     [/;/, /^$|[^#]/, null, null, Lexer.comment], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment], // block comment
     [/#/, null, /\|/, null, Lexer.b_comment], [/\s/, null, null, Lexer.b_comment, Lexer.b_comment], [/#/, /\|/, null, Lexer.b_comment, null], // inline commentss
     [/#/, null, /;/, null, Lexer.i_comment], [/;/, /#/, null, Lexer.i_comment, null], // datum label
-    [/#/, null, /[0-9]/, null, Lexer.l_datum], [/=/, /[0-9]/, Lexer.boundary, Lexer.l_datum, null], [/#/, /[0-9]/, Lexer.boundary, Lexer.l_datum, null], // block symbols
+    [/#/, null, /[0-9]/, null, Lexer.l_datum], [/=/, /[0-9]/, null, Lexer.l_datum, null], [/#/, /[0-9]/, null, Lexer.l_datum, null], // block symbols
     [/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], // hash special symbols, lexer don't need to distingiush those
     // we only care if it's not pick up by vectors literals
     [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
@@ -2837,11 +2837,15 @@
         read_only(this, '_formatter', formatter, {
           hidden: true
         });
-        read_only(this, '_meta', meta, {
-          hidden: true
-        });
         read_only(this, '__lexer__', new Lexer(arg));
         read_only(this, '__env__', env);
+        read_only(this, '_meta', meta, {
+          hidden: true
+        }); // datum labels
+
+        read_only(this, '_refs', [], {
+          hidden: true
+        });
       }
 
       createClass(Parser, [{
@@ -2896,7 +2900,7 @@
 
                   case 11:
                     _context.next = 13;
-                    return this.read_object();
+                    return this._read_object();
 
                   case 13:
                     return _context.abrupt("continue", 0);
@@ -2931,6 +2935,11 @@
 
           return peek;
         }()
+      }, {
+        key: "reset",
+        value: function reset() {
+          this._refs.length = 0;
+        }
       }, {
         key: "skip",
         value: function skip() {
@@ -2977,6 +2986,18 @@
 
           return read;
         }()
+      }, {
+        key: "match_datum_label",
+        value: function match_datum_label(token) {
+          var m = token.match(/^#([0-9]+)=$/);
+          return m && m[1];
+        }
+      }, {
+        key: "match_datum_ref",
+        value: function match_datum_ref(token) {
+          var m = token.match(/^#([0-9]+)#$/);
+          return m && m[1];
+        }
       }, {
         key: "is_open",
         value: function is_open(token) {
@@ -3030,7 +3051,7 @@
 
                     this.skip();
                     _context3.next = 14;
-                    return this.read_object();
+                    return this._read_object();
 
                   case 14:
                     prev.cdr = _context3.sent;
@@ -3040,7 +3061,7 @@
                   case 17:
                     _context3.t0 = Pair;
                     _context3.next = 20;
-                    return this.read_object();
+                    return this._read_object();
 
                   case 20:
                     _context3.t1 = _context3.sent;
@@ -3129,32 +3150,197 @@
               throw e;
             }
           });
-        }
+        } // public API that handle R7RS datum labels
+
       }, {
         key: "read_object",
         value: function () {
-          var _read_object = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5() {
-            var token, special, bultin, expr, object, extension, result;
+          var _read_object2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5() {
+            var object;
             return regenerator.wrap(function _callee5$(_context5) {
               while (1) {
                 switch (_context5.prev = _context5.next) {
                   case 0:
-                    _context5.next = 2;
-                    return this.peek();
+                    this.reset();
+                    _context5.next = 3;
+                    return this._read_object();
 
-                  case 2:
-                    token = _context5.sent;
+                  case 3:
+                    object = _context5.sent;
 
-                    if (!(token === eof)) {
-                      _context5.next = 5;
+                    if (object instanceof DatumReference) {
+                      object = object.valueOf();
+                    }
+
+                    if (!this._refs.length) {
+                      _context5.next = 7;
                       break;
                     }
 
-                    return _context5.abrupt("return", token);
+                    return _context5.abrupt("return", this._resolve_object(object));
+
+                  case 7:
+                    return _context5.abrupt("return", object);
+
+                  case 8:
+                  case "end":
+                    return _context5.stop();
+                }
+              }
+            }, _callee5, this);
+          }));
+
+          function read_object() {
+            return _read_object2.apply(this, arguments);
+          }
+
+          return read_object;
+        }()
+      }, {
+        key: "_resolve_object",
+        value: function () {
+          var _resolve_object2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(object) {
+            var _this5 = this;
+
+            var result;
+            return regenerator.wrap(function _callee6$(_context6) {
+              while (1) {
+                switch (_context6.prev = _context6.next) {
+                  case 0:
+                    if (!Array.isArray(object)) {
+                      _context6.next = 2;
+                      break;
+                    }
+
+                    return _context6.abrupt("return", object.map(function (item) {
+                      return _this5._resolve_object(item);
+                    }));
+
+                  case 2:
+                    if (!is_plain_object(object)) {
+                      _context6.next = 6;
+                      break;
+                    }
+
+                    result = {};
+                    Object.keys(object).forEach(function (key) {
+                      result[key] = _this5._resolve_object(object[key]);
+                    });
+                    return _context6.abrupt("return", result);
+
+                  case 6:
+                    if (!(object instanceof Pair)) {
+                      _context6.next = 8;
+                      break;
+                    }
+
+                    return _context6.abrupt("return", this._resolve_pair(object));
+
+                  case 8:
+                    return _context6.abrupt("return", object);
+
+                  case 9:
+                  case "end":
+                    return _context6.stop();
+                }
+              }
+            }, _callee6, this);
+          }));
+
+          function _resolve_object(_x3) {
+            return _resolve_object2.apply(this, arguments);
+          }
+
+          return _resolve_object;
+        }()
+      }, {
+        key: "_resolve_pair",
+        value: function () {
+          var _resolve_pair2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(pair) {
+            return regenerator.wrap(function _callee7$(_context7) {
+              while (1) {
+                switch (_context7.prev = _context7.next) {
+                  case 0:
+                    if (!(pair instanceof Pair)) {
+                      _context7.next = 15;
+                      break;
+                    }
+
+                    if (!(pair.car instanceof DatumReference)) {
+                      _context7.next = 7;
+                      break;
+                    }
+
+                    _context7.next = 4;
+                    return pair.car.valueOf();
+
+                  case 4:
+                    pair.car = _context7.sent;
+                    _context7.next = 8;
+                    break;
+
+                  case 7:
+                    this._resolve_pair(pair.car);
+
+                  case 8:
+                    if (!(pair.cdr instanceof DatumReference)) {
+                      _context7.next = 14;
+                      break;
+                    }
+
+                    _context7.next = 11;
+                    return pair.cdr.valueOf();
+
+                  case 11:
+                    pair.cdr = _context7.sent;
+                    _context7.next = 15;
+                    break;
+
+                  case 14:
+                    this._resolve_pair(pair.cdr);
+
+                  case 15:
+                    return _context7.abrupt("return", pair);
+
+                  case 16:
+                  case "end":
+                    return _context7.stop();
+                }
+              }
+            }, _callee7, this);
+          }));
+
+          function _resolve_pair(_x4) {
+            return _resolve_pair2.apply(this, arguments);
+          }
+
+          return _resolve_pair;
+        }()
+      }, {
+        key: "_read_object",
+        value: function () {
+          var _read_object3 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8() {
+            var token, special, bultin, expr, object, extension, result, ref, ref_label;
+            return regenerator.wrap(function _callee8$(_context8) {
+              while (1) {
+                switch (_context8.prev = _context8.next) {
+                  case 0:
+                    _context8.next = 2;
+                    return this.peek();
+
+                  case 2:
+                    token = _context8.sent;
+
+                    if (!(token === eof)) {
+                      _context8.next = 5;
+                      break;
+                    }
+
+                    return _context8.abrupt("return", token);
 
                   case 5:
                     if (!this.is_special(token)) {
-                      _context5.next = 35;
+                      _context8.next = 35;
                       break;
                     }
 
@@ -3168,41 +3354,41 @@
                     special = specials.get(token);
                     bultin = this.is_builtin(token);
                     this.skip();
-                    _context5.next = 11;
-                    return this.read_object();
+                    _context8.next = 11;
+                    return this._read_object();
 
                   case 11:
-                    object = _context5.sent;
+                    object = _context8.sent;
 
                     if (bultin) {
-                      _context5.next = 22;
+                      _context8.next = 22;
                       break;
                     }
 
                     extension = this.__env__.get(special.symbol);
 
                     if (!(typeof extension === 'function')) {
-                      _context5.next = 22;
+                      _context8.next = 22;
                       break;
                     }
 
                     if (!is_literal(token)) {
-                      _context5.next = 19;
+                      _context8.next = 19;
                       break;
                     }
 
-                    return _context5.abrupt("return", extension.call(this.__env__, object));
+                    return _context8.abrupt("return", extension.call(this.__env__, object));
 
                   case 19:
                     if (!(object instanceof Pair)) {
-                      _context5.next = 21;
+                      _context8.next = 21;
                       break;
                     }
 
-                    return _context5.abrupt("return", extension.apply(this.__env__, object.to_array(false)));
+                    return _context8.abrupt("return", extension.apply(this.__env__, object.to_array(false)));
 
                   case 21:
-                    throw new Error('Parser: Invalid parser extension ' + "invocation ".concat(special.symbol));
+                    throw new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
 
                   case 22:
                     if (is_literal(token)) {
@@ -3213,74 +3399,120 @@
 
 
                     if (!bultin) {
-                      _context5.next = 25;
+                      _context8.next = 25;
                       break;
                     }
 
-                    return _context5.abrupt("return", expr);
+                    return _context8.abrupt("return", expr);
 
                   case 25:
                     if (!(extension instanceof Macro)) {
-                      _context5.next = 34;
+                      _context8.next = 34;
                       break;
                     }
 
-                    _context5.next = 28;
+                    _context8.next = 28;
                     return this.evaluate(expr);
 
                   case 28:
-                    result = _context5.sent;
+                    result = _context8.sent;
 
                     if (!(result instanceof Pair || result instanceof LSymbol)) {
-                      _context5.next = 31;
+                      _context8.next = 31;
                       break;
                     }
 
-                    return _context5.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
+                    return _context8.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
 
                   case 31:
-                    return _context5.abrupt("return", result);
+                    return _context8.abrupt("return", result);
 
                   case 34:
-                    throw new Error("Parser: invlid parser extension: ".concat(special.symbol));
+                    throw new Error('Parse Error: invlid parser extension: ' + special.symbol);
 
                   case 35:
-                    if (!this.is_open(token)) {
-                      _context5.next = 42;
+                    ref = this.match_datum_ref(token);
+
+                    if (!(ref !== null)) {
+                      _context8.next = 41;
                       break;
                     }
 
                     this.skip();
-                    _context5.next = 39;
-                    return this.read_list();
 
-                  case 39:
-                    return _context5.abrupt("return", _context5.sent);
+                    if (!this._refs[ref]) {
+                      _context8.next = 40;
+                      break;
+                    }
 
-                  case 42:
-                    _context5.next = 44;
-                    return this.read_value();
+                    return _context8.abrupt("return", new DatumReference(ref, this._refs[ref]));
 
-                  case 44:
-                    return _context5.abrupt("return", _context5.sent);
+                  case 40:
+                    throw new Error("Parse Error: invalid datum label #".concat(ref, "#"));
 
-                  case 45:
+                  case 41:
+                    ref_label = this.match_datum_label(token);
+
+                    if (!(ref_label !== null)) {
+                      _context8.next = 48;
+                      break;
+                    }
+
+                    this.skip();
+                    this._refs[ref_label] = this._read_object();
+                    return _context8.abrupt("return", this._refs[ref_label]);
+
+                  case 48:
+                    if (!this.is_open(token)) {
+                      _context8.next = 53;
+                      break;
+                    }
+
+                    this.skip();
+                    return _context8.abrupt("return", this.read_list());
+
+                  case 53:
+                    return _context8.abrupt("return", this.read_value());
+
+                  case 54:
                   case "end":
-                    return _context5.stop();
+                    return _context8.stop();
                 }
               }
-            }, _callee5, this);
+            }, _callee8, this);
           }));
 
-          function read_object() {
-            return _read_object.apply(this, arguments);
+          function _read_object() {
+            return _read_object3.apply(this, arguments);
           }
 
-          return read_object;
+          return _read_object;
         }()
       }]);
 
       return Parser;
+    }(); // ----------------------------------------------------------------------
+    // :: parser helper that allow to handle circular list structures
+    // :: using datum labels
+    // ----------------------------------------------------------------------
+
+
+    var DatumReference = /*#__PURE__*/function () {
+      function DatumReference(name, data) {
+        classCallCheck(this, DatumReference);
+
+        this.name = name;
+        this.data = data;
+      }
+
+      createClass(DatumReference, [{
+        key: "valueOf",
+        value: function valueOf() {
+          return this.data;
+        }
+      }]);
+
+      return DatumReference;
     }(); // ----------------------------------------------------------------------
     // :: tokens are the array of strings from tokenizer
     // :: the return value is array of lisp code created out of Pair class
@@ -3296,11 +3528,11 @@
 
 
     function _parse() {
-      _parse = wrapAsyncGenerator( /*#__PURE__*/regenerator.mark(function _callee6(arg, env) {
+      _parse = wrapAsyncGenerator( /*#__PURE__*/regenerator.mark(function _callee9(arg, env) {
         var parser, expr;
-        return regenerator.wrap(function _callee6$(_context6) {
+        return regenerator.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
                 if (!env) {
                   if (global_env) {
@@ -3318,33 +3550,33 @@
 
               case 2:
 
-                _context6.next = 5;
+                _context9.next = 5;
                 return awaitAsyncGenerator(parser.read_object());
 
               case 5:
-                expr = _context6.sent;
+                expr = _context9.sent;
 
                 if (!(expr === eof)) {
-                  _context6.next = 8;
+                  _context9.next = 8;
                   break;
                 }
 
-                return _context6.abrupt("break", 12);
+                return _context9.abrupt("break", 12);
 
               case 8:
-                _context6.next = 10;
+                _context9.next = 10;
                 return expr;
 
               case 10:
-                _context6.next = 2;
+                _context9.next = 2;
                 break;
 
               case 12:
               case "end":
-                return _context6.stop();
+                return _context9.stop();
             }
           }
-        }, _callee6);
+        }, _callee9);
       }));
       return _parse.apply(this, arguments);
     }
@@ -3354,47 +3586,6 @@
         return x;
       };
       var error = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
-
-      if (value instanceof Array) {
-        var anyPromise = value.filter(is_promise);
-
-        if (anyPromise.length) {
-          return unpromise(Promise.all(value), function (arr) {
-            if (Object.isFrozen(value)) {
-              Object.freeze(arr);
-            }
-
-            return arr;
-          }, error);
-        }
-
-        return fn(value);
-      }
-
-      if (is_plain_object(value)) {
-        var keys = Object.keys(value);
-        var values = keys.map(function (x) {
-          return value[x];
-        });
-
-        var _anyPromise = values.filter(is_promise);
-
-        if (_anyPromise.length) {
-          return unpromise(Promise.all(values), function (values) {
-            var result = {};
-            values.forEach(function (value, i) {
-              var key = keys[i];
-              result[key] = value;
-            });
-
-            if (Object.isFrozen(value)) {
-              Object.freeze(result);
-            }
-
-            return result;
-          }, error);
-        }
-      }
 
       if (is_promise(value)) {
         var ret = value.then(fn);
@@ -3406,7 +3597,59 @@
         }
       }
 
+      if (value instanceof Array) {
+        return unpromise_array(value, fn, error);
+      }
+
+      if (is_plain_object(value)) {
+        return unpromise_object(value, fn, error);
+      }
+
       return fn(value);
+    } // ----------------------------------------------------------------------
+
+
+    function unpromise_array(array, fn, error) {
+      var anyPromise = array.filter(is_promise);
+
+      if (anyPromise.length) {
+        return unpromise(Promise.all(array), function (arr) {
+          if (Object.isFrozen(array)) {
+            Object.freeze(arr);
+          }
+
+          return arr;
+        }, error);
+      }
+
+      return fn(array);
+    } // ----------------------------------------------------------------------
+
+
+    function unpromise_object(object, fn, error) {
+      var keys = Object.keys(object);
+      var values = keys.map(function (x) {
+        return object[x];
+      });
+      var anyPromise = values.filter(is_promise);
+
+      if (anyPromise.length) {
+        return unpromise(Promise.all(values), function (values) {
+          var result = {};
+          values.forEach(function (value, i) {
+            var key = keys[i];
+            result[key] = value;
+          });
+
+          if (Object.isFrozen(object)) {
+            Object.freeze(result);
+          }
+
+          return result;
+        }, error);
+      }
+
+      return fn(object);
     } // ----------------------------------------------------------------------
 
 
@@ -3425,7 +3668,7 @@
     // ----------------------------------------------------------------------
 
 
-    function uniterate_async(_x3) {
+    function uniterate_async(_x5) {
       return _uniterate_async.apply(this, arguments);
     } // ----------------------------------------------------------------------
     // :: function that return mather function that match string against string
@@ -3433,34 +3676,34 @@
 
 
     function _uniterate_async() {
-      _uniterate_async = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15(object) {
+      _uniterate_async = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee18(object) {
         var result, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _value, item;
 
-        return regenerator.wrap(function _callee15$(_context15) {
+        return regenerator.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
                 result = [];
                 _iteratorNormalCompletion = true;
                 _didIteratorError = false;
-                _context15.prev = 3;
+                _context18.prev = 3;
                 _iterator = asyncIterator(object);
 
               case 5:
-                _context15.next = 7;
+                _context18.next = 7;
                 return _iterator.next();
 
               case 7:
-                _step = _context15.sent;
+                _step = _context18.sent;
                 _iteratorNormalCompletion = _step.done;
-                _context15.next = 11;
+                _context18.next = 11;
                 return _step.value;
 
               case 11:
-                _value = _context15.sent;
+                _value = _context18.sent;
 
                 if (_iteratorNormalCompletion) {
-                  _context15.next = 18;
+                  _context18.next = 18;
                   break;
                 }
 
@@ -3469,56 +3712,56 @@
 
               case 15:
                 _iteratorNormalCompletion = true;
-                _context15.next = 5;
+                _context18.next = 5;
                 break;
 
               case 18:
-                _context15.next = 24;
+                _context18.next = 24;
                 break;
 
               case 20:
-                _context15.prev = 20;
-                _context15.t0 = _context15["catch"](3);
+                _context18.prev = 20;
+                _context18.t0 = _context18["catch"](3);
                 _didIteratorError = true;
-                _iteratorError = _context15.t0;
+                _iteratorError = _context18.t0;
 
               case 24:
-                _context15.prev = 24;
-                _context15.prev = 25;
+                _context18.prev = 24;
+                _context18.prev = 25;
 
                 if (!(!_iteratorNormalCompletion && _iterator["return"] != null)) {
-                  _context15.next = 29;
+                  _context18.next = 29;
                   break;
                 }
 
-                _context15.next = 29;
+                _context18.next = 29;
                 return _iterator["return"]();
 
               case 29:
-                _context15.prev = 29;
+                _context18.prev = 29;
 
                 if (!_didIteratorError) {
-                  _context15.next = 32;
+                  _context18.next = 32;
                   break;
                 }
 
                 throw _iteratorError;
 
               case 32:
-                return _context15.finish(29);
+                return _context18.finish(29);
 
               case 33:
-                return _context15.finish(24);
+                return _context18.finish(24);
 
               case 34:
-                return _context15.abrupt("return", result);
+                return _context18.abrupt("return", result);
 
               case 35:
               case "end":
-                return _context15.stop();
+                return _context18.stop();
             }
           }
-        }, _callee15, null, [[3, 20, 24, 34], [25,, 29, 33]]);
+        }, _callee18, null, [[3, 20, 24, 34], [25,, 29, 33]]);
       }));
       return _uniterate_async.apply(this, arguments);
     }
@@ -3529,9 +3772,11 @@
           return String(x).match(arg);
         };
       } else if (is_function(arg)) {
-        // it will alwasy be function
+        // it will always be function
         return arg;
       }
+
+      throw new Error('Invalid matcher');
     } // ----------------------------------------------------------------------
     // :: documentaton decorator to LIPS functions if lines starts with :
     // :: they are ignored (not trim) otherwise it trim so
@@ -5190,9 +5435,9 @@
 
 
     function seq_compare(fn, args) {
-      var _args8 = toArray(args),
-          a = _args8[0],
-          rest = _args8.slice(1);
+      var _args11 = toArray(args),
+          a = _args11[0],
+          rest = _args11.slice(1);
 
       while (rest.length > 0) {
         var _rest = rest,
@@ -5372,32 +5617,32 @@
 
     function macro_expand(single) {
       return /*#__PURE__*/function () {
-        var _ref20 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(code, args) {
+        var _ref20 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(code, args) {
           var env, traverse, _traverse;
 
-          return regenerator.wrap(function _callee8$(_context8) {
+          return regenerator.wrap(function _callee11$(_context11) {
             while (1) {
-              switch (_context8.prev = _context8.next) {
+              switch (_context11.prev = _context11.next) {
                 case 0:
                   _traverse = function _traverse3() {
-                    _traverse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(node, n, env) {
+                    _traverse = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(node, n, env) {
                       var value, code, result, _result, expr, scope, car, cdr, pair;
 
-                      return regenerator.wrap(function _callee7$(_context7) {
+                      return regenerator.wrap(function _callee10$(_context10) {
                         while (1) {
-                          switch (_context7.prev = _context7.next) {
+                          switch (_context10.prev = _context10.next) {
                             case 0:
                               if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-                                _context7.next = 26;
+                                _context10.next = 26;
                                 break;
                               }
 
                               if (!node[__data__]) {
-                                _context7.next = 3;
+                                _context10.next = 3;
                                 break;
                               }
 
-                              return _context7.abrupt("return", node);
+                              return _context10.abrupt("return", node);
 
                             case 3:
                               value = env.get(node.car, {
@@ -5405,178 +5650,178 @@
                               });
 
                               if (!(value instanceof Macro && value.__defmacro__)) {
-                                _context7.next = 26;
+                                _context10.next = 26;
                                 break;
                               }
 
                               code = value instanceof Syntax ? node : node.cdr;
-                              _context7.next = 8;
+                              _context10.next = 8;
                               return value.invoke(code, _objectSpread(_objectSpread({}, args), {}, {
                                 env: env
                               }), true);
 
                             case 8:
-                              result = _context7.sent;
+                              result = _context10.sent;
 
                               if (!(value instanceof Syntax)) {
-                                _context7.next = 17;
+                                _context10.next = 17;
                                 break;
                               }
 
                               _result = result, expr = _result.expr, scope = _result.scope;
 
                               if (!(expr instanceof Pair)) {
-                                _context7.next = 16;
+                                _context10.next = 16;
                                 break;
                               }
 
                               if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                                _context7.next = 14;
+                                _context10.next = 14;
                                 break;
                               }
 
-                              return _context7.abrupt("return", expr);
+                              return _context10.abrupt("return", expr);
 
                             case 14:
                               if (n !== -1) {
                                 n = n - 1;
                               }
 
-                              return _context7.abrupt("return", traverse(expr, n, scope));
+                              return _context10.abrupt("return", traverse(expr, n, scope));
 
                             case 16:
                               result = expr;
 
                             case 17:
                               if (!(result instanceof LSymbol)) {
-                                _context7.next = 19;
+                                _context10.next = 19;
                                 break;
                               }
 
-                              return _context7.abrupt("return", quote(result));
+                              return _context10.abrupt("return", quote(result));
 
                             case 19:
                               if (!(result instanceof Pair)) {
-                                _context7.next = 24;
+                                _context10.next = 24;
                                 break;
                               }
 
                               if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                                _context7.next = 22;
+                                _context10.next = 22;
                                 break;
                               }
 
-                              return _context7.abrupt("return", result);
+                              return _context10.abrupt("return", result);
 
                             case 22:
                               if (n !== -1) {
                                 n = n - 1;
                               }
 
-                              return _context7.abrupt("return", traverse(result, n, env));
+                              return _context10.abrupt("return", traverse(result, n, env));
 
                             case 24:
                               if (!is_atom(result)) {
-                                _context7.next = 26;
+                                _context10.next = 26;
                                 break;
                               }
 
-                              return _context7.abrupt("return", result);
+                              return _context10.abrupt("return", result);
 
                             case 26:
                               // TODO: CYCLE DETECT
                               car = node.car;
 
                               if (!(car instanceof Pair)) {
-                                _context7.next = 31;
+                                _context10.next = 31;
                                 break;
                               }
 
-                              _context7.next = 30;
+                              _context10.next = 30;
                               return traverse(car, n, env);
 
                             case 30:
-                              car = _context7.sent;
+                              car = _context10.sent;
 
                             case 31:
                               cdr = node.cdr;
 
                               if (!(cdr instanceof Pair)) {
-                                _context7.next = 36;
+                                _context10.next = 36;
                                 break;
                               }
 
-                              _context7.next = 35;
+                              _context10.next = 35;
                               return traverse(cdr, n, env);
 
                             case 35:
-                              cdr = _context7.sent;
+                              cdr = _context10.sent;
 
                             case 36:
                               pair = new Pair(car, cdr);
-                              return _context7.abrupt("return", pair);
+                              return _context10.abrupt("return", pair);
 
                             case 38:
                             case "end":
-                              return _context7.stop();
+                              return _context10.stop();
                           }
                         }
-                      }, _callee7);
+                      }, _callee10);
                     }));
                     return _traverse.apply(this, arguments);
                   };
 
-                  traverse = function _traverse2(_x6, _x7, _x8) {
+                  traverse = function _traverse2(_x8, _x9, _x10) {
                     return _traverse.apply(this, arguments);
                   };
 
                   env = args['env'] = this;
 
                   if (!(code.cdr instanceof Pair && LNumber.isNumber(code.cdr.car))) {
-                    _context8.next = 9;
+                    _context11.next = 9;
                     break;
                   }
 
-                  _context8.t0 = quote;
-                  _context8.next = 7;
+                  _context11.t0 = quote;
+                  _context11.next = 7;
                   return traverse(code, code.cdr.car.valueOf(), env);
 
                 case 7:
-                  _context8.t1 = _context8.sent.car;
-                  return _context8.abrupt("return", (0, _context8.t0)(_context8.t1));
+                  _context11.t1 = _context11.sent.car;
+                  return _context11.abrupt("return", (0, _context11.t0)(_context11.t1));
 
                 case 9:
                   if (!single) {
-                    _context8.next = 15;
+                    _context11.next = 15;
                     break;
                   }
 
-                  _context8.t2 = quote;
-                  _context8.next = 13;
+                  _context11.t2 = quote;
+                  _context11.next = 13;
                   return traverse(code, 1, env);
 
                 case 13:
-                  _context8.t3 = _context8.sent.car;
-                  return _context8.abrupt("return", (0, _context8.t2)(_context8.t3));
+                  _context11.t3 = _context11.sent.car;
+                  return _context11.abrupt("return", (0, _context11.t2)(_context11.t3));
 
                 case 15:
-                  _context8.t4 = quote;
-                  _context8.next = 18;
+                  _context11.t4 = quote;
+                  _context11.next = 18;
                   return traverse(code, -1, env);
 
                 case 18:
-                  _context8.t5 = _context8.sent.car;
-                  return _context8.abrupt("return", (0, _context8.t4)(_context8.t5));
+                  _context11.t5 = _context11.sent.car;
+                  return _context11.abrupt("return", (0, _context11.t4)(_context11.t5));
 
                 case 20:
                 case "end":
-                  return _context8.stop();
+                  return _context11.stop();
               }
             }
-          }, _callee8, this);
+          }, _callee11, this);
         }));
 
-        return function (_x4, _x5) {
+        return function (_x6, _x7) {
           return _ref20.apply(this, arguments);
         };
       }();
@@ -6941,7 +7186,7 @@
 
 
     function pipe() {
-      var _this5 = this;
+      var _this6 = this;
 
       for (var _len7 = arguments.length, fns = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
         fns[_key7] = arguments[_key7];
@@ -6956,7 +7201,7 @@
         }
 
         return fns.reduce(function (args, f) {
-          return [f.apply(_this5, args)];
+          return [f.apply(_this6, args)];
         }, args)[0];
       };
     } // -------------------------------------------------------------------------
@@ -8155,10 +8400,10 @@
 
 
     LComplex.prototype.complex_op = function (name, n, fn) {
-      var _this6 = this;
+      var _this7 = this;
 
       var calc = function calc(re, im) {
-        var result = fn(_this6.__re__, re, _this6.__im__, im);
+        var result = fn(_this7.__re__, re, _this7.__im__, im);
 
         if ('im' in result && 're' in result) {
           if (result.im.cmp(0) === 0 && !LNumber.isFloat(result.im)) {
@@ -8830,7 +9075,7 @@
 
 
     function InputPort(read) {
-      var _this7 = this;
+      var _this8 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputPort) || typeof this === 'undefined') {
         return new InputPort(read);
@@ -8850,35 +9095,35 @@
         }
       });
       this._read = read;
-      this._with_parser = this._with_init_parser.bind(this, /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9() {
+      this._with_parser = this._with_init_parser.bind(this, /*#__PURE__*/asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12() {
         var line;
-        return regenerator.wrap(function _callee9$(_context9) {
+        return regenerator.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                if (_this7.char_ready()) {
-                  _context9.next = 5;
+                if (_this8.char_ready()) {
+                  _context12.next = 5;
                   break;
                 }
 
-                _context9.next = 3;
-                return _this7._read();
+                _context12.next = 3;
+                return _this8._read();
 
               case 3:
-                line = _context9.sent;
+                line = _context12.sent;
                 parser = new Parser(line, {
-                  env: _this7
+                  env: _this8
                 });
 
               case 5:
-                return _context9.abrupt("return", _this7.__parser__);
+                return _context12.abrupt("return", _this8.__parser__);
 
               case 6:
               case "end":
-                return _context9.stop();
+                return _context12.stop();
             }
           }
-        }, _callee9);
+        }, _callee12);
       })));
 
       this.char_ready = function () {
@@ -8915,35 +9160,35 @@
     InputPort.prototype._with_init_parser = function (make_parser, fn) {
       var self = this;
       return /*#__PURE__*/function () {
-        var _ref26 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10() {
+        var _ref26 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13() {
           var parser,
               _len16,
               args,
               _key16,
-              _args12 = arguments;
+              _args15 = arguments;
 
-          return regenerator.wrap(function _callee10$(_context10) {
+          return regenerator.wrap(function _callee13$(_context13) {
             while (1) {
-              switch (_context10.prev = _context10.next) {
+              switch (_context13.prev = _context13.next) {
                 case 0:
-                  _context10.next = 2;
+                  _context13.next = 2;
                   return make_parser.call(self);
 
                 case 2:
-                  parser = _context10.sent;
+                  parser = _context13.sent;
 
-                  for (_len16 = _args12.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-                    args[_key16] = _args12[_key16];
+                  for (_len16 = _args15.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+                    args[_key16] = _args15[_key16];
                   }
 
-                  return _context10.abrupt("return", fn.apply(void 0, [parser].concat(args)));
+                  return _context13.abrupt("return", fn.apply(void 0, [parser].concat(args)));
 
                 case 5:
                 case "end":
-                  return _context10.stop();
+                  return _context13.stop();
               }
             }
-          }, _callee10);
+          }, _callee13);
         }));
 
         return function () {
@@ -8957,14 +9202,14 @@
     };
 
     InputPort.prototype.close = function () {
-      var _this8 = this;
+      var _this9 = this;
 
       this.__parser__ = null; // make content garbage collected, we assign null,
       // because the value is in prototype
 
       this._with_parser = null;
       ['read', 'close', 'read_char', 'peek-char', 'read_line'].forEach(function (name) {
-        _this8[name] = function () {
+        _this9[name] = function () {
           throw new Error('input-port: port is closed');
         };
       });
@@ -9014,7 +9259,7 @@
 
 
     function OutputStringPort(toString) {
-      var _this9 = this;
+      var _this10 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) || typeof this === 'undefined') {
         return new OutputStringPort(toString);
@@ -9031,7 +9276,7 @@
           x = x.valueOf();
         }
 
-        _this9.__buffer__.push(x);
+        _this10.__buffer__.push(x);
       };
     }
 
@@ -9050,7 +9295,7 @@
 
 
     function OutputFilePort(filename, fd) {
-      var _this10 = this;
+      var _this11 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof OutputFilePort) || typeof this === 'undefined') {
         return new OutputFilePort(filename, fd);
@@ -9070,7 +9315,7 @@
           x = x.valueOf();
         }
 
-        _this10.fs().write(_this10._fd, x, function (err) {
+        _this11.fs().write(_this11._fd, x, function (err) {
           if (err) {
             throw err;
           }
@@ -9094,17 +9339,17 @@
     };
 
     OutputFilePort.prototype.close = function () {
-      var _this11 = this;
+      var _this12 = this;
 
       return new Promise(function (resolve, reject) {
-        _this11.fs().close(_this11._fd, function (err) {
+        _this12.fs().close(_this12._fd, function (err) {
           if (err) {
             reject(err);
           } else {
-            read_only(_this11, '_fd', null, {
+            read_only(_this12, '_fd', null, {
               hidden: true
             });
-            OutputPort.prototype.close.call(_this11);
+            OutputPort.prototype.close.call(_this12);
             resolve();
           }
         });
@@ -9117,7 +9362,7 @@
 
 
     function InputStringPort(string, env) {
-      var _this12 = this;
+      var _this13 = this;
 
       if (typeof this !== 'undefined' && !(this instanceof InputStringPort) || typeof this === 'undefined') {
         return new InputStringPort(string);
@@ -9127,13 +9372,13 @@
       env = env || global_env;
       string = string.valueOf();
       this._with_parser = this._with_init_parser.bind(this, function () {
-        if (!_this12.__parser__) {
-          _this12.__parser__ = new Parser(string, {
+        if (!_this13.__parser__) {
+          _this13.__parser__ = new Parser(string, {
             env: env
           });
         }
 
-        return _this12.__parser__;
+        return _this13.__parser__;
       });
       read_only(this, '__type__', text_port);
 
@@ -9194,11 +9439,11 @@
     };
 
     InputByteVectorPort.prototype.close = function () {
-      var _this13 = this;
+      var _this14 = this;
 
       read_only(this, '__vector__', nil);
       ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(function (name) {
-        _this13[name] = function () {
+        _this14[name] = function () {
           throw new Error('Input-binary-port: port is closed');
         };
       });
@@ -9363,7 +9608,7 @@
       var fs, Buffer;
 
       this.write = function (x) {
-        var _this14 = this;
+        var _this15 = this;
 
         typecheck('write', x, ['number', 'uint8array']);
         var buffer;
@@ -9383,7 +9628,7 @@
         }
 
         return new Promise(function (resolve, reject) {
-          fs.write(_this14._fd, buffer, function (err) {
+          fs.write(_this15._fd, buffer, function (err) {
             if (err) {
               reject(err);
             } else {
@@ -9645,13 +9890,13 @@
 
 
     Environment.prototype.clone = function () {
-      var _this15 = this;
+      var _this16 = this;
 
       // duplicate refs
       var env = {}; // TODO: duplicated Symbols
 
       Object.keys(this.__env__).forEach(function (key) {
-        env[key] = _this15.__env__[key];
+        env[key] = _this16.__env__[key];
       });
       return new Environment(env, this.__parent__, this.__name__);
     }; // -------------------------------------------------------------------------
@@ -9808,7 +10053,7 @@
 
 
     Environment.prototype.constant = function (name, value) {
-      var _this16 = this;
+      var _this17 = this;
 
       if (this.__env__.hasOwnProperty(name)) {
         throw new Error("Environment::constant: ".concat(name, " already exists"));
@@ -9817,7 +10062,7 @@
       if (arguments.length === 1 && is_plain_object(arguments[0])) {
         var obj = arguments[0];
         Object.keys(obj).forEach(function (key) {
-          _this16.constant(name, obj[key]);
+          _this17.constant(name, obj[key]);
         });
       } else {
         Object.defineProperty(this.__env__, name, {
@@ -10008,7 +10253,7 @@
       }, "(read-char port)\n\n            Function read next character from input port."),
       // ------------------------------------------------------------------
       read: doc( /*#__PURE__*/function () {
-        var _read2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11() {
+        var _read2 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14() {
           var arg,
               _iteratorNormalCompletion2,
               _didIteratorError2,
@@ -10018,87 +10263,87 @@
               _value2,
               value,
               port,
-              _args13 = arguments;
+              _args16 = arguments;
 
-          return regenerator.wrap(function _callee11$(_context11) {
+          return regenerator.wrap(function _callee14$(_context14) {
             while (1) {
-              switch (_context11.prev = _context11.next) {
+              switch (_context14.prev = _context14.next) {
                 case 0:
-                  arg = _args13.length > 0 && _args13[0] !== undefined$1 ? _args13[0] : null;
+                  arg = _args16.length > 0 && _args16[0] !== undefined$1 ? _args16[0] : null;
 
                   if (!LString.isString(arg)) {
-                    _context11.next = 35;
+                    _context14.next = 35;
                     break;
                   }
 
                   _iteratorNormalCompletion2 = true;
                   _didIteratorError2 = false;
-                  _context11.prev = 4;
+                  _context14.prev = 4;
                   _iterator2 = asyncIterator(parse(arg, this));
 
                 case 6:
-                  _context11.next = 8;
+                  _context14.next = 8;
                   return _iterator2.next();
 
                 case 8:
-                  _step2 = _context11.sent;
+                  _step2 = _context14.sent;
                   _iteratorNormalCompletion2 = _step2.done;
-                  _context11.next = 12;
+                  _context14.next = 12;
                   return _step2.value;
 
                 case 12:
-                  _value2 = _context11.sent;
+                  _value2 = _context14.sent;
 
                   if (_iteratorNormalCompletion2) {
-                    _context11.next = 19;
+                    _context14.next = 19;
                     break;
                   }
 
                   value = _value2;
-                  return _context11.abrupt("return", value);
+                  return _context14.abrupt("return", value);
 
                 case 16:
                   _iteratorNormalCompletion2 = true;
-                  _context11.next = 6;
+                  _context14.next = 6;
                   break;
 
                 case 19:
-                  _context11.next = 25;
+                  _context14.next = 25;
                   break;
 
                 case 21:
-                  _context11.prev = 21;
-                  _context11.t0 = _context11["catch"](4);
+                  _context14.prev = 21;
+                  _context14.t0 = _context14["catch"](4);
                   _didIteratorError2 = true;
-                  _iteratorError2 = _context11.t0;
+                  _iteratorError2 = _context14.t0;
 
                 case 25:
-                  _context11.prev = 25;
-                  _context11.prev = 26;
+                  _context14.prev = 25;
+                  _context14.prev = 26;
 
                   if (!(!_iteratorNormalCompletion2 && _iterator2["return"] != null)) {
-                    _context11.next = 30;
+                    _context14.next = 30;
                     break;
                   }
 
-                  _context11.next = 30;
+                  _context14.next = 30;
                   return _iterator2["return"]();
 
                 case 30:
-                  _context11.prev = 30;
+                  _context14.prev = 30;
 
                   if (!_didIteratorError2) {
-                    _context11.next = 33;
+                    _context14.next = 33;
                     break;
                   }
 
                   throw _iteratorError2;
 
                 case 33:
-                  return _context11.finish(30);
+                  return _context14.finish(30);
 
                 case 34:
-                  return _context11.finish(25);
+                  return _context14.finish(25);
 
                 case 35:
                   if (arg === null) {
@@ -10108,14 +10353,14 @@
                   }
 
                   typecheck_text_port('read', port, 'input-port');
-                  return _context11.abrupt("return", port.read.call(this));
+                  return _context14.abrupt("return", port.read.call(this));
 
                 case 38:
                 case "end":
-                  return _context11.stop();
+                  return _context14.stop();
               }
             }
-          }, _callee11, this, [[4, 21, 25, 35], [26,, 30, 34]]);
+          }, _callee14, this, [[4, 21, 25, 35], [26,, 30, 34]]);
         }));
 
         function read() {
@@ -10293,7 +10538,7 @@
       }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
       // ------------------------------------------------------------------
       'set!': doc(new Macro('set!', function (code) {
-        var _this17 = this;
+        var _this18 = this;
 
         var _ref29 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
             dynamic_scope = _ref29.dynamic_scope,
@@ -10373,7 +10618,7 @@
               var key = parts.pop();
               var name = parts.join('.');
 
-              var obj = _this17.get(name, {
+              var obj = _this18.get(name, {
                 throwError: false
               });
 
@@ -10501,12 +10746,12 @@
       }, "(load filename)\n            (load filename environment)\n\n            Function fetch the file and evaluate its content as LIPS code,\n            If second argument is provided and it's environment the evaluation\n            will happen in that environment."),
       // ------------------------------------------------------------------
       'do': doc(new Macro('do', /*#__PURE__*/function () {
-        var _ref30 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(code, _ref31) {
+        var _ref30 = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(code, _ref31) {
           var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _loop3;
 
-          return regenerator.wrap(function _callee13$(_context13) {
+          return regenerator.wrap(function _callee16$(_context16) {
             while (1) {
-              switch (_context13.prev = _context13.next) {
+              switch (_context16.prev = _context16.next) {
                 case 0:
                   dynamic_scope = _ref31.dynamic_scope, error = _ref31.error;
                   self = this;
@@ -10533,23 +10778,23 @@
 
                 case 10:
                   if (!(node !== nil)) {
-                    _context13.next = 21;
+                    _context16.next = 21;
                     break;
                   }
 
                   item = node.car;
-                  _context13.t0 = scope;
-                  _context13.t1 = item.car;
-                  _context13.next = 16;
+                  _context16.t0 = scope;
+                  _context16.t1 = item.car;
+                  _context16.next = 16;
                   return _evaluate(item.cdr.car, eval_args);
 
                 case 16:
-                  _context13.t2 = _context13.sent;
+                  _context16.t2 = _context16.sent;
 
-                  _context13.t0.set.call(_context13.t0, _context13.t1, _context13.t2);
+                  _context16.t0.set.call(_context16.t0, _context16.t1, _context16.t2);
 
                   node = node.cdr;
-                  _context13.next = 10;
+                  _context16.next = 10;
                   break;
 
                 case 21:
@@ -10558,19 +10803,19 @@
                     dynamic_scope: dynamic_scope,
                     error: error
                   };
-                  _loop3 = /*#__PURE__*/regenerator.mark(function _callee12() {
+                  _loop3 = /*#__PURE__*/regenerator.mark(function _callee15() {
                     var node, next, _item, value, symbols;
 
-                    return regenerator.wrap(function _callee12$(_context12) {
+                    return regenerator.wrap(function _callee15$(_context15) {
                       while (1) {
-                        switch (_context12.prev = _context12.next) {
+                        switch (_context15.prev = _context15.next) {
                           case 0:
                             if (!(body !== nil)) {
-                              _context12.next = 3;
+                              _context15.next = 3;
                               break;
                             }
 
-                            _context12.next = 3;
+                            _context15.next = 3;
                             return lips.evaluate(body, eval_args);
 
                           case 3:
@@ -10579,27 +10824,27 @@
 
                           case 5:
                             if (!(node !== nil)) {
-                              _context12.next = 15;
+                              _context15.next = 15;
                               break;
                             }
 
                             _item = node.car;
 
                             if (!(_item.cdr.cdr !== nil)) {
-                              _context12.next = 12;
+                              _context15.next = 12;
                               break;
                             }
 
-                            _context12.next = 10;
+                            _context15.next = 10;
                             return _evaluate(_item.cdr.cdr.car, eval_args);
 
                           case 10:
-                            value = _context12.sent;
+                            value = _context15.sent;
                             next[_item.car.valueOf()] = value;
 
                           case 12:
                             node = node.cdr;
-                            _context12.next = 5;
+                            _context15.next = 5;
                             break;
 
                           case 15:
@@ -10610,51 +10855,51 @@
 
                           case 17:
                           case "end":
-                            return _context12.stop();
+                            return _context15.stop();
                         }
                       }
-                    }, _callee12);
+                    }, _callee15);
                   });
 
                 case 23:
-                  _context13.next = 25;
+                  _context16.next = 25;
                   return _evaluate(test.car, eval_args);
 
                 case 25:
-                  _context13.t3 = _context13.sent;
+                  _context16.t3 = _context16.sent;
 
-                  if (!(_context13.t3 === false)) {
-                    _context13.next = 30;
+                  if (!(_context16.t3 === false)) {
+                    _context16.next = 30;
                     break;
                   }
 
-                  return _context13.delegateYield(_loop3(), "t4", 28);
+                  return _context16.delegateYield(_loop3(), "t4", 28);
 
                 case 28:
-                  _context13.next = 23;
+                  _context16.next = 23;
                   break;
 
                 case 30:
                   if (!(test.cdr !== nil)) {
-                    _context13.next = 34;
+                    _context16.next = 34;
                     break;
                   }
 
-                  _context13.next = 33;
+                  _context16.next = 33;
                   return _evaluate(test.cdr.car, eval_args);
 
                 case 33:
-                  return _context13.abrupt("return", _context13.sent);
+                  return _context16.abrupt("return", _context16.sent);
 
                 case 34:
                 case "end":
-                  return _context13.stop();
+                  return _context16.stop();
               }
             }
-          }, _callee13, this);
+          }, _callee16, this);
         }));
 
-        return function (_x9, _x10) {
+        return function (_x11, _x12) {
           return _ref30.apply(this, arguments);
         };
       }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
@@ -10883,7 +11128,7 @@
       }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
       // ------------------------------------------------------------------
       'eval': doc('eval', function (code, env) {
-        var _this18 = this;
+        var _this19 = this;
 
         env = env || this;
         return _evaluate(code, {
@@ -10891,13 +11136,13 @@
           //dynamic_scope: this,
           error: function error(e) {
             var error = global_env.get('error');
-            error.call(_this18, e.message);
+            error.call(_this19, e.message);
 
             if (e.code) {
               var stack = e.code.map(function (line, i) {
                 return "[".concat(i + 1, "]: ").concat(line);
               }).join('\n');
-              error.call(_this18, stack);
+              error.call(_this19, stack);
             }
           }
         });
@@ -11961,7 +12206,7 @@
       }, "(string->number number [radix])\n\n           Function convert string to number."),
       // ------------------------------------------------------------------
       'try': doc(new Macro('try', function (code, _ref39) {
-        var _this19 = this;
+        var _this20 = this;
 
         var dynamic_scope = _ref39.dynamic_scope,
             _error = _ref39.error;
@@ -11995,9 +12240,9 @@
           }
 
           var args = {
-            env: _this19,
+            env: _this20,
             error: function error(e) {
-              var env = _this19.inherit('try');
+              var env = _this20.inherit('try');
 
               if (catch_clause) {
                 env.set(catch_clause.cdr.car.car, e);
@@ -12007,7 +12252,7 @@
                 };
 
                 if (dynamic_scope) {
-                  args.dynamic_scope = _this19;
+                  args.dynamic_scope = _this20;
                 }
 
                 unpromise(_evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
@@ -12020,7 +12265,7 @@
           };
 
           if (dynamic_scope) {
-            args.dynamic_scope = _this19;
+            args.dynamic_scope = _this20;
           }
 
           var result = _evaluate(code.car, args);
@@ -12080,7 +12325,7 @@
       }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
       // ------------------------------------------------------------------
       map: doc(function map(fn) {
-        var _this20 = this;
+        var _this21 = this;
 
         for (var _len30 = arguments.length, lists = new Array(_len30 > 1 ? _len30 - 1 : 0), _key30 = 1; _key30 < _len30; _key30++) {
           lists[_key30 - 1] = arguments[_key30];
@@ -12091,7 +12336,7 @@
         lists.forEach(function (arg, i) {
           typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-          if (arg instanceof Pair && !is_list.call(_this20, arg)) {
+          if (arg instanceof Pair && !is_list.call(_this21, arg)) {
             throw new Error("map: argument ".concat(i + 1, " is not a list"));
           }
         });
@@ -12113,7 +12358,7 @@
         var env = this.newFrame(fn, args);
         env.set('parent.frame', parent_frame);
         return unpromise(fn.call.apply(fn, [env].concat(toConsumableArray(args))), function (head) {
-          return unpromise(map.call.apply(map, [_this20, fn].concat(toConsumableArray(lists.map(function (l) {
+          return unpromise(map.call.apply(map, [_this21, fn].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           })))), function (rest) {
             return new Pair(head, rest);
@@ -12209,7 +12454,7 @@
       }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
       // ------------------------------------------------------------------
       reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-        var _this21 = this;
+        var _this22 = this;
 
         for (var _len33 = arguments.length, lists = new Array(_len33 > 3 ? _len33 - 3 : 0), _key34 = 3; _key34 < _len33; _key34++) {
           lists[_key34 - 3] = arguments[_key34];
@@ -12229,7 +12474,7 @@
         return unpromise(fn.apply(void 0, toConsumableArray(lists.map(function (l) {
           return l.car;
         })).concat([init])), function (value) {
-          return reduce.call.apply(reduce, [_this21, fn, value].concat(toConsumableArray(lists.map(function (l) {
+          return reduce.call.apply(reduce, [_this22, fn, value].concat(toConsumableArray(lists.map(function (l) {
             return l.cdr;
           }))));
         });
@@ -12949,70 +13194,70 @@
         }
       }
 
-      function promise(_x11) {
+      function promise(_x13) {
         return _promise.apply(this, arguments);
       }
 
       function _promise() {
-        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(node) {
+        _promise = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee17(node) {
           var pair;
-          return regenerator.wrap(function _callee14$(_context14) {
+          return regenerator.wrap(function _callee17$(_context17) {
             while (1) {
-              switch (_context14.prev = _context14.next) {
+              switch (_context17.prev = _context17.next) {
                 case 0:
-                  _context14.t0 = Pair;
+                  _context17.t0 = Pair;
 
                   if (!node.haveCycles('car')) {
-                    _context14.next = 5;
+                    _context17.next = 5;
                     break;
                   }
 
-                  _context14.t1 = node.car;
-                  _context14.next = 8;
+                  _context17.t1 = node.car;
+                  _context17.next = 8;
                   break;
 
                 case 5:
-                  _context14.next = 7;
+                  _context17.next = 7;
                   return resolve(node.car);
 
                 case 7:
-                  _context14.t1 = _context14.sent;
+                  _context17.t1 = _context17.sent;
 
                 case 8:
-                  _context14.t2 = _context14.t1;
+                  _context17.t2 = _context17.t1;
 
                   if (!node.haveCycles('cdr')) {
-                    _context14.next = 13;
+                    _context17.next = 13;
                     break;
                   }
 
-                  _context14.t3 = node.cdr;
-                  _context14.next = 16;
+                  _context17.t3 = node.cdr;
+                  _context17.next = 16;
                   break;
 
                 case 13:
-                  _context14.next = 15;
+                  _context17.next = 15;
                   return resolve(node.cdr);
 
                 case 15:
-                  _context14.t3 = _context14.sent;
+                  _context17.t3 = _context17.sent;
 
                 case 16:
-                  _context14.t4 = _context14.t3;
-                  pair = new _context14.t0(_context14.t2, _context14.t4);
+                  _context17.t4 = _context17.t3;
+                  pair = new _context17.t0(_context17.t2, _context17.t4);
 
                   if (node[__data__]) {
                     pair[__data__] = true;
                   }
 
-                  return _context14.abrupt("return", pair);
+                  return _context17.abrupt("return", pair);
 
                 case 20:
                 case "end":
-                  return _context14.stop();
+                  return _context17.stop();
               }
             }
-          }, _callee14);
+          }, _callee17);
         }));
         return _promise.apply(this, arguments);
       }
@@ -13305,18 +13550,18 @@
     } // -------------------------------------------------------------------------
 
 
-    function exec(_x12, _x13, _x14) {
+    function exec(_x14, _x15, _x16) {
       return _exec.apply(this, arguments);
     } // -------------------------------------------------------------------------
 
 
     function _exec() {
-      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(string, env, dynamic_scope) {
+      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(string, env, dynamic_scope) {
         var results, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
 
-        return regenerator.wrap(function _callee16$(_context16) {
+        return regenerator.wrap(function _callee19$(_context19) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -13329,24 +13574,24 @@
                 results = [];
                 _iteratorNormalCompletion3 = true;
                 _didIteratorError3 = false;
-                _context16.prev = 4;
+                _context19.prev = 4;
                 _iterator3 = asyncIterator(parse(string));
 
               case 6:
-                _context16.next = 8;
+                _context19.next = 8;
                 return _iterator3.next();
 
               case 8:
-                _step3 = _context16.sent;
+                _step3 = _context19.sent;
                 _iteratorNormalCompletion3 = _step3.done;
-                _context16.next = 12;
+                _context19.next = 12;
                 return _step3.value;
 
               case 12:
-                _value3 = _context16.sent;
+                _value3 = _context19.sent;
 
                 if (_iteratorNormalCompletion3) {
-                  _context16.next = 28;
+                  _context19.next = 28;
                   break;
                 }
 
@@ -13379,76 +13624,76 @@
                 });
 
                 if (is_promise(value)) {
-                  _context16.next = 20;
+                  _context19.next = 20;
                   break;
                 }
 
                 results.push(value);
-                _context16.next = 25;
+                _context19.next = 25;
                 break;
 
               case 20:
-                _context16.t0 = results;
-                _context16.next = 23;
+                _context19.t0 = results;
+                _context19.next = 23;
                 return value;
 
               case 23:
-                _context16.t1 = _context16.sent;
+                _context19.t1 = _context19.sent;
 
-                _context16.t0.push.call(_context16.t0, _context16.t1);
+                _context19.t0.push.call(_context19.t0, _context19.t1);
 
               case 25:
                 _iteratorNormalCompletion3 = true;
-                _context16.next = 6;
+                _context19.next = 6;
                 break;
 
               case 28:
-                _context16.next = 34;
+                _context19.next = 34;
                 break;
 
               case 30:
-                _context16.prev = 30;
-                _context16.t2 = _context16["catch"](4);
+                _context19.prev = 30;
+                _context19.t2 = _context19["catch"](4);
                 _didIteratorError3 = true;
-                _iteratorError3 = _context16.t2;
+                _iteratorError3 = _context19.t2;
 
               case 34:
-                _context16.prev = 34;
-                _context16.prev = 35;
+                _context19.prev = 34;
+                _context19.prev = 35;
 
                 if (!(!_iteratorNormalCompletion3 && _iterator3["return"] != null)) {
-                  _context16.next = 39;
+                  _context19.next = 39;
                   break;
                 }
 
-                _context16.next = 39;
+                _context19.next = 39;
                 return _iterator3["return"]();
 
               case 39:
-                _context16.prev = 39;
+                _context19.prev = 39;
 
                 if (!_didIteratorError3) {
-                  _context16.next = 42;
+                  _context19.next = 42;
                   break;
                 }
 
                 throw _iteratorError3;
 
               case 42:
-                return _context16.finish(39);
+                return _context19.finish(39);
 
               case 43:
-                return _context16.finish(34);
+                return _context19.finish(34);
 
               case 44:
-                return _context16.abrupt("return", results);
+                return _context19.abrupt("return", results);
 
               case 45:
               case "end":
-                return _context16.stop();
+                return _context19.stop();
             }
           }
-        }, _callee16, null, [[4, 30, 34, 44], [35,, 39, 43]]);
+        }, _callee19, null, [[4, 30, 34, 44], [35,, 39, 43]]);
       }));
       return _exec.apply(this, arguments);
     }
@@ -13790,10 +14035,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 16 Mar 2021 19:55:58 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 17 Mar 2021 13:20:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 16 Mar 2021 19:55:58 +0000').valueOf();
+      var date = LString('Wed, 17 Mar 2021 13:20:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13805,7 +14050,7 @@
 
       var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.12 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro and\n(apropos name) to display list of matched names in environment.\n").replace(/^.*\n/, '');
+      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro and\n(apropos name) to display list of matched names in environment.\n").replace(/^.*\n/, '');
       return banner;
     }(); // -------------------------------------------------------------------------
     // to be used with string function when code is minified
@@ -13831,9 +14076,9 @@
     QuotedPromise.__class__ = 'promise'; // -------------------------------------------------------------------------
 
     var lips = {
-      version: '1.0.0-beta.12',
+      version: 'DEV',
       banner: banner,
-      date: 'Tue, 16 Mar 2021 19:55:58 +0000',
+      date: 'Wed, 17 Mar 2021 13:20:37 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

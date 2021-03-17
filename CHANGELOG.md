@@ -1,3 +1,7 @@
+## 1.0.0-beta.14
+### Features
+* R7RS datum labels
+
 ## 1.0.0-beta.12
 ### Breaking
 * `env` and `dir` now returns symbols instead of strings

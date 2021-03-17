@@ -1236,8 +1236,8 @@
 
         // datum label
         [/#/, null, /[0-9]/, null, Lexer.l_datum],
-        [/=/, /[0-9]/, Lexer.boundary, Lexer.l_datum, null],
-        [/#/, /[0-9]/, Lexer.boundary, Lexer.l_datum, null],
+        [/=/, /[0-9]/, null, Lexer.l_datum, null],
+        [/#/, /[0-9]/, null, Lexer.l_datum, null],
 
         // block symbols
         [/\|/, null, null, null, Lexer.b_symbol],
@@ -1341,10 +1341,14 @@
             if (arg instanceof LString) {
                 arg = arg.toString();
             }
+
             read_only(this, '_formatter', formatter, { hidden: true });
-            read_only(this, '_meta', meta, { hidden: true });
             read_only(this, '__lexer__', new Lexer(arg));
             read_only(this, '__env__', env);
+
+            read_only(this, '_meta', meta, { hidden: true });
+            // datum labels
+            read_only(this, '_refs', [], { hidden: true });
         }
         resolve(name) {
             return this.__env__ && this.__env__.get(name, { throwError: false });
@@ -1365,7 +1369,7 @@
                     if (this.__lexer__.peek() === eof) {
                         throw new Error('Lexer: syntax error eof found after comment');
                     }
-                    await this.read_object();
+                    await this._read_object();
                     continue;
                 }
                 break;
@@ -1375,6 +1379,9 @@
                 return token;
             }
             return token.token;
+        }
+        reset() {
+            this._refs.length = 0;
         }
         skip() {
             this.__lexer__.skip();
@@ -1389,6 +1396,14 @@
             const token = await this.peek();
             this.skip();
             return token;
+        }
+        match_datum_label(token) {
+            var m = token.match(/^#([0-9]+)=$/);
+            return m && m[1];
+        }
+        match_datum_ref(token) {
+            var m = token.match(/^#([0-9]+)#$/);
+            return m && m[1];
         }
         is_open(token) {
             return ['(', '['].includes(token);
@@ -1409,9 +1424,9 @@
                 }
                 if (token === '.' && head !== nil) {
                     this.skip();
-                    prev.cdr = await this.read_object();
+                    prev.cdr = await this._read_object();
                 } else {
-                    const cur = new Pair(await this.read_object(), nil);
+                    const cur = new Pair(await this._read_object(), nil);
                     if (head === nil) {
                         head = cur;
                     } else {
@@ -1437,7 +1452,50 @@
                 throw e;
             } });
         }
+        // public API that handle R7RS datum labels
         async read_object() {
+            this.reset();
+            var object = await this._read_object();
+            if (object instanceof DatumReference) {
+                object = object.valueOf();
+            }
+            if (this._refs.length) {
+                return this._resolve_object(object);
+            }
+            return object;
+        }
+        async _resolve_object(object) {
+            if (Array.isArray(object)) {
+                return object.map(item => this._resolve_object(item));
+            }
+            if (is_plain_object(object)) {
+                var result = {};
+                Object.keys(object).forEach(key => {
+                    result[key] = this._resolve_object(object[key]);
+                });
+                return result;
+            }
+            if (object instanceof Pair) {
+                return this._resolve_pair(object);
+            }
+            return object;
+        }
+        async _resolve_pair(pair) {
+            if (pair instanceof Pair) {
+                if (pair.car instanceof DatumReference) {
+                    pair.car = await pair.car.valueOf();
+                } else {
+                    this._resolve_pair(pair.car);
+                }
+                if (pair.cdr instanceof DatumReference) {
+                    pair.cdr = await pair.cdr.valueOf();
+                } else {
+                    this._resolve_pair(pair.cdr);
+                }
+            }
+            return pair;
+        }
+        async _read_object() {
             const token = await this.peek();
             if (token === eof) {
                 return token;
@@ -1454,7 +1512,7 @@
                 const bultin = this.is_builtin(token);
                 this.skip();
                 let expr;
-                const object = await this.read_object();
+                const object = await this._read_object();
                 if (!bultin) {
                     var extension = this.__env__.get(special.symbol);
                     if (typeof extension === 'function') {
@@ -1463,7 +1521,7 @@
                         } else if (object instanceof Pair) {
                             return extension.apply(this.__env__, object.to_array(false));
                         }
-                        throw new Error('Parser: Invalid parser extension ' +
+                        throw new Error('Parse Error: Invalid parser extension ' +
                                         `invocation ${special.symbol}`);
                     }
                 }
@@ -1496,15 +1554,42 @@
                     }
                     return result;
                 } else {
-                    throw new Error(`Parser: invlid parser extension: ${special.symbol}`);
+                    throw new Error('Parse Error: invlid parser extension: ' +
+                                    special.symbol);
                 }
             }
-            if (this.is_open(token)) {
+            var ref = this.match_datum_ref(token);
+            if (ref !== null) {
                 this.skip();
-                return await this.read_list();
-            } else {
-                return await this.read_value();
+                if (this._refs[ref]) {
+                    return new DatumReference(ref, this._refs[ref]);
+                }
+                throw new Error(`Parse Error: invalid datum label #${ref}#`);
             }
+            var ref_label = this.match_datum_label(token);
+            if (ref_label !== null) {
+                this.skip();
+                this._refs[ref_label] = this._read_object();
+                return this._refs[ref_label];
+            } else if (this.is_open(token)) {
+                this.skip();
+                return this.read_list();
+            } else {
+                return this.read_value();
+            }
+        }
+    }
+    // ----------------------------------------------------------------------
+    // :: parser helper that allow to handle circular list structures
+    // :: using datum labels
+    // ----------------------------------------------------------------------
+    class DatumReference {
+        constructor(name, data) {
+            this.name = name;
+            this.data = data;
+        }
+        valueOf() {
+            return this.data;
         }
     }
     // ----------------------------------------------------------------------
@@ -1535,36 +1620,6 @@
     }
     // ----------------------------------------------------------------------
     function unpromise(value, fn = x => x, error = null) {
-        if (value instanceof Array) {
-            const anyPromise = value.filter(is_promise);
-            if (anyPromise.length) {
-                return unpromise(Promise.all(value), (arr) => {
-                    if (Object.isFrozen(value)) {
-                        Object.freeze(arr);
-                    }
-                    return arr;
-                }, error);
-            }
-            return fn(value);
-        }
-        if (is_plain_object(value)) {
-            const keys = Object.keys(value);
-            const values = keys.map(x => value[x]);
-            const anyPromise = values.filter(is_promise);
-            if (anyPromise.length) {
-                return unpromise(Promise.all(values), (values) => {
-                    const result = {};
-                    values.forEach((value, i) => {
-                        const key = keys[i];
-                        result[key] = value;
-                    });
-                    if (Object.isFrozen(value)) {
-                        Object.freeze(result);
-                    }
-                    return result;
-                }, error);
-            }
-        }
         if (is_promise(value)) {
             var ret = value.then(fn);
             if (error === null) {
@@ -1573,8 +1628,48 @@
                 return ret.catch(error);
             }
         }
+        if (value instanceof Array) {
+            return unpromise_array(value, fn, error);
+        }
+        if (is_plain_object(value)) {
+            return unpromise_object(value, fn, error);
+        }
         return fn(value);
-    }// ----------------------------------------------------------------------
+    }
+    // ----------------------------------------------------------------------
+    function unpromise_array(array, fn, error) {
+        const anyPromise = array.filter(is_promise);
+        if (anyPromise.length) {
+            return unpromise(Promise.all(array), (arr) => {
+                if (Object.isFrozen(array)) {
+                    Object.freeze(arr);
+                }
+                return arr;
+            }, error);
+        }
+        return fn(array);
+    }
+    // ----------------------------------------------------------------------
+    function unpromise_object(object, fn, error) {
+        const keys = Object.keys(object);
+        const values = keys.map(x => object[x]);
+        const anyPromise = values.filter(is_promise);
+        if (anyPromise.length) {
+            return unpromise(Promise.all(values), (values) => {
+                const result = {};
+                values.forEach((value, i) => {
+                    const key = keys[i];
+                    result[key] = value;
+                });
+                if (Object.isFrozen(object)) {
+                    Object.freeze(result);
+                }
+                return result;
+            }, error);
+        }
+        return fn(object);
+    }
+    // ----------------------------------------------------------------------
     function read_only(object, property, value, { hidden = false } = {}) {
         Object.defineProperty(object, property, {
             value,
@@ -1599,9 +1694,10 @@
         if (arg instanceof RegExp) {
             return x => String(x).match(arg);
         } else if (is_function(arg)) {
-            // it will alwasy be function
+            // it will always be function
             return arg;
         }
+        throw new Error('Invalid matcher');
     }
     // ----------------------------------------------------------------------
     // :: documentaton decorator to LIPS functions if lines starts with :

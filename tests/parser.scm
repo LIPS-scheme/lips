@@ -151,6 +151,24 @@
         (t.is (eval (. code 0)) "hello-world")))
 
 
+(test "parse: datum labels"
+      (lambda (t)
+        (let ((x (list #0=(cons 1 2) #0#)))
+          (set-car! (car x) 2)
+          (t.is x '((2 . 2) (1 . 2))))
+
+        (let ((x (list '#0=(1 2 3) '#0#)))
+          (t.is (eq? (car x) (cadr x)) true))
+
+        (let ((x (list #1='(1 2 3) #1#)))
+          (t.is (eq? (car x) (cadr x)) true))
+
+        (let ((x '(#2=(1 2 3) #2#)))
+          (t.is (eq? (car x) (cadr x)) true))
+
+        (let ((x '#3=(1 2 . #3#)))
+          (t.is (eq? x (cddr x)) true))))
+
 (test "tokenizer: should create tokens for simple list"
       (lambda (t)
         (t.is (lips.tokenize "(foo bar baz)")
