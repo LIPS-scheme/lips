@@ -46,8 +46,8 @@ dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
 
-dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/srfi.scm
-	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/srfi.scm > dist/std.scm
+dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/srfi.scm lib/init.scm
+	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/srfi.scm lib/init.scm > dist/std.scm
 
 dist/std.min.scm: dist/std.scm
 	$(LIPS) ./scripts/minify.scm dist/std.scm > dist/std.min.scm
