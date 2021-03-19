@@ -1,6 +1,7 @@
 ## 1.0.0-beta.14
 ### Features
 * R7RS datum labels
+* allow to use `set-repr!` on records (record type name is now a class)
 ### Bugfix
 * fix `set-repr!` on classes
 

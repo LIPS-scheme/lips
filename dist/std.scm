@@ -3893,11 +3893,11 @@
 
    Macro for defining records. Example of usage:
 
-      (define-record-type <pare>
-        (kons x y)
-        pare?
-        (x kar set-kar!)
-        (y kdr set-kdr!))
+   (define-record-type <pare>
+     (kons x y)
+     pare?
+     (x kar set-kar!)
+     (y kdr set-kdr!))
 
    (define p (kons 1 2))
    (print (kar p))
@@ -3905,26 +3905,25 @@
    (set-kdr! p 3)
    (print (kdr p))
    ;; 3"
-  (let ((class-name (gensym))
-        (obj-name (gensym))
-        (value-name (gensym)))
+  (let ((obj-name (gensym 'obj-name))
+        (value-name (gensym 'value-name)))
     `(begin
-       (define ,class-name (class Object
-                                  (constructor (lambda (self ,@(cdr constructor))
-                                                 ,@(map (lambda (field)
-                                                          (let* ((name (symbol->string field))
-                                                                 (prop (string-append "self."
-                                                                                      name)))
-                                                            `(set! ,(string->symbol prop) ,field)))
-                                                        (cdr constructor))))
-                                  (toType (lambda (self)
-                                            "record"))
-                                  (toString (lambda (self)
-                                              ,(symbol->string name)))))
+       (define ,name (class Object
+                            (constructor (lambda (self ,@(cdr constructor))
+                                           ,@(map (lambda (field)
+                                                    (let* ((name (symbol->string field))
+                                                           (prop (string-append "self."
+                                                                                name)))
+                                                      `(set! ,(string->symbol prop) ,field)))
+                                                  (cdr constructor))))
+                            (toType (lambda (self)
+                                      "record"))
+                            (toString (lambda (self)
+                                        ,(symbol->string name)))))
        (define ,constructor
-         (new ,class-name ,@(cdr constructor)))
+         (new ,name ,@(cdr constructor)))
        (define (,pred obj)
-         (instanceof ,class-name obj))
+         (instanceof ,name obj))
        ,@(map (lambda (field)
                 (let ((prop-name (car field))
                       (get (cadr field))
