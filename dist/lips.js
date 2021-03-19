@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. DEV
+ *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.12
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 17 Mar 2021 13:20:37 +0000
+ * build: Fri, 19 Mar 2021 11:47:23 +0000
  */
 (function () {
   'use strict';
@@ -5080,11 +5080,6 @@
       }
 
       if (_typeof_1(obj) === 'object') {
-        // user defined representation
-        if (is_function(obj.toString) && obj.toString[__lambda__]) {
-          return obj.toString().valueOf();
-        }
-
         var constructor = obj.constructor;
 
         if (!constructor) {
@@ -5113,6 +5108,11 @@
           }
 
           name = constructor.name;
+        } // user defined representation
+
+
+        if (is_function(obj.toString) && obj.toString[__lambda__]) {
+          return obj.toString().valueOf();
         }
 
         if (type(obj) === 'instance' && !is_native_function(constructor)) {
@@ -13379,11 +13379,14 @@
               }
 
               return unpromise(arg.apply(this, args), unbox);
-            }; // copy prototype from function to wrapper
+            }; // make wrapper work like output of bind
+
+
+            hidden_prop(wrapper, '__bound__', true);
+            hidden_prop(wrapper, '__fn__', arg); // copy prototype from function to wrapper
             // so this work when calling new from JavaScript
             // case of Preact that pass LIPS class as argument
             // to h function
-
 
             wrapper.prototype = arg.prototype;
             return wrapper;
@@ -14035,10 +14038,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 17 Mar 2021 13:20:37 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 19 Mar 2021 11:47:23 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 17 Mar 2021 13:20:37 +0000').valueOf();
+      var date = LString('Fri, 19 Mar 2021 11:47:23 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14050,7 +14053,7 @@
 
       var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro and\n(apropos name) to display list of matched names in environment.\n").replace(/^.*\n/, '');
+      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.12 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro and\n(apropos name) to display list of matched names in environment.\n").replace(/^.*\n/, '');
       return banner;
     }(); // -------------------------------------------------------------------------
     // to be used with string function when code is minified
@@ -14076,9 +14079,9 @@
     QuotedPromise.__class__ = 'promise'; // -------------------------------------------------------------------------
 
     var lips = {
-      version: 'DEV',
+      version: '1.0.0-beta.12',
       banner: banner,
-      date: 'Wed, 17 Mar 2021 13:20:37 +0000',
+      date: 'Fri, 19 Mar 2021 11:47:23 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

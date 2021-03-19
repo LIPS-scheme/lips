@@ -1,6 +1,8 @@
 ## 1.0.0-beta.14
 ### Features
 * R7RS datum labels
+### Bugfix
+* fix `set-repr!` on classes
 
 ## 1.0.0-beta.12
 ### Breaking

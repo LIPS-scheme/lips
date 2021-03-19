@@ -2748,10 +2748,6 @@
             return 'null';
         }
         if (typeof obj === 'object') {
-            // user defined representation
-            if (is_function(obj.toString) && obj.toString[__lambda__]) {
-                return obj.toString().valueOf();
-            }
             var constructor = obj.constructor;
             if (!constructor) {
                 // this is case of fs.constants in Node.js that is null constructor object
@@ -2774,6 +2770,10 @@
                     }
                 }
                 name = constructor.name;
+            }
+            // user defined representation
+            if (is_function(obj.toString) && obj.toString[__lambda__]) {
+                return obj.toString().valueOf();
             }
             if (type(obj) === 'instance' && !is_native_function(constructor)) {
                 name = 'instance';
@@ -9389,6 +9389,9 @@
                     var wrapper = function(...args) {
                         return unpromise(arg.apply(this, args), unbox);
                     };
+                    // make wrapper work like output of bind
+                    hidden_prop(wrapper, '__bound__', true);
+                    hidden_prop(wrapper, '__fn__', arg);
                     // copy prototype from function to wrapper
                     // so this work when calling new from JavaScript
                     // case of Preact that pass LIPS class as argument
