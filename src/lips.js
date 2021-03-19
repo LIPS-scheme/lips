@@ -8052,10 +8052,10 @@
             typecheck('match', pattern, ['regex', 'string']);
             typecheck('match', string, 'string');
             var m = string.match(pattern);
-            return m ? global_env.get('array->list')(m) : nil;
+            return m ? global_env.get('array->list')(m) : false;
         }, `(match pattern string)
 
-            function return match object from JavaScript as list.`),
+            function return match object from JavaScript as list or #f if not match.`),
         // ------------------------------------------------------------------
         search: doc(function search(pattern, string) {
             typecheck('search', pattern, ['regex', 'string']);
