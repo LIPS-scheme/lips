@@ -328,3 +328,28 @@
       (lambda (t)
         (t.is (repr '|foo bar| true) "|foo bar|")
         (t.is (repr (string->symbol "foo bar") true) "|foo bar|")))
+
+(test "core: set-repr! on classes"
+      (lambda (t)
+        (define Foo (class Object))
+        (define foo-repr "#<FOO CLASS>")
+        (set-repr! Foo (lambda () foo-repr))
+
+        (t.is (repr (new Foo)) foo-repr)))
+
+(test "core: set-repr! on records"
+      (lambda (t)
+        (define-record-type <pare>
+          (kons x y)
+          pare?
+          (x kar set-kar!)
+          (y kdr set-kdr!))
+
+        (set-repr! <pare>
+                   (lambda (x q)
+                     (string-append "(" (repr (kar x) q)
+                                    " . "
+                                    (repr (kdr x) q)
+                                    ")")))
+
+        (t.is (repr (kons 1 2)) "(1 . 2)")))
