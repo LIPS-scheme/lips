@@ -1353,6 +1353,24 @@
       (Uint8Array.from bin)))
 
 ;; -----------------------------------------------------------------------------
+(define (complement fn)
+  "(complement fn)
+
+   Higer order function that returns complement of the given function. If the function fn
+   for a given arguments return true the result function will return false, if it would
+   return false, the result function will return true."
+  (lambda args
+    (not (apply fn args))))
+
+;; -----------------------------------------------------------------------------
+(define (always constant)
+  "(always constant)
+
+   Higher order function returns new function that always return given constant."
+  (lambda ()
+    constant))
+
+;; -----------------------------------------------------------------------------
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |

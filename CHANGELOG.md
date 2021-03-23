@@ -3,6 +3,7 @@
 * R7RS datum labels
 * allow to use `set-repr!` on records (record type name is now a class)
 * match function return `#f` instead of `nil` when fail to match (so it work in `cond` or `if`)
+* new higer order functions `complement` and `always` (based on Ramda)
 ### Bugfix
 * fix `set-repr!` on classes
 

@@ -105,6 +105,8 @@
 (define response->text (curry response->content #f))
 (define http-get (if (eq? self window) (lambda (url binary) "(http-get url)\u000A\u000ANode.js Function that send HTTP Request and return string or\u000Abinary Buffer object." (throw (new Error "http-get: function is Node.js only."))) (let* ((http (. (require "http") (quote get))) (https (. (require "https") (quote get)))) (lambda (url binary) "(http-get url)\u000A\u000ANode.js Function that send HTTP Request and return string or\u000Abinary Buffer object." (let ((request (if (null? (url.match #/^https/)) http https))) (new Promise (lambda (resolve reject) (--> (request url (lambda (res) (if (= res.statusCode 200) (resolve (response->content binary res)) (let ((code res.statusCode)) (res.resume) (reject (string-append "Request return " (number->string code))))))) (on "error" reject)))))))))
 (define (buffer->u8vector bin) "(buffer->u8vector bin)\u000A\u000ACross platform function that can be used in both Node and Browser.\u000AIt can be used together with %read-file or %read-binary-file and convert\u000Athe result ArrayBuffer or Buffer to u8vector." (if (instanceof ArrayBuffer bin) (new Uint8Array bin) (Uint8Array.from bin)))
+(define (complement fn) "(complement fn)\u000A\u000AHiger order function that returns complement of the given function. If the function fn\u000Afor a given arguments return true the result function will return false, if it would\u000Areturn false, the result function will return true." (lambda args (not (apply fn args))))
+(define (always constant) "(always constant)\u000A\u000AHigher order function returns new function that always return given constant." (lambda () constant))
 (define string-append concat)
 (define = ==)
 (define remainder %)
