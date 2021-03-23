@@ -1371,3 +1371,29 @@
     constant))
 
 ;; -----------------------------------------------------------------------------
+(define (once fn)
+  "(once fn)
+
+   Higher order function that return new function, that is guarantee
+   to be called only once."
+  (let ((result))
+    (lambda args
+      (if (string=? (type result) "undefined")
+          (set! result (apply fn args)))
+      result)))
+
+;; -----------------------------------------------------------------------------
+(define (flip fn)
+  "(flip fn)
+
+   Higher order function that return new function where first two arguments are swapped.
+
+   Example:
+
+     (define first (curry (flip vector-ref) 0))
+     (first #(1 2 3))
+     ;; ==> 1"
+  (lambda (a b . rest)
+    (apply fn b a rest)))
+
+;; -----------------------------------------------------------------------------

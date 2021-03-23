@@ -107,6 +107,8 @@
 (define (buffer->u8vector bin) "(buffer->u8vector bin)\u000A\u000ACross platform function that can be used in both Node and Browser.\u000AIt can be used together with %read-file or %read-binary-file and convert\u000Athe result ArrayBuffer or Buffer to u8vector." (if (instanceof ArrayBuffer bin) (new Uint8Array bin) (Uint8Array.from bin)))
 (define (complement fn) "(complement fn)\u000A\u000AHiger order function that returns complement of the given function. If the function fn\u000Afor a given arguments return true the result function will return false, if it would\u000Areturn false, the result function will return true." (lambda args (not (apply fn args))))
 (define (always constant) "(always constant)\u000A\u000AHigher order function returns new function that always return given constant." (lambda () constant))
+(define (once fn) "(once fn)\u000A\u000AHigher order function that return new function, that is guarantee\u000Ato be called only once." (let ((result)) (lambda args (if (string=? (type result) "undefined") (set! result (apply fn args))) result)))
+(define (flip fn) "(flip fn)\u000A\u000AHigher order function that return new function where first two arguments are swapped.\u000A\u000AExample:\u000A\u000A  (define first (curry (flip vector-ref) 0))\u000A  (first #(1 2 3))\u000A  ;; ==> 1" (lambda (a b . rest) (apply fn b a rest)))
 (define string-append concat)
 (define = ==)
 (define remainder %)
