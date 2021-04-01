@@ -54,43 +54,50 @@ function run(code, interpreter, dynamic = false, env = null, stack = false) {
         code = code.toString();
     }
     return interpreter.exec(code, dynamic, env).catch(function(e) {
-        if (!e) {
-            console.log('Error is null');
-            return;
-        }
-        if (!stack) {
-            console.error(e.message);
-        }
-        log_error(e.message);
-        if (e.__code__) {
-            strace = e.__code__.map((line, i) => {
-                var prefix = `[${i+1}]: `;
-                var formatter = new Formatter(line);
-                var output = formatter.break().format({
-                    offset: prefix.length
-                });
-                return prefix + output;
-            }).join('\n');
-        }
-        if (stack) {
-            console.error(e.stack);
-            console.error(strace);
-        } else {
-            console.error('Call (stack-trace) to see the stack');
-            console.error('Thrown exception is in global exception variable, use ' +
-                          '(display exception.stack) to display JS stack trace');
-        }
-        global.exception = e;
+        print_error(e, stack);
     });
 }
+
+// -----------------------------------------------------------------------------
+function print_error(e, stack) {
+    if (!e) {
+        console.log('Error is null');
+        return;
+    }
+    log_error(e.message);
+    if (e.__code__) {
+        strace = e.__code__.map((line, i) => {
+            var prefix = `[${i+1}]: `;
+            var formatter = new Formatter(line);
+            var output = formatter.break().format({
+                offset: prefix.length
+            });
+            return prefix + output;
+        }).join('\n');
+    }
+    if (stack) {
+        console.error(e.stack);
+        console.error(strace);
+    } else {
+        console.error(e.message);
+        console.error('Call (stack-trace) to see the stack');
+        console.error('Thrown exception is in global exception variable, use ' +
+                      '(display exception.stack) to display JS stack trace');
+    }
+    global.exception = e;}
+
 
 // -----------------------------------------------------------------------------
 function print(result) {
     if (result && result.length) {
         var last = result.pop();
         if (last !== undefined) {
-            var ret = env.get('repr')(last, true);
-            console.log('\x1b[K' + ret.toString());
+            try {
+                var ret = env.get('repr')(last, true);
+                console.log('\x1b[K' + ret.toString());
+            } catch(e) {
+                print_error(e, options.t || options.trace);
+            }
         }
     }
 }

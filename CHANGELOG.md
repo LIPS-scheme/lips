@@ -7,6 +7,7 @@
 ### Bugfix
 * fix `set-repr!` on classes
 * fix conflict with jQuery plugns in bookmark
+* fix swallowing errors when printing values in Node REPL
 
 ## 1.0.0-beta.12
 ### Breaking
