@@ -6,6 +6,7 @@
 * new functions `complement`, `always`, `once`, `flip` (inspired by Ramda)
 ### Bugfix
 * fix `set-repr!` on classes
+* fix conflict with jQuery plugns in bookmark
 
 ## 1.0.0-beta.12
 ### Breaking
