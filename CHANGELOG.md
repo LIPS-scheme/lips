@@ -1,4 +1,6 @@
 ## 1.0.0-beta.14
+### Breaking
+* remove `zip` function that just `(map list l1 l2 ...)`
 ### Features
 * R7RS datum labels
 * allow to use `set-repr!` on records (record type name is now a class)

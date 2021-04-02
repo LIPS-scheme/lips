@@ -680,17 +680,6 @@
       (and (fn (car list)) (every fn (cdr list)))))
 
 ;; -----------------------------------------------------------------------------
-(define (zip . args)
-  "(zip list1 list2 ...)
-
-   Create one list by taking each element of each list."
-  (if (null? args)
-      nil
-      (if (some null? args)
-         nil
-         (cons (map car args) (apply zip (map cdr args))))))
-
-;; -----------------------------------------------------------------------------
 (define-macro (promise . body)
   "(promise . body)
 
