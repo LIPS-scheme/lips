@@ -3,7 +3,7 @@
 * R7RS datum labels
 * allow to use `set-repr!` on records (record type name is now a class)
 * match function return `#f` instead of `nil` when fail to match (so it work in `cond` or `if`)
-* new functions `complement`, `always`, `once`, `flip` (inspired by Ramda)
+* new functions `complement`, `always`, `once`, `flip`, `unfold` (inspired by Ramda)
 ### Bugfix
 * fix `set-repr!` on classes
 * fix conflict with jQuery plugns in bookmark

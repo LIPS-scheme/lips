@@ -1359,6 +1359,7 @@
    Higer order function that returns complement of the given function. If the function fn
    for a given arguments return true the result function will return false, if it would
    return false, the result function will return true."
+  (typecheck "complement" fn "function")
   (lambda args
     (not (apply fn args))))
 
@@ -1376,6 +1377,7 @@
 
    Higher order function that return new function, that is guarantee
    to be called only once."
+  (typecheck "once" fn "function")
   (let ((result))
     (lambda args
       (if (string=? (type result) "undefined")
@@ -1393,10 +1395,25 @@
      (define first (curry (flip vector-ref) 0))
      (first #(1 2 3))
      ;; ==> 1"
+  (typecheck "flip" fn "function")
   (lambda (a b . rest)
     (apply fn b a rest)))
 
 ;; -----------------------------------------------------------------------------
+(define (unfold fn init)
+  "(unfold fn init)
+
+   Function returns list from given function and init value. The function should
+   return cons where first is the item added to the list and second is next value
+   passed to the funtion. If function return false it end the loop."
+  (typecheck "unfold" fn "function")
+  (let iter ((pair (fn init)) (result '()))
+    (if (not pair)
+        (reverse result)
+        (iter (fn (cdr pair)) (cons (car pair) result)))))
+
+;; -----------------------------------------------------------------------------
+
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
