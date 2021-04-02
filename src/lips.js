@@ -874,9 +874,9 @@
     function promise_all(arg) {
         if (Array.isArray(arg)) {
             return Promise.all(arg.map(escape_quote_promise))
-                          .then(values => {
-                              return values.map(unescape_quote_promise);
-                          });
+                .then(values => {
+                    return values.map(unescape_quote_promise);
+                });
         }
         return arg;
     }
