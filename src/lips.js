@@ -839,7 +839,7 @@
                 get: () => internal[name]
             });
         });
-        this.__promise__ = promise;
+        read_only(this, '__promise__', promise);
     }
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.then = function(fn) {
@@ -868,6 +868,26 @@
     };
     QuotedPromise.pending_str = '#<js-promise (pending)>';
     QuotedPromise.rejected_str = '#<js-promise (rejected)>';
+    // ----------------------------------------------------------------------
+    // wrapper over Promise.all that ignore quoted promises
+    // ----------------------------------------------------------------------
+    function promise_all(arg) {
+        if (Array.isArray(arg)) {
+            return Promise.all(arg.map(escape_quote_promise))
+                          .then(values => {
+                              return values.map(unescape_quote_promise);
+                          });
+        }
+        return arg;
+    }
+    // ----------------------------------------------------------------------
+    function escape_quote_promise(value) {
+        return is_promise(value) ? value : new Value(value);
+    }
+    // ----------------------------------------------------------------------
+    function unescape_quote_promise(value) {
+        return value instanceof Value ? value.valueOf() : value;
+    }
     // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
@@ -1620,6 +1640,9 @@
     }
     // ----------------------------------------------------------------------
     function unpromise(value, fn = x => x, error = null) {
+        if (value instanceof QuotedPromise) {
+            return fn(value);
+        }
         if (is_promise(value)) {
             var ret = value.then(fn);
             if (error === null) {
@@ -1640,7 +1663,7 @@
     function unpromise_array(array, fn, error) {
         const anyPromise = array.filter(is_promise);
         if (anyPromise.length) {
-            return unpromise(Promise.all(array), (arr) => {
+            return unpromise(promise_all(array), (arr) => {
                 if (Object.isFrozen(array)) {
                     Object.freeze(arr);
                 }
@@ -1655,7 +1678,7 @@
         const values = keys.map(x => object[x]);
         const anyPromise = values.filter(is_promise);
         if (anyPromise.length) {
-            return unpromise(Promise.all(values), (values) => {
+            return unpromise(promise_all(values), (values) => {
                 const result = {};
                 values.forEach((value, i) => {
                     const key = keys[i];
@@ -4269,7 +4292,7 @@
                         var v = values.map(x => x.value);
                         var promises = v.filter(is_promise);
                         if (promises.length) {
-                            return Promise.all(v).then((arr) => {
+                            return promise_all(v).then((arr) => {
                                 for (var i = 0, len = arr.length; i < len; ++i) {
                                     env.set(values[i].name, arr[i]);
                                 }
@@ -4323,7 +4346,7 @@
             }
             var havePromises = results.filter(is_promise).length;
             if (havePromises) {
-                return Promise.all(results).then(fn.bind(this));
+                return promise_all(results).then(fn.bind(this));
             } else {
                 return fn.call(this, results);
             }
@@ -6306,7 +6329,7 @@
         return this.inherit(name, env.__env__);
     };
     // -------------------------------------------------------------------------
-    // value returned in lookup if found value in env
+    // value returned in lookup if found value in env and in promise_all
     // -------------------------------------------------------------------------
     function Value(value) {
         if (typeof this !== 'undefined' && !(this instanceof Value) ||
@@ -7598,7 +7621,7 @@
                         cdr = fn(cdr);
                     }
                     if (is_promise(car) || is_promise(cdr)) {
-                        return Promise.all([car, cdr]).then(([car, cdr]) => {
+                        return promise_all([car, cdr]).then(([car, cdr]) => {
                             return new Pair(car, cdr);
                         });
                     } else {
@@ -9177,6 +9200,7 @@
         var type = typeof obj;
         return ['string', 'function'].includes(type) ||
             typeof obj === 'symbol' ||
+            obj instanceof QuotedPromise ||
             obj instanceof LSymbol ||
             obj instanceof LNumber ||
             obj instanceof LString ||
@@ -9297,7 +9321,7 @@
         }
         function resolve(node) {
             if (node instanceof Array) {
-                return Promise.all(node.map(resolve));
+                return promise_all(node.map(resolve));
             }
             if (node instanceof Pair && promises.length) {
                 return promise(node);
@@ -9360,7 +9384,7 @@
         }
         var value = macro.invoke(code, eval_args);
         return unpromise(resolve_promises(value), function ret(value) {
-            if (value && value[__data__] || !value || self_evaluated(value)) {
+            if (!value || value && value[__data__] || self_evaluated(value)) {
                 return value;
             } else {
                 return unpromise(evaluate(value, eval_args), finalize);

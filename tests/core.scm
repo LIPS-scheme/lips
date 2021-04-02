@@ -253,6 +253,18 @@
           (t.is (repr promise) "#<js-promise (rejected)>")
           (t.is (not (null? (promise.__reason__.message.match #/ZONK/))) true))))
 
+(test "core: quoted promise in let"
+      (lambda (t)
+
+        (define (timer time value)
+          (new Promise (lambda (resolve) (setTimeout (curry resolve value) time))))
+
+        (define result (let ((x (timer 0 "hello"))
+                             (y '>(timer 200 "world")))
+                         (list x y)))
+        (t.is (car result) "hello")
+        (t.is (repr (cadr result)) "#<js-promise (pending)>")))
+
 (test "core: regex"
       (lambda (t)
         (let* ((str "#/(\\((?:env|dir|help|apropos)[^)]*\\))/g")

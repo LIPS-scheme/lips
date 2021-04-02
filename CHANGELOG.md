@@ -10,6 +10,7 @@
 * fix `set-repr!` on classes
 * fix conflict with jQuery plugns in bookmark
 * fix swallowing errors when printing values in Node REPL
+* fix mixed quoted and normal promises in let [#154](https://github.com/jcubic/lips/issues/154)
 
 ## 1.0.0-beta.12
 ### Breaking

@@ -1081,6 +1081,10 @@
 
 ;; -----------------------------------------------------------------------------
 (define (await value)
+  "(await value)
+
+   Function unquote quoted promise so it can be automagicaly evaluated (resolved
+   to its value)."
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)
       value))

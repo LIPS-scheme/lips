@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 23 Mar 2021 09:12:43 +0000
+ * build: Fri, 02 Apr 2021 15:31:26 +0000
  */
 (function () {
   'use strict';
@@ -2226,7 +2226,7 @@
           }
         });
       });
-      this.__promise__ = promise;
+      read_only(this, '__promise__', promise);
     } // ----------------------------------------------------------------------
 
 
@@ -2263,8 +2263,31 @@
 
     QuotedPromise.pending_str = '#<js-promise (pending)>';
     QuotedPromise.rejected_str = '#<js-promise (rejected)>'; // ----------------------------------------------------------------------
+    // wrapper over Promise.all that ignore quoted promises
+    // ----------------------------------------------------------------------
+
+    function promise_all(arg) {
+      if (Array.isArray(arg)) {
+        return Promise.all(arg.map(escape_quote_promise)).then(function (values) {
+          return values.map(unescape_quote_promise);
+        });
+      }
+
+      return arg;
+    } // ----------------------------------------------------------------------
+
+
+    function escape_quote_promise(value) {
+      return is_promise(value) ? value : new Value(value);
+    } // ----------------------------------------------------------------------
+
+
+    function unescape_quote_promise(value) {
+      return value instanceof Value ? value.valueOf() : value;
+    } // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
+
 
     var specials = {
       LITERAL: Symbol["for"]('literal'),
@@ -3587,6 +3610,10 @@
       };
       var error = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
 
+      if (value instanceof QuotedPromise) {
+        return fn(value);
+      }
+
       if (is_promise(value)) {
         var ret = value.then(fn);
 
@@ -3613,7 +3640,7 @@
       var anyPromise = array.filter(is_promise);
 
       if (anyPromise.length) {
-        return unpromise(Promise.all(array), function (arr) {
+        return unpromise(promise_all(array), function (arr) {
           if (Object.isFrozen(array)) {
             Object.freeze(arr);
           }
@@ -3634,7 +3661,7 @@
       var anyPromise = values.filter(is_promise);
 
       if (anyPromise.length) {
-        return unpromise(Promise.all(values), function (values) {
+        return unpromise(promise_all(values), function (values) {
           var result = {};
           values.forEach(function (value, i) {
             var key = keys[i];
@@ -7088,7 +7115,7 @@
               var promises = v.filter(is_promise);
 
               if (promises.length) {
-                return Promise.all(v).then(function (arr) {
+                return promise_all(v).then(function (arr) {
                   for (var i = 0, len = arr.length; i < len; ++i) {
                     env.set(values[i].name, arr[i]);
                   }
@@ -7165,7 +7192,7 @@
         var havePromises = results.filter(is_promise).length;
 
         if (havePromises) {
-          return Promise.all(results).then(fn.bind(this));
+          return promise_all(results).then(fn.bind(this));
         } else {
           return fn.call(this, results);
         }
@@ -9907,7 +9934,7 @@
       typecheck('Environment::merge', env, 'environment');
       return this.inherit(name, env.__env__);
     }; // -------------------------------------------------------------------------
-    // value returned in lookup if found value in env
+    // value returned in lookup if found value in env and in promise_all
     // -------------------------------------------------------------------------
 
 
@@ -11520,7 +11547,7 @@
             }
 
             if (is_promise(car) || is_promise(cdr)) {
-              return Promise.all([car, cdr]).then(function (_ref37) {
+              return promise_all([car, cdr]).then(function (_ref37) {
                 var _ref38 = slicedToArray(_ref37, 2),
                     car = _ref38[0],
                     cdr = _ref38[1];
@@ -13065,7 +13092,7 @@
     function self_evaluated(obj) {
       var type = _typeof_1(obj);
 
-      return ['string', 'function'].includes(type) || _typeof_1(obj) === 'symbol' || obj instanceof LSymbol || obj instanceof LNumber || obj instanceof LString || obj instanceof RegExp;
+      return ['string', 'function'].includes(type) || _typeof_1(obj) === 'symbol' || obj instanceof QuotedPromise || obj instanceof LSymbol || obj instanceof LNumber || obj instanceof LString || obj instanceof RegExp;
     } // -------------------------------------------------------------------------
 
 
@@ -13264,7 +13291,7 @@
 
       function resolve(node) {
         if (node instanceof Array) {
-          return Promise.all(node.map(resolve));
+          return promise_all(node.map(resolve));
         }
 
         if (node instanceof Pair && promises.length) {
@@ -13349,7 +13376,7 @@
 
       var value = macro.invoke(code, eval_args);
       return unpromise(resolve_promises(value), function ret(value) {
-        if (value && value[__data__] || !value || self_evaluated(value)) {
+        if (!value || value && value[__data__] || self_evaluated(value)) {
           return value;
         } else {
           return unpromise(_evaluate(value, eval_args), finalize);
@@ -14038,10 +14065,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 23 Mar 2021 09:12:43 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 02 Apr 2021 15:31:26 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 23 Mar 2021 09:12:43 +0000').valueOf();
+      var date = LString('Fri, 02 Apr 2021 15:31:26 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14081,7 +14108,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 23 Mar 2021 09:12:43 +0000',
+      date: 'Fri, 02 Apr 2021 15:31:26 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
