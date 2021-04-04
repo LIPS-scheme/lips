@@ -1010,7 +1010,7 @@
                             (toType (lambda (self)
                                       "record"))
                             (toString (lambda (self)
-                                        ,(symbol->string name)))))
+                                        (string-append "#<" ,(symbol->string name) ">")))))
        (define ,constructor
          (new ,name ,@(cdr constructor)))
        (define (,pred obj)

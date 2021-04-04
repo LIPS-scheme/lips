@@ -970,12 +970,16 @@
    Macro that decrement the value it work only on symbols")
 
 ;; -----------------------------------------------------------------------------
-(define (pretty-format pair)
+(define (pretty-format . lists)
   "(pretty-format pair)
 
    Function return pretty printed string from pair expression."
-  (typecheck "pretty-pair" pair "pair")
-  (--> (new lips.Formatter (repr pair true)) (break) (format)))
+  (let ((code (--> (list->vector lists)
+                   (map (lambda (pair i)
+                          (typecheck "pretty-pair" pair "pair" i)
+                          (repr pair true)))
+                   (join ""))))
+    (--> (new lips.Formatter code) (break) (format))))
 
 ;; -----------------------------------------------------------------------------
 (define (reset)
@@ -3973,7 +3977,7 @@
                             (toType (lambda (self)
                                       "record"))
                             (toString (lambda (self)
-                                        ,(symbol->string name)))))
+                                        (string-append "#<" ,(symbol->string name) ">")))))
        (define ,constructor
          (new ,name ,@(cdr constructor)))
        (define (,pred obj)

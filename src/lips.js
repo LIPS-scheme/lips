@@ -2109,9 +2109,9 @@
     const identifiers = [p_o, symbols, p_e];
     const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
     // rules for breaking S-Expressions into lines
-    var def_lambda_re = keywords_re('define', 'lambda', 'syntax-rules');
+    var def_lambda_re = keywords_re('define', 'lambda', 'define-macro', 'syntax-rules');
     /* eslint-disable max-len */
-    var non_def = /^(?!.*\b(?:[()[\]]|define|let(?:\*|rec|-env|-syntax)?|lambda|syntax-rules)\b).*$/;
+    var non_def = /^(?!.*\b(?:[()[\]]|define(?:-macro)?|let(?:\*|rec|-env|-syntax|)?|lambda|syntax-rules)\b).*$/;
     /* eslint-enable */
     var let_re = /^(?:#:)?(let(?:\*|rec|-env|-syntax)?)$/;
     // match keyword if it's normal token or gensym (prefixed with #:)
@@ -2120,14 +2120,15 @@
     }
     // line breaking rules
     Formatter.rules = [
-        [[p_o, keywords_re('begin')], 1],
+        [[sexp], 0, not_close],
+        [[p_o, keywords_re('begin', 'cond-expand')], 1],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
         [[p_o, let_re, symbol, sexp, sexp_or_atom], 0, not_close],
         //[[p_o, let_re, p_o, let_value], 1, not_close],
         [[p_o, keywords_re('define-syntax'), /.+/], 1],
         [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
         [[p_o, sexp], 1, not_close],
-        [[p_o, let_re, sexp], 1, not_close],
+        [[p_o, not_p, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
         [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
         [[p_o, keywords_re('if'), not_p, glob], 1],
