@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 04 Apr 2021 12:40:54 +0000
+ * build: Tue, 06 Apr 2021 09:41:27 +0000
  */
 (function () {
   'use strict';
@@ -3615,7 +3615,22 @@
       }
 
       if (is_promise(value)) {
-        var ret = value.then(fn);
+        var ret = value.then(function (value) {
+          // escape QuotedPromise because JS handle primise like objects
+          // like real promises and next `then` get the value
+          // not promise like object #153
+          if (value instanceof Value) {
+            value = value.valueOf();
+          }
+
+          var ret = fn(value);
+
+          if (ret instanceof QuotedPromise) {
+            return new Value(ret);
+          }
+
+          return ret;
+        });
 
         if (error === null) {
           return ret;
@@ -5272,100 +5287,12 @@
         mark_node(node, 'cdr');
       });
     } // ----------------------------------------------------------------------
-    // trampoline based recursive pair to string that don't overflow the stack
-    // ----------------------------------------------------------------------
-
-    /* istanbul ignore next */
-
-
-    var pair_to_string = function () {
-      var prefix = function prefix(pair, nested) {
-        var result = [];
-
-        if (pair[__ref__]) {
-          result.push(pair[__ref__] + '(');
-        } else if (!nested) {
-          result.push('(');
-        }
-
-        return result;
-      };
-
-      var postfix = function postfix(pair, nested) {
-        if (is_debug()) ;
-
-        if (!nested || pair[__ref__]) {
-          return [')'];
-        }
-
-        return [];
-      };
-
-      return trampoline(function pairToString(pair, quote) {
-        var extra = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : {};
-        var _extra$nested = extra.nested,
-            nested = _extra$nested === void 0 ? false : _extra$nested,
-            _extra$result = extra.result,
-            result = _extra$result === void 0 ? [] : _extra$result,
-            _extra$cont = extra.cont,
-            cont = _extra$cont === void 0 ? function () {
-          result.push.apply(result, toConsumableArray(postfix(pair, nested)));
-        } : _extra$cont;
-        result.push.apply(result, toConsumableArray(prefix(pair, nested)));
-        var car;
-
-        if (pair[__cycles__] && pair[__cycles__].car) {
-          car = pair[__cycles__].car;
-        } else {
-          car = toString(pair.car, quote, true, {
-            result: result,
-            cont: cont
-          });
-        }
-
-        if (car !== undefined$1) {
-          result.push(car);
-        }
-
-        return new Thunk(function () {
-          if (pair.cdr instanceof Pair) {
-            if (pair[__cycles__] && pair[__cycles__].cdr) {
-              result.push(' . ');
-              result.push(pair[__cycles__].cdr);
-            } else {
-              if (pair.cdr[__ref__]) {
-                result.push(' . ');
-              } else {
-                result.push(' ');
-              }
-
-              return pairToString(pair.cdr, quote, {
-                nested: true,
-                result: result,
-                cont: cont
-              });
-            }
-          } else if (pair.cdr !== nil) {
-            result.push(' . ');
-            result.push(toString(pair.cdr, quote));
-          }
-        }, cont);
-      });
-    }(); // ----------------------------------------------------------------------
 
 
     Pair.prototype.toString = function (quote) {
       var _ref18 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
           _ref18$nested = _ref18.nested,
           nested = _ref18$nested === void 0 ? false : _ref18$nested;
-
-      if (is_debug()) {
-        var result = [];
-        pair_to_string(this, quote, {
-          result: result
-        });
-        return result.join('');
-      }
 
       var arr = [];
 
@@ -6644,12 +6571,6 @@
 
                 var next = function next(key, value) {
                   new_bind[key] = value;
-
-                  if (is_debug()) {
-                    console.log({
-                      NEWBIND: new_bind[key].toString()
-                    });
-                  }
                 };
 
                 var value = transform_ellipsis_expr(expr, _bind2, {
@@ -14065,10 +13986,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Sun, 04 Apr 2021 12:40:54 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 06 Apr 2021 09:41:27 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Sun, 04 Apr 2021 12:40:54 +0000').valueOf();
+      var date = LString('Tue, 06 Apr 2021 09:41:27 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14108,7 +14029,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Sun, 04 Apr 2021 12:40:54 +0000',
+      date: 'Tue, 06 Apr 2021 09:41:27 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

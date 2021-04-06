@@ -1644,7 +1644,19 @@
             return fn(value);
         }
         if (is_promise(value)) {
-            var ret = value.then(fn);
+            var ret = value.then(function(value) {
+                // escape QuotedPromise because JS handle primise like objects
+                // like real promises and next `then` get the value
+                // not promise like object #153
+                if (value instanceof Value) {
+                    value = value.valueOf();
+                }
+                var ret = fn(value);
+                if (ret instanceof QuotedPromise) {
+                    return new Value(ret);
+                }
+                return ret;
+            });
             if (error === null) {
                 return ret;
             } else {
@@ -2912,6 +2924,7 @@
     // ----------------------------------------------------------------------
     // trampoline based recursive pair to string that don't overflow the stack
     // ----------------------------------------------------------------------
+    /* eslint-disable no-unused-vars */
     /* istanbul ignore next */
     const pair_to_string = (function() {
         const prefix = (pair, nested) => {
@@ -2924,9 +2937,6 @@
             return result;
         };
         const postfix = (pair, nested) => {
-            if (is_debug()) {
-                //console.log({ ref: pair.ref, nested });
-            }
             if (!nested || pair[__ref__]) {
                 return [')'];
             }
@@ -2977,11 +2987,6 @@
 
     // ----------------------------------------------------------------------
     Pair.prototype.toString = function(quote, { nested = false } = {}) {
-        if (is_debug()) {
-            var result = [];
-            pair_to_string(this, quote, { result });
-            return result.join('');
-        }
         var arr = [];
         if (this[__ref__]) {
             arr.push(this[__ref__] + '(');
@@ -3912,9 +3917,6 @@
                             const new_bind = {};
                             const next = (key, value) => {
                                 new_bind[key] = value;
-                                if (is_debug()) {
-                                    console.log({ NEWBIND: new_bind[key].toString() });
-                                }
                             };
                             const value = transform_ellipsis_expr(
                                 expr,
