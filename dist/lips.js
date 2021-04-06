@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 06 Apr 2021 09:41:27 +0000
+ * build: Tue, 06 Apr 2021 11:22:24 +0000
  */
 (function () {
   'use strict';
@@ -2226,7 +2226,9 @@
           }
         });
       });
-      read_only(this, '__promise__', promise);
+      read_only(this, '__promise__', promise); // prevent resolving when returned from real promise #153
+
+      this.then = false;
     } // ----------------------------------------------------------------------
 
 
@@ -3610,27 +3612,8 @@
       };
       var error = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
 
-      if (value instanceof QuotedPromise) {
-        return fn(value);
-      }
-
       if (is_promise(value)) {
-        var ret = value.then(function (value) {
-          // escape QuotedPromise because JS handle primise like objects
-          // like real promises and next `then` get the value
-          // not promise like object #153
-          if (value instanceof Value) {
-            value = value.valueOf();
-          }
-
-          var ret = fn(value);
-
-          if (ret instanceof QuotedPromise) {
-            return new Value(ret);
-          }
-
-          return ret;
-        });
+        var ret = value.then(fn);
 
         if (error === null) {
           return ret;
@@ -10090,9 +10073,12 @@
 
       while (args.length) {
         var arg = args.shift();
-        var name = unbox(arg);
+        var name = unbox(arg); // the value was set to false to prevent resolving
+        // by Real Promises #153
 
-        if (name === '__code__' && is_function(object) && typeof object.__code__ === 'undefined') {
+        if (name === 'then' && object instanceof QuotedPromise) {
+          value = QuotedPromise.prototype.then;
+        } else if (name === '__code__' && is_function(object) && typeof object.__code__ === 'undefined') {
           value = native_lambda;
         } else {
           value = object[name];
@@ -13986,10 +13972,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 06 Apr 2021 09:41:27 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 06 Apr 2021 11:22:24 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 06 Apr 2021 09:41:27 +0000').valueOf();
+      var date = LString('Tue, 06 Apr 2021 11:22:24 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14029,7 +14015,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 06 Apr 2021 09:41:27 +0000',
+      date: 'Tue, 06 Apr 2021 11:22:24 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

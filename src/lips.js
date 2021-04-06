@@ -840,6 +840,8 @@
             });
         });
         read_only(this, '__promise__', promise);
+        // prevent resolving when returned from real promise #153
+        this.then = false;
     }
     // ----------------------------------------------------------------------
     QuotedPromise.prototype.then = function(fn) {
@@ -1640,23 +1642,8 @@
     }
     // ----------------------------------------------------------------------
     function unpromise(value, fn = x => x, error = null) {
-        if (value instanceof QuotedPromise) {
-            return fn(value);
-        }
         if (is_promise(value)) {
-            var ret = value.then(function(value) {
-                // escape QuotedPromise because JS handle primise like objects
-                // like real promises and next `then` get the value
-                // not promise like object #153
-                if (value instanceof Value) {
-                    value = value.valueOf();
-                }
-                var ret = fn(value);
-                if (ret instanceof QuotedPromise) {
-                    return new Value(ret);
-                }
-                return ret;
-            });
+            var ret = value.then(fn);
             if (error === null) {
                 return ret;
             } else {
@@ -6523,7 +6510,11 @@
         while (args.length) {
             var arg = args.shift();
             var name = unbox(arg);
-            if (name === '__code__' && is_function(object) &&
+            // the value was set to false to prevent resolving
+            // by Real Promises #153
+            if (name === 'then' && object instanceof QuotedPromise) {
+                value = QuotedPromise.prototype.then;
+            } else if (name === '__code__' && is_function(object) &&
                         typeof object.__code__ === 'undefined') {
                 value = native_lambda;
             } else {
