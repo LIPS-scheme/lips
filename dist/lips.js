@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 06 Apr 2021 11:22:24 +0000
+ * build: Tue, 06 Apr 2021 12:09:30 +0000
  */
 (function () {
   'use strict';
@@ -13972,10 +13972,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Tue, 06 Apr 2021 11:22:24 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Tue, 06 Apr 2021 12:09:30 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Tue, 06 Apr 2021 11:22:24 +0000').valueOf();
+      var date = LString('Tue, 06 Apr 2021 12:09:30 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -13987,7 +13987,7 @@
 
       var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables.\nYou can also use (help name) to display help for specic function or macro and\n(apropos name) to display list of matched names in environment.\n").replace(/^.*\n/, '');
+      var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specic function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
       return banner;
     }(); // -------------------------------------------------------------------------
     // to be used with string function when code is minified
@@ -14015,7 +14015,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Tue, 06 Apr 2021 11:22:24 +0000',
+      date: 'Tue, 06 Apr 2021 12:09:30 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
