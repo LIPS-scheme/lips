@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 09 Apr 2021 15:56:02 +0000
+ * build: Fri, 09 Apr 2021 15:58:19 +0000
  */
 (function () {
   'use strict';
@@ -11003,15 +11003,9 @@
       }), "(define name expression)\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
       // ------------------------------------------------------------------
       'set-obj!': doc('set-obj!', function (obj, key, value) {
-        var obj_type = _typeof_1(obj);
-
-        if (is_null(obj) || obj_type !== 'object' && obj_type !== 'function') {
-          var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
-          throw new Error(msg);
-        }
-
-        obj = unbind(obj);
+        typecheck('set-obj!', obj, ['function', 'object']);
         typecheck('set-obj!', key, ['string', 'symbol']);
+        obj = unbind(obj);
         key = key.valueOf();
 
         if (arguments.length === 2) {
@@ -13973,10 +13967,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 09 Apr 2021 15:56:02 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 09 Apr 2021 15:58:19 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 09 Apr 2021 15:56:02 +0000').valueOf();
+      var date = LString('Fri, 09 Apr 2021 15:58:19 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14016,7 +14010,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 09 Apr 2021 15:56:02 +0000',
+      date: 'Fri, 09 Apr 2021 15:58:19 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

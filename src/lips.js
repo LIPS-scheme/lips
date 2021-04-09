@@ -7214,13 +7214,9 @@
              code \`(define function (lambda args body))\``),
         // ------------------------------------------------------------------
         'set-obj!': doc('set-obj!', function(obj, key, value) {
-            var obj_type = typeof obj;
-            if (is_null(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
-                var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
-                throw new Error(msg);
-            }
-            obj = unbind(obj);
+            typecheck('set-obj!', obj, ['function', 'object']);
             typecheck('set-obj!', key, ['string', 'symbol']);
+            obj = unbind(obj);
             key = key.valueOf();
             if (arguments.length === 2) {
                 delete obj[key];
