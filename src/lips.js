@@ -4052,6 +4052,9 @@
         if (object instanceof Array) {
             return object.map(unbox);
         }
+        if (object instanceof QuotedPromise) {
+            delete object.then;
+        }
         if (is_plain_object(object)) {
             return map_object(object, unbox);
         }
@@ -7214,8 +7217,12 @@
              code \`(define function (lambda args body))\``),
         // ------------------------------------------------------------------
         'set-obj!': doc('set-obj!', function(obj, key, value) {
-            typecheck('set-obj!', obj, ['function', 'object']);
-            typecheck('set-obj!', key, ['string', 'symbol']);
+            var obj_type = typeof obj;
+            if (is_null(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
+                var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
+                throw new Error(msg);
+            }
+            typecheck('set-obj!', key, ['string', 'symbol', 'number']);
             obj = unbind(obj);
             key = key.valueOf();
             if (arguments.length === 2) {

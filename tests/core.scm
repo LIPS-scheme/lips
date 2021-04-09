@@ -253,6 +253,12 @@
           (t.is (repr promise) "#<js-promise (rejected)>")
           (t.is (not (null? (promise.__reason__.message.match #/ZONK/))) true))))
 
+(test "core: Promise.all on quoted promises"
+      (lambda (t)
+        (let ((expected #(10 20))
+              (result (vector '>(wait 1000 10) '>(wait 1000 20))))
+          (t.is (Promise.all result) expected))))
+
 (test "core: quoted promise in let"
       (lambda (t)
 
