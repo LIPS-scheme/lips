@@ -244,13 +244,6 @@
                   result))))))
 
 ;; -----------------------------------------------------------------------------
-(define-macro (wait time . expr)
-  "(wait time . expr)
-
-   Function return promise that will resolve with evaluating the expression after delay."
-  `(promise (timer ,time (resolve (begin ,@expr)))))
-
-;; -----------------------------------------------------------------------------
 (define (pair-map fn seq-list)
   "(pair-map fn list)
 
@@ -687,7 +680,7 @@
   `(new Promise (lambda (resolve reject)
                   (try (begin ,@body)
                        (catch (e)
-                              (error (.. e.message)))))))
+                              (error e.message))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (timer time . body)
@@ -696,6 +689,36 @@
    Macro evaluate expression after delay, it return timer. To clear the timer you can use
    native JS clearTimeout function."
   `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
+
+;; -----------------------------------------------------------------------------
+(define-macro (wait time . expr)
+  "(wait time . expr)
+
+   Function return promise that will resolve with evaluating the expression after delay."
+  `(promise (timer ,time (resolve (begin ,@expr)))))
+
+;; -----------------------------------------------------------------------------
+(define (await value)
+  "(await value)
+
+   Function unquote quoted promise so it can be automagicaly evaluated (resolved
+   to its value)."
+  (if (instanceof lips.QuotedPromise value)
+      (value.valueOf)
+      value))
+
+;; -----------------------------------------------------------------------------
+(define-macro (quote-promise expr)
+  "(quote-promise expr)
+   '>expr
+
+  Macro used to escape promise the whole expression, will be wrapped
+  with JavaScript class that behave like Promise but will not
+  auto resolve like normal promise."
+  `(let ((env))
+      (set! env (current-environment))
+      (env.set (Symbol.for "__promise__") true)
+      ,expr))
 
 ;; -----------------------------------------------------------------------------
 (define (defmacro? obj)
@@ -1069,29 +1092,6 @@
   (throw (new Error (string-append "You're using invalid quote character run: "
                                    "(set-special! \"’\" 'quote)"
                                    " to allow running this type of quote"))))
-
-;; -----------------------------------------------------------------------------
-(define-macro (quote-promise expr)
-  "(quote-promise expr)
-   '>expr
-
-  Macro used to escape promise the whole expression, will be wrapped
-  with JavaScript class that behave like Promise but will not
-  auto resolve like normal promise."
-  `(let ((env))
-      (set! env (current-environment))
-      (env.set (Symbol.for "__promise__") true)
-      ,expr))
-
-;; -----------------------------------------------------------------------------
-(define (await value)
-  "(await value)
-
-   Function unquote quoted promise so it can be automagicaly evaluated (resolved
-   to its value)."
-  (if (instanceof lips.QuotedPromise value)
-      (value.valueOf)
-      value))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (let-env-values env spec . body)
