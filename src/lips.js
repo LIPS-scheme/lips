@@ -7220,6 +7220,7 @@
                 throw new Error(msg);
             }
             obj = unbind(obj);
+            typecheck('set-obj!', key, ['string', 'symbol']);
             key = key.valueOf();
             if (arguments.length === 2) {
                 delete obj[key];

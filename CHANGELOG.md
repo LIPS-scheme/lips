@@ -12,6 +12,7 @@
 * fix swallowing errors when printing values in Node REPL
 * fix mixed quoted and normal promises in let binding [#154](https://github.com/jcubic/lips/issues/154)
 * fix problem were await affect quoted promise in macros (e.g. `begin`) [#153](https://github.com/jcubic/lips/issues/153)
+* typecheck second argument to `set-obj!`
 
 ## 1.0.0-beta.12
 ### Breaking
