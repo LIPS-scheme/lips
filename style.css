@@ -9,6 +9,7 @@ header.main, footer {
 header.main {
   padding: 10px;
   padding-bottom: 0;
+  min-height: 231px;
 }
 header.main a {
     display: inline-block;
@@ -77,6 +78,7 @@ section header h2 {
 }
 .term {
   height: 200px;
+  background: black;
 }
 footer {
   padding: 10px;
