@@ -169,9 +169,9 @@
       "space-before-function-paren": [
         "error",
         {
-            "anonymous": "never",
-            "named": "never",
-            "asyncArrow": "always"
+          "anonymous": "never",
+          "named": "never",
+          "asyncArrow": "always"
         }
       ],
       "complexity": [
@@ -216,6 +216,7 @@
     "benchmark": "^2.1.4",
     "coveralls": "^3.1.0",
     "eslint": "^7.17.0",
+    "json-dry": "^1.1.0",
     "microtime": "^3.0.0",
     "nyc": "^15.0.1",
     "preact": "^10.5.7",
