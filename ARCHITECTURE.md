@@ -12,3 +12,51 @@ Main public function is `exec` that accept string (code) and Environment instanc
 ## UML Diagram of all classes
 
 [![Scheme interpreter UML Diagram](https://github.com/jcubic/lips/blob/devel/assets/classDiagram.svg?raw=true)](https://github.com/jcubic/lips/blob/devel/assets/classDiagram.svgg)
+
+## Lexer
+
+Lexer is created as simple state machine with `Lexer._rules` that specify
+all the states. The sate change is simple it can change from null to given
+state for a given token (e.g. symbol), remain in same state and move from given state to null. The last change produce new token. Rules are dynamic
+the parser can be update by syntax extensions so `Lexer.rules` is a getter
+that return proper states with dynamic state rules generate from specials
+(syntax extensions).
+
+The most interesting methods of `Lexer` are `peek` and `skip` that
+can be used with the parser. It also have methods to be used with
+I/O ports that can be used to read string and then continue to parse rest of the content. The reason why Lexer have those methods (like `peek_char`) is
+that Lexer is used as the only interface in ports functions:
+`peek-char` `read-char` and `read`.
+
+## Parser
+
+## Environment
+
+## Interpreter
+
+## Pair
+
+## Symbols
+
+## Numbers
+
+## Strings
+
+## Characters
+
+## Macros
+
+## Formatter
+
+## InputPort
+
+## OutputPort
+
+## Worker
+
+## Values
+
+## Value
+
+## QuotedPromise
+
