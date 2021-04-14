@@ -875,9 +875,18 @@
     // ----------------------------------------------------------------------
     function promise_all(arg) {
         if (Array.isArray(arg)) {
-            return Promise.all(arg.map(escape_quote_promise))
+            // using loops for performance
+            var escaped = [], i = arg.length;
+            while (i--) {
+                escaped[i] = escape_quote_promise(arg[i]);
+            }
+            return Promise.all(escaped)
                 .then(values => {
-                    return values.map(unescape_quote_promise);
+                    var unescaped = [], i = values.length;
+                    while (i--) {
+                        unescaped[i] = unescape_quote_promise(values[i]);
+                    }
+                    return unescaped;
                 });
         }
         return arg;
@@ -1674,8 +1683,16 @@
     // ----------------------------------------------------------------------
     function unpromise_object(object, fn, error) {
         const keys = Object.keys(object);
-        const values = keys.map(x => object[x]);
-        const anyPromise = values.filter(is_promise);
+        const values = [], anyPromise = [];
+        let i = keys.length;
+        while (i--) {
+            const key = keys[i];
+            const value = object[key];
+            values[i] = value;
+            if (is_promise(value)) {
+                anyPromise.push(value);
+            }
+        }
         if (anyPromise.length) {
             return unpromise(promise_all(values), (values) => {
                 const result = {};
@@ -9406,7 +9423,9 @@
             !is_array_method(fn)) {
             // we unbox values from callback functions #76
             // calling map on array should not unbox the value
-            args = args.map(arg => {
+            var result = [], i = args.length;
+            while (i--) {
+                let arg = args[i];
                 if (is_lips_function(arg)) {
                     var wrapper = function(...args) {
                         return unpromise(arg.apply(this, args), unbox);
@@ -9419,10 +9438,12 @@
                     // case of Preact that pass LIPS class as argument
                     // to h function
                     wrapper.prototype = arg.prototype;
-                    return wrapper;
+                    result[i] = wrapper;
+                } else {
+                    result[i] = arg;
                 }
-                return arg;
-            });
+            }
+            args = result;
         }
         return args;
     }

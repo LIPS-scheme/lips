@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 09 Apr 2021 16:12:10 +0000
+ * build: Wed, 14 Apr 2021 16:50:27 +0000
  */
 (function () {
   'use strict';
@@ -2270,8 +2270,23 @@
 
     function promise_all(arg) {
       if (Array.isArray(arg)) {
-        return Promise.all(arg.map(escape_quote_promise)).then(function (values) {
-          return values.map(unescape_quote_promise);
+        // using loops for performance
+        var escaped = [],
+            i = arg.length;
+
+        while (i--) {
+          escaped[i] = escape_quote_promise(arg[i]);
+        }
+
+        return Promise.all(escaped).then(function (values) {
+          var unescaped = [],
+              i = values.length;
+
+          while (i--) {
+            unescaped[i] = unescape_quote_promise(values[i]);
+          }
+
+          return unescaped;
         });
       }
 
@@ -3653,10 +3668,19 @@
 
     function unpromise_object(object, fn, error) {
       var keys = Object.keys(object);
-      var values = keys.map(function (x) {
-        return object[x];
-      });
-      var anyPromise = values.filter(is_promise);
+      var values = [],
+          anyPromise = [];
+      var i = keys.length;
+
+      while (i--) {
+        var key = keys[i];
+        var value = object[key];
+        values[i] = value;
+
+        if (is_promise(value)) {
+          anyPromise.push(value);
+        }
+      }
 
       if (anyPromise.length) {
         return unpromise(promise_all(values), function (values) {
@@ -13310,9 +13334,14 @@
       if (!is_raw_lambda(fn) && args.some(is_lips_function) && !is_lips_function(fn) && !is_array_method(fn)) {
         // we unbox values from callback functions #76
         // calling map on array should not unbox the value
-        args = args.map(function (arg) {
+        var result = [],
+            i = args.length;
+
+        var _loop4 = function _loop4() {
+          var arg = args[i];
+
           if (is_lips_function(arg)) {
-            var wrapper = function wrapper() {
+            wrapper = function wrapper() {
               for (var _len43 = arguments.length, args = new Array(_len43), _key45 = 0; _key45 < _len43; _key45++) {
                 args[_key45] = arguments[_key45];
               }
@@ -13328,11 +13357,19 @@
             // to h function
 
             wrapper.prototype = arg.prototype;
-            return wrapper;
+            result[i] = wrapper;
+          } else {
+            result[i] = arg;
           }
+        };
 
-          return arg;
-        });
+        while (i--) {
+          var wrapper;
+
+          _loop4();
+        }
+
+        args = result;
       }
 
       return args;
@@ -13977,10 +14014,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 09 Apr 2021 16:12:10 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 14 Apr 2021 16:50:27 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 09 Apr 2021 16:12:10 +0000').valueOf();
+      var date = LString('Wed, 14 Apr 2021 16:50:27 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14020,7 +14057,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 09 Apr 2021 16:12:10 +0000',
+      date: 'Wed, 14 Apr 2021 16:50:27 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
