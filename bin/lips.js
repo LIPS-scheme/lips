@@ -22,7 +22,7 @@ const {
     env,
     banner,
     InputPort,
-    OutputPort } = require(options.debug ? '../src/lips' : '../dist/lips');
+    OutputPort } = require('../src/lips');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
