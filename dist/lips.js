@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 14 Apr 2021 08:38:21 +0000
+ * build: Wed, 14 Apr 2021 11:11:24 +0000
  */
 (function () {
   'use strict';
@@ -2134,9 +2134,7 @@
         return this.__name__;
       }
 
-      return {
-        'smb': symbol_to_string(this.__name__)
-      };
+      return [symbol_to_string(this.__name__)];
     };
 
     LSymbol.prototype.valueOf = function () {
@@ -4509,7 +4507,7 @@
     };
 
     Nil.prototype.serialize = function () {
-      return 'nil';
+      return 0;
     };
 
     Nil.prototype.to_object = function () {
@@ -5376,10 +5374,7 @@
 
 
     Pair.prototype.serialize = function () {
-      return {
-        car: this.car,
-        cdr: this.cdr
-      };
+      return [this.car, this.cdr];
     }; // ----------------------------------------------------------------------
     // :: abs that work on BigInt
     // ----------------------------------------------------------------------
@@ -6686,7 +6681,7 @@
 
 
     function is_null(value) {
-      return typeof value === 'undefined' || value === _nil || value === null;
+      return is_undef(value) || value === _nil || value === null;
     } // ----------------------------------------------------------------------
 
 
@@ -6704,7 +6699,12 @@
         return true;
       }
 
-      return o && typeof o !== 'undefined' && is_function(o.then);
+      return o && is_function(o.then);
+    } // ----------------------------------------------------------------------
+
+
+    function is_undef(value) {
+      return typeof value === 'undefined';
     } // ----------------------------------------------------------------------
     // :: Function utilities
     // ----------------------------------------------------------------------
@@ -13906,30 +13906,12 @@
     // -------------------------------------------------------------------------
 
 
-    function serialize(data) {
-      return JSON.stringify(data, function (key, value) {
-        var v0 = this[key];
-
-        if (v0) {
-          var cls = v0.constructor.__class__;
-
-          if (cls) {
-            return {
-              'class': cls,
-              'value': v0.serialize()
-            };
-          }
-        }
-
-        return value;
-      });
-    } // -------------------------------------------------------------------------
-
-
     var serialization_map = {
       'pair': function pair(_ref45) {
-        var car = _ref45.car,
-            cdr = _ref45.cdr;
+        var _ref46 = slicedToArray(_ref45, 2),
+            car = _ref46[0],
+            cdr = _ref46[1];
+
         return Pair(car, cdr);
       },
       'number': function number(value) {
@@ -13945,27 +13927,68 @@
       'symbol': function symbol(value) {
         if (LString.isString(value)) {
           return LSymbol(value);
-        } else if (value && value['smb']) {
-          return LSymbol(Symbol["for"](value['smb']));
+        } else if (Array.isArray(value)) {
+          return LSymbol(Symbol["for"](value[0]));
         }
       },
       'string': LString,
       'character': LCharacter
     }; // -------------------------------------------------------------------------
+    // class mapping to create smaller JSON
 
-    function unserialize(string) {
-      return JSON.parse(string, function (_, value) {
-        if (value && _typeof_1(value) === 'object') {
-          if (value['class']) {
-            var cls = value['class'];
+    var available_class = Object.keys(serialization_map);
+    var class_map = {};
 
-            if (serialization_map[cls]) {
-              return serialization_map[cls](value['value']);
-            }
+    for (var _i5 = 0, _Object$entries3 = Object.entries(available_class); _i5 < _Object$entries3.length; _i5++) {
+      var _Object$entries3$_i = slicedToArray(_Object$entries3[_i5], 2),
+          i = _Object$entries3$_i[0],
+          cls = _Object$entries3$_i[1];
+
+      class_map[cls] = +i;
+    }
+
+    function mangle_name(name) {
+      return class_map[name];
+    }
+
+    function resolve_name(i) {
+      return available_class[i];
+    } // -------------------------------------------------------------------------
+
+
+    function serialize(data) {
+      return JSON.stringify(data, function (key, value) {
+        var v0 = this[key];
+
+        if (v0) {
+          var cls = mangle_name(v0.constructor.__class__);
+
+          if (!is_undef(cls)) {
+            return {
+              '@': cls,
+              '#': v0.serialize()
+            };
           }
         }
 
         return value;
+      });
+    } // -------------------------------------------------------------------------
+
+
+    function unserialize(string) {
+      return JSON.parse(string, function (_, object) {
+        if (object && _typeof_1(object) === 'object') {
+          if (!is_undef(object['@'])) {
+            var cls = resolve_name(object['@']);
+
+            if (serialization_map[cls]) {
+              return serialization_map[cls](object['#']);
+            }
+          }
+        }
+
+        return object;
       });
     } // -------------------------------------------------------------------------
 
@@ -14063,10 +14086,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Wed, 14 Apr 2021 08:38:21 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Wed, 14 Apr 2021 11:11:24 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Wed, 14 Apr 2021 08:38:21 +0000').valueOf();
+      var date = LString('Wed, 14 Apr 2021 11:11:24 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14110,7 +14133,7 @@
     var lips = {
       version: '1.0.0-beta.12',
       banner: banner,
-      date: 'Wed, 14 Apr 2021 08:38:21 +0000',
+      date: 'Wed, 14 Apr 2021 11:11:24 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

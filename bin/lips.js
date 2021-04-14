@@ -107,7 +107,7 @@ function print(result) {
 // -----------------------------------------------------------------------------
 
 function bootstrap(interpreter) {
-    var list = ['./dist/std.scm'];
+    var list = ['./dist/std.xcm'];
     function open(name) {
         var path;
         try {
