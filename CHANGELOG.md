@@ -7,6 +7,7 @@
 * match function return `#f` instead of `nil` when fail to match (so it work in `cond` or `if`)
 * new functions `complement`, `always`, `once`, `flip`, `unfold` (inspired by Ramda)
 * add codemirror hits for std lib symbols
+* experimental compiler to JSON (not 100% ready)
 ### Bugfix
 * fix `set-repr!` on classes
 * fix conflict with jQuery plugns in bookmark

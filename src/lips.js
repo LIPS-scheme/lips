@@ -762,8 +762,11 @@
         }
         return str;
     };
-    LSymbol.prototype.toJSON = function() {
-        this.toString(true);
+    LSymbol.prototype.serialize = function() {
+        if (LString.isString(this.__name__)) {
+            return this.__name__;
+        }
+        return [symbol_to_string(this.__name__)];
     };
     LSymbol.prototype.valueOf = function() {
         return this.__name__.valueOf();
@@ -2285,13 +2288,16 @@
     // :: Nil constructor with only once instance
     // ----------------------------------------------------------------------
     function Nil() {}
-    Nil.prototype.toString = Nil.prototype.toJSON = function() {
+    Nil.prototype.toString = function() {
         return '()';
     };
     Nil.prototype.valueOf = function() {
         console.warn('\nNIL: LIPS just called valueOf on nil constant. ' +
                      'This is probably not what you want.');
         return undefined;
+    };
+    Nil.prototype.serialize = function() {
+        return 0;
     };
     Nil.prototype.to_object = function() {
         return {};
@@ -3061,7 +3067,13 @@
         }
         return this;
     };
-
+    // ----------------------------------------------------------------------
+    Pair.prototype.serialize = function() {
+        return [
+            this.car,
+            this.cdr
+        ];
+    };
     // ----------------------------------------------------------------------
     // :: abs that work on BigInt
     // ----------------------------------------------------------------------
@@ -4013,7 +4025,7 @@
     // :: check for nullish values
     // ----------------------------------------------------------------------
     function is_null(value) {
-        return typeof value === 'undefined' || value === nil || value === null;
+        return is_undef(value) || value === nil || value === null;
     }
     // ----------------------------------------------------------------------
     function is_function(o) {
@@ -4027,7 +4039,11 @@
         if (o instanceof Promise) {
             return true;
         }
-        return o && typeof o !== 'undefined' && is_function(o.then);
+        return o && is_function(o.then);
+    }
+    // ----------------------------------------------------------------------
+    function is_undef(value) {
+        return typeof value === 'undefined';
     }
     // ----------------------------------------------------------------------
     // :: Function utilities
@@ -4499,7 +4515,7 @@
     LCharacter.prototype.toString = function() {
         return '#\\' + (this.__name__ || this.__char__);
     };
-    LCharacter.prototype.valueOf = function() {
+    LCharacter.prototype.valueOf = LCharacter.prototype.serialize = function() {
         return this.__char__;
     };
     // -------------------------------------------------------------------------
@@ -4531,6 +4547,9 @@
             LString.prototype[key] = wrap(String.prototype[key]);
         }
     }
+    LString.prototype.serialize = function() {
+        return this.valueOf();
+    };
     LString.isString = function(x) {
         return x instanceof LString || typeof x === 'string';
     };
@@ -4713,6 +4732,10 @@
         }
     };
     // -------------------------------------------------------------------------
+    LNumber.prototype.serialize = function() {
+        return this.__value__;
+    };
+    // -------------------------------------------------------------------------
     LNumber.prototype.isNaN = function() {
         return Number.isNaN(this.__value__);
     };
@@ -4804,7 +4827,7 @@
         return LNumber;
     };
     // -------------------------------------------------------------------------
-    LNumber.prototype.toString = LNumber.prototype.toJSON = function(radix) {
+    LNumber.prototype.toString = function(radix) {
         if (Number.isNaN(this.__value__)) {
             return '+nan.0';
         }
@@ -5151,6 +5174,13 @@
             value: 'complex',
             enumerable: true
         });
+    };
+    // -------------------------------------------------------------------------
+    LComplex.prototype.serialize = function() {
+        return {
+            re: this.__re__,
+            im: this.__im__
+        };
     };
     // -------------------------------------------------------------------------
     LComplex.prototype.toRational = function(n) {
@@ -5502,6 +5532,13 @@
         });
     };
     // -------------------------------------------------------------------------
+    LRational.prototype.serialize = function() {
+        return {
+            num: this.__num__,
+            denom: this.__denom__
+        };
+    };
+    // -------------------------------------------------------------------------
     LRational.prototype.pow = function(n) {
         var cmp = n.cmp(0);
         if (cmp === 0) {
@@ -5699,6 +5736,9 @@
         '~': 'inot',
         '<<': 'ishrn',
         '>>': 'ishln'
+    };
+    LBigInteger.prototype.serialize = function() {
+        return this.__value__.toString();
     };
     // -------------------------------------------------------------------------
     LBigInteger.prototype._op = function(op, n) {
@@ -6186,7 +6226,7 @@
     }
     // -------------------------------------------------------------------------
     Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
-        typecheck('Interpreter::exec', code, 'string', 1);
+        typecheck('Interpreter::exec', code, ['string', 'array'], 1);
         typecheck('Interpreter::exec', dynamic, 'boolean', 2);
         // simple solution to overwrite this variable in each interpreter
         // before evaluation of user code
@@ -6949,7 +6989,11 @@
                 if (type(code) === 'buffer') {
                     code = code.toString();
                 }
-                return exec(code.replace(/^#!.*/, ''), env);
+                code = code.replace(/^#!.*/, '');
+                if (code.match(/\{/)) {
+                    code = unserialize(code);
+                }
+                return exec(code, env);
             }
             if (is_node()) {
                 return new Promise((resolve, reject) => {
@@ -9561,7 +9605,7 @@
         }
     }
     // -------------------------------------------------------------------------
-    async function exec(string, env, dynamic_scope) {
+    async function exec(arg, env, dynamic_scope) {
         if (dynamic_scope === true) {
             env = dynamic_scope = env || user_env;
         } else if (env === true) {
@@ -9570,7 +9614,8 @@
             env = env || user_env;
         }
         var results = [];
-        for await (let code of parse(string)) {
+        var input = Array.isArray(arg) ? arg : parse(arg);
+        for await (let code of input) {
             const value = evaluate(code, {
                 env,
                 dynamic_scope,
@@ -9663,7 +9708,7 @@
         return lips.version.match(/^(\{\{VER\}\}|DEV)$/);
     }
     // -------------------------------------------------------------------------
-    function bootstrap(url = '') {
+    function bootstrap(url = '', json = false) {
         if (url === '') {
             if (is_dev()) {
                 url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
@@ -9762,35 +9807,72 @@
     }
 
     // -------------------------------------------------------------------------
-    Pair.unDry = function(value) {
-        return new Pair(value.car, value.cdr);
-    };
-    Pair.prototype.toDry = function() {
-        return {
-            value: {
-                car: this.car,
-                cdr: this.cdr
+    // Serialization
+    // -------------------------------------------------------------------------
+    var serialization_map = {
+        'pair': ([car, cdr]) => Pair(car, cdr),
+        'number': function(value) {
+            if (LString.isString(value)) {
+                return LNumber([value, 10]);
             }
-        };
-    };
-    Nil.prototype.toDry = function() {
-        return {
-            value: null
-        };
-    };
-    Nil.unDry = function() {
-        return nil;
-    };
-    LSymbol.prototype.toDry = function() {
-        return {
-            value: {
-                name: this.__name__
+            return LNumber(value);
+        },
+        'nil': function() {
+            return nil;
+        },
+        'symbol': function(value) {
+            if (LString.isString(value)) {
+                return LSymbol(value);
+            } else if (Array.isArray(value)) {
+                return LSymbol(Symbol.for(value[0]));
             }
-        };
+        },
+        'string': LString,
+        'character': LCharacter
     };
-    LSymbol.unDry = function(value) {
-        return new LSymbol(value.__name__);
-    };
+    // -------------------------------------------------------------------------
+    // class mapping to create smaller JSON
+    const available_class = Object.keys(serialization_map);
+    const class_map = {};
+    for (let [i, cls] of Object.entries(available_class)) {
+        class_map[cls] = +i;
+    }
+    function mangle_name(name) {
+        return class_map[name];
+    }
+    function resolve_name(i) {
+        return available_class[i];
+    }
+    // -------------------------------------------------------------------------
+    function serialize(data) {
+        return JSON.stringify(data, function (key, value) {
+            const v0 = this[key];
+            if (v0) {
+                var cls = mangle_name(v0.constructor.__class__);
+                if (!is_undef(cls)) {
+                    return {
+                        '@': cls,
+                        '#': v0.serialize()
+                    };
+                }
+            }
+            return value;
+        });
+    }
+    // -------------------------------------------------------------------------
+    function unserialize(string) {
+        return JSON.parse(string, (_, object) => {
+            if (object && typeof object === 'object') {
+                if (!is_undef(object['@'])) {
+                    var cls = resolve_name(object['@']);
+                    if (serialization_map[cls]) {
+                        return serialization_map[cls](object['#']);
+                    }
+                }
+            }
+            return object;
+        });
+    }
     // -------------------------------------------------------------------------
     function execError(e) {
         console.error(e.message || e);
@@ -9909,6 +9991,8 @@ properties of an object.
     // to be used with string function when code is minified
     // -------------------------------------------------------------------------
     Ahead.__class__ = 'ahead';
+    Pair.__class__ = 'pair';
+    Nil.__class__ = 'nil';
     Pattern.__class__ = 'pattern';
     Formatter.__class__ = 'formatter';
     Macro.__class__ = 'macro';
@@ -9920,9 +10004,11 @@ properties of an object.
     InputStringPort.__class__ = 'input-string-port';
     InputFilePort.__class__ = 'input-file-port';
     OutputFilePort.__class__ = 'output-file-port';
-    // types used for detect lips objects
-    LNumber.__class__ = 'number';
+    [LNumber, LComplex, LRational, LFloat, LBigInteger].forEach(cls => {
+        cls.__class__ = 'number';
+    });
     LCharacter.__class__ = 'character';
+    LSymbol.__class__ = 'symbol';
     LString.__class__ = 'string';
     QuotedPromise.__class__ = 'promise';
     // -------------------------------------------------------------------------
@@ -9935,6 +10021,9 @@ properties of an object.
         parse: compose(uniterate_async, parse),
         tokenize,
         evaluate,
+
+        serialize,
+        unserialize,
 
         bootstrap,
 

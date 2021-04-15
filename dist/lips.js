@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 15 Apr 2021 10:59:04 +0000
+ * build: Thu, 15 Apr 2021 12:58:27 +0000
  */
 (function () {
   'use strict';
@@ -1864,7 +1864,7 @@
       } else if (arg.match(float_re)) {
         return parse_float(arg);
       } else if (arg === 'nil') {
-        return nil;
+        return _nil;
       } else if (['+nan.0', '-nan.0'].includes(arg)) {
         return LNumber(NaN);
       } else if (['true', '#t', '#true'].includes(arg)) {
@@ -2129,8 +2129,12 @@
       return str;
     };
 
-    LSymbol.prototype.toJSON = function () {
-      this.toString(true);
+    LSymbol.prototype.serialize = function () {
+      if (LString.isString(this.__name__)) {
+        return this.__name__;
+      }
+
+      return [symbol_to_string(this.__name__)];
     };
 
     LSymbol.prototype.valueOf = function () {
@@ -3057,7 +3061,7 @@
               while (1) {
                 switch (_context3.prev = _context3.next) {
                   case 0:
-                    head = nil, prev = head;
+                    head = _nil, prev = head;
 
                   case 1:
 
@@ -3084,7 +3088,7 @@
                     return _context3.abrupt("break", 27);
 
                   case 10:
-                    if (!(token === '.' && head !== nil)) {
+                    if (!(token === '.' && head !== _nil)) {
                       _context3.next = 17;
                       break;
                     }
@@ -3105,10 +3109,10 @@
 
                   case 20:
                     _context3.t1 = _context3.sent;
-                    _context3.t2 = nil;
+                    _context3.t2 = _nil;
                     cur = new _context3.t0(_context3.t1, _context3.t2);
 
-                    if (head === nil) {
+                    if (head === _nil) {
                       head = cur;
                     } else {
                       prev.cdr = cur;
@@ -3432,7 +3436,7 @@
 
                   case 22:
                     if (is_literal(token)) {
-                      expr = new Pair(special.symbol, new Pair(object, nil));
+                      expr = new Pair(special.symbol, new Pair(object, _nil));
                     } else {
                       expr = new Pair(special.symbol, object);
                     } // builtin parser extensions just expand into lists like 'x ==> (quote x)
@@ -4517,7 +4521,7 @@
 
     function Nil() {}
 
-    Nil.prototype.toString = Nil.prototype.toJSON = function () {
+    Nil.prototype.toString = function () {
       return '()';
     };
 
@@ -4526,21 +4530,26 @@
       return undefined$1;
     };
 
+    Nil.prototype.serialize = function () {
+      return 0;
+    };
+
     Nil.prototype.to_object = function () {
       return {};
     };
 
     Nil.prototype.append = function (x) {
-      return new Pair(x, nil);
+      return new Pair(x, _nil);
     };
 
     Nil.prototype.to_array = function () {
       return [];
     };
 
-    var nil = new Nil(); // ----------------------------------------------------------------------
+    var _nil = new Nil(); // ----------------------------------------------------------------------
     // :: Pair constructor
     // ----------------------------------------------------------------------
+
 
     function Pair(car, cdr) {
       if (typeof this !== 'undefined' && this.constructor !== Pair || typeof this === 'undefined') {
@@ -4556,7 +4565,7 @@
       return function recur(list) {
         typecheck(name, list, ['pair', 'nil']);
 
-        if (list === nil) {
+        if (list === _nil) {
           return [];
         }
 
@@ -4577,7 +4586,7 @@
 
             result.push(car);
             node = node.cdr;
-          } else if (node === nil) {
+          } else if (node === _nil) {
             break;
           } else {
             throw new Error("".concat(name, ": can't convert improper list"));
@@ -4599,7 +4608,7 @@
       var node = this;
 
       while (true) {
-        if (!node || node === nil || !(node instanceof Pair) || node.haveCycles('cdr')) {
+        if (!node || node === _nil || !(node instanceof Pair) || node.haveCycles('cdr')) {
           break;
         }
 
@@ -4670,7 +4679,7 @@
       var node = this;
 
       while (true) {
-        if (node.cdr === nil) {
+        if (node.cdr === _nil) {
           return node;
         }
 
@@ -4710,7 +4719,7 @@
       }
 
       if (deep === false) {
-        var list = nil;
+        var list = _nil;
 
         for (var _i3 = array.length; _i3--;) {
           list = new Pair(array[_i3], list);
@@ -4723,7 +4732,7 @@
         array = toConsumableArray(array);
       }
 
-      var result = nil;
+      var result = _nil;
       var i = array.length;
 
       while (i--) {
@@ -4792,7 +4801,7 @@
     Pair.fromPairs = function (array) {
       return array.reduce(function (list, pair) {
         return new Pair(new Pair(new LSymbol(pair[0]), pair[1]), list);
-      }, nil);
+      }, _nil);
     }; // ----------------------------------------------------------------------
 
 
@@ -4806,10 +4815,10 @@
 
     Pair.prototype.reduce = function (fn) {
       var node = this;
-      var result = nil;
+      var result = _nil;
 
       while (true) {
-        if (node !== nil) {
+        if (node !== _nil) {
           result = fn(result, node.car);
           node = node.cdr;
         } else {
@@ -4827,9 +4836,9 @@
       }
 
       var node = this;
-      var prev = nil;
+      var prev = _nil;
 
-      while (node !== nil) {
+      while (node !== _nil) {
         var next = node.cdr;
         node.cdr = prev;
         prev = node;
@@ -4873,9 +4882,9 @@
 
     Pair.prototype.map = function (fn) {
       if (typeof this.car !== 'undefined') {
-        return new Pair(fn(this.car), this.cdr === nil ? nil : this.cdr.map(fn));
+        return new Pair(fn(this.car), this.cdr === _nil ? _nil : this.cdr.map(fn));
       } else {
-        return nil;
+        return _nil;
       }
     };
 
@@ -5112,7 +5121,7 @@
         _iterator8.f();
       }
 
-      if ([nil, eof].includes(obj)) {
+      if ([_nil, eof].includes(obj)) {
         return obj.toString();
       }
 
@@ -5337,7 +5346,7 @@
           });
           arr.push(cdr);
         }
-      } else if (this.cdr !== nil) {
+      } else if (this.cdr !== _nil) {
         arr = arr.concat([' . ', toString(this.cdr, quote, true)]);
       }
 
@@ -5372,9 +5381,9 @@
         } else {
           this.car = arg;
         }
-      } else if (arg !== nil) {
+      } else if (arg !== _nil) {
         while (true) {
-          if (p instanceof Pair && p.cdr !== nil) {
+          if (p instanceof Pair && p.cdr !== _nil) {
             p = p.cdr;
           } else {
             break;
@@ -5385,6 +5394,11 @@
       }
 
       return this;
+    }; // ----------------------------------------------------------------------
+
+
+    Pair.prototype.serialize = function () {
+      return [this.car, this.cdr];
     }; // ----------------------------------------------------------------------
     // :: abs that work on BigInt
     // ----------------------------------------------------------------------
@@ -5500,7 +5514,7 @@
 
 
     function is_atom(obj) {
-      return obj instanceof LSymbol || LString.isString(obj) || obj === nil || obj === null || obj instanceof LCharacter || obj instanceof LNumber || obj === true || obj === false;
+      return obj instanceof LSymbol || LString.isString(obj) || obj === _nil || obj === null || obj instanceof LCharacter || obj instanceof LNumber || obj === true || obj === false;
     } // ----------------------------------------------------------------------
 
 
@@ -5886,7 +5900,7 @@
         if (pattern instanceof Pair && pattern.car instanceof Pair && pattern.car.cdr instanceof Pair && LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
           log('>> 0');
 
-          if (code === nil) {
+          if (code === _nil) {
             log({
               pattern: pattern.toString()
             });
@@ -5918,7 +5932,7 @@
 
         if (pattern instanceof Pair && pattern.cdr instanceof Pair && LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
           // pattern (... ???) - SRFI-46
-          if (pattern.cdr.cdr !== nil) {
+          if (pattern.cdr.cdr !== _nil) {
             if (pattern.cdr.cdr instanceof Pair) {
               // if we have (x ... a b) we need to remove two from the end
               var list_len = pattern.cdr.cdr.length();
@@ -5931,7 +5945,7 @@
               }
 
               var rest = list.cdr;
-              list.cdr = nil;
+              list.cdr = _nil;
 
               if (!traverse(pattern.cdr.cdr, rest, pattern_names, ellipsis)) {
                 return false;
@@ -5948,36 +5962,36 @@
 
             log('>> 1');
 
-            if (code === nil) {
+            if (code === _nil) {
               log('>> 2');
 
               if (ellipsis) {
                 log('NIL');
-                bindings['...'].symbols[_name3] = nil;
+                bindings['...'].symbols[_name3] = _nil;
               } else {
                 log('NULL');
                 bindings['...'].symbols[_name3] = null;
               }
-            } else if (code instanceof Pair && (code.car instanceof Pair || code.car === nil)) {
+            } else if (code instanceof Pair && (code.car instanceof Pair || code.car === _nil)) {
               log('>> 3 ' + ellipsis);
 
               if (ellipsis) {
                 if (bindings['...'].symbols[_name3]) {
                   var node = bindings['...'].symbols[_name3];
 
-                  if (node === nil) {
-                    node = new Pair(nil, new Pair(code, nil));
+                  if (node === _nil) {
+                    node = new Pair(_nil, new Pair(code, _nil));
                   } else {
-                    node = node.append(new Pair(code, nil));
+                    node = node.append(new Pair(code, _nil));
                   }
 
                   bindings['...'].symbols[_name3] = node;
                 } else {
-                  bindings['...'].symbols[_name3] = new Pair(code, nil);
+                  bindings['...'].symbols[_name3] = new Pair(code, _nil);
                 }
               } else {
                 log('>> 4');
-                bindings['...'].symbols[_name3] = new Pair(code, nil);
+                bindings['...'].symbols[_name3] = new Pair(code, _nil);
               }
             } else {
               log('>> 6');
@@ -5987,10 +6001,10 @@
                 pattern_names.push(_name3);
 
                 if (!bindings['...'].symbols[_name3]) {
-                  bindings['...'].symbols[_name3] = new Pair(code, nil);
+                  bindings['...'].symbols[_name3] = new Pair(code, _nil);
                 } else {
                   var _node = bindings['...'].symbols[_name3];
-                  bindings['...'].symbols[_name3] = _node.append(new Pair(code, nil));
+                  bindings['...'].symbols[_name3] = _node.append(new Pair(code, _nil));
                 }
 
                 log({
@@ -6006,9 +6020,9 @@
           } else if (pattern.car instanceof Pair) {
             var names = toConsumableArray(pattern_names);
 
-            if (code === nil) {
+            if (code === _nil) {
               log('>> 9');
-              bindings['...'].lists.push(nil);
+              bindings['...'].lists.push(_nil);
               return true;
             }
 
@@ -6067,7 +6081,7 @@
             pattern: pattern.toString()
           });
 
-          if (code.cdr === nil) {
+          if (code.cdr === _nil) {
             // last item in in call using in recursive calls on
             // last element of the list
             // case of pattern (p . rest) and code (0)
@@ -6085,7 +6099,7 @@
               var _name5 = pattern.cdr.valueOf();
 
               if (!(_name5 in bindings.symbols)) {
-                bindings.symbols[_name5] = nil;
+                bindings.symbols[_name5] = _nil;
               }
 
               _name5 = pattern.car.valueOf();
@@ -6124,7 +6138,7 @@
           if (traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr, code.cdr, pattern_names, ellipsis)) {
             return true;
           }
-        } else if (pattern === nil && (code === nil || code === undefined$1)) {
+        } else if (pattern === _nil && (code === _nil || code === undefined$1)) {
           // undefined is case when you don't have body ...
           // and you do recursive call
           return true;
@@ -6294,14 +6308,14 @@
                 var caar = car.car,
                     cadr = car.cdr;
 
-                if (cadr !== nil) {
-                  next(name, new Pair(cadr, nil));
+                if (cadr !== _nil) {
+                  next(name, new Pair(cadr, _nil));
                 }
 
                 return caar;
               }
 
-              if (cdr !== nil) {
+              if (cdr !== _nil) {
                 next(name, cdr);
               }
 
@@ -6345,7 +6359,7 @@
                     _cdr = item.cdr;
 
                 if (nested) {
-                  if (_cdr !== nil) {
+                  if (_cdr !== _nil) {
                     log('|| next 1');
                     next(_name7, _cdr);
                   }
@@ -6355,7 +6369,7 @@
                   });
                   return _car;
                 } else {
-                  if (_car.cdr !== nil) {
+                  if (_car.cdr !== _nil) {
                     log('|| next 2');
                     next(_name7, new Pair(_car.cdr, _cdr));
                   }
@@ -6410,7 +6424,7 @@
             return !skip_nulls;
           }
 
-          return x instanceof Pair || x === nil || x instanceof Array && x.length;
+          return x instanceof Pair || x === _nil || x instanceof Array && x.length;
         });
       }
 
@@ -6462,14 +6476,14 @@
               // lists is free ellipsis on pairs ((???) ...)
               // TODO: will this work in every case? Do we need to handle
               // nesting here?
-              if (bindings['...'].lists[0] === nil) {
-                return nil;
+              if (bindings['...'].lists[0] === _nil) {
+                return _nil;
               }
 
               var new_expr = expr.car;
 
               if (is_spread) {
-                new_expr = new Pair(expr.car, new Pair(expr.cdr.car, nil));
+                new_expr = new Pair(expr.car, new Pair(expr.cdr.car, _nil));
               }
 
               log('>> 2');
@@ -6480,7 +6494,7 @@
 
                 var _bind = _objectSpread({}, _symbols2);
 
-                result = nil;
+                result = _nil;
 
                 var _loop = function _loop() {
                   if (!have_binding(_bind)) {
@@ -6502,7 +6516,7 @@
 
                   if (car !== undefined$1) {
                     if (is_spread) {
-                      if (result === nil) {
+                      if (result === _nil) {
                         result = car;
                       } else {
                         result = result.append(car);
@@ -6521,12 +6535,12 @@
                   if (_ret === "break") break;
                 }
 
-                if (result !== nil && !is_spread) {
+                if (result !== _nil && !is_spread) {
                   result = result.reverse();
                 } // case of (list) ... (rest code)
 
 
-                if (expr.cdr.cdr !== nil && !LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
+                if (expr.cdr.cdr !== _nil && !LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
                   var _rest6 = traverse(expr.cdr.cdr, {
                     disabled: disabled
                   });
@@ -6542,10 +6556,10 @@
                 });
 
                 if (car) {
-                  return new Pair(car, nil);
+                  return new Pair(car, _nil);
                 }
 
-                return nil;
+                return _nil;
               }
             } else if (expr.car instanceof LSymbol) {
               log('>> 4');
@@ -6564,7 +6578,7 @@
 
               var _is_null = _symbols2[name] === null;
 
-              var _result2 = nil;
+              var _result2 = _nil;
 
               var _loop2 = function _loop2() {
                 if (!have_binding(_bind2, true)) {
@@ -6600,7 +6614,7 @@
                 if (_ret2 === "break") break;
               }
 
-              if (_result2 !== nil) {
+              if (_result2 !== _nil) {
                 _result2 = _result2.reverse();
               } // case if (x ... y ...) second spread is not processed
               // and (??? . x) last symbol
@@ -6691,7 +6705,7 @@
 
 
     function is_null(value) {
-      return typeof value === 'undefined' || value === nil || value === null;
+      return is_undef(value) || value === _nil || value === null;
     } // ----------------------------------------------------------------------
 
 
@@ -6709,7 +6723,12 @@
         return true;
       }
 
-      return o && typeof o !== 'undefined' && is_function(o.then);
+      return o && is_function(o.then);
+    } // ----------------------------------------------------------------------
+
+
+    function is_undef(value) {
+      return typeof value === 'undefined';
     } // ----------------------------------------------------------------------
     // :: Function utilities
     // ----------------------------------------------------------------------
@@ -6998,15 +7017,15 @@
         // (let iter ((x 10)) (iter (- x 1))) -> (let* ((iter (lambda (x) ...
 
         if (code.car instanceof LSymbol) {
-          if (!(code.cdr.car instanceof Pair || code.cdr.car === nil)) {
+          if (!(code.cdr.car instanceof Pair || code.cdr.car === _nil)) {
             throw new Error('let require list of pairs');
           }
 
           var params;
 
-          if (code.cdr.car === nil) {
-            args = nil;
-            params = nil;
+          if (code.cdr.car === _nil) {
+            args = _nil;
+            params = _nil;
           } else {
             params = code.cdr.car.map(function (pair) {
               return pair.car;
@@ -7356,7 +7375,7 @@
       return '#\\' + (this.__name__ || this.__char__);
     };
 
-    LCharacter.prototype.valueOf = function () {
+    LCharacter.prototype.valueOf = LCharacter.prototype.serialize = function () {
       return this.__char__;
     }; // -------------------------------------------------------------------------
     // :: String wrapper that handle copy and in place change
@@ -7409,6 +7428,10 @@
         _iterator11.f();
       }
     }
+
+    LString.prototype.serialize = function () {
+      return this.valueOf();
+    };
 
     LString.isString = function (x) {
       return x instanceof LString || typeof x === 'string';
@@ -7651,6 +7674,11 @@
       }
     }; // -------------------------------------------------------------------------
 
+    LNumber.prototype.serialize = function () {
+      return this.__value__;
+    }; // -------------------------------------------------------------------------
+
+
     LNumber.prototype.isNaN = function () {
       return Number.isNaN(this.__value__);
     }; // -------------------------------------------------------------------------
@@ -7761,7 +7789,7 @@
     }; // -------------------------------------------------------------------------
 
 
-    LNumber.prototype.toString = LNumber.prototype.toJSON = function (radix) {
+    LNumber.prototype.toString = function (radix) {
       if (Number.isNaN(this.__value__)) {
         return '+nan.0';
       }
@@ -8228,6 +8256,14 @@
         value: 'complex',
         enumerable: true
       });
+    }; // -------------------------------------------------------------------------
+
+
+    LComplex.prototype.serialize = function () {
+      return {
+        re: this.__re__,
+        im: this.__im__
+      };
     }; // -------------------------------------------------------------------------
 
 
@@ -8706,6 +8742,14 @@
     }; // -------------------------------------------------------------------------
 
 
+    LRational.prototype.serialize = function () {
+      return {
+        num: this.__num__,
+        denom: this.__denom__
+      };
+    }; // -------------------------------------------------------------------------
+
+
     LRational.prototype.pow = function (n) {
       var cmp = n.cmp(0);
 
@@ -8998,7 +9042,12 @@
       '~': 'inot',
       '<<': 'ishrn',
       '>>': 'ishln'
+    };
+
+    LBigInteger.prototype.serialize = function () {
+      return this.__value__.toString();
     }; // -------------------------------------------------------------------------
+
 
     LBigInteger.prototype._op = function (op, n) {
       if (typeof n === 'undefined') {
@@ -9425,7 +9474,7 @@
     InputByteVectorPort.prototype.close = function () {
       var _this14 = this;
 
-      read_only(this, '__vector__', nil);
+      read_only(this, '__vector__', _nil);
       ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(function (name) {
         _this14[name] = function () {
           throw new Error('Input-binary-port: port is closed');
@@ -9693,7 +9742,7 @@
     Interpreter.prototype.exec = function (code) {
       var dynamic = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : false;
       var env = arguments.length > 2 && arguments[2] !== undefined$1 ? arguments[2] : null;
-      typecheck('Interpreter::exec', code, 'string', 1);
+      typecheck('Interpreter::exec', code, ['string', 'array'], 1);
       typecheck('Interpreter::exec', dynamic, 'boolean', 2); // simple solution to overwrite this variable in each interpreter
       // before evaluation of user code
 
@@ -9833,7 +9882,7 @@
         var scope = frame.__parent__;
 
         if (!(scope instanceof Environment)) {
-          return nil;
+          return _nil;
         }
 
         if (n <= 0) {
@@ -10198,7 +10247,7 @@
     }, undefined$1, 'internal'); // -------------------------------------------------------------------------
 
     var global_env = new Environment({
-      nil: nil,
+      nil: _nil,
       eof: eof,
       undefined: undefined$1,
       'true': true,
@@ -10646,7 +10695,7 @@
       }, "(set-cdr! obj value)\n\n            Function that set cdr (tail) of the list/pair to specified value.\n            It can destroy the list. Old value is lost."),
       // ------------------------------------------------------------------
       'empty?': doc('empty?', function (x) {
-        return typeof x === 'undefined' || x === nil;
+        return typeof x === 'undefined' || x === _nil;
       }, "(empty? object)\n\n            Function return true if value is undfined empty list."),
       // ------------------------------------------------------------------
       gensym: doc('gensym', gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
@@ -10686,7 +10735,13 @@
             code = code.toString();
           }
 
-          return exec(code.replace(/^#!.*/, ''), env);
+          code = code.replace(/^#!.*/, '');
+
+          if (code.match(/\{/)) {
+            code = unserialize(code);
+          }
+
+          return exec(code, env);
         }
 
         if (is_node()) {
@@ -10752,7 +10807,7 @@
                   test = code.cdr.car;
                   body = code.cdr.cdr;
 
-                  if (body !== nil) {
+                  if (body !== _nil) {
                     body = new Pair(LSymbol('begin'), body);
                   }
 
@@ -10764,7 +10819,7 @@
                   node = vars;
 
                 case 10:
-                  if (!(node !== nil)) {
+                  if (!(node !== _nil)) {
                     _context16.next = 21;
                     break;
                   }
@@ -10797,7 +10852,7 @@
                       while (1) {
                         switch (_context15.prev = _context15.next) {
                           case 0:
-                            if (!(body !== nil)) {
+                            if (!(body !== _nil)) {
                               _context15.next = 3;
                               break;
                             }
@@ -10810,14 +10865,14 @@
                             next = {};
 
                           case 5:
-                            if (!(node !== nil)) {
+                            if (!(node !== _nil)) {
                               _context15.next = 15;
                               break;
                             }
 
                             _item = node.car;
 
-                            if (!(_item.cdr.cdr !== nil)) {
+                            if (!(_item.cdr.cdr !== _nil)) {
                               _context15.next = 12;
                               break;
                             }
@@ -10867,7 +10922,7 @@
                   break;
 
                 case 30:
-                  if (!(test.cdr !== nil)) {
+                  if (!(test.cdr !== _nil)) {
                     _context16.next = 34;
                     break;
                   }
@@ -10917,7 +10972,7 @@
           }
         };
 
-        if (code === nil) {
+        if (code === _nil) {
           throw new Error('too few expressions for `if`');
         }
 
@@ -11072,7 +11127,7 @@
         } else if (is_prototype(obj) && is_function(value)) {
           obj[key] = unbind(value);
           obj[key][__prototype__] = true;
-        } else if (is_function(value) || is_native(value) || value === nil) {
+        } else if (is_function(value) || is_native(value) || value === _nil) {
           obj[key] = value;
         } else {
           obj[key] = value ? value.valueOf() : value;
@@ -11145,7 +11200,7 @@
 
         var __doc__;
 
-        if (code.cdr instanceof Pair && LString.isString(code.cdr.car) && code.cdr.cdr !== nil) {
+        if (code.cdr instanceof Pair && LString.isString(code.cdr.car) && code.cdr.cdr !== _nil) {
           __doc__ = code.cdr.car.valueOf();
         }
 
@@ -11203,9 +11258,9 @@
             env.set('arguments', _args);
           }
 
-          if (name instanceof LSymbol || name !== nil) {
+          if (name instanceof LSymbol || name !== _nil) {
             while (true) {
-              if (name.car !== nil) {
+              if (name.car !== _nil) {
                 if (name instanceof LSymbol) {
                   // rest argument,  can also be first argument
                   value = quote(Pair.fromArray(args.slice(i), false));
@@ -11217,7 +11272,7 @@
                 }
               }
 
-              if (name.cdr === nil) {
+              if (name.cdr === _nil) {
                 break;
               }
 
@@ -11272,16 +11327,16 @@
             var arg = code;
 
             while (true) {
-              if (name === nil) {
+              if (name === _nil) {
                 break;
               }
 
               if (name instanceof LSymbol) {
                 env.__env__[name.__name__] = arg;
                 break;
-              } else if (name.car !== nil) {
-                if (arg === nil) {
-                  env.__env__[name.car.__name__] = nil;
+              } else if (name.car !== _nil) {
+                if (arg === _nil) {
+                  env.__env__[name.car.__name__] = _nil;
                 } else {
                   if (arg.car instanceof Pair) {
                     arg.car[__data__] = true;
@@ -11291,11 +11346,11 @@
                 }
               }
 
-              if (name.cdr === nil) {
+              if (name.cdr === _nil) {
                 break;
               }
 
-              if (arg !== nil) {
+              if (arg !== _nil) {
                 arg = arg.cdr;
               }
 
@@ -11340,7 +11395,7 @@
         function get_identifiers(node) {
           var symbols = [];
 
-          while (node !== nil) {
+          while (node !== _nil) {
             var x = node.car;
             symbols.push(x.valueOf());
             node = node.cdr;
@@ -11350,7 +11405,7 @@
         }
 
         function validate_identifiers(node) {
-          while (node !== nil) {
+          while (node !== _nil) {
             var x = node.car;
 
             if (!(x instanceof LSymbol)) {
@@ -11405,7 +11460,7 @@
             rules = macro.cdr;
           }
 
-          while (rules !== nil) {
+          while (rules !== _nil) {
             var rule = rules.car.car;
             var expr = rules.car.cdr.car;
             log(rule);
@@ -11527,7 +11582,7 @@
         function join(eval_pair, value) {
 
           if (eval_pair instanceof Pair) {
-            if (value !== nil) {
+            if (value !== _nil) {
               eval_pair.append(value);
             }
           } else {
@@ -11617,7 +11672,7 @@
 
         function unquote_splice(pair, unquote_cnt, max_unq) {
           if (unquote_cnt < max_unq) {
-            return new Pair(new Pair(pair.car.car, recur(pair.car.cdr, unquote_cnt, max_unq)), nil);
+            return new Pair(new Pair(pair.car.car, recur(pair.car.cdr, unquote_cnt, max_unq)), _nil);
           }
 
           var lists = [];
@@ -11638,11 +11693,11 @@
               if (arr.some(function (x) {
                 return !(x instanceof Pair);
               })) {
-                if (pair.cdr instanceof Pair && LSymbol.is(pair.cdr.car, '.') && pair.cdr.cdr instanceof Pair && pair.cdr.cdr.cdr === nil) {
+                if (pair.cdr instanceof Pair && LSymbol.is(pair.cdr.car, '.') && pair.cdr.cdr instanceof Pair && pair.cdr.cdr.cdr === _nil) {
                   return pair.cdr.cdr.car;
                 }
 
-                if (!(pair.cdr === nil || pair.cdr instanceof Pair)) {
+                if (!(pair.cdr === _nil || pair.cdr instanceof Pair)) {
                   var msg = "You can't splice atom inside list";
                   throw new Error(msg);
                 }
@@ -11652,7 +11707,7 @@
                   throw new Error(_msg);
                 }
 
-                if (!(pair.cdr instanceof Pair && arr[0] === nil)) {
+                if (!(pair.cdr instanceof Pair && arr[0] === _nil)) {
                   return arr[0];
                 }
               } // don't create Cycles
@@ -11668,12 +11723,12 @@
               });
               var value = recur(pair.cdr, 0, 1);
 
-              if (value === nil && arr[0] === nil) {
+              if (value === _nil && arr[0] === _nil) {
                 return undefined$1;
               }
 
               return unpromise(value, function (value) {
-                if (arr[0] === nil) {
+                if (arr[0] === _nil) {
                   return value;
                 }
 
@@ -11708,13 +11763,13 @@
               // + 2 - one for unquote and one for unquote splicing
               if (unquote_cnt + 2 === max_unq && pair.car.cdr instanceof Pair && pair.car.cdr.car instanceof Pair && LSymbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
                 var rest = pair.car.cdr;
-                return new Pair(new Pair(new LSymbol('unquote'), unquote_splice(rest, unquote_cnt + 2, max_unq)), nil);
-              } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== nil) {
+                return new Pair(new Pair(new LSymbol('unquote'), unquote_splice(rest, unquote_cnt + 2, max_unq)), _nil);
+              } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== _nil) {
                 if (pair.car.cdr.car instanceof Pair) {
                   // values inside unquote are lists
                   var result = [];
                   return function recur(node) {
-                    if (node === nil) {
+                    if (node === _nil) {
                       return Pair.fromArray(result);
                     }
 
@@ -11752,7 +11807,7 @@
               }
 
               if (pair.cdr instanceof Pair) {
-                if (pair.cdr.cdr !== nil) {
+                if (pair.cdr.cdr !== _nil) {
                   if (pair.cdr.car instanceof Pair) {
                     // TODO: test if this part is needed
                     // this part was duplicated in previous section
@@ -11761,7 +11816,7 @@
                     var _result3 = []; // evaluate all values in unquote
 
                     return function recur(node) {
-                      if (node === nil) {
+                      if (node === _nil) {
                         return Pair.fromArray(_result3);
                       }
 
@@ -11870,7 +11925,7 @@
         return items.reduce(function (acc, item) {
           typecheck('append!', acc, ['nil', 'pair']);
 
-          if ((item instanceof Pair || item === nil) && !is_list(item)) {
+          if ((item instanceof Pair || item === _nil) && !is_list(item)) {
             throw new Error('append!: Invalid argument, value is not a list');
           }
 
@@ -11878,23 +11933,23 @@
             return acc;
           }
 
-          if (acc === nil) {
-            if (item === nil) {
-              return nil;
+          if (acc === _nil) {
+            if (item === _nil) {
+              return _nil;
             }
 
             return item;
           }
 
           return acc.append(item);
-        }, nil);
+        }, _nil);
       }, "(append! arg1 ...)\n\n             Destructive version of append, it modify the list in place. It return\n             new list where each argument is appened to the end. It may modify\n             lists added as arguments."),
       // ------------------------------------------------------------------
       reverse: doc(function reverse(arg) {
         typecheck('reverse', arg, ['array', 'pair', 'nil']);
 
-        if (arg === nil) {
-          return nil;
+        if (arg === _nil) {
+          return _nil;
         }
 
         if (arg instanceof Pair) {
@@ -11916,8 +11971,8 @@
           var count = 0;
 
           while (count < index) {
-            if (!node.cdr || node.cdr === nil || node.haveCycles('cdr')) {
-              return nil;
+            if (!node.cdr || node.cdr === _nil || node.haveCycles('cdr')) {
+              return _nil;
             }
 
             node = node.cdr;
@@ -11939,7 +11994,7 @@
 
         return args.reverse().reduce(function (list, item) {
           return new Pair(item, list);
-        }, nil);
+        }, _nil);
       }, "(list . args)\n\n            Function create new list out of its arguments."),
       // ------------------------------------------------------------------
       substring: doc(function substring(string, start, end) {
@@ -12010,7 +12065,7 @@
         if (names.length) {
           result = Pair.fromArray(names);
         } else {
-          result = nil;
+          result = _nil;
         }
 
         if (env.__parent__ instanceof Environment) {
@@ -12124,7 +12179,7 @@
       }, "(array? expression)\n\n            Function check if value is an arrray."),
       // ------------------------------------------------------------------
       'object?': doc('object?', function (obj) {
-        return obj !== nil && obj !== null && !(obj instanceof LCharacter) && !(obj instanceof RegExp) && !(obj instanceof LString) && !(obj instanceof Pair) && !(obj instanceof LNumber) && _typeof_1(obj) === 'object' && !(obj instanceof Array);
+        return obj !== _nil && obj !== null && !(obj instanceof LCharacter) && !(obj instanceof RegExp) && !(obj instanceof LString) && !(obj instanceof Pair) && !(obj instanceof LNumber) && _typeof_1(obj) === 'object' && !(obj instanceof Array);
       }, "(object? expression)\n\n            Function check if value is an plain object."),
       // ------------------------------------------------------------------
       flatten: doc(function flatten(list) {
@@ -12277,12 +12332,12 @@
         typecheck('find', list, ['pair', 'nil']);
 
         if (is_null(list)) {
-          return nil;
+          return _nil;
         }
 
         var fn = matcher('find', arg);
         return unpromise(fn(list.car), function (value) {
-          if (value && value !== nil) {
+          if (value && value !== _nil) {
             return list.car;
           }
 
@@ -12330,13 +12385,13 @@
         });
 
         if (lists.length === 0) {
-          return nil;
+          return _nil;
         }
 
         if (lists.some(function (x) {
-          return x === nil;
+          return x === _nil;
         })) {
-          return nil;
+          return _nil;
         }
 
         var args = lists.map(function (l) {
@@ -12358,7 +12413,7 @@
         var node = obj;
 
         while (true) {
-          if (node === nil) {
+          if (node === _nil) {
             return true;
           }
 
@@ -12398,7 +12453,7 @@
         });
 
         if (lists.some(function (x) {
-          return x === nil;
+          return x === _nil;
         })) {
           return init;
         }
@@ -12424,7 +12479,7 @@
           });
 
           if (keys.length === 0) {
-            return nil;
+            return _nil;
           } else if (keys.length === 1) {
             var _keys3 = keys,
                 _keys4 = slicedToArray(_keys3, 1),
@@ -12454,7 +12509,7 @@
         });
 
         if (lists.some(function (x) {
-          return x === nil;
+          return x === _nil;
         })) {
           return init;
         }
@@ -12476,7 +12531,7 @@
         var fn = matcher('filter', arg);
         return function loop(i) {
           function next(value) {
-            if (value && value !== nil) {
+            if (value && value !== _nil) {
               result.push(item);
             }
 
@@ -13099,7 +13154,7 @@
         return 'NaN';
       }
 
-      if (obj === nil) {
+      if (obj === _nil) {
         return 'nil';
       }
 
@@ -13304,7 +13359,7 @@
             node = node.cdr;
             return loop();
           });
-        } else if (node === nil) {
+        } else if (node === _nil) {
           return next();
         } else {
           throw new Error('Syntax Error: improper list found in apply');
@@ -13560,8 +13615,8 @@
 
 
     function _exec() {
-      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(string, env, dynamic_scope) {
-        var results, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
+      _exec = asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(arg, env, dynamic_scope) {
+        var results, input, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
 
         return regenerator.wrap(function _callee19$(_context19) {
           while (1) {
@@ -13576,26 +13631,27 @@
                 }
 
                 results = [];
+                input = Array.isArray(arg) ? arg : parse(arg);
                 _iteratorNormalCompletion3 = true;
                 _didIteratorError3 = false;
-                _context19.prev = 4;
-                _iterator3 = asyncIterator(parse(string));
+                _context19.prev = 5;
+                _iterator3 = asyncIterator(input);
 
-              case 6:
-                _context19.next = 8;
+              case 7:
+                _context19.next = 9;
                 return _iterator3.next();
 
-              case 8:
+              case 9:
                 _step3 = _context19.sent;
                 _iteratorNormalCompletion3 = _step3.done;
-                _context19.next = 12;
+                _context19.next = 13;
                 return _step3.value;
 
-              case 12:
+              case 13:
                 _value3 = _context19.sent;
 
                 if (_iteratorNormalCompletion3) {
-                  _context19.next = 28;
+                  _context19.next = 29;
                   break;
                 }
 
@@ -13628,76 +13684,76 @@
                 });
 
                 if (is_promise(value)) {
-                  _context19.next = 20;
+                  _context19.next = 21;
                   break;
                 }
 
                 results.push(value);
-                _context19.next = 25;
+                _context19.next = 26;
                 break;
 
-              case 20:
+              case 21:
                 _context19.t0 = results;
-                _context19.next = 23;
+                _context19.next = 24;
                 return value;
 
-              case 23:
+              case 24:
                 _context19.t1 = _context19.sent;
 
                 _context19.t0.push.call(_context19.t0, _context19.t1);
 
-              case 25:
+              case 26:
                 _iteratorNormalCompletion3 = true;
-                _context19.next = 6;
+                _context19.next = 7;
                 break;
 
-              case 28:
-                _context19.next = 34;
+              case 29:
+                _context19.next = 35;
                 break;
 
-              case 30:
-                _context19.prev = 30;
-                _context19.t2 = _context19["catch"](4);
+              case 31:
+                _context19.prev = 31;
+                _context19.t2 = _context19["catch"](5);
                 _didIteratorError3 = true;
                 _iteratorError3 = _context19.t2;
 
-              case 34:
-                _context19.prev = 34;
+              case 35:
                 _context19.prev = 35;
+                _context19.prev = 36;
 
                 if (!(!_iteratorNormalCompletion3 && _iterator3["return"] != null)) {
-                  _context19.next = 39;
+                  _context19.next = 40;
                   break;
                 }
 
-                _context19.next = 39;
+                _context19.next = 40;
                 return _iterator3["return"]();
 
-              case 39:
-                _context19.prev = 39;
+              case 40:
+                _context19.prev = 40;
 
                 if (!_didIteratorError3) {
-                  _context19.next = 42;
+                  _context19.next = 43;
                   break;
                 }
 
                 throw _iteratorError3;
 
-              case 42:
-                return _context19.finish(39);
-
               case 43:
-                return _context19.finish(34);
+                return _context19.finish(40);
 
               case 44:
-                return _context19.abrupt("return", results);
+                return _context19.finish(35);
 
               case 45:
+                return _context19.abrupt("return", results);
+
+              case 46:
               case "end":
                 return _context19.stop();
             }
           }
-        }, _callee19, null, [[4, 30, 34, 44], [35,, 39, 43]]);
+        }, _callee19, null, [[5, 31, 35, 45], [36,, 40, 44]]);
       }));
       return _exec.apply(this, arguments);
     }
@@ -13908,42 +13964,95 @@
         return this.rpc('eval', [code, dynamic]);
       };
     } // -------------------------------------------------------------------------
+    // Serialization
+    // -------------------------------------------------------------------------
 
 
-    Pair.unDry = function (value) {
-      return new Pair(value.car, value.cdr);
-    };
+    var serialization_map = {
+      'pair': function pair(_ref44) {
+        var _ref45 = slicedToArray(_ref44, 2),
+            car = _ref45[0],
+            cdr = _ref45[1];
 
-    Pair.prototype.toDry = function () {
-      return {
-        value: {
-          car: this.car,
-          cdr: this.cdr
+        return Pair(car, cdr);
+      },
+      'number': function number(value) {
+        if (LString.isString(value)) {
+          return LNumber([value, 10]);
         }
-      };
-    };
 
-    Nil.prototype.toDry = function () {
-      return {
-        value: null
-      };
-    };
-
-    Nil.unDry = function () {
-      return nil;
-    };
-
-    LSymbol.prototype.toDry = function () {
-      return {
-        value: {
-          name: this.__name__
+        return LNumber(value);
+      },
+      'nil': function nil() {
+        return _nil;
+      },
+      'symbol': function symbol(value) {
+        if (LString.isString(value)) {
+          return LSymbol(value);
+        } else if (Array.isArray(value)) {
+          return LSymbol(Symbol["for"](value[0]));
         }
-      };
-    };
-
-    LSymbol.unDry = function (value) {
-      return new LSymbol(value.__name__);
+      },
+      'string': LString,
+      'character': LCharacter
     }; // -------------------------------------------------------------------------
+    // class mapping to create smaller JSON
+
+    var available_class = Object.keys(serialization_map);
+    var class_map = {};
+
+    for (var _i5 = 0, _Object$entries3 = Object.entries(available_class); _i5 < _Object$entries3.length; _i5++) {
+      var _Object$entries3$_i = slicedToArray(_Object$entries3[_i5], 2),
+          i = _Object$entries3$_i[0],
+          cls = _Object$entries3$_i[1];
+
+      class_map[cls] = +i;
+    }
+
+    function mangle_name(name) {
+      return class_map[name];
+    }
+
+    function resolve_name(i) {
+      return available_class[i];
+    } // -------------------------------------------------------------------------
+
+
+    function serialize(data) {
+      return JSON.stringify(data, function (key, value) {
+        var v0 = this[key];
+
+        if (v0) {
+          var cls = mangle_name(v0.constructor.__class__);
+
+          if (!is_undef(cls)) {
+            return {
+              '@': cls,
+              '#': v0.serialize()
+            };
+          }
+        }
+
+        return value;
+      });
+    } // -------------------------------------------------------------------------
+
+
+    function unserialize(string) {
+      return JSON.parse(string, function (_, object) {
+        if (object && _typeof_1(object) === 'object') {
+          if (!is_undef(object['@'])) {
+            var cls = resolve_name(object['@']);
+
+            if (serialization_map[cls]) {
+              return serialization_map[cls](object['#']);
+            }
+          }
+        }
+
+        return object;
+      });
+    } // -------------------------------------------------------------------------
 
 
     function execError(e) {
@@ -14039,10 +14148,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 15 Apr 2021 10:59:04 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 15 Apr 2021 12:58:27 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 15 Apr 2021 10:59:04 +0000').valueOf();
+      var date = LString('Thu, 15 Apr 2021 12:58:27 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14062,6 +14171,8 @@
 
 
     Ahead.__class__ = 'ahead';
+    Pair.__class__ = 'pair';
+    Nil.__class__ = 'nil';
     Pattern.__class__ = 'pattern';
     Formatter.__class__ = 'formatter';
     Macro.__class__ = 'macro';
@@ -14072,22 +14183,26 @@
     OutputStringPort.__class__ = 'output-string-port';
     InputStringPort.__class__ = 'input-string-port';
     InputFilePort.__class__ = 'input-file-port';
-    OutputFilePort.__class__ = 'output-file-port'; // types used for detect lips objects
-
-    LNumber.__class__ = 'number';
+    OutputFilePort.__class__ = 'output-file-port';
+    [LNumber, LComplex, LRational, LFloat, LBigInteger].forEach(function (cls) {
+      cls.__class__ = 'number';
+    });
     LCharacter.__class__ = 'character';
+    LSymbol.__class__ = 'symbol';
     LString.__class__ = 'string';
     QuotedPromise.__class__ = 'promise'; // -------------------------------------------------------------------------
 
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 15 Apr 2021 10:59:04 +0000',
+      date: 'Thu, 15 Apr 2021 12:58:27 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
       tokenize: tokenize,
       evaluate: _evaluate,
+      serialize: serialize,
+      unserialize: unserialize,
       bootstrap: bootstrap,
       Environment: Environment,
       env: user_env,
@@ -14117,7 +14232,7 @@
       Lexer: Lexer,
       specials: specials,
       repr: repr,
-      nil: nil,
+      nil: _nil,
       eof: eof,
       LSymbol: LSymbol,
       LNumber: LNumber,
