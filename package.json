@@ -19,9 +19,22 @@
   "keywords": [
     "lisp",
     "scheme",
+    "R5RS",
+    "R7RS",
     "repl",
+    "interpreter",
+    "programming",
     "language",
-    "interpreter"
+    "functional",
+    "lambda",
+    "s-expression",
+    "node.js",
+    "repl",
+    "parser",
+    "macro",
+    "lexer",
+    "token",
+    "tokenizer"
   ],
   "author": "Jakub T. Jankiewicz <jcubic@onet.pl> (https://jcubic.pl/jakub-jankiewicz/)",
   "license": "MIT",
