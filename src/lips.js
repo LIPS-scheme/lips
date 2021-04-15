@@ -1254,6 +1254,29 @@
         [/"/, /^$|[^\\]/, null, null, Lexer.string],
         [/"/, /^$|[^\\]/, null, Lexer.string, null],
 
+        // hash special symbols, lexer don't need to distingiush those
+        // we only care if it's not pick up by vectors literals
+        [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol],
+
+        // characters
+        [/#/, null, /\\/, null, Lexer.character],
+        [/\\/, /#/, /\s/, Lexer.character, Lexer.character],
+        [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character],
+        [/\s/, /\\/, null, Lexer.character, null],
+        [/\S/, null, Lexer.boundary, Lexer.character, null],
+
+        // regex
+        [/#/, Lexer.boundary, /\//, null, Lexer.regex],
+        [/[ \t]/, null, null, Lexer.regex, Lexer.regex],
+        [/\[/, null, null, Lexer.regex, Lexer.regex_class],
+        [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex],
+        [/[()[\]]/, null, null, Lexer.regex, Lexer.regex],
+        [/\//, /\\/, null, Lexer.regex, Lexer.regex],
+        [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null],
+        [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null],
+        [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex],
+        [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null],
+
         // comment
         [/;/, /^$|[^#]/, null, null, Lexer.comment],
         [/[\s\S]/, null, /\n/, Lexer.comment, null],
@@ -1276,33 +1299,11 @@
         // block symbols
         [/\|/, null, null, null, Lexer.b_symbol],
         [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol],
-        [/\|/, null, Lexer.boundary, Lexer.b_symbol, null],
-
-        // hash special symbols, lexer don't need to distingiush those
-        // we only care if it's not pick up by vectors literals
-        [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol],
-
-        // characters
-        [/#/, null, /\\/, null, Lexer.character],
-        [/\\/, /#/, /\s/, Lexer.character, Lexer.character],
-        [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character],
-        [/\s/, /\\/, null, Lexer.character, null],
-        [/\S/, null, Lexer.boundary, Lexer.character, null],
-
-        // brackets
-        [/[()[\]]/, null, null, null, null],
-
-        // regex
-        [/#/, Lexer.boundary, /\//, null, Lexer.regex],
-        [/[ \t]/, null, null, Lexer.regex, Lexer.regex],
-        [/\[/, null, null, Lexer.regex, Lexer.regex_class],
-        [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex],
-        [/[()[\]]/, null, null, Lexer.regex, Lexer.regex],
-        [/\//, /\\/, null, Lexer.regex, Lexer.regex],
-        [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null],
-        [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null],
-        [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex],
-        [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null]
+        [/\|/, null, Lexer.boundary, Lexer.b_symbol, null]
+    ];
+    // ----------------------------------------------------------------------
+    Lexer._brackets = [
+        [/[()[\]]/, null, null, null, null]
     ];
     // ----------------------------------------------------------------------
     // :: symbols should be matched last
@@ -1336,7 +1337,8 @@
             var tokens = specials.names().sort((a, b) => {
                 return b.length - a.length || a.localeCompare(b);
             });
-            Lexer._cache.rules = Lexer._rules.concat(tokens.reduce((acc, token) => {
+
+            var special_rules = tokens.reduce((acc, token) => {
                 const { type, symbol: special_symbol } = specials.get(token);
                 let rules;
                 let symbol;
@@ -1356,7 +1358,13 @@
                     rules = Lexer.literal_rule(token, symbol);
                 }
                 return acc.concat(rules);
-            }, []), Lexer._symbol_rules);
+            }, []);
+
+            Lexer._cache.rules = Lexer._rules.concat(
+                Lexer._brackets,
+                special_rules,
+                Lexer._symbol_rules
+            );
 
             Lexer._cache.valid = true;
             return Lexer._cache.rules;

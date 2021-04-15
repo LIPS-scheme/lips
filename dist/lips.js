@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 15 Apr 2021 13:20:50 +0000
+ * build: Thu, 15 Apr 2021 16:28:37 +0000
  */
 (function () {
   'use strict';
@@ -2786,17 +2786,18 @@
     Lexer._rules = [// char_re prev_re next_re from_state to_state
     // null as to_state mean that is single char token
     // string
-    [/"/, /^$|[^\\]/, null, null, Lexer.string], [/"/, /^$|[^\\]/, null, Lexer.string, null], // comment
+    [/"/, /^$|[^\\]/, null, null, Lexer.string], [/"/, /^$|[^\\]/, null, Lexer.string, null], // hash special symbols, lexer don't need to distingiush those
+    // we only care if it's not pick up by vectors literals
+    [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
+    [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null], // regex
+    [/#/, Lexer.boundary, /\//, null, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/\[/, null, null, Lexer.regex, Lexer.regex_class], [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /\\/, null, Lexer.regex, Lexer.regex], [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null], // comment
     [/;/, /^$|[^#]/, null, null, Lexer.comment], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment], // block comment
     [/#/, null, /\|/, null, Lexer.b_comment], [/\s/, null, null, Lexer.b_comment, Lexer.b_comment], [/#/, /\|/, null, Lexer.b_comment, null], // inline commentss
     [/#/, null, /;/, null, Lexer.i_comment], [/;/, /#/, null, Lexer.i_comment, null], // datum label
     [/#/, null, /[0-9]/, null, Lexer.l_datum], [/=/, /[0-9]/, null, Lexer.l_datum, null], [/#/, /[0-9]/, null, Lexer.l_datum, null], // block symbols
-    [/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null], // hash special symbols, lexer don't need to distingiush those
-    // we only care if it's not pick up by vectors literals
-    [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
-    [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null], // brackets
-    [/[()[\]]/, null, null, null, null], // regex
-    [/#/, Lexer.boundary, /\//, null, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/\[/, null, null, Lexer.regex, Lexer.regex_class], [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /\\/, null, Lexer.regex, Lexer.regex], [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null]]; // ----------------------------------------------------------------------
+    [/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null]]; // ----------------------------------------------------------------------
+
+    Lexer._brackets = [[/[()[\]]/, null, null, null, null]]; // ----------------------------------------------------------------------
     // :: symbols should be matched last
     // ----------------------------------------------------------------------
 
@@ -2824,7 +2825,7 @@
         var tokens = specials.names().sort(function (a, b) {
           return b.length - a.length || a.localeCompare(b);
         });
-        Lexer._cache.rules = Lexer._rules.concat(tokens.reduce(function (acc, token) {
+        var special_rules = tokens.reduce(function (acc, token) {
           var _specials$get = specials.get(token),
               type = _specials$get.type,
               special_symbol = _specials$get.symbol;
@@ -2849,7 +2850,8 @@
           }
 
           return acc.concat(rules);
-        }, []), Lexer._symbol_rules);
+        }, []);
+        Lexer._cache.rules = Lexer._rules.concat(Lexer._brackets, special_rules, Lexer._symbol_rules);
         Lexer._cache.valid = true;
         return Lexer._cache.rules;
       }
@@ -14162,10 +14164,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 15 Apr 2021 13:20:50 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 15 Apr 2021 16:28:37 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 15 Apr 2021 13:20:50 +0000').valueOf();
+      var date = LString('Thu, 15 Apr 2021 16:28:37 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14209,7 +14211,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 15 Apr 2021 13:20:50 +0000',
+      date: 'Thu, 15 Apr 2021 16:28:37 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
