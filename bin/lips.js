@@ -104,10 +104,10 @@ function print(result) {
         }
     }
 }
-// -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
 function bootstrap(interpreter) {
-    var list = ['./dist/std.xcm'];
+    var list = ['./dist/std.scm'];
     function open(name) {
         var path;
         try {
@@ -135,6 +135,7 @@ function bootstrap(interpreter) {
     })();
 }
 
+// -----------------------------------------------------------------------------
 function compiled(name) {
     return name.match(/\.xcm$/);
 }
@@ -280,6 +281,7 @@ if (options.version || options.V) {
 } else if ((options.c || options.compile) && options._.length === 1) {
     try {
         const filename = options._[0];
+        console.log('Experimental compiler');
         console.log(`Compiling ${filename} ...`);
         const compiled_name = filename.replace(/\.[^.]+$/, '') + '.xcm';
         var code = readFile(filename);

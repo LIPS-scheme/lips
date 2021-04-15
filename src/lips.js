@@ -9696,7 +9696,7 @@
             url += '/';
         }
         var load = global_env.get('load');
-        return load.call(lips.env, `${url}dist/std.xcm`, global_env);
+        return load.call(lips.env, `${url}dist/std.scm`, global_env);
     }
     // -------------------------------------------------------------------------
     function Worker(url) {
