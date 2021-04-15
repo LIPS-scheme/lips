@@ -9708,7 +9708,7 @@
         return lips.version.match(/^(\{\{VER\}\}|DEV)$/);
     }
     // -------------------------------------------------------------------------
-    function bootstrap(url = '', json = false) {
+    function bootstrap(url = '') {
         if (url === '') {
             if (is_dev()) {
                 url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
@@ -9817,6 +9817,9 @@
             }
             return LNumber(value);
         },
+        'regex': function([pattern, flag]) {
+            return new RegExp(pattern, flag);
+        },
         'nil': function() {
             return nil;
         },
@@ -9845,9 +9848,15 @@
     }
     // -------------------------------------------------------------------------
     function serialize(data) {
-        return JSON.stringify(data, function (key, value) {
+        return JSON.stringify(data, function(key, value) {
             const v0 = this[key];
             if (v0) {
+                if (v0 instanceof RegExp) {
+                    return {
+                        '@': mangle_name('regex'),
+                        '#': [v0.source, v0.flags]
+                    };
+                }
                 var cls = mangle_name(v0.constructor.__class__);
                 if (!is_undef(cls)) {
                     return {

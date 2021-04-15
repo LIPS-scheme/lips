@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 15 Apr 2021 12:58:27 +0000
+ * build: Thu, 15 Apr 2021 13:20:50 +0000
  */
 (function () {
   'use strict';
@@ -13983,6 +13983,13 @@
 
         return LNumber(value);
       },
+      'regex': function regex(_ref46) {
+        var _ref47 = slicedToArray(_ref46, 2),
+            pattern = _ref47[0],
+            flag = _ref47[1];
+
+        return new RegExp(pattern, flag);
+      },
       'nil': function nil() {
         return _nil;
       },
@@ -14023,6 +14030,13 @@
         var v0 = this[key];
 
         if (v0) {
+          if (v0 instanceof RegExp) {
+            return {
+              '@': mangle_name('regex'),
+              '#': [v0.source, v0.flags]
+            };
+          }
+
           var cls = mangle_name(v0.constructor.__class__);
 
           if (!is_undef(cls)) {
@@ -14148,10 +14162,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 15 Apr 2021 12:58:27 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Thu, 15 Apr 2021 13:20:50 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 15 Apr 2021 12:58:27 +0000').valueOf();
+      var date = LString('Thu, 15 Apr 2021 13:20:50 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14195,7 +14209,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 15 Apr 2021 12:58:27 +0000',
+      date: 'Thu, 15 Apr 2021 13:20:50 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
