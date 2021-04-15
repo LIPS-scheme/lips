@@ -22,11 +22,15 @@ the parser can be update by syntax extensions so `Lexer.rules` is a getter
 that return proper states with dynamic state rules generate from specials
 (syntax extensions).
 
+To speed up generating of rules at parse time, the Lexer use caching, that is invalidated
+when specials are modified (new syntax is added or removed).
+
 The most interesting methods of `Lexer` are `peek` and `skip` that
 can be used with the parser. It also have methods to be used with
 I/O ports that can be used to read string and then continue to parse rest of the content. The reason why Lexer have those methods (like `peek_char`) is
 that Lexer is used as the only interface in ports functions:
 `peek-char` `read-char` and `read`.
+
 
 ## Parser
 
