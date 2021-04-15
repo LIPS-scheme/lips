@@ -4110,14 +4110,16 @@
             return fn;
         }
         const bound = fn.bind(context);
-        const props = Object.getOwnPropertyNames(fn).filter(filter_fn_names);
-        props.forEach(prop => {
-            try {
-                bound[prop] = fn[prop];
-            } catch (e) {
-                // ignore error from express.js while accessing bodyParser
+        const props = Object.getOwnPropertyNames(fn);
+        for (var prop of props) {
+            if (filter_fn_names(prop)) {
+                try {
+                    bound[prop] = fn[prop];
+                } catch (e) {
+                    // ignore error from express.js while accessing bodyParser
+                }
             }
-        });
+        }
         hidden_prop(bound, '__fn__', fn);
         hidden_prop(bound, '__context__', context);
         hidden_prop(bound, '__bound__', true);
@@ -4308,9 +4310,9 @@
                                 }
                             }).then(exec);
                         } else {
-                            values.forEach(({ name, value }) => {
+                            for (let { name, value } of values) {
                                 env.set(name, value);
-                            });
+                            }
                         }
                     }
                     return exec();
