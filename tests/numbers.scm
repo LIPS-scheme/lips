@@ -799,7 +799,16 @@
           (t.is (eqv? a b) #f)
           (t.is (equal? a b) #f)
           (t.is (= a b) #t)
-          (t.is (number->string b) "-0.0"))))
+          (t.is (number->string b) "-0.0"))
+
+        (t.is (to.throw (/ 1 0)) true)
+        (t.is (/ 1.0 0) +inf.0)
+        (t.is (/ 1 0.0) +inf.0)
+        (t.is (/ 1 -0.0) -inf.0)
+        (t.is (/ 1 -inf.0) -0.0)
+        (t.is (/ 1 +inf.0) 0.0)
+        (t.is (/ 0.0 -37) -0.0)
+        (t.is (/ 0 -37) 0)))
 
 (test "numbers: exact->inexact"
       (lambda (t)
