@@ -816,8 +816,16 @@
         (t.is (exact->inexact 1/2+10i) 0.5+10.0i)
         (t.is (exact->inexact 1/2+10.0i) 0.5+10.0i)))
 
-(test "operation: exp on complex numbers"
+(test "operation: exp"
       (lambda (t)
+        ;; big int
+        (t.is (exp 2) 7.38905609893065)
+        (t.is (exp 3) 20.085536923187668)
+        (t.is (exp 4) 54.598150033144236)
+        ;; rational, float use Math.exp
+        (t.is (exp 1/2) (exp 0.5))
+        (t.is (exp 1/3) (exp (exact->inexact 1/3)))
+        ;; complex
         (t.is (exp 2+2i) -3.074932320639359+6.71884969742825i)
         (t.is (exp +i) 0.5403023058681398+0.8414709848078965i)
         (t.is (exp -i) 0.5403023058681398-0.8414709848078965i)
