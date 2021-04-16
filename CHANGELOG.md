@@ -8,6 +8,7 @@
 * new functions `complement`, `always`, `once`, `flip`, `unfold` (inspired by Ramda)
 * add codemirror hits for std lib symbols
 * experimental compiler to JSON (not 100% ready)
+* add support for `exp` on complex numbers
 ### Bugfix
 * fix `set-repr!` on classes
 * fix conflict with jQuery plugns in bookmark
