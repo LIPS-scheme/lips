@@ -5457,6 +5457,9 @@
         return function(n) {
             const gcde = (e, x, y) => {
                     const _gcd = (a, b) => (b < e ? a : _gcd(b, a % b));
+                    if (Number.isNaN(x) || Number.isNaN(y)) {
+                        return NaN;
+                    }
                     return _gcd(Math.abs(x), Math.abs(y));
                 },
                 c = gcde(eps ? eps : (1 / 10000), 1, n);
