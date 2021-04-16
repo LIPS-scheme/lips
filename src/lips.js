@@ -878,29 +878,37 @@
     // ----------------------------------------------------------------------
     function promise_all(arg) {
         if (Array.isArray(arg)) {
-            // using loops for performance
-            var escaped = [], i = arg.length;
-            while (i--) {
-                escaped[i] = escape_quote_promise(arg[i]);
-            }
-            return Promise.all(escaped)
-                .then(values => {
-                    var unescaped = [], i = values.length;
-                    while (i--) {
-                        unescaped[i] = unescape_quote_promise(values[i]);
-                    }
-                    return unescaped;
-                });
+            return Promise.all(escape_quoted_promises(arg))
+                .then(unescape_quoted_promises);
         }
         return arg;
     }
     // ----------------------------------------------------------------------
-    function escape_quote_promise(value) {
-        return is_promise(value) ? value : new Value(value);
+    function escape_quoted_promises(array) {
+        // using loops for performance
+        var escaped = new Array(array.length), i = array.length;
+        while (i--) {
+            const value = array[i];
+            if (value instanceof QuotedPromise) {
+                escaped[i] = new Value(value);
+            } else {
+                escaped[i] = value;
+            }
+        }
+        return escaped;
     }
     // ----------------------------------------------------------------------
-    function unescape_quote_promise(value) {
-        return value instanceof Value ? value.valueOf() : value;
+    function unescape_quoted_promises(array) {
+        var unescaped = new Array(array.length), i = array.length;
+        while (i--) {
+            var value = array[i];
+            if (value instanceof Value) {
+                unescaped[i] = value.valueOf();
+            } else {
+                unescaped[i] = value;
+            }
+        }
+        return unescaped;
     }
     // ----------------------------------------------------------------------
     // :: Parser macros transformers
@@ -1680,8 +1688,7 @@
     }
     // ----------------------------------------------------------------------
     function unpromise_array(array, fn, error) {
-        const anyPromise = array.filter(is_promise);
-        if (anyPromise.length) {
+        if (array.find(is_promise)) {
             return unpromise(promise_all(array), (arr) => {
                 if (Object.isFrozen(array)) {
                     Object.freeze(arr);

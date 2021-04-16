@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 15 Apr 2021 16:28:37 +0000
+ * build: Fri, 16 Apr 2021 12:18:46 +0000
  */
 (function () {
   'use strict';
@@ -2274,37 +2274,47 @@
 
     function promise_all(arg) {
       if (Array.isArray(arg)) {
-        // using loops for performance
-        var escaped = [],
-            i = arg.length;
-
-        while (i--) {
-          escaped[i] = escape_quote_promise(arg[i]);
-        }
-
-        return Promise.all(escaped).then(function (values) {
-          var unescaped = [],
-              i = values.length;
-
-          while (i--) {
-            unescaped[i] = unescape_quote_promise(values[i]);
-          }
-
-          return unescaped;
-        });
+        return Promise.all(escape_quoted_promises(arg)).then(unescape_quoted_promises);
       }
 
       return arg;
     } // ----------------------------------------------------------------------
 
 
-    function escape_quote_promise(value) {
-      return is_promise(value) ? value : new Value(value);
+    function escape_quoted_promises(array) {
+      // using loops for performance
+      var escaped = new Array(array.length),
+          i = array.length;
+
+      while (i--) {
+        var value = array[i];
+
+        if (value instanceof QuotedPromise) {
+          escaped[i] = new Value(value);
+        } else {
+          escaped[i] = value;
+        }
+      }
+
+      return escaped;
     } // ----------------------------------------------------------------------
 
 
-    function unescape_quote_promise(value) {
-      return value instanceof Value ? value.valueOf() : value;
+    function unescape_quoted_promises(array) {
+      var unescaped = new Array(array.length),
+          i = array.length;
+
+      while (i--) {
+        var value = array[i];
+
+        if (value instanceof Value) {
+          unescaped[i] = value.valueOf();
+        } else {
+          unescaped[i] = value;
+        }
+      }
+
+      return unescaped;
     } // ----------------------------------------------------------------------
     // :: Parser macros transformers
     // ----------------------------------------------------------------------
@@ -3656,9 +3666,7 @@
 
 
     function unpromise_array(array, fn, error) {
-      var anyPromise = array.filter(is_promise);
-
-      if (anyPromise.length) {
+      if (array.find(is_promise)) {
         return unpromise(promise_all(array), function (arr) {
           if (Object.isFrozen(array)) {
             Object.freeze(arr);
@@ -14164,10 +14172,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Thu, 15 Apr 2021 16:28:37 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 16 Apr 2021 12:18:46 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Thu, 15 Apr 2021 16:28:37 +0000').valueOf();
+      var date = LString('Fri, 16 Apr 2021 12:18:46 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14211,7 +14219,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Thu, 15 Apr 2021 16:28:37 +0000',
+      date: 'Fri, 16 Apr 2021 12:18:46 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),
