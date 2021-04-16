@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 16 Apr 2021 12:18:46 +0000
+ * build: Fri, 16 Apr 2021 15:41:28 +0000
  */
 (function () {
   'use strict';
@@ -1847,42 +1847,46 @@
 
 
     function parse_argument(arg) {
-      var regex = arg.match(re_re);
+      if (constants.hasOwnProperty(arg)) {
+        return constants[arg];
+      }
 
-      if (regex) {
-        return new RegExp(regex[1], regex[2]);
-      } else if (arg.match(/^"[\s\S]*"$/)) {
+      if (arg.match(/^"[\s\S]*"$/)) {
         return parse_string(arg);
-      } else if (arg.match(char_re)) {
-        return parse_character(arg);
-      } else if (arg.match(rational_re)) {
-        return parse_rational(arg);
-      } else if (arg.match(complex_re)) {
-        return parse_complex(arg);
-      } else if (arg.match(int_re)) {
-        return parse_integer(arg);
-      } else if (arg.match(float_re)) {
-        return parse_float(arg);
-      } else if (arg === 'nil') {
-        return _nil;
-      } else if (['+nan.0', '-nan.0'].includes(arg)) {
-        return LNumber(NaN);
-      } else if (['true', '#t', '#true'].includes(arg)) {
-        return true;
-      } else if (['false', '#f', '#false'].includes(arg)) {
-        return false;
-      } else if (arg.match(/^#[iexobd]/)) {
-        throw new Error('Invalid numeric constant');
-      } else {
-        // characters with more than one codepoint
+      } else if (arg[0] === '#') {
+        var regex = arg.match(re_re);
+
+        if (regex) {
+          return new RegExp(regex[1], regex[2]);
+        } else if (arg.match(char_re)) {
+          return parse_character(arg);
+        } // characters with more than one codepoint
+
+
         var m = arg.match(/#\\(.+)/);
 
         if (m && ucs2decode(m[1]).length === 1) {
           return parse_character(arg);
         }
-
-        return parse_symbol(arg);
       }
+
+      if (arg.match(/[0-9a-f]|[+-]i/i)) {
+        if (arg.match(int_re)) {
+          return parse_integer(arg);
+        } else if (arg.match(float_re)) {
+          return parse_float(arg);
+        } else if (arg.match(rational_re)) {
+          return parse_rational(arg);
+        } else if (arg.match(complex_re)) {
+          return parse_complex(arg);
+        }
+      }
+
+      if (arg.match(/^#[iexobd]/)) {
+        throw new Error('Invalid numeric constant: ' + arg);
+      }
+
+      return parse_symbol(arg);
     } // ----------------------------------------------------------------------
 
 
@@ -9113,9 +9117,11 @@
 
       return value;
     }; // -------------------------------------------------------------------------
+
+
+    LNumber.NaN = LNumber(NaN); // -------------------------------------------------------------------------
     // :: Port abstration - read should be a function that return next line
     // -------------------------------------------------------------------------
-
 
     function InputPort(read) {
       var _this8 = this;
@@ -10256,6 +10262,19 @@
       'space-unicode-regex': /[\t-\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]/
     }, undefined$1, 'internal'); // -------------------------------------------------------------------------
 
+    var nan = LNumber(NaN);
+    var constants = {
+      'true': true,
+      'false': false,
+      '#t': true,
+      '#true': true,
+      '#f': false,
+      '#false': false,
+      'nil': _nil,
+      '+nan.0': nan,
+      '-nan.0': nan
+    }; // -------------------------------------------------------------------------
+
     var global_env = new Environment({
       nil: _nil,
       eof: eof,
@@ -10263,7 +10282,7 @@
       'true': true,
       'false': false,
       'null': null,
-      'NaN': LNumber(NaN),
+      'NaN': nan,
       // ------------------------------------------------------------------
       'peek-char': doc('peek-char', function () {
         var port = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
@@ -14172,10 +14191,10 @@
 
     var banner = function () {
       // Rollup tree-shaking is removing the variable if it's normal string because
-      // obviously 'Fri, 16 Apr 2021 12:18:46 +0000' == '{{' + 'DATE}}'; can be removed
+      // obviously 'Fri, 16 Apr 2021 15:41:28 +0000' == '{{' + 'DATE}}'; can be removed
       // but disablig Tree-shaking is adding lot of not used code so we use this
       // hack instead
-      var date = LString('Fri, 16 Apr 2021 12:18:46 +0000').valueOf();
+      var date = LString('Fri, 16 Apr 2021 15:41:28 +0000').valueOf();
 
       var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14219,7 +14238,7 @@
     var lips = {
       version: 'DEV',
       banner: banner,
-      date: 'Fri, 16 Apr 2021 12:18:46 +0000',
+      date: 'Fri, 16 Apr 2021 15:41:28 +0000',
       exec: exec,
       // unwrap async generator into Promise<Array>
       parse: compose(uniterate_async, parse),

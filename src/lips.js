@@ -533,39 +533,39 @@
     }
     // ----------------------------------------------------------------------
     function parse_argument(arg) {
-        var regex = arg.match(re_re);
-        if (regex) {
-            return new RegExp(regex[1], regex[2]);
-        } else if (arg.match(/^"[\s\S]*"$/)) {
+        if (constants.hasOwnProperty(arg)) {
+            return constants[arg];
+        }
+        if (arg.match(/^"[\s\S]*"$/)) {
             return parse_string(arg);
-        } else if (arg.match(char_re)) {
-            return parse_character(arg);
-        } else if (arg.match(rational_re)) {
-            return parse_rational(arg);
-        } else if (arg.match(complex_re)) {
-            return parse_complex(arg);
-        } else if (arg.match(int_re)) {
-            return parse_integer(arg);
-        } else if (arg.match(float_re)) {
-            return parse_float(arg);
-        } else if (arg === 'nil') {
-            return nil;
-        } else if (['+nan.0', '-nan.0'].includes(arg)) {
-            return LNumber(NaN);
-        } else if (['true', '#t', '#true'].includes(arg)) {
-            return true;
-        } else if (['false', '#f', '#false'].includes(arg)) {
-            return false;
-        } else if (arg.match(/^#[iexobd]/)) {
-            throw new Error('Invalid numeric constant');
-        } else {
+        } else if (arg[0] === '#') {
+            var regex = arg.match(re_re);
+            if (regex) {
+                return new RegExp(regex[1], regex[2]);
+            } else if (arg.match(char_re)) {
+                return parse_character(arg);
+            }
             // characters with more than one codepoint
             var m = arg.match(/#\\(.+)/);
             if (m && ucs2decode(m[1]).length === 1) {
                 return parse_character(arg);
             }
-            return parse_symbol(arg);
         }
+        if (arg.match(/[0-9a-f]|[+-]i/i)) {
+            if (arg.match(int_re)) {
+                return parse_integer(arg);
+            } else if (arg.match(float_re)) {
+                return parse_float(arg);
+            } else if (arg.match(rational_re)) {
+                return parse_rational(arg);
+            } else if (arg.match(complex_re)) {
+                return parse_complex(arg);
+            }
+        }
+        if (arg.match(/^#[iexobd]/)) {
+            throw new Error('Invalid numeric constant: ' + arg);
+        }
+        return parse_symbol(arg);
     }
     // ----------------------------------------------------------------------
     function is_symbol_string(str) {
@@ -5794,6 +5794,8 @@
         return value;
     };
     // -------------------------------------------------------------------------
+    LNumber.NaN = LNumber(NaN);
+    // -------------------------------------------------------------------------
     // :: Port abstration - read should be a function that return next line
     // -------------------------------------------------------------------------
     function InputPort(read) {
@@ -6656,6 +6658,19 @@
         'space-unicode-regex': /\s/u
     }, undefined, 'internal');
     // -------------------------------------------------------------------------
+    var nan = LNumber(NaN);
+    var constants = {
+        'true': true,
+        'false': false,
+        '#t': true,
+        '#true': true,
+        '#f': false,
+        '#false': false,
+        'nil': nil,
+        '+nan.0': nan,
+        '-nan.0': nan
+    };
+    // -------------------------------------------------------------------------
     var global_env = new Environment({
         nil,
         eof,
@@ -6663,7 +6678,7 @@
         'true': true,
         'false': false,
         'null': null,
-        'NaN': LNumber(NaN),
+        'NaN': nan,
         // ------------------------------------------------------------------
         'peek-char': doc('peek-char', function(port = null) {
             if (port === null) {
