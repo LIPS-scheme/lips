@@ -200,8 +200,8 @@
         ;; complex
         (t.is (/ +nan.0+10i 0.5+0.5i) +nan.0+nan.0i)
         (t.is (/ +nan.0+1/2i 0.5+0.5i) +nan.0+nan.0i)
-        (t.is (/ +nan.0+0.5i 0.5+0.5i) +nan.0+nan.0i
-              )
+        (t.is (/ +nan.0+0.5i 0.5+0.5i) +nan.0+nan.0i)
+
         (t.is (/ +nan.0+10i 1/2+0.5i) +nan.0+nan.0i)
         (t.is (/ +nan.0+1/2i 1/2+0.5i) +nan.0+nan.0i)
         (t.is (/ +nan.0+0.5i 1/2+0.5i) +nan.0+nan.0i)
@@ -228,7 +228,7 @@
 
         (t.is (/ +nan.0+10i 0.5+10i) +nan.0+nan.0i)
         (t.is (/ +nan.0+1/2i 0.5+10i) +nan.0+nan.0i)
-        (t.is (/ +nan.0+0.5i 0.5+10i) +nan.0+nan.0i))
+        (t.is (/ +nan.0+0.5i 0.5+10i) +nan.0+nan.0i)))
 
 (test "numbers: complex infinity"
       (lambda (t)
