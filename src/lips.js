@@ -2307,8 +2307,6 @@
         return '()';
     };
     Nil.prototype.valueOf = function() {
-        console.warn('\nNIL: LIPS just called valueOf on nil constant. ' +
-                     'This is probably not what you want.');
         return undefined;
     };
     Nil.prototype.serialize = function() {
@@ -3246,13 +3244,92 @@
     function macro_expand(single) {
         return async function(code, args) {
             var env = args['env'] = this;
+            var bindings = [];
+            var let_macros = ['let', 'let*', 'letrec'];
+            var lambda = global_env.get('lambda');
+            var define = global_env.get('define');
+            function is_let_macro(symbol) {
+                var name = symbol.valueOf();
+                return let_macros.includes(name);
+            }
+            function is_procedure(value, node) {
+                return value === define && node.cdr.car instanceof Pair;
+            }
+            function is_lambda(value) {
+                return value === lambda;
+            }
+            function proc_bindings(node) {
+                var names = [];
+                while (true) {
+                    if (node !== nil) {
+                        if (node instanceof LSymbol) {
+                            names.push(node.valueOf());
+                            break;
+                        }
+                        names.push(node.car.valueOf());
+                        node = node.cdr;
+                    } else {
+                        break;
+                    }
+                }
+                return [...bindings, ...names];
+            }
+            function let_binding(node) {
+                return [...bindings, ...node.to_array(false).map(function(node) {
+                    if (node instanceof Pair) {
+                        return node.car.valueOf();
+                    }
+                    throw new Error('macroexpand: Invalid let binding');
+                })];
+            }
+            function is_macro(name, value) {
+                return value instanceof Macro &&
+                    value.__defmacro__ &&
+                    !bindings.includes(name);
+            }
+            async function expand_let_binding(node, n) {
+                if (node === nil) {
+                    return nil;
+                }
+                var pair = node.car;
+                return new Pair(
+                    new Pair(
+                        pair.car,
+                        await traverse(pair.cdr, n, env)
+                    ),
+                    await expand_let_binding(node.cdr)
+                );
+            }
             async function traverse(node, n, env) {
                 if (node instanceof Pair && node.car instanceof LSymbol) {
                     if (node[__data__]) {
                         return node;
                     }
+                    var name = node.car.valueOf();
                     var value = env.get(node.car, { throwError: false });
-                    if (value instanceof Macro && value.__defmacro__) {
+                    var is_let = is_let_macro(node.car);
+
+                    var is_binding = is_let ||
+                        is_procedure(value, node) ||
+                        is_lambda(value);
+
+                    if (is_binding && node.cdr.car instanceof Pair) {
+                        var second;
+                        if (is_let) {
+                            bindings = let_binding(node.cdr.car);
+                            second = await expand_let_binding(node.cdr.car, n);
+                        } else {
+                            bindings = proc_bindings(node.cdr.car);
+                            second = node.cdr.car;
+                        }
+                        return new Pair(
+                            node.car,
+                            new Pair(
+                                second,
+                                await traverse(node.cdr.cdr, n, env)
+                            )
+                        );
+                    } else if (is_macro(name, value)) {
                         var code = value instanceof Syntax ? node : node.cdr;
                         var result = await value.invoke(code, { ...args, env }, true);
                         if (value instanceof Syntax) {
