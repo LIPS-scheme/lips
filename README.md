@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.12-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&f5a832cf4f350b34360fe48881328a73e9261a77)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&bb03ada70769d4d64f1b9682d5256f9742e74e7a)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&c4787399d3a850e63ac4c89543087b6a)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -225,6 +225,6 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
-Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/me)
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjcubic%2Flips.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjcubic%2Flips?ref=badge_large)

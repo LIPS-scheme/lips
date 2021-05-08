@@ -225,6 +225,6 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
-Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/me)
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjcubic%2Flips.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjcubic%2Flips?ref=badge_large)
