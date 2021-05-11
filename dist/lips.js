@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 08 May 2021 13:41:01 +0000
+ * build: Tue, 11 May 2021 07:27:41 +0000
  */
 (function () {
 	'use strict';
@@ -7726,11 +7726,12 @@
 	  };
 
 	  LString.prototype.get = function (n) {
-	    return Array.from(this.__string__)[n];
+	    typecheck('LString::get', n, 'number');
+	    return Array.from(this.__string__)[n.valueOf()];
 	  };
 
 	  LString.prototype.cmp = function (string) {
-	    typecheck('LStrign::cmp', string, 'string');
+	    typecheck('LString::cmp', string, 'string');
 	    var a = this.valueOf();
 	    var b = string.valueOf();
 
@@ -7752,6 +7753,10 @@
 	  };
 
 	  LString.prototype.set = function (n, _char8) {
+	    typecheck('LString::set', n, 'number');
+	    typecheck('LString::set', _char8, ['string', 'character']);
+	    n = n.valueOf();
+
 	    if (_char8 instanceof LCharacter) {
 	      _char8 = _char8.__char__;
 	    }
@@ -7781,13 +7786,15 @@
 	    return LString(this.valueOf());
 	  };
 
-	  LString.prototype.fill = function (chr) {
-	    if (chr instanceof LCharacter) {
-	      chr = chr.toString();
+	  LString.prototype.fill = function (_char9) {
+	    typecheck('LString::fill', _char9, ['string', 'character']);
+
+	    if (_char9 instanceof LCharacter) {
+	      _char9 = _char9.toString();
 	    }
 
 	    var len = this.__string__.length;
-	    this.__string__ = new Array(len + 1).join(chr);
+	    this.__string__ = new Array(len + 1).join(_char9);
 	  }; // -------------------------------------------------------------------------
 	  // :: Number wrapper that handle BigNumbers
 	  // -------------------------------------------------------------------------
@@ -14469,10 +14476,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 08 May 2021 13:41:01 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 11 May 2021 07:27:41 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 08 May 2021 13:41:01 +0000').valueOf();
+	    var date = LString('Tue, 11 May 2021 07:27:41 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14516,7 +14523,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 08 May 2021 13:41:01 +0000',
+	    date: 'Tue, 11 May 2021 07:27:41 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

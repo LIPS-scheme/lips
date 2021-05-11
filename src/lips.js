@@ -4646,10 +4646,11 @@
         return x instanceof LString || typeof x === 'string';
     };
     LString.prototype.get = function(n) {
-        return Array.from(this.__string__)[n];
+        typecheck('LString::get', n, 'number');
+        return Array.from(this.__string__)[n.valueOf()];
     };
     LString.prototype.cmp = function(string) {
-        typecheck('LStrign::cmp', string, 'string');
+        typecheck('LString::cmp', string, 'string');
         var a = this.valueOf();
         var b = string.valueOf();
         if (a < b) {
@@ -4667,6 +4668,9 @@
         return LString(this.__string__.toUpperCase());
     };
     LString.prototype.set = function(n, char) {
+        typecheck('LString::set', n, 'number');
+        typecheck('LString::set', char, ['string', 'character']);
+        n = n.valueOf();
         if (char instanceof LCharacter) {
             char = char.__char__;
         }
@@ -4688,12 +4692,13 @@
     LString.prototype.clone = function() {
         return LString(this.valueOf());
     };
-    LString.prototype.fill = function(chr) {
-        if (chr instanceof LCharacter) {
-            chr = chr.toString();
+    LString.prototype.fill = function(char) {
+        typecheck('LString::fill', char, ['string', 'character']);
+        if (char instanceof LCharacter) {
+            char = char.toString();
         }
         var len = this.__string__.length;
-        this.__string__ = new Array(len + 1).join(chr);
+        this.__string__ = new Array(len + 1).join(char);
     };
     // -------------------------------------------------------------------------
     // :: Number wrapper that handle BigNumbers
