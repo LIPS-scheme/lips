@@ -6355,6 +6355,17 @@
         return this.__env__.constant(name, value);
     };
     // -------------------------------------------------------------------------
+    // Lips Exception used in error function
+    // -------------------------------------------------------------------------
+    function LipsError(message, args) {
+        this.name = 'LipsError';
+        this.message = message;
+        this.args = args;
+        this.stack = (new Error()).stack;
+    }
+    LipsError.prototype = new Error();
+    LipsError.prototype.constructor = LipsError;
+    // -------------------------------------------------------------------------
     // :: Environment constructor (parent and name arguments are optional)
     // -------------------------------------------------------------------------
     function Environment(obj, parent, name) {
@@ -6904,7 +6915,7 @@
             const value = args.map(repr).join(' ');
             port.write.call(global_env, value);
             global_env.get('newline')(port);
-        }, `(error . args)
+        }, `(display-error . args)
 
             Display error message.`),
         // ------------------------------------------------------------------
@@ -8616,11 +8627,16 @@
              it's executed when expression expr throw error. If finally is provide
              it's always executed at the end.`),
         // ------------------------------------------------------------------
+        'raise': doc('raise', function(obj) {
+            throw obj;
+        }, `(raise obj)
+
+            Throws new exception with given object.`),
         'throw': doc('throw', function(message) {
             throw new Error(message);
         }, `(throw string)
 
-            Throw new expection.`),
+            Throws new expection.`),
         // ------------------------------------------------------------------
         find: doc('find', function find(arg, list) {
             typecheck('find', arg, ['regex', 'function']);
@@ -9738,10 +9754,7 @@
                     if (e && e.message) {
                         if (e.message.match(/^Error:/)) {
                             // clean duplicated Error: added by JS
-                            e.message = e.message.replace(/.*:\s*([^:]+:\s*)/, '$1');
-                        } else {
-                            // add missing Error
-                            e.message = `Error: ${e.message}`;
+                            e.message = e.message.replace(/^(Error:)\s*([^:]+:\s*)/, '$1 $2');
                         }
                         if (code) {
                             // LIPS stack trace
@@ -10128,6 +10141,7 @@ properties of an object.
     InputStringPort.__class__ = 'input-string-port';
     InputFilePort.__class__ = 'input-file-port';
     OutputFilePort.__class__ = 'output-file-port';
+    LipsError.__class__ = 'lips-error';
     [LNumber, LComplex, LRational, LFloat, LBigInteger].forEach(cls => {
         cls.__class__ = 'number';
     });
@@ -10166,6 +10180,7 @@ properties of an object.
         Pair,
         Values,
         QuotedPromise,
+        Error: LipsError,
 
         quote,
 

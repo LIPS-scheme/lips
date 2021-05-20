@@ -371,3 +371,13 @@
                                     ")")))
 
         (t.is (repr (kons 1 2)) "(1 . 2)")))
+
+(test "core: errors and try..catch"
+      (lambda (t)
+        (let* ((message "Some Error")
+               (args '(1 2 3))
+               (err (try (apply error message args)
+                         (catch (e) e))))
+          (t.is (error-object? err) true)
+          (t.is (error-object-message err) message)
+          (t.is (error-object-irritants err) (list->vector args)))))

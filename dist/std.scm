@@ -3317,8 +3317,6 @@
   (try (thunk)
        (catch (e)
               (handler e))))
-;; -----------------------------------------------------------------------------
-(define raise throw)
 
 ;; -----------------------------------------------------------------------------
 ;; macro definition taken from R7RS spec
@@ -3406,7 +3404,7 @@
     ((_ "step" arg ...)
      (join " " (vector->list  (vector (repr arg) ...))))
     ((_ message arg ...)
-     (raise (new Error (format "~a ~a" message (_ "step" arg ...)))))))
+     (error (format "~a ~a" message (_ "step" arg ...))))))
 
 ;; -----------------------------------------------------------------------------
 ;; based on https://srfi.schemers.org/srfi-0/srfi-0.html
@@ -4194,6 +4192,37 @@
             Function change current working directory to provided string."
            (typecheck "set-current-directory!" value "string")
            (process.chdir value))))))
+
+;; -----------------------------------------------------------------------------
+(define (error message . args)
+  "(error message ...)
+
+   Function raises error with given message and arguments,
+   which are called invariants."
+  (raise (new lips.Error message (args.to_array))))
+
+;; -----------------------------------------------------------------------------
+(define (error-object? obj)
+  "(error-object? obj)
+
+   Function check if object is of Error object throwed by error function."
+  (instanceof lips.Error obj))
+
+;; -----------------------------------------------------------------------------
+(define (error-object-message obj)
+  "(error-object-message error-object)
+
+   Returns the message encapsulated by error-object."
+  (if (error-object? obj)
+      obj.message))
+
+;; -----------------------------------------------------------------------------
+(define (error-object-irritants obj)
+  "(error-object-irritants error-object)
+
+   Returns a list of the irritants encapsulated by error-object."
+  (if (error-object? obj)
+      obj.args))
 
 ;; -----------------------------------------------------------------------------
 ;; -----------------------------------------------------------------------------
