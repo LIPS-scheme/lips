@@ -7477,7 +7477,7 @@
                 env,
                 //dynamic_scope: this,
                 error: e => {
-                    var error = global_env.get('error');
+                    var error = global_env.get('display-error');
                     error.call(this, e.message);
                     if (e.code) {
                         var stack = e.code.map((line, i) => {
