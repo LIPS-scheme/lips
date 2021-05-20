@@ -4309,7 +4309,7 @@
         });
     }
     // ----------------------------------------------------------------------
-    function setFnLength(fn, length) {
+    function set_fn_length(fn, length) {
         try {
             Object.defineProperty(fn, 'length', {
                 get: function() {
@@ -4473,7 +4473,7 @@
         });
     }
     // -------------------------------------------------------------------------
-    function guardMathCall(fn, ...args) {
+    function guard_math_call(fn, ...args) {
         args.forEach(arg => {
             typecheck('', arg, 'number');
         });
@@ -4513,21 +4513,21 @@
         };
     }
     // -------------------------------------------------------------------------
-    function limitMathOp(n, fn) {
-        // + 1 so it inlcude function in guardMathCall
-        return limit(n + 1, curry(guardMathCall, fn));
+    function limit_math_op(n, fn) {
+        // + 1 so it inlcude function in guard_math_call
+        return limit(n + 1, curry(guard_math_call, fn));
     }
     // -------------------------------------------------------------------------
     // some functional magic
-    var singleMathOp = curry(limitMathOp, 1);
-    var binaryMathOp = curry(limitMathOp, 2);
+    var single_math_op = curry(limit_math_op, 1);
+    var binary_math_op = curry(limit_math_op, 2);
     // -------------------------------------------------------------------------
-    function reduceMathOp(fn, init = null) {
+    function reduce_math_op(fn, init = null) {
         return function(...args) {
             if (init !== null) {
                 args = [init, ...args];
             }
-            return args.reduce(binaryMathOp(fn));
+            return args.reduce(binary_math_op(fn));
         };
     }
     // -------------------------------------------------------------------------
@@ -6898,7 +6898,7 @@
 
             Function send string to standard output or provied port.`),
         // ------------------------------------------------------------------
-        error: doc(function error(...args) {
+        'display-error': doc('display-error', function error(...args) {
             const port = internal(this, 'stderr');
             const repr = global_env.get('repr');
             const value = args.map(repr).join(' ');
@@ -7563,7 +7563,7 @@
                 return doc(lambda, __doc__, true); // variable arguments
             }
             // wrap and decorate with __doc__
-            return doc(setFnLength(lambda, length), __doc__, true);
+            return doc(set_fn_length(lambda, length), __doc__, true);
         }, `(lambda (a b) body)
             (lambda args body)
             (lambda (a b . rest) body)
@@ -8425,7 +8425,7 @@
 
             Function check if value is a pair or list structure.`),
         // ------------------------------------------------------------------
-        'regex?': doc(function(obj) {
+        'regex?': doc('regex?', function(obj) {
             return obj instanceof RegExp;
         }, `(regex? expression)
 
@@ -8875,27 +8875,27 @@
 
             Function return the least common multiple of their arguments.`),
         // ------------------------------------------------------------------
-        'odd?': doc('odd?', singleMathOp(function(num) {
+        'odd?': doc('odd?', single_math_op(function(num) {
             return LNumber(num).isOdd();
         }), `(odd? number)
 
              Function check if number os odd.`),
         // ------------------------------------------------------------------
-        'even?': doc('even?', singleMathOp(function(num) {
+        'even?': doc('even?', single_math_op(function(num) {
             return LNumber(num).isEven();
         }), `(even? number)
 
              Function check if number is even.`),
         // ------------------------------------------------------------------
         // math functions
-        '*': doc('*', reduceMathOp(function(a, b) {
+        '*': doc('*', reduce_math_op(function(a, b) {
             return LNumber(a).mul(b);
         }, LNumber(1)), `(* . numbers)
 
         Multiplicate all numbers passed as arguments. If single value is passed
         it will return that value.`),
         // ------------------------------------------------------------------
-        '+': doc('+', reduceMathOp(function(a, b) {
+        '+': doc('+', reduce_math_op(function(a, b) {
             return LNumber(a).add(b);
         }, LNumber(0)), `(+ . numbers)
 
@@ -8911,7 +8911,7 @@
                 return LNumber(args[0]).sub();
             }
             if (args.length) {
-                return args.reduce(binaryMathOp(function(a, b) {
+                return args.reduce(binary_math_op(function(a, b) {
                     return LNumber(a).sub(b);
                 }));
             }
@@ -8929,7 +8929,7 @@
             if (args.length === 1) {
                 return LNumber(1).div(args[0]);
             }
-            return args.reduce(binaryMathOp(function(a, b) {
+            return args.reduce(binary_math_op(function(a, b) {
                 return LNumber(a).div(b);
             }));
         }, `(/ n1 n2 ...)
@@ -8938,7 +8938,7 @@
             Divide number passed as arguments one by one. If single argument
             is passed it will calculate (/ 1 n1).`),
         // ------------------------------------------------------------------
-        abs: doc('abs', singleMathOp(function(n) {
+        abs: doc('abs', single_math_op(function(n) {
             return LNumber(n).abs();
         }), `(abs number)
 
@@ -8957,13 +8957,13 @@
 
             Function return integer value from real number.`),
         // ------------------------------------------------------------------
-        sqrt: doc('sqrt', singleMathOp(function(n) {
+        sqrt: doc('sqrt', single_math_op(function(n) {
             return LNumber(n).sqrt();
         }), `(sqrt number)
 
              Function return square root of the number.`),
         // ------------------------------------------------------------------
-        '**': doc('**', binaryMathOp(function(a, b) {
+        '**': doc('**', binary_math_op(function(a, b) {
             a = LNumber(a);
             b = LNumber(b);
             if (b.cmp(0) === -1) {
@@ -8974,13 +8974,13 @@
 
             Function calculate number a to to the power of b.`),
         // ------------------------------------------------------------------
-        '1+': doc('1+', singleMathOp(function(number) {
+        '1+': doc('1+', single_math_op(function(number) {
             return LNumber(number).add(1);
         }), `(1+ number)
 
              Function add 1 to the number and return result.`),
         // ------------------------------------------------------------------
-        '1-': doc(singleMathOp(function(number) {
+        '1-': doc(single_math_op(function(number) {
             return LNumber(number).sub(1);
         }), `(1- number)
 
@@ -9017,7 +9017,7 @@
             Function compare its numerical arguments and check if they are
             monotonically decreasing`),
         // ------------------------------------------------------------------
-        '<=': doc(function(...args) {
+        '<=': doc('<=', function(...args) {
             typecheck_args('<=', args, 'number');
             return seq_compare((a, b) => [0, -1].includes(LNumber(a).cmp(b)), args);
         }, `(<= x1 x2 ...)
@@ -9133,12 +9133,12 @@
         }, `(>> a b)
 
             Function right shit the value a by value b.`),
-        '<<': doc(function(a, b) {
+        '<<': doc('<<', function(a, b) {
             return LNumber(a).shl(b);
         }, `(<< a b)
 
             Function left shit the value a by value b.`),
-        not: doc(function not(value) {
+        not: doc('not', function not(value) {
             if (is_null(value)) {
                 return true;
             }
