@@ -6664,7 +6664,7 @@
                                           "[native code]"
                                           (throw "Invalid Invocation"))`))[0];
     // -------------------------------------------------------------------------------
-    var get = doc(function get(object, ...args) {
+    var get = doc('get', function get(object, ...args) {
         // if arg is symbol someone probably want to get __fn__ from binded function
         if (is_function(object) && typeof args[0] !== 'symbol') {
             object = unbind(object);
@@ -6796,7 +6796,7 @@
 
             Function read next character from input port.`),
         // ------------------------------------------------------------------
-        read: doc(async function read(arg = null) {
+        read: doc('read', async function read(arg = null) {
             if (LString.isString(arg)) {
                 for await (let value of parse(arg, this)) {
                     return value;
@@ -6819,7 +6819,7 @@
             function can be used together with eval to evaluate code from
             string`),
         // ------------------------------------------------------------------
-        pprint: doc(function pprint(arg) {
+        pprint: doc('pprint', function pprint(arg) {
             if (arg instanceof Pair) {
                 arg = new lips.Formatter(arg.toString(true)).break().format();
                 global_env.get('display').call(global_env, arg);
@@ -6832,7 +6832,7 @@
            Pretty print list expression, if called with non-pair it just call
            print function with passed argument.`),
         // ------------------------------------------------------------------
-        print: doc(function print(...args) {
+        print: doc('print', function print(...args) {
             const display = global_env.get('display');
             const newline = global_env.get('newline');
             args.forEach(arg => {
@@ -6845,7 +6845,7 @@
             standard output (by default it's console but it can be defined
             it user code), the function call newline after printing each arg.`),
         // ------------------------------------------------------------------
-        'format': doc(function format(str, ...args) {
+        format: doc('format', function format(str, ...args) {
             typecheck('format', str, 'string');
             const re = /(~[as%~])/g;
             let m = str.match(/(~[as])/g);
@@ -6886,7 +6886,7 @@
 
             if there missing arguments or other escape character it throw exception.`),
         // ------------------------------------------------------------------
-        display: doc(function display(arg, port = null) {
+        display: doc('display', function display(arg, port = null) {
             if (port === null) {
                 port = internal(this, 'stdout');
             } else {
@@ -6956,20 +6956,20 @@
              or macro in variable and use it in context. But help for variable require
              to pass the symbol itself.`),
         // ------------------------------------------------------------------
-        cons: doc(function cons(car, cdr) {
+        cons: doc('cons', function cons(car, cdr) {
             return new Pair(car, cdr);
         }, `(cons left right)
 
             Function return new Pair out of two arguments.`),
         // ------------------------------------------------------------------
-        car: doc(function car(list) {
+        car: doc('car', function car(list) {
             typecheck('car', list, 'pair');
             return list.car;
         }, `(car pair)
 
             Function returns car (head) of the list/pair.`),
         // ------------------------------------------------------------------
-        cdr: doc(function cdr(list) {
+        cdr: doc('cdr', function cdr(list) {
             typecheck('cdr', list, 'pair');
             return list.cdr;
         }, `(cdr pair)
@@ -7079,7 +7079,7 @@
         // ------------------------------------------------------------------
         // TODO: (load filename environment-specifier)
         // ------------------------------------------------------------------
-        load: doc(function load(file, env) {
+        load: doc('load', function load(file, env) {
             typecheck('load', file, 'string');
             var g_env = this;
             if (g_env.__name__ === '__frame__') {
@@ -7423,7 +7423,7 @@
 
             Function return new base environment with std lib.`),
         // ------------------------------------------------------------------
-        'values': doc(function values(...args) {
+        'values': doc('values', function values(...args) {
             return Values(args);
         }, `(values a1 a2 ...)
 
@@ -8112,14 +8112,14 @@
             evaluate expression but return value without parenthesis (it will join)
             the list with its value. Best used with macros but it can be used outside`),
         // ------------------------------------------------------------------
-        clone: doc(function clone(list) {
+        clone: doc('clone', function clone(list) {
             typecheck('clone', list, 'pair');
             return list.clone();
         }, `(clone list)
 
             Function return clone of the list.`),
         // ------------------------------------------------------------------
-        append: doc(function append(...items) {
+        append: doc('append', function append(...items) {
             items = items.map(item => {
                 if (item instanceof Pair) {
                     return item.clone();
@@ -8156,7 +8156,7 @@
              new list where each argument is appened to the end. It may modify
              lists added as arguments.`),
         // ------------------------------------------------------------------
-        reverse: doc(function reverse(arg) {
+        reverse: doc('reverse', function reverse(arg) {
             typecheck('reverse', arg, ['array', 'pair', 'nil']);
             if (arg === nil) {
                 return nil;
@@ -8174,7 +8174,7 @@
             Function will reverse the list or array. If value is not a list
             or array it will throw exception.`),
         // ------------------------------------------------------------------
-        nth: doc(function nth(index, obj) {
+        nth: doc('nth', function nth(index, obj) {
             typecheck('nth', index, 'number');
             typecheck('nth', obj, ['array', 'pair']);
             if (obj instanceof Pair) {
@@ -8198,13 +8198,13 @@
             Function return nth element of the list or array. If used with different
             value it will throw exception`),
         // ------------------------------------------------------------------
-        list: doc(function list(...args) {
+        list: doc('list', function list(...args) {
             return args.reverse().reduce((list, item) => new Pair(item, list), nil);
         }, `(list . args)
 
             Function create new list out of its arguments.`),
         // ------------------------------------------------------------------
-        substring: doc(function substring(string, start, end) {
+        substring: doc('substring', function substring(string, start, end) {
             typecheck('substring', string, 'string');
             typecheck('substring', start, 'number');
             typecheck('substring', end, ['number', 'undefined']);
@@ -8213,14 +8213,14 @@
 
             Function return part of the string starting at start ending with end.`),
         // ------------------------------------------------------------------
-        concat: doc(function concat(...args) {
+        concat: doc('concat', function concat(...args) {
             args.forEach((arg, i) => typecheck('concat', arg, 'string', i + 1));
             return args.join('');
         }, `(concat . strings)
 
             Function create new string by joining its arguments`),
         // ------------------------------------------------------------------
-        join: doc(function join(separator, list) {
+        join: doc('join', function join(separator, list) {
             typecheck('join', separator, 'string');
             typecheck('join', list, ['pair', 'nil']);
             return global_env.get('list->array')(list).join(separator);
@@ -8228,7 +8228,7 @@
 
             Function return string by joining elements of the list`),
         // ------------------------------------------------------------------
-        split: doc(function split(separator, string) {
+        split: doc('split', function split(separator, string) {
             typecheck('split', separator, ['regex', 'string']);
             typecheck('split', string, 'string');
             return global_env.get('array->list')(string.split(separator));
@@ -8237,7 +8237,7 @@
             Function create list by splitting string by separatar that can
             be a string or regular expression.`),
         // ------------------------------------------------------------------
-        replace: doc(function replace(pattern, replacement, string) {
+        replace: doc('replace', function replace(pattern, replacement, string) {
             typecheck('replace', pattern, ['regex', 'string']);
             typecheck('replace', replacement, ['string', 'function']);
             typecheck('replace', string, 'string');
@@ -8247,7 +8247,7 @@
             Function change pattern to replacement inside string. Pattern can be string
             or regex and replacement can be function or string.`),
         // ------------------------------------------------------------------
-        match: doc(function match(pattern, string) {
+        match: doc('match', function match(pattern, string) {
             typecheck('match', pattern, ['regex', 'string']);
             typecheck('match', string, 'string');
             var m = string.match(pattern);
@@ -8256,7 +8256,7 @@
 
             function return match object from JavaScript as list or #f if not match.`),
         // ------------------------------------------------------------------
-        search: doc(function search(pattern, string) {
+        search: doc('search', function search(pattern, string) {
             typecheck('search', pattern, ['regex', 'string']);
             typecheck('search', string, 'string');
             return string.search(pattern);
@@ -8264,7 +8264,7 @@
 
             Function return first found index of the pattern inside a string`),
         // ------------------------------------------------------------------
-        repr: doc(function repr(obj, quote) {
+        repr: doc('repr', function repr(obj, quote) {
             return toString(obj, quote);
         }, `(repr obj)
 
@@ -8279,7 +8279,7 @@
             are escaped with slash so they can be used in RegExp constructor
             to match literal string`),
         // ------------------------------------------------------------------
-        env: doc(function env(env) {
+        env: doc('env', function env(env) {
             env = env || this;
             var names = Object.keys(env.__env__).map(LSymbol);
             // TODO: get symbols
@@ -8468,7 +8468,7 @@
 
             Function check if value is an plain object.`),
         // ------------------------------------------------------------------
-        flatten: doc(function flatten(list) {
+        flatten: doc('flatten', function flatten(list) {
             typecheck('flatten', list, 'pair');
             return list.flatten();
         }, `(flatten list)
@@ -8496,7 +8496,7 @@
 
              Function convert LIPS list into JavaScript array.`),
         // ------------------------------------------------------------------
-        apply: doc(function apply(fn, ...args) {
+        apply: doc('apply', function apply(fn, ...args) {
             typecheck('apply', fn, 'function', 1);
             var last = args.pop();
             typecheck('apply', last, ['pair', 'nil'], args.length + 2);
@@ -8506,7 +8506,7 @@
 
             Function that call function with list of arguments.`),
         // ------------------------------------------------------------------
-        'length': doc(function length(obj) {
+        length: doc('length', function length(obj) {
             if (!obj) {
                 return LNumber(0);
             }
@@ -8622,7 +8622,7 @@
 
             Throw new expection.`),
         // ------------------------------------------------------------------
-        find: doc(function find(arg, list) {
+        find: doc('find', function find(arg, list) {
             typecheck('find', arg, ['regex', 'function']);
             typecheck('find', list, ['pair', 'nil']);
             if (is_null(list)) {
@@ -8660,7 +8660,7 @@
             it will take each value from each list and call \`fn\` function
             with that many argument as number of list arguments.`),
         // ------------------------------------------------------------------
-        map: doc(function map(fn, ...lists) {
+        map: doc('map', function map(fn, ...lists) {
             typecheck('map', fn, 'function');
             var is_list = global_env.get('list?');
             lists.forEach((arg, i) => {
@@ -8713,7 +8713,7 @@
             Function test if value is proper linked list structure.
             The car of each pair can be any value. It return false on cycles."`),
         // ------------------------------------------------------------------
-        some: doc(function some(fn, list) {
+        some: doc('some', function some(fn, list) {
             typecheck('some', fn, 'function');
             typecheck('some', list, ['pair', 'nil']);
             if (is_null(list)) {
@@ -8748,7 +8748,7 @@
              e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))
              for: (fold fn '() alist blist)`),
         // ------------------------------------------------------------------
-        pluck: doc(function pluck(...keys) {
+        pluck: doc('pluck', function pluck(...keys) {
             return function(obj) {
                 keys = keys.map(x => x instanceof LSymbol ? x.__name__ : x);
                 if (keys.length === 0) {
@@ -8789,7 +8789,7 @@
              e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))
              for (reduce fn init alist blist)`),
         // ------------------------------------------------------------------
-        filter: doc(function filter(arg, list) {
+        filter: doc('filter', function filter(arg, list) {
             typecheck('filter', arg, ['regex', 'function']);
             typecheck('filter', list, ['pair', 'nil']);
             var array = global_env.get('list->array')(list);
@@ -8850,7 +8850,7 @@
         // ------------------------------------------------------------------
         // Numbers
         // ------------------------------------------------------------------
-        'gcd': doc(function gcd(...args) {
+        gcd: doc('gcd', function gcd(...args) {
             typecheck_args('lcm', args, 'number');
             return args.reduce(function(result, item) {
                 return result.gcd(item);
@@ -8859,7 +8859,7 @@
 
             Function return the greatest common divisor of their arguments.`),
         // ------------------------------------------------------------------
-        'lcm': doc(function lcm(...args) {
+        lcm: doc('lcm', function lcm(...args) {
             typecheck_args('lcm', args, 'number');
             // ref: https://rosettacode.org/wiki/Least_common_multiple#JavaScript
             var n = args.length, a = abs(args[0]);
