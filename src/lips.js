@@ -9753,8 +9753,9 @@
                 error: (e, code) => {
                     if (e && e.message) {
                         if (e.message.match(/^Error:/)) {
+                            var re = /^(Error:)\s*([^:]+:\s*)/;
                             // clean duplicated Error: added by JS
-                            e.message = e.message.replace(/^(Error:)\s*([^:]+:\s*)/, '$1 $2');
+                            e.message = e.message.replace(re, '$1 $2');
                         }
                         if (code) {
                             // LIPS stack trace
