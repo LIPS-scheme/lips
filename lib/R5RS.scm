@@ -1103,7 +1103,7 @@
   (length vec))
 
 ;; -----------------------------------------------------------------------------
-;; case macro from R7RS spec https://small.r7rs.org/attachment/r7rs.pdf
+;; case macro from R7RS spec https://small.r7rs.org/wiki/R7RSSmallErrata/
 ;; -----------------------------------------------------------------------------
 (define-syntax case
   (syntax-rules (else =>)
@@ -1118,10 +1118,6 @@
        (else result1 result2 ...))
      (begin result1 result2 ...))
     ((case key
-       ((atoms ...) result1 result2 ...))
-     (if (memv key '(atoms ...))
-         (begin result1 result2 ...)))
-    ((case key
        ((atoms ...) => result))
      (if (memv key '(atoms ...))
          (result key)))
@@ -1131,6 +1127,10 @@
      (if (memv key '(atoms ...))
          (result key)
          (case key clause clauses ...)))
+    ((case key
+       ((atoms ...) result1 result2 ...))
+     (if (memv key '(atoms ...))
+         (begin result1 result2 ...)))
     ((case key
        ((atoms ...) result1 result2 ...)
        clause clauses ...)

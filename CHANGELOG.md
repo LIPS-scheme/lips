@@ -19,6 +19,7 @@
 * fix mixed quoted and normal promises in let binding [#154](https://github.com/jcubic/lips/issues/154)
 * fix problem were await affect quoted promise in macros (e.g. `begin`) [#153](https://github.com/jcubic/lips/issues/153)
 * typecheck second argument to `set-obj!`
+* fix `case` macro (use implementation from R7RS Errata)
 
 ## 1.0.0-beta.12
 ### Breaking
