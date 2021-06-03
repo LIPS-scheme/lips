@@ -812,7 +812,11 @@
         `(begin
            (define ,name ,(if (null? constructor)
                               `(lambda ())
-                              (%class-lambda constructor)))
+                              ;; we return this to solve issue when constructor
+                              ;; return a promise
+                              ;; ref: https://stackoverflow.com/a/50885340/387194
+                              (append (%class-lambda constructor)
+                                      (list 'this))))
            (set-obj! ,name (Symbol.for "__class__") true)
            ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
                 `(begin
