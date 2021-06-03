@@ -769,19 +769,6 @@
     `(lambda ,args
        (apply ,(cadr expr) this ,args))))
 
-;; TODO: handle this broken case when arguments are improper list
-;;       Throw proper error
-;; (%class-lambda '(hello (lambda (x y . z) (print z))))
-
-(define (%class-lambda expr)
-  "(%class-lambda expr)
-
-  Define lambda that have self is first argument. The expr is in a form:
-  (constructor (lambda (self ...) . body)) as given by define-class macro."
-  (let ((args (cdadadr expr)))
-    `(lambda (,@args)
-       (,(cadr expr) this ,@args))))
-
 ;; -----------------------------------------------------------------------------
 (define (%class-method-name expr)
   "(%class-method-name expr)

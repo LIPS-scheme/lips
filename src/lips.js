@@ -7970,52 +7970,54 @@
             var splices = new Set();
             function recur(pair, unquote_cnt, max_unq) {
                 if (pair instanceof Pair) {
-                    if (LSymbol.is(pair.car.car, 'unquote-splicing')) {
-                        return unquote_splice(pair, unquote_cnt + 1, max_unq);
+                    if (pair.car instanceof Pair) {
+                        if (LSymbol.is(pair.car.car, 'unquote-splicing')) {
+                            return unquote_splice(pair, unquote_cnt + 1, max_unq);
+                        }
+                        if (LSymbol.is(pair.car.car, 'unquote')) {
+                            // + 2 - one for unquote and one for unquote splicing
+                            if (unquote_cnt + 2 === max_unq &&
+                                pair.car.cdr instanceof Pair &&
+                                pair.car.cdr.car instanceof Pair &&
+                                LSymbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
+                                const rest = pair.car.cdr;
+                                return new Pair(
+                                    new Pair(
+                                        new LSymbol('unquote'),
+                                        unquote_splice(rest, unquote_cnt + 2, max_unq)
+                                    ),
+                                    nil
+                                );
+                            } else if (pair.car.cdr instanceof Pair &&
+                                       pair.car.cdr.cdr !== nil) {
+                                if (pair.car.cdr.car instanceof Pair) {
+                                    // values inside unquote are lists
+                                    const result = [];
+                                    return (function recur(node) {
+                                        if (node === nil) {
+                                            return Pair.fromArray(result);
+                                        }
+                                        return unpromise(evaluate(node.car, {
+                                            env: self,
+                                            dynamic_scope,
+                                            error
+                                        }), function(next) {
+                                            result.push(next);
+                                            return recur(node.cdr);
+                                        });
+                                    })(pair.car.cdr);
+                                } else {
+                                    // same as in guile if (unquote 1 2 3) it should be
+                                    // spliced - scheme spec say it's unspecify but it
+                                    // work like in CL
+                                    return pair.car.cdr;
+                                }
+                            }
+                        }
                     }
                     if (LSymbol.is(pair.car, 'quasiquote')) {
                         var cdr = recur(pair.cdr, unquote_cnt, max_unq + 1);
                         return new Pair(pair.car, cdr);
-                    }
-                    if (LSymbol.is(pair.car.car, 'unquote')) {
-                        // + 2 - one for unquote and one for unquote splicing
-                        if (unquote_cnt + 2 === max_unq &&
-                            pair.car.cdr instanceof Pair &&
-                            pair.car.cdr.car instanceof Pair &&
-                            LSymbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
-                            const rest = pair.car.cdr;
-                            return new Pair(
-                                new Pair(
-                                    new LSymbol('unquote'),
-                                    unquote_splice(rest, unquote_cnt + 2, max_unq)
-                                ),
-                                nil
-                            );
-                        } else if (pair.car.cdr instanceof Pair &&
-                                   pair.car.cdr.cdr !== nil) {
-                            if (pair.car.cdr.car instanceof Pair) {
-                                // values inside unquote are lists
-                                const result = [];
-                                return (function recur(node) {
-                                    if (node === nil) {
-                                        return Pair.fromArray(result);
-                                    }
-                                    return unpromise(evaluate(node.car, {
-                                        env: self,
-                                        dynamic_scope,
-                                        error
-                                    }), function(next) {
-                                        result.push(next);
-                                        return recur(node.cdr);
-                                    });
-                                })(pair.car.cdr);
-                            } else {
-                                // same as in guile if (unquote 1 2 3) it should be
-                                // spliced - scheme spec say it's unspecify but it
-                                // work like in CL
-                                return pair.car.cdr;
-                            }
-                        }
                     }
                     if (LSymbol.is(pair.car, 'quote')) {
                         return new Pair(

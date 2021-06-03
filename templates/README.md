@@ -204,6 +204,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 
 ### 1.1
 - [ ] Fully working JSON Compiler (for faster parsing and loading std lib).
+- [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
 - [ ] Proper expansion time for both macro system.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 03 Jun 2021 11:58:26 +0000
+ * build: Thu, 03 Jun 2021 14:13:51 +0000
  */
 (function () {
 	'use strict';
@@ -12077,45 +12077,47 @@
 
 	      function recur(pair, unquote_cnt, max_unq) {
 	        if (pair instanceof Pair) {
-	          if (LSymbol.is(pair.car.car, 'unquote-splicing')) {
-	            return unquote_splice(pair, unquote_cnt + 1, max_unq);
+	          if (pair.car instanceof Pair) {
+	            if (LSymbol.is(pair.car.car, 'unquote-splicing')) {
+	              return unquote_splice(pair, unquote_cnt + 1, max_unq);
+	            }
+
+	            if (LSymbol.is(pair.car.car, 'unquote')) {
+	              // + 2 - one for unquote and one for unquote splicing
+	              if (unquote_cnt + 2 === max_unq && pair.car.cdr instanceof Pair && pair.car.cdr.car instanceof Pair && LSymbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
+	                var rest = pair.car.cdr;
+	                return new Pair(new Pair(new LSymbol('unquote'), unquote_splice(rest, unquote_cnt + 2, max_unq)), _nil);
+	              } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== _nil) {
+	                if (pair.car.cdr.car instanceof Pair) {
+	                  // values inside unquote are lists
+	                  var result = [];
+	                  return function recur(node) {
+	                    if (node === _nil) {
+	                      return Pair.fromArray(result);
+	                    }
+
+	                    return unpromise(_evaluate(node.car, {
+	                      env: self,
+	                      dynamic_scope: dynamic_scope,
+	                      error: error
+	                    }), function (next) {
+	                      result.push(next);
+	                      return recur(node.cdr);
+	                    });
+	                  }(pair.car.cdr);
+	                } else {
+	                  // same as in guile if (unquote 1 2 3) it should be
+	                  // spliced - scheme spec say it's unspecify but it
+	                  // work like in CL
+	                  return pair.car.cdr;
+	                }
+	              }
+	            }
 	          }
 
 	          if (LSymbol.is(pair.car, 'quasiquote')) {
 	            var cdr = recur(pair.cdr, unquote_cnt, max_unq + 1);
 	            return new Pair(pair.car, cdr);
-	          }
-
-	          if (LSymbol.is(pair.car.car, 'unquote')) {
-	            // + 2 - one for unquote and one for unquote splicing
-	            if (unquote_cnt + 2 === max_unq && pair.car.cdr instanceof Pair && pair.car.cdr.car instanceof Pair && LSymbol.is(pair.car.cdr.car.car, 'unquote-splicing')) {
-	              var rest = pair.car.cdr;
-	              return new Pair(new Pair(new LSymbol('unquote'), unquote_splice(rest, unquote_cnt + 2, max_unq)), _nil);
-	            } else if (pair.car.cdr instanceof Pair && pair.car.cdr.cdr !== _nil) {
-	              if (pair.car.cdr.car instanceof Pair) {
-	                // values inside unquote are lists
-	                var result = [];
-	                return function recur(node) {
-	                  if (node === _nil) {
-	                    return Pair.fromArray(result);
-	                  }
-
-	                  return unpromise(_evaluate(node.car, {
-	                    env: self,
-	                    dynamic_scope: dynamic_scope,
-	                    error: error
-	                  }), function (next) {
-	                    result.push(next);
-	                    return recur(node.cdr);
-	                  });
-	                }(pair.car.cdr);
-	              } else {
-	                // same as in guile if (unquote 1 2 3) it should be
-	                // spliced - scheme spec say it's unspecify but it
-	                // work like in CL
-	                return pair.car.cdr;
-	              }
-	            }
 	          }
 
 	          if (LSymbol.is(pair.car, 'quote')) {
@@ -14490,10 +14492,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 03 Jun 2021 11:58:26 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 03 Jun 2021 14:13:51 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 03 Jun 2021 11:58:26 +0000').valueOf();
+	    var date = LString('Thu, 03 Jun 2021 14:13:51 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14538,7 +14540,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 03 Jun 2021 11:58:26 +0000',
+	    date: 'Thu, 03 Jun 2021 14:13:51 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

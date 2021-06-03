@@ -22,6 +22,8 @@
 * typecheck second argument to `set-obj!`
 * fix `case` macro (use implementation from R7RS Errata)
 * fix async constructor in `define-class`
+* fix methods with improper lists in `define-class`
+* fix null inside quasiquote
 
 ## 1.0.0-beta.12
 ### Breaking
