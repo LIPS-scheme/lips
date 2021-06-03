@@ -197,8 +197,8 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 - [ ] Fully tested Numerical Tower.
 - [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] All recursive function in JS don't consume stack.
+- [ ] Picture language (possibly inspired by ProcessingJS).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
-- [ ] Picture language (possibly inspired by ProcessingJS)
   - [ ] Objects.
   - [ ] Vectors.
 
