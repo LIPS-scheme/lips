@@ -60,7 +60,7 @@ then include the file in the script tag. You can grab the version from unpkg.com
 https://unpkg.com/@jcubic/lips@beta
 ```
 
-or from jsdelivery
+or from jsdelivry (that's seems a bit faster)
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
@@ -184,7 +184,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 
 ## Links
 * [Gitter Chat](https://gitter.im/jcubic/lips)
-* [Git Repository](https://github.com/jcubic/lips)
+* [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 
 ## Roadmap
@@ -198,6 +198,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 - [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] All recursive function in JS don't consume stack.
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
+- [ ] Picture language (possibly inspired by ProcessingJS)
   - [ ] Objects.
   - [ ] Vectors.
 
