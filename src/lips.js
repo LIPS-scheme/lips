@@ -6758,24 +6758,21 @@
     var constants = {
         'true': true,
         'false': false,
-        '#t': true,
         '#true': true,
-        '#f': false,
         '#false': false,
-        'nil': nil,
+        '#t': true,
+        '#f': false,
+        nil,
+        eof,
+        'null': null,
+        'NaN': nan,
         '+nan.0': nan,
         '-nan.0': nan
     };
     // -------------------------------------------------------------------------
     var global_env = new Environment({
-        nil,
-        eof,
-        undefined,
-        'true': true,
-        'false': false,
-        'null': null,
-        'NaN': nan,
-        // ------------------------------------------------------------------
+        undefined, // undefined as parser constant breaks most of the unit tests
+        // ---------------------------------------------------------------------
         'peek-char': doc('peek-char', function(port = null) {
             if (port === null) {
                 port = internal(this, 'stdin');

@@ -12,6 +12,7 @@
 * experimental compiler to JSON (not 100% ready)
 * add support for `exp` on complex numbers
 * add R7RS `error-object?`, `error-object-message` and `error-object-irritants`
+* Make `NaN`, `null` and `undefined` parser constants
 ### Bugfix
 * fix `set-repr!` on classes
 * fix conflict with jQuery plugns in bookmark
