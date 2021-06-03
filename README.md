@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.12-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&d9b7bcf0994a8039534981c3c41b552d21ac7d1a)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&1f325ad19446b5794075baa61bf0ddce72f1a6af)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&25a417d0b61dd73dde71da232355132a)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)

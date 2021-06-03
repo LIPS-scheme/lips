@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 03 Jun 2021 09:25:18 +0000
+ * build: Thu, 03 Jun 2021 11:50:16 +0000
  */
 (function () {
 	'use strict';
@@ -1357,6 +1357,9 @@
 
 	var regenerator = runtime_1;
 
+	var _excluded = ["token"],
+	    _excluded2 = ["stderr", "stdin", "stdout"];
+
 	function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 	function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
@@ -2096,7 +2099,7 @@
 
 	  function multiline_formatter(meta) {
 	    var token = meta.token,
-	        rest = _objectWithoutProperties(meta, ["token"]);
+	        rest = _objectWithoutProperties(meta, _excluded);
 
 	    if (token.match(/^"[\s\S]*"$/) && token.match(/\n/)) {
 	      var re = new RegExp('^ {1,' + (meta.col + 1) + '}', 'mg');
@@ -10005,7 +10008,7 @@
 	        stderr = _ref26.stderr,
 	        stdin = _ref26.stdin,
 	        stdout = _ref26.stdout,
-	        obj = _objectWithoutProperties(_ref26, ["stderr", "stdin", "stdout"]);
+	        obj = _objectWithoutProperties(_ref26, _excluded2);
 
 	    if (typeof this !== 'undefined' && !(this instanceof Interpreter) || typeof this === 'undefined') {
 	      return new Interpreter(name, _objectSpread({
@@ -14487,10 +14490,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 03 Jun 2021 09:25:18 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 03 Jun 2021 11:50:16 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 03 Jun 2021 09:25:18 +0000').valueOf();
+	    var date = LString('Thu, 03 Jun 2021 11:50:16 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14535,7 +14538,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 03 Jun 2021 09:25:18 +0000',
+	    date: 'Thu, 03 Jun 2021 11:50:16 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
