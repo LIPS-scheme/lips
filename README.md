@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.12-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&c7f2477a0fe79166b7747b20589e58ea1b7d4c7e)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&73e2f1cf6b595c8f5c579c04990750c3f5fa9da6)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&25a417d0b61dd73dde71da232355132a)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -192,17 +192,18 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ### 1.0
 - [x] Full support for R5RS
 - [ ] Full support for R7RS
+  - [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] Continuations.
 - [ ] Tail Call Optimization (TCO).
 - [ ] Fully tested Numerical Tower.
-- [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] All recursive function in JS don't consume stack.
+- [ ] Picture language (possibly inspired by ProcessingJS).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
-- [ ] Picture language (possibly inspired by ProcessingJS)
   - [ ] Objects.
   - [ ] Vectors.
 
 ### 1.1
+- [ ] Fully working JSON Compiler (for faster parsing and loading std lib).
 - [ ] Proper expansion time for both macro system.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 

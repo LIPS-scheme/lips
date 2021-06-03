@@ -192,17 +192,18 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ### 1.0
 - [x] Full support for R5RS
 - [ ] Full support for R7RS
+  - [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] Continuations.
 - [ ] Tail Call Optimization (TCO).
 - [ ] Fully tested Numerical Tower.
-- [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] All recursive function in JS don't consume stack.
+- [ ] Picture language (possibly inspired by ProcessingJS).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
-- [ ] Picture language (possibly inspired by ProcessingJS)
   - [ ] Objects.
   - [ ] Vectors.
 
 ### 1.1
+- [ ] Fully working JSON Compiler (for faster parsing and loading std lib).
 - [ ] Proper expansion time for both macro system.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 
