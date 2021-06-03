@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.12-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&d63e4d40a13075e38241f1c03c0cc014fc19ada9)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&3d83a5452749e79ba3c2b3ff1a4e074e30b7b3e1)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&64ed443d0b922f100bd1e27a5b7039bd)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -60,7 +60,7 @@ then include the file in the script tag. You can grab the version from unpkg.com
 https://unpkg.com/@jcubic/lips@beta
 ```
 
-or from jsdelivery
+or from jsdelivry (that's seems a bit faster)
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
@@ -184,7 +184,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 
 ## Links
 * [Gitter Chat](https://gitter.im/jcubic/lips)
-* [Git Repository](https://github.com/jcubic/lips)
+* [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 
 ## Roadmap
@@ -198,6 +198,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 - [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] All recursive function in JS don't consume stack.
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
+- [ ] Picture language (possibly inspired by ProcessingJS)
   - [ ] Objects.
   - [ ] Vectors.
 
