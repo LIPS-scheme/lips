@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 03 Jun 2021 14:13:51 +0000
+ * build: Thu, 03 Jun 2021 14:44:54 +0000
  */
 (function () {
 	'use strict';
@@ -4010,7 +4010,7 @@
 
 	    if (name) {
 	      fn.__name__ = name;
-	    } else if (fn.name && !fn[__lambda__]) {
+	    } else if (fn.name && !is_lambda(fn)) {
 	      fn.__name__ = fn.name;
 	    }
 
@@ -5062,7 +5062,7 @@
 
 
 	  function is_lips_function(x) {
-	    return is_function(x) && (x[__lambda__] || x.__doc__);
+	    return is_function(x) && (is_lambda(x) || x.__doc__);
 	  } // ----------------------------------------------------------------------
 
 
@@ -5151,7 +5151,7 @@
 
 	    var constructor = fn.prototype && fn.prototype.constructor;
 
-	    if (is_function(constructor) && constructor[__lambda__]) {
+	    if (is_function(constructor) && is_lambda(constructor)) {
 	      if (fn[__class__] && constructor.hasOwnProperty('__name__')) {
 	        var name = constructor.__name__;
 
@@ -5178,7 +5178,7 @@
 
 	    if (has_own_function(fn, 'toString')) {
 	      return fn.toString();
-	    } else if (fn.name && !fn[__lambda__]) {
+	    } else if (fn.name && !is_lambda(fn)) {
 	      return "#<procedure:".concat(fn.name.trim(), ">");
 	    } else {
 	      return '#<procedure>';
@@ -5323,12 +5323,16 @@
 	      } // user defined representation
 
 
-	      if (is_function(obj.toString) && obj.toString[__lambda__]) {
+	      if (is_function(obj.toString) && is_lambda(obj.toString)) {
 	        return obj.toString().valueOf();
 	      }
 
-	      if (type(obj) === 'instance' && !is_native_function(constructor)) {
-	        name = 'instance';
+	      if (type(obj) === 'instance') {
+	        if (is_lambda(constructor) && constructor.__name__) {
+	          name = constructor.__name__.valueOf();
+	        } else if (!is_native_function(constructor)) {
+	          name = 'instance';
+	        }
 	      }
 
 	      if (is_iterator(obj, Symbol.iterator)) {
@@ -7153,7 +7157,7 @@
 	      hidden_prop(bound, '__native__', true);
 	    }
 
-	    if (is_plain_object(context) && fn[__lambda__]) {
+	    if (is_plain_object(context) && is_lambda(fn)) {
 	      hidden_prop(bound, '__method__', true);
 	    }
 
@@ -7268,6 +7272,21 @@
 	      var wrapper = new Function("f", "return function(".concat(args, ") {\n                return f.apply(this, arguments);\n            };"));
 	      return wrapper(fn);
 	    }
+	  } // ----------------------------------------------------------------------
+
+
+	  function is_lambda(obj) {
+	    return obj && obj[__lambda__];
+	  } // ----------------------------------------------------------------------
+
+
+	  function is_method(obj) {
+	    return obj && obj[__method__];
+	  } // ----------------------------------------------------------------------
+
+
+	  function is_raw_lambda(fn) {
+	    return is_lambda(fn) && !fn[__prototype__] && !is_method(fn) && !is_port_method(fn);
 	  } // ----------------------------------------------------------------------
 
 
@@ -11419,7 +11438,7 @@
 	          env = env.__parent__;
 	        }
 
-	        if (new_expr && (is_function(value) && value[__lambda__] || value instanceof Syntax)) {
+	        if (new_expr && (is_function(value) && is_lambda(value) || value instanceof Syntax)) {
 	          value.__name__ = code.car.valueOf();
 
 	          if (value.__name__ instanceof LString) {
@@ -13733,11 +13752,6 @@
 	  } // -------------------------------------------------------------------------
 
 
-	  function is_raw_lambda(fn) {
-	    return fn[__lambda__] && !fn[__prototype__] && !fn[__method__] && !is_port_method(fn);
-	  } // -------------------------------------------------------------------------
-
-
 	  function prepare_fn_args(fn, args) {
 	    if (is_bound(fn) && !is_object_bound(fn) && (!lips_context(fn) || is_port_method(fn))) {
 	      args = args.map(unbox);
@@ -14492,10 +14506,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 03 Jun 2021 14:13:51 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 03 Jun 2021 14:44:54 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 03 Jun 2021 14:13:51 +0000').valueOf();
+	    var date = LString('Thu, 03 Jun 2021 14:44:54 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14540,7 +14554,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 03 Jun 2021 14:13:51 +0000',
+	    date: 'Thu, 03 Jun 2021 14:44:54 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

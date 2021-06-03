@@ -805,10 +805,11 @@
                               (append (%class-lambda constructor)
                                       (list 'this))))
            (set-obj! ,name (Symbol.for "__class__") true)
-           ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
+           ,(if (not (null? parent))
                 `(begin
                    (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))
                    (set-obj! (. ,name 'prototype) 'constructor ,name)))
+           (set-obj! ,name '__name__ ',name)
            ,@(map (lambda (fn)
                     `(set-obj! (. ,name 'prototype)
                                ,(%class-method-name (car fn))

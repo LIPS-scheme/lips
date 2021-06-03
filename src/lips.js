@@ -1777,7 +1777,7 @@
         }
         if (name) {
             fn.__name__ = name;
-        } else if (fn.name && !fn[__lambda__]) {
+        } else if (fn.name && !is_lambda(fn)) {
             fn.__name__ = fn.name;
         }
         return fn;
@@ -2624,7 +2624,7 @@
     }
     // ----------------------------------------------------------------------
     function is_lips_function(x) {
-        return is_function(x) && (x[__lambda__] || x.__doc__);
+        return is_function(x) && (is_lambda(x) || x.__doc__);
     }
     // ----------------------------------------------------------------------
     function user_repr(obj) {
@@ -2700,7 +2700,7 @@
             return '#<procedure(native)>';
         }
         const constructor = fn.prototype && fn.prototype.constructor;
-        if (is_function(constructor) && constructor[__lambda__]) {
+        if (is_function(constructor) && is_lambda(constructor)) {
             if (fn[__class__] && constructor.hasOwnProperty('__name__')) {
                 let name = constructor.__name__;
                 if (LString.isString(name)) {
@@ -2721,7 +2721,7 @@
         }
         if (has_own_function(fn, 'toString')) {
             return fn.toString();
-        } else if (fn.name && !fn[__lambda__]) {
+        } else if (fn.name && !is_lambda(fn)) {
             return `#<procedure:${fn.name.trim()}>`;
         } else {
             return '#<procedure>';
@@ -2831,11 +2831,15 @@
                 name = constructor.name;
             }
             // user defined representation
-            if (is_function(obj.toString) && obj.toString[__lambda__]) {
+            if (is_function(obj.toString) && is_lambda(obj.toString)) {
                 return obj.toString().valueOf();
             }
-            if (type(obj) === 'instance' && !is_native_function(constructor)) {
-                name = 'instance';
+            if (type(obj) === 'instance') {
+                if (is_lambda(constructor) && constructor.__name__) {
+                    name = constructor.__name__.valueOf();
+                } else if (!is_native_function(constructor)) {
+                    name = 'instance';
+                }
             }
             if (is_iterator(obj, Symbol.iterator)) {
                 if (name) {
@@ -4234,7 +4238,7 @@
         if (is_native_function(fn)) {
             hidden_prop(bound, '__native__', true);
         }
-        if (is_plain_object(context) && fn[__lambda__]) {
+        if (is_plain_object(context) && is_lambda(fn)) {
             hidden_prop(bound, '__method__', true);
         }
         bound.valueOf = function() {
@@ -4326,6 +4330,19 @@
             };`);
             return wrapper(fn);
         }
+    }
+    // ----------------------------------------------------------------------
+    function is_lambda(obj) {
+        return obj && obj[__lambda__];
+    }
+    // ----------------------------------------------------------------------
+    function is_method(obj) {
+        return obj && obj[__method__];
+    }
+    // ----------------------------------------------------------------------
+    function is_raw_lambda(fn) {
+        return is_lambda(fn) && !fn[__prototype__] &&
+            !is_method(fn) && !is_port_method(fn);
     }
     // ----------------------------------------------------------------------
     function is_native_function(fn) {
@@ -7380,7 +7397,7 @@
                     env = env.__parent__;
                 }
                 if (new_expr &&
-                    ((is_function(value) && value[__lambda__]) ||
+                    ((is_function(value) && is_lambda(value)) ||
                      (value instanceof Syntax))) {
                     value.__name__ = code.car.valueOf();
                     if (value.__name__ instanceof LString) {
@@ -9581,11 +9598,6 @@
                 return unpromise(evaluate(value, eval_args), finalize);
             }
         });
-    }
-    // -------------------------------------------------------------------------
-    function is_raw_lambda(fn) {
-        return fn[__lambda__] && !fn[__prototype__] &&
-            !fn[__method__] && !is_port_method(fn);
     }
     // -------------------------------------------------------------------------
     function prepare_fn_args(fn, args) {
