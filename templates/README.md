@@ -223,6 +223,8 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
   * [flatten](https://stackoverflow.com/a/27282907/387194),
   * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
+* Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
+
 
 ## License
 

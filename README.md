@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.14-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&058809fbfbc2e0d038998043cc42545a0051410d)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&3b606a6040cdb74547092a9c8f1ff076313f93a9)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&25a417d0b61dd73dde71da232355132a)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -223,6 +223,8 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
   * [flatten](https://stackoverflow.com/a/27282907/387194),
   * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
+* Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
+
 
 ## License
 
