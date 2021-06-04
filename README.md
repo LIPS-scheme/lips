@@ -1,9 +1,9 @@
-![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
+![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true)
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.12-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&3d83a5452749e79ba3c2b3ff1a4e074e30b7b3e1)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&64ed443d0b922f100bd1e27a5b7039bd)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=devel&bbce271899464f9cdb10e86cc2435b8fe8e48435)](https://travis-ci.org/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&25a417d0b61dd73dde71da232355132a)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
@@ -145,7 +145,7 @@ npm install -g @jcubic/lips@beta
 
 you can run the interpreter from the terminal:
 
-![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
 
 
 You can also run code in a string with:
@@ -192,10 +192,10 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ### 1.0
 - [x] Full support for R5RS
 - [ ] Full support for R7RS
+  - [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] Continuations.
 - [ ] Tail Call Optimization (TCO).
 - [ ] Fully tested Numerical Tower.
-- [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] All recursive function in JS don't consume stack.
 - [ ] Picture language (possibly inspired by ProcessingJS).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
@@ -203,6 +203,8 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
   - [ ] Vectors.
 
 ### 1.1
+- [ ] Fully working JSON Compiler (for faster parsing and loading std lib).
+- [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
 - [ ] Proper expansion time for both macro system.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 
@@ -226,6 +228,6 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
-Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/me)
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjcubic%2Flips.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjcubic%2Flips?ref=badge_large)

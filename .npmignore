@@ -17,3 +17,5 @@ tests
 assets
 examples
 scripts
+benchmarks
+*.md

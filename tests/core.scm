@@ -253,6 +253,24 @@
           (t.is (repr promise) "#<js-promise (rejected)>")
           (t.is (not (null? (promise.__reason__.message.match #/ZONK/))) true))))
 
+(test "core: Promise.all on quoted promises"
+      (lambda (t)
+        (let ((expected #(10 20))
+              (result (vector '>(wait 1000 10) '>(wait 1000 20))))
+          (t.is (Promise.all result) expected))))
+
+(test "core: quoted promise in let"
+      (lambda (t)
+
+        (define (timer time value)
+          (new Promise (lambda (resolve) (setTimeout (curry resolve value) time))))
+
+        (define result (let ((x (timer 0 "hello"))
+                             (y '>(timer 200 "world")))
+                         (list x y)))
+        (t.is (car result) "hello")
+        (t.is (repr (cadr result)) "#<js-promise (pending)>")))
+
 (test "core: regex"
       (lambda (t)
         (let* ((str "#/(\\((?:env|dir|help|apropos)[^)]*\\))/g")
@@ -328,3 +346,38 @@
       (lambda (t)
         (t.is (repr '|foo bar| true) "|foo bar|")
         (t.is (repr (string->symbol "foo bar") true) "|foo bar|")))
+
+(test "core: set-repr! on classes"
+      (lambda (t)
+        (define Foo (class Object))
+        (define foo-repr "#<FOO CLASS>")
+        (set-repr! Foo (lambda () foo-repr))
+
+        (t.is (repr (new Foo)) foo-repr)))
+
+(test "core: set-repr! on records"
+      (lambda (t)
+        (define-record-type <pare>
+          (kons x y)
+          pare?
+          (x kar set-kar!)
+          (y kdr set-kdr!))
+
+        (set-repr! <pare>
+                   (lambda (x q)
+                     (string-append "(" (repr (kar x) q)
+                                    " . "
+                                    (repr (kdr x) q)
+                                    ")")))
+
+        (t.is (repr (kons 1 2)) "(1 . 2)")))
+
+(test "core: errors and try..catch"
+      (lambda (t)
+        (let* ((message "Some Error")
+               (args '(1 2 3))
+               (err (try (apply error message args)
+                         (catch (e) e))))
+          (t.is (error-object? err) true)
+          (t.is (error-object-message err) message)
+          (t.is (error-object-irritants err) (list->vector args)))))

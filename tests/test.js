@@ -36,7 +36,7 @@ get_files().then(filenames => {
     })).then(async function (files) {
       await lips.exec(`
         (let-env lips.env.__parent__
-          (load "./dist/std.min.scm")
+          (load "./dist/std.scm")
           (load "./tests/helpers/helpers.scm"))
       `);
       return lips.exec([`

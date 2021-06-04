@@ -244,13 +244,6 @@
                   result))))))
 
 ;; -----------------------------------------------------------------------------
-(define-macro (wait time . expr)
-  "(wait time . expr)
-
-   Function return promise that will resolve with evaluating the expression after delay."
-  `(promise (timer ,time (resolve (begin ,@expr)))))
-
-;; -----------------------------------------------------------------------------
 (define (pair-map fn seq-list)
   "(pair-map fn list)
 
@@ -680,17 +673,6 @@
       (and (fn (car list)) (every fn (cdr list)))))
 
 ;; -----------------------------------------------------------------------------
-(define (zip . args)
-  "(zip list1 list2 ...)
-
-   Create one list by taking each element of each list."
-  (if (null? args)
-      nil
-      (if (some null? args)
-         nil
-         (cons (map car args) (apply zip (map cdr args))))))
-
-;; -----------------------------------------------------------------------------
 (define-macro (promise . body)
   "(promise . body)
 
@@ -698,7 +680,7 @@
   `(new Promise (lambda (resolve reject)
                   (try (begin ,@body)
                        (catch (e)
-                              (error (.. e.message)))))))
+                              (error e.message))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (timer time . body)
@@ -707,6 +689,36 @@
    Macro evaluate expression after delay, it return timer. To clear the timer you can use
    native JS clearTimeout function."
   `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
+
+;; -----------------------------------------------------------------------------
+(define-macro (wait time . expr)
+  "(wait time . expr)
+
+   Function return promise that will resolve with evaluating the expression after delay."
+  `(promise (timer ,time (resolve (begin ,@expr)))))
+
+;; -----------------------------------------------------------------------------
+(define (await value)
+  "(await value)
+
+   Function unquote quoted promise so it can be automagicaly evaluated (resolved
+   to its value)."
+  (if (instanceof lips.QuotedPromise value)
+      (value.valueOf)
+      value))
+
+;; -----------------------------------------------------------------------------
+(define-macro (quote-promise expr)
+  "(quote-promise expr)
+   '>expr
+
+  Macro used to escape promise the whole expression, will be wrapped
+  with JavaScript class that behave like Promise but will not
+  auto resolve like normal promise."
+  `(let ((env))
+      (set! env (current-environment))
+      (env.set (Symbol.for "__promise__") true)
+      ,expr))
 
 ;; -----------------------------------------------------------------------------
 (define (defmacro? obj)
@@ -757,19 +769,6 @@
     `(lambda ,args
        (apply ,(cadr expr) this ,args))))
 
-;; TODO: handle this broken case when arguments are improper list
-;;       Throw proper error
-;; (%class-lambda '(hello (lambda (x y . z) (print z))))
-
-(define (%class-lambda expr)
-  "(%class-lambda expr)
-
-  Define lambda that have self is first argument. The expr is in a form:
-  (constructor (lambda (self ...) . body)) as given by define-class macro."
-  (let ((args (cdadadr expr)))
-    `(lambda (,@args)
-       (,(cadr expr) this ,@args))))
-
 ;; -----------------------------------------------------------------------------
 (define (%class-method-name expr)
   "(%class-method-name expr)
@@ -800,12 +799,17 @@
         `(begin
            (define ,name ,(if (null? constructor)
                               `(lambda ())
-                              (%class-lambda constructor)))
+                              ;; we return this to solve issue when constructor
+                              ;; return a promise
+                              ;; ref: https://stackoverflow.com/a/50885340/387194
+                              (append (%class-lambda constructor)
+                                      (list 'this))))
            (set-obj! ,name (Symbol.for "__class__") true)
-           ,(if (and (not (null? parent)) (not (eq? parent 'Object)))
+           ,(if (not (null? parent))
                 `(begin
                    (set-obj! ,name 'prototype (Object.create (. ,parent 'prototype)))
                    (set-obj! (. ,name 'prototype) 'constructor ,name)))
+           (set-obj! ,name '__name__ ',name)
            ,@(map (lambda (fn)
                     `(set-obj! (. ,name 'prototype)
                                ,(%class-method-name (car fn))
@@ -981,12 +985,16 @@
    Macro that decrement the value it work only on symbols")
 
 ;; -----------------------------------------------------------------------------
-(define (pretty-format pair)
+(define (pretty-format . lists)
   "(pretty-format pair)
 
    Function return pretty printed string from pair expression."
-  (typecheck "pretty-pair" pair "pair")
-  (--> (new lips.Formatter (repr pair true)) (break) (format)))
+  (let ((code (--> (list->vector lists)
+                   (map (lambda (pair i)
+                          (typecheck "pretty-pair" pair "pair" i)
+                          (repr pair true)))
+                   (join ""))))
+    (--> (new lips.Formatter code) (break) (format))))
 
 ;; -----------------------------------------------------------------------------
 (define (reset)
@@ -1076,25 +1084,6 @@
   (throw (new Error (string-append "You're using invalid quote character run: "
                                    "(set-special! \"’\" 'quote)"
                                    " to allow running this type of quote"))))
-
-;; -----------------------------------------------------------------------------
-(define-macro (quote-promise expr)
-  "(quote-promise expr)
-   '>expr
-
-  Macro used to escape promise the whole expression, will be wrapped
-  with JavaScript class that behave like Promise but will not
-  auto resolve like normal promise."
-  `(let ((env))
-      (set! env (current-environment))
-      (env.set (Symbol.for "__promise__") true)
-      ,expr))
-
-;; -----------------------------------------------------------------------------
-(define (await value)
-  (if (instanceof lips.QuotedPromise value)
-      (value.valueOf)
-      value))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (let-env-values env spec . body)
@@ -1353,6 +1342,67 @@
       (Uint8Array.from bin)))
 
 ;; -----------------------------------------------------------------------------
+(define (complement fn)
+  "(complement fn)
+
+   Higer order function that returns complement of the given function. If the function fn
+   for a given arguments return true the result function will return false, if it would
+   return false, the result function will return true."
+  (typecheck "complement" fn "function")
+  (lambda args
+    (not (apply fn args))))
+
+;; -----------------------------------------------------------------------------
+(define (always constant)
+  "(always constant)
+
+   Higher order function returns new function that always return given constant."
+  (lambda ()
+    constant))
+
+;; -----------------------------------------------------------------------------
+(define (once fn)
+  "(once fn)
+
+   Higher order function that return new function, that is guarantee
+   to be called only once."
+  (typecheck "once" fn "function")
+  (let ((result))
+    (lambda args
+      (if (string=? (type result) "undefined")
+          (set! result (apply fn args)))
+      result)))
+
+;; -----------------------------------------------------------------------------
+(define (flip fn)
+  "(flip fn)
+
+   Higher order function that return new function where first two arguments are swapped.
+
+   Example:
+
+     (define first (curry (flip vector-ref) 0))
+     (first #(1 2 3))
+     ;; ==> 1"
+  (typecheck "flip" fn "function")
+  (lambda (a b . rest)
+    (apply fn b a rest)))
+
+;; -----------------------------------------------------------------------------
+(define (unfold fn init)
+  "(unfold fn init)
+
+   Function returns list from given function and init value. The function should
+   return cons where first is the item added to the list and second is next value
+   passed to the funtion. If function return false it end the loop."
+  (typecheck "unfold" fn "function")
+  (let iter ((pair (fn init)) (result '()))
+    (if (not pair)
+        (reverse result)
+        (iter (fn (cdr pair)) (cons (car pair) result)))))
+
+;; -----------------------------------------------------------------------------
+
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
@@ -1788,7 +1838,7 @@
 
 ;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
-(define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+(define _maths (list "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
 
 ;; -----------------------------------------------------------------------------
 (define _this_env (current-environment))
@@ -1805,6 +1855,17 @@
                                   " math operation (it call JavaScript Math)." name
                                   " function."))
         (iter (cdr fns)))))
+
+;; -----------------------------------------------------------------------------
+(define (exp x)
+  (typecheck "exp" x "number")
+  (if (string=? x.__type__ "complex")
+      (let* ((re (real-part x))
+             (im (imag-part x))
+             (factor (Math.exp re)))
+         (make-rectangular (* factor (cos im))
+                           (* factor (sin im))))
+       (Math.exp x)))
 
 ;; -----------------------------------------------------------------------------
 (define (modulo a b)
@@ -2447,7 +2508,7 @@
   (length vec))
 
 ;; -----------------------------------------------------------------------------
-;; case macro from R7RS spec https://small.r7rs.org/attachment/r7rs.pdf
+;; case macro from R7RS spec https://small.r7rs.org/wiki/R7RSSmallErrata/
 ;; -----------------------------------------------------------------------------
 (define-syntax case
   (syntax-rules (else =>)
@@ -2462,10 +2523,6 @@
        (else result1 result2 ...))
      (begin result1 result2 ...))
     ((case key
-       ((atoms ...) result1 result2 ...))
-     (if (memv key '(atoms ...))
-         (begin result1 result2 ...)))
-    ((case key
        ((atoms ...) => result))
      (if (memv key '(atoms ...))
          (result key)))
@@ -2475,6 +2532,10 @@
      (if (memv key '(atoms ...))
          (result key)
          (case key clause clauses ...)))
+    ((case key
+       ((atoms ...) result1 result2 ...))
+     (if (memv key '(atoms ...))
+         (begin result1 result2 ...)))
     ((case key
        ((atoms ...) result1 result2 ...)
        clause clauses ...)
@@ -3248,8 +3309,6 @@
   (try (thunk)
        (catch (e)
               (handler e))))
-;; -----------------------------------------------------------------------------
-(define raise throw)
 
 ;; -----------------------------------------------------------------------------
 ;; macro definition taken from R7RS spec
@@ -3337,7 +3396,7 @@
     ((_ "step" arg ...)
      (join " " (vector->list  (vector (repr arg) ...))))
     ((_ message arg ...)
-     (raise (new Error (format "~a ~a" message (_ "step" arg ...)))))))
+     (error (format "~a ~a" message (_ "step" arg ...))))))
 
 ;; -----------------------------------------------------------------------------
 ;; based on https://srfi.schemers.org/srfi-0/srfi-0.html
@@ -3893,11 +3952,11 @@
 
    Macro for defining records. Example of usage:
 
-      (define-record-type <pare>
-        (kons x y)
-        pare?
-        (x kar set-kar!)
-        (y kdr set-kdr!))
+   (define-record-type <pare>
+     (kons x y)
+     pare?
+     (x kar set-kar!)
+     (y kdr set-kdr!))
 
    (define p (kons 1 2))
    (print (kar p))
@@ -3905,26 +3964,25 @@
    (set-kdr! p 3)
    (print (kdr p))
    ;; 3"
-  (let ((class-name (gensym))
-        (obj-name (gensym))
-        (value-name (gensym)))
+  (let ((obj-name (gensym 'obj-name))
+        (value-name (gensym 'value-name)))
     `(begin
-       (define ,class-name (class Object
-                                  (constructor (lambda (self ,@(cdr constructor))
-                                                 ,@(map (lambda (field)
-                                                          (let* ((name (symbol->string field))
-                                                                 (prop (string-append "self."
-                                                                                      name)))
-                                                            `(set! ,(string->symbol prop) ,field)))
-                                                        (cdr constructor))))
-                                  (toType (lambda (self)
-                                            "record"))
-                                  (toString (lambda (self)
-                                              ,(symbol->string name)))))
+       (define ,name (class Object
+                            (constructor (lambda (self ,@(cdr constructor))
+                                           ,@(map (lambda (field)
+                                                    (let* ((name (symbol->string field))
+                                                           (prop (string-append "self."
+                                                                                name)))
+                                                      `(set! ,(string->symbol prop) ,field)))
+                                                  (cdr constructor))))
+                            (toType (lambda (self)
+                                      "record"))
+                            (toString (lambda (self)
+                                        (string-append "#<" ,(symbol->string name) ">")))))
        (define ,constructor
-         (new ,class-name ,@(cdr constructor)))
+         (new ,name ,@(cdr constructor)))
        (define (,pred obj)
-         (instanceof ,class-name obj))
+         (instanceof ,name obj))
        ,@(map (lambda (field)
                 (let ((prop-name (car field))
                       (get (cadr field))
@@ -4126,6 +4184,37 @@
             Function change current working directory to provided string."
            (typecheck "set-current-directory!" value "string")
            (process.chdir value))))))
+
+;; -----------------------------------------------------------------------------
+(define (error message . args)
+  "(error message ...)
+
+   Function raises error with given message and arguments,
+   which are called invariants."
+  (raise (new lips.Error message (args.to_array))))
+
+;; -----------------------------------------------------------------------------
+(define (error-object? obj)
+  "(error-object? obj)
+
+   Function check if object is of Error object throwed by error function."
+  (instanceof lips.Error obj))
+
+;; -----------------------------------------------------------------------------
+(define (error-object-message obj)
+  "(error-object-message error-object)
+
+   Returns the message encapsulated by error-object."
+  (if (error-object? obj)
+      obj.message))
+
+;; -----------------------------------------------------------------------------
+(define (error-object-irritants obj)
+  "(error-object-irritants error-object)
+
+   Returns a list of the irritants encapsulated by error-object."
+  (if (error-object? obj)
+      obj.args))
 
 ;; -----------------------------------------------------------------------------
 ;; -----------------------------------------------------------------------------

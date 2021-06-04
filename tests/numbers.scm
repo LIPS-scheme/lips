@@ -157,6 +157,79 @@
         (t.is (+ 1/2 +inf.0) +inf.0)
         (t.is (+ 10+10i +inf.0) +inf.0+10i)))
 
+(test "operators: / with NaN"
+      (lambda (t)
+        (t.is (/ +nan.0+nan.0i 10) +nan.0+nan.0i)
+        (t.is (/ +nan.0+nan.0i 10.0) +nan.0+nan.0i)
+        (t.is (/ +nan.0+nan.0i 1/2) +nan.0+nan.0i)
+        (t.is (/ +nan.0+nan.0i +nan.0+nan.0i) +nan.0+nan.0i)
+
+        (t.is (/ +nan.0 2) +nan.0)
+        (t.is (/ +nan.0 1/2) +nan.0)
+        (t.is (/ +nan.0 0.5) +nan.0)
+
+        (t.is (/ 2 +nan.0) +nan.0)
+        (t.is (/ 1/2 +nan.0) +nan.0)
+        (t.is (/ 0.5 +nan.0) +nan.0)
+
+        (t.is (/ +nan.0+10i 2) +nan.0+5i)
+        (t.is (/ +nan.0+1/2i 2) +nan.0+1/4i)
+        (t.is (/ +nan.0+0.5i 2) +nan.0+0.25i)
+
+        (t.is (/ +nan.0+10i 1/2) +nan.0+20i)
+        (t.is (/ +nan.0+1/2i 1/2) +nan.0+i)
+        (t.is (/ +nan.0+0.5i 1/2) +nan.0+1.0i)
+
+        (t.is (/ +nan.0+10i 0.5) +nan.0+20.0i)
+        (t.is (/ +nan.0+1/2i 0.5) +nan.0+1.0i)
+        (t.is (/ +nan.0+0.5i 0.5) +nan.0+1.0i)
+
+        ;; reversed
+        (t.is (/ 10+nan.0i 2) 5+nan.0i)
+        (t.is (/ 1/2+nan.0i 2) 1/4+nan.0i)
+        (t.is (/ 0.5+nan.0i 2) 0.25+nan.0i)
+
+        (t.is (/ 10+nan.0i 1/2) 20+nan.0i)
+        (t.is (/ 1/2+nan.0i 1/2) 1+nan.0i)
+        (t.is (/ .5+nan.0i 1/2) 1.0+nan.0i)
+
+        (t.is (/ 10+nan.0i 0.5) 20.0+nan.0i)
+        (t.is (/ 1/2+nan.0i 0.5) 1.0+nan.0i)
+        (t.is (/ 0.5+nan.0i 0.5) 1.0+nan.0i)
+
+        ;; complex
+        (t.is (/ +nan.0+10i 0.5+0.5i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+1/2i 0.5+0.5i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+0.5i 0.5+0.5i) +nan.0+nan.0i)
+
+        (t.is (/ +nan.0+10i 1/2+0.5i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+1/2i 1/2+0.5i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+0.5i 1/2+0.5i) +nan.0+nan.0i)
+
+        (t.is (/ +nan.0+10i 1/2+1/2i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+1/2i 1/2+1/2i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+0.5i 1/2+1/2i) +nan.0+nan.0i)
+
+        (t.is (/ +nan.0+10i 0.5+1/2i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+1/2i 0.5+1/2i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+0.5i 0.5+1/2i) +nan.0+nan.0i)
+
+        (t.is (/ +nan.0+10i 10+1/2i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+1/2i 10+1/2i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+0.5i 10+1/2i) +nan.0+nan.0i)
+
+        (t.is (/ +nan.0+10i 10+0.5i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+1/2i 10+0.5i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+0.5i 10+0.5i) +nan.0+nan.0i)
+
+        (t.is (/ +nan.0+10i 1/2+10i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+1/2i 1/2+10i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+0.5i 1/2+10i) +nan.0+nan.0i)
+
+        (t.is (/ +nan.0+10i 0.5+10i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+1/2i 0.5+10i) +nan.0+nan.0i)
+        (t.is (/ +nan.0+0.5i 0.5+10i) +nan.0+nan.0i)))
+
 (test "numbers: complex infinity"
       (lambda (t)
         (t.is (number->string +inf.0+10i) "+inf.0+10i")
@@ -799,7 +872,16 @@
           (t.is (eqv? a b) #f)
           (t.is (equal? a b) #f)
           (t.is (= a b) #t)
-          (t.is (number->string b) "-0.0"))))
+          (t.is (number->string b) "-0.0"))
+
+        (t.is (to.throw (/ 1 0)) true)
+        (t.is (/ 1.0 0) +inf.0)
+        (t.is (/ 1 0.0) +inf.0)
+        (t.is (/ 1 -0.0) -inf.0)
+        (t.is (/ 1 -inf.0) -0.0)
+        (t.is (/ 1 +inf.0) 0.0)
+        (t.is (/ 0.0 -37) -0.0)
+        (t.is (/ 0 -37) 0)))
 
 (test "numbers: exact->inexact"
       (lambda (t)
@@ -815,3 +897,20 @@
 
         (t.is (exact->inexact 1/2+10i) 0.5+10.0i)
         (t.is (exact->inexact 1/2+10.0i) 0.5+10.0i)))
+
+(test "operation: exp"
+      (lambda (t)
+        ;; big int
+        (t.is (exp 2) 7.38905609893065)
+        (t.is (exp 3) 20.085536923187668)
+        (t.is (exp 4) 54.598150033144236)
+        ;; rational, float use Math.exp
+        (t.is (exp 1/2) (exp 0.5))
+        (t.is (exp 1/3) (exp (exact->inexact 1/3)))
+        ;; complex
+        (t.is (exp 2+2i) -3.074932320639359+6.71884969742825i)
+        (t.is (exp +i) 0.5403023058681398+0.8414709848078965i)
+        (t.is (exp -i) 0.5403023058681398-0.8414709848078965i)
+        (t.is (exp -2-2i) -0.05631934999212789-0.12306002480577674i)
+        (t.is (exp +2-2i) -3.074932320639359-6.71884969742825i)
+        (t.is (exp -2+2i) -0.05631934999212789+0.12306002480577674i)))

@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 
 const lily = require('@jcubic/lily');
+const util = require('util');
 
-const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug'];
+const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b'];
 const options = lily(process.argv.slice(2), { boolean });
 
 const {
     exec,
+    parse,
     Formatter,
+    serialize,
+    unserialize,
     balanced_parenthesis,
     tokenize,
     Interpreter,
@@ -22,7 +26,7 @@ const {
     env,
     banner,
     InputPort,
-    OutputPort } = require(options.debug ? '../src/lips' : '../dist/lips');
+    OutputPort } = require('../src/lips');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -49,74 +53,91 @@ function debug(message) {
     console.log(message);
 }
 // -----------------------------------------------------------------------------
-function run(code, interpreter, dynamic = false, env = null, stack = false) {
-    if (typeof code !== 'string') {
-        code = code.toString();
+async function run(code, interpreter, dynamic = false, env = null, stack = false) {
+    try {
+        return await interpreter.exec(code, dynamic, env)
+    } catch (e) {
+        print_error(e, stack);
     }
-    return interpreter.exec(code, dynamic, env).catch(function(e) {
-        if (!e) {
-            console.log('Error is null');
-            return;
-        }
-        if (!stack) {
-            console.error(e.message);
-        }
-        log_error(e.message);
-        if (e.__code__) {
-            strace = e.__code__.map((line, i) => {
-                var prefix = `[${i+1}]: `;
-                var formatter = new Formatter(line);
-                var output = formatter.break().format({
-                    offset: prefix.length
-                });
-                return prefix + output;
-            }).join('\n');
-        }
-        if (stack) {
-            console.error(e.stack);
-            console.error(strace);
-        } else {
-            console.error('Call (stack-trace) to see the stack');
-            console.error('Thrown exception is in global exception variable, use ' +
-                          '(display exception.stack) to display JS stack trace');
-        }
-        global.exception = e;
-    });
 }
+
+// -----------------------------------------------------------------------------
+function print_error(e, stack) {
+    if (!e) {
+        console.log('Error is null');
+        return;
+    }
+    log_error(e.message);
+    if (e.__code__) {
+        strace = e.__code__.map((line, i) => {
+            var prefix = `[${i+1}]: `;
+            var formatter = new Formatter(line);
+            var output = formatter.break().format({
+                offset: prefix.length
+            });
+            return prefix + output;
+        }).join('\n');
+    }
+    if (stack) {
+        console.error(e.stack);
+        console.error(strace);
+    } else {
+        console.error(e.message);
+        console.error('Call (stack-trace) to see the stack');
+        console.error('Thrown exception is in global exception variable, use ' +
+                      '(display exception.stack) to display JS stack trace');
+    }
+    global.exception = e;}
+
 
 // -----------------------------------------------------------------------------
 function print(result) {
     if (result && result.length) {
         var last = result.pop();
         if (last !== undefined) {
-            var ret = env.get('repr')(last, true);
-            console.log('\x1b[K' + ret.toString());
+            try {
+                var ret = env.get('repr')(last, true);
+                console.log('\x1b[K' + ret.toString());
+            } catch(e) {
+                print_error(e, options.t || options.trace);
+            }
         }
     }
 }
-// -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
 function bootstrap(interpreter) {
     var list = ['./dist/std.scm'];
+    function open(name) {
+        var path;
+        try {
+            path = require.resolve(`./${name}`);
+        } catch (e) {
+            try {
+                path = require.resolve(`../${name}`);
+            } catch (e) {
+                path = require.resolve(`@jcubic/lips/../${name}`);
+            }
+        }
+        return fs.readFileSync(path).toString();
+    }
     return (function next() {
         var name = list.shift();
         if (name) {
-            var path;
-            try {
-                path = require.resolve(`./${name}`);
-            } catch (e) {
-                try {
-                    path = require.resolve(`../${name}`);
-                } catch (e) {
-                    path = require.resolve(`@jcubic/lips/../${name}`);
-                }
+            var data = open(name);
+            if (compiled(name)) {
+                data = unserialize(data);
             }
-            var data = fs.readFileSync(path);
             return run(data, interpreter, false, env.__parent__, true).then(next);
         } else {
             return Promise.resolve();
         }
     })();
+}
+
+// -----------------------------------------------------------------------------
+function compiled(name) {
+    return name.match(/\.xcm$/);
 }
 
 // -----------------------------------------------------------------------------
@@ -217,6 +238,10 @@ var interp = Interpreter('repl', {
     '__help': env.get('help')
 });
 
+function readFile(filename) {
+    const buff = fs.readFileSync(filename);
+    return buff.toString().replace(/^#!.*\n/, '');
+}
 // -----------------------------------------------------------------------------
 
 if (options.version || options.V) {
@@ -238,13 +263,36 @@ if (options.version || options.V) {
     bootstrap(interp).then(function() {
         return run('(for-each (lambda (x) (write x) (newline)) output)', interp, options.d || options.dynamic);
     });
-} else if (options.e || options.eval || options.c || options.code) {
+} else if (options.e || options.eval) {
     // from 1.0 documentation should use -e but it's not breaking change
     bootstrap(interp).then(function() {
-        const code = options.e || options.eval || options.c || options.code;
+        const code = options.e || options.eval;
         const dynamic = options.d || options.dynamic;
         return run(code, interp, dynamic, null, true).then(print);
     });
+} else if (options.b && options._.length === 1) {
+    const filename = options._[0];
+    const code = readFile(filename);
+    if (compiled(filename)) {
+        for (expr of unserialize(code)) {
+            console.log(expr.toString(true));
+        }
+    }
+} else if ((options.c || options.compile) && options._.length === 1) {
+    try {
+        const filename = options._[0];
+        console.log('Experimental compiler');
+        console.log(`Compiling ${filename} ...`);
+        const compiled_name = filename.replace(/\.[^.]+$/, '') + '.xcm';
+        var code = readFile(filename);
+        bootstrap(interp).then(function() {
+            parse(code, interp.__env__).then(code => {
+                fs.writeFileSync(compiled_name, serialize(code));
+            });
+        });
+    } catch(e) {
+        console.log(e);
+    }
 } else if (options._.length >= 1) {
     // hack for node-gtk
     const rl = readline.createInterface({
@@ -260,22 +308,26 @@ if (options.version || options.V) {
         }
         process.exit();
     });
-    fs.promises.readFile(options._[0]).then(function(data) {
+    const filename = options._[0];
+    try {
+        let code = readFile(filename);
+        if (compiled(filename)) {
+            code = unserialize(code);
+        }
         return bootstrap(interp).then(() => {
-            const code = data.toString().replace(/^#!.*\n/, '');
             const dynamic = options.d || options.dynamic;
             return run(code, interp, dynamic, null, options.t || options.trace);
         });
-    }).catch(err => {
+    } catch (err) {
         log_error(err.message || err);
         console.error(err);
-    }).finally(function() {
+    } finally {
         rl.close();
-    });
+    }
 } else if (options.h || options.help) {
     var name = process.argv[1];
     var intro = banner.replace(/(me>\n)[\s\S]+$/, '$1');
-    console.log(format('%s\nusage:\n  %s -q | -h | -t | -c <code> | <filename> | -d\n\n  [-h --help]\t' +
+    console.log(format('%s\nusage:\n  %s -q | -h | -t | -e <code> | <filename> | -d\n\n  [-h --help]\t' +
                        '\tthis help message\n  [-e --eval]\t\texecute code\n  [-V --version]\tdisplay ' +
                        'version information according to srfi-176\n  [-q --quiet]\t\tdon\'t display ba' +
                        'nner in REPL\n  [-d --dynamic]\trun interpreter with dynamic scope\n  [-t --tr' +
@@ -286,7 +338,7 @@ if (options.version || options.V) {
     const dynamic = options.d || options.dynamic;
     const entry = '   ' + (dynamic ? 'dynamic' : 'lexical') + ' scope $1';
     if (process.stdin.isTTY && !options.q && !options.quiet) {
-        console.log(banner.replace(/(\n\nLIPS.+)/m, entry));
+        console.log(banner.replace(/(\n\nLIPS.+)/m, entry)); // '
     }
     var prompt = 'lips> ';
     var continuePrompt = '... ';

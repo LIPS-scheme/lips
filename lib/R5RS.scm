@@ -433,7 +433,7 @@
 
 ;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
-(define _maths (list "exp" "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+(define _maths (list "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
 
 ;; -----------------------------------------------------------------------------
 (define _this_env (current-environment))
@@ -450,6 +450,17 @@
                                   " math operation (it call JavaScript Math)." name
                                   " function."))
         (iter (cdr fns)))))
+
+;; -----------------------------------------------------------------------------
+(define (exp x)
+  (typecheck "exp" x "number")
+  (if (string=? x.__type__ "complex")
+      (let* ((re (real-part x))
+             (im (imag-part x))
+             (factor (Math.exp re)))
+         (make-rectangular (* factor (cos im))
+                           (* factor (sin im))))
+       (Math.exp x)))
 
 ;; -----------------------------------------------------------------------------
 (define (modulo a b)
@@ -1092,7 +1103,7 @@
   (length vec))
 
 ;; -----------------------------------------------------------------------------
-;; case macro from R7RS spec https://small.r7rs.org/attachment/r7rs.pdf
+;; case macro from R7RS spec https://small.r7rs.org/wiki/R7RSSmallErrata/
 ;; -----------------------------------------------------------------------------
 (define-syntax case
   (syntax-rules (else =>)
@@ -1107,10 +1118,6 @@
        (else result1 result2 ...))
      (begin result1 result2 ...))
     ((case key
-       ((atoms ...) result1 result2 ...))
-     (if (memv key '(atoms ...))
-         (begin result1 result2 ...)))
-    ((case key
        ((atoms ...) => result))
      (if (memv key '(atoms ...))
          (result key)))
@@ -1120,6 +1127,10 @@
      (if (memv key '(atoms ...))
          (result key)
          (case key clause clauses ...)))
+    ((case key
+       ((atoms ...) result1 result2 ...))
+     (if (memv key '(atoms ...))
+         (begin result1 result2 ...)))
     ((case key
        ((atoms ...) result1 result2 ...)
        clause clauses ...)

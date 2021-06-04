@@ -192,17 +192,19 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ### 1.0
 - [x] Full support for R5RS
 - [ ] Full support for R7RS
+  - [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] Continuations.
 - [ ] Tail Call Optimization (TCO).
 - [ ] Fully tested Numerical Tower.
-- [ ] R7RS libraries (`import`/`export`/`define-library`).
 - [ ] All recursive function in JS don't consume stack.
+- [ ] Picture language (possibly inspired by ProcessingJS).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
-- [ ] Picture language (possibly inspired by ProcessingJS)
   - [ ] Objects.
   - [ ] Vectors.
 
 ### 1.1
+- [ ] Fully working JSON Compiler (for faster parsing and loading std lib).
+- [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
 - [ ] Proper expansion time for both macro system.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 
@@ -226,6 +228,6 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
-Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/jakub-jankiewicz)
+Copyright (c) 2018-2021 [Jakub T. Jankiewicz](https://jcubic.pl/me)
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjcubic%2Flips.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjcubic%2Flips?ref=badge_large)

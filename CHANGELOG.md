@@ -1,3 +1,31 @@
+## 1.0.0-beta.14
+### Breaking
+* remove `zip` function that just `(map list l1 l2 ...)`
+* `raise` now throws object as is (just like JS `throw` keyword)
+* `error` now throws LipsError exception as per R7RS
+### Features
+* R7RS datum labels
+* allow to use `set-repr!` on records (record type name is now a class)
+* match function return `#f` instead of `nil` when fail to match (so it work in `cond` or `if`)
+* new functions `complement`, `always`, `once`, `flip`, `unfold` (inspired by Ramda)
+* add codemirror hits for std lib symbols
+* experimental compiler to JSON (not 100% ready)
+* add support for `exp` on complex numbers
+* add R7RS `error-object?`, `error-object-message` and `error-object-irritants`
+* make `NaN`, `null` and `undefined` parser constants
+* return proper repr of instances of `define-class`
+### Bugfix
+* fix `set-repr!` on classes
+* fix conflict with jQuery plugns in bookmark
+* fix swallowing errors when printing values in Node REPL
+* fix mixed quoted and normal promises in let binding [#154](https://github.com/jcubic/lips/issues/154)
+* fix problem were await affect quoted promise in macros (e.g. `begin`) [#153](https://github.com/jcubic/lips/issues/153)
+* typecheck second argument to `set-obj!`
+* fix `case` macro (use implementation from R7RS Errata)
+* fix async constructor in `define-class`
+* fix methods with improper lists in `define-class`
+* fix null inside quasiquote
+
 ## 1.0.0-beta.12
 ### Breaking
 * `env` and `dir` now returns symbols instead of strings
