@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.14-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&f87942006cf306934091c9f7d2f42ff1602208bd)](https://travis-ci.org/jcubic/lips)
+[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&058809fbfbc2e0d038998043cc42545a0051410d)](https://travis-ci.org/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&25a417d0b61dd73dde71da232355132a)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -23,15 +23,14 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Demo
 
-[Demo](https://lips.js.org/#demo)
-
-[1.0 Beta demo](https://lips.js.org/beta.html)
+[Web REPL Demo](https://lips.js.org/#demo)
 
 ## Features
 
 * Literal regular expression.
-* Asynchronous execution.
+* Asynchronous execution (auto resolving of promises).
 * Possibility to add new syntax (similar to vectors and object).
+* Numerical tower and Big Integer support.
 * Powerful introspection.
 * Great integration with JavaScript.
 * Auto formatting lisp of code (pretty print)
@@ -60,7 +59,7 @@ then include the file in the script tag. You can grab the version from unpkg.com
 https://unpkg.com/@jcubic/lips@beta
 ```
 
-or from jsdelivry (that's seems a bit faster)
+or from jsDelivr (that's seems a bit faster)
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
@@ -197,7 +196,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 - [ ] Tail Call Optimization (TCO).
 - [ ] Fully tested Numerical Tower.
 - [ ] All recursive function in JS don't consume stack.
-- [ ] Picture language (possibly inspired by ProcessingJS).
+- [ ] Picture language (possibly inspired by P5.js).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
   - [ ] Objects.
   - [ ] Vectors.

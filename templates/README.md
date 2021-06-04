@@ -23,15 +23,14 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 ## Demo
 
-[Demo](https://lips.js.org/#demo)
-
-[1.0 Beta demo](https://lips.js.org/beta.html)
+[Web REPL Demo](https://lips.js.org/#demo)
 
 ## Features
 
 * Literal regular expression.
-* Asynchronous execution.
+* Asynchronous execution (auto resolving of promises).
 * Possibility to add new syntax (similar to vectors and object).
+* Numerical tower and Big Integer support.
 * Powerful introspection.
 * Great integration with JavaScript.
 * Auto formatting lisp of code (pretty print)
@@ -60,7 +59,7 @@ then include the file in the script tag. You can grab the version from unpkg.com
 https://unpkg.com/@jcubic/lips@beta
 ```
 
-or from jsdelivry (that's seems a bit faster)
+or from jsDelivr (that's seems a bit faster)
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
@@ -197,7 +196,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 - [ ] Tail Call Optimization (TCO).
 - [ ] Fully tested Numerical Tower.
 - [ ] All recursive function in JS don't consume stack.
-- [ ] Picture language (possibly inspired by ProcessingJS).
+- [ ] Picture language (possibly inspired by P5.js).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
   - [ ] Objects.
   - [ ] Vectors.
