@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 04 Jun 2021 11:25:19 +0000
+ * build: Fri, 04 Jun 2021 12:09:05 +0000
  */
 (function () {
 	'use strict';
@@ -10590,7 +10590,6 @@
 	    '#t': true,
 	    '#f': false,
 	    nil: _nil,
-	    eof: eof,
 	    'null': null,
 	    'NaN': nan,
 	    '+nan.0': nan,
@@ -10598,6 +10597,7 @@
 	  }; // -------------------------------------------------------------------------
 
 	  var global_env = new Environment({
+	    eof: eof,
 	    undefined: undefined$1,
 	    // undefined as parser constant breaks most of the unit tests
 	    // ---------------------------------------------------------------------
@@ -14200,7 +14200,7 @@
 	    }
 
 	    var load = global_env.get('load');
-	    return load.call(lips.env, "".concat(url, "dist/std.scm"), global_env);
+	    return load.call(lips.env, "".concat(url, "dist/std.min.scm"), global_env);
 	  } // -------------------------------------------------------------------------
 
 
@@ -14506,10 +14506,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 04 Jun 2021 11:25:19 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 04 Jun 2021 12:09:05 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 04 Jun 2021 11:25:19 +0000').valueOf();
+	    var date = LString('Fri, 04 Jun 2021 12:09:05 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14554,7 +14554,7 @@
 	  var lips = {
 	    version: '1.0.0-beta.14',
 	    banner: banner,
-	    date: 'Fri, 04 Jun 2021 11:25:19 +0000',
+	    date: 'Fri, 04 Jun 2021 12:09:05 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

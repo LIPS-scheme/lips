@@ -6780,7 +6780,6 @@
         '#t': true,
         '#f': false,
         nil,
-        eof,
         'null': null,
         'NaN': nan,
         '+nan.0': nan,
@@ -6788,6 +6787,7 @@
     };
     // -------------------------------------------------------------------------
     var global_env = new Environment({
+        eof,
         undefined, // undefined as parser constant breaks most of the unit tests
         // ---------------------------------------------------------------------
         'peek-char': doc('peek-char', function(port = null) {
@@ -9859,7 +9859,7 @@
             url += '/';
         }
         var load = global_env.get('load');
-        return load.call(lips.env, `${url}dist/std.scm`, global_env);
+        return load.call(lips.env, `${url}dist/std.min.scm`, global_env);
     }
     // -------------------------------------------------------------------------
     function Worker(url) {
