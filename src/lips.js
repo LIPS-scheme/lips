@@ -5191,6 +5191,17 @@
         return new Array(Number(b)).fill(0).reduce(x => x * a, e);
     };
     // -------------------------------------------------------------------------
+    // use native exponential operator if possible (it's way faster)
+    // -------------------------------------------------------------------------
+    var exp_op = new Function('a,b', 'return a ** b');
+    try {
+        if (exp_op(2, 2) === 4) {
+            pow = exp_op;
+        }
+    } catch(e) {
+        // ignore
+    }
+    // -------------------------------------------------------------------------
     LNumber.prototype.pow = function(n) {
         var value;
         if (LNumber.isBN(this.__value__)) {

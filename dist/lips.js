@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.14
+ *  \_\ /_/ \_\                     /_/ v. DEV
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 04 Jun 2021 12:09:05 +0000
+ * build: Tue, 27 Jul 2021 10:58:35 +0000
  */
 (function () {
 	'use strict';
@@ -8451,6 +8451,18 @@
 	      return x * a;
 	    }, e);
 	  }; // -------------------------------------------------------------------------
+	  // use native exponential operator if possible (it's way faster)
+	  // -------------------------------------------------------------------------
+
+
+	  var exp_op = new Function('a,b', 'return a ** b');
+
+	  try {
+	    if (exp_op(2, 2) === 4) {
+	      pow = exp_op;
+	    }
+	  } catch (e) {// ignore
+	  } // -------------------------------------------------------------------------
 
 
 	  LNumber.prototype.pow = function (n) {
@@ -14506,10 +14518,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 04 Jun 2021 12:09:05 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Tue, 27 Jul 2021 10:58:35 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 04 Jun 2021 12:09:05 +0000').valueOf();
+	    var date = LString('Tue, 27 Jul 2021 10:58:35 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14521,7 +14533,7 @@
 
 	    var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-	    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.14 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specic function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
+	    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specic function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
 	    return banner;
 	  }(); // -------------------------------------------------------------------------
 	  // to be used with string function when code is minified
@@ -14552,9 +14564,9 @@
 	  QuotedPromise.__class__ = 'promise'; // -------------------------------------------------------------------------
 
 	  var lips = {
-	    version: '1.0.0-beta.14',
+	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 04 Jun 2021 12:09:05 +0000',
+	    date: 'Tue, 27 Jul 2021 10:58:35 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

@@ -1,3 +1,7 @@
+## 1.0.0-beta.15
+### Features
+* improve performance of ** operator when JS support exponential operator
+
 ## 1.0.0-beta.14
 ### Breaking
 * remove `zip` function that just `(map list l1 l2 ...)`
