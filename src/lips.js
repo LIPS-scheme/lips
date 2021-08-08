@@ -4790,7 +4790,7 @@
                         // non standard radix we convert by hand
                         var n_radix = BigInt(radix);
                         value = [...str].map((x, i) => {
-                            return BigInt(parseInt(x, radix)) * (n_radix ** BigInt(i));
+                            return BigInt(parseInt(x, radix)) * pow(n_radix, BigInt(i));
                         }).reduce((a, b) => a + b);
                     } else {
                         value = BigInt(prefix + str);
@@ -5198,7 +5198,7 @@
         if (exp_op(2, 2) === 4) {
             pow = exp_op;
         }
-    } catch(e) {
+    } catch (e) {
         // ignore
     }
     // -------------------------------------------------------------------------

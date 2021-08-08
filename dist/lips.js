@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 27 Jul 2021 10:58:35 +0000
+ * build: Sun, 08 Aug 2021 18:54:18 +0000
  */
 (function () {
 	'use strict';
@@ -7915,7 +7915,7 @@
 	            // non standard radix we convert by hand
 	            var n_radix = BigInt(radix);
 	            value = _toConsumableArray(str).map(function (x, i) {
-	              return BigInt(parseInt(x, radix)) * Math.pow(n_radix, BigInt(i));
+	              return BigInt(parseInt(x, radix)) * pow(n_radix, BigInt(i));
 	            }).reduce(function (a, b) {
 	              return a + b;
 	            });
@@ -14518,10 +14518,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Tue, 27 Jul 2021 10:58:35 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 08 Aug 2021 18:54:18 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Tue, 27 Jul 2021 10:58:35 +0000').valueOf();
+	    var date = LString('Sun, 08 Aug 2021 18:54:18 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14566,7 +14566,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Tue, 27 Jul 2021 10:58:35 +0000',
+	    date: 'Sun, 08 Aug 2021 18:54:18 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
