@@ -974,3 +974,29 @@
                   (%foo (foo))))))
            (foo)
            (t.is result '(foo)))))
+
+(test "syntax: nested syntax-rules scope conflict"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ bar)
+             (let ()
+               (define-syntax %foo
+                 (syntax-rules (bar)
+                   ((_ bar x)
+                    (list "foo" x))))
+               (%foo bar 10)))))
+
+        (t.is (foo x) '("foo" 10))
+
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ x)
+             (let ()
+               (define-syntax %foo
+                 (syntax-rules (bar)
+                   ((_ (bar) x)
+                    (list "foo" x))))
+               (%foo (bar) 10)))))
+
+        (t.is (foo 10) '("foo" 10))))

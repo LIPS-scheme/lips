@@ -17,8 +17,6 @@
  *
  * unfetch by Jason Miller (@developit) MIT License
  *
- * contentloaded.js
- *
  * ucs2decode function from Punycode v 2.1.1 by Mathias Bynens MIT License
  *
  * Author: Diego Perini (diego.perini at gmail.com)
@@ -26,6 +24,8 @@
  * Updated: 20101020
  * License: MIT
  * Version: 1.2
+ *
+ * contentloaded.js
  *
  * URL:
  * http://javascript.nwbox.com/ContentLoaded/
@@ -762,6 +762,12 @@
         }
         return str;
     };
+    LSymbol.prototype.literal = function() {
+        if (this.is_gensym()) {
+            return this.__literal__;
+        }
+        return this.valueOf();
+    };
     LSymbol.prototype.serialize = function() {
         if (LString.isString(this.__name__)) {
             return this.__name__;
@@ -789,8 +795,16 @@
     // -------------------------------------------------------------------------
     var gensym = (function() {
         var count = 0;
+        function with_props(name, sym) {
+            var symbol = new LSymbol(sym);
+            hidden_prop(symbol, '__literal__', name);
+            return symbol;
+        }
         return function(name = null) {
             if (name instanceof LSymbol) {
+                if (name.is_gensym()) {
+                    return name;
+                }
                 name = name.valueOf();
             }
             if (is_gensym(name)) {
@@ -799,10 +813,10 @@
             }
             // use ES6 symbol as name for lips symbol (they are unique)
             if (name !== null) {
-                return new LSymbol(Symbol(`#:${name}`));
+                return with_props(name, Symbol(`#:${name}`));
             }
             count++;
-            return new LSymbol(Symbol(`#:g${count}`));
+            return with_props(count, Symbol(`#:g${count}`));
         };
     })();
     // ----------------------------------------------------------------------
@@ -3452,7 +3466,7 @@
                 return same_atom(pattern, code);
             }
             if (pattern instanceof LSymbol &&
-                symbols.includes(pattern.valueOf())) {
+                symbols.includes(pattern.literal())) {
                 const ref = expansion.ref(code);
                 // shadowing the indentifier works only with lambda and let
                 if (LSymbol.is(code, pattern)) {
@@ -4089,6 +4103,7 @@
                             traverse(expr.cdr.cdr, { disabled })
                         );
                     }
+                    log('REST >>>> ' + rest.toString());
                 } else {
                     rest = traverse(expr.cdr, { disabled });
                 }
@@ -7758,6 +7773,7 @@
                             names,
                             ellipsis
                         });
+                        log('OUPUT>>> ' + new_expr.toString());
                         if (new_expr) {
                             expr = new_expr;
                         }

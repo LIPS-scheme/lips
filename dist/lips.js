@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 08 Aug 2021 18:54:18 +0000
+ * build: Mon, 09 Aug 2021 21:08:58 +0000
  */
 (function () {
 	'use strict';
@@ -2274,6 +2274,14 @@
 	    return str;
 	  };
 
+	  LSymbol.prototype.literal = function () {
+	    if (this.is_gensym()) {
+	      return this.__literal__;
+	    }
+
+	    return this.valueOf();
+	  };
+
 	  LSymbol.prototype.serialize = function () {
 	    if (LString.isString(this.__name__)) {
 	      return this.__name__;
@@ -2308,10 +2316,21 @@
 
 	  var gensym = function () {
 	    var count = 0;
+
+	    function with_props(name, sym) {
+	      var symbol = new LSymbol(sym);
+	      hidden_prop(symbol, '__literal__', name);
+	      return symbol;
+	    }
+
 	    return function () {
 	      var name = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : null;
 
 	      if (name instanceof LSymbol) {
+	        if (name.is_gensym()) {
+	          return name;
+	        }
+
 	        name = name.valueOf();
 	      }
 
@@ -2322,11 +2341,11 @@
 
 
 	      if (name !== null) {
-	        return new LSymbol(Symbol("#:".concat(name)));
+	        return with_props(name, Symbol("#:".concat(name)));
 	      }
 
 	      count++;
-	      return new LSymbol(Symbol("#:g".concat(count)));
+	      return with_props(count, Symbol("#:g".concat(count)));
 	    };
 	  }(); // ----------------------------------------------------------------------
 	  // class used to escape promises feature #54
@@ -6177,7 +6196,7 @@
 	        return same_atom(pattern, code);
 	      }
 
-	      if (pattern instanceof LSymbol && symbols.includes(pattern.valueOf())) {
+	      if (pattern instanceof LSymbol && symbols.includes(pattern.literal())) {
 	        var ref = expansion.ref(code); // shadowing the indentifier works only with lambda and let
 
 	        if (LSymbol.is(code, pattern)) {
@@ -6962,6 +6981,8 @@
 	              disabled: disabled
 	            }));
 	          }
+
+	          log('REST >>>> ' + rest.toString());
 	        } else {
 	          rest = traverse(expr.cdr, {
 	            disabled: disabled
@@ -11846,6 +11867,7 @@
 	              names: names,
 	              ellipsis: ellipsis
 	            });
+	            log('OUPUT>>> ' + new_expr.toString());
 
 	            if (new_expr) {
 	              expr = new_expr;
@@ -14518,10 +14540,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 08 Aug 2021 18:54:18 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 09 Aug 2021 21:08:58 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 08 Aug 2021 18:54:18 +0000').valueOf();
+	    var date = LString('Mon, 09 Aug 2021 21:08:58 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14566,7 +14588,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 08 Aug 2021 18:54:18 +0000',
+	    date: 'Mon, 09 Aug 2021 21:08:58 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
