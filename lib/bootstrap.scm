@@ -606,9 +606,11 @@
              (concat "&("
                      (--> (Object.getOwnPropertyNames x)
                           (map (lambda (key)
-                                 (concat ":" key
-                                         " "
-                                         (repr (. x key) q))))
+                                 (let ((value (repr (. x key) q))
+                                       (key (if (key.match #/\s/)
+                                                (concat "|" key "|")
+                                                key)))
+                                   (concat ":" key " " value))))
                           (join " "))
                      ")")))
 
