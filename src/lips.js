@@ -4123,6 +4123,12 @@
                 if (disabled && LSymbol.is(expr, ellipsis_symbol)) {
                     return expr;
                 }
+                const symbols = Object.keys(bindings['...'].symbols);
+                const name = expr.literal();
+                if (symbols.includes(name)) {
+                    const msg = `missing ellipsis symbol next to name \`${name}'`;
+                    throw new Error(`syntax-rules: ${msg}`);
+                }
                 const value = transform(expr, { disabled });
                 if (typeof value !== 'undefined') {
                     return value;
@@ -7748,47 +7754,52 @@
                     symbols = get_identifiers(macro.car);
                     rules = macro.cdr;
                 }
-                while (rules !== nil) {
-                    var rule = rules.car.car;
-                    var expr = rules.car.cdr.car;
-                    log(rule);
-                    var bindings = extract_patterns(rule, code, symbols, ellipsis, {
-                        expansion: this, define: env
-                    });
-                    if (bindings) {
-                        /* istanbul ignore next */
-                        if (is_debug()) {
-                            console.log(JSON.stringify(symbolize(bindings), true, 2));
-                            console.log('PATTERN: ' + rule.toString(true));
-                            console.log('MACRO: ' + code.toString(true));
-                        }
-                        // name is modified in transform_syntax
-                        var names = [];
-                        const new_expr = transform_syntax({
-                            bindings,
-                            expr,
-                            symbols,
-                            scope,
-                            lex_scope: var_scope,
-                            names,
-                            ellipsis
+                try {
+                    while (rules !== nil) {
+                        var rule = rules.car.car;
+                        var expr = rules.car.cdr.car;
+                        log(rule);
+                        var bindings = extract_patterns(rule, code, symbols, ellipsis, {
+                            expansion: this, define: env
                         });
-                        log('OUPUT>>> ' + new_expr.toString());
-                        if (new_expr) {
-                            expr = new_expr;
+                        if (bindings) {
+                            /* istanbul ignore next */
+                            if (is_debug()) {
+                                console.log(JSON.stringify(symbolize(bindings), true, 2));
+                                console.log('PATTERN: ' + rule.toString(true));
+                                console.log('MACRO: ' + code.toString(true));
+                            }
+                            // name is modified in transform_syntax
+                            var names = [];
+                            const new_expr = transform_syntax({
+                                bindings,
+                                expr,
+                                symbols,
+                                scope,
+                                lex_scope: var_scope,
+                                names,
+                                ellipsis
+                            });
+                            log('OUPUT>>> ' + new_expr.toString());
+                            if (new_expr) {
+                                expr = new_expr;
+                            }
+                            var new_env = var_scope.merge(scope, Syntax.__merge_env__);
+                            if (macro_expand) {
+                                return { expr, scope: new_env };
+                            }
+                            var result = evaluate(expr, { ...eval_args, env: new_env });
+                            // Hack: update the result if there are generated
+                            //       gensyms that should be literal symbols
+                            // TODO: maybe not the part move when literal elisps may
+                            //       be generated, maybe they will need to be mark somehow
+                            return clear_gensyms(result, names);
                         }
-                        var new_env = var_scope.merge(scope, Syntax.__merge_env__);
-                        if (macro_expand) {
-                            return { expr, scope: new_env };
-                        }
-                        var result = evaluate(expr, { ...eval_args, env: new_env });
-                        // Hack: update the result if there are generated
-                        //       gensyms that should be literal symbols
-                        // TODO: maybe not the part move when literal elisps may
-                        //       be generated, maybe they will need to be mark somehow
-                        return clear_gensyms(result, names);
+                        rules = rules.cdr;
                     }
-                    rules = rules.cdr;
+                } catch (e) {
+                    e.message += ` in macro: ${macro.toString(true)}`;
+                    throw e;
                 }
                 throw new Error(`Invalid Syntax ${code.toString(true)}`);
             }, env);

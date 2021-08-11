@@ -1000,3 +1000,22 @@
                (%foo (bar) 10)))))
 
         (t.is (foo 10) '("foo" 10))))
+
+(test "syntax: it should throw error on missing ellipsis symbol"
+      (lambda (t)
+        (t.is
+         (to.throw
+          (define-syntax foo
+            (syntax-rules (:c)
+              ((_ x ...)
+               (letrec-syntax ((bar (syntax-rules <:::> (:c)
+                                                  ((_ x)
+                                                   (print x))
+                                                  ((_ a b <:::>)
+                                                   (begin
+                                                     (display a)
+                                                     (display " ")
+                                                     (bar b <:::>))))))
+                 (bar x ...)))))
+          (foo 1 2 3))
+         true)))
