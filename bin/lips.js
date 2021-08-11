@@ -311,6 +311,7 @@ if (options.version || options.V) {
     const filename = options._[0];
     try {
         let code = readFile(filename);
+        process.chdir(path.dirname(filename));
         if (compiled(filename)) {
             code = unserialize(code);
         }
