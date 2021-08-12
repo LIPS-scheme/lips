@@ -4,7 +4,6 @@
 ### Bugfix
 * fix scoping issue in nested `syntax-rules`
 * fix `repr` of object that have space in key
-* fix current working directory when running executable
 * property throw error when name is used without ellipsis
 
 ## 1.0.0-beta.14
