@@ -1184,6 +1184,23 @@
        (--> ,parent (set ',name ,module-var)))))
 
 ;; -----------------------------------------------------------------------------
+(define-syntax define-library/export
+  (syntax-rules (rename :c)
+    ((_ :c (rename to from))
+     (print (string-append "export "
+                           (symbol->string 'from)
+                           " ==> "
+                           (symbol->string 'to))))
+    ((_ :c name)
+     (print (string-append "export " (symbol->string 'name))))
+    ((_ x ...)
+     (begin
+       (define-library/export :c x)
+       ...))))
+
+;; -----------------------------------------------------------------------------
+;; TODO: use browserFS or LightningFS
+;; -----------------------------------------------------------------------------
 (define-values (current-directory set-current-directory!)
   (if (eq? self window)
       (let ((cwd (string-append location.origin (--> location.pathname
