@@ -11,7 +11,7 @@ Main public function is `exec` that accept string (code) and Environment instanc
 
 ## UML Diagram of all classes
 
-[![Scheme interpreter UML Diagram](https://github.com/jcubic/lips/blob/devel/assets/classDiagram.svg?raw=true)](https://github.com/jcubic/lips/blob/devel/assets/classDiagram.svgg)
+[![Scheme interpreter UML Diagram](https://github.com/jcubic/lips/blob/devel/assets/classDiagram.svg?raw=true)](https://github.com/jcubic/lips/blob/devel/assets/classDiagram.svg)
 
 ## Lexer
 
