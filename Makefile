@@ -50,7 +50,7 @@ dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm l
 	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm > dist/std.scm
 
 dist/std.min.scm: dist/std.scm
-	./scripts/minify.scm ./dist/std.scm > dist/std.min.scm
+	$(LIPS) ./scripts/minify.scm ./dist/std.scm > dist/std.min.scm
 
 Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/g" templates/Makefile > Makefile
