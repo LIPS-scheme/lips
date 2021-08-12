@@ -1,6 +1,7 @@
 ## 1.0.0-beta.15
 ### Features
 * improve performance of ** operator when JS support exponential operator
+* add alias for `string-join` and `string-split`
 ### Bugfix
 * fix scoping issue in nested `syntax-rules`
 * fix `repr` of object that have space in key
