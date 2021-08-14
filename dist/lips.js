@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 14 Aug 2021 12:52:36 +0000
+ * build: Sat, 14 Aug 2021 14:53:44 +0000
  */
 (function () {
 	'use strict';
@@ -10409,9 +10409,6 @@
 
 	    if (symbol instanceof LSymbol && symbol[LSymbol.object]) {
 	      // dot notation symbols from syntax-rules that are gensyms
-	      console.log({
-	        symbol: symbol
-	      });
 	      parts = symbol[LSymbol.object];
 	    } else if (typeof name === 'string') {
 	      parts = name.split('.').filter(Boolean);
@@ -14578,10 +14575,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 14 Aug 2021 12:52:36 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 14 Aug 2021 14:53:44 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 14 Aug 2021 12:52:36 +0000').valueOf();
+	    var date = LString('Sat, 14 Aug 2021 14:53:44 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14626,7 +14623,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 14 Aug 2021 12:52:36 +0000',
+	    date: 'Sat, 14 Aug 2021 14:53:44 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
