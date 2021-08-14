@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 09 Aug 2021 21:08:58 +0000
+ * build: Thu, 12 Aug 2021 21:01:14 +0000
  */
 (function () {
 	'use strict';
@@ -7004,6 +7004,15 @@
 	          return expr;
 	        }
 
+	        var _symbols3 = Object.keys(bindings['...'].symbols);
+
+	        var _name8 = expr.literal();
+
+	        if (_symbols3.includes(_name8)) {
+	          var msg = "missing ellipsis symbol next to name `".concat(_name8, "'");
+	          throw new Error("syntax-rules: ".concat(msg));
+	        }
+
 	        var _value5 = transform(expr);
 
 	        if (typeof _value5 !== 'undefined') {
@@ -7424,9 +7433,9 @@
 	              try {
 	                for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
 	                  var _step10$value = _step10.value,
-	                      _name8 = _step10$value.name,
+	                      _name9 = _step10$value.name,
 	                      _value6 = _step10$value.value;
-	                  env.set(_name8, _value6);
+	                  env.set(_name9, _value6);
 	                }
 	              } catch (err) {
 	                _iterator10.e(err);
@@ -11839,61 +11848,66 @@
 	          rules = macro.cdr;
 	        }
 
-	        while (rules !== _nil) {
-	          var rule = rules.car.car;
-	          var expr = rules.car.cdr.car;
-	          log(rule);
-	          var bindings = extract_patterns(rule, code, symbols, ellipsis, {
-	            expansion: this,
-	            define: env
-	          });
-
-	          if (bindings) {
-	            /* istanbul ignore next */
-	            if (is_debug()) {
-	              console.log(JSON.stringify(symbolize(bindings), true, 2));
-	              console.log('PATTERN: ' + rule.toString(true));
-	              console.log('MACRO: ' + code.toString(true));
-	            } // name is modified in transform_syntax
-
-
-	            var names = [];
-	            var new_expr = transform_syntax({
-	              bindings: bindings,
-	              expr: expr,
-	              symbols: symbols,
-	              scope: scope,
-	              lex_scope: var_scope,
-	              names: names,
-	              ellipsis: ellipsis
+	        try {
+	          while (rules !== _nil) {
+	            var rule = rules.car.car;
+	            var expr = rules.car.cdr.car;
+	            log(rule);
+	            var bindings = extract_patterns(rule, code, symbols, ellipsis, {
+	              expansion: this,
+	              define: env
 	            });
-	            log('OUPUT>>> ' + new_expr.toString());
 
-	            if (new_expr) {
-	              expr = new_expr;
-	            }
+	            if (bindings) {
+	              /* istanbul ignore next */
+	              if (is_debug()) {
+	                console.log(JSON.stringify(symbolize(bindings), true, 2));
+	                console.log('PATTERN: ' + rule.toString(true));
+	                console.log('MACRO: ' + code.toString(true));
+	              } // name is modified in transform_syntax
 
-	            var new_env = var_scope.merge(scope, Syntax.__merge_env__);
 
-	            if (macro_expand) {
-	              return {
+	              var names = [];
+	              var new_expr = transform_syntax({
+	                bindings: bindings,
 	                expr: expr,
-	                scope: new_env
-	              };
+	                symbols: symbols,
+	                scope: scope,
+	                lex_scope: var_scope,
+	                names: names,
+	                ellipsis: ellipsis
+	              });
+	              log('OUPUT>>> ' + new_expr.toString());
+
+	              if (new_expr) {
+	                expr = new_expr;
+	              }
+
+	              var new_env = var_scope.merge(scope, Syntax.__merge_env__);
+
+	              if (macro_expand) {
+	                return {
+	                  expr: expr,
+	                  scope: new_env
+	                };
+	              }
+
+	              var result = _evaluate(expr, _objectSpread(_objectSpread({}, eval_args), {}, {
+	                env: new_env
+	              })); // Hack: update the result if there are generated
+	              //       gensyms that should be literal symbols
+	              // TODO: maybe not the part move when literal elisps may
+	              //       be generated, maybe they will need to be mark somehow
+
+
+	              return clear_gensyms(result, names);
 	            }
 
-	            var result = _evaluate(expr, _objectSpread(_objectSpread({}, eval_args), {}, {
-	              env: new_env
-	            })); // Hack: update the result if there are generated
-	            //       gensyms that should be literal symbols
-	            // TODO: maybe not the part move when literal elisps may
-	            //       be generated, maybe they will need to be mark somehow
-
-
-	            return clear_gensyms(result, names);
+	            rules = rules.cdr;
 	          }
-
-	          rules = rules.cdr;
+	        } catch (e) {
+	          e.message += " in macro: ".concat(macro.toString(true));
+	          throw e;
 	        }
 
 	        throw new Error("Invalid Syntax ".concat(code.toString(true)));
@@ -14540,10 +14554,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 09 Aug 2021 21:08:58 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 12 Aug 2021 21:01:14 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 09 Aug 2021 21:08:58 +0000').valueOf();
+	    var date = LString('Thu, 12 Aug 2021 21:01:14 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14588,7 +14602,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 09 Aug 2021 21:08:58 +0000',
+	    date: 'Thu, 12 Aug 2021 21:01:14 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

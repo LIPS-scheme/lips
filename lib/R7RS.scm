@@ -56,7 +56,7 @@
     ((_ (((x ...) values) ...) body ...)
      (apply (lambda (x ... ...)
               body ...)
-            (vector->list (apply vector-append (map (lambda (x) ((. x "valueOf")))
+            (vector->list (apply vector-append (map (lambda (arg) ((. arg "valueOf")))
                                                      (list values ...)))))))
   "(let-values binding body ...)
 
