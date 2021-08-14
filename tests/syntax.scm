@@ -439,7 +439,7 @@
 
         (t.is result '(1 2 3 4 5 6))))
 
-(test_ "syntax: lifted ellipsis"
+(test.skip "syntax: lifted ellipsis"
       (lambda (t)
         (define result
           (let-syntax
@@ -606,7 +606,7 @@
 
         (t.is (L 1 2 3) '(1 2 3))))
 
-(test_ "syntax: should return list with ellipsis"
+(test.skip "syntax: should return list with ellipsis"
        (lambda (t)
 
          (define-syntax test
@@ -741,7 +741,7 @@
         (def-2 bar 20)
         (t.is (+ foo bar) 30)))
 
-(test_ "syntax: free variables"
+(test.skip "syntax: free variables"
       (lambda (t)
         (define-syntax def (syntax-rules ()
                              ((_ foo bar)
@@ -938,7 +938,7 @@
                            (+ a b c))
               6)))
 
-(test_ "syntax: nested _"
+(test.skip "syntax: nested _"
        (lambda (t)
          (define-syntax foo
            (syntax-rules ()
@@ -958,7 +958,7 @@
 
          (t.is (foo) '("foo" (10) bar "bar"))))
 
-(test_ "syntax: nesting, renaming and scope"
+(test.skip "syntax: nesting, renaming and scope"
        (lambda (t)
          (let ((result 10))
            (define-syntax foo

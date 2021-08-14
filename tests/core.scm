@@ -310,12 +310,23 @@
 
         (t.is (try (Promise.reject 10) (catch (e) e)) 10)
 
-
         (t.is (to.throw (try (Promise.reject 10) (catch (e) (throw e)))) true)
 
         (let ((x))
           (t.is (to.throw (try (Promise.reject 10) (finally (set! x 10))))true)
           (t.is x 10))))
+
+(test.skip "core: try..catch should stop execution"
+           (lambda (t)
+             (let ((result #f))
+               (try
+                (begin
+                  (set! result 1)
+                  (throw 'ZONK)
+                  (set! result 2))
+                (catch (e)
+                       (set! result 3)))
+               (t.is result 3))))
 
 (test "core: chain of promises"
       (lambda (t)
