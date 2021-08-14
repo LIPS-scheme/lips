@@ -130,7 +130,7 @@
         (t.is (or (begin) 1) undefined)
         (t.is (or null 1) null)))
 
-(test_ "core: do macro"
+(test "core: do macro"
       (lambda (t)
         (t.is (do ((i 0) (j 10 (- j 1))) (i j)) 10)
         (t.is (do ((i 0) (j 10 (- j 1))) (null j)) 10)

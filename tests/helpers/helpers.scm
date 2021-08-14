@@ -32,11 +32,6 @@
            (throw (new Error (concat "failed: " ',(repr body true)))))
        ,result)))
 
-(define (test_ . rest)
-  "(test_ . rest)
-
-   Helper that disable tests. Function that do nothing")
-
 (define (%test-specs t specs)
   "(%test-specs t list)
 

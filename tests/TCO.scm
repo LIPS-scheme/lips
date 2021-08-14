@@ -1,4 +1,4 @@
-(test_ "TCO: it should run (! 1000)"
+(test.skip "TCO: it should run (! 1000)"
        (lambda (t)
          (define (! n)
            (let iter ((n n) (acc 1))
