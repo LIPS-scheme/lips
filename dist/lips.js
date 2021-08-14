@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 12 Aug 2021 21:01:14 +0000
+ * build: Sat, 14 Aug 2021 12:52:36 +0000
  */
 (function () {
 	'use strict';
@@ -2252,7 +2252,9 @@
 	    }
 	  }
 
-	  LSymbol.list = {}; // ----------------------------------------------------------------------
+	  LSymbol.list = {};
+	  LSymbol.literal = Symbol["for"]('__literal__');
+	  LSymbol.object = Symbol["for"]('__object__'); // ----------------------------------------------------------------------
 
 	  LSymbol.is = function (symbol, name) {
 	    return symbol instanceof LSymbol && (name instanceof LSymbol && symbol.__name__ === name.__name__ || typeof name === 'string' && symbol.__name__ === name || name instanceof RegExp && name.test(symbol.__name__));
@@ -2276,7 +2278,7 @@
 
 	  LSymbol.prototype.literal = function () {
 	    if (this.is_gensym()) {
-	      return this.__literal__;
+	      return this[LSymbol.literal];
 	    }
 
 	    return this.valueOf();
@@ -6596,7 +6598,20 @@
 	          name: name,
 	          gensym: gensym_name
 	        });
-	        gensyms[name] = gensym_name;
+	        gensyms[name] = gensym_name; // we need to check if name is a string, because it can be
+	        // gensym from nested syntax-rules
+
+	        if (typeof name === 'string' && name.match(/\./)) {
+	          var _name$split$filter = name.split('.').filter(Boolean),
+	              _name$split$filter2 = _toArray(_name$split$filter),
+	              first = _name$split$filter2[0],
+	              rest = _name$split$filter2.slice(1); // save JavaScript dot notation for Env::get
+
+
+	          if (gensyms[first]) {
+	            hidden_prop(gensym_name, '__object__', [gensyms[first]].concat(_toConsumableArray(rest)));
+	          }
+	        }
 	      }
 
 	      return gensyms[name];
@@ -10390,35 +10405,44 @@
 	      return patch_value(value.valueOf());
 	    }
 
-	    if (typeof name === 'string') {
-	      var parts = name.split('.').filter(Boolean);
+	    var parts;
 
-	      if (parts.length > 0) {
-	        var _parts = _toArray(parts),
-	            first = _parts[0],
-	            rest = _parts.slice(1);
+	    if (symbol instanceof LSymbol && symbol[LSymbol.object]) {
+	      // dot notation symbols from syntax-rules that are gensyms
+	      console.log({
+	        symbol: symbol
+	      });
+	      parts = symbol[LSymbol.object];
+	    } else if (typeof name === 'string') {
+	      parts = name.split('.').filter(Boolean);
+	    }
 
-	        value = this._lookup(first);
+	    if (parts && parts.length > 0) {
+	      var _parts = parts,
+	          _parts2 = _toArray(_parts),
+	          first = _parts2[0],
+	          rest = _parts2.slice(1);
 
-	        if (rest.length) {
-	          try {
-	            if (value instanceof Value) {
-	              value = value.valueOf();
-	            } else {
-	              value = get(root, first);
+	      value = this._lookup(first);
 
-	              if (is_function(value)) {
-	                value = unbind(value);
-	              }
+	      if (rest.length) {
+	        try {
+	          if (value instanceof Value) {
+	            value = value.valueOf();
+	          } else {
+	            value = get(root, first);
+
+	            if (is_function(value)) {
+	              value = unbind(value);
 	            }
-
-	            return get.apply(void 0, [value].concat(_toConsumableArray(rest)));
-	          } catch (e) {// ignore symbols in expansion that look like
-	            // property access e.g. %as.data
 	          }
-	        } else if (value instanceof Value) {
-	          return patch_value(value.valueOf());
+
+	          return get.apply(void 0, [value].concat(_toConsumableArray(rest)));
+	        } catch (e) {// ignore symbols in expansion that look like
+	          // property access e.g. %as.data
 	        }
+	      } else if (value instanceof Value) {
+	        return patch_value(value.valueOf());
 	      }
 
 	      value = get(root, name);
@@ -14554,10 +14578,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 12 Aug 2021 21:01:14 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 14 Aug 2021 12:52:36 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 12 Aug 2021 21:01:14 +0000').valueOf();
+	    var date = LString('Sat, 14 Aug 2021 12:52:36 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14602,7 +14626,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 12 Aug 2021 21:01:14 +0000',
+	    date: 'Sat, 14 Aug 2021 12:52:36 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

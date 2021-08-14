@@ -743,6 +743,8 @@
         }
     }
     LSymbol.list = {};
+    LSymbol.literal = Symbol.for('__literal__');
+    LSymbol.object = Symbol.for('__object__');
     // ----------------------------------------------------------------------
     LSymbol.is = function(symbol, name) {
         return symbol instanceof LSymbol &&
@@ -764,7 +766,7 @@
     };
     LSymbol.prototype.literal = function() {
         if (this.is_gensym()) {
-            return this.__literal__;
+            return this[LSymbol.literal];
         }
         return this.valueOf();
     };
@@ -3810,6 +3812,15 @@
                     name, gensym: gensym_name
                 });
                 gensyms[name] = gensym_name;
+                // we need to check if name is a string, because it can be
+                // gensym from nested syntax-rules
+                if (typeof name === 'string' && name.match(/\./)) {
+                    const [first, ...rest] = name.split('.').filter(Boolean);
+                    // save JavaScript dot notation for Env::get
+                    if (gensyms[first]) {
+                        hidden_prop(gensym_name, '__object__', [gensyms[first], ...rest]);
+                    }
+                }
             }
             return gensyms[name];
         }
@@ -6598,29 +6609,33 @@
             }
             return patch_value(value.valueOf());
         }
-        if (typeof name === 'string') {
-            var parts = name.split('.').filter(Boolean);
-            if (parts.length > 0) {
-                var [first, ...rest] = parts;
-                value = this._lookup(first);
-                if (rest.length) {
-                    try {
-                        if (value instanceof Value) {
-                            value = value.valueOf();
-                        } else {
-                            value = get(root, first);
-                            if (is_function(value)) {
-                                value = unbind(value);
-                            }
+        var parts;
+        if (symbol instanceof LSymbol && symbol[LSymbol.object]) {
+            // dot notation symbols from syntax-rules that are gensyms
+            parts = symbol[LSymbol.object];
+        } else if (typeof name === 'string') {
+            parts = name.split('.').filter(Boolean);
+        }
+        if (parts && parts.length > 0) {
+            var [first, ...rest] = parts;
+            value = this._lookup(first);
+            if (rest.length) {
+                try {
+                    if (value instanceof Value) {
+                        value = value.valueOf();
+                    } else {
+                        value = get(root, first);
+                        if (is_function(value)) {
+                            value = unbind(value);
                         }
-                        return get(value, ...rest);
-                    } catch (e) {
-                        // ignore symbols in expansion that look like
-                        // property access e.g. %as.data
                     }
-                } else if (value instanceof Value) {
-                    return patch_value(value.valueOf());
+                    return get(value, ...rest);
+                } catch (e) {
+                    // ignore symbols in expansion that look like
+                    // property access e.g. %as.data
                 }
+            } else if (value instanceof Value) {
+                return patch_value(value.valueOf());
             }
             value = get(root, name);
         }
