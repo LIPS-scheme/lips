@@ -9750,6 +9750,8 @@
     // -------------------------------------------------------------------------
     // :: Continuations object from call/cc
     // -------------------------------------------------------------------------
+    /* eslint-disable no-unused-vars */
+    /* istanbul ignore next */
     class Continuation {
         constructor(k) {
             this.__value__ = k;
@@ -9765,6 +9767,55 @@
     }
     // -------------------------------------------------------------------------
     const noop = () => {};
+    // -------------------------------------------------------------------------
+    // :: continuations based on:
+    // :: Implementation strategies for continuations by Clinger, Jartheimer and Ost
+    // -------------------------------------------------------------------------
+    let cont_overflow = 1000; // TODO: increase
+    let continuations = [];
+    // -------------------------------------------------------------------------
+    /* istanbul ignore next */
+    class ReturnValue {
+    }
+    // -------------------------------------------------------------------------
+    /* istanbul ignore next */
+    function creg_get() {
+        return continuations.slice();
+    }
+    // -------------------------------------------------------------------------
+    /* istanbul ignore next */
+    function creg_set(k) {
+        continuations = k;
+    }
+    // -------------------------------------------------------------------------
+    // :: TODO: figure out how to use function for macro
+    // ::       that will not reset continuation stack
+    // ::       and public API that will do reset the stack
+    // :: possible solution is to force using _evaluate for macros as API
+    // :: but force to use exec for any other work.
+    // :: TODO: check Interpreter, it should use exec
+    // -------------------------------------------------------------------------
+    let steppers = {
+        enter: noop,
+        leave: noop
+    };
+    // -------------------------------------------------------------------------
+    // TODO: use plugable/swappable evaluate, macro should get evaluate as DI
+    // -------------------------------------------------------------------------
+    /* istanbul ignore next */
+    function step_evaluate(code, args) {
+        return unpromise(steppers.enter(code, args), function() {
+            return steppers.leave(evaluate(code, args));
+        });
+    }
+    // -------------------------------------------------------------------------
+    /* istanbul ignore next */
+    function main_evaluate(code, args) {
+        // new continuation stack
+        creg_set([]);
+        return evaluate(code, args);
+    }
+    /* eslint-enable no-unused-vars */
     // -------------------------------------------------------------------------
     function evaluate(code, { env, dynamic_scope, error = noop } = {}) {
         try {
@@ -9839,6 +9890,8 @@
             return result;
         } catch (e) {
             error && error.call(env, e, code);
+        } finally {
+
         }
     }
     // -------------------------------------------------------------------------

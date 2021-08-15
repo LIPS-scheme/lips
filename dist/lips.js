@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 15 Aug 2021 10:42:19 +0000
+ * build: Sun, 15 Aug 2021 15:44:39 +0000
  */
 (function () {
 	'use strict';
@@ -14038,6 +14038,10 @@
 	  // :: Continuations object from call/cc
 	  // -------------------------------------------------------------------------
 
+	  /* eslint-disable no-unused-vars */
+
+	  /* istanbul ignore next */
+
 
 	  var Continuation = /*#__PURE__*/function () {
 	    function Continuation(k) {
@@ -14065,6 +14069,8 @@
 
 
 	  var noop = function noop() {}; // -------------------------------------------------------------------------
+	  /* eslint-enable no-unused-vars */
+	  // -------------------------------------------------------------------------
 
 
 	  function _evaluate(code) {
@@ -14131,18 +14137,11 @@
 	        result = evaluate_macro(value, rest, eval_args);
 	      } else if (is_function(value)) {
 	        result = apply(value, rest, eval_args);
-	      } else if (value instanceof Continuation) {
+	      } else if (is_continuation(value)) {
 	        result = value.invoke();
 	      } else if (code instanceof Pair) {
 	        value = first && first.toString();
 	        throw new Error("".concat(type(first), " ").concat(value, " is not a function"));
-	      } else if (!is_function(value)) {
-	        if (value) {
-	          var msg = "".concat(type(value), " `").concat(value, "' is not a function");
-	          throw new Error(msg);
-	        }
-
-	        throw new Error("Unknown function `".concat(first.toString(), "'"));
 	      } else {
 	        return code;
 	      } // escape promise feature #54
@@ -14169,7 +14168,7 @@
 	      return result;
 	    } catch (e) {
 	      error && error.call(env, e, code);
-	    }
+	    } finally {}
 	  } // -------------------------------------------------------------------------
 
 
@@ -14724,10 +14723,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 15 Aug 2021 10:42:19 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 15 Aug 2021 15:44:39 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 15 Aug 2021 10:42:19 +0000').valueOf();
+	    var date = LString('Sun, 15 Aug 2021 15:44:39 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14772,7 +14771,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 15 Aug 2021 10:42:19 +0000',
+	    date: 'Sun, 15 Aug 2021 15:44:39 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
