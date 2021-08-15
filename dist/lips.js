@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 15 Aug 2021 10:42:19 +0000
+ * build: Sun, 15 Aug 2021 17:26:12 +0000
  */
 (function () {
 	'use strict';
@@ -10183,6 +10183,8 @@
 
 
 	  function Interpreter(name) {
+	    var _this16 = this;
+
 	    var _ref26 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
 	        stderr = _ref26.stderr,
 	        stdin = _ref26.stdin,
@@ -10202,6 +10204,11 @@
 	    }
 
 	    this.__env__ = user_env.inherit(name, obj);
+
+	    this.__env__.set('parent.frame', doc('parent.frame', function () {
+	      return _this16.__env__;
+	    }, global_env.__env__['parent.frame'].__doc__));
+
 	    var defaults_name = '**interaction-environment-defaults**';
 	    this.set(defaults_name, get_props(obj).concat(defaults_name));
 	    var inter = internal_env.inherit("internal-".concat(name));
@@ -10418,13 +10425,13 @@
 
 
 	  Environment.prototype.clone = function () {
-	    var _this16 = this;
+	    var _this17 = this;
 
 	    // duplicate refs
 	    var env = {}; // TODO: duplicated Symbols
 
 	    Object.keys(this.__env__).forEach(function (key) {
-	      env[key] = _this16.__env__[key];
+	      env[key] = _this17.__env__[key];
 	    });
 	    return new Environment(env, this.__parent__, this.__name__);
 	  }; // -------------------------------------------------------------------------
@@ -10587,7 +10594,7 @@
 
 
 	  Environment.prototype.constant = function (name, value) {
-	    var _this17 = this;
+	    var _this18 = this;
 
 	    if (this.__env__.hasOwnProperty(name)) {
 	      throw new Error("Environment::constant: ".concat(name, " already exists"));
@@ -10596,7 +10603,7 @@
 	    if (arguments.length === 1 && is_plain_object(arguments[0])) {
 	      var obj = arguments[0];
 	      Object.keys(obj).forEach(function (key) {
-	        _this17.constant(name, obj[key]);
+	        _this18.constant(name, obj[key]);
 	      });
 	    } else {
 	      Object.defineProperty(this.__env__, name, {
@@ -11086,7 +11093,7 @@
 	    }, "(cdr pair)\n\n            Function returns cdr (tail) of the list/pair."),
 	    // ------------------------------------------------------------------
 	    'set!': doc(new Macro('set!', function (code) {
-	      var _this18 = this;
+	      var _this19 = this;
 
 	      var _ref28 = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {},
 	          dynamic_scope = _ref28.dynamic_scope,
@@ -11166,7 +11173,7 @@
 	            var key = parts.pop();
 	            var name = parts.join('.');
 
-	            var obj = _this18.get(name, {
+	            var obj = _this19.get(name, {
 	              throwError: false
 	            });
 
@@ -11697,7 +11704,7 @@
 	    }, "(parent.frame)\n\n            Return parent environment if called from inside function.\n            If no parent frame found it return nil."),
 	    // ------------------------------------------------------------------
 	    'eval': doc('eval', function (code, env) {
-	      var _this19 = this;
+	      var _this20 = this;
 
 	      env = env || this;
 	      return _evaluate(code, {
@@ -11705,13 +11712,13 @@
 	        //dynamic_scope: this,
 	        error: function error(e) {
 	          var error = global_env.get('display-error');
-	          error.call(_this19, e.message);
+	          error.call(_this20, e.message);
 
 	          if (e.code) {
 	            var stack = e.code.map(function (line, i) {
 	              return "[".concat(i + 1, "]: ").concat(line);
 	            }).join('\n');
-	            error.call(_this19, stack);
+	            error.call(_this20, stack);
 	          }
 	        }
 	      });
@@ -12783,7 +12790,7 @@
 	    }, "(string->number number [radix])\n\n           Function convert string to number."),
 	    // ------------------------------------------------------------------
 	    'try': doc(new Macro('try', function (code, _ref38) {
-	      var _this20 = this;
+	      var _this21 = this;
 
 	      var dynamic_scope = _ref38.dynamic_scope,
 	          _error = _ref38.error;
@@ -12817,9 +12824,9 @@
 	        }
 
 	        var args = {
-	          env: _this20,
+	          env: _this21,
 	          error: function error(e) {
-	            var env = _this20.inherit('try');
+	            var env = _this21.inherit('try');
 
 	            if (catch_clause) {
 	              env.set(catch_clause.cdr.car.car, e);
@@ -12829,7 +12836,7 @@
 	              };
 
 	              if (dynamic_scope) {
-	                args.dynamic_scope = _this20;
+	                args.dynamic_scope = _this21;
 	              }
 
 	              unpromise(_evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
@@ -12842,7 +12849,7 @@
 	        };
 
 	        if (dynamic_scope) {
-	          args.dynamic_scope = _this20;
+	          args.dynamic_scope = _this21;
 	        }
 
 	        var result = _evaluate(code.car, args);
@@ -12905,7 +12912,7 @@
 	    }, "(for-each fn . lists)\n\n            Higher order function that call function `fn` by for each\n            value of the argument. If you provide more then one list as argument\n            it will take each value from each list and call `fn` function\n            with that many argument as number of list arguments."),
 	    // ------------------------------------------------------------------
 	    map: doc('map', function map(fn) {
-	      var _this21 = this;
+	      var _this22 = this;
 
 	      for (var _len30 = arguments.length, lists = new Array(_len30 > 1 ? _len30 - 1 : 0), _key30 = 1; _key30 < _len30; _key30++) {
 	        lists[_key30 - 1] = arguments[_key30];
@@ -12916,7 +12923,7 @@
 	      lists.forEach(function (arg, i) {
 	        typecheck('map', arg, ['pair', 'nil'], i + 1); // detect cycles
 
-	        if (arg instanceof Pair && !is_list.call(_this21, arg)) {
+	        if (arg instanceof Pair && !is_list.call(_this22, arg)) {
 	          throw new Error("map: argument ".concat(i + 1, " is not a list"));
 	        }
 	      });
@@ -12938,7 +12945,7 @@
 	      var env = this.newFrame(fn, args);
 	      env.set('parent.frame', parent_frame);
 	      return unpromise(fn.call.apply(fn, [env].concat(_toConsumableArray(args))), function (head) {
-	        return unpromise(map.call.apply(map, [_this21, fn].concat(_toConsumableArray(lists.map(function (l) {
+	        return unpromise(map.call.apply(map, [_this22, fn].concat(_toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
 	        })))), function (rest) {
 	          return new Pair(head, rest);
@@ -13034,7 +13041,7 @@
 	    }, "(pluck . string)\n\n            If called with single string it will return function that will return\n            key from object. If called with more then one argument function will\n            return new object by taking all properties from given object."),
 	    // ------------------------------------------------------------------
 	    reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
-	      var _this22 = this;
+	      var _this23 = this;
 
 	      for (var _len33 = arguments.length, lists = new Array(_len33 > 3 ? _len33 - 3 : 0), _key34 = 3; _key34 < _len33; _key34++) {
 	        lists[_key34 - 3] = arguments[_key34];
@@ -13054,7 +13061,7 @@
 	      return unpromise(fn.apply(void 0, _toConsumableArray(lists.map(function (l) {
 	        return l.car;
 	      })).concat([init])), function (value) {
-	        return reduce.call.apply(reduce, [_this22, fn, value].concat(_toConsumableArray(lists.map(function (l) {
+	        return reduce.call.apply(reduce, [_this23, fn, value].concat(_toConsumableArray(lists.map(function (l) {
 	          return l.cdr;
 	        }))));
 	      });
@@ -14131,18 +14138,11 @@
 	        result = evaluate_macro(value, rest, eval_args);
 	      } else if (is_function(value)) {
 	        result = apply(value, rest, eval_args);
-	      } else if (value instanceof Continuation) {
+	      } else if (is_continuation(value)) {
 	        result = value.invoke();
 	      } else if (code instanceof Pair) {
 	        value = first && first.toString();
 	        throw new Error("".concat(type(first), " ").concat(value, " is not a function"));
-	      } else if (!is_function(value)) {
-	        if (value) {
-	          var msg = "".concat(type(value), " `").concat(value, "' is not a function");
-	          throw new Error(msg);
-	        }
-
-	        throw new Error("Unknown function `".concat(first.toString(), "'"));
 	      } else {
 	        return code;
 	      } // escape promise feature #54
@@ -14724,10 +14724,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 15 Aug 2021 10:42:19 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 15 Aug 2021 17:26:12 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 15 Aug 2021 10:42:19 +0000').valueOf();
+	    var date = LString('Sun, 15 Aug 2021 17:26:12 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14772,7 +14772,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 15 Aug 2021 10:42:19 +0000',
+	    date: 'Sun, 15 Aug 2021 17:26:12 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
