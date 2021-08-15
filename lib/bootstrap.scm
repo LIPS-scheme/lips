@@ -206,18 +206,19 @@
   "(symbol->string symbol)
 
    Function convert LIPS symbol to string."
-  (if (symbol? s)
-      (let ((name s.__name__))
-        (if (string? name)
-            name
-            (--> name (toString))))))
+  (typecheck "symbol->string" s "symbol")
+  (let ((name s.__name__))
+    (if (string? name)
+        name
+        (name.toString))))
 
 ;; -----------------------------------------------------------------------------
 (define (string->symbol string)
   "(string->symbol string)
 
    Function convert string to LIPS symbol."
-  (and (string? string) (%as.data (new (. lips "LSymbol") string))))
+  (typecheck "string->symbol" string "string")
+  (%as.data (new lips.LSymbol string)))
 
 ;; -----------------------------------------------------------------------------
 (define (alist->object alist)
