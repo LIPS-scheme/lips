@@ -7,6 +7,8 @@
 * fix `repr` of object that have space in key
 * property throw error when name is used without ellipsis
 * fix using dot notation inside syntax-rules macros
+* typecheck `string->symbol` and `symbol->string`
+* fix `parent.frame` inside `Intepreter`
 
 ## 1.0.0-beta.14
 ### Breaking

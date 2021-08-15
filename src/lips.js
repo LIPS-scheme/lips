@@ -6386,6 +6386,9 @@
             name = 'anonymous';
         }
         this.__env__ = user_env.inherit(name, obj);
+        this.__env__.set('parent.frame', doc('parent.frame', () => {
+            return this.__env__;
+        }, global_env.__env__['parent.frame'].__doc__));
         const defaults_name = '**interaction-environment-defaults**';
         this.set(defaults_name, get_props(obj).concat(defaults_name));
         var inter = internal_env.inherit(`internal-${name}`);
