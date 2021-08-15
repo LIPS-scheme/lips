@@ -9814,17 +9814,11 @@
                 result = evaluate_macro(value, rest, eval_args);
             } else if (is_function(value)) {
                 result = apply(value, rest, eval_args);
-            } else if (value instanceof Continuation) {
+            } else if (is_continuation(value)) {
                 result = value.invoke();
             } else if (code instanceof Pair) {
                 value = first && first.toString();
                 throw new Error(`${type(first)} ${value} is not a function`);
-            } else if (!is_function(value)) {
-                if (value) {
-                    var msg = `${type(value)} \`${value}' is not a function`;
-                    throw new Error(msg);
-                }
-                throw new Error(`Unknown function \`${first.toString()}'`);
             } else {
                 return code;
             }
