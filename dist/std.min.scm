@@ -119,6 +119,7 @@
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
+(define call-with-current-continuation call/cc)
 (define-macro (define-symbol-macro type spec . rest) "(define-symbol-macro type (name . args) . body)\u000A\u000AMacro that creates special symbol macro for evaluator similar to build in , or `.\u000AIt's like alias for real macro. Similar to CL reader macros but it receive already\u000Aparsed code like normal macros. Type can be SPLICE or LITERAL symbols.\u000AALL default symbol macros are literal." (let* ((name (car spec)) (symbol (cadr spec)) (args (cddr spec))) (quasiquote (begin (set-special! (unquote symbol) (quote (unquote name)) (unquote (string->symbol (concat "lips.specials." (symbol->string type))))) (define-macro ((unquote name) (unquote-splicing args)) (unquote-splicing rest))))))
 (set-special! "#" (quote vector-literal) lips.specials.SPLICE)
 (define-macro (vector-literal . args) (if (not (or (pair? args) (eq? args ()))) (throw (new Error (concat "Parse Error: vector require pair got " (type args) " in " (repr args)))) (let ((v (list->array args))) (Object.freeze v) v)))

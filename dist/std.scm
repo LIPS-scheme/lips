@@ -1440,6 +1440,7 @@
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
+(define call-with-current-continuation call/cc)
 ;; -----------------------------------------------------------------------------
 (define-macro (define-symbol-macro type spec . rest)
   "(define-symbol-macro type (name . args) . body)
