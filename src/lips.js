@@ -3434,6 +3434,12 @@
     };
     Syntax.className = 'syntax';
     // ----------------------------------------------------------------------
+    // :: TODO: SRFI-139
+    // ----------------------------------------------------------------------
+    class Parameter extends Syntax {
+    }
+    Syntax.Parameter = Parameter;
+    // ----------------------------------------------------------------------
     // :: for usage in syntax-rule when pattern match it will return
     // :: list of bindings from code that match the pattern
     // :: TODO detect cycles
@@ -4158,6 +4164,14 @@
     // ----------------------------------------------------------------------
     function is_function(o) {
         return typeof o === 'function' && typeof o.bind === 'function';
+    }
+    // ----------------------------------------------------------------------
+    function is_continuation(o) {
+        return o instanceof Continuation;
+    }
+    // ----------------------------------------------------------------------
+    function is_callable(o) {
+        return is_function(o) || is_continuation(o);
     }
     // ----------------------------------------------------------------------
     function is_promise(o) {
@@ -7402,6 +7416,20 @@
             expression. The code should have side effects and/or when it's promise
             it should resolve to undefined.`),
         // ------------------------------------------------------------------
+        'call/cc': doc(Macro.defmacro('call/cc', function(code, eval_args = {}) {
+            const args = {
+                env: this,
+                ...eval_args
+            };
+            return unpromise(evaluate(code.car, args), (result) => {
+                if (is_function(result)) {
+                    return result(new Continuation(null));
+                }
+            });
+        }), `(call/cc proc)
+
+              TODO`),
+        // ------------------------------------------------------------------
         define: doc(Macro.defmacro('define', function(code, eval_args) {
             var env = this;
             if (code.car instanceof Pair &&
@@ -9720,7 +9748,25 @@
         });
     }
     // -------------------------------------------------------------------------
-    function evaluate(code, { env, dynamic_scope, error = () => {} } = {}) {
+    // :: Continuations object from call/cc
+    // -------------------------------------------------------------------------
+    class Continuation {
+        constructor(k) {
+            this.__value__ = k;
+        }
+        invoke() {
+            if (this.__value__ === null) {
+                throw new Error('Continuations are not implemented yet');
+            }
+        }
+        toString() {
+            return '#<Continuation>';
+        }
+    }
+    // -------------------------------------------------------------------------
+    const noop = () => {};
+    // -------------------------------------------------------------------------
+    function evaluate(code, { env, dynamic_scope, error = noop } = {}) {
         try {
             if (dynamic_scope === true) {
                 env = dynamic_scope = env || global_env;
@@ -9749,10 +9795,10 @@
                         return evaluate(new Pair(value, code.cdr), eval_args);
                     });
                     // else is later in code
-                } else if (!is_function(value)) {
+                } else if (!is_callable(value)) {
                     throw new Error(
                         type(value) + ' ' + env.get('repr')(value) +
-                            ' is not a function while evaluating ' + code.toString()
+                            ' is not callable while evaluating ' + code.toString()
                     );
                 }
             }
@@ -9768,6 +9814,8 @@
                 result = evaluate_macro(value, rest, eval_args);
             } else if (is_function(value)) {
                 result = apply(value, rest, eval_args);
+            } else if (value instanceof Continuation) {
+                result = value.invoke();
             } else if (code instanceof Pair) {
                 value = first && first.toString();
                 throw new Error(`${type(first)} ${value} is not a function`);

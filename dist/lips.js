@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 14 Aug 2021 14:53:44 +0000
+ * build: Sun, 15 Aug 2021 10:42:19 +0000
  */
 (function () {
 	'use strict';
@@ -118,6 +118,104 @@
 	});
 
 	var _construct = unwrapExports(construct);
+
+	var inherits = createCommonjsModule(function (module) {
+	function _inherits(subClass, superClass) {
+	  if (typeof superClass !== "function" && superClass !== null) {
+	    throw new TypeError("Super expression must either be null or a function");
+	  }
+
+	  subClass.prototype = Object.create(superClass && superClass.prototype, {
+	    constructor: {
+	      value: subClass,
+	      writable: true,
+	      configurable: true
+	    }
+	  });
+	  if (superClass) setPrototypeOf(subClass, superClass);
+	}
+
+	module.exports = _inherits;
+	module.exports["default"] = module.exports, module.exports.__esModule = true;
+	});
+
+	var _inherits = unwrapExports(inherits);
+
+	var _typeof_1 = createCommonjsModule(function (module) {
+	function _typeof(obj) {
+	  "@babel/helpers - typeof";
+
+	  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+	    module.exports = _typeof = function _typeof(obj) {
+	      return typeof obj;
+	    };
+
+	    module.exports["default"] = module.exports, module.exports.__esModule = true;
+	  } else {
+	    module.exports = _typeof = function _typeof(obj) {
+	      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+	    };
+
+	    module.exports["default"] = module.exports, module.exports.__esModule = true;
+	  }
+
+	  return _typeof(obj);
+	}
+
+	module.exports = _typeof;
+	module.exports["default"] = module.exports, module.exports.__esModule = true;
+	});
+
+	var _typeof = unwrapExports(_typeof_1);
+
+	var assertThisInitialized = createCommonjsModule(function (module) {
+	function _assertThisInitialized(self) {
+	  if (self === void 0) {
+	    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	  }
+
+	  return self;
+	}
+
+	module.exports = _assertThisInitialized;
+	module.exports["default"] = module.exports, module.exports.__esModule = true;
+	});
+
+	unwrapExports(assertThisInitialized);
+
+	var possibleConstructorReturn = createCommonjsModule(function (module) {
+	var _typeof = _typeof_1["default"];
+
+
+
+	function _possibleConstructorReturn(self, call) {
+	  if (call && (_typeof(call) === "object" || typeof call === "function")) {
+	    return call;
+	  }
+
+	  return assertThisInitialized(self);
+	}
+
+	module.exports = _possibleConstructorReturn;
+	module.exports["default"] = module.exports, module.exports.__esModule = true;
+	});
+
+	var _possibleConstructorReturn = unwrapExports(possibleConstructorReturn);
+
+	var getPrototypeOf = createCommonjsModule(function (module) {
+	function _getPrototypeOf(o) {
+	  module.exports = _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+	    return o.__proto__ || Object.getPrototypeOf(o);
+	  };
+	  module.exports["default"] = module.exports, module.exports.__esModule = true;
+	  return _getPrototypeOf(o);
+	}
+
+	module.exports = _getPrototypeOf;
+	module.exports["default"] = module.exports, module.exports.__esModule = true;
+	});
+
+	var _getPrototypeOf = unwrapExports(getPrototypeOf);
 
 	var arrayWithHoles = createCommonjsModule(function (module) {
 	function _arrayWithHoles(arr) {
@@ -425,33 +523,6 @@
 	});
 
 	var _slicedToArray = unwrapExports(slicedToArray);
-
-	var _typeof_1 = createCommonjsModule(function (module) {
-	function _typeof(obj) {
-	  "@babel/helpers - typeof";
-
-	  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-	    module.exports = _typeof = function _typeof(obj) {
-	      return typeof obj;
-	    };
-
-	    module.exports["default"] = module.exports, module.exports.__esModule = true;
-	  } else {
-	    module.exports = _typeof = function _typeof(obj) {
-	      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-	    };
-
-	    module.exports["default"] = module.exports, module.exports.__esModule = true;
-	  }
-
-	  return _typeof(obj);
-	}
-
-	module.exports = _typeof;
-	module.exports["default"] = module.exports, module.exports.__esModule = true;
-	});
-
-	var _typeof = unwrapExports(_typeof_1);
 
 	var asyncIterator = createCommonjsModule(function (module) {
 	function _asyncIterator(iterable) {
@@ -1359,6 +1430,10 @@
 
 	var _excluded = ["token"],
 	    _excluded2 = ["stderr", "stdin", "stdout"];
+
+	function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+	function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 	function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
@@ -6155,6 +6230,24 @@
 	  };
 
 	  Syntax.className = 'syntax'; // ----------------------------------------------------------------------
+	  // :: TODO: SRFI-139
+	  // ----------------------------------------------------------------------
+
+	  var Parameter = /*#__PURE__*/function (_Syntax) {
+	    _inherits(Parameter, _Syntax);
+
+	    var _super = _createSuper(Parameter);
+
+	    function Parameter() {
+	      _classCallCheck(this, Parameter);
+
+	      return _super.apply(this, arguments);
+	    }
+
+	    return Parameter;
+	  }(Syntax);
+
+	  Syntax.Parameter = Parameter; // ----------------------------------------------------------------------
 	  // :: for usage in syntax-rule when pattern match it will return
 	  // :: list of bindings from code that match the pattern
 	  // :: TODO detect cycles
@@ -7051,6 +7144,16 @@
 
 	  function is_function(o) {
 	    return typeof o === 'function' && typeof o.bind === 'function';
+	  } // ----------------------------------------------------------------------
+
+
+	  function is_continuation(o) {
+	    return o instanceof Continuation;
+	  } // ----------------------------------------------------------------------
+
+
+	  function is_callable(o) {
+	    return is_function(o) || is_continuation(o);
 	  } // ----------------------------------------------------------------------
 
 
@@ -11469,6 +11572,20 @@
 	      _evaluate(new Pair(new LSymbol('begin'), code), args);
 	    }, "(ignore expression)\n\n            Macro that will evaluate expression and swallow any promises that may\n            be created. It wil run and ignore any value that may be returned by\n            expression. The code should have side effects and/or when it's promise\n            it should resolve to undefined."),
 	    // ------------------------------------------------------------------
+	    'call/cc': doc(Macro.defmacro('call/cc', function (code) {
+	      var eval_args = arguments.length > 1 && arguments[1] !== undefined$1 ? arguments[1] : {};
+
+	      var args = _objectSpread({
+	        env: this
+	      }, eval_args);
+
+	      return unpromise(_evaluate(code.car, args), function (result) {
+	        if (is_function(result)) {
+	          return result(new Continuation(null));
+	        }
+	      });
+	    }), "(call/cc proc)\n\n              TODO"),
+	    // ------------------------------------------------------------------
 	    define: doc(Macro.defmacro('define', function (code, eval_args) {
 	      var env = this;
 
@@ -13918,6 +14035,36 @@
 	      }, error);
 	    });
 	  } // -------------------------------------------------------------------------
+	  // :: Continuations object from call/cc
+	  // -------------------------------------------------------------------------
+
+
+	  var Continuation = /*#__PURE__*/function () {
+	    function Continuation(k) {
+	      _classCallCheck(this, Continuation);
+
+	      this.__value__ = k;
+	    }
+
+	    _createClass(Continuation, [{
+	      key: "invoke",
+	      value: function invoke() {
+	        if (this.__value__ === null) {
+	          throw new Error('Continuations are not implemented yet');
+	        }
+	      }
+	    }, {
+	      key: "toString",
+	      value: function toString() {
+	        return '#<Continuation>';
+	      }
+	    }]);
+
+	    return Continuation;
+	  }(); // -------------------------------------------------------------------------
+
+
+	  var noop = function noop() {}; // -------------------------------------------------------------------------
 
 
 	  function _evaluate(code) {
@@ -13925,7 +14072,7 @@
 	        env = _ref43.env,
 	        dynamic_scope = _ref43.dynamic_scope,
 	        _ref43$error = _ref43.error,
-	        error = _ref43$error === void 0 ? function () {} : _ref43$error;
+	        error = _ref43$error === void 0 ? noop : _ref43$error;
 
 	    try {
 	      if (dynamic_scope === true) {
@@ -13965,8 +14112,8 @@
 	          return value.then(function (value) {
 	            return _evaluate(new Pair(value, code.cdr), eval_args);
 	          }); // else is later in code
-	        } else if (!is_function(value)) {
-	          throw new Error(type(value) + ' ' + env.get('repr')(value) + ' is not a function while evaluating ' + code.toString());
+	        } else if (!is_callable(value)) {
+	          throw new Error(type(value) + ' ' + env.get('repr')(value) + ' is not callable while evaluating ' + code.toString());
 	        }
 	      }
 
@@ -13984,6 +14131,8 @@
 	        result = evaluate_macro(value, rest, eval_args);
 	      } else if (is_function(value)) {
 	        result = apply(value, rest, eval_args);
+	      } else if (value instanceof Continuation) {
+	        result = value.invoke();
 	      } else if (code instanceof Pair) {
 	        value = first && first.toString();
 	        throw new Error("".concat(type(first), " ").concat(value, " is not a function"));
@@ -14575,10 +14724,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 14 Aug 2021 14:53:44 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 15 Aug 2021 10:42:19 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 14 Aug 2021 14:53:44 +0000').valueOf();
+	    var date = LString('Sun, 15 Aug 2021 10:42:19 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14623,7 +14772,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 14 Aug 2021 14:53:44 +0000',
+	    date: 'Sun, 15 Aug 2021 10:42:19 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
