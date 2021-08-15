@@ -9794,6 +9794,9 @@
     // :: possible solution is to force using _evaluate for macros as API
     // :: but force to use exec for any other work.
     // :: TODO: check Interpreter, it should use exec
+    // :: Stepper inspired by:
+    // :: "Modeling an Algebraic Stepper" by Clements, Flatt, and Felleisen
+    // :: (breakpoint) integrate with KISS
     // -------------------------------------------------------------------------
     let steppers = {
         enter: noop,
@@ -9801,6 +9804,8 @@
     };
     // -------------------------------------------------------------------------
     // TODO: use plugable/swappable evaluate, macro should get evaluate as DI
+    //       allow to access continuation stack in stepper to be able to move
+    //       forward/backward
     // -------------------------------------------------------------------------
     /* istanbul ignore next */
     function step_evaluate(code, args) {
