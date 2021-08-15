@@ -187,25 +187,29 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 * [Official Website](https://lips.js.org/)
 
 ## Roadmap
-
 ### 1.0
 - [x] Full support for R5RS
 - [ ] Full support for R7RS
   - [ ] R7RS libraries (`import`/`export`/`define-library`).
-- [ ] Continuations.
-- [ ] Tail Call Optimization (TCO).
-- [ ] Fully tested Numerical Tower.
-- [ ] All recursive function in JS don't consume stack.
-- [ ] Picture language (possibly inspired by P5.js).
+  - [ ] Continuations.
+  - [ ] Tail Call Optimization (TCO).
+  - [ ] Fully tested Numerical Tower.
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
   - [ ] Objects.
   - [ ] Vectors.
 
 ### 1.1
+- [ ] Picture language (possibly inspired by P5.js).
+- [ ] Stepper/Debugger.
 - [ ] Fully working JSON Compiler (for faster parsing and loading std lib).
 - [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
 - [ ] Proper expansion time for both macro system.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
+- [ ] All recursive function in JS don't consume stack.
+
+### WIP Side projects
+- [ ] [KISS](https://github.com/jcubic/kiss) (chrome extension REPL).
+- [ ] [SMILE](https://github.com/jcubic/smile) (Web IDE), need to start over.
 
 ## Acknowledgments
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
