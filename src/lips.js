@@ -6556,14 +6556,17 @@
         return '#<environment:' + this.__name__ + '>';
     };
     // -------------------------------------------------------------------------
-    Environment.prototype.clone = function() {
+    Environment.prototype.clone = function(deep = false) {
         // duplicate refs
-        var env = {};
-        // TODO: duplicated Symbols
-        Object.keys(this.__env__).forEach(key => {
+        const env = {};
+        get_props(this.__env__).forEach(key => {
             env[key] = this.__env__[key];
         });
-        return new Environment(env, this.__parent__, this.__name__);
+        let parent = this.__parent__;
+        if (deep && parent && parent !== global_env) {
+            parent = this.__parent__.clone(deep);
+        }
+        return new Environment(env, parent, this.__name__ + '<clone>');
     };
     // -------------------------------------------------------------------------
     Environment.prototype.merge = function(env, name = 'merge') {

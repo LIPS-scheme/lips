@@ -206,6 +206,27 @@
           (x.foo)
           (t.is result #(1 2 3)))))
 
+(test "core: env clone + let-env"
+      (lambda (t)
+        (let ((x 10))
+          (let ((env (current-environment)))
+            (let ((clone (env.clone)))
+              (let-env clone
+                       (define test #f)
+                       (set! x 20))
+              (t.is x 10)
+              (let-env env
+                       (define test #t)
+                       (set! x 20))
+              (t.is test #t)
+              (t.is x 20)
+              (let-env clone
+                       (t.is x 20)
+                       (t.is test #f))
+              (let-env env
+                       (t.is x 20)
+                       (t.is test #t)))))))
+
 (test "core: access this in closure returned from method"
       (lambda (t)
         (let* ((x (object :foo (lambda ()
