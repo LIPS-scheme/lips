@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 15 Aug 2021 17:26:12 +0000
+ * build: Mon, 16 Aug 2021 13:07:09 +0000
  */
 (function () {
 	'use strict';
@@ -5653,6 +5653,31 @@
 
 	  Pair.prototype.serialize = function () {
 	    return [this.car, this.cdr];
+	  }; // ----------------------------------------------------------------------
+	  // :: List iterator (for do-iterator macro)
+	  // ----------------------------------------------------------------------
+
+
+	  Pair.prototype[Symbol.iterator] = function () {
+	    var node = this;
+	    return {
+	      next: function next() {
+	        var cur = node;
+	        node = cur.cdr;
+
+	        if (node === _nil) {
+	          return {
+	            value: undefined$1,
+	            done: true
+	          };
+	        } else {
+	          return {
+	            value: cur.car,
+	            done: false
+	          };
+	        }
+	      }
+	    };
 	  }; // ----------------------------------------------------------------------
 	  // :: abs that work on BigInt
 	  // ----------------------------------------------------------------------
@@ -14724,10 +14749,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 15 Aug 2021 17:26:12 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 16 Aug 2021 13:07:09 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 15 Aug 2021 17:26:12 +0000').valueOf();
+	    var date = LString('Mon, 16 Aug 2021 13:07:09 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14772,7 +14797,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 15 Aug 2021 17:26:12 +0000',
+	    date: 'Mon, 16 Aug 2021 13:07:09 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

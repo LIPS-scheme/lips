@@ -3108,6 +3108,23 @@
         ];
     };
     // ----------------------------------------------------------------------
+    // :: List iterator (for do-iterator macro)
+    // ----------------------------------------------------------------------
+    Pair.prototype[Symbol.iterator] = function() {
+        var node = this;
+        return {
+            next: function() {
+                var cur = node;
+                node = cur.cdr;
+                if (node === nil) {
+                    return { value: undefined, done: true };
+                } else {
+                    return { value: cur.car, done: false };
+                }
+            }
+        };
+    };
+    // ----------------------------------------------------------------------
     // :: abs that work on BigInt
     // ----------------------------------------------------------------------
     function abs(x) {
