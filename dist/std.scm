@@ -206,18 +206,19 @@
   "(symbol->string symbol)
 
    Function convert LIPS symbol to string."
-  (if (symbol? s)
-      (let ((name s.__name__))
-        (if (string? name)
-            name
-            (--> name (toString))))))
+  (typecheck "symbol->string" s "symbol")
+  (let ((name s.__name__))
+    (if (string? name)
+        name
+        (name.toString))))
 
 ;; -----------------------------------------------------------------------------
 (define (string->symbol string)
   "(string->symbol string)
 
    Function convert string to LIPS symbol."
-  (and (string? string) (%as.data (new (. lips "LSymbol") string))))
+  (typecheck "string->symbol" string "string")
+  (%as.data (new lips.LSymbol string)))
 
 ;; -----------------------------------------------------------------------------
 (define (alist->object alist)
@@ -501,7 +502,7 @@
   (if (pair? list)
       (let* ((item (car list))
              (first (car item))
-             (forms (cdr item))
+             (forms (if (eq? (cadr item) '=>) (cddr item) (cdr item)))
              (rest (cdr list)))
         `(if ,first
              (begin
@@ -2838,10 +2839,13 @@
                                              " not supported"))))))
 
 ;; -----------------------------------------------------------------------------
-;; Implementation of byte vector functions - SRFI-4
+;; Implementation of byte vector functions - SRFI-4 and SRFI-160
 ;;
 ;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
-;; it use JavaScript typed arrays
+;; latest verion is defined in
+;; https://srfi.schemers.org/srfi-160/srfi-160.html
+;;
+;; it uses JavaScript typed arrays
 ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
@@ -4151,8 +4155,8 @@
         (namespace-var (gensym))
         (name (car spec))
         (namespace (cadr spec)))
-    `(let ((,module-var (new-library ,(symbol->string name)
-                                     ,(symbol->string namespace)))
+    `(let ((,module-var (new-library ,(repr name)
+                                     ,(repr namespace)))
            (,namespace-var ',namespace))
        (define-macro (export . body)
          (%export ,module-var ,namespace-var body))

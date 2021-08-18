@@ -502,7 +502,7 @@
   (if (pair? list)
       (let* ((item (car list))
              (first (car item))
-             (forms (cdr item))
+             (forms (if (eq? (cadr item) '=>) (cddr item) (cdr item)))
              (rest (cdr list)))
         `(if ,first
              (begin
