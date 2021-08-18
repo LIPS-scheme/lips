@@ -498,22 +498,36 @@
 (define-macro (cond . list)
   "(cond (predicate? . body)
          (predicate? . body))
-   Macro for condition check. For usage instead of nested ifs."
+
+   (cond (predicate? => procedure)
+         (predicate? => procedure))
+
+   Macro for condition checks. For usage instead of nested ifs.
+   You can use predicate and any number of expressions. Or symbol =>
+   Followed by procedure that will be invoked with result
+   of the predicate."
   (if (pair? list)
       (let* ((item (car list))
+             (value (gensym))
              (first (car item))
-             (forms (if (eq? (cadr item) '=>) (cddr item) (cdr item)))
+             (fn (and (not (null? (cdr item))) (eq? (cadr item) '=>)))
+             (expression (if fn
+                             (caddr item)
+                             (cdr item)))
              (rest (cdr list)))
-        `(if ,first
-             (begin
-               ,@forms)
-             ,(if (and (pair? rest)
-                       (or (eq? (caar rest) true)
-                           (eq? (caar rest) 'else)))
-                  `(begin
-                     ,@(cdar rest))
-                  (if (not (null? rest))
-                      `(cond ,@rest)))))
+        `(let ((,value ,first))
+           (if ,value
+               ,(if fn
+                    `(,expression ,value)
+                    `(begin
+                       ,@expression))
+               ,(if (and (pair? rest)
+                         (or (eq? (caar rest) true)
+                             (eq? (caar rest) 'else)))
+                    `(begin
+                       ,@(cdar rest))
+                    (if (not (null? rest))
+                        `(cond ,@rest))))))
       nil))
 
 ;; -----------------------------------------------------------------------------
