@@ -4,6 +4,7 @@
 * add alias for `string-join` and `string-split`
 * lists are now iterators
 * add optional `=>` syntax to `cond` macro (as per R7RS)
+* make `undefined` parser constant
 ### Bugfix
 * fix scoping issue in nested `syntax-rules`
 * fix `repr` of object that have space in key

@@ -6861,6 +6861,7 @@
         '#t': true,
         '#f': false,
         nil,
+        'undefined': undefined,
         'null': null,
         'NaN': nan,
         '+nan.0': nan,
