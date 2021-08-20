@@ -11,6 +11,7 @@
 * fix using dot notation inside syntax-rules macros
 * typecheck `string->symbol` and `symbol->string`
 * fix `parent.frame` inside `Intepreter`
+* fix `eval` without env
 
 ## 1.0.0-beta.14
 ### Breaking

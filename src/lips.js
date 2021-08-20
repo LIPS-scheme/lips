@@ -7596,7 +7596,7 @@
             If no parent frame found it return nil.`),
         // ------------------------------------------------------------------
         'eval': doc('eval', function(code, env) {
-            env = env || this;
+            env = env || this.get('current-environment').call(this);
             return evaluate(code, {
                 env,
                 //dynamic_scope: this,
