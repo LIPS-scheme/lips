@@ -1039,3 +1039,14 @@
                                (lambda (num) (num.isFloat))))))
             (let ((is-float (foo)))
               (t.is (map is-float input) expect))))))
+
+(test "syntax: refsh macro"
+      (lambda (t)
+        (define-syntax fresh
+          (syntax-rules ()
+            ((_ (sym ...) expr exprs ...)
+             (let ((sym (if #f #f)) ...)
+               expr exprs ...))))
+
+        (t.is (fresh (a b c) (list a b c))
+              (list undefined undefined undefined))))

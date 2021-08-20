@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 16 Aug 2021 13:07:09 +0000
+ * build: Fri, 20 Aug 2021 14:52:35 +0000
  */
 (function () {
 	'use strict';
@@ -1454,16 +1454,16 @@
 	(function (root, factory) {
 	  if (typeof define === 'function' && define.amd) {
 	    // AMD. Register as an anonymous module.
-	    define(['bn.js'], function (BN) {
-	      return root.lips = factory(root, BN);
+	    define(['bn.js', 'cbor-x'], function (BN, CBOR) {
+	      return root.lips = factory(root, BN, CBOR);
 	    });
 	  } else if ((typeof module === "undefined" ? "undefined" : _typeof(module)) === 'object' && module.exports) {
 	    // Node/CommonJS
-	    module.exports = factory(root, require('bn.js'));
+	    module.exports = factory(root, require('bn.js'), require('cbor-x'));
 	  } else {
-	    root.lips = factory(root, root.BN);
+	    root.lips = factory(root, root.BN, root.CBOR);
 	  }
-	})(typeof global !== 'undefined' ? global : self, function (root, BN, undefined$1) {
+	})(typeof global !== 'undefined' ? global : self, function (root, BN, CBOR, undefined$1) {
 	  /* eslint-disable */
 
 	  /* istanbul ignore next */
@@ -3980,34 +3980,34 @@
 
 
 	  function _uniterate_async() {
-	    _uniterate_async = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(object) {
+	    _uniterate_async = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee20(object) {
 	      var result, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _value, item;
 
-	      return regenerator.wrap(function _callee19$(_context19) {
+	      return regenerator.wrap(function _callee20$(_context20) {
 	        while (1) {
-	          switch (_context19.prev = _context19.next) {
+	          switch (_context20.prev = _context20.next) {
 	            case 0:
 	              result = [];
 	              _iteratorNormalCompletion = true;
 	              _didIteratorError = false;
-	              _context19.prev = 3;
+	              _context20.prev = 3;
 	              _iterator = _asyncIterator(object);
 
 	            case 5:
-	              _context19.next = 7;
+	              _context20.next = 7;
 	              return _iterator.next();
 
 	            case 7:
-	              _step = _context19.sent;
+	              _step = _context20.sent;
 	              _iteratorNormalCompletion = _step.done;
-	              _context19.next = 11;
+	              _context20.next = 11;
 	              return _step.value;
 
 	            case 11:
-	              _value = _context19.sent;
+	              _value = _context20.sent;
 
 	              if (_iteratorNormalCompletion) {
-	                _context19.next = 18;
+	                _context20.next = 18;
 	                break;
 	              }
 
@@ -4016,56 +4016,56 @@
 
 	            case 15:
 	              _iteratorNormalCompletion = true;
-	              _context19.next = 5;
+	              _context20.next = 5;
 	              break;
 
 	            case 18:
-	              _context19.next = 24;
+	              _context20.next = 24;
 	              break;
 
 	            case 20:
-	              _context19.prev = 20;
-	              _context19.t0 = _context19["catch"](3);
+	              _context20.prev = 20;
+	              _context20.t0 = _context20["catch"](3);
 	              _didIteratorError = true;
-	              _iteratorError = _context19.t0;
+	              _iteratorError = _context20.t0;
 
 	            case 24:
-	              _context19.prev = 24;
-	              _context19.prev = 25;
+	              _context20.prev = 24;
+	              _context20.prev = 25;
 
 	              if (!(!_iteratorNormalCompletion && _iterator["return"] != null)) {
-	                _context19.next = 29;
+	                _context20.next = 29;
 	                break;
 	              }
 
-	              _context19.next = 29;
+	              _context20.next = 29;
 	              return _iterator["return"]();
 
 	            case 29:
-	              _context19.prev = 29;
+	              _context20.prev = 29;
 
 	              if (!_didIteratorError) {
-	                _context19.next = 32;
+	                _context20.next = 32;
 	                break;
 	              }
 
 	              throw _iteratorError;
 
 	            case 32:
-	              return _context19.finish(29);
+	              return _context20.finish(29);
 
 	            case 33:
-	              return _context19.finish(24);
+	              return _context20.finish(24);
 
 	            case 34:
-	              return _context19.abrupt("return", result);
+	              return _context20.abrupt("return", result);
 
 	            case 35:
 	            case "end":
-	              return _context19.stop();
+	              return _context20.stop();
 	          }
 	        }
-	      }, _callee19, null, [[3, 20, 24, 34], [25,, 29, 33]]);
+	      }, _callee20, null, [[3, 20, 24, 34], [25,, 29, 33]]);
 	    }));
 	    return _uniterate_async.apply(this, arguments);
 	  }
@@ -11274,18 +11274,36 @@
 	        file += '.scm';
 	      }
 
+	      var IS_BIN = file.match(/\.xcb$/);
+
 	      function run(code) {
-	        if (type(code) === 'buffer') {
-	          code = code.toString();
-	        }
+	        if (IS_BIN) {
+	          code = unserialize_bin(code);
+	        } else {
+	          if (type(code) === 'buffer') {
+	            code = code.toString();
+	          }
 
-	        code = code.replace(/^#!.*/, '');
+	          code = code.replace(/^#!.*/, '');
 
-	        if (code.match(/\{/)) {
-	          code = unserialize(code);
+	          if (code.match(/\{/)) {
+	            code = unserialize(code);
+	          }
 	        }
 
 	        return exec(code, env);
+	      }
+
+	      function fetch(file) {
+	        return root.fetch(file).then(function (res) {
+	          return IS_BIN ? res.arrayBuffer() : res.text();
+	        }).then(function (code) {
+	          if (IS_BIN) {
+	            code = new Uint8Array(code);
+	          }
+
+	          return code;
+	        });
 	      }
 
 	      if (is_node()) {
@@ -11321,9 +11339,7 @@
 	        file = module_path + '/' + file.replace(/^\.?\/?/, '');
 	      }
 
-	      return root.fetch(file).then(function (res) {
-	        return res.text();
-	      }).then(function (code) {
+	      return fetch(file).then(function (code) {
 	        global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
 	        return run(code);
 	      }).then(function () {})["finally"](function () {
@@ -14198,152 +14214,166 @@
 	  } // -------------------------------------------------------------------------
 
 
-	  function exec(_x16, _x17, _x18) {
-	    return _exec.apply(this, arguments);
-	  } // -------------------------------------------------------------------------
+	  var compile = exec_collect(function (code, value) {
+	    return code;
+	  }); // -------------------------------------------------------------------------
 
+	  var exec = exec_collect(function (code, value) {
+	    return value;
+	  }); // -------------------------------------------------------------------------
 
-	  function _exec() {
-	    _exec = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee20(arg, env, dynamic_scope) {
-	      var results, input, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
+	  function exec_collect(collect_callback) {
+	    return /*#__PURE__*/function () {
+	      var _exec_lambda = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(arg, env, dynamic_scope) {
+	        var results, input, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
 
-	      return regenerator.wrap(function _callee20$(_context20) {
-	        while (1) {
-	          switch (_context20.prev = _context20.next) {
-	            case 0:
-	              if (dynamic_scope === true) {
-	                env = dynamic_scope = env || user_env;
-	              } else if (env === true) {
-	                env = dynamic_scope = user_env;
-	              } else {
-	                env = env || user_env;
-	              }
+	        return regenerator.wrap(function _callee19$(_context19) {
+	          while (1) {
+	            switch (_context19.prev = _context19.next) {
+	              case 0:
+	                if (dynamic_scope === true) {
+	                  env = dynamic_scope = env || user_env;
+	                } else if (env === true) {
+	                  env = dynamic_scope = user_env;
+	                } else {
+	                  env = env || user_env;
+	                }
 
-	              results = [];
-	              input = Array.isArray(arg) ? arg : parse(arg);
-	              _iteratorNormalCompletion3 = true;
-	              _didIteratorError3 = false;
-	              _context20.prev = 5;
-	              _iterator3 = _asyncIterator(input);
+	                results = [];
+	                input = Array.isArray(arg) ? arg : parse(arg);
+	                _iteratorNormalCompletion3 = true;
+	                _didIteratorError3 = false;
+	                _context19.prev = 5;
+	                _iterator3 = _asyncIterator(input);
 
-	            case 7:
-	              _context20.next = 9;
-	              return _iterator3.next();
+	              case 7:
+	                _context19.next = 9;
+	                return _iterator3.next();
 
-	            case 9:
-	              _step3 = _context20.sent;
-	              _iteratorNormalCompletion3 = _step3.done;
-	              _context20.next = 13;
-	              return _step3.value;
+	              case 9:
+	                _step3 = _context19.sent;
+	                _iteratorNormalCompletion3 = _step3.done;
+	                _context19.next = 13;
+	                return _step3.value;
 
-	            case 13:
-	              _value3 = _context20.sent;
+	              case 13:
+	                _value3 = _context19.sent;
 
-	              if (_iteratorNormalCompletion3) {
-	                _context20.next = 29;
-	                break;
-	              }
+	                if (_iteratorNormalCompletion3) {
+	                  _context19.next = 32;
+	                  break;
+	                }
 
-	              code = _value3;
-	              value = _evaluate(code, {
-	                env: env,
-	                dynamic_scope: dynamic_scope,
-	                error: function error(e, code) {
-	                  if (e && e.message) {
-	                    if (e.message.match(/^Error:/)) {
-	                      var re = /^(Error:)\s*([^:]+:\s*)/; // clean duplicated Error: added by JS
+	                code = _value3;
+	                value = _evaluate(code, {
+	                  env: env,
+	                  dynamic_scope: dynamic_scope,
+	                  error: function error(e, code) {
+	                    if (e && e.message) {
+	                      if (e.message.match(/^Error:/)) {
+	                        var re = /^(Error:)\s*([^:]+:\s*)/; // clean duplicated Error: added by JS
 
-	                      e.message = e.message.replace(re, '$1 $2');
-	                    }
-
-	                    if (code) {
-	                      // LIPS stack trace
-	                      if (!(e.__code__ instanceof Array)) {
-	                        e.__code__ = [];
+	                        e.message = e.message.replace(re, '$1 $2');
 	                      }
 
-	                      e.__code__.push(code.toString(true));
+	                      if (code) {
+	                        // LIPS stack trace
+	                        if (!(e.__code__ instanceof Array)) {
+	                          e.__code__ = [];
+	                        }
+
+	                        e.__code__.push(code.toString(true));
+	                      }
 	                    }
+
+	                    throw e;
 	                  }
+	                });
 
-	                  throw e;
+	                if (is_promise(value)) {
+	                  _context19.next = 21;
+	                  break;
 	                }
-	              });
 
-	              if (is_promise(value)) {
-	                _context20.next = 21;
+	                results.push(collect_callback(code, value));
+	                _context19.next = 29;
 	                break;
-	              }
 
-	              results.push(value);
-	              _context20.next = 26;
-	              break;
+	              case 21:
+	                _context19.t0 = results;
+	                _context19.t1 = collect_callback;
+	                _context19.t2 = code;
+	                _context19.next = 26;
+	                return value;
 
-	            case 21:
-	              _context20.t0 = results;
-	              _context20.next = 24;
-	              return value;
+	              case 26:
+	                _context19.t3 = _context19.sent;
+	                _context19.t4 = (0, _context19.t1)(_context19.t2, _context19.t3);
 
-	            case 24:
-	              _context20.t1 = _context20.sent;
+	                _context19.t0.push.call(_context19.t0, _context19.t4);
 
-	              _context20.t0.push.call(_context20.t0, _context20.t1);
-
-	            case 26:
-	              _iteratorNormalCompletion3 = true;
-	              _context20.next = 7;
-	              break;
-
-	            case 29:
-	              _context20.next = 35;
-	              break;
-
-	            case 31:
-	              _context20.prev = 31;
-	              _context20.t2 = _context20["catch"](5);
-	              _didIteratorError3 = true;
-	              _iteratorError3 = _context20.t2;
-
-	            case 35:
-	              _context20.prev = 35;
-	              _context20.prev = 36;
-
-	              if (!(!_iteratorNormalCompletion3 && _iterator3["return"] != null)) {
-	                _context20.next = 40;
+	              case 29:
+	                _iteratorNormalCompletion3 = true;
+	                _context19.next = 7;
 	                break;
-	              }
 
-	              _context20.next = 40;
-	              return _iterator3["return"]();
-
-	            case 40:
-	              _context20.prev = 40;
-
-	              if (!_didIteratorError3) {
-	                _context20.next = 43;
+	              case 32:
+	                _context19.next = 38;
 	                break;
-	              }
 
-	              throw _iteratorError3;
+	              case 34:
+	                _context19.prev = 34;
+	                _context19.t5 = _context19["catch"](5);
+	                _didIteratorError3 = true;
+	                _iteratorError3 = _context19.t5;
 
-	            case 43:
-	              return _context20.finish(40);
+	              case 38:
+	                _context19.prev = 38;
+	                _context19.prev = 39;
 
-	            case 44:
-	              return _context20.finish(35);
+	                if (!(!_iteratorNormalCompletion3 && _iterator3["return"] != null)) {
+	                  _context19.next = 43;
+	                  break;
+	                }
 
-	            case 45:
-	              return _context20.abrupt("return", results);
+	                _context19.next = 43;
+	                return _iterator3["return"]();
 
-	            case 46:
-	            case "end":
-	              return _context20.stop();
+	              case 43:
+	                _context19.prev = 43;
+
+	                if (!_didIteratorError3) {
+	                  _context19.next = 46;
+	                  break;
+	                }
+
+	                throw _iteratorError3;
+
+	              case 46:
+	                return _context19.finish(43);
+
+	              case 47:
+	                return _context19.finish(38);
+
+	              case 48:
+	                return _context19.abrupt("return", results);
+
+	              case 49:
+	              case "end":
+	                return _context19.stop();
+	            }
 	          }
-	        }
-	      }, _callee20, null, [[5, 31, 35, 45], [36,, 40, 44]]);
-	    }));
-	    return _exec.apply(this, arguments);
-	  }
+	        }, _callee19, null, [[5, 34, 38, 48], [39,, 43, 47]]);
+	      }));
+
+	      function exec_lambda(_x16, _x17, _x18) {
+	        return _exec_lambda.apply(this, arguments);
+	      }
+
+	      return exec_lambda;
+	    }();
+	  } // -------------------------------------------------------------------------
+
 
 	  function balanced(code) {
 	    var maching_pairs = {
@@ -14431,6 +14461,7 @@
 
 	  function bootstrap() {
 	    var url = arguments.length > 0 && arguments[0] !== undefined$1 ? arguments[0] : '';
+	    var files = ['dist/std.xcb'];
 
 	    if (url === '') {
 	      if (is_dev()) {
@@ -14443,7 +14474,14 @@
 	    }
 
 	    var load = global_env.get('load');
-	    return load.call(lips.env, "".concat(url, "dist/std.min.scm"), global_env);
+	    return function next() {
+	      if (files.length) {
+	        var name = files.shift();
+	        return load.call(user_env, [url, name].join('/'), global_env).then(next);
+	      } else {
+	        return Promise.resolve();
+	      }
+	    }();
 	  } // -------------------------------------------------------------------------
 
 
@@ -14551,7 +14589,7 @@
 	      return this.rpc('eval', [code, dynamic]);
 	    };
 	  } // -------------------------------------------------------------------------
-	  // Serialization
+	  // :: Serialization
 	  // -------------------------------------------------------------------------
 
 
@@ -14653,7 +14691,89 @@
 
 	      return object;
 	    });
-	  } // -------------------------------------------------------------------------
+	  } // binary serialization using CBOR binary data format
+
+
+	  var cbor = function () {
+	    var addExtension = CBOR.addExtension,
+	        Encoder = CBOR.Encoder;
+	    var types = {
+	      'pair': Pair,
+	      'symbol': LSymbol,
+	      'number': LNumber,
+	      'string': LString,
+	      'character': LCharacter,
+	      'nil': _nil.constructor,
+	      'regex': RegExp
+	    };
+
+	    function serializer(Class, fn) {
+	      return {
+	        deserialize: fn,
+	        Class: Class
+	      };
+	    }
+
+	    var encoder = new Encoder();
+	    var cbor_serialization_map = {};
+
+	    for (var _i6 = 0, _Object$entries4 = Object.entries(serialization_map); _i6 < _Object$entries4.length; _i6++) {
+	      var _Object$entries4$_i = _slicedToArray(_Object$entries4[_i6], 2),
+	          name = _Object$entries4$_i[0],
+	          fn = _Object$entries4$_i[1];
+
+	      var Class = types[name];
+	      cbor_serialization_map[name] = serializer(Class, fn);
+	    } // add CBOR data mapping
+
+
+	    var tag = 43311;
+	    Object.keys(cbor_serialization_map).forEach(function (type) {
+	      var data = cbor_serialization_map[type];
+
+	      if (typeof data === 'function') {
+	        var _Class = data;
+	        addExtension({
+	          Class: _Class,
+	          tag: tag,
+	          encode: function encode(instance, _encode) {
+	            _encode(instance.serialize());
+	          },
+	          decode: function decode(data) {
+	            return new _Class(data);
+	          }
+	        });
+	      } else {
+	        var deserialize = data.deserialize,
+	            _Class2 = data.Class;
+	        addExtension({
+	          Class: _Class2,
+	          tag: tag,
+	          encode: function encode(instance, _encode2) {
+	            if (instance instanceof RegExp) {
+	              return _encode2([instance.source, instance.flags]);
+	            }
+
+	            _encode2(instance.serialize());
+	          },
+	          decode: function decode(data) {
+	            return deserialize(data);
+	          }
+	        });
+	      }
+
+	      tag++;
+	    });
+	    return encoder;
+	  }();
+
+	  var serialize_bin = function serialize_bin(obj) {
+	    return cbor.encode(obj);
+	  };
+
+	  var unserialize_bin = function unserialize_bin(str) {
+	    return cbor.decode(str);
+	  }; // -------------------------------------------------------------------------
 
 
 	  function execError(e) {
@@ -14749,10 +14869,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 16 Aug 2021 13:07:09 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 20 Aug 2021 14:52:35 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 16 Aug 2021 13:07:09 +0000').valueOf();
+	    var date = LString('Fri, 20 Aug 2021 14:52:35 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14797,14 +14917,17 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 16 Aug 2021 13:07:09 +0000',
+	    date: 'Fri, 20 Aug 2021 14:52:35 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
 	    tokenize: tokenize,
 	    evaluate: _evaluate,
+	    compile: compile,
 	    serialize: serialize,
 	    unserialize: unserialize,
+	    serialize_bin: serialize_bin,
+	    unserialize_bin: unserialize_bin,
 	    bootstrap: bootstrap,
 	    Environment: Environment,
 	    env: user_env,

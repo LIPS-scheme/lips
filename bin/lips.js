@@ -3,15 +3,18 @@
 const lily = require('@jcubic/lily');
 const util = require('util');
 
-const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b'];
+const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b', 'cbor'];
 const options = lily(process.argv.slice(2), { boolean });
 
 const {
     exec,
+    compile,
     parse,
     Formatter,
     serialize,
     unserialize,
+    serialize_bin,
+    unserialize_bin,
     balanced_parenthesis,
     tokenize,
     Interpreter,
@@ -107,8 +110,8 @@ function print(result) {
 
 // -----------------------------------------------------------------------------
 function bootstrap(interpreter) {
-    var list = ['./dist/std.scm'];
-    function open(name) {
+    var list = ['./dist/std.xcb'];
+    function read(name) {
         var path;
         try {
             path = require.resolve(`./${name}`);
@@ -119,16 +122,13 @@ function bootstrap(interpreter) {
                 path = require.resolve(`@jcubic/lips/../${name}`);
             }
         }
-        return fs.readFileSync(path).toString();
+        return readCode(path);
     }
     return (function next() {
         var name = list.shift();
         if (name) {
-            var data = open(name);
-            if (compiled(name)) {
-                data = unserialize(data);
-            }
-            return run(data, interpreter, false, env.__parent__, true).then(next);
+            const code = read(name);
+            return run(code, interpreter, false, env.__parent__, true).then(next);
         } else {
             return Promise.resolve();
         }
@@ -136,8 +136,26 @@ function bootstrap(interpreter) {
 }
 
 // -----------------------------------------------------------------------------
+function readCode(filename) {
+    if (compiled_binary(filename)) {
+        return unserialize_bin(readBinary(filename));
+    } else {
+        const code = readFile(filename);
+        if (compiled(filename)) {
+            return unserialize(code);
+        }
+        return code;
+    }
+}
+
+// -----------------------------------------------------------------------------
 function compiled(name) {
     return name.match(/\.xcm$/);
+}
+
+// -----------------------------------------------------------------------------
+function compiled_binary(name) {
+    return name.match(/\.xcb$/);
 }
 
 // -----------------------------------------------------------------------------
@@ -238,12 +256,17 @@ var interp = Interpreter('repl', {
     '__help': env.get('help')
 });
 
+function readBinary(filename) {
+    return fs.readFileSync(filename);
+}
+
+// -----------------------------------------------------------------------------
 function readFile(filename) {
-    const buff = fs.readFileSync(filename);
+    const buff = readBinary(filename);
     return buff.toString().replace(/^#!.*\n/, '');
 }
-// -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
 if (options.version || options.V) {
     // SRFI 176
     global.output = Pair.fromArray([
@@ -272,23 +295,35 @@ if (options.version || options.V) {
     });
 } else if (options.b && options._.length === 1) {
     const filename = options._[0];
-    const code = readFile(filename);
-    if (compiled(filename)) {
-        for (expr of unserialize(code)) {
-            console.log(expr.toString(true));
-        }
+    for (expr of readCode(filename)) {
+        console.log(expr.toString(true));
     }
 } else if ((options.c || options.compile) && options._.length === 1) {
     try {
         const filename = options._[0];
         console.log('Experimental compiler');
         console.log(`Compiling ${filename} ...`);
-        const compiled_name = filename.replace(/\.[^.]+$/, '') + '.xcm';
+        const ext = options.cbor ? '.xcb' : '.xcm';
+        const compiled_name = filename.replace(/\.[^.]+$/, '') + ext;
         var code = readFile(filename);
         bootstrap(interp).then(function() {
-            parse(code, interp.__env__).then(code => {
-                fs.writeFileSync(compiled_name, serialize(code));
-            });
+            return compile(code, interp.__env__).then(code => {
+                console.log(`Writing ${compiled_name} ...`);
+                try {
+                    const encoded = options.cbor ? serialize_bin(code) : serialize(code);
+                    fs.writeFile(compiled_name, encoded, function(err) {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log('DONE');
+                        }
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
+            })
+        }).catch(e => {
+            print_error(e, true);
         });
     } catch(e) {
         console.log(e);
@@ -310,10 +345,7 @@ if (options.version || options.V) {
     });
     const filename = options._[0];
     try {
-        let code = readFile(filename);
-        if (compiled(filename)) {
-            code = unserialize(code);
-        }
+        const code = readCode(filename);
         return bootstrap(interp).then(() => {
             const dynamic = options.d || options.dynamic;
             return run(code, interp, dynamic, null, options.t || options.trace);

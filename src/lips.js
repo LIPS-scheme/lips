@@ -44,16 +44,16 @@
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define(['bn.js'], function(BN) {
-            return (root.lips = factory(root, BN));
+        define(['bn.js', 'cbor-x'], function(BN, CBOR) {
+            return (root.lips = factory(root, BN, CBOR));
         });
     } else if (typeof module === 'object' && module.exports) {
         // Node/CommonJS
-        module.exports = factory(root, require('bn.js'));
+        module.exports = factory(root, require('bn.js'), require('cbor-x'));
     } else {
-        root.lips = factory(root, root.BN);
+        root.lips = factory(root, root.BN, root.CBOR);
     }
-})(typeof global !== 'undefined' ? global : self, function(root, BN, undefined) {
+})(typeof global !== 'undefined' ? global : self, function(root, BN, CBOR, undefined) {
     "use strict";
     /* eslint-disable */
     /* istanbul ignore next */
@@ -7206,15 +7206,30 @@
             if (!file.match(/.[^.]+$/)) {
                 file += '.scm';
             }
+            const IS_BIN = file.match(/\.xcb$/);
             function run(code) {
-                if (type(code) === 'buffer') {
-                    code = code.toString();
-                }
-                code = code.replace(/^#!.*/, '');
-                if (code.match(/\{/)) {
-                    code = unserialize(code);
+                if (IS_BIN) {
+                    code = unserialize_bin(code);
+                } else {
+                    if (type(code) === 'buffer') {
+                        code = code.toString();
+                    }
+                    code = code.replace(/^#!.*/, '');
+                    if (code.match(/\{/)) {
+                        code = unserialize(code);
+                    }
                 }
                 return exec(code, env);
+            }
+            function fetch(file) {
+                return root.fetch(file)
+                    .then(res => IS_BIN ? res.arrayBuffer() : res.text())
+                    .then((code) => {
+                        if (IS_BIN) {
+                            code = new Uint8Array(code);
+                        }
+                        return code;
+                    });
             }
             if (is_node()) {
                 return new Promise((resolve, reject) => {
@@ -7245,7 +7260,7 @@
                 module_path = module_path.valueOf();
                 file = module_path + '/' + file.replace(/^\.?\/?/, '');
             }
-            return root.fetch(file).then(res => res.text()).then((code) => {
+            return fetch(file).then(code => {
                 global_env.set(PATH, file.replace(/\/[^/]*$/, ''));
                 return run(code);
             }).then(() => {}).finally(() => {
@@ -9862,45 +9877,55 @@
         }
     }
     // -------------------------------------------------------------------------
-    async function exec(arg, env, dynamic_scope) {
-        if (dynamic_scope === true) {
-            env = dynamic_scope = env || user_env;
-        } else if (env === true) {
-            env = dynamic_scope = user_env;
-        } else {
-            env = env || user_env;
-        }
-        var results = [];
-        var input = Array.isArray(arg) ? arg : parse(arg);
-        for await (let code of input) {
-            const value = evaluate(code, {
-                env,
-                dynamic_scope,
-                error: (e, code) => {
-                    if (e && e.message) {
-                        if (e.message.match(/^Error:/)) {
-                            var re = /^(Error:)\s*([^:]+:\s*)/;
-                            // clean duplicated Error: added by JS
-                            e.message = e.message.replace(re, '$1 $2');
-                        }
-                        if (code) {
-                            // LIPS stack trace
-                            if (!(e.__code__ instanceof Array)) {
-                                e.__code__ = [];
-                            }
-                            e.__code__.push(code.toString(true));
-                        }
-                    }
-                    throw e;
-                }
-            });
-            if (!is_promise(value)) {
-                results.push(value);
+    const compile = exec_collect(function(code, value) {
+        return code;
+    });
+    // -------------------------------------------------------------------------
+    const exec = exec_collect(function(code, value) {
+        return value;
+    });
+    // -------------------------------------------------------------------------
+    function exec_collect(collect_callback) {
+        return async function exec_lambda(arg, env, dynamic_scope) {
+            if (dynamic_scope === true) {
+                env = dynamic_scope = env || user_env;
+            } else if (env === true) {
+                env = dynamic_scope = user_env;
             } else {
-                results.push(await value);
+                env = env || user_env;
             }
-        }
-        return results;
+            var results = [];
+            var input = Array.isArray(arg) ? arg : parse(arg);
+            for await (let code of input) {
+                const value = evaluate(code, {
+                    env,
+                    dynamic_scope,
+                    error: (e, code) => {
+                        if (e && e.message) {
+                            if (e.message.match(/^Error:/)) {
+                                var re = /^(Error:)\s*([^:]+:\s*)/;
+                                // clean duplicated Error: added by JS
+                                e.message = e.message.replace(re, '$1 $2');
+                            }
+                            if (code) {
+                                // LIPS stack trace
+                                if (!(e.__code__ instanceof Array)) {
+                                    e.__code__ = [];
+                                }
+                                e.__code__.push(code.toString(true));
+                            }
+                        }
+                        throw e;
+                    }
+                });
+                if (!is_promise(value)) {
+                    results.push(collect_callback(code, value));
+                } else {
+                    results.push(collect_callback(code, await value));
+                }
+            }
+            return results;
+        };
     }
     // -------------------------------------------------------------------------
     function balanced(code) {
@@ -9964,6 +9989,7 @@
     }
     // -------------------------------------------------------------------------
     function bootstrap(url = '') {
+        const files = ['dist/std.xcb'];
         if (url === '') {
             if (is_dev()) {
                 url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
@@ -9974,7 +10000,14 @@
             url += '/';
         }
         var load = global_env.get('load');
-        return load.call(lips.env, `${url}dist/std.min.scm`, global_env);
+        return (function next() {
+            if (files.length) {
+                const name = files.shift();
+                return load.call(user_env, [url, name].join('/'), global_env).then(next);
+            } else {
+                return Promise.resolve();
+            }
+        })();
     }
     // -------------------------------------------------------------------------
     function Worker(url) {
@@ -10062,7 +10095,7 @@
     }
 
     // -------------------------------------------------------------------------
-    // Serialization
+    // :: Serialization
     // -------------------------------------------------------------------------
     var serialization_map = {
         'pair': ([car, cdr]) => Pair(car, cdr),
@@ -10137,6 +10170,76 @@
             return object;
         });
     }
+
+    // binary serialization using CBOR binary data format
+    const cbor = (function() {
+
+        const { addExtension, Encoder } = CBOR;
+
+        var types = {
+            'pair': Pair,
+            'symbol': LSymbol,
+            'number': LNumber,
+            'string': LString,
+            'character': LCharacter,
+            'nil': nil.constructor,
+            'regex': RegExp
+        };
+
+        function serializer(Class, fn) {
+            return {
+                deserialize: fn,
+                Class
+            };
+        }
+
+        var encoder = new Encoder();
+
+        const cbor_serialization_map = {};
+        for (const [ name, fn ] of Object.entries(serialization_map)) {
+            const Class = types[name];
+            cbor_serialization_map[name] = serializer(Class, fn);
+        }
+        // add CBOR data mapping
+        let tag = 43311;
+        Object.keys(cbor_serialization_map).forEach(type => {
+            const data = cbor_serialization_map[type];
+            if (typeof data === 'function') {
+                const Class = data;
+                addExtension({
+                    Class,
+                    tag,
+                    encode(instance, encode) {
+                        encode(instance.serialize());
+                    },
+                    decode(data) {
+                        return new Class(data);
+                    }
+                });
+            } else {
+                const { deserialize, Class } = data;
+                addExtension({
+                    Class,
+                    tag,
+                    encode(instance, encode) {
+                        if (instance instanceof RegExp) {
+                            return encode([instance.source, instance.flags]);
+                        }
+                        encode(instance.serialize());
+                    },
+                    decode(data) {
+                        return deserialize(data);
+                    }
+                });
+            }
+            tag++;
+        });
+        return encoder;
+    })();
+
+    const serialize_bin = (obj) => cbor.encode(obj);
+    const unserialize_bin = (str) => cbor.decode(str);
+
     // -------------------------------------------------------------------------
     function execError(e) {
         console.error(e.message || e);
@@ -10286,9 +10389,13 @@ properties of an object.
         parse: compose(uniterate_async, parse),
         tokenize,
         evaluate,
+        compile,
 
         serialize,
         unserialize,
+
+        serialize_bin,
+        unserialize_bin,
 
         bootstrap,
 

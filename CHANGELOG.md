@@ -3,7 +3,7 @@
 * improve performance of ** operator when JS support exponential operator
 * add alias for `string-join` and `string-split`
 * lists are now iterators
-* add optional `=>` to `cond` macro (as per R7RS)
+* add optional `=>` syntax to `cond` macro (as per R7RS)
 ### Bugfix
 * fix scoping issue in nested `syntax-rules`
 * fix `repr` of object that have space in key
