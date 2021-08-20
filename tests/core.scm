@@ -111,6 +111,11 @@
         (t.is '|\x3BB;| 'λ)
         (t.is '|\x9;\x9;| '|\t\t|)))
 
+(test "core: dot comma"
+      (lambda (t)
+        ;; found in https://doc.scheme.org/surveys/DotComma/
+        (t.is  (let ((b 312)) `(a .,b)) '(a . 312))))
+
 (test "core: if"
       (lambda (t)
         (t.is (if (newline) 1 2) 1)

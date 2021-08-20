@@ -1268,6 +1268,7 @@
     Lexer.b_comment = Symbol.for('b_comment');
     Lexer.i_comment = Symbol.for('i_comment');
     Lexer.l_datum = Symbol.for('l_datum');
+    Lexer.dot = Symbol.for('dot');
     // ----------------------------------------------------------------------
     Lexer.boundary = /^$|[\s()[\]]/;
     // ----------------------------------------------------------------------
@@ -1319,6 +1320,9 @@
         [/#/, null, /[0-9]/, null, Lexer.l_datum],
         [/=/, /[0-9]/, null, Lexer.l_datum, null],
         [/#/, /[0-9]/, null, Lexer.l_datum, null],
+
+        // for dot comma `(a .,b)
+        [/\./, Lexer.boundary, /,/, null, null],
 
         // block symbols
         [/\|/, null, null, null, Lexer.b_symbol],
@@ -9244,14 +9248,14 @@
                         return loop();
                     }
                 }
-                var arg = args.shift();
-                if (typeof arg === 'undefined') {
+                if (!args.length) {
                     if (result !== false) {
                         return result;
                     } else {
                         return false;
                     }
                 } else {
+                    var arg = args.shift();
                     var value = evaluate(arg, { env: self, dynamic_scope, error });
                     return unpromise(value, next);
                 }
@@ -9878,7 +9882,7 @@
         }
     }
     // -------------------------------------------------------------------------
-    const compile = exec_collect(function(code, value) {
+    const compile = exec_collect(function(code) {
         return code;
     });
     // -------------------------------------------------------------------------

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 20 Aug 2021 19:40:34 +0000
+ * build: Fri, 20 Aug 2021 20:38:07 +0000
  */
 (function () {
 	'use strict';
@@ -3030,7 +3030,8 @@
 	  Lexer.b_symbol = Symbol["for"]('b_symbol');
 	  Lexer.b_comment = Symbol["for"]('b_comment');
 	  Lexer.i_comment = Symbol["for"]('i_comment');
-	  Lexer.l_datum = Symbol["for"]('l_datum'); // ----------------------------------------------------------------------
+	  Lexer.l_datum = Symbol["for"]('l_datum');
+	  Lexer.dot = Symbol["for"]('dot'); // ----------------------------------------------------------------------
 
 	  Lexer.boundary = /^$|[\s()[\]]/; // ----------------------------------------------------------------------
 
@@ -3045,7 +3046,8 @@
 	  [/;/, /^$|[^#]/, null, null, Lexer.comment], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment], // block comment
 	  [/#/, null, /\|/, null, Lexer.b_comment], [/\s/, null, null, Lexer.b_comment, Lexer.b_comment], [/#/, /\|/, null, Lexer.b_comment, null], // inline commentss
 	  [/#/, null, /;/, null, Lexer.i_comment], [/;/, /#/, null, Lexer.i_comment, null], // datum label
-	  [/#/, null, /[0-9]/, null, Lexer.l_datum], [/=/, /[0-9]/, null, Lexer.l_datum, null], [/#/, /[0-9]/, null, Lexer.l_datum, null], // block symbols
+	  [/#/, null, /[0-9]/, null, Lexer.l_datum], [/=/, /[0-9]/, null, Lexer.l_datum, null], [/#/, /[0-9]/, null, Lexer.l_datum, null], // for dot comma `(a .,b)
+	  [/\./, Lexer.boundary, /,/, null, null], // block symbols
 	  [/\|/, null, null, null, Lexer.b_symbol], [/\s/, null, null, Lexer.b_symbol, Lexer.b_symbol], [/\|/, null, Lexer.boundary, Lexer.b_symbol, null]]; // ----------------------------------------------------------------------
 
 	  Lexer._brackets = [[/[()[\]]/, null, null, null, null]]; // ----------------------------------------------------------------------
@@ -13411,15 +13413,15 @@
 	          }
 	        }
 
-	        var arg = args.shift();
-
-	        if (typeof arg === 'undefined') {
+	        if (!args.length) {
 	          if (result !== false) {
 	            return result;
 	          } else {
 	            return false;
 	          }
 	        } else {
+	          var arg = args.shift();
+
 	          var value = _evaluate(arg, {
 	            env: self,
 	            dynamic_scope: dynamic_scope,
@@ -14215,7 +14217,7 @@
 	  } // -------------------------------------------------------------------------
 
 
-	  var compile = exec_collect(function (code, value) {
+	  var compile = exec_collect(function (code) {
 	    return code;
 	  }); // -------------------------------------------------------------------------
 
@@ -14870,10 +14872,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 20 Aug 2021 19:40:34 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 20 Aug 2021 20:38:07 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 20 Aug 2021 19:40:34 +0000').valueOf();
+	    var date = LString('Fri, 20 Aug 2021 20:38:07 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14918,7 +14920,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 20 Aug 2021 19:40:34 +0000',
+	    date: 'Fri, 20 Aug 2021 20:38:07 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
