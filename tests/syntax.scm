@@ -1061,3 +1061,16 @@
         (t.is (letrec-syntax ((foo (syntax-rules (foo) ((_ foo) #t) ((_ x) #f))))
                 (foo foo))
               #t)))
+
+(test.skip "syntax: let-syntax and set! of definition"
+      (lambda (t)
+        ;; https://github.com/jcubic/lips/issues/172
+        (define-syntax g
+          (syntax-rules ()
+            ((g 2) -3)))
+
+        (t.is (let-syntax ((f (syntax-rules ()
+                          ((f 1) (g 2)))))
+                (set! g (lambda (x) -1000))
+                (f 1))
+              -3)))
