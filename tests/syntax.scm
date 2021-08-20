@@ -1050,3 +1050,14 @@
 
         (t.is (fresh (a b c) (list a b c))
               (list undefined undefined undefined))))
+
+(test "syntax: macro from Petrofsky"
+      (lambda (t)
+        ;; https://groups.google.com/g/comp.lang.scheme/c/FB1HgUx5d2s
+        (t.is (letrec-syntax ((foo (syntax-rules (foo) ((_ foo) #t) ((_ x) #f))))
+                (foo foo))
+              #t)
+        (define foo null)
+        (t.is (letrec-syntax ((foo (syntax-rules (foo) ((_ foo) #t) ((_ x) #f))))
+                (foo foo))
+              #t)))
