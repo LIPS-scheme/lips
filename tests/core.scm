@@ -116,6 +116,11 @@
         ;; found in https://doc.scheme.org/surveys/DotComma/
         (t.is  (let ((b 312)) `(a .,b)) '(a . 312))))
 
+(test "core: quote as delimiter"
+      (lambda (t)
+        ;; found in https://doc.scheme.org/surveys/QuoteDelimiter/
+        (t.is (list 'a'b) '(a b))))
+
 (test "core: if"
       (lambda (t)
         (t.is (if (newline) 1 2) 1)

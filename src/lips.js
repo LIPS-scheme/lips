@@ -1270,7 +1270,7 @@
     Lexer.l_datum = Symbol.for('l_datum');
     Lexer.dot = Symbol.for('dot');
     // ----------------------------------------------------------------------
-    Lexer.boundary = /^$|[\s()[\]]/;
+    Lexer.boundary = /^$|[\s()[\]']/;
     // ----------------------------------------------------------------------
     Lexer._rules = [
         // char_re prev_re next_re from_state to_state

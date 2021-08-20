@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 20 Aug 2021 20:38:07 +0000
+ * build: Fri, 20 Aug 2021 21:09:18 +0000
  */
 (function () {
 	'use strict';
@@ -3033,7 +3033,7 @@
 	  Lexer.l_datum = Symbol["for"]('l_datum');
 	  Lexer.dot = Symbol["for"]('dot'); // ----------------------------------------------------------------------
 
-	  Lexer.boundary = /^$|[\s()[\]]/; // ----------------------------------------------------------------------
+	  Lexer.boundary = /^$|[\s()[\]']/; // ----------------------------------------------------------------------
 
 	  Lexer._rules = [// char_re prev_re next_re from_state to_state
 	  // null as to_state mean that is single char token
@@ -14872,10 +14872,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 20 Aug 2021 20:38:07 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 20 Aug 2021 21:09:18 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 20 Aug 2021 20:38:07 +0000').valueOf();
+	    var date = LString('Fri, 20 Aug 2021 21:09:18 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14920,7 +14920,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 20 Aug 2021 20:38:07 +0000',
+	    date: 'Fri, 20 Aug 2021 21:09:18 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
