@@ -759,7 +759,8 @@
             return symbol_to_string(this.__name__);
         }
         var str = this.valueOf();
-        if (quote && str.match(/\s/)) {
+        // same as Lexer.boundary without $|
+        if (quote && str.match(/[\s()[\]']/)) {
             return `|${str}|`;
         }
         return str;

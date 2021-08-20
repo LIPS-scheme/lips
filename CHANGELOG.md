@@ -15,6 +15,7 @@
 * fix `eval` without env
 * fix quote as delimiter
 * fix comma dot as two tokens
+* fix printing symbols that have brackets or quotes
 
 ## 1.0.0-beta.14
 ### Breaking
