@@ -9,11 +9,9 @@
 <script src="https://cdn.jsdelivr.net/combine/npm/jquery.terminal/js/jquery.terminal.min.js,npm/js-polyfills/keyboard.js,npm/prismjs/prism.js,npm/jquery.terminal/js/prism.js,npm/prismjs/components/prism-scheme.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/terminal.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/lib/js/prism.js"></script>
-<script type="text/x-scheme">
+<script src="https://cdn.jsdelivr.net/npm/cbor-x/dist/index.js"></script>
+<script type="text/x-scheme" bootstrap="https://cdn.jsdelivr.net/gh/jcubic/lips@devel/">
  ($.terminal.syntax "scheme")
- (let ((env lips.env.__parent__)
-       (path "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/"))
-     (load (concat path "dist/std.scm") env))
 
  (define term (terminal (object :selector ".term"
                                 :dynamic false
