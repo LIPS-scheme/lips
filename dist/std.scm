@@ -87,7 +87,7 @@
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
-          
+
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0

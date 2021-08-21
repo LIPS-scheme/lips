@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Aug 2021 14:48:09 +0000
+ * build: Sat, 21 Aug 2021 16:47:18 +0000
  */
 (function () {
 	'use strict';
@@ -5338,6 +5338,10 @@
 	      return str_mapping.get(obj);
 	    }
 
+	    if (is_prototype(obj)) {
+	      return '#<prototype>';
+	    }
+
 	    if (obj) {
 	      var cls = obj.constructor;
 
@@ -5352,10 +5356,6 @@
 	          pair_args: pair_args
 	        });
 	      }
-	    }
-
-	    if (is_prototype(obj)) {
-	      return '#<prototype>';
 	    } // standard objects that have toString
 
 
@@ -7210,6 +7210,9 @@
 	    switch (_typeof(object)) {
 	      case 'string':
 	        return LString(object);
+
+	      case 'bigint':
+	        return LNumber(object);
 
 	      case 'number':
 	        if (!Number.isNaN(object)) {
@@ -11710,7 +11713,7 @@
 	      } else if (is_function(value) || is_native(value) || value === _nil) {
 	        obj[key] = value;
 	      } else {
-	        obj[key] = value ? value.valueOf() : value;
+	        obj[key] = value && !is_prototype(value) ? value.valueOf() : value;
 	      }
 	    }, "(set-obj! obj key value)\n\n            Function set property of JavaScript object"),
 	    // ------------------------------------------------------------------
@@ -14888,10 +14891,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 21 Aug 2021 14:48:09 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 21 Aug 2021 16:47:18 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 21 Aug 2021 14:48:09 +0000').valueOf();
+	    var date = LString('Sat, 21 Aug 2021 16:47:18 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14936,7 +14939,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 21 Aug 2021 14:48:09 +0000',
+	    date: 'Sat, 21 Aug 2021 16:47:18 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

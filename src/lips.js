@@ -2802,14 +2802,14 @@
         if (str_mapping.has(obj)) {
             return str_mapping.get(obj);
         }
+        if (is_prototype(obj)) {
+            return '#<prototype>';
+        }
         if (obj) {
             var cls = obj.constructor;
             if (instances.has(cls)) {
                 return instances.get(cls)(obj, { quote, skip_cycles, pair_args });
             }
-        }
-        if (is_prototype(obj)) {
-            return '#<prototype>';
         }
         // standard objects that have toString
         for (let type of native_types) {
@@ -4218,6 +4218,8 @@
         switch (typeof object) {
             case 'string':
                 return LString(object);
+            case 'bigint':
+                return LNumber(object);
             case 'number':
                 if (!Number.isNaN(object)) {
                     return LNumber(object);
@@ -7553,7 +7555,7 @@
             } else if (is_function(value) || is_native(value) || value === nil) {
                 obj[key] = value;
             } else {
-                obj[key] = value ? value.valueOf() : value;
+                obj[key] = value && !is_prototype(value) ? value.valueOf() : value;
             }
         }, `(set-obj! obj key value)
 

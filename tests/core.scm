@@ -368,6 +368,18 @@
         (t.is (repr '|foo bar| true) "|foo bar|")
         (t.is (repr (string->symbol "foo bar") true) "|foo bar|")))
 
+(test "core: repr of prototypes"
+       (lambda (t)
+         (t.is (repr lips.LNumber.prototype)
+               "#<prototype>")
+
+         (t.is (repr Number.prototype)
+               "#<prototype>")
+
+         (let ((x (object :foo (object :bar Number.prototype))))
+           (t.is (repr x.foo.bar)
+                 "#<prototype>"))))
+
 (test "core: set-repr! on classes"
       (lambda (t)
         (define Foo (class Object))
