@@ -433,8 +433,29 @@
       n))
 
 ;; -----------------------------------------------------------------------------
+(define (log z)
+  "(log z)
+
+   Funcntion calculates natural logarithm of z. Where argument can be
+   any number (including complex negative and rational).
+   If the value is 0 it return NaN."
+  (cond ((real? z)
+         (cond ((zero? z) NaN)
+               ((> z 0) (Math.log z))
+               (else
+                (+ (Math.log (abs z))
+                   (* Math.PI +i)))))
+        ((complex? z)
+         (let ((arg (Math.atan2 (imag-part z)
+                                (real-part z))))
+           (+ (Math.log (z.modulus))
+              (* +i arg))))
+        ((rational? z)
+         (log (exact->inexact z)))))
+
+;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
-(define _maths (list "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+(define _maths (list "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
 
 ;; -----------------------------------------------------------------------------
 (define _this_env (current-environment))

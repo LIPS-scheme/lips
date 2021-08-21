@@ -213,3 +213,13 @@
           (t.is (string->utf8 str 0 1) #u8(#xCE #xBB))
           (t.is (string->utf8 str 0 2) #u8(#xCE #xBB #x41))
           (t.is (string->utf8 str 1 3) #u8(#x41 #x41)))))
+
+(test "std: atanh and log function"
+      (lambda (t)
+        ;; source: https://doc.scheme.org/surveys/ComplexLog/
+        (define (atanh x)
+          (/ (- (log (+ 1 x))
+                (log (- 1 x)))
+             2))
+        (t.is (atanh -2)
+              -0.5493061443340548+1.5707963267948966i)))

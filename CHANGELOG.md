@@ -5,6 +5,7 @@
 * lists are now iterators
 * add optional `=>` syntax to `cond` macro (as per R7RS)
 * make `undefined` parser constant
+* add support for `log` of complex, rational, and negative numbers
 ### Bugfix
 * fix scoping issue in nested `syntax-rules`
 * fix `repr` of object that have space in key
