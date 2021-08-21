@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Aug 2021 17:17:38 +0000
+ * build: Sat, 21 Aug 2021 17:29:01 +0000
  */
 (function () {
 	'use strict';
@@ -7204,7 +7204,9 @@
 	        return LNumber(object);
 
 	      case 'number':
-	        if (!Number.isNaN(object)) {
+	        if (Number.isNaN(object)) {
+	          return nan;
+	        } else {
 	          return LNumber(object);
 	        }
 
@@ -14074,19 +14076,7 @@
 	          return quote(result);
 	        }
 
-	        if (Number.isNaN(result)) {
-	          return result;
-	        }
-
-	        if (typeof result === 'number') {
-	          return LNumber(result);
-	        }
-
-	        if (typeof result === 'string') {
-	          return LString(result);
-	        }
-
-	        return result;
+	        return box(result);
 	      }, error);
 	    });
 	  } // -------------------------------------------------------------------------
@@ -14876,10 +14866,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 21 Aug 2021 17:17:38 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 21 Aug 2021 17:29:01 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 21 Aug 2021 17:17:38 +0000').valueOf();
+	    var date = LString('Sat, 21 Aug 2021 17:29:01 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14924,7 +14914,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 21 Aug 2021 17:17:38 +0000',
+	    date: 'Sat, 21 Aug 2021 17:29:01 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

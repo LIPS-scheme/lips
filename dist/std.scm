@@ -1804,7 +1804,7 @@
 
    Return maximum of it's arguments."
   (numbers? "max" args)
-  (apply (.. Math.max) args))
+  (apply Math.max args))
 
 ;; -----------------------------------------------------------------------------
 (define (min . args)
@@ -1812,7 +1812,7 @@
 
    Return minimum of it's arguments."
   (numbers? "min" args)
-  (apply (.. Math.min) args))
+  (apply Math.min args))
 
 ;; -----------------------------------------------------------------------------
 (define (make-rectangular re im)

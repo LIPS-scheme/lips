@@ -4221,7 +4221,9 @@
             case 'bigint':
                 return LNumber(object);
             case 'number':
-                if (!Number.isNaN(object)) {
+                if (Number.isNaN(object)) {
+                    return nan;
+                } else {
                     return LNumber(object);
                 }
         }
@@ -9784,16 +9786,7 @@
                     result.markCycles();
                     return quote(result);
                 }
-                if (Number.isNaN(result)) {
-                    return result;
-                }
-                if (typeof result === 'number') {
-                    return LNumber(result);
-                }
-                if (typeof result === 'string') {
-                    return LString(result);
-                }
-                return result;
+                return box(result);
             }, error);
         });
     }

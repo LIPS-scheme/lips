@@ -21,6 +21,7 @@
 * fix `repr` of native type prototypes (e.g. `LComplex`)
 * fix using prototypes inside objects (e.g. `(object :foo Number.prototype)`)
 * fix `sqrt` of rational where numerator or denominator is float
+* fix boxing NaN value
 
 ## 1.0.0-beta.14
 ### Breaking
