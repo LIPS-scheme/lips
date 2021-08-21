@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Aug 2021 18:12:55 +0000
+ * build: Sat, 21 Aug 2021 18:58:33 +0000
  */
 (function () {
 	'use strict';
@@ -10603,7 +10603,7 @@
 	    this.__env__[name] = value;
 
 	    if (doc) {
-	      this.doc(name, doc);
+	      this.doc(name, doc, true);
 	    }
 
 	    return this;
@@ -14866,10 +14866,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 21 Aug 2021 18:12:55 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 21 Aug 2021 18:58:33 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 21 Aug 2021 18:12:55 +0000').valueOf();
+	    var date = LString('Sat, 21 Aug 2021 18:58:33 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14914,7 +14914,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 21 Aug 2021 18:12:55 +0000',
+	    date: 'Sat, 21 Aug 2021 18:58:33 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

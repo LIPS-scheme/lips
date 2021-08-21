@@ -6701,7 +6701,7 @@
         }
         this.__env__[name] = value;
         if (doc) {
-            this.doc(name, doc);
+            this.doc(name, doc, true);
         }
         return this;
     };

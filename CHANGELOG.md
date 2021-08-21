@@ -23,6 +23,7 @@
 * fix `sqrt` of rational where numerator or denominator is float
 * fix boxing NaN value
 * fix `length` of nil
+* fix trimming spaces in `Env::set`
 
 ## 1.0.0-beta.14
 ### Breaking
