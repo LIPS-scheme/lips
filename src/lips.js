@@ -2808,6 +2808,9 @@
                 return instances.get(cls)(obj, { quote, skip_cycles, pair_args });
             }
         }
+        if (is_prototype(obj)) {
+            return '#<prototype>';
+        }
         // standard objects that have toString
         for (let type of native_types) {
             if (obj instanceof type) {
@@ -2838,9 +2841,6 @@
             if (typeof constructor.__class__ === 'string') {
                 name = constructor.__class__;
             } else {
-                if (is_prototype(obj)) {
-                    return '#<prototype>';
-                }
                 var fn = user_repr(obj);
                 if (fn) {
                     if (is_function(fn)) {
@@ -6672,6 +6672,7 @@
                 } catch (e) {
                     // ignore symbols in expansion that look like
                     // property access e.g. %as.data
+                    throw e;
                 }
             } else if (value instanceof Value) {
                 return patch_value(value.valueOf());
@@ -6779,13 +6780,13 @@
                                           (throw "Invalid Invocation"))`))[0];
     // -------------------------------------------------------------------------------
     var get = doc('get', function get(object, ...args) {
-        // if arg is symbol someone probably want to get __fn__ from binded function
-        if (is_function(object) && typeof args[0] !== 'symbol') {
-            object = unbind(object);
-        }
         var value;
         var len = args.length;
         while (args.length) {
+            // if arg is symbol someone probably want to get __fn__ from binded function
+            if (is_function(object) && typeof args[0] !== 'symbol') {
+                object = unbind(object);
+            }
             var arg = args.shift();
             var name = unbox(arg);
             // the value was set to false to prevent resolving

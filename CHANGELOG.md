@@ -16,6 +16,8 @@
 * fix quote as delimiter
 * fix comma dot as two tokens
 * fix printing symbols that have brackets or quotes
+* fix resolving dot notation (e.g. `lips.LComplex.prototype.modulus`)
+* fix `repr` of native type prototypes (e.g. `LComplex`)
 
 ## 1.0.0-beta.14
 ### Breaking

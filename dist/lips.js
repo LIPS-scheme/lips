@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Aug 2021 14:28:15 +0000
+ * build: Sat, 21 Aug 2021 14:48:09 +0000
  */
 (function () {
 	'use strict';
@@ -5352,6 +5352,10 @@
 	          pair_args: pair_args
 	        });
 	      }
+	    }
+
+	    if (is_prototype(obj)) {
+	      return '#<prototype>';
 	    } // standard objects that have toString
 
 
@@ -5403,10 +5407,6 @@
 	      if (typeof constructor.__class__ === 'string') {
 	        name = constructor.__class__;
 	      } else {
-	        if (is_prototype(obj)) {
-	          return '#<prototype>';
-	        }
-
 	        var fn = user_repr(obj);
 
 	        if (fn) {
@@ -10572,8 +10572,10 @@
 	          }
 
 	          return get.apply(void 0, [value].concat(_toConsumableArray(rest)));
-	        } catch (e) {// ignore symbols in expansion that look like
+	        } catch (e) {
+	          // ignore symbols in expansion that look like
 	          // property access e.g. %as.data
+	          throw e;
 	        }
 	      } else if (value instanceof Value) {
 	        return patch_value(value.valueOf());
@@ -10696,19 +10698,20 @@
 	  var native_lambda = parse(tokenize("(lambda ()\n                                          \"[native code]\"\n                                          (throw \"Invalid Invocation\"))"))[0]; // -------------------------------------------------------------------------------
 
 	  var get = doc('get', function get(object) {
+	    var value;
+
 	    for (var _len17 = arguments.length, args = new Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
 	      args[_key17 - 1] = arguments[_key17];
 	    }
 
-	    // if arg is symbol someone probably want to get __fn__ from binded function
-	    if (is_function(object) && _typeof(args[0]) !== 'symbol') {
-	      object = unbind(object);
-	    }
-
-	    var value;
 	    var len = args.length;
 
 	    while (args.length) {
+	      // if arg is symbol someone probably want to get __fn__ from binded function
+	      if (is_function(object) && _typeof(args[0]) !== 'symbol') {
+	        object = unbind(object);
+	      }
+
 	      var arg = args.shift();
 	      var name = unbox(arg); // the value was set to false to prevent resolving
 	      // by Real Promises #153
@@ -14885,10 +14888,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 21 Aug 2021 14:28:15 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 21 Aug 2021 14:48:09 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 21 Aug 2021 14:28:15 +0000').valueOf();
+	    var date = LString('Sat, 21 Aug 2021 14:48:09 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14933,7 +14936,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 21 Aug 2021 14:28:15 +0000',
+	    date: 'Sat, 21 Aug 2021 14:48:09 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
