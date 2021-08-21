@@ -1074,3 +1074,19 @@
                 (set! g (lambda (x) -1000))
                 (f 1))
               -3)))
+
+(test "syntax: reverse-syntax macro"
+      ;; example from book Sketchy Scheme by Nils M Holm
+      (define-syntax reverse-syntax
+        (syntax-rules ()
+          ((_ lst)
+           (reverse-syntax lst ()))
+          ((_ () r)
+           r)
+          ((_ (a . d) r)
+           (reverse-syntax d (a . r)))))
+
+      (t.is (macroexpand (reverse-syntax (1 2 3 4)))
+            '(4 3 2 1))
+      (t.is (reverse-syntax (1 2 cons))
+            '(1 . 2)))
