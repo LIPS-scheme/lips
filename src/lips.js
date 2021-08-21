@@ -5760,11 +5760,8 @@
     LRational.prototype.sqrt = function() {
         const num = this.__num__.sqrt();
         const denom = this.__denom__.sqrt();
-        if (num instanceof LFloat) {
-            num = num.toRational();
-        }
-        if (denom instanceof LFloat) {
-            denom = denom.toRational();
+        if (num instanceof LFloat || denom instanceof LFloat) {
+            return num.div(denom);
         }
         return LRational({ num, denom });
     };
