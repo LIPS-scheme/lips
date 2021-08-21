@@ -6,6 +6,8 @@ const util = require('util');
 const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b', 'cbor'];
 const options = lily(process.argv.slice(2), { boolean });
 
+const quiet = options.q || options.quiet;
+
 const {
     exec,
     compile,
@@ -301,20 +303,24 @@ if (options.version || options.V) {
 } else if ((options.c || options.compile) && options._.length === 1) {
     try {
         const filename = options._[0];
-        console.log('Experimental compiler');
-        console.log(`Compiling ${filename} ...`);
+        if (!quiet) {
+            console.log('Experimental compiler');
+            console.log(`Compiling ${filename} ...`);
+        }
         const ext = options.cbor ? '.xcb' : '.xcm';
         const compiled_name = filename.replace(/\.[^.]+$/, '') + ext;
         var code = readFile(filename);
         bootstrap(interp).then(function() {
             return compile(code, interp.__env__).then(code => {
-                console.log(`Writing ${compiled_name} ...`);
+                if (!quiet) {
+                    console.log(`Writing ${compiled_name} ...`);
+                }
                 try {
                     const encoded = options.cbor ? serialize_bin(code) : serialize(code);
                     fs.writeFile(compiled_name, encoded, function(err) {
                         if (err) {
                             console.error(err);
-                        } else {
+                        } else if (!quiet) {
                             console.log('DONE');
                         }
                     });
@@ -369,7 +375,7 @@ if (options.version || options.V) {
 } else {
     const dynamic = options.d || options.dynamic;
     const entry = '   ' + (dynamic ? 'dynamic' : 'lexical') + ' scope $1';
-    if (process.stdin.isTTY && !options.q && !options.quiet) {
+    if (process.stdin.isTTY && !quiet) {
         console.log(banner.replace(/(\n\nLIPS.+)/m, entry)); // '
     }
     var prompt = 'lips> ';
