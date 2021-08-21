@@ -7530,6 +7530,7 @@
                 env.set(code.car, value, __doc__, true);
             });
         }), `(define name expression)
+             (define name expression "doc string")
              (define (function-name . args) body)
 
              Macro for defining values. It can be used to define variables,
@@ -8658,14 +8659,14 @@
             Function that call function with list of arguments.`),
         // ------------------------------------------------------------------
         length: doc('length', function length(obj) {
-            if (!obj) {
-                return LNumber(0);
+            if (!obj || obj === nil) {
+                return 0;
             }
             if (obj instanceof Pair) {
-                return LNumber(obj.length());
+                return obj.length();
             }
             if ("length" in obj) {
-                return LNumber(obj.length);
+                return obj.length;
             }
         }, `(length expression)
 

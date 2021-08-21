@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Aug 2021 17:29:01 +0000
+ * build: Sat, 21 Aug 2021 18:12:55 +0000
  */
 (function () {
 	'use strict';
@@ -11678,7 +11678,7 @@
 
 	        env.set(code.car, value, __doc__, true);
 	      });
-	    }), "(define name expression)\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
+	    }), "(define name expression)\n             (define name expression \"doc string\")\n             (define (function-name . args) body)\n\n             Macro for defining values. It can be used to define variables,\n             or function. If first argument is list it will create function\n             with name beeing first element of the list. The macro evalute\n             code `(define function (lambda args body))`"),
 	    // ------------------------------------------------------------------
 	    'set-obj!': doc('set-obj!', function (obj, key, value) {
 	      var obj_type = _typeof(obj);
@@ -12787,16 +12787,16 @@
 	    }, "(apply fn list)\n\n            Function that call function with list of arguments."),
 	    // ------------------------------------------------------------------
 	    length: doc('length', function length(obj) {
-	      if (!obj) {
-	        return LNumber(0);
+	      if (!obj || obj === _nil) {
+	        return 0;
 	      }
 
 	      if (obj instanceof Pair) {
-	        return LNumber(obj.length());
+	        return obj.length();
 	      }
 
 	      if ("length" in obj) {
-	        return LNumber(obj.length);
+	        return obj.length;
 	      }
 	    }, "(length expression)\n\n            Function return length of the object, the object can be list\n            or any object that have length property."),
 	    // ------------------------------------------------------------------
@@ -14866,10 +14866,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 21 Aug 2021 17:29:01 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sat, 21 Aug 2021 18:12:55 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 21 Aug 2021 17:29:01 +0000').valueOf();
+	    var date = LString('Sat, 21 Aug 2021 18:12:55 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14914,7 +14914,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 21 Aug 2021 17:29:01 +0000',
+	    date: 'Sat, 21 Aug 2021 18:12:55 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
