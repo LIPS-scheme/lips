@@ -443,13 +443,12 @@
 (let iter ((fns _maths))
   (if (not (null? fns))
       (let* ((name (car fns))
-             (LNumber (.. lips.LNumber))
              (op (. Math name))
-             (fn (lambda (n) (LNumber (op n)))))
+             (fn (lambda (n) (lips.LNumber (op n)))))
         (--> _this_env (set name fn))
         (set-obj! fn '__doc__ (concat "(" name " n)\n\nFunction calculate " name
-                                  " math operation (it call JavaScript Math)." name
-                                  " function."))
+                                  " math operation (it call JavaScript Math." name
+                                  " function)"))
         (iter (cdr fns)))))
 
 ;; -----------------------------------------------------------------------------

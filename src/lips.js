@@ -9475,6 +9475,9 @@
         if (position !== null) {
             postfix += ` (argument ${position})`;
         }
+        if (is_function(expected)) {
+            return `Invalid type got ${got}${postfix}`;
+        }
         if (expected instanceof Array) {
             if (expected.length === 1) {
                 expected = expected[0];
@@ -9506,6 +9509,12 @@
     function typecheck(fn, arg, expected, position = null) {
         fn = fn.valueOf();
         const arg_type = type(arg).toLowerCase();
+        if (is_function(expected)) {
+            if (expected(arg)) {
+                throw new Error(typeErrorMessage(fn, arg_type, expected, position));
+            }
+            return;
+        }
         var match = false;
         if (expected instanceof Pair) {
             expected = expected.to_array();

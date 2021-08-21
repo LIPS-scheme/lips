@@ -1423,6 +1423,11 @@
 (define string-split split)
 
 ;; -----------------------------------------------------------------------------
+(define-macro (check-arg fn value symbol)
+  "(check-arg fn value symbol)
+
+   Macro typecheck using function. Used in SRFI-1 code"
+  `(typecheck ,(symbol->string symbol) value ,fn))
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
@@ -1868,13 +1873,12 @@
 (let iter ((fns _maths))
   (if (not (null? fns))
       (let* ((name (car fns))
-             (LNumber (.. lips.LNumber))
              (op (. Math name))
-             (fn (lambda (n) (LNumber (op n)))))
+             (fn (lambda (n) (lips.LNumber (op n)))))
         (--> _this_env (set name fn))
         (set-obj! fn '__doc__ (concat "(" name " n)\n\nFunction calculate " name
-                                  " math operation (it call JavaScript Math)." name
-                                  " function."))
+                                  " math operation (it call JavaScript Math." name
+                                  " function)"))
         (iter (cdr fns)))))
 
 ;; -----------------------------------------------------------------------------
