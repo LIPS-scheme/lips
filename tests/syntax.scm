@@ -1074,3 +1074,23 @@
                 (set! g (lambda (x) -1000))
                 (f 1))
               -3)))
+
+(test "syntax: syntax-rules -> syntax-rules"
+      (lambda (t)
+        ;; source: https://srfi.schemers.org/srfi-147/srfi-147.html
+        (define-syntax syntax-rules*
+          (syntax-rules ()
+            ((syntax-rules* (literal ...) (pattern . templates) ...)
+             (syntax-rules (literal ...) (pattern (begin . templates)) ...))
+            ((syntax-rules* ellipsis (literal ...) (pattern . templates) ...)
+             (syntax-rules ellipsis (literal ...) (pattern (begin . templates)) ...))))
+
+        (t.is (let-syntax
+                  ((foo
+                    (syntax-rules* ()
+                                   ((foo a b)
+                                    (define a 1)
+                                    (define b 2)))))
+                (foo x y)
+                (list x y))
+              '(1 2))))
