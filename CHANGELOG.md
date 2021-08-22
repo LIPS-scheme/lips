@@ -24,6 +24,7 @@
 * fix boxing NaN value
 * fix `length` of nil
 * fix trimming spaces in `Env::set`
+* fix `repr` of symbols with impossible characters created with `string->symbol`
 
 ## 1.0.0-beta.14
 ### Breaking

@@ -759,8 +759,8 @@
             return symbol_to_string(this.__name__);
         }
         var str = this.valueOf();
-        // same as Lexer.boundary without $|
-        if (quote && str.match(/[\s()[\]']/)) {
+        // those special characters can be normal symbol when printed
+        if (quote && str.match(/(^;|[\s()[\]'])/)) {
             return `|${str}|`;
         }
         return str;
