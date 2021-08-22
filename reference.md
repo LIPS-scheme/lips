@@ -1,42 +1,5 @@
 # Function Reference
 
-## %
-```
-(% n1 n2)
-
-Function get reminder of it's arguments.
-```
-
-## &
-```
-(& a b)
-
-Function calculate and bit operation.
-```
-
-## *
-```
-(* . numbers)
-
-Multiplicate all numbers passed as arguments. If single value is passed
-it will return that value.
-```
-
-## **
-```
-(** a b)
-
-Function calculate number a to to the power of b.
-```
-
-## +
-```
-(+ . numbers)
-
-Sum all numbers passed as arguments. If single value is passed it will
-return that value.
-```
-
 ## -
 ```
 (- n1 n2 ...)
@@ -61,6 +24,21 @@ without problem unlike in JavaScript when you use
 pass it as argument.
 ```
 
+## *
+```
+(* . numbers)
+
+Multiplicate all numbers passed as arguments. If single value is passed
+it will return that value.
+```
+
+## **
+```
+(** a b)
+
+Function calculate number a to to the power of b.
+```
+
 ## /
 ```
 (/ n1 n2 ...)
@@ -70,18 +48,26 @@ Divide number passed as arguments one by one. If single argument
 is passed it will calculate (/ 1 n1).
 ```
 
-## 1+
+## &
 ```
-(1+ number)
+(& a b)
 
-Function add 1 to the number and return result.
+Function calculate and bit operation.
 ```
 
-## 1-
+## %
 ```
-(1- number)
+(% n1 n2)
 
-Function substract 1 from the number and return result.
+Function get reminder of it's arguments.
+```
+
+## +
+```
+(+ . numbers)
+
+Sum all numbers passed as arguments. If single value is passed it will
+return that value.
 ```
 
 ## <
@@ -144,18 +130,32 @@ monotonically nondecreasing
 Function right shit the value a by value b.
 ```
 
-## Y
+## |
 ```
-(Y f)
+(& a b)
 
-  _ __   __    _            _       _      _ __   __         _   _  _
- /  \ \ / /   /  __        /   ____  \    /  \ \ / /    ____  \   \  \
-+    \ v /   +   \ \      +   / ___|  +  +    \ v /    / ___|  +   +  +
-|     \ /    |    \ \     |  | |__    |  |     \ /    | |__    |   |  |
-|     | |    |    /  \    |  |  __|   |  |     | |    |  __|   |   |  |
-|     | |    |   / /\ \   |  | |      |  |     | |    | |      |   |  |
-+     |_|    +  /_/  \_\  +  |_|      +  +     |_|    |_|      +   +  +
- \_           \_           \_       _/    \_                 _/  _/ _/
+Function calculate or bit operation.
+```
+
+## ~
+```
+(~ number)
+
+Function negate the value.
+```
+
+## 1-
+```
+(1- number)
+
+Function substract 1 from the number and return result.
+```
+
+## 1+
+```
+(1+ number)
+
+Function add 1 to the number and return result.
 ```
 
 ## abs
@@ -297,18 +297,18 @@ Function return new function with arguments limited to two.
 Function test if argument is binary port.
 ```
 
-## boolean=?
-```
-(boolean=? b1 b2 ...)
-
-Function check if all arguments are boolean and if they are the same.
-```
-
 ## boolean?
 ```
 (boolean? x)
 
 Function return true if value is boolean.
+```
+
+## boolean=?
+```
+(boolean=? b1 b2 ...)
+
+Function check if all arguments are boolean and if they are the same.
 ```
 
 ## bound?
@@ -879,18 +879,18 @@ Function return codepoint of Unicode character.
 Function return true if character is leter of the ASCII alphabet.
 ```
 
-## char-ci<=?
-```
-(char-ci<? chr1 chr2)
-
-Function return true if second character is not larger then the first one.
-```
-
 ## char-ci<?
 ```
 (char-ci<? chr1 chr2)
 
 Function return true if second character is smaller then the first one.
+```
+
+## char-ci<=?
+```
+(char-ci<? chr1 chr2)
+
+Function return true if second character is not larger then the first one.
 ```
 
 ## char-ci=?
@@ -900,18 +900,18 @@ Function return true if second character is smaller then the first one.
 Function check if two characters are equal.
 ```
 
-## char-ci>=?
-```
-(char-ci<? chr1 chr2)
-
-Function return true if second character is not smaller then the first one.
-```
-
 ## char-ci>?
 ```
 (char-ci<? chr1 chr2)
 
 Function return true if second character is larger then the first one.
+```
+
+## char-ci>=?
+```
+(char-ci<? chr1 chr2)
+
+Function return true if second character is not smaller then the first one.
 ```
 
 ## char-downcase
@@ -966,11 +966,11 @@ Function check if character is upper case.
 Function return true if character is whitespace.
 ```
 
-## char<=?
+## char?
 ```
-(char<? chr1 chr2)
+(char? obj)
 
-Function return true if second character is not larger then the first one.
+Function check if object is character.
 ```
 
 ## char<?
@@ -980,18 +980,18 @@ Function return true if second character is not larger then the first one.
 Function return true if second character is smaller then the first one.
 ```
 
+## char<=?
+```
+(char<? chr1 chr2)
+
+Function return true if second character is not larger then the first one.
+```
+
 ## char=?
 ```
 (char=? chr1 chr2)
 
 Function check if two characters are equal.
-```
-
-## char>=?
-```
-(char<? chr1 chr2)
-
-Function return true if second character is not smaller then the first one.
 ```
 
 ## char>?
@@ -1001,11 +1001,11 @@ Function return true if second character is not smaller then the first one.
 Function return true if second character is larger then the first one.
 ```
 
-## char?
+## char>=?
 ```
-(char? obj)
+(char<? chr1 chr2)
 
-Function check if object is character.
+Function return true if second character is not smaller then the first one.
 ```
 
 ## clone
@@ -3062,18 +3062,18 @@ start of the string, if no end is specified it convert to the end of the string.
 Function create new string by joining its arguments
 ```
 
-## string-ci<=?
-```
-(string-ci<? string1 string2)
-
-Function return true if second string is not larger then the first one.
-```
-
 ## string-ci<?
 ```
 (string-ci<? string1 string2)
 
 Function return true if second string is smaller then the first one.
+```
+
+## string-ci<=?
+```
+(string-ci<? string1 string2)
+
+Function return true if second string is not larger then the first one.
 ```
 
 ## string-ci=?
@@ -3083,18 +3083,18 @@ Function return true if second string is smaller then the first one.
 Function check if two string s are equal.
 ```
 
-## string-ci>=?
-```
-(string-ci>=? string1 string2)
-
-Function return true if second character is not smaller then the first one.
-```
-
 ## string-ci>?
 ```
 (string-ci<? string1 string2)
 
 Function return true if second string is larger then the first one.
+```
+
+## string-ci>=?
+```
+(string-ci>=? string1 string2)
+
+Function return true if second character is not smaller then the first one.
 ```
 
 ## string-copy
@@ -3148,11 +3148,11 @@ Function create list by splitting string by separatar that can
 be a string or regular expression.
 ```
 
-## string<=?
+## string?
 ```
-(string<? string1 string2)
+(string? expression)
 
-Function return true if second string is not larger then the first one.
+Function check if value is a string.
 ```
 
 ## string<?
@@ -3162,18 +3162,18 @@ Function return true if second string is not larger then the first one.
 Function return true if second string is smaller then the first one.
 ```
 
+## string<=?
+```
+(string<? string1 string2)
+
+Function return true if second string is not larger then the first one.
+```
+
 ## string=?
 ```
 (string=? string1 string2)
 
 Function check if two string s are equal.
-```
-
-## string>=?
-```
-(string<? string1 string2)
-
-Function return true if second character is not smaller then the first one.
 ```
 
 ## string>?
@@ -3183,11 +3183,11 @@ Function return true if second character is not smaller then the first one.
 Function return true if second string is larger then the first one.
 ```
 
-## string?
+## string>=?
 ```
-(string? expression)
+(string<? string1 string2)
 
-Function check if value is a string.
+Function return true if second character is not smaller then the first one.
 ```
 
 ## substring
@@ -3204,18 +3204,18 @@ Function return part of the string starting at start ending with end.
 Function convert LIPS symbol to string.
 ```
 
-## symbol=?
-```
-(symbol=? s1 s2 ...)
-
-Function check if each value is symbol and it's the same acording to string=? predicate.
-```
-
 ## symbol?
 ```
 (symbol? expression)
 
 Function check if value is LIPS symbol
+```
+
+## symbol=?
+```
+(symbol=? s1 s2 ...)
+
+Function check if each value is symbol and it's the same acording to string=? predicate.
 ```
 
 ## take
@@ -3711,24 +3711,24 @@ to the textual output port.
 Write byte into binary output port.
 ```
 
+## Y
+```
+(Y f)
+
+  _ __   __    _            _       _      _ __   __         _   _  _
+ /  \ \ / /   /  __        /   ____  \    /  \ \ / /    ____  \   \  \
++    \ v /   +   \ \      +   / ___|  +  +    \ v /    / ___|  +   +  +
+|     \ /    |    \ \     |  | |__    |  |     \ /    | |__    |   |  |
+|     | |    |    /  \    |  |  __|   |  |     | |    |  __|   |   |  |
+|     | |    |   / /\ \   |  | |      |  |     | |    | |      |   |  |
++     |_|    +  /_/  \_\  +  |_|      +  +     |_|    |_|      +   +  +
+ \_           \_           \_       _/    \_                 _/  _/ _/
+```
+
 ## zero?
 ```
 (zero? x)
 
 Function check if number is equal to 0
-```
-
-## |
-```
-(& a b)
-
-Function calculate or bit operation.
-```
-
-## ~
-```
-(~ number)
-
-Function negate the value.
 ```
 
