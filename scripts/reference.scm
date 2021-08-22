@@ -1,0 +1,15 @@
+#!/usr/bin/env lips
+
+(let* ((global-env lips.env.__parent__)
+       (names (list->vector (map symbol->string (env global-env)))))
+  (names.sort)
+  (print "# Function Reference")
+  (print "")
+  (--> names (forEach (lambda (name)
+                        (let ((value (global-env.get name)))
+                          (when (and (procedure? value) (null? (name.match #/^%./)))
+                            (print (string-append "## " name))
+                            (print "```")
+                            (print (eval `(help ,(string->symbol name)) global-env))
+                            (print "```")
+                            (print "")))))))
