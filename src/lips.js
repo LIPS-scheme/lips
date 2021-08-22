@@ -6669,10 +6669,11 @@
                             value = unbind(value);
                         }
                     }
-                    return get(value, ...rest);
+                    if (typeof value !== 'undefined') {
+                        // object accessor
+                        return get(value, ...rest);
+                    }
                 } catch (e) {
-                    // ignore symbols in expansion that look like
-                    // property access e.g. %as.data
                     throw e;
                 }
             } else if (value instanceof Value) {
@@ -9513,7 +9514,7 @@
         fn = fn.valueOf();
         const arg_type = type(arg).toLowerCase();
         if (is_function(expected)) {
-            if (expected(arg)) {
+            if (!expected(arg)) {
                 throw new Error(typeErrorMessage(fn, arg_type, expected, position));
             }
             return;

@@ -1,3 +1,4 @@
+bootstrap with std.xcb
 (define (%doc string fn) (typecheck "%doc" fn "function") (typecheck "%doc" string "string") (set-obj! fn (quote __doc__) (--> string (replace #/^ +/gm ""))) fn)
 (define-macro (let-syntax vars . body) "(let-syntax ((name fn)) body)\u000A\u000A Macro works like combination of let and define-syntax. It creaates\u000A local macros and evaluate body in context of those macros.\u000A The macro to letrec-syntax is like letrec is to let." (quasiquote (let (unquote vars) (unquote-splicing (map (lambda (rule) (quasiquote (typecheck "let-syntax" (unquote (car rule)) "syntax"))) vars)) (unquote-splicing body))))
 (define-macro (letrec-syntax vars . body) "(letrec-syntax ((name fn)) body)\u000A\u000A Macro works like combination of letrec and define-syntax. It creaates\u000A local macros and evaluate body in context of those macros." (quasiquote (letrec (unquote vars) (unquote-splicing (map (lambda (rule) (quasiquote (typecheck "letrec-syntax" (unquote (car rule)) "syntax"))) vars)) (unquote-splicing body))))
@@ -110,7 +111,6 @@
 (define (unfold fn init) "(unfold fn init)\u000A\u000AFunction returns list from given function and init value. The function should\u000Areturn cons where first is the item added to the list and second is next value\u000Apassed to the funtion. If function return false it end the loop." (typecheck "unfold" fn "function") (let iter ((pair (fn init)) (result (quote ()))) (if (not pair) (reverse result) (iter (fn (cdr pair)) (cons (car pair) result)))))
 (define string-join join)
 (define string-split split)
-(define-macro (check-arg fn value symbol) "(check-arg fn value symbol)\u000A\u000AMacro typecheck using function. Used in SRFI-1 code" (quasiquote (typecheck (unquote (symbol->string symbol)) value (unquote fn))))
 (define string-append concat)
 (define = ==)
 (define remainder %)

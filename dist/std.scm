@@ -1421,13 +1421,6 @@
 ;; -----------------------------------------------------------------------------
 (define string-join join)
 (define string-split split)
-
-;; -----------------------------------------------------------------------------
-(define-macro (check-arg fn value symbol)
-  "(check-arg fn value symbol)
-
-   Macro typecheck using function. Used in SRFI-1 code"
-  `(typecheck ,(symbol->string symbol) value ,fn))
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
@@ -2876,8 +2869,6 @@
       (else (throw (new Error (string-append "scheme-report-environment: version "
                                              (number->string version)
                                              " not supported"))))))
-
-;; -----------------------------------------------------------------------------
 ;; Implementation of byte vector functions - SRFI-4 and SRFI-160
 ;;
 ;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
@@ -4281,8 +4272,6 @@
    Returns a list of the irritants encapsulated by error-object."
   (if (error-object? obj)
       obj.args))
-
-;; -----------------------------------------------------------------------------
 ;; -----------------------------------------------------------------------------
 ;; init internal fs for LIPS Scheme Input/Output functions
 ;; -----------------------------------------------------------------------------

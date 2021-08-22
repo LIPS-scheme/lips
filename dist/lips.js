@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 21 Aug 2021 18:58:33 +0000
+ * build: Sun, 22 Aug 2021 19:21:38 +0000
  */
 (function () {
 	'use strict';
@@ -10561,10 +10561,11 @@
 	            }
 	          }
 
-	          return get.apply(void 0, [value].concat(_toConsumableArray(rest)));
+	          if (typeof value !== 'undefined') {
+	            // object accessor
+	            return get.apply(void 0, [value].concat(_toConsumableArray(rest)));
+	          }
 	        } catch (e) {
-	          // ignore symbols in expansion that look like
-	          // property access e.g. %as.data
 	          throw e;
 	        }
 	      } else if (value instanceof Value) {
@@ -13662,7 +13663,7 @@
 	    var arg_type = type(arg).toLowerCase();
 
 	    if (is_function(expected)) {
-	      if (expected(arg)) {
+	      if (!expected(arg)) {
 	        throw new Error(typeErrorMessage(fn, arg_type, expected, position));
 	      }
 
@@ -14866,10 +14867,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sat, 21 Aug 2021 18:58:33 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Sun, 22 Aug 2021 19:21:38 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sat, 21 Aug 2021 18:58:33 +0000').valueOf();
+	    var date = LString('Sun, 22 Aug 2021 19:21:38 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14914,7 +14915,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sat, 21 Aug 2021 18:58:33 +0000',
+	    date: 'Sun, 22 Aug 2021 19:21:38 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
