@@ -1421,10 +1421,3 @@
 ;; -----------------------------------------------------------------------------
 (define string-join join)
 (define string-split split)
-
-;; -----------------------------------------------------------------------------
-(define-macro (check-arg fn value symbol)
-  "(check-arg fn value symbol)
-
-   Macro typecheck using function. Used in SRFI-1 code"
-  `(typecheck ,(symbol->string symbol) value ,fn))

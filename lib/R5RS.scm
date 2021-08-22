@@ -1446,5 +1446,3 @@
       (else (throw (new Error (string-append "scheme-report-environment: version "
                                              (number->string version)
                                              " not supported"))))))
-
-;; -----------------------------------------------------------------------------

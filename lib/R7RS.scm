@@ -1262,5 +1262,3 @@
    Returns a list of the irritants encapsulated by error-object."
   (if (error-object? obj)
       obj.args))
-
-;; -----------------------------------------------------------------------------
