@@ -439,7 +439,7 @@
 
         (t.is result '(1 2 3 4 5 6))))
 
-(test.skip "syntax: lifted ellipsis"
+(test.failing "syntax: lifted ellipsis"
       (lambda (t)
         (define result
           (let-syntax
@@ -606,7 +606,7 @@
 
         (t.is (L 1 2 3) '(1 2 3))))
 
-(test.skip "syntax: should return list with ellipsis"
+(test.failing "syntax: should return list with ellipsis"
        (lambda (t)
 
          (define-syntax test
@@ -741,7 +741,7 @@
         (def-2 bar 20)
         (t.is (+ foo bar) 30)))
 
-(test.skip "syntax: free variables"
+(test.failing "syntax: free variables"
       (lambda (t)
         (define-syntax def (syntax-rules ()
                              ((_ foo bar)
@@ -938,7 +938,7 @@
                            (+ a b c))
               6)))
 
-(test.skip "syntax: nested _"
+(test.failing "syntax: nested _"
        (lambda (t)
          (define-syntax foo
            (syntax-rules ()
@@ -958,7 +958,7 @@
 
          (t.is (foo) '("foo" (10) bar "bar"))))
 
-(test.skip "syntax: nesting, renaming and scope"
+(test.failing "syntax: nesting, renaming and scope"
        (lambda (t)
          (let ((result 10))
            (define-syntax foo
@@ -1062,7 +1062,7 @@
                 (foo foo))
               #t)))
 
-(test.skip "syntax: let-syntax and set! of definition"
+(test.failing "syntax: let-syntax and set! of definition"
       (lambda (t)
         ;; https://github.com/jcubic/lips/issues/172
         (define-syntax g
