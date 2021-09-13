@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 22 Aug 2021 21:02:37 +0000
+ * build: Mon, 13 Sep 2021 09:07:40 +0000
  */
 (function () {
 	'use strict';
@@ -2095,8 +2095,13 @@
 	  } // ----------------------------------------------------------------------
 
 
+	  function is_atom_string(str) {
+	    return !(['(', ')', '[', ']'].includes(str) || specials.names().includes(str));
+	  } // ----------------------------------------------------------------------
+
+
 	  function is_symbol_string(str) {
-	    return !(['(', ')', '[', ']'].includes(str) || str.match(re_re) || str.match(/^"[\s\S]*"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || str.match(char_re) || ['#t', '#f', 'nil', 'true', 'false'].includes(str));
+	    return is_atom_string(str) && !(str.match(re_re) || str.match(/^"[\s\S]*"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || str.match(char_re) || ['#t', '#f', 'nil', 'true', 'false'].includes(str));
 	  } // ----------------------------------------------------------------------
 
 
@@ -2620,6 +2625,14 @@
 	    _events: {},
 	    _specials: {}
 	  };
+
+	  function is_special(token) {
+	    return specials.names().includes(token);
+	  }
+
+	  function is_builtin(token) {
+	    return specials.builtin.includes(token);
+	  }
 
 	  function is_literal(special) {
 	    return specials.type(special) === specials.LITERAL;
@@ -3234,16 +3247,6 @@
 	        this.__lexer__.skip();
 	      }
 	    }, {
-	      key: "is_special",
-	      value: function is_special(token) {
-	        return specials.names().includes(token);
-	      }
-	    }, {
-	      key: "is_builtin",
-	      value: function is_builtin(token) {
-	        return specials.builtin.includes(token);
-	      }
-	    }, {
 	      key: "read",
 	      value: function () {
 	        var _read = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2() {
@@ -3627,7 +3630,7 @@
 	                  return _context8.abrupt("return", token);
 
 	                case 5:
-	                  if (!this.is_special(token)) {
+	                  if (!is_special(token)) {
 	                    _context8.next = 35;
 	                    break;
 	                  }
@@ -3640,7 +3643,7 @@
 	                  // MACRO: if macros are used they are evaluated in place and
 	                  // result is returned by parser but they are quoted
 	                  special = specials.get(token);
-	                  bultin = this.is_builtin(token);
+	                  bultin = is_builtin(token);
 	                  this.skip();
 	                  _context8.next = 11;
 	                  return this._read_object();
@@ -4584,11 +4587,11 @@
 	  } // line breaking rules
 
 
-	  Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, sexp, sexp_or_atom], 0, not_close], //[[p_o, let_re, p_o, let_value], 1, not_close],
-	  [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re], 1, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close], [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]]; // ----------------------------------------------------------------------
+	  Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close], //--[[p_o, keywords_re('define-syntax'), /.+/], 1],
+	  [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]]; // ----------------------------------------------------------------------
 
 	  Formatter.prototype["break"] = function () {
-	    var code = this.__code__.replace(/\n[ \t]*/g, '\n '); // function that work when calling tokenize with meta data or not
+	    var code = this.__code__.replace(/\n[ \t]*/g, '\n ').replace(/^\s+/, ''); // function that work when calling tokenize with meta data or not
 
 
 	    var token = function token(t) {
@@ -4596,6 +4599,16 @@
 	        return t.token;
 	      } else {
 	        return t.token.replace(/\s+/, ' ');
+	      }
+	    };
+
+	    var first_token_index = function first_token_index(tokens) {
+	      for (var i = tokens.length; i--;) {
+	        var _token = tokens[i];
+
+	        if (_token.trim() && !is_special(_token)) {
+	          return tokens.length - i - 1;
+	        }
 	      }
 	    }; // tokenize is part of the parser/lexer that split code into tokens and inclue
 	    // meta data like number of column or line
@@ -4606,7 +4619,7 @@
 	    });
 	    var rules = Formatter.rules;
 
-	    for (var i = 1; i < tokens.length; ++i) {
+	    outer: for (var i = 1; i < tokens.length; ++i) {
 	      if (!tokens[i].trim()) {
 	        continue;
 	      }
@@ -4637,22 +4650,29 @@
 	          count = count.valueOf(); // 0 count mean ignore the previous S-Expression
 
 	          var test_sexp = count > 0 ? sexp[count] : sub;
-	          var m = match(pattern, test_sexp.filter(function (t) {
-	            return t.trim();
-	          }));
+	          var input = test_sexp.filter(function (t) {
+	            return t.trim() && !is_special(t);
+	          });
+	          var inc = first_token_index(test_sexp);
+	          var m = match(pattern, input);
 	          var next = tokens.slice(i).find(function (t) {
-	            return t.trim();
+	            return t.trim() && !is_special(t);
 	          });
 
 	          if (m && (ext instanceof Ahead && ext.match(next) || !ext)) {
-	            if (!tokens[i - 1].trim()) {
-	              tokens[i - 1] = '\n';
-	            } else {
-	              tokens.splice(i, 0, '\n');
-	              i++;
+	            var index = i - inc;
+
+	            if (tokens[index] !== '\n') {
+	              if (!tokens[index].trim()) {
+	                tokens[index] = '\n';
+	              } else {
+	                tokens.splice(index, 0, '\n');
+	                i++;
+	              }
 	            }
 
-	            continue;
+	            i += inc;
+	            continue outer;
 	          }
 	        }
 	      } catch (err) {
@@ -14867,10 +14887,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Sun, 22 Aug 2021 21:02:37 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 13 Sep 2021 09:07:40 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Sun, 22 Aug 2021 21:02:37 +0000').valueOf();
+	    var date = LString('Mon, 13 Sep 2021 09:07:40 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14915,7 +14935,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Sun, 22 Aug 2021 21:02:37 +0000',
+	    date: 'Mon, 13 Sep 2021 09:07:40 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

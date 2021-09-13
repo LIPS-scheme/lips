@@ -568,12 +568,18 @@
         return parse_symbol(arg);
     }
     // ----------------------------------------------------------------------
+    function is_atom_string(str) {
+        return !(['(', ')', '[', ']'].includes(str) ||
+                 specials.names().includes(str));
+    }
+    // ----------------------------------------------------------------------
     function is_symbol_string(str) {
-        return !(['(', ')', '[', ']'].includes(str) || str.match(re_re) ||
-                 str.match(/^"[\s\S]*"$/) || str.match(int_re) ||
-                 str.match(float_re) || str.match(complex_re) ||
-                 str.match(rational_re) || str.match(char_re) ||
-                 ['#t', '#f', 'nil', 'true', 'false'].includes(str));
+        return is_atom_string(str) &&
+            !(str.match(re_re) ||
+              str.match(/^"[\s\S]*"$/) || str.match(int_re) ||
+              str.match(float_re) || str.match(complex_re) ||
+              str.match(rational_re) || str.match(char_re) ||
+              ['#t', '#f', 'nil', 'true', 'false'].includes(str));
     }
     // ----------------------------------------------------------------------
     var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
@@ -982,6 +988,12 @@
         _events: {},
         _specials: {}
     };
+    function is_special(token) {
+        return specials.names().includes(token);
+    }
+    function is_builtin(token) {
+        return specials.builtin.includes(token);
+    }
     function is_literal(special) {
         return specials.type(special) === specials.LITERAL;
     }
@@ -1457,12 +1469,6 @@
         skip() {
             this.__lexer__.skip();
         }
-        is_special(token) {
-            return specials.names().includes(token);
-        }
-        is_builtin(token) {
-            return specials.builtin.includes(token);
-        }
         async read() {
             const token = await this.peek();
             this.skip();
@@ -1571,7 +1577,7 @@
             if (token === eof) {
                 return token;
             }
-            if (this.is_special(token)) {
+            if (is_special(token)) {
                 // bultin parser extensions are mapping short symbol to longer symbol
                 // that can be function or macro, parser don't care
                 // if it's not bultin then the extension can be macro or function
@@ -1580,7 +1586,7 @@
                 // MACRO: if macros are used they are evaluated in place and
                 // result is returned by parser but they are quoted
                 const special = specials.get(token);
-                const bultin = this.is_builtin(token);
+                const bultin = is_builtin(token);
                 this.skip();
                 let expr;
                 const object = await this._read_object();
@@ -2178,23 +2184,23 @@
         [[sexp], 0, not_close],
         [[p_o, keywords_re('begin', 'cond-expand')], 1],
         [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
-        [[p_o, let_re, symbol, sexp, sexp_or_atom], 0, not_close],
-        //[[p_o, let_re, p_o, let_value], 1, not_close],
-        [[p_o, keywords_re('define-syntax'), /.+/], 1],
+        [[p_o, let_re, symbol, sexp_or_atom], 1, not_close],
+        [[p_o, let_re, p_o, let_value], 1, not_close],
+        //--[[p_o, keywords_re('define-syntax'), /.+/], 1],
         [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
         [[p_o, sexp], 1, not_close],
         [[p_o, not_p, sexp], 1, not_close],
         [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close],
         [[p_o, keywords_re('while'), not_p, sexp], 1, not_close],
         [[p_o, keywords_re('if'), not_p, glob], 1],
-        [[p_o, def_lambda_re, identifiers], 1, not_close],
-        [[p_o, def_lambda_re, identifiers, string_re], 1, not_close],
-        [[p_o, def_lambda_re, identifiers, string_re, sexp], 1, not_close],
-        [[p_o, def_lambda_re, identifiers, sexp], 1, not_close]
+        [[p_o, def_lambda_re, identifiers], 0, not_close],
+        [[p_o, def_lambda_re, identifiers, string_re], 0, not_close],
+        [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close],
+        [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]
     ];
     // ----------------------------------------------------------------------
     Formatter.prototype.break = function() {
-        var code = this.__code__.replace(/\n[ \t]*/g, '\n ');
+        var code = this.__code__.replace(/\n[ \t]*/g, '\n ').replace(/^\s+/, '');
         // function that work when calling tokenize with meta data or not
         const token = t => {
             if (t.token.match(string_re) || t.token.match(re_re)) {
@@ -2203,11 +2209,19 @@
                 return t.token.replace(/\s+/, ' ');
             }
         };
+        const first_token_index = tokens => {
+            for (let i = tokens.length; i--;) {
+                const token = tokens[i];
+                if (token.trim() && !is_special(token)) {
+                    return tokens.length - i - 1;
+                }
+            }
+        };
         // tokenize is part of the parser/lexer that split code into tokens and inclue
         // meta data like number of column or line
         var tokens = tokenize(code, true).map(token).filter(t => t !== '\n');
         const { rules } = Formatter;
-        for (let i = 1; i < tokens.length; ++i) {
+        outer: for (let i = 1; i < tokens.length; ++i) {
             if (!tokens[i].trim()) {
                 continue;
             }
@@ -2225,16 +2239,22 @@
                 count = count.valueOf();
                 // 0 count mean ignore the previous S-Expression
                 var test_sexp = count > 0 ? sexp[count] : sub;
-                var m = match(pattern, test_sexp.filter(t => t.trim()));
-                var next = tokens.slice(i).find(t => t.trim());
+                const input = test_sexp.filter(t => t.trim() && !is_special(t));
+                const inc = first_token_index(test_sexp);
+                var m = match(pattern, input);
+                var next = tokens.slice(i).find(t => t.trim() && !is_special(t));
                 if (m && (ext instanceof Ahead && ext.match(next) || !ext)) {
-                    if (!tokens[i - 1].trim()) {
-                        tokens[i - 1] = '\n';
-                    } else {
-                        tokens.splice(i, 0, '\n');
-                        i++;
+                    const index = i - inc;
+                    if (tokens[index] !== '\n') {
+                        if (!tokens[index].trim()) {
+                            tokens[index] = '\n';
+                        } else {
+                            tokens.splice(index, 0, '\n');
+                            i++;
+                        }
                     }
-                    continue;
+                    i += inc;
+                    continue outer;
                 }
             }
         }
