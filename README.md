@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.14-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&75654fa5aa91871593771657cbca4fc1884b63ea)](https://travis-ci.com/jcubic/lips)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&762bb34982481aecd09ab175a1d3f481513a9f37)](https://travis-ci.com/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&c1abbbeea4a2dfbda33d5c9893a9d546)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -194,6 +194,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
   - [ ] Continuations.
   - [ ] Tail Call Optimization (TCO).
   - [ ] Fully tested Numerical Tower.
+- [x] Fully working binary compiler (for faster parsing and loading std lib).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
   - [ ] Objects.
   - [ ] Vectors.
@@ -201,7 +202,6 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 ### 1.1
 - [ ] Picture language (possibly inspired by P5.js).
 - [ ] Stepper/Debugger.
-- [ ] Fully working JSON Compiler (for faster parsing and loading std lib).
 - [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
 - [ ] Proper expansion time for both macro system.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
