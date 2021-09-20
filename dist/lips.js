@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 20 Sep 2021 11:47:41 +0000
+ * build: Mon, 20 Sep 2021 12:35:41 +0000
  */
 (function () {
 	'use strict';
@@ -8624,13 +8624,14 @@
 	    var value = this.valueOf();
 
 	    if (this.cmp(0) < 0) {
+	      var im = Math.sqrt(-value);
 	      return LComplex({
 	        re: 0,
-	        im: Math.sqrt(-value)
+	        im: im
 	      });
 	    }
 
-	    return new LNumber(Math.sqrt(value));
+	    return LNumber(Math.sqrt(value));
 	  }; // -------------------------------------------------------------------------
 
 
@@ -9136,6 +9137,21 @@
 	    }
 
 	    return approxRatio(n.valueOf())(this.__value__.valueOf());
+	  }; // -------------------------------------------------------------------------
+
+
+	  LFloat.prototype.sqrt = function () {
+	    var value = this.valueOf();
+
+	    if (this.cmp(0) < 0) {
+	      var im = LFloat(Math.sqrt(-value));
+	      return LComplex({
+	        re: 0,
+	        im: im
+	      });
+	    }
+
+	    return LFloat(Math.sqrt(value));
 	  }; // -------------------------------------------------------------------------
 	  // ref: https://rosettacode.org/wiki/Convert_decimal_number_to_rational
 	  // -------------------------------------------------------------------------
@@ -14887,10 +14903,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 20 Sep 2021 11:47:41 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Mon, 20 Sep 2021 12:35:41 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 20 Sep 2021 11:47:41 +0000').valueOf();
+	    var date = LString('Mon, 20 Sep 2021 12:35:41 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14935,7 +14951,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 20 Sep 2021 11:47:41 +0000',
+	    date: 'Mon, 20 Sep 2021 12:35:41 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

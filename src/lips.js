@@ -5273,9 +5273,10 @@
     LNumber.prototype.sqrt = function() {
         var value = this.valueOf();
         if (this.cmp(0) < 0) {
-            return LComplex({ re: 0, im: Math.sqrt(-value) });
+            var im = Math.sqrt(-value);
+            return LComplex({ re: 0, im });
         }
-        return new LNumber(Math.sqrt(value));
+        return LNumber(Math.sqrt(value));
     };
     // -------------------------------------------------------------------------
     var pow = function(a, b) {
@@ -5650,6 +5651,15 @@
             return toRational(this.__value__.valueOf());
         }
         return approxRatio(n.valueOf())(this.__value__.valueOf());
+    };
+    // -------------------------------------------------------------------------
+    LFloat.prototype.sqrt = function() {
+        var value = this.valueOf();
+        if (this.cmp(0) < 0) {
+            var im = LFloat(Math.sqrt(-value));
+            return LComplex({ re: 0, im });
+        }
+        return LFloat(Math.sqrt(value));
     };
     // -------------------------------------------------------------------------
     // ref: https://rosettacode.org/wiki/Convert_decimal_number_to_rational
