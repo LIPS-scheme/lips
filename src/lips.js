@@ -3141,7 +3141,7 @@
             next: function() {
                 var cur = node;
                 node = cur.cdr;
-                if (node === nil) {
+                if (cur === nil) {
                     return { value: undefined, done: true };
                 } else {
                     return { value: cur.car, done: false };
