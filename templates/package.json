@@ -245,6 +245,6 @@
     "cbor-x": "^0.8.3",
     "cbor-extract": "^0.3.1",
     "prism-cli": "^0.5.3",
-    "prismjs": "^1.23.0"
+    "prismjs": "^1.25.0"
   }
 }
