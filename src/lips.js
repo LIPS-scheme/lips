@@ -5677,8 +5677,8 @@
     };
     // -------------------------------------------------------------------------
     LRational.prototype.sqrt = function() {
-        const num = this.__num__.sqrt();
-        const denom = this.__denom__.sqrt();
+        var num = this.__num__.sqrt();
+        var denom = this.__denom__.sqrt();
         if (num instanceof LFloat) {
             num = num.toRational();
         }
