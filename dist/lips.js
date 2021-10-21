@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 20 Sep 2021 12:35:41 +0000
+ * build: Thu, 21 Oct 2021 20:36:35 +0000
  */
 (function () {
 	'use strict';
@@ -14725,7 +14725,9 @@
 
 	      return object;
 	    });
-	  } // binary serialization using CBOR binary data format
+	  } // -------------------------------------------------------------------------
+	  // binary serialization using CBOR binary data format
+	  // -------------------------------------------------------------------------
 
 
 	  var cbor = function () {
@@ -14799,15 +14801,79 @@
 	      tag++;
 	    });
 	    return encoder;
-	  }();
+	  }(); // -------------------------------------------------------------------------
 
-	  var serialize_bin = function serialize_bin(obj) {
-	    return cbor.encode(obj);
-	  };
 
-	  var unserialize_bin = function unserialize_bin(str) {
-	    return cbor.decode(str);
-	  }; // -------------------------------------------------------------------------
+	  function merge_uint8_array() {
+	    for (var _len44 = arguments.length, args = new Array(_len44), _key46 = 0; _key46 < _len44; _key46++) {
+	      args[_key46] = arguments[_key46];
+	    }
+
+	    if (args.length > 1) {
+	      var len = args.reduce(function (acc, arr) {
+	        return acc + arr.length;
+	      }, 0);
+	      var result = new Uint8Array(len);
+	      var offset = 0;
+	      args.forEach(function (item) {
+	        result.set(item, offset);
+	        offset += item.length;
+	      });
+	      return result;
+	    } else if (args.length) {
+	      return args[0];
+	    }
+	  } // -------------------------------------------------------------------------
+
+
+	  function encode_magic() {
+	    var VERSION = 1;
+	    var encoder = new TextEncoder('utf-8');
+	    return encoder.encode("CBOR".concat(VERSION.toString().padStart(3, ' ')));
+	  } // -------------------------------------------------------------------------
+
+
+	  var MAGIC_LENGTH = 7; // -------------------------------------------------------------------------
+
+	  function decode_magic(obj) {
+	    var decoder = new TextDecoder('utf-8');
+	    var prefix = decoder.decode(obj.slice(0, MAGIC_LENGTH));
+
+	    if (prefix.match(/^CBOR/)) {
+	      var m = prefix.match(/[0-9]+$/);
+
+	      if (m) {
+	        return {
+	          type: 'CBOR',
+	          version: Number(m[0])
+	        };
+	      }
+	    }
+
+	    return {
+	      type: 'unknown'
+	    };
+	  } // -------------------------------------------------------------------------
+
+
+	  function serialize_bin(obj) {
+	    var magic = encode_magic();
+	    var payload = cbor.encode(obj);
+	    return merge_uint8_array(magic, payload);
+	  } // -------------------------------------------------------------------------
+
+
+	  function unserialize_bin(data) {
+	    var _decode_magic = decode_magic(data),
+	        type = _decode_magic.type,
+	        version = _decode_magic.version;
+
+	    if (type === 'CBOR' && version === 1) {
+	      return cbor.decode(data.slice(MAGIC_LENGTH));
+	    } else {
+	      throw new Error("Invalid file format ".concat(type));
+	    }
+	  } // -------------------------------------------------------------------------
 
 
 	  function execError(e) {
@@ -14903,10 +14969,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Mon, 20 Sep 2021 12:35:41 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Thu, 21 Oct 2021 20:36:35 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Mon, 20 Sep 2021 12:35:41 +0000').valueOf();
+	    var date = LString('Thu, 21 Oct 2021 20:36:35 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -14951,7 +15017,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Mon, 20 Sep 2021 12:35:41 +0000',
+	    date: 'Thu, 21 Oct 2021 20:36:35 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

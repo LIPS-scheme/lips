@@ -10211,7 +10211,9 @@
         });
     }
 
+    // -------------------------------------------------------------------------
     // binary serialization using CBOR binary data format
+    // -------------------------------------------------------------------------
     const cbor = (function() {
 
         const { addExtension, Encoder } = CBOR;
@@ -10277,8 +10279,65 @@
         return encoder;
     })();
 
-    const serialize_bin = (obj) => cbor.encode(obj);
-    const unserialize_bin = (str) => cbor.decode(str);
+    // -------------------------------------------------------------------------
+    function merge_uint8_array(...args) {
+        if (args.length > 1) {
+            const len = args.reduce((acc, arr) => acc + arr.length, 0);
+            const result = new Uint8Array(len);
+            let offset = 0;
+            args.forEach(item => {
+                result.set(item, offset);
+                offset += item.length;
+            });
+            return result;
+        } else if (args.length) {
+            return args[0];
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    function encode_magic() {
+        const VERSION = 1;
+        const encoder = new TextEncoder('utf-8');
+        return encoder.encode(`CBOR${VERSION.toString().padStart(3, ' ')}`);
+    }
+
+    // -------------------------------------------------------------------------
+    const MAGIC_LENGTH = 7;
+    // -------------------------------------------------------------------------
+    function decode_magic(obj) {
+        const decoder = new TextDecoder('utf-8');
+        const prefix = decoder.decode(obj.slice(0, MAGIC_LENGTH));
+        if (prefix.match(/^CBOR/)) {
+            const m = prefix.match(/[0-9]+$/);
+            if (m) {
+                return {
+                    type: 'CBOR',
+                    version: Number(m[0])
+                };
+            }
+        }
+        return {
+            type: 'unknown'
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    function serialize_bin(obj) {
+        const magic = encode_magic();
+        const payload = cbor.encode(obj);
+        return merge_uint8_array(magic, payload);
+    }
+
+    // -------------------------------------------------------------------------
+    function unserialize_bin(data) {
+        const { type, version } = decode_magic(data);
+        if (type === 'CBOR' && version === 1) {
+            return cbor.decode(data.slice(MAGIC_LENGTH));
+        } else {
+            throw new Error(`Invalid file format ${type}`);
+        }
+    }
 
     // -------------------------------------------------------------------------
     function execError(e) {
@@ -10287,6 +10346,7 @@
             console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`));
         }
     }
+
     // -------------------------------------------------------------------------
     function init() {
         var lips_mimes = ['text/x-lips', 'text/x-scheme'];
