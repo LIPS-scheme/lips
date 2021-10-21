@@ -181,6 +181,27 @@ chmod a+x foo.scm
 
 Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
+## Limitations
+Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
+process long arrays and use callback function. If the array is quite large each pice of code
+inside the callback may slow down the processing. For example see:
+
+script [reference.scm](https://github.com/jcubic/lips/blob/{{BRANCH}}/scripts/reference.scm)
+
+That generates reference documentation for all builtin functions and macros.
+The slow part is `(names.sort name-compare)` (`Array::sort`) that take quite time to calculate,
+because the array with functions and macros is quite large. If you came into performance issue,
+you can write the part of the code in JavaScript. If you want to do this in LIPS Scheme you can use
+something like this:
+
+```scheme
+(let ((fn (self.eval "(function(a, b) {
+                         /* any complex code in JS */
+                         return a.localeCompare(b);
+                      })")))
+   (arr.sort fn))
+```
+
 ## Links
 * [Gitter Chat](https://gitter.im/jcubic/lips)
 * [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
