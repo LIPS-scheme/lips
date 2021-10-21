@@ -265,31 +265,41 @@
 ;; -----------------------------------------------------------------------------
 (define (object-expander readonly expr . rest)
   "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
+   (object-expander reaonly '(:foo :bar))
+
 
    Recursive function helper for defining LIPS code for create objects
-   using key like syntax."
+   using key like syntax. if no values are used it will create JavaScript
+   shorthand objects where keys are used for keys and values"
   (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
-           ,@(pair-map (lambda (key value)
-                         (if (not (key? key))
-                             (let ((msg (string-append (type key)
-                                                       " "
-                                                       (repr key)
-                                                       " is not a symbol!")))
-                               (throw msg))
-                             (let ((prop (key->string key)))
-                               (if (and (pair? value) (key? (car value)))
-                                   `(set-obj! ,name
-                                              ,prop
-                                              ,(object-expander readonly value))
-                                    (if quot
-                                        `(set-obj! ,name ,prop ',value)
-                                        `(set-obj! ,name ,prop ,value))))))
-                       expr)
+           ,@(let loop ((lst expr) (result nil))
+               (if (null? lst)
+                   (reverse result)
+                   (let ((first (car lst))
+                         (second (if (null? (cdr lst)) nil (cadr lst))))
+                     (if (not (key? first))
+                         (let ((msg (string-append (type first)
+                                                   " "
+                                                   (repr first)
+                                                   " is not a symbol!")))
+                           (throw msg))
+                         (let ((prop (key->string first)))
+                           (if (or (key? second) (null? second))
+                               (let ((code `(set-obj! ,name ,prop undefined)))
+                                 (loop (cdr lst) (cons code result)))
+                               (let ((code (if (and (pair? second) (key? (car second)))
+                                               `(set-obj! ,name
+                                                          ,prop
+                                                          ,(object-expander readonly second))
+                                               (if quot
+                                                   `(set-obj! ,name ,prop ',second)
+                                                   `(set-obj! ,name ,prop ,second)))))
+                                 (loop (cddr lst) (cons code result)))))))))
            ,(if readonly
-               `(Object.freeze ,name))
+                `(Object.freeze ,name))
            ,name))))
 
 ;; -----------------------------------------------------------------------------
