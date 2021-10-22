@@ -5662,6 +5662,14 @@
         return LFloat(Math.sqrt(value));
     };
     // -------------------------------------------------------------------------
+    LFloat.prototype.abs = function() {
+        var value = this.valueOf();
+        if (value < 0) {
+            value = -value;
+        }
+        return LFloat(value);
+    };
+    // -------------------------------------------------------------------------
     // ref: https://rosettacode.org/wiki/Convert_decimal_number_to_rational
     // -------------------------------------------------------------------------
     var toRational = approxRatio(1e-10);

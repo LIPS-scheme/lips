@@ -245,6 +245,7 @@
   "dependencies": {
     "@jcubic/lily": "^0.1.0",
     "bn.js": "^5.2.0",
+    "cbor-extract": "^0.3.2",
     "cbor-x": "^0.8.3",
     "prism-cli": "^0.5.3",
     "prismjs": "^1.25.0"
