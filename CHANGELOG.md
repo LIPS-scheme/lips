@@ -22,6 +22,7 @@
 * fix `repr` of native type prototypes (e.g. `LComplex`)
 * fix using prototypes inside objects (e.g. `(object :foo Number.prototype)`)
 * fix `sqrt` of rational where numerator or denominator is float
+* fix `sqrt` of negative real that are like integers [#175](https://github.com/jcubic/lips/issues/175)
 * fix boxing NaN value
 * fix `length` of nil
 * fix trimming spaces in `Env::set`
