@@ -289,6 +289,7 @@
                          (let ((prop (key->string first)))
                            (if (or (key? second) (null? second))
                                (let ((code `(set-obj! ,name ,prop undefined)))
+                                 (set! readonly false)
                                  (loop (cdr lst) (cons code result)))
                                (let ((code (if (and (pair? second) (key? (car second)))
                                                `(set-obj! ,name
