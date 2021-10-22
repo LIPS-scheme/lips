@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 21 Oct 2021 20:36:35 +0000
+ * build: Fri, 22 Oct 2021 08:48:25 +0000
  */
 (function () {
 	'use strict';
@@ -180,6 +180,8 @@
 	function _possibleConstructorReturn(self, call) {
 	  if (call && (_typeof(call) === "object" || typeof call === "function")) {
 	    return call;
+	  } else if (call !== void 0) {
+	    throw new TypeError("Derived constructors may only return object or undefined");
 	  }
 
 	  return assertThisInitialized(self);
@@ -467,7 +469,7 @@
 
 	var iterableToArrayLimit = createCommonjsModule(function (module) {
 	function _iterableToArrayLimit(arr, i) {
-	  var _i = arr && (typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]);
+	  var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
 
 	  if (_i == null) return;
 	  var _arr = [];
@@ -3975,14 +3977,14 @@
 
 	  function _uniterate_async() {
 	    _uniterate_async = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee20(object) {
-	      var result, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _value, item;
+	      var result, _iteratorAbruptCompletion, _didIteratorError, _iteratorError, _iterator, _step, item;
 
 	      return regenerator.wrap(function _callee20$(_context20) {
 	        while (1) {
 	          switch (_context20.prev = _context20.next) {
 	            case 0:
 	              result = [];
-	              _iteratorNormalCompletion = true;
+	              _iteratorAbruptCompletion = false;
 	              _didIteratorError = false;
 	              _context20.prev = 3;
 	              _iterator = _asyncIterator(object);
@@ -3992,74 +3994,66 @@
 	              return _iterator.next();
 
 	            case 7:
-	              _step = _context20.sent;
-	              _iteratorNormalCompletion = _step.done;
-	              _context20.next = 11;
-	              return _step.value;
-
-	            case 11:
-	              _value = _context20.sent;
-
-	              if (_iteratorNormalCompletion) {
-	                _context20.next = 18;
+	              if (!(_iteratorAbruptCompletion = !(_step = _context20.sent).done)) {
+	                _context20.next = 13;
 	                break;
 	              }
 
-	              item = _value;
+	              item = _step.value;
 	              result.push(item);
 
-	            case 15:
-	              _iteratorNormalCompletion = true;
+	            case 10:
+	              _iteratorAbruptCompletion = false;
 	              _context20.next = 5;
 	              break;
 
-	            case 18:
-	              _context20.next = 24;
+	            case 13:
+	              _context20.next = 19;
 	              break;
 
-	            case 20:
-	              _context20.prev = 20;
+	            case 15:
+	              _context20.prev = 15;
 	              _context20.t0 = _context20["catch"](3);
 	              _didIteratorError = true;
 	              _iteratorError = _context20.t0;
 
-	            case 24:
-	              _context20.prev = 24;
-	              _context20.prev = 25;
+	            case 19:
+	              _context20.prev = 19;
+	              _context20.prev = 20;
 
-	              if (!(!_iteratorNormalCompletion && _iterator["return"] != null)) {
-	                _context20.next = 29;
+	              if (!(_iteratorAbruptCompletion && _iterator["return"] != null)) {
+	                _context20.next = 24;
 	                break;
 	              }
 
-	              _context20.next = 29;
+	              _context20.next = 24;
 	              return _iterator["return"]();
 
-	            case 29:
-	              _context20.prev = 29;
+	            case 24:
+	              _context20.prev = 24;
 
 	              if (!_didIteratorError) {
-	                _context20.next = 32;
+	                _context20.next = 27;
 	                break;
 	              }
 
 	              throw _iteratorError;
 
-	            case 32:
-	              return _context20.finish(29);
-
-	            case 33:
+	            case 27:
 	              return _context20.finish(24);
 
-	            case 34:
+	            case 28:
+	              return _context20.finish(19);
+
+	            case 29:
 	              return _context20.abrupt("return", result);
 
-	            case 35:
+	            case 30:
 	            case "end":
 	              return _context20.stop();
 	          }
 	        }
-	      }, _callee20, null, [[3, 20, 24, 34], [25,, 29, 33]]);
+	      }, _callee20, null, [[3, 15, 19, 29], [20,, 24, 28]]);
 	    }));
 	    return _uniterate_async.apply(this, arguments);
 	  }
@@ -6710,13 +6704,13 @@
 	          var value = scope.get(name);
 	          scope.set(gensym_name, value);
 	        } else {
-	          var _value4 = scope.get(name, {
+	          var _value = scope.get(name, {
 	            throwError: false
 	          }); // value is not in scope, but it's JavaScript object
 
 
-	          if (typeof _value4 !== 'undefined') {
-	            scope.set(gensym_name, _value4);
+	          if (typeof _value !== 'undefined') {
+	            scope.set(gensym_name, _value);
 	          }
 	        } // keep names so they can be restored after evaluation
 	        // if there are free symbols as output
@@ -7157,10 +7151,10 @@
 	          throw new Error("syntax-rules: ".concat(msg));
 	        }
 
-	        var _value5 = transform(expr);
+	        var _value2 = transform(expr);
 
-	        if (typeof _value5 !== 'undefined') {
-	          return _value5;
+	        if (typeof _value2 !== 'undefined') {
+	          return _value2;
 	        }
 	      }
 
@@ -7593,8 +7587,8 @@
 	                for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
 	                  var _step10$value = _step10.value,
 	                      _name9 = _step10$value.name,
-	                      _value6 = _step10$value.value;
-	                  env.set(_name9, _value6);
+	                      _value3 = _step10$value.value;
+	                  env.set(_name9, _value3);
 	                }
 	              } catch (err) {
 	                _iterator10.e(err);
@@ -10868,12 +10862,11 @@
 	    read: doc('read', /*#__PURE__*/function () {
 	      var _read2 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15() {
 	        var arg,
-	            _iteratorNormalCompletion2,
+	            _iteratorAbruptCompletion2,
 	            _didIteratorError2,
 	            _iteratorError2,
 	            _iterator2,
 	            _step2,
-	            _value2,
 	            value,
 	            port,
 	            _args17 = arguments;
@@ -10885,11 +10878,11 @@
 	                arg = _args17.length > 0 && _args17[0] !== undefined$1 ? _args17[0] : null;
 
 	                if (!LString.isString(arg)) {
-	                  _context15.next = 35;
+	                  _context15.next = 30;
 	                  break;
 	                }
 
-	                _iteratorNormalCompletion2 = true;
+	                _iteratorAbruptCompletion2 = false;
 	                _didIteratorError2 = false;
 	                _context15.prev = 4;
 	                _iterator2 = _asyncIterator(parse(arg, this));
@@ -10899,66 +10892,58 @@
 	                return _iterator2.next();
 
 	              case 8:
-	                _step2 = _context15.sent;
-	                _iteratorNormalCompletion2 = _step2.done;
-	                _context15.next = 12;
-	                return _step2.value;
-
-	              case 12:
-	                _value2 = _context15.sent;
-
-	                if (_iteratorNormalCompletion2) {
-	                  _context15.next = 19;
+	                if (!(_iteratorAbruptCompletion2 = !(_step2 = _context15.sent).done)) {
+	                  _context15.next = 14;
 	                  break;
 	                }
 
-	                value = _value2;
+	                value = _step2.value;
 	                return _context15.abrupt("return", value);
 
-	              case 16:
-	                _iteratorNormalCompletion2 = true;
+	              case 11:
+	                _iteratorAbruptCompletion2 = false;
 	                _context15.next = 6;
 	                break;
 
-	              case 19:
-	                _context15.next = 25;
+	              case 14:
+	                _context15.next = 20;
 	                break;
 
-	              case 21:
-	                _context15.prev = 21;
+	              case 16:
+	                _context15.prev = 16;
 	                _context15.t0 = _context15["catch"](4);
 	                _didIteratorError2 = true;
 	                _iteratorError2 = _context15.t0;
 
-	              case 25:
-	                _context15.prev = 25;
-	                _context15.prev = 26;
+	              case 20:
+	                _context15.prev = 20;
+	                _context15.prev = 21;
 
-	                if (!(!_iteratorNormalCompletion2 && _iterator2["return"] != null)) {
-	                  _context15.next = 30;
+	                if (!(_iteratorAbruptCompletion2 && _iterator2["return"] != null)) {
+	                  _context15.next = 25;
 	                  break;
 	                }
 
-	                _context15.next = 30;
+	                _context15.next = 25;
 	                return _iterator2["return"]();
 
-	              case 30:
-	                _context15.prev = 30;
+	              case 25:
+	                _context15.prev = 25;
 
 	                if (!_didIteratorError2) {
-	                  _context15.next = 33;
+	                  _context15.next = 28;
 	                  break;
 	                }
 
 	                throw _iteratorError2;
 
-	              case 33:
-	                return _context15.finish(30);
-
-	              case 34:
+	              case 28:
 	                return _context15.finish(25);
 
-	              case 35:
+	              case 29:
+	                return _context15.finish(20);
+
+	              case 30:
 	                if (arg === null) {
 	                  port = internal(this, 'stdin');
 	                } else {
@@ -10968,12 +10953,12 @@
 	                typecheck_text_port('read', port, 'input-port');
 	                return _context15.abrupt("return", port.read.call(this));
 
-	              case 38:
+	              case 33:
 	              case "end":
 	                return _context15.stop();
 	            }
 	          }
-	        }, _callee15, this, [[4, 21, 25, 35], [26,, 30, 34]]);
+	        }, _callee15, this, [[4, 16, 20, 30], [21,, 25, 29]]);
 	      }));
 
 	      function read() {
@@ -13465,7 +13450,7 @@
 	    // bit operations
 	    '|': doc('|', function (a, b) {
 	      return LNumber(a).or(b);
-	    }, "(& a b)\n\n            Function calculate or bit operation."),
+	    }, "(| a b)\n\n            Function calculate or bit operation."),
 	    '&': doc('&', function (a, b) {
 	      return LNumber(a).and(b);
 	    }, "(& a b)\n\n            Function calculate and bit operation."),
@@ -14259,7 +14244,7 @@
 	  function exec_collect(collect_callback) {
 	    return /*#__PURE__*/function () {
 	      var _exec_lambda = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(arg, env, dynamic_scope) {
-	        var results, input, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _value3, code, value;
+	        var results, input, _iteratorAbruptCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, code, value;
 
 	        return regenerator.wrap(function _callee19$(_context19) {
 	          while (1) {
@@ -14275,7 +14260,7 @@
 
 	                results = [];
 	                input = Array.isArray(arg) ? arg : parse(arg);
-	                _iteratorNormalCompletion3 = true;
+	                _iteratorAbruptCompletion3 = false;
 	                _didIteratorError3 = false;
 	                _context19.prev = 5;
 	                _iterator3 = _asyncIterator(input);
@@ -14285,20 +14270,12 @@
 	                return _iterator3.next();
 
 	              case 9:
-	                _step3 = _context19.sent;
-	                _iteratorNormalCompletion3 = _step3.done;
-	                _context19.next = 13;
-	                return _step3.value;
-
-	              case 13:
-	                _value3 = _context19.sent;
-
-	                if (_iteratorNormalCompletion3) {
-	                  _context19.next = 32;
+	                if (!(_iteratorAbruptCompletion3 = !(_step3 = _context19.sent).done)) {
+	                  _context19.next = 27;
 	                  break;
 	                }
 
-	                code = _value3;
+	                code = _step3.value;
 	                value = _evaluate(code, {
 	                  env: env,
 	                  dynamic_scope: dynamic_scope,
@@ -14325,79 +14302,79 @@
 	                });
 
 	                if (is_promise(value)) {
-	                  _context19.next = 21;
+	                  _context19.next = 16;
 	                  break;
 	                }
 
 	                results.push(collect_callback(code, value));
-	                _context19.next = 29;
+	                _context19.next = 24;
 	                break;
 
-	              case 21:
+	              case 16:
 	                _context19.t0 = results;
 	                _context19.t1 = collect_callback;
 	                _context19.t2 = code;
-	                _context19.next = 26;
+	                _context19.next = 21;
 	                return value;
 
-	              case 26:
+	              case 21:
 	                _context19.t3 = _context19.sent;
 	                _context19.t4 = (0, _context19.t1)(_context19.t2, _context19.t3);
 
 	                _context19.t0.push.call(_context19.t0, _context19.t4);
 
-	              case 29:
-	                _iteratorNormalCompletion3 = true;
+	              case 24:
+	                _iteratorAbruptCompletion3 = false;
 	                _context19.next = 7;
 	                break;
 
-	              case 32:
-	                _context19.next = 38;
+	              case 27:
+	                _context19.next = 33;
 	                break;
 
-	              case 34:
-	                _context19.prev = 34;
+	              case 29:
+	                _context19.prev = 29;
 	                _context19.t5 = _context19["catch"](5);
 	                _didIteratorError3 = true;
 	                _iteratorError3 = _context19.t5;
 
-	              case 38:
-	                _context19.prev = 38;
-	                _context19.prev = 39;
+	              case 33:
+	                _context19.prev = 33;
+	                _context19.prev = 34;
 
-	                if (!(!_iteratorNormalCompletion3 && _iterator3["return"] != null)) {
-	                  _context19.next = 43;
+	                if (!(_iteratorAbruptCompletion3 && _iterator3["return"] != null)) {
+	                  _context19.next = 38;
 	                  break;
 	                }
 
-	                _context19.next = 43;
+	                _context19.next = 38;
 	                return _iterator3["return"]();
 
-	              case 43:
-	                _context19.prev = 43;
+	              case 38:
+	                _context19.prev = 38;
 
 	                if (!_didIteratorError3) {
-	                  _context19.next = 46;
+	                  _context19.next = 41;
 	                  break;
 	                }
 
 	                throw _iteratorError3;
 
-	              case 46:
-	                return _context19.finish(43);
-
-	              case 47:
+	              case 41:
 	                return _context19.finish(38);
 
-	              case 48:
+	              case 42:
+	                return _context19.finish(33);
+
+	              case 43:
 	                return _context19.abrupt("return", results);
 
-	              case 49:
+	              case 44:
 	              case "end":
 	                return _context19.stop();
 	            }
 	          }
-	        }, _callee19, null, [[5, 34, 38, 48], [39,, 43, 47]]);
+	        }, _callee19, null, [[5, 29, 33, 43], [34,, 38, 42]]);
 	      }));
 
 	      function exec_lambda(_x16, _x17, _x18) {
@@ -14969,10 +14946,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Thu, 21 Oct 2021 20:36:35 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 22 Oct 2021 08:48:25 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Thu, 21 Oct 2021 20:36:35 +0000').valueOf();
+	    var date = LString('Fri, 22 Oct 2021 08:48:25 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -15017,7 +14994,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Thu, 21 Oct 2021 20:36:35 +0000',
+	    date: 'Fri, 22 Oct 2021 08:48:25 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),
@@ -15075,4 +15052,4 @@
 	  return lips;
 	});
 
-}());
+})();

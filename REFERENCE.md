@@ -132,7 +132,7 @@ Function right shit the value a by value b.
 
 ## |
 ```
-(& a b)
+(| a b)
 
 Function calculate or bit operation.
 ```
@@ -2252,9 +2252,12 @@ Return numberator of rational or same number if n is not rational.
 ## object-expander
 ```
 (object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
+(object-expander reaonly '(:foo :bar))
+
 
 Recursive function helper for defining LIPS code for create objects
-using key like syntax.
+using key like syntax. if no values are used it will create JavaScript
+shorthand objects where keys are used for keys and values
 ```
 
 ## object?

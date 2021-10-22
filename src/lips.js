@@ -9303,7 +9303,7 @@
         // bit operations
         '|': doc('|', function(a, b) {
             return LNumber(a).or(b);
-        }, `(& a b)
+        }, `(| a b)
 
             Function calculate or bit operation.`),
         '&': doc('&', function(a, b) {
