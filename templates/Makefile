@@ -15,7 +15,6 @@ MAKE=make
 GIT=git
 CD=cd
 SED=sed
-GZ=gzip
 CP=cp
 RM=rm
 TEST=test
@@ -32,7 +31,7 @@ UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 LIPS=./bin/lips.js
 
-ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.min.scm dist/std.xcb.gz
+ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.min.scm dist/std.xcb
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
@@ -52,9 +51,6 @@ dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm l
 
 dist/std.xcb: dist/std.scm
 	$(LIPS) -c -q --cbor dist/std.scm
-
-dist/std.xcb.gz: dist/std.xcb
-	$(GZ) -k dist/std.xcb
 
 dist/std.min.scm: dist/std.scm
 	$(LIPS) ./scripts/minify.scm ./dist/std.scm > dist/std.min.scm

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 22 Oct 2021 11:24:12 +0000
+ * build: Fri, 22 Oct 2021 14:56:40 +0000
  */
 (function () {
 	'use strict';
@@ -1443,16 +1443,16 @@
 	(function (root, factory) {
 	  if (typeof define === 'function' && define.amd) {
 	    // AMD. Register as an anonymous module.
-	    define(['bn.js', 'cbor-x'], function (BN, CBOR) {
-	      return root.lips = factory(root, BN, CBOR);
+	    define(['bn.js', 'cbor-x', 'lzjb'], function (BN, CBOR, lzjb) {
+	      return root.lips = factory(root, BN, CBOR, lzjb);
 	    });
 	  } else if ((typeof module === "undefined" ? "undefined" : _typeof(module)) === 'object' && module.exports) {
 	    // Node/CommonJS
-	    module.exports = factory(root, require('bn.js'), require('cbor-x'));
+	    module.exports = factory(root, require('bn.js'), require('cbor-x'), require('lzjb'));
 	  } else {
-	    root.lips = factory(root, root.BN, root.CBOR);
+	    root.lips = factory(root, root.BN, root.CBOR, root.lzjb);
 	  }
-	})(typeof global !== 'undefined' ? global : self, function (root, BN, CBOR, undefined$1) {
+	})(typeof global !== 'undefined' ? global : self, function (root, BN, CBOR, lzjb, undefined$1) {
 	  /* eslint-disable */
 
 	  /* istanbul ignore next */
@@ -14840,7 +14840,7 @@
 	  function encode_magic() {
 	    var VERSION = 1;
 	    var encoder = new TextEncoder('utf-8');
-	    return encoder.encode("CBOR".concat(VERSION.toString().padStart(3, ' ')));
+	    return encoder.encode("CBRZ".concat(VERSION.toString().padStart(3, ' ')));
 	  } // -------------------------------------------------------------------------
 
 
@@ -14849,14 +14849,15 @@
 	  function decode_magic(obj) {
 	    var decoder = new TextDecoder('utf-8');
 	    var prefix = decoder.decode(obj.slice(0, MAGIC_LENGTH));
+	    var name = prefix.substring(0, 4);
 
-	    if (prefix.match(/^CBOR/)) {
-	      var m = prefix.match(/[0-9]+$/);
+	    if (['CBOR', 'CBRZ'].includes(name)) {
+	      var m = prefix.match(/^(....).*([0-9]+)$/);
 
 	      if (m) {
 	        return {
-	          type: 'CBOR',
-	          version: Number(m[0])
+	          type: m[1],
+	          version: Number(m[2])
 	        };
 	      }
 	    }
@@ -14870,7 +14871,7 @@
 	  function serialize_bin(obj) {
 	    var magic = encode_magic();
 	    var payload = cbor.encode(obj);
-	    return merge_uint8_array(magic, payload);
+	    return merge_uint8_array(magic, Buffer.from(lzjb.compressFile(payload)));
 	  } // -------------------------------------------------------------------------
 
 
@@ -14881,6 +14882,8 @@
 
 	    if (type === 'CBOR' && version === 1) {
 	      return cbor.decode(data.slice(MAGIC_LENGTH));
+	    } else if (type === 'CBRZ' && version === 1) {
+	      return cbor.decode(lzjb.decompressFile(data.slice(MAGIC_LENGTH)));
 	    } else {
 	      throw new Error("Invalid file format ".concat(type));
 	    }
@@ -14980,10 +14983,10 @@
 
 	  var banner = function () {
 	    // Rollup tree-shaking is removing the variable if it's normal string because
-	    // obviously 'Fri, 22 Oct 2021 11:24:12 +0000' == '{{' + 'DATE}}'; can be removed
+	    // obviously 'Fri, 22 Oct 2021 14:56:40 +0000' == '{{' + 'DATE}}'; can be removed
 	    // but disablig Tree-shaking is adding lot of not used code so we use this
 	    // hack instead
-	    var date = LString('Fri, 22 Oct 2021 11:24:12 +0000').valueOf();
+	    var date = LString('Fri, 22 Oct 2021 14:56:40 +0000').valueOf();
 
 	    var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -15028,7 +15031,7 @@
 	  var lips = {
 	    version: 'DEV',
 	    banner: banner,
-	    date: 'Fri, 22 Oct 2021 11:24:12 +0000',
+	    date: 'Fri, 22 Oct 2021 14:56:40 +0000',
 	    exec: exec,
 	    // unwrap async generator into Promise<Array>
 	    parse: compose(uniterate_async, parse),

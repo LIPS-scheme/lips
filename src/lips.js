@@ -44,16 +44,16 @@
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define(['bn.js', 'cbor-x'], function(BN, CBOR) {
-            return (root.lips = factory(root, BN, CBOR));
+        define(['bn.js', 'cbor-x', 'lzjb'], function(BN, CBOR, lzjb) {
+            return (root.lips = factory(root, BN, CBOR, lzjb));
         });
     } else if (typeof module === 'object' && module.exports) {
         // Node/CommonJS
-        module.exports = factory(root, require('bn.js'), require('cbor-x'));
+        module.exports = factory(root, require('bn.js'), require('cbor-x'), require('lzjb'));
     } else {
-        root.lips = factory(root, root.BN, root.CBOR);
+        root.lips = factory(root, root.BN, root.CBOR, root.lzjb);
     }
-})(typeof global !== 'undefined' ? global : self, function(root, BN, CBOR, undefined) {
+})(typeof global !== 'undefined' ? global : self, function(root, BN, CBOR, lzjb, undefined) {
     "use strict";
     /* eslint-disable */
     /* istanbul ignore next */
@@ -10307,7 +10307,7 @@
     function encode_magic() {
         const VERSION = 1;
         const encoder = new TextEncoder('utf-8');
-        return encoder.encode(`CBOR${VERSION.toString().padStart(3, ' ')}`);
+        return encoder.encode(`CBRZ${VERSION.toString().padStart(3, ' ')}`);
     }
 
     // -------------------------------------------------------------------------
@@ -10316,12 +10316,13 @@
     function decode_magic(obj) {
         const decoder = new TextDecoder('utf-8');
         const prefix = decoder.decode(obj.slice(0, MAGIC_LENGTH));
-        if (prefix.match(/^CBOR/)) {
-            const m = prefix.match(/[0-9]+$/);
+        const name = prefix.substring(0, 4);
+        if (['CBOR', 'CBRZ'].includes(name)) {
+            const m = prefix.match(/^(....).*([0-9]+)$/);
             if (m) {
                 return {
-                    type: 'CBOR',
-                    version: Number(m[0])
+                    type: m[1],
+                    version: Number(m[2])
                 };
             }
         }
@@ -10334,7 +10335,7 @@
     function serialize_bin(obj) {
         const magic = encode_magic();
         const payload = cbor.encode(obj);
-        return merge_uint8_array(magic, payload);
+        return merge_uint8_array(magic, Buffer.from(lzjb.compressFile(payload)))
     }
 
     // -------------------------------------------------------------------------
@@ -10342,6 +10343,8 @@
         const { type, version } = decode_magic(data);
         if (type === 'CBOR' && version === 1) {
             return cbor.decode(data.slice(MAGIC_LENGTH));
+        } else if (type === 'CBRZ' && version === 1) {
+            return cbor.decode(lzjb.decompressFile(data.slice(MAGIC_LENGTH)));
         } else {
             throw new Error(`Invalid file format ${type}`);
         }
