@@ -5,7 +5,8 @@
 * lists are now iterators
 * add optional `=>` syntax to `cond` macro (as per R7RS)
 * make `undefined` parser constant
-* add support for `log` of complex, rational, and negative numbers
+* add support for `log` ofcomplex, rational, and negative numbers
+* allow to define shorthand object literals [#185](https://github.com/jcubic/lips/issues/185)
 ### Bugfix
 * fix scoping issue in nested `syntax-rules`
 * fix `repr` of object that have space in key
@@ -25,6 +26,8 @@
 * fix `length` of nil
 * fix trimming spaces in `Env::set`
 * fix `repr` of symbols with impossible characters created with `string->symbol`
+* fix `eqv?` on same pairs
+* fix `abs` on inexact numbers that can be represented as integers [#181](https://github.com/jcubic/lips/issues/181)
 
 ## 1.0.0-beta.14
 ### Breaking

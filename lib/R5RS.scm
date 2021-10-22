@@ -119,7 +119,7 @@
                                     (and (--> im.a (isNaN))
                                          (--> im.b (isNaN)))))))
                             (else (= a b))))))
-            ((pair? a) (and (null? a) (null? b)))
+            ((and (pair? a) (null? a)) (null? b))
             (else (eq? a b)))
       false))
 
