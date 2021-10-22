@@ -275,7 +275,7 @@
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
-           ,@(let loop ((lst expr) (result nil))
+           ,@(let loop ((lst expr) (result nil) (local-readonly readonly))
                (if (null? lst)
                    (reverse result)
                    (let ((first (car lst))
@@ -290,15 +290,15 @@
                            (if (or (key? second) (null? second))
                                (let ((code `(set-obj! ,name ,prop undefined)))
                                  (set! readonly false)
-                                 (loop (cdr lst) (cons code result)))
+                                 (loop (cdr lst) (cons code result) local-readonly))
                                (let ((code (if (and (pair? second) (key? (car second)))
                                                `(set-obj! ,name
                                                           ,prop
-                                                          ,(object-expander readonly second))
+                                                          ,(object-expander local-readonly second))
                                                (if quot
                                                    `(set-obj! ,name ,prop ',second)
                                                    `(set-obj! ,name ,prop ,second)))))
-                                 (loop (cddr lst) (cons code result)))))))))
+                                 (loop (cddr lst) (cons code result) local-readonly))))))))
            ,(if readonly
                 `(Object.freeze ,name))
            ,name))))
