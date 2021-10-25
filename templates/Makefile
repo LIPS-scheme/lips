@@ -58,8 +58,8 @@ dist/std.min.scm: dist/std.scm
 Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/g" templates/Makefile > Makefile
 
-package.json: templates/package.json .$(VERSION)
-	$(SED) -e "s/{{VER}}/"$(VERSION)"/g" templates/package.json > package.json || true
+package.json: .$(VERSION)
+	$(SED) -i 's/"version": "[^"]\+"/"version": "$(VERSION)"/' package.json
 
 assets/classDiagram.svg: assets/classDiagram
 	$(MERMAID) -i assets/classDiagram -o assets/classDiagram.svg
