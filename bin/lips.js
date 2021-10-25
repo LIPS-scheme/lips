@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-const lily = require('@jcubic/lily');
-const util = require('util');
+import lily from '@jcubic/lily';
 
 const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b', 'cbor'];
 const options = lily(process.argv.slice(2), { boolean });
 
 const quiet = options.q || options.quiet;
+
+import lips from '../src/lips.js';
 
 const {
     exec,
@@ -31,16 +32,21 @@ const {
     env,
     banner,
     InputPort,
-    OutputPort } = require('../src/lips');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const { format } = require('util');
-const readline = require('readline');
-var highlight = require('prism-cli');
-var Prism = require('prismjs');
-require('prismjs/components/prism-scheme.min.js');
-require('../lib/js/prism.js');
+    OutputPort } = lips;
+
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { format } from 'util';
+import readline from 'readline';
+import highlight from 'prism-cli';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-scheme.min.js';
+import '../lib/js/prism.js';
+
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 const kDebounceHistoryMS = 15;
 
@@ -198,6 +204,9 @@ function log(message) {
 var strace;
 var rl;
 var newline;
+const moduleURL = new URL(import.meta.url);
+const __dirname = path.dirname(moduleURL.pathname);
+const __filename = path.basename(moduleURL.pathname);
 var interp = Interpreter('repl', {
     stdin: InputPort(function() {
         return new Promise(function(resolve) {
@@ -353,7 +362,7 @@ if (options.version || options.V) {
     const filename = options._[0];
     try {
         const code = readCode(filename);
-        return bootstrap(interp).then(() => {
+        bootstrap(interp).then(() => {
             const dynamic = options.d || options.dynamic;
             return run(code, interp, dynamic, null, options.t || options.trace);
         });

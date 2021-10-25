@@ -3,6 +3,7 @@
   "version": "1.0.0-beta.14",
   "description": "Simple Scheme Like Lisp in JavaScript",
   "main": "src/lips.js",
+  "type": "module",
   "unpkg": "dist/lips.min.js",
   "scripts": {
     "test": "nyc ava --timeout 10m --verbose tests/test.js",
@@ -221,6 +222,9 @@
     "@babel/runtime": "^7.14.5",
     "@babel/runtime-corejs2": "^7.14.5",
     "@mermaid-js/mermaid-cli": "^8.10.2",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-node-resolve": "^13.0.6",
     "acorn": "^8.4.0",
     "ava": "^3.15.0",
     "babel-preset-env": "^1.7.0",
@@ -234,9 +238,6 @@
     "preact": "^10.5.13",
     "preact-render-to-string": "^5.1.19",
     "rollup": "^2.51.2",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-commonjs": "^10.0.0",
-    "rollup-plugin-node-resolve": "^5.0.0",
     "uglify-js": "^3.13.9"
   },
   "peerDepencies": {
@@ -246,6 +247,7 @@
     "@jcubic/lily": "^0.1.0",
     "bn.js": "^5.2.0",
     "cbor-x": "^0.8.3",
+    "compressjs": "^1.0.3",
     "prism-cli": "^0.5.3",
     "prismjs": "^1.25.0"
   }
