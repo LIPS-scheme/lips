@@ -44,9 +44,10 @@
 
 const root = typeof global !== 'undefined' ? global : self;
 
-import lzjb from '../vendor/compressjs/Lzjb.js';
-import BN from 'bn.js';
+import lzjb from 'lzjb';
 import { addExtension, Encoder } from 'cbor-x';
+
+const BN = root.BN;
 
 /* eslint-disable */
 /* istanbul ignore next */
