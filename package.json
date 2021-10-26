@@ -238,6 +238,7 @@
     "preact": "^10.5.13",
     "preact-render-to-string": "^5.1.19",
     "rollup": "^2.51.2",
+    "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "uglify-js": "^3.13.9"
   },

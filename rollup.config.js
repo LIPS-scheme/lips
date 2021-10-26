@@ -39,11 +39,11 @@ export default {
             "exclude": "node_modules/**"
         }),
         nodePolyfills(),
-        nodeResolve({
-            mainFields: ["jsnext:main"]
-        }),
         commonjs({
             include: "node_modules/**"
+        }),
+        nodeResolve({
+            mainFields: ["jsnext:main"]
         })
     ]
 };

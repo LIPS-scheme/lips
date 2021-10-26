@@ -8,16 +8,17 @@
  */
 
 // without this tests stop before running LIPS files
-const ava = require('ava');
-const lily = require('@jcubic/lily');
+import ava  from 'ava';
+import lily from '@jcubic/lily';
+import { promisify } from 'util';
+import fs from 'fs';
+import util from 'util';
 
-const { promisify } = require('util');
-const fs = require('fs');
-const readFile = promisify(fs.readFile);
+import lips from '../src/lips.js';
+
 const readDir = promisify(fs.readdir);
-var util = require('util');
+const readFile = promisify(fs.readFile);
 
-const lips = require('../src/lips');
 
 async function get_files() {
     const options = lily(process.argv.slice(2));

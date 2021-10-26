@@ -39,13 +39,14 @@
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
-/* global define, jQuery, BigInt, Map, Set, Symbol, importScripts, Uint8Array */
+/* global jQuery, BigInt, Map, Set, Symbol, importScripts, Uint8Array */
 "use strict";
 
 const root = typeof global !== 'undefined' ? global : self;
 
-import lzjb from 'lzjb';
 import { addExtension, Encoder } from 'cbor-x';
+import { compress, decompress } from '../vendor/lzjb.js';
+let fs, path, nodeRequire;
 
 const BN = root.BN;
 
@@ -2705,7 +2706,7 @@ function symbolize(obj) {
         const symbols = Object.getOwnPropertySymbols(obj);
         symbols.forEach((key) => {
             const name = key.toString()
-                  .replace(/Symbol\(([^)]+)\)/, '$1');
+                .replace(/Symbol\(([^)]+)\)/, '$1');
             result[name] = toString(obj[key]);
         });
         const props = Object.getOwnPropertyNames(obj);
@@ -5670,13 +5671,13 @@ var toRational = approxRatio(1e-10);
 function approxRatio(eps) {
     return function(n) {
         const gcde = (e, x, y) => {
-            const _gcd = (a, b) => (b < e ? a : _gcd(b, a % b));
-            if (Number.isNaN(x) || Number.isNaN(y)) {
-                return NaN;
-            }
-            return _gcd(Math.abs(x), Math.abs(y));
-        },
-              c = gcde(eps ? eps : (1 / 10000), 1, n);
+                const _gcd = (a, b) => (b < e ? a : _gcd(b, a % b));
+                if (Number.isNaN(x) || Number.isNaN(y)) {
+                    return NaN;
+                }
+                return _gcd(Math.abs(x), Math.abs(y));
+            },
+            c = gcde(eps ? eps : (1 / 10000), 1, n);
         return LRational({ num: Math.floor(n / c), denom: Math.floor(1 / c) });
     };
 }
@@ -9450,12 +9451,13 @@ function nodeModuleFind(dir) {
 function is_node() {
     return typeof global !== 'undefined' && global.global === global;
 }
+
 // -------------------------------------------------------------------------
 async function node_specific() {
     const { createRequire } = await import('module');
-    const fs = await import('fs');
-    const path = await import('path');
-    const nodeRequire = createRequire(import.meta.url);
+    nodeRequire = createRequire(import.meta.url);
+    fs = await import('fs');
+    path = await import('path');
     global_env.set('global', global);
     global_env.set('self', global);
     global_env.set('window', undefined);
@@ -10331,7 +10333,7 @@ function decode_magic(obj) {
 function serialize_bin(obj) {
     const magic = encode_magic();
     const payload = cbor.encode(obj);
-    return merge_uint8_array(magic, Buffer.from(lzjb.compressFile(payload)))
+    return merge_uint8_array(magic, compress(payload));
 }
 
 // -------------------------------------------------------------------------
@@ -10340,7 +10342,8 @@ function unserialize_bin(data) {
     if (type === 'CBOR' && version === 1) {
         return cbor.decode(data.slice(MAGIC_LENGTH));
     } else if (type === 'CBRZ' && version === 1) {
-        return cbor.decode(lzjb.decompressFile(data.slice(MAGIC_LENGTH)));
+        const arr = decompress(data.slice(MAGIC_LENGTH));
+        return cbor.decode(arr);
     } else {
         throw new Error(`Invalid file format ${type}`);
     }
