@@ -1136,7 +1136,7 @@
     (filter (cond ((string? name) (regex name))
                   ((symbol? name) (regex (symbol->string name)))
                   (else name))
-            (env))))
+            (env (interaction-environment)))))
 
 ;; -----------------------------------------------------------------------------
 (define (promisify fn)
