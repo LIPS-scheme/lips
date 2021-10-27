@@ -4,7 +4,7 @@
 ;; http://people.cs.aau.dk/~normark/prog3-03/html/notes/eval-order_themes-delay-stream-section.html
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyriht (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyriht (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 
@@ -30,7 +30,7 @@
 (define the-empty-stream '())
 
 ;; -----------------------------------------------------------------------------
-(define (take n stream)
+(define (stream-take n stream)
   (if (<= n 0)
       '()
       (cons (head stream) (take (- n 1) (tail stream)))))
@@ -100,7 +100,7 @@
     (stream-for-each proc (stream-cdr stream))))
 
 ;; --------------------------------------------------------------------------
-(define (limit n stream)
+(define (stream-limit n stream)
   "return stream of n element of stream <stream> ( -> stream = {0 .. n})"
   (let iter ((n n) (stream stream))
     (if (or (empty-stream? stream) (eq? n 0))
