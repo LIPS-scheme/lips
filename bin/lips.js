@@ -118,8 +118,8 @@ function print(result) {
 
 // -----------------------------------------------------------------------------
 function bootstrap(interpreter) {
-    const file = options.bootstrap ? options.bootstrap : 'std.xcb';
-    const list = [`./dist/${file}`];
+    const file = options.bootstrap ? options.bootstrap : './dist/std.xcb';
+    const list = [file];
     function read(name) {
         var path;
         try {
