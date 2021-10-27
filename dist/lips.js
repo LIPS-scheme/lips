@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 27 Oct 2021 10:47:38 +0000
+ * build: Wed, 27 Oct 2021 10:59:53 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -4995,7 +4995,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Wed, 27 Oct 2021 10:47:38 +0000
+   * Build time: Wed, 27 Oct 2021 10:59:53 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout"];
@@ -18055,7 +18055,7 @@
     return function next() {
       if (files.length) {
         var name = files.shift();
-        return load.call(user_env, [url, name].join('/'), global_env).then(next);
+        return load.call(user_env, [url, name].join(''), global_env).then(next);
       } else {
         return Promise.resolve();
       }
@@ -18519,10 +18519,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 27 Oct 2021 10:47:38 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 27 Oct 2021 10:59:53 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 27 Oct 2021 10:47:38 +0000').valueOf();
+    var date = LString('Wed, 27 Oct 2021 10:59:53 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18567,7 +18567,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Wed, 27 Oct 2021 10:47:38 +0000',
+    date: 'Wed, 27 Oct 2021 10:59:53 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

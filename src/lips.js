@@ -9999,7 +9999,7 @@ function bootstrap(url = '') {
     return (function next() {
         if (files.length) {
             const name = files.shift();
-            return load.call(user_env, [url, name].join('/'), global_env).then(next);
+            return load.call(user_env, [url, name].join(''), global_env).then(next);
         } else {
             return Promise.resolve();
         }
