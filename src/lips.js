@@ -7205,7 +7205,7 @@ var global_env = new Environment({
                     code = code.toString();
                 }
                 code = code.replace(/^#!.*/, '');
-                if (code.match(/\{/)) {
+                if (code.match(/^\{/)) {
                     code = unserialize(code);
                 }
             }
