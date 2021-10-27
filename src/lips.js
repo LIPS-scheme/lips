@@ -10281,7 +10281,7 @@ function decode_magic(obj) {
 function serialize_bin(obj) {
     const magic = encode_magic();
     const payload = cbor.encode(obj);
-    return merge_uint8_array(magic, pack(payload));
+    return merge_uint8_array(magic, pack(payload, { magic: false }));
 }
 
 // -------------------------------------------------------------------------
@@ -10290,7 +10290,7 @@ function unserialize_bin(data) {
     if (type === 'CBOR' && version === 1) {
         return cbor.decode(data.slice(MAGIC_LENGTH));
     } else if (type === 'CBRZ' && version === 1) {
-        const arr = unpack(data.slice(MAGIC_LENGTH));
+        const arr = unpack(data.slice(MAGIC_LENGTH), { magic: false });
         return cbor.decode(arr);
     } else {
         throw new Error(`Invalid file format ${type}`);

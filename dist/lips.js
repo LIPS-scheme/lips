@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 27 Oct 2021 10:22:54 +0000
+ * build: Wed, 27 Oct 2021 10:47:38 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -4669,12 +4669,12 @@
 
   /**@license
    *
-   * No Dependency fast LZJB Compression for Browser and Node
+   * No Dependency fast and small LZJB Compression for Browser and Node
    *
    * Copyright (c) 2021 Jakub T. Jankiewicz https://jcubic.pl/me
    * Released under BSD-3-Clause License
    *
-   * build: Tue, 26 Oct 2021 18:34:12 GMT
+   * build: Wed, 27 Oct 2021 10:43:10 GMT
    */
 
   Object.defineProperty(lzjbPack, '__esModule', { value: true });
@@ -4922,27 +4922,33 @@
       return result;
   }
 
-  function pack(input) {
+  function pack(input, { magic = true } = {}) {
       const out = new Uint8Array(Math.max(input.length * 1.5 | 0, 16 * 1024));
       const len = compress(input, out);
       const len_array = number_to_bytes(input.length);
-      return merge_uint8_array$1(
-          MAGIC,
+      const payload = [
           Uint8Array.of(len_array.length),
           len_array,
           out.slice(0, len)
-      );
+      ];
+      if (magic) {
+          payload.unshift(MAGIC);
+      }
+      return merge_uint8_array$1(...payload);
   }
 
-  function unpack(input) {
-      const decoder = new TextDecoder('utf-8');
-      const magic = decoder.decode(input.slice(0, MAGIC.length));
-      if (magic !== MAGIC_STRING) {
-          throw new Error('Invalid magic value');
+  function unpack(input, { magic = true } = {}) {
+      if (magic) {
+          const decoder = new TextDecoder('utf-8');
+          const magic_prefix = decoder.decode(input.slice(0, MAGIC.length));
+          if (magic_prefix !== MAGIC_STRING) {
+              throw new Error('Invalid magic value');
+          }
       }
-      const size = input[MAGIC.length];
-      const start = MAGIC.length + 1;
-      const end = MAGIC.length + size + 1;
+      const magic_length = magic ? MAGIC.length : 0;
+      const size = input[magic_length];
+      const start = magic_length + 1;
+      const end = magic_length + size + 1;
       const len = bytes_to_number(input.slice(start, end));
       input = input.slice(end);
       const out = new Uint8Array(len);
@@ -4989,7 +4995,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Wed, 27 Oct 2021 10:22:54 +0000
+   * Build time: Wed, 27 Oct 2021 10:47:38 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout"];
@@ -18396,7 +18402,9 @@
   function serialize_bin(obj) {
     var magic = encode_magic();
     var payload = cbor.encode(obj);
-    return merge_uint8_array(magic, pack_1(payload));
+    return merge_uint8_array(magic, pack_1(payload, {
+      magic: false
+    }));
   } // -------------------------------------------------------------------------
 
 
@@ -18408,7 +18416,9 @@
     if (type === 'CBOR' && version === 1) {
       return cbor.decode(data.slice(MAGIC_LENGTH));
     } else if (type === 'CBRZ' && version === 1) {
-      var arr = unpack_1(data.slice(MAGIC_LENGTH));
+      var arr = unpack_1(data.slice(MAGIC_LENGTH), {
+        magic: false
+      });
       return cbor.decode(arr);
     } else {
       throw new Error("Invalid file format ".concat(type));
@@ -18509,10 +18519,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 27 Oct 2021 10:22:54 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 27 Oct 2021 10:47:38 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 27 Oct 2021 10:22:54 +0000').valueOf();
+    var date = LString('Wed, 27 Oct 2021 10:47:38 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18557,7 +18567,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Wed, 27 Oct 2021 10:22:54 +0000',
+    date: 'Wed, 27 Oct 2021 10:47:38 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
