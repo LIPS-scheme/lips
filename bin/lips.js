@@ -428,11 +428,11 @@ function run_repl(err, rl) {
     var multiline = false;
     var resolve;
     // we use promise loop to fix issue when copy paste list of S-Expression
-    var prev_eval = Promise.resolve();
+    let prev_eval = Promise.resolve();
     if (process.stdin.isTTY) {
         rl.prompt();
     }
-    var prev_line;
+    let prev_line;
     bootstrap(interp).then(function() {
         rl.on('line', function(line) {
             code += line;
@@ -473,7 +473,7 @@ function run_repl(err, rl) {
                     rl.setPrompt('');
                     rl.pause();
                     prev_eval = prev_eval.then(function() {
-                        var result = run(code, interp, dynamic, null, options.t || options.trace);
+                        const result = run(code, interp, dynamic, null, options.t || options.trace);
                         code = '';
                         return result;
                     }).then(function(result) {
@@ -504,10 +504,10 @@ function run_repl(err, rl) {
                     });
                 } else {
                     multiline = true;
-                    var ind = indent(code, 2, prompt.length - continuePrompt.length);
+                    const ind = indent(code, 2, prompt.length - continuePrompt.length);
                     rl.setPrompt(continuePrompt);
                     rl.prompt();
-                    spaces = new Array(ind + 1).join(' ');
+                    const spaces = new Array(ind + 1).join(' ');
                     if (terminal) {
                         rl.write(spaces);
                     }
