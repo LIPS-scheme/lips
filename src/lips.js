@@ -15,8 +15,6 @@
  *
  * includes:
  *
- * unfetch by Jason Miller (@developit) MIT License
- *
  * ucs2decode function from Punycode v 2.1.1 by Mathias Bynens MIT License
  *
  * Author: Diego Perini (diego.perini at gmail.com)
@@ -45,7 +43,13 @@
 const root = typeof global !== 'undefined' ? global : self;
 
 import { addExtension, Encoder } from 'cbor-x';
-import { compress, decompress } from '../vendor/lzjb.js';
+import { pack, unpack } from 'lzjb-pack';
+import unfetch from 'unfetch';
+
+if (!root.fetch) {
+    root.fetch = unfetch;
+}
+
 let fs, path, nodeRequire;
 
 const BN = root.BN;
@@ -113,62 +117,6 @@ function log(x, regex = null) {
 /* istanbul ignore next */
 function is_debug() {
     return user_env && user_env.get('DEBUG', { throwError: false });
-}
-if (!root.fetch) {
-    /* istanbul ignore next */
-    root.fetch = function(url, options) {
-        options = options || {};
-        return new Promise( (resolve, reject) => {
-            let request = new XMLHttpRequest();
-
-            request.open(options.method || 'get', url, true);
-
-            for (let i in options.headers) {
-                request.setRequestHeader(i, options.headers[i]);
-            }
-
-            request.withCredentials = options.credentials=='include';
-
-            request.onload = () => {
-                resolve(response());
-            };
-
-            request.onerror = reject;
-
-            request.send(options.body || null);
-
-            function response() {
-                let keys = [],
-                    all = [],
-                    headers = {},
-                    header;
-
-                request.getAllResponseHeaders().replace(/^(.*?):[^\S\n]*([\s\S]*?)$/gm, (m, key, value) => {
-                    keys.push(key = key.toLowerCase());
-                    all.push([key, value]);
-                    header = headers[key];
-                    headers[key] = header ? `${header},${value}` : value;
-                });
-
-                return {
-                    ok: (request.status/100|0) == 2,    // 200-299
-                    status: request.status,
-                    statusText: request.statusText,
-                    url: request.responseURL,
-                    clone: response,
-                    text: () => Promise.resolve(request.responseText),
-                    json: () => Promise.resolve(request.responseText).then(JSON.parse),
-                    blob: () => Promise.resolve(new Blob([request.response])),
-                    headers: {
-                        keys: () => keys,
-                        entries: () => all,
-                        get: n => headers[n.toLowerCase()],
-                        has: n => n.toLowerCase() in headers
-                    }
-                };
-            }
-        });
-    };
 }
 /* eslint-enable */
 /* eslint-disable max-len */
@@ -10333,7 +10281,7 @@ function decode_magic(obj) {
 function serialize_bin(obj) {
     const magic = encode_magic();
     const payload = cbor.encode(obj);
-    return merge_uint8_array(magic, compress(payload));
+    return merge_uint8_array(magic, pack(payload));
 }
 
 // -------------------------------------------------------------------------
@@ -10342,7 +10290,7 @@ function unserialize_bin(data) {
     if (type === 'CBOR' && version === 1) {
         return cbor.decode(data.slice(MAGIC_LENGTH));
     } else if (type === 'CBRZ' && version === 1) {
-        const arr = decompress(data.slice(MAGIC_LENGTH));
+        const arr = unpack(data.slice(MAGIC_LENGTH));
         return cbor.decode(arr);
     } else {
         throw new Error(`Invalid file format ${type}`);

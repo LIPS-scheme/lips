@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 26 Oct 2021 12:05:00 +0000
+ * build: Wed, 27 Oct 2021 10:22:54 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -140,7 +140,7 @@
     if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
   }
 
-  function _arrayLikeToArray$2(arr, len) {
+  function _arrayLikeToArray$1(arr, len) {
     if (len == null || len > arr.length) len = arr.length;
 
     for (var i = 0, arr2 = new Array(len); i < len; i++) {
@@ -150,13 +150,13 @@
     return arr2;
   }
 
-  function _unsupportedIterableToArray$2(o, minLen) {
+  function _unsupportedIterableToArray$1(o, minLen) {
     if (!o) return;
-    if (typeof o === "string") return _arrayLikeToArray$2(o, minLen);
+    if (typeof o === "string") return _arrayLikeToArray$1(o, minLen);
     var n = Object.prototype.toString.call(o).slice(8, -1);
     if (n === "Object" && o.constructor) n = o.constructor.name;
     if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$2(o, minLen);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen);
   }
 
   function _nonIterableRest() {
@@ -164,11 +164,11 @@
   }
 
   function _toArray(arr) {
-    return _arrayWithHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$2(arr) || _nonIterableRest();
+    return _arrayWithHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableRest();
   }
 
   function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr)) return _arrayLikeToArray$2(arr);
+    if (Array.isArray(arr)) return _arrayLikeToArray$1(arr);
   }
 
   function _nonIterableSpread() {
@@ -176,7 +176,7 @@
   }
 
   function _toConsumableArray(arr) {
-    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$2(arr) || _nonIterableSpread();
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableSpread();
   }
 
   function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -317,7 +317,7 @@
   }
 
   function _slicedToArray(arr, i) {
-    return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$2(arr, i) || _nonIterableRest();
+    return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$1(arr, i) || _nonIterableRest();
   }
 
   function _asyncIterator(iterable) {
@@ -4665,252 +4665,295 @@
   let defaultEncoder = new Encoder({ useRecords: false });
   defaultEncoder.encode;
 
-  function _createForOfIteratorHelper$1(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$1(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+  var lzjbPack = {};
 
-  function _unsupportedIterableToArray$1(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$1(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen); }
+  /**@license
+   *
+   * No Dependency fast LZJB Compression for Browser and Node
+   *
+   * Copyright (c) 2021 Jakub T. Jankiewicz https://jcubic.pl/me
+   * Released under BSD-3-Clause License
+   *
+   * build: Tue, 26 Oct 2021 18:34:12 GMT
+   */
 
-  function _arrayLikeToArray$1(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+  Object.defineProperty(lzjbPack, '__esModule', { value: true });
 
   /*
    * source https://github.com/copy/jslzjb-k
    * Based on jslzjb: https://code.google.com/p/jslzjb/
    * Heavily modified for speed
    */
-  var jslzjb = function () {
-    // TODO:
-    //"use asm";
-    // Constants was used for compress/decompress function.
-    var
-    /** @const */
-    NBBY = 8,
+  // Constants was used for compress/decompress function.
+  const
+  /** @const */ NBBY = 8,
+        /** @const */ MATCH_BITS = 6,
+        /** @const */ MATCH_MIN = 3,
+        /** @const */ MATCH_MAX = ((1 << MATCH_BITS) + (MATCH_MIN - 1)),
+        /** @const */ OFFSET_MASK = ((1 << (16 - MATCH_BITS)) - 1),
+        /** @const */ LEMPEL_SIZE = 256;
 
-    /** @const */
-    MATCH_BITS = 6,
-
-    /** @const */
-    MATCH_MIN = 3,
-
-    /** @const */
-    MATCH_MAX = (1 << MATCH_BITS) + (MATCH_MIN - 1),
-
-    /** @const */
-    OFFSET_MASK = (1 << 16 - MATCH_BITS) - 1,
-
-    /** @const */
-    LEMPEL_SIZE = 256;
-    /**
-     * Because of weak of javascript's natural, many compression algorithm
-     * become useless in javascript implementation. The main problem is
-     * performance, even the simple Huffman, LZ77/78 algorithm will take many
-     * many time to operate. We use LZJB algorithm to do that, it suprisingly
-     * fulfills our requirement to compress string fastly and efficiently.
-     *
-     * Our implementation is based on
-     * http://src.opensolaris.org/source/raw/onnv/onnv-gate/
-     * usr/src/uts/common/os/compress.c
-     * It is licensed under CDDL.
-     *
-     * Compress byte array using fast and efficient algorithm.
-     *
-     * @param {Uint8Array} sstart  The buffer to compress
-     * @param {Uint8Array} dstart  The buffer to write into
-     * @return {number} compressed length (number of bytes written to the
-     *                  output buffer). May be bigger than the size of the
-     *                  output buffer, in which case some bytes are lost
-     */
-
-    function compress(sstart, dstart) {
+  /**
+    * Because of weak of javascript's natural, many compression algorithm
+    * become useless in javascript implementation. The main problem is
+    * performance, even the simple Huffman, LZ77/78 algorithm will take many
+    * many time to operate. We use LZJB algorithm to do that, it suprisingly
+    * fulfills our requirement to compress string fastly and efficiently.
+    *
+    * Our implementation is based on
+    * http://src.opensolaris.org/source/raw/onnv/onnv-gate/
+    * usr/src/uts/common/os/compress.c
+    * It is licensed under CDDL.
+    *
+    * Compress byte array using fast and efficient algorithm.
+    *
+    * @param {Uint8Array} sstart  The buffer to compress
+    * @param {Uint8Array} dstart  The buffer to write into
+    * @return {number} compressed length (number of bytes written to the
+    *                  output buffer). May be bigger than the size of the
+    *                  output buffer, in which case some bytes are lost
+    */
+  function compress(sstart, dstart) {
       var slen = 0,
           src = 0,
           dst = 0,
           cpy = 0,
           copymap = 0,
-          copymask = 1 << NBBY - 1,
+          copymask = 1 << (NBBY - 1),
           mlen = 0,
           offset = 0,
           hp = 0,
           lempel = new Int32Array(LEMPEL_SIZE),
-          i = 0; // Initialize lempel array.
+          i = 0;
 
-      for (i = 0; i < LEMPEL_SIZE; i++) {
-        lempel[i] = -858993460;
+      // Initialize lempel array.
+      for(i = 0; i < LEMPEL_SIZE; i++) {
+          lempel[i] = -858993460;
       }
 
       slen = sstart.length;
 
       while (src < slen) {
-        if ((copymask <<= 1) == 1 << NBBY) {
-          copymask = 1;
-          copymap = dst;
-          dstart[dst++] = 0;
-        }
-
-        if (src > slen - MATCH_MAX) {
-          dstart[dst++] = sstart[src++];
-          continue;
-        }
-
-        hp = (sstart[src] + 13 ^ sstart[src + 1] - 13 ^ sstart[src + 2]) & LEMPEL_SIZE - 1;
-        offset = src - lempel[hp] & OFFSET_MASK;
-        lempel[hp] = src;
-        cpy = src - offset;
-
-        if (cpy >= 0 && cpy != src && sstart[src] == sstart[cpy] && sstart[src + 1] == sstart[cpy + 1] && sstart[src + 2] == sstart[cpy + 2]) {
-          dstart[copymap] |= copymask;
-
-          for (mlen = MATCH_MIN; mlen < MATCH_MAX; mlen++) {
-            if (sstart[src + mlen] != sstart[cpy + mlen]) break;
+          if ((copymask <<= 1) == (1 << NBBY)) {
+              copymask = 1;
+              copymap = dst;
+              dstart[dst++] = 0;
           }
 
-          dstart[dst++] = mlen - MATCH_MIN << NBBY - MATCH_BITS | offset >> NBBY;
-          dstart[dst++] = offset;
-          src += mlen;
-        } else {
-          dstart[dst++] = sstart[src++];
-        }
+          if (src > slen - MATCH_MAX) {
+              dstart[dst++] = sstart[src++];
+              continue;
+          }
+
+          hp = ((sstart[src] + 13) ^
+                (sstart[src + 1] - 13) ^
+                sstart[src + 2]) &
+              (LEMPEL_SIZE - 1);
+
+          offset = (src - lempel[hp]) & OFFSET_MASK;
+          lempel[hp] = src;
+          cpy = src - offset;
+
+          if (cpy >= 0 && cpy != src &&
+              sstart[src] == sstart[cpy] &&
+              sstart[src + 1] == sstart[cpy + 1] &&
+              sstart[src + 2] == sstart[cpy + 2]) {
+              dstart[copymap] |= copymask;
+              for (mlen = MATCH_MIN; mlen < MATCH_MAX; mlen++)
+                  if (sstart[src + mlen] != sstart[cpy + mlen])
+                      break;
+              dstart[dst++] = ((mlen - MATCH_MIN) << (NBBY - MATCH_BITS)) |
+                  (offset >> NBBY);
+              dstart[dst++] = offset;
+              src += mlen;
+          } else {
+              dstart[dst++] = sstart[src++];
+          }
       }
 
       console.assert(sstart.length >= src);
+
       return dst;
-    }
-    /**
-     * Our implementation is based on
-     * http://src.opensolaris.org/source/raw/onnv/onnv-gate/
-     * usr/src/uts/common/os/compress.c
-     * It is licensed under CDDL.
-     *
-     * Decompress byte array using fast and efficient algorithm.
-     *
-     * @param {Uint8Array} sstart  The buffer to decompress
-     * @param {number} slen  compressed length
-     * @param {Uint8Array} dstart  The buffer to write into
-     * @return {number} decompressed length
-     */
+  }
 
-
-    function decompress(sstart, slen, dstart) {
+  /**
+    * Our implementation is based on
+    * http://src.opensolaris.org/source/raw/onnv/onnv-gate/
+    * usr/src/uts/common/os/compress.c
+    * It is licensed under CDDL.
+    *
+    * Decompress byte array using fast and efficient algorithm.
+    *
+    * @param {Uint8Array} sstart  The buffer to decompress
+    * @param {number} slen  compressed length
+    * @param {Uint8Array} dstart  The buffer to write into
+    * @return {number} decompressed length
+    */
+  function decompress(sstart, slen, dstart) {
       slen = slen | 0;
+
       var src = 0,
           dst = 0,
           cpy = 0,
           copymap = 0,
           copymask = 1 << (NBBY - 1 | 0),
           mlen = 0,
-          offset = 0; //var avg_mlen = [];
+          offset = 0;
+
+      //var avg_mlen = [];
 
       while (src < slen) {
-        if ((copymask <<= 1) === 1 << NBBY) {
-          copymask = 1;
-          copymap = sstart[src];
-          src = src + 1 | 0;
-        }
+          if ((copymask <<= 1) === (1 << NBBY)) {
+              copymask = 1;
+              copymap = sstart[src];
+              src = src + 1 | 0;
+          }
 
-        if (copymap & copymask) {
-          mlen = (sstart[src] >> (NBBY - MATCH_BITS | 0)) + MATCH_MIN | 0;
-          offset = (sstart[src] << NBBY | sstart[src + 1 | 0]) & OFFSET_MASK;
-          src = src + 2 | 0;
-          cpy = dst - offset | 0; //if (cpy >= 0)
+          if (copymap & copymask) {
+              mlen = (sstart[src] >> (NBBY - MATCH_BITS | 0)) + MATCH_MIN | 0;
+              offset = ((sstart[src] << NBBY) | sstart[src + 1 | 0]) & OFFSET_MASK;
+              src = src + 2 | 0;
 
-          {
-            //console.log(mlen);
-            //avg_mlen.push(mlen);
-            //dstart.set(dstart.subarray(cpy, cpy + mlen | 0), dst);
-            //dst = dst + mlen | 0;
-            //cpy = cpy + mlen | 0;
-            //mlen = mlen - 1 | 0;
-            while (mlen > 4) {
-              dstart[dst] = dstart[cpy];
-              dst = dst + 1 | 0;
-              cpy = cpy + 1 | 0;
-              dstart[dst] = dstart[cpy];
-              dst = dst + 1 | 0;
-              cpy = cpy + 1 | 0;
-              dstart[dst] = dstart[cpy];
-              dst = dst + 1 | 0;
-              cpy = cpy + 1 | 0;
-              dstart[dst] = dstart[cpy];
-              dst = dst + 1 | 0;
-              cpy = cpy + 1 | 0;
-              mlen = mlen - 4 | 0;
-            }
+              cpy = dst - offset | 0;
+              //if (cpy >= 0)
+              {
+                  //console.log(mlen);
+                  //avg_mlen.push(mlen);
 
-            while (mlen > 0) {
-              dstart[dst] = dstart[cpy];
+                  //dstart.set(dstart.subarray(cpy, cpy + mlen | 0), dst);
+                  //dst = dst + mlen | 0;
+                  //cpy = cpy + mlen | 0;
+
+                  //mlen = mlen - 1 | 0;
+                  while (mlen > 4) {
+                      dstart[dst] = dstart[cpy];
+                      dst = dst + 1 | 0;
+                      cpy = cpy + 1 | 0;
+
+                      dstart[dst] = dstart[cpy];
+                      dst = dst + 1 | 0;
+                      cpy = cpy + 1 | 0;
+
+                      dstart[dst] = dstart[cpy];
+                      dst = dst + 1 | 0;
+                      cpy = cpy + 1 | 0;
+
+                      dstart[dst] = dstart[cpy];
+                      dst = dst + 1 | 0;
+                      cpy = cpy + 1 | 0;
+
+                      mlen = mlen - 4 | 0;
+                  }
+
+                  while (mlen > 0) {
+                      dstart[dst] = dstart[cpy];
+                      dst = dst + 1 | 0;
+                      cpy = cpy + 1 | 0;
+                      mlen = mlen - 1 | 0;
+                  }
+              }
+              //else
+              //{
+              //    /*
+              //     * offset before start of destination buffer
+              //     * indicates corrupt source data
+              //     */
+              //    console.warn("possibly corrupt data");
+              //    return dstart;
+              //}
+          } else {
+              dstart[dst] = sstart[src];
               dst = dst + 1 | 0;
-              cpy = cpy + 1 | 0;
-              mlen = mlen - 1 | 0;
-            }
-          } //else
-          //{
-          //    /*
-          //     * offset before start of destination buffer
-          //     * indicates corrupt source data
-          //     */
-          //    console.warn("possibly corrupt data");
-          //    return dstart;
-          //}
-        } else {
-          dstart[dst] = sstart[src];
-          dst = dst + 1 | 0;
-          src = src + 1 | 0;
-        }
-      } //console.log(avg_mlen.reduce(function(a, x) { return a + x; }, 0) / avg_mlen.length);
+              src = src + 1 | 0;
+          }
+      }
+
+      //console.log(avg_mlen.reduce(function(a, x) { return a + x; }, 0) / avg_mlen.length);
+
       //console.assert(dstart.length >= dst);
       //console.assert(sstart.length >= src);
 
-
       return dst;
-    }
-
-    return {
-      compress: compress,
-      decompress: decompress
-    };
-  }(); // int array conversion
-  // ref: https://stackoverflow.com/a/69721696/387194
-
-
-  function intToArray(i) {
-    return Uint8Array.of((i & 0xff000000) >> 24, (i & 0x00ff0000) >> 16, (i & 0x0000ff00) >> 8, (i & 0x000000ff) >> 0);
   }
 
-  function arrayToInt(bs) {
-    var start = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-    var bytes = bs.subarray(start, start + 4);
-    var n = 0;
 
-    var _iterator = _createForOfIteratorHelper$1(bytes.values()),
-        _step;
+  function encode_magic$1() {
+      const encoder = new TextEncoder('utf-8');
+      return encoder.encode(MAGIC_STRING);
+  }
 
-    try {
-      for (_iterator.s(); !(_step = _iterator.n()).done;) {
-        var _byte = _step.value;
-        n = n << 8 | _byte;
+  const MAGIC_STRING = '@lzjb';
+  const MAGIC = encode_magic$1();
+
+  function merge_uint8_array$1(...args) {
+      if (args.length > 1) {
+          const len = args.reduce((acc, arr) => acc + arr.length, 0);
+          const result = new Uint8Array(len);
+          let offset = 0;
+          args.forEach(item => {
+              result.set(item, offset);
+              offset += item.length;
+          });
+          return result;
+      } else if (args.length) {
+          return args[0];
       }
-    } catch (err) {
-      _iterator.e(err);
-    } finally {
-      _iterator.f();
-    }
-
-    return n;
   }
 
-  function compress(input) {
-    var out = new Uint8Array(Math.max(input.length * 1.5 | 0, 16 * 1024));
-    var len = jslzjb.compress(input, out);
-    var result = new Uint8Array(4 + len);
-    result.set(intToArray(input.length));
-    result.set(out.slice(0, len), 4);
-    return result;
+  function number_to_bytes(number) {
+      const len = Math.ceil(Math.log2(number) / 8);
+      const byteArray = new Uint8Array(len);
+
+      for (let index = 0; index < byteArray.length; index ++ ) {
+          const byte = number & 0xff;
+          byteArray[index] = byte;
+          number = (number - byte) / 256;
+      }
+
+      return byteArray;
   }
-  function decompress(input) {
-    var len = arrayToInt(input.slice(0, 4));
-    input = input.slice(4);
-    var out = new Uint8Array(len);
-    jslzjb.decompress(input, input.length, out);
-    return out;
+
+  function bytes_to_number(byteArray) {
+      let result = 0;
+      for (let i = byteArray.length - 1; i >= 0; i--) {
+          result = (result * 256) + byteArray[i];
+      }
+
+      return result;
   }
+
+  function pack(input) {
+      const out = new Uint8Array(Math.max(input.length * 1.5 | 0, 16 * 1024));
+      const len = compress(input, out);
+      const len_array = number_to_bytes(input.length);
+      return merge_uint8_array$1(
+          MAGIC,
+          Uint8Array.of(len_array.length),
+          len_array,
+          out.slice(0, len)
+      );
+  }
+
+  function unpack(input) {
+      const decoder = new TextDecoder('utf-8');
+      const magic = decoder.decode(input.slice(0, MAGIC.length));
+      if (magic !== MAGIC_STRING) {
+          throw new Error('Invalid magic value');
+      }
+      const size = input[MAGIC.length];
+      const start = MAGIC.length + 1;
+      const end = MAGIC.length + size + 1;
+      const len = bytes_to_number(input.slice(start, end));
+      input = input.slice(end);
+      const out = new Uint8Array(len);
+      decompress(input, input.length, out);
+      return out;
+  }
+
+  var pack_1 = lzjbPack.pack = pack;
+  var unpack_1 = lzjbPack.unpack = unpack;
+
+  function unfetch(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttpRequest,o=[],u=[],i={},a=function(){return {ok:2==(s.status/100|0),statusText:s.statusText,status:s.status,url:s.responseURL,text:function(){return Promise.resolve(s.responseText)},json:function(){return Promise.resolve(s.responseText).then(JSON.parse)},blob:function(){return Promise.resolve(new Blob([s.response]))},clone:a,headers:{keys:function(){return o},entries:function(){return u},get:function(e){return i[e.toLowerCase()]},has:function(e){return e.toLowerCase()in i}}}};for(var l in s.open(n.method||"get",e,!0),s.onload=function(){s.getAllResponseHeaders().replace(/^(.*?):[^\S\n]*([\s\S]*?)$/gm,function(e,n,t){o.push(n=n.toLowerCase()),u.push([n,t]),i[n]=i[n]?i[n]+","+t:t;}),t(a());},s.onerror=r,s.withCredentials="include"==n.credentials,n.headers)s.setRequestHeader(l,n.headers[l]);s.send(n.body||null);})}
 
   /**@license
    *   __ __                          __
@@ -4929,8 +4972,6 @@
    *
    * includes:
    *
-   * unfetch by Jason Miller (@developit) MIT License
-   *
    * ucs2decode function from Punycode v 2.1.1 by Mathias Bynens MIT License
    *
    * Author: Diego Perini (diego.perini at gmail.com)
@@ -4948,7 +4989,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Tue, 26 Oct 2021 12:05:00 +0000
+   * Build time: Wed, 27 Oct 2021 10:22:54 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout"];
@@ -4967,6 +5008,11 @@
 
   function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
   var root = typeof global !== 'undefined' ? global : self;
+
+  if (!root.fetch) {
+    root.fetch = unfetch;
+  }
+
   var fs, path$2, nodeRequire;
   var BN = root.BN;
   /* eslint-disable */
@@ -5054,75 +5100,6 @@
     return user_env && user_env.get('DEBUG', {
       throwError: false
     });
-  }
-
-  if (!root.fetch) {
-    /* istanbul ignore next */
-    root.fetch = function (url, options) {
-      options = options || {};
-      return new Promise(function (resolve, reject) {
-        var request = new XMLHttpRequest();
-        request.open(options.method || 'get', url, true);
-
-        for (var i in options.headers) {
-          request.setRequestHeader(i, options.headers[i]);
-        }
-
-        request.withCredentials = options.credentials == 'include';
-
-        request.onload = function () {
-          resolve(response());
-        };
-
-        request.onerror = reject;
-        request.send(options.body || null);
-
-        function response() {
-          var _keys2 = [],
-              all = [],
-              headers = {},
-              header;
-          request.getAllResponseHeaders().replace(/^(.*?):[^\S\n]*([\s\S]*?)$/gm, function (m, key, value) {
-            _keys2.push(key = key.toLowerCase());
-
-            all.push([key, value]);
-            header = headers[key];
-            headers[key] = header ? "".concat(header, ",").concat(value) : value;
-          });
-          return {
-            ok: (request.status / 100 | 0) == 2,
-            // 200-299
-            status: request.status,
-            statusText: request.statusText,
-            url: request.responseURL,
-            clone: response,
-            text: function text() {
-              return Promise.resolve(request.responseText);
-            },
-            json: function json() {
-              return Promise.resolve(request.responseText).then(JSON.parse);
-            },
-            blob: function blob() {
-              return Promise.resolve(new Blob([request.response]));
-            },
-            headers: {
-              keys: function keys() {
-                return _keys2;
-              },
-              entries: function entries() {
-                return all;
-              },
-              get: function get(n) {
-                return headers[n.toLowerCase()];
-              },
-              has: function has(n) {
-                return n.toLowerCase() in headers;
-              }
-            }
-          };
-        }
-      });
-    };
   }
   /* eslint-enable */
 
@@ -16619,9 +16596,9 @@
         if (keys.length === 0) {
           return _nil;
         } else if (keys.length === 1) {
-          var _keys3 = keys,
-              _keys4 = _slicedToArray(_keys3, 1),
-              _key33 = _keys4[0];
+          var _keys2 = keys,
+              _keys3 = _slicedToArray(_keys2, 1),
+              _key33 = _keys3[0];
 
           return obj[_key33];
         }
@@ -18419,7 +18396,7 @@
   function serialize_bin(obj) {
     var magic = encode_magic();
     var payload = cbor.encode(obj);
-    return merge_uint8_array(magic, compress(payload));
+    return merge_uint8_array(magic, pack_1(payload));
   } // -------------------------------------------------------------------------
 
 
@@ -18431,7 +18408,7 @@
     if (type === 'CBOR' && version === 1) {
       return cbor.decode(data.slice(MAGIC_LENGTH));
     } else if (type === 'CBRZ' && version === 1) {
-      var arr = decompress(data.slice(MAGIC_LENGTH));
+      var arr = unpack_1(data.slice(MAGIC_LENGTH));
       return cbor.decode(arr);
     } else {
       throw new Error("Invalid file format ".concat(type));
@@ -18532,10 +18509,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 26 Oct 2021 12:05:00 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 27 Oct 2021 10:22:54 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 26 Oct 2021 12:05:00 +0000').valueOf();
+    var date = LString('Wed, 27 Oct 2021 10:22:54 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18580,7 +18557,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Tue, 26 Oct 2021 12:05:00 +0000',
+    date: 'Wed, 27 Oct 2021 10:22:54 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

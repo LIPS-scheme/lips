@@ -250,7 +250,9 @@
     "@jcubic/lily": "^0.1.0",
     "cbor-x": "^0.8.3",
     "lzjb": "^0.0.4",
+    "lzjb-pack": "^0.1.0",
     "prism-cli": "^0.5.3",
-    "prismjs": "^1.25.0"
+    "prismjs": "^1.25.0",
+    "unfetch": "^4.2.0"
   }
 }
