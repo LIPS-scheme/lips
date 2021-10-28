@@ -460,7 +460,7 @@ function run_repl(err, rl) {
                     }
                     return '\x1b[K' + prefix + line;
                 }).join('\n');
-                let num = lines.length + count;
+                let num = lines.length + count + 1;
                 const format = `\x1b[${num}F${stdout}\n`;
                 process.stdout.write(format);
             }
