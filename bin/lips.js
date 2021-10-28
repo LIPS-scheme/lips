@@ -119,7 +119,6 @@ function print(result) {
 // -----------------------------------------------------------------------------
 function bootstrap(interpreter) {
     const file = options.bootstrap ? options.bootstrap : './dist/std.xcb';
-    const list = [file];
     function read(name) {
         var path;
         try {
@@ -133,15 +132,8 @@ function bootstrap(interpreter) {
         }
         return readCode(path);
     }
-    return (function next() {
-        var name = list.shift();
-        if (name) {
-            const code = read(name);
-            return run(code, interpreter, false, env.__parent__, true).then(next);
-        } else {
-            return Promise.resolve();
-        }
-    })();
+    const code = read(file);
+    return run(code, interpreter, false, env.__parent__, true);
 }
 
 // -----------------------------------------------------------------------------
