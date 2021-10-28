@@ -8,7 +8,7 @@
 * add optional `=>` syntax to `cond` macro (as per R7RS)
 * make `undefined` parser constant
 * compile into binary CBOR format with LZJB compression
-* add support for `log` ofcomplex, rational, and negative numbers
+* add support for `log` of complex, rational, and negative numbers
 * allow to define shorthand object literals [#185](https://github.com/jcubic/lips/issues/185)
 * add Buffered Output Port and `flush-output` function
 ### Bugfix
