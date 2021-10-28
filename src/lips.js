@@ -10015,25 +10015,16 @@ function is_dev() {
 }
 // -------------------------------------------------------------------------
 function bootstrap(url = '') {
-    const files = ['dist/std.xcb'];
+    const std = 'dist/std.xcb';
     if (url === '') {
         if (is_dev()) {
-            url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
+            url = `https://cdn.jsdelivr.net/gh/jcubic/lips@devel/${std}`;
         } else {
-            url = `https://cdn.jsdelivr.net/npm/@jcubic/lips@${lips.version}/`;
+            url = `https://cdn.jsdelivr.net/npm/@jcubic/lips@${lips.version}/${std}`;
         }
-    } else if (!url.match(/\/$/)) {
-        url += '/';
     }
     var load = global_env.get('load');
-    return (function next() {
-        if (files.length) {
-            const name = files.shift();
-            return load.call(user_env, [url, name].join(''), global_env).then(next);
-        } else {
-            return Promise.resolve();
-        }
-    })();
+    return load.call(user_env, url, global_env);
 }
 // -------------------------------------------------------------------------
 function Worker(url) {

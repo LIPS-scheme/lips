@@ -109,9 +109,21 @@ on first script tag with `text/x-scheme` type. By default it will use CDN from
 [jsdelivr](https://www.jsdelivr.com/). To load each file using builtin load function
 (that will fetch the file using AJAX and evaluate it).
 
-```
+```html
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js" bootstrap></script>
 ```
+
+You can also specify the path where LIPS should search for standard library.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
+        bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb">
+</script>
+```
+
+You can use `bootstrap="./std.xcb"` if there is `std.xcb` file in local directory.
+You can also bootstrap with `std.scm` or `std.min.scm` but xcb file is the fastest,
+because it's already parsed and compiled into binary format.
 
 ## Running LIPS programmatically
 

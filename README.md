@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.14-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&3eb8068c8fad429f5c22fd55d377c124eb7f2bd7)](https://travis-ci.com/jcubic/lips)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&8837d2bfdf049e9c524fa4207b757da3adefe674)](https://travis-ci.com/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&c4718a7f131af9e8661ca26097f3db4b)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
@@ -109,9 +109,21 @@ on first script tag with `text/x-scheme` type. By default it will use CDN from
 [jsdelivr](https://www.jsdelivr.com/). To load each file using builtin load function
 (that will fetch the file using AJAX and evaluate it).
 
-```
+```html
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js" bootstrap></script>
 ```
+
+You can also specify the path where LIPS should search for standard library.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
+        bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb">
+</script>
+```
+
+You can use `bootstrap="./std.xcb"` if there is `std.xcb` file in local directory.
+You can also bootstrap with `std.scm` or `std.min.scm` but xcb file is the fastest,
+because it's already parsed and compiled into binary format.
 
 ## Running LIPS programmatically
 

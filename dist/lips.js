@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 28 Oct 2021 09:47:41 +0000
+ * build: Thu, 28 Oct 2021 10:14:28 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -4995,7 +4995,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Thu, 28 Oct 2021 09:47:41 +0000
+   * Build time: Thu, 28 Oct 2021 10:14:28 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout"];
@@ -18103,27 +18103,18 @@
 
   function bootstrap() {
     var url = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-    var files = ['dist/std.xcb'];
+    var std = 'dist/std.xcb';
 
     if (url === '') {
       if (is_dev()) {
-        url = 'https://cdn.jsdelivr.net/gh/jcubic/lips@devel/';
+        url = "https://cdn.jsdelivr.net/gh/jcubic/lips@devel/".concat(std);
       } else {
-        url = "https://cdn.jsdelivr.net/npm/@jcubic/lips@".concat(lips.version, "/");
+        url = "https://cdn.jsdelivr.net/npm/@jcubic/lips@".concat(lips.version, "/").concat(std);
       }
-    } else if (!url.match(/\/$/)) {
-      url += '/';
     }
 
     var load = global_env.get('load');
-    return function next() {
-      if (files.length) {
-        var name = files.shift();
-        return load.call(user_env, [url, name].join(''), global_env).then(next);
-      } else {
-        return Promise.resolve();
-      }
-    }();
+    return load.call(user_env, url, global_env);
   } // -------------------------------------------------------------------------
 
 
@@ -18583,10 +18574,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 28 Oct 2021 09:47:41 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 28 Oct 2021 10:14:28 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 28 Oct 2021 09:47:41 +0000').valueOf();
+    var date = LString('Thu, 28 Oct 2021 10:14:28 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18632,7 +18623,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Thu, 28 Oct 2021 09:47:41 +0000',
+    date: 'Thu, 28 Oct 2021 10:14:28 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

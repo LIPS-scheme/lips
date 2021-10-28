@@ -1,4 +1,6 @@
 ## 1.0.0-beta.15
+### Breaking
+* bootstrap URL now require full url to the file with standard library
 ### Features
 * improve performance of `**` operator when JS support exponential operator
 * add alias for `string-join` and `string-split`
