@@ -6064,9 +6064,39 @@ OutputPort.prototype.close = function() {
         throw new Error('output-port: port is closed');
     };
 };
+OutputPort.prototype.flush = function() {
+    // do nothing
+};
 OutputPort.prototype.toString = function() {
     return '#<output-port>';
 };
+// -------------------------------------------------------------------------
+class BufferedOutputPort extends OutputPort {
+    constructor(fn) {
+        super((...args) => this._write(...args));
+        typecheck('BufferedOutputPort', fn, 'function');
+        read_only(this, '_fn', fn, { hidden: true });
+        read_only(this, '_buffer', [], { hidden: true });
+    }
+    flush() {
+        if (this._buffer.length) {
+            this._fn(this._buffer.join(''));
+            this._buffer.length = 0;
+        }
+    }
+    _write(...args) {
+        if (args.length) {
+            args.forEach(arg => {
+                this._buffer.push(arg);
+            });
+            const last_value = this._buffer[this._buffer.length - 1];
+            if (last_value.match(/\n$/)) {
+                this._buffer[this._buffer.length - 1] = last_value.replace(/\n$/, '');
+                this.flush();
+            }
+        }
+    }
+}
 // -------------------------------------------------------------------------
 function OutputStringPort(toString) {
     if (typeof this !== 'undefined' && !(this instanceof OutputStringPort) ||
@@ -6824,11 +6854,11 @@ function interaction(env, name) {
 }
 // -------------------------------------------------------------------------
 var internal_env = new Environment({
-    stdout: new OutputPort(function(...args) {
+    stdout: new BufferedOutputPort(function(...args) {
         console.log(...args);
     }),
     // ------------------------------------------------------------------
-    stderr: new OutputPort(function(...args) {
+    stderr: new BufferedOutputPort(function(...args) {
         console.error(...args);
     }),
     // ------------------------------------------------------------------
@@ -10415,28 +10445,29 @@ properties of an object.
 // -------------------------------------------------------------------------
 // to be used with string function when code is minified
 // -------------------------------------------------------------------------
-Ahead.__class__ = 'ahead';
-Pair.__class__ = 'pair';
-Nil.__class__ = 'nil';
-Pattern.__class__ = 'pattern';
-Formatter.__class__ = 'formatter';
-Macro.__class__ = 'macro';
-Syntax.__class__ = 'syntax';
-Environment.__class__ = 'environment';
-InputPort.__class__ = 'input-port';
-OutputPort.__class__ = 'output-port';
-OutputStringPort.__class__ = 'output-string-port';
-InputStringPort.__class__ = 'input-string-port';
-InputFilePort.__class__ = 'input-file-port';
-OutputFilePort.__class__ = 'output-file-port';
-LipsError.__class__ = 'lips-error';
+read_only(Ahead, '__class__', 'ahead');
+read_only(Pair, '__class__', 'pair');
+read_only(Nil, '__class__', 'nil');
+read_only(Pattern, '__class__', 'pattern');
+read_only(Formatter, '__class__', 'formatter');
+read_only(Macro, '__class__', 'macro');
+read_only(Syntax, '__class__', 'syntax');
+read_only(Environment, '__class__', 'environment');
+read_only(InputPort, '__class__', 'input-port');
+read_only(OutputPort, '__class__', 'output-port');
+read_only(BufferedOutputPort, '__class__', 'output-port');
+read_only(OutputStringPort, '__class__', 'output-string-port');
+read_only(InputStringPort, '__class__', 'input-string-port');
+read_only(InputFilePort, '__class__', 'input-file-port');
+read_only(OutputFilePort, '__class__', 'output-file-port');
+read_only(LipsError, '__class__', 'lips-error');
 [LNumber, LComplex, LRational, LFloat, LBigInteger].forEach(cls => {
-    cls.__class__ = 'number';
+    read_only(cls, '__class__', 'number');
 });
-LCharacter.__class__ = 'character';
-LSymbol.__class__ = 'symbol';
-LString.__class__ = 'string';
-QuotedPromise.__class__ = 'promise';
+read_only(LCharacter, '__class__', 'character');
+read_only(LSymbol, '__class__', 'symbol');
+read_only(LString, '__class__', 'string');
+read_only(QuotedPromise, '__class__', 'promise');
 // -------------------------------------------------------------------------
 const lips = {
     version: '{{VER}}',
@@ -10478,6 +10509,7 @@ const lips = {
 
     InputPort,
     OutputPort,
+    BufferedOutputPort,
     InputFilePort,
     OutputFilePort,
     InputStringPort,

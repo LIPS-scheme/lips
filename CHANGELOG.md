@@ -1,6 +1,6 @@
 ## 1.0.0-beta.15
 ### Features
-* improve performance of ** operator when JS support exponential operator
+* improve performance of `**` operator when JS support exponential operator
 * add alias for `string-join` and `string-split`
 * lists are now iterators
 * add optional `=>` syntax to `cond` macro (as per R7RS)
@@ -8,6 +8,7 @@
 * compile into binary CBOR format with LZJB compression
 * add support for `log` ofcomplex, rational, and negative numbers
 * allow to define shorthand object literals [#185](https://github.com/jcubic/lips/issues/185)
+* add Buffered Output Port and `flush-output` function
 ### Bugfix
 * fix scoping issue in nested `syntax-rules`
 * fix `repr` of object that have space in key
@@ -30,6 +31,7 @@
 * fix `repr` of symbols with impossible characters created with `string->symbol`
 * fix `eqv?` on same pairs
 * fix `abs` on inexact numbers that can be represented as integers [#181](https://github.com/jcubic/lips/issues/181)
+* fix extra newline when calling print in browser [#186](https://github.com/jcubic/lips/issues/186)
 
 ## 1.0.0-beta.14
 ### Breaking

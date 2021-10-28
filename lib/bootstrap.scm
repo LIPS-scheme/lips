@@ -585,11 +585,21 @@
 
 ;; -----------------------------------------------------------------------------
 (define (current-input-port)
-  "current-input-port)
+  "(current-input-port)
 
    Function return default stdin port."
   (let-env (interaction-environment)
      (--> **internal-env** (get 'stdin))))
+
+;; -----------------------------------------------------------------------------
+(define (flush-output . rest)
+  "(flush-output)
+
+   If output-port is buffered, this causes the contents of its buffer to be written to
+   the output device. Otherwise it has no effect. Returns an unspecified value."
+  (let ((port (if (null? rest) (current-output-port) (car rest))))
+    (typecheck "flush-output" port "output-port")
+    (--> port (flush))))
 
 ;; -----------------------------------------------------------------------------
 (define (regex? x)
