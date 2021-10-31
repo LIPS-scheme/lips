@@ -21,10 +21,11 @@ Few things to consider when contributing:
 * Any PRs should be added into devel branch.
 
 ## How to contribute
-* first fork the repo, then you need to clone it:
+* first fork the repo, then you need to clone it and change into devel branch:
 
 ```bash
 git clone git@github.com:<YOUR NAME>/lips.git
+git checkout devel
 ```
 
 Then you install dependencies:
