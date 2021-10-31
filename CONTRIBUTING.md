@@ -18,6 +18,7 @@ Few things to consider when contributing:
   except for Node.js REPL where there can be additional packages used.
 * Any breaking change should be first discussed in issue, but it probably will not be
   be merged unless the current behavior seems like bug.
+* Any PRs should be added into devel branch.
 
 ## How to contribute
 * first fork the repo, then you need to clone it:
