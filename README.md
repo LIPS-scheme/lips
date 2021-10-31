@@ -1,8 +1,8 @@
 ![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true)
 
-[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.14-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.15-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&8ec00c86ce896975ef16ca93c2df03c5b9019d06)](https://travis-ci.com/jcubic/lips)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&1917d24530c4cb8f4f3ca66af7733e2b40805d69)](https://travis-ci.com/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&8c3211ada49521a8f2c41c9cc2095a91)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)

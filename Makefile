@@ -1,7 +1,7 @@
 .PHONY: publish test coveralls lint zero
 
-VERSION=1.0.0-beta.14
-VERSION_DASH=`echo -n "1.0.0-beta.14" | sed "s/-/%E2%80%93/"`
+VERSION=1.0.0-beta.15
+VERSION_DASH=`echo -n "1.0.0-beta.15" | sed "s/-/%E2%80%93/"`
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 YEAR=`date +%Y`
