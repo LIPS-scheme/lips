@@ -10309,9 +10309,7 @@ function serialize_bin(obj) {
 // -------------------------------------------------------------------------
 function unserialize_bin(data) {
     const { type, version } = decode_magic(data);
-    if (type === 'CBOR' && version === 1) {
-        return cbor.decode(data.slice(MAGIC_LENGTH));
-    } else if (type === 'CBRZ' && version === 1) {
+    if (type === 'LIPS' && version === 1) {
         const arr = unpack(data.slice(MAGIC_LENGTH), { magic: false });
         return cbor.decode(arr);
     } else {
