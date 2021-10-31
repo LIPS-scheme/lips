@@ -10359,13 +10359,13 @@ function init() {
                     if (lips_mimes.includes(type)) {
                         var bootstrap_attr = script.getAttribute('bootstrap');
                         if (!bootstraped && typeof bootstrap_attr === 'string') {
-                            bootstrap(bootstrap_attr).then(function() {
+                            return bootstrap(bootstrap_attr).then(function() {
                                 return load(script, function(e) {
                                     console.error(e);
                                 });
                             }).then(loop);
                         } else {
-                            load(script, function(e) {
+                            return load(script, function(e) {
                                 console.error(e);
                             }).then(loop);
                         }

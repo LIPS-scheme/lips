@@ -1,3 +1,7 @@
+## 1.0.0-beta.16.2
+### Bugfix
+* fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
+
 ## 1.0.0-beta.15
 ### Breaking
 * bootstrap URL now require full url to the file with standard library
