@@ -10274,17 +10274,18 @@ function merge_uint8_array(...args) {
 function encode_magic() {
     const VERSION = 1;
     const encoder = new TextEncoder('utf-8');
-    return encoder.encode(`CBRZ${VERSION.toString().padStart(3, ' ')}`);
+    return encoder.encode(`LIPS${VERSION.toString().padStart(3, ' ')}`);
 }
 
 // -------------------------------------------------------------------------
 const MAGIC_LENGTH = 7;
+
 // -------------------------------------------------------------------------
 function decode_magic(obj) {
     const decoder = new TextDecoder('utf-8');
     const prefix = decoder.decode(obj.slice(0, MAGIC_LENGTH));
     const name = prefix.substring(0, 4);
-    if (['CBOR', 'CBRZ'].includes(name)) {
+    if (name === 'LIPS') {
         const m = prefix.match(/^(....).*([0-9]+)$/);
         if (m) {
             return {

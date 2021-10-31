@@ -309,7 +309,7 @@ if (options.version || options.V) {
             console.log('Experimental compiler');
             console.log(`Compiling ${filename} ...`);
         }
-        const ext = options.cbor ? '.xcb' : '.xcm';
+        const ext = '.xcb';
         const compiled_name = filename.replace(/\.[^.]+$/, '') + ext;
         var code = readFile(filename);
         bootstrap(interp).then(function() {
@@ -318,7 +318,7 @@ if (options.version || options.V) {
                     console.log(`Writing ${compiled_name} ...`);
                 }
                 try {
-                    const encoded = options.cbor ? serialize_bin(code) : serialize(code);
+                    const encoded = serialize_bin(code);
                     fs.writeFile(compiled_name, encoded, function(err) {
                         if (err) {
                             console.error(err);

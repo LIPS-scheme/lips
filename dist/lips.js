@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 28 Oct 2021 10:14:28 +0000
+ * build: Sun, 31 Oct 2021 08:55:41 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -4995,7 +4995,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Thu, 28 Oct 2021 10:14:28 +0000
+   * Build time: Sun, 31 Oct 2021 08:55:41 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout"];
@@ -18426,7 +18426,7 @@
   function encode_magic() {
     var VERSION = 1;
     var encoder = new TextEncoder('utf-8');
-    return encoder.encode("CBRZ".concat(VERSION.toString().padStart(3, ' ')));
+    return encoder.encode("LIPS".concat(VERSION.toString().padStart(3, ' ')));
   } // -------------------------------------------------------------------------
 
 
@@ -18437,7 +18437,7 @@
     var prefix = decoder.decode(obj.slice(0, MAGIC_LENGTH));
     var name = prefix.substring(0, 4);
 
-    if (['CBOR', 'CBRZ'].includes(name)) {
+    if (name === 'LIPS') {
       var m = prefix.match(/^(....).*([0-9]+)$/);
 
       if (m) {
@@ -18574,10 +18574,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 28 Oct 2021 10:14:28 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sun, 31 Oct 2021 08:55:41 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 28 Oct 2021 10:14:28 +0000').valueOf();
+    var date = LString('Sun, 31 Oct 2021 08:55:41 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18623,7 +18623,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Thu, 28 Oct 2021 10:14:28 +0000',
+    date: 'Sun, 31 Oct 2021 08:55:41 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
