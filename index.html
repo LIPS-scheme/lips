@@ -87,13 +87,21 @@
     <p>Key features of the interpreter:</p>
     <ul>
       <li>Literal regular expression.</li>
-      <li>Great integration with JavaScript.</li>
-      <li>Asynchronous execution (auto resolving of promises).</li>
-      <li>Possibility to add new syntax (similar to vectors and object).</li>
-      <li>Numerical tower and Big Integer support.</li>
-      <li>Powerful introspection.</li>
+      <li>Great integration with JavaScript. You can use any JS library out of the box.</li>
+      <li>Possibility modify the parser at runtime (add new syntax, similar to vectors and object).</li>
+      <li>Possibility to set represention of new data types for write and display.
+          Witth parser extensions you can make new data types have different syntax and still be homoicoic.</li>
+      <li>Small JavaScript core with Standard Library written in basic Scheme.</li>
+      <li>Full support of Unicode and Emoji.</li>
+      <li>Support for SXML, that allow to write JSX like Preact/React apps.</li>
+      <li>I/O Ports supports in browser with <a href="https://github.com/jvilk/BrowserFS">BrowserFS</a>.</li>
+      <li>Binary Compiler that speed up the parsing of big files (e.g. standard library).</li>
+      <li>Functional helpers (inspired by <a href="https://ramdajs.com/">RamdaJS</a>)</li>
+      <li>Asynchronous execution (auto resolving of promises with optional promise quotation).</li>
+      <li>Full numerical tower and Big Integer support.</li>
+      <li>Powerful introspection (similar to the one in Python).</li>
       <li>Auto formatting lisp of code (pretty print)</li>
-      <li>Lisp and hygienic Scheme macros and macroexpand.</li>
+      <li>Lisp/hygienic macros and macroexpand.</li>
       <li>Builtin help system.</li>
     </ul>
   </section>
