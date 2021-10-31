@@ -81,6 +81,28 @@
           (t.is (to.throw (set! x.foo "hey")) true)
           (t.is (to.throw (set! x.bar "hey")) true))))
 
+(test "core: it should allow change shorthand object literals"
+      (lambda (t)
+        (let ((obj &(:x :y)))
+          (set! obj.x 10)
+          (set! obj.y 20)
+          (t.is obj &(:x 10 :y 20)))
+        (let ((obj &(:x :y &(:foo "bar"))))
+          (set! obj.x 10)
+          (t.is obj &(:x 10 :y &(:foo "bar"))))))
+
+#;(test "core: it should throw when change object literals long property after short property"
+      (lambda (t)
+        (let ((obj &(:x :y 20)))
+          (set! obj.x 10)
+          (t.is (to.throw (set! obj.y 30)) true)
+          (t.is obj &(:x 10 :y 20)))))
+
+(test "core: it should throw when change nested object in shorthand object literals"
+      (lambda (t)
+        (let ((obj &(:x :y &(:foo "bar"))))
+          (t.is (to.throw (set! obj.y.foo "baz")) true)
+          (t.is obj &(:x :y &(:foo "bar"))))))
 
 (test "core: it should throw when set vector literal"
       (lambda (t)
@@ -111,6 +133,16 @@
         (t.is '|\x3BB;| 'λ)
         (t.is '|\x9;\x9;| '|\t\t|)))
 
+(test "core: dot comma"
+      (lambda (t)
+        ;; found in https://doc.scheme.org/surveys/DotComma/
+        (t.is  (let ((b 312)) `(a .,b)) '(a . 312))))
+
+(test "core: quote as delimiter"
+      (lambda (t)
+        ;; found in https://doc.scheme.org/surveys/QuoteDelimiter/
+        (t.is (list 'a'b) '(a b))))
+
 (test "core: if"
       (lambda (t)
         (t.is (if (newline) 1 2) 1)
@@ -130,7 +162,7 @@
         (t.is (or (begin) 1) undefined)
         (t.is (or null 1) null)))
 
-(test_ "core: do macro"
+(test "core: do macro"
       (lambda (t)
         (t.is (do ((i 0) (j 10 (- j 1))) (i j)) 10)
         (t.is (do ((i 0) (j 10 (- j 1))) (null j)) 10)
@@ -310,12 +342,23 @@
 
         (t.is (try (Promise.reject 10) (catch (e) e)) 10)
 
-
         (t.is (to.throw (try (Promise.reject 10) (catch (e) (throw e)))) true)
 
         (let ((x))
           (t.is (to.throw (try (Promise.reject 10) (finally (set! x 10))))true)
           (t.is x 10))))
+
+(test.failing "core: try..catch should stop execution"
+           (lambda (t)
+             (let ((result #f))
+               (try
+                (begin
+                  (set! result 1)
+                  (throw 'ZONK)
+                  (set! result 2))
+                (catch (e)
+                       (set! result 3)))
+               (t.is result 3))))
 
 (test "core: chain of promises"
       (lambda (t)
@@ -346,6 +389,18 @@
       (lambda (t)
         (t.is (repr '|foo bar| true) "|foo bar|")
         (t.is (repr (string->symbol "foo bar") true) "|foo bar|")))
+
+(test "core: repr of prototypes"
+       (lambda (t)
+         (t.is (repr lips.LNumber.prototype)
+               "#<prototype>")
+
+         (t.is (repr Number.prototype)
+               "#<prototype>")
+
+         (let ((x (object :foo (object :bar Number.prototype))))
+           (t.is (repr x.foo.bar)
+                 "#<prototype>"))))
 
 (test "core: set-repr! on classes"
       (lambda (t)

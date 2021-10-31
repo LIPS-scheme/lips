@@ -87,7 +87,7 @@
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
-          
+
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
@@ -206,18 +206,19 @@
   "(symbol->string symbol)
 
    Function convert LIPS symbol to string."
-  (if (symbol? s)
-      (let ((name s.__name__))
-        (if (string? name)
-            name
-            (--> name (toString))))))
+  (typecheck "symbol->string" s "symbol")
+  (let ((name s.__name__))
+    (if (string? name)
+        name
+        (name.toString))))
 
 ;; -----------------------------------------------------------------------------
 (define (string->symbol string)
   "(string->symbol string)
 
    Function convert string to LIPS symbol."
-  (and (string? string) (%as.data (new (. lips "LSymbol") string))))
+  (typecheck "string->symbol" string "string")
+  (%as.data (new lips.LSymbol string)))
 
 ;; -----------------------------------------------------------------------------
 (define (alist->object alist)
@@ -264,31 +265,42 @@
 ;; -----------------------------------------------------------------------------
 (define (object-expander readonly expr . rest)
   "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
+   (object-expander reaonly '(:foo :bar))
+
 
    Recursive function helper for defining LIPS code for create objects
-   using key like syntax."
+   using key like syntax. if no values are used it will create JavaScript
+   shorthand objects where keys are used for keys and values"
   (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
-           ,@(pair-map (lambda (key value)
-                         (if (not (key? key))
-                             (let ((msg (string-append (type key)
-                                                       " "
-                                                       (repr key)
-                                                       " is not a symbol!")))
-                               (throw msg))
-                             (let ((prop (key->string key)))
-                               (if (and (pair? value) (key? (car value)))
-                                   `(set-obj! ,name
-                                              ,prop
-                                              ,(object-expander readonly value))
-                                    (if quot
-                                        `(set-obj! ,name ,prop ',value)
-                                        `(set-obj! ,name ,prop ,value))))))
-                       expr)
+           ,@(let loop ((lst expr) (result nil) (local-readonly readonly))
+               (if (null? lst)
+                   (reverse result)
+                   (let ((first (car lst))
+                         (second (if (null? (cdr lst)) nil (cadr lst))))
+                     (if (not (key? first))
+                         (let ((msg (string-append (type first)
+                                                   " "
+                                                   (repr first)
+                                                   " is not a symbol!")))
+                           (throw msg))
+                         (let ((prop (key->string first)))
+                           (if (or (key? second) (null? second))
+                               (let ((code `(set-obj! ,name ,prop undefined)))
+                                 (set! readonly false)
+                                 (loop (cdr lst) (cons code result) local-readonly))
+                               (let ((code (if (and (pair? second) (key? (car second)))
+                                               `(set-obj! ,name
+                                                          ,prop
+                                                          ,(object-expander local-readonly second))
+                                               (if quot
+                                                   `(set-obj! ,name ,prop ',second)
+                                                   `(set-obj! ,name ,prop ,second)))))
+                                 (loop (cddr lst) (cons code result) local-readonly))))))))
            ,(if readonly
-               `(Object.freeze ,name))
+                `(Object.freeze ,name))
            ,name))))
 
 ;; -----------------------------------------------------------------------------
@@ -497,22 +509,36 @@
 (define-macro (cond . list)
   "(cond (predicate? . body)
          (predicate? . body))
-   Macro for condition check. For usage instead of nested ifs."
+
+   (cond (predicate? => procedure)
+         (predicate? => procedure))
+
+   Macro for condition checks. For usage instead of nested ifs.
+   You can use predicate and any number of expressions. Or symbol =>
+   Followed by procedure that will be invoked with result
+   of the predicate."
   (if (pair? list)
       (let* ((item (car list))
+             (value (gensym))
              (first (car item))
-             (forms (cdr item))
+             (fn (and (not (null? (cdr item))) (eq? (cadr item) '=>)))
+             (expression (if fn
+                             (caddr item)
+                             (cdr item)))
              (rest (cdr list)))
-        `(if ,first
-             (begin
-               ,@forms)
-             ,(if (and (pair? rest)
-                       (or (eq? (caar rest) true)
-                           (eq? (caar rest) 'else)))
-                  `(begin
-                     ,@(cdar rest))
-                  (if (not (null? rest))
-                      `(cond ,@rest)))))
+        `(let ((,value ,first))
+           (if ,value
+               ,(if fn
+                    `(,expression ,value)
+                    `(begin
+                       ,@expression))
+               ,(if (and (pair? rest)
+                         (or (eq? (caar rest) true)
+                             (eq? (caar rest) 'else)))
+                    `(begin
+                       ,@(cdar rest))
+                    (if (not (null? rest))
+                        `(cond ,@rest))))))
       nil))
 
 ;; -----------------------------------------------------------------------------
@@ -559,11 +585,21 @@
 
 ;; -----------------------------------------------------------------------------
 (define (current-input-port)
-  "current-input-port)
+  "(current-input-port)
 
    Function return default stdin port."
   (let-env (interaction-environment)
      (--> **internal-env** (get 'stdin))))
+
+;; -----------------------------------------------------------------------------
+(define (flush-output . rest)
+  "(flush-output)
+
+   If output-port is buffered, this causes the contents of its buffer to be written to
+   the output device. Otherwise it has no effect. Returns an unspecified value."
+  (let ((port (if (null? rest) (current-output-port) (car rest))))
+    (typecheck "flush-output" port "output-port")
+    (--> port (flush))))
 
 ;; -----------------------------------------------------------------------------
 (define (regex? x)
@@ -606,9 +642,9 @@
              (concat "&("
                      (--> (Object.getOwnPropertyNames x)
                           (map (lambda (key)
-                                 (concat ":" key
-                                         " "
-                                         (repr (. x key) q))))
+                                 (let ((value (repr (. x key) q))
+                                       (key (repr (string->symbol key))))
+                                   (concat ":" key " " value))))
                           (join " "))
                      ")")))
 
@@ -1110,7 +1146,7 @@
     (filter (cond ((string? name) (regex name))
                   ((symbol? name) (regex (symbol->string name)))
                   (else name))
-            (env))))
+            (env (interaction-environment)))))
 
 ;; -----------------------------------------------------------------------------
 (define (promisify fn)
@@ -1402,4 +1438,5 @@
         (iter (fn (cdr pair)) (cons (car pair) result)))))
 
 ;; -----------------------------------------------------------------------------
-
+(define string-join join)
+(define string-split split)

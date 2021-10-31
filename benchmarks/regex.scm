@@ -1,36 +1,19 @@
-#!/usr/bin/env -S lips --debug
+#!/usr/bin/env -S lips --debug -t
 
-(define Benchmark (require "benchmark"))
+(load "./helpers.scm")
 
+(suite (add "Regex: variable" (lambda ()
+                                (let ((str "foo")
+                                      (re #/foo/))
+                                  (--> (new Array 1000)
+                                       (fill 0)
+                                       (map (lambda ()
+                                              (str.match re)))))))
 
-(define suite (new Benchmark.Suite))
+       (add "Regex: literal" (lambda ()
+                               (let ((str "foo"))
+                                 (--> (new Array 1000)
+                                      (fill 0)
+                                      (map (lambda ()
+                                             (str.match #/foo/))))))))
 
-
-(--> suite (add "Regex: variable" (lambda ()
-                                    (let ((str "foo")
-                                          (re #/foo/))
-                                      (--> (new Array 1000)
-                                           (fill 0)
-                                           (map (lambda ()
-                                                  (str.match re)))))))
-
-           (add "Regex: literal" (lambda ()
-                                   (let ((str "foo"))
-                                     (--> (new Array 1000)
-                                          (fill 0)
-                                          (map (lambda ()
-                                                 (str.match #/foo/)))))))
-
-           (on "cycle" (lambda (e)
-                           (print (string-append ">>> " (String e.target)))))
-
-           (on "complete" (lambda (e)
-                            (try
-                              (print (string-append "Fastest is "
-                                                    (repr (--> (this.filter "fastest")
-                                                               (map "name")
-                                                               0))))
-                            (catch (e)
-                              (print e)))))
-
-           (run &(:async true)))

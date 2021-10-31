@@ -3,11 +3,12 @@
   "version": "1.0.0-beta.14",
   "description": "Simple Scheme Like Lisp in JavaScript",
   "main": "src/lips.js",
+  "type": "module",
   "unpkg": "dist/lips.min.js",
   "scripts": {
-    "test": "nyc ava --timeout 10m --verbose tests/test.js",
-    "test-update": "nyc ava --update-snapshots --timeout 10m --verbose tests/test.js",
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "test": "c8 ava --timeout 10m --verbose tests/test.js",
+    "test-update": "c8 ava --update-snapshots --timeout 10m --verbose tests/test.js",
+    "coverage": "c8 report --reporter=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",
@@ -234,15 +235,22 @@
     "preact": "^10.5.15",
     "preact-render-to-string": "^5.1.19",
     "rollup": "^2.58.0",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-commonjs": "^10.0.0",
-    "rollup-plugin-node-resolve": "^5.0.0",
-    "uglify-js": "^3.14.2"
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "uglify-js": "^3.14.2",
+    "c8": "^7.10.0"
+  },
+  "peerDepencies": {
+    "cbor-extract": "^0.3.1",
+    "bn.js": "^5.2.0"
   },
   "dependencies": {
     "@jcubic/lily": "^0.3.0",
     "bn.js": "^5.2.0",
+    "cbor-x": "^0.8.3",
+    "lzjb-pack": "^0.2.0",
     "prism-cli": "^0.5.3",
-    "prismjs": "^1.25.0"
+    "prismjs": "^1.25.0",
+    "unfetch": "^4.2.0"
   }
 }

@@ -87,7 +87,7 @@
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
-          
+
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
@@ -206,18 +206,19 @@
   "(symbol->string symbol)
 
    Function convert LIPS symbol to string."
-  (if (symbol? s)
-      (let ((name s.__name__))
-        (if (string? name)
-            name
-            (--> name (toString))))))
+  (typecheck "symbol->string" s "symbol")
+  (let ((name s.__name__))
+    (if (string? name)
+        name
+        (name.toString))))
 
 ;; -----------------------------------------------------------------------------
 (define (string->symbol string)
   "(string->symbol string)
 
    Function convert string to LIPS symbol."
-  (and (string? string) (%as.data (new (. lips "LSymbol") string))))
+  (typecheck "string->symbol" string "string")
+  (%as.data (new lips.LSymbol string)))
 
 ;; -----------------------------------------------------------------------------
 (define (alist->object alist)
@@ -264,31 +265,42 @@
 ;; -----------------------------------------------------------------------------
 (define (object-expander readonly expr . rest)
   "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
+   (object-expander reaonly '(:foo :bar))
+
 
    Recursive function helper for defining LIPS code for create objects
-   using key like syntax."
+   using key like syntax. if no values are used it will create JavaScript
+   shorthand objects where keys are used for keys and values"
   (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
-           ,@(pair-map (lambda (key value)
-                         (if (not (key? key))
-                             (let ((msg (string-append (type key)
-                                                       " "
-                                                       (repr key)
-                                                       " is not a symbol!")))
-                               (throw msg))
-                             (let ((prop (key->string key)))
-                               (if (and (pair? value) (key? (car value)))
-                                   `(set-obj! ,name
-                                              ,prop
-                                              ,(object-expander readonly value))
-                                    (if quot
-                                        `(set-obj! ,name ,prop ',value)
-                                        `(set-obj! ,name ,prop ,value))))))
-                       expr)
+           ,@(let loop ((lst expr) (result nil) (local-readonly readonly))
+               (if (null? lst)
+                   (reverse result)
+                   (let ((first (car lst))
+                         (second (if (null? (cdr lst)) nil (cadr lst))))
+                     (if (not (key? first))
+                         (let ((msg (string-append (type first)
+                                                   " "
+                                                   (repr first)
+                                                   " is not a symbol!")))
+                           (throw msg))
+                         (let ((prop (key->string first)))
+                           (if (or (key? second) (null? second))
+                               (let ((code `(set-obj! ,name ,prop undefined)))
+                                 (set! readonly false)
+                                 (loop (cdr lst) (cons code result) local-readonly))
+                               (let ((code (if (and (pair? second) (key? (car second)))
+                                               `(set-obj! ,name
+                                                          ,prop
+                                                          ,(object-expander local-readonly second))
+                                               (if quot
+                                                   `(set-obj! ,name ,prop ',second)
+                                                   `(set-obj! ,name ,prop ,second)))))
+                                 (loop (cddr lst) (cons code result) local-readonly))))))))
            ,(if readonly
-               `(Object.freeze ,name))
+                `(Object.freeze ,name))
            ,name))))
 
 ;; -----------------------------------------------------------------------------
@@ -497,22 +509,36 @@
 (define-macro (cond . list)
   "(cond (predicate? . body)
          (predicate? . body))
-   Macro for condition check. For usage instead of nested ifs."
+
+   (cond (predicate? => procedure)
+         (predicate? => procedure))
+
+   Macro for condition checks. For usage instead of nested ifs.
+   You can use predicate and any number of expressions. Or symbol =>
+   Followed by procedure that will be invoked with result
+   of the predicate."
   (if (pair? list)
       (let* ((item (car list))
+             (value (gensym))
              (first (car item))
-             (forms (cdr item))
+             (fn (and (not (null? (cdr item))) (eq? (cadr item) '=>)))
+             (expression (if fn
+                             (caddr item)
+                             (cdr item)))
              (rest (cdr list)))
-        `(if ,first
-             (begin
-               ,@forms)
-             ,(if (and (pair? rest)
-                       (or (eq? (caar rest) true)
-                           (eq? (caar rest) 'else)))
-                  `(begin
-                     ,@(cdar rest))
-                  (if (not (null? rest))
-                      `(cond ,@rest)))))
+        `(let ((,value ,first))
+           (if ,value
+               ,(if fn
+                    `(,expression ,value)
+                    `(begin
+                       ,@expression))
+               ,(if (and (pair? rest)
+                         (or (eq? (caar rest) true)
+                             (eq? (caar rest) 'else)))
+                    `(begin
+                       ,@(cdar rest))
+                    (if (not (null? rest))
+                        `(cond ,@rest))))))
       nil))
 
 ;; -----------------------------------------------------------------------------
@@ -559,11 +585,21 @@
 
 ;; -----------------------------------------------------------------------------
 (define (current-input-port)
-  "current-input-port)
+  "(current-input-port)
 
    Function return default stdin port."
   (let-env (interaction-environment)
      (--> **internal-env** (get 'stdin))))
+
+;; -----------------------------------------------------------------------------
+(define (flush-output . rest)
+  "(flush-output)
+
+   If output-port is buffered, this causes the contents of its buffer to be written to
+   the output device. Otherwise it has no effect. Returns an unspecified value."
+  (let ((port (if (null? rest) (current-output-port) (car rest))))
+    (typecheck "flush-output" port "output-port")
+    (--> port (flush))))
 
 ;; -----------------------------------------------------------------------------
 (define (regex? x)
@@ -606,9 +642,9 @@
              (concat "&("
                      (--> (Object.getOwnPropertyNames x)
                           (map (lambda (key)
-                                 (concat ":" key
-                                         " "
-                                         (repr (. x key) q))))
+                                 (let ((value (repr (. x key) q))
+                                       (key (repr (string->symbol key))))
+                                   (concat ":" key " " value))))
                           (join " "))
                      ")")))
 
@@ -1110,7 +1146,7 @@
     (filter (cond ((string? name) (regex name))
                   ((symbol? name) (regex (symbol->string name)))
                   (else name))
-            (env))))
+            (env (interaction-environment)))))
 
 ;; -----------------------------------------------------------------------------
 (define (promisify fn)
@@ -1402,7 +1438,8 @@
         (iter (fn (cdr pair)) (cons (car pair) result)))))
 
 ;; -----------------------------------------------------------------------------
-
+(define string-join join)
+(define string-split split)
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
@@ -1435,6 +1472,7 @@
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
+(define call-with-current-continuation call/cc)
 ;; -----------------------------------------------------------------------------
 (define-macro (define-symbol-macro type spec . rest)
   "(define-symbol-macro type (name . args) . body)
@@ -1523,7 +1561,7 @@
                                     (and (--> im.a (isNaN))
                                          (--> im.b (isNaN)))))))
                             (else (= a b))))))
-            ((pair? a) (and (null? a) (null? b)))
+            ((and (pair? a) (null? a)) (null? b))
             (else (eq? a b)))
       false))
 
@@ -1778,7 +1816,7 @@
 
    Return maximum of it's arguments."
   (numbers? "max" args)
-  (apply (.. Math.max) args))
+  (apply Math.max args))
 
 ;; -----------------------------------------------------------------------------
 (define (min . args)
@@ -1786,7 +1824,7 @@
 
    Return minimum of it's arguments."
   (numbers? "min" args)
-  (apply (.. Math.min) args))
+  (apply Math.min args))
 
 ;; -----------------------------------------------------------------------------
 (define (make-rectangular re im)
@@ -1837,8 +1875,29 @@
       n))
 
 ;; -----------------------------------------------------------------------------
+(define (log z)
+  "(log z)
+
+   Funcntion calculates natural logarithm of z. Where argument can be
+   any number (including complex negative and rational).
+   If the value is 0 it return NaN."
+  (cond ((real? z)
+         (cond ((zero? z) NaN)
+               ((> z 0) (Math.log z))
+               (else
+                (+ (Math.log (abs z))
+                   (* Math.PI +i)))))
+        ((complex? z)
+         (let ((arg (Math.atan2 (imag-part z)
+                                (real-part z))))
+           (+ (Math.log (z.modulus))
+              (* +i arg))))
+        ((rational? z)
+         (log (exact->inexact z)))))
+
+;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
-(define _maths (list "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+(define _maths (list "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
 
 ;; -----------------------------------------------------------------------------
 (define _this_env (current-environment))
@@ -1847,13 +1906,12 @@
 (let iter ((fns _maths))
   (if (not (null? fns))
       (let* ((name (car fns))
-             (LNumber (.. lips.LNumber))
              (op (. Math name))
-             (fn (lambda (n) (LNumber (op n)))))
+             (fn (lambda (n) (lips.LNumber (op n)))))
         (--> _this_env (set name fn))
         (set-obj! fn '__doc__ (concat "(" name " n)\n\nFunction calculate " name
-                                  " math operation (it call JavaScript Math)." name
-                                  " function."))
+                                  " math operation (it call JavaScript Math." name
+                                  " function)"))
         (iter (cdr fns)))))
 
 ;; -----------------------------------------------------------------------------
@@ -2830,12 +2888,13 @@
       (else (throw (new Error (string-append "scheme-report-environment: version "
                                              (number->string version)
                                              " not supported"))))))
-
-;; -----------------------------------------------------------------------------
-;; Implementation of byte vector functions - SRFI-4
+;; Implementation of byte vector functions - SRFI-4 and SRFI-160
 ;;
 ;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
-;; it use JavaScript typed arrays
+;; latest verion is defined in
+;; https://srfi.schemers.org/srfi-160/srfi-160.html
+;;
+;; it uses JavaScript typed arrays
 ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
@@ -3026,7 +3085,7 @@
     ((_ (((x ...) values) ...) body ...)
      (apply (lambda (x ... ...)
               body ...)
-            (vector->list (apply vector-append (map (lambda (x) ((. x "valueOf")))
+            (vector->list (apply vector-append (map (lambda (arg) ((. arg "valueOf")))
                                                      (list values ...)))))))
   "(let-values binding body ...)
 
@@ -4145,14 +4204,31 @@
         (namespace-var (gensym))
         (name (car spec))
         (namespace (cadr spec)))
-    `(let ((,module-var (new-library ,(symbol->string name)
-                                     ,(symbol->string namespace)))
+    `(let ((,module-var (new-library ,(repr name)
+                                     ,(repr namespace)))
            (,namespace-var ',namespace))
        (define-macro (export . body)
          (%export ,module-var ,namespace-var body))
        ,@body
        (--> ,parent (set ',name ,module-var)))))
 
+;; -----------------------------------------------------------------------------
+(define-syntax define-library/export
+  (syntax-rules (rename :c)
+    ((_ :c (rename to from))
+     (print (string-append "export "
+                           (symbol->string 'from)
+                           " ==> "
+                           (symbol->string 'to))))
+    ((_ :c name)
+     (print (string-append "export " (symbol->string 'name))))
+    ((_ x ...)
+     (begin
+       (define-library/export :c x)
+       ...))))
+
+;; -----------------------------------------------------------------------------
+;; TODO: use browserFS or LightningFS
 ;; -----------------------------------------------------------------------------
 (define-values (current-directory set-current-directory!)
   (if (eq? self window)
@@ -4215,69 +4291,6 @@
    Returns a list of the irritants encapsulated by error-object."
   (if (error-object? obj)
       obj.args))
-
-;; -----------------------------------------------------------------------------
-;; -----------------------------------------------------------------------------
-;; SRFI-2 https://srfi.schemers.org/srfi-2/srfi-2.html
-;; -----------------------------------------------------------------------------
-(define-syntax and-let*
-  (syntax-rules ()
-    ((_ ()) #t)
-    ((_ () body ...)
-     (let () body ...))
-    ((_ ((expression))) ;; last/single expression
-     expression)
-    ((_ ((symbol expression)) body ...) ;; last/single pair
-     (let ((symbol expression))
-       (if symbol (begin body ...))))
-    ((_ ((symbol expression) expr ...) body ...) ;; lead pair
-     (let ((symbol expression))
-       (and symbol (and-let* (expr ...) body ...))))
-    ((_ ((expression) expr ...) body ...) ;; lead expression
-     (and expression (and-let* (expr ...) body ...))))
-  "(and-let* ((name expression) expression ...) body)
-
-   Macro that combine let and and. First expression need to be in form of let.
-   Symbol expression the rest can be boolean expression or name expreession.
-   This is implementation of SRFI-2.")
-
-;; -----------------------------------------------------------------------------
-;; SRFI-10 https://srfi.schemers.org/srfi-10/srfi-10.html
-;; -----------------------------------------------------------------------------
-(set-special! "#," 'sharp-comma)
-
-(define **reader-ctor-list** '())
-
-;; -----------------------------------------------------------------------------
-(define (define-reader-ctor symbol fn)
-  "(define-reader-ctor symbol fn)
-
-   Define the value for #, syntax. SRFI-10
-   Example:
-
-   (define-reader-ctor '+ +)
-   (print #,(+ 1 2))"
-  (let ((node (assoc symbol **reader-ctor-list**)))
-    (if (pair? node)
-        (set-cdr! node fn)
-        (set! **reader-ctor-list** (cons (cons symbol fn)
-                                         **reader-ctor-list**)))))
-
-;; -----------------------------------------------------------------------------
-(define-syntax sharp-comma
-  (syntax-rules ()
-    ((_ (fn arg ...))
-     (let ((node (assoc 'fn **reader-ctor-list**)))
-       (if (pair? node)
-           ((cdr node) 'arg ...)
-           (syntax-error (string-append "Invalid symbol " (symbol->string 'fn)
-                                        " in expression " (repr '(fn arg ...))))))))
-  "(sharp-comma expr)
-   #,(ctor ...)
-
-   This is syntax extension for SRFI-10. To define the function to be used with
-   This syntax you need to call `define-reader-ctor` function and define
-   symbol function mapping.")
 ;; -----------------------------------------------------------------------------
 ;; init internal fs for LIPS Scheme Input/Output functions
 ;; -----------------------------------------------------------------------------

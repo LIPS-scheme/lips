@@ -31,11 +31,10 @@ UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 LIPS=./bin/lips.js
 
-ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.min.scm
+ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.min.scm dist/std.xcb
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
-	$(SED) -i '/^\s*\/\*\*/,/^\s*\*\//d' dist/lips.js
 	$(CAT) src/banner.js dist/lips.js > dist/tmp.js
 	$(CP) dist/tmp.js dist/lips.js
 	$(RM) dist/tmp.js
@@ -46,17 +45,20 @@ dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
 
-dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/srfi.scm lib/init.scm
-	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/srfi.scm lib/init.scm > dist/std.scm
+dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm
+	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm > dist/std.scm
+
+dist/std.xcb: dist/std.scm
+	$(LIPS) --bootstrap dist/std.scm -c -q dist/std.scm
 
 dist/std.min.scm: dist/std.scm
-	$(LIPS) ./scripts/minify.scm dist/std.scm > dist/std.min.scm
+	$(LIPS) --bootstrap dist/std.scm ./scripts/minify.scm ./dist/std.scm > dist/std.min.scm
 
 Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/g" templates/Makefile > Makefile
 
-package.json: templates/package.json .$(VERSION)
-	$(SED) -e "s/{{VER}}/"$(VERSION)"/g" templates/package.json > package.json || true
+package.json: .$(VERSION)
+	$(SED) -i 's/"version": "[^"]\+"/"version": "$(VERSION)"/' package.json
 
 assets/classDiagram.svg: assets/classDiagram
 	$(MERMAID) -i assets/classDiagram -o assets/classDiagram.svg

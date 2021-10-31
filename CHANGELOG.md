@@ -1,3 +1,40 @@
+## 1.0.0-beta.15
+### Breaking
+* bootstrap URL now require full url to the file with standard library
+### Features
+* improve performance of `**` operator when JS support exponential operator
+* add alias for `string-join` and `string-split`
+* lists are now iterators
+* add optional `=>` syntax to `cond` macro (as per R7RS)
+* make `undefined` parser constant
+* compile into binary CBOR format with LZJB compression
+* add support for `log` of complex, rational, and negative numbers
+* allow to define shorthand object literals [#185](https://github.com/jcubic/lips/issues/185)
+* add Buffered Output Port and `flush-output` function
+### Bugfix
+* fix scoping issue in nested `syntax-rules`
+* fix `repr` of object that have space in key
+* property throw error when name is used without ellipsis
+* fix using dot notation inside syntax-rules macros
+* typecheck `string->symbol` and `symbol->string`
+* fix `parent.frame` inside `Intepreter`
+* fix `eval` without env
+* fix quote as delimiter
+* fix comma dot as two tokens
+* fix printing symbols that have brackets or quotes
+* fix resolving dot notation (e.g. `lips.LComplex.prototype.modulus`)
+* fix `repr` of native type prototypes (e.g. `LComplex`)
+* fix using prototypes inside objects (e.g. `(object :foo Number.prototype)`)
+* fix `sqrt` of rational where numerator or denominator is float
+* fix `sqrt` of negative real that are like integers [#175](https://github.com/jcubic/lips/issues/175)
+* fix boxing NaN value
+* fix `length` of nil
+* fix trimming spaces in `Env::set`
+* fix `repr` of symbols with impossible characters created with `string->symbol`
+* fix `eqv?` on same pairs
+* fix `abs` on inexact numbers that can be represented as integers [#181](https://github.com/jcubic/lips/issues/181)
+* fix extra newline when calling print in browser [#186](https://github.com/jcubic/lips/issues/186)
+
 ## 1.0.0-beta.14
 ### Breaking
 * remove `zip` function that just `(map list l1 l2 ...)`

@@ -4,7 +4,7 @@
 ;; http://people.cs.aau.dk/~normark/prog3-03/html/notes/eval-order_themes-delay-stream-section.html
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyriht (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyriht (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 
@@ -30,35 +30,35 @@
 (define the-empty-stream '())
 
 ;; -----------------------------------------------------------------------------
-(define (take n stream)
+(define (stream-take n stream)
   (if (<= n 0)
-    '()
-     (cons (head stream) (take (- n 1) (tail stream)))))
+      '()
+      (cons (head stream) (take (- n 1) (tail stream)))))
 
 ;; -----------------------------------------------------------------------------
 (define (stream-section n stream)
   (cond ((= n 0) '())
         (else
-          (cons
-            (head stream)
-            (stream-section
-             (- n 1)
-             (tail stream))))))
+         (cons
+          (head stream)
+          (stream-section
+           (- n 1)
+           (tail stream))))))
 
 ;; --------------------------------------------------------------------------
 (define (stream-inject init fn stream)
-   (let iter ((result init)
-	     (stream stream))
+  (let iter ((result init)
+             (stream stream))
     (if (empty-stream? (stream-cdr stream))
-	result
-	(iter (fn result (stream-car stream))
-	      (stream-cdr stream)))))
+        result
+        (iter (fn result (stream-car stream))
+              (stream-cdr stream)))))
 
 ;; -----------------------------------------------------------------------------
 (define (add-streams s1 s2)
- (let ((h1 (head s1))
-       (h2 (head s2)))
-   (cons-stream
+  (let ((h1 (head s1))
+        (h2 (head s2)))
+    (cons-stream
      (+ h1 h2)
      (add-streams (tail s1) (tail s2)))))
 
@@ -66,72 +66,72 @@
 (define (stream-range n)
   (let loop ((i 0))
     (if (= i n)
-	the-empty-stream
-	(cons-stream i (loop (+ i 1))))))
+        the-empty-stream
+        (cons-stream i (loop (+ i 1))))))
 ;; --------------------------------------------------------------------------
 (define (stream-reduce fun stream)
   (let iter ((result (stream-car stream))
-	     (stream stream))
+             (stream stream))
     (if (empty-stream? (stream-cdr stream))
-	result
-	(iter (fun result (stream-car stream))
-	      (stream-cdr stream)))))
+        result
+        (iter (fun result (stream-car stream))
+              (stream-cdr stream)))))
 
 ;; -----------------------------------------------------------------------------
 (define (zip-streams . streams)
   (if (empty-stream? streams)
       the-empty-stream
       (cons-stream (apply list (map stream-car streams))
-		   (apply zip-streams (map stream-cdr streams)))))
+                   (apply zip-streams (map stream-cdr streams)))))
 
 ;; --------------------------------------------------------------------------
 (define (stream-map proc . streams)
   (define (single-map proc stream)
-	   (if (empty-stream? stream)
-	       the-empty-stream
-	       (cons-stream (apply proc (stream-car stream))
-			    (single-map proc (stream-cdr stream)))))
+    (if (empty-stream? stream)
+        the-empty-stream
+        (cons-stream (apply proc (stream-car stream))
+                     (single-map proc (stream-cdr stream)))))
   (single-map proc (apply zip-streams streams)))
 
 ;; --------------------------------------------------------------------------
 (define (stream-for-each proc stream)
   (unless (empty-stream? stream)
-	  (proc (stream-car stream))
-	  (stream-for-each proc (stream-cdr stream))))
+    (proc (stream-car stream))
+    (stream-for-each proc (stream-cdr stream))))
 
 ;; --------------------------------------------------------------------------
-(define (limit n stream)
+(define (stream-limit n stream)
   "return stream of n element of stream <stream> ( -> stream = {0 .. n})"
   (let iter ((n n) (stream stream))
     (if (or (empty-stream? stream) (eq? n 0))
-	the-empty-stream
-	(cons-stream (stream-car stream)
-		     (iter (- n 1)
-			   (stream-cdr stream))))))
+        the-empty-stream
+        (cons-stream (stream-car stream)
+                     (iter (- n 1)
+                           (stream-cdr stream))))))
 
 ;; -----------------------------------------------------------------------------
 (define (slice-stream a b stream)
   (let loop ((n (- b a)) (stream (skip-stream a stream)))
     (if (eq? n 0)
-	the-empty-stream
-	(cons-stream (stream-car stream)
-		     (loop (- n 1) (stream-cdr stream))))))
+        the-empty-stream
+        (cons-stream (stream-car stream)
+                     (loop (- n 1) (stream-cdr stream))))))
 
 ;; -----------------------------------------------------------------------------
 (define (force-stream stream)
   (let iter ((stream stream))
     (if (empty-stream? stream)
-       '()
-	(cons (stream-car stream)
-	      (iter (stream-cdr stream))))))
+        '()
+        (cons (stream-car stream)
+              (iter (stream-cdr stream))))))
 
 ;; -----------------------------------------------------------------------------
 ;; example streams
 ;; -----------------------------------------------------------------------------
 (define fibs
   (cons-stream 0
-    (cons-stream 1
-      (add-streams (tail fibs) fibs))))
+               (cons-stream 1
+                            (add-streams (tail fibs) fibs))))
 
 ;; -----------------------------------------------------------------------------
 (define (integers-from n)
@@ -148,8 +148,8 @@
   (stream-reduce * (limit n integers)))
 
 ;; -----------------------------------------------------------------------------
-;;(;;define factorials
-;;  (stream-map ! integers))
+(define factorials
+  (stream-map ! integers))
 
 ;; -----------------------------------------------------------------------------
 (define (divisible? x y)

@@ -1,4 +1,4 @@
-(test "syntax-rules: hygiene"
+(test "syntax: hygiene"
       (lambda (t)
         (define result (let ((f (lambda (x) (+ x 1))))
                           (let-syntax ((f (syntax-rules ()
@@ -8,7 +8,7 @@
                             (list (f 1) (g 1)))))
          (t.is result '(1 2))))
 
-(test "syntax-rules: lambda"
+(test "syntax: lambda"
       (lambda (t)
         (let ()
           (define-syntax foo
@@ -27,7 +27,7 @@
                     ((test z) 10)))
                 '(6 20)))))
 
-(test "syntax-rules: complex hygiene"
+(test "syntax: complex hygiene"
       (lambda (t)
         (let ((result (let-syntax
                         ((or (syntax-rules ()
@@ -49,7 +49,7 @@
                               y)))))
         (t.is result 7))))
 
-(test "syntax-rules: let + return symbol"
+(test "syntax: let + return symbol"
       (lambda (t)
         (define result (let ((x 'outer))
                          (let-syntax ((m (syntax-rules () ((m) x))))
@@ -58,7 +58,7 @@
         (t.is result 'outer)))
 
 
-(test "syntax-rules: quote expression"
+(test "syntax: quote expression"
       (lambda (t)
           (define-syntax stest
             (syntax-rules ()
@@ -75,7 +75,7 @@
                                    ((_) '()))))
             (t.is (stest 5 4 3 2 1 0) '(5 4 3 2 1 0)))))
 
-(test "syntax-rules: recursive or"
+(test "syntax: recursive or"
       (lambda (t)
          (define or_ (syntax-rules ()
                 ((or) #f)
@@ -91,7 +91,7 @@
          (t.is (or_ 10) 10)
          (t.is (or_) #f)))
 
-(test "syntax-rules: rest (dot)"
+(test "syntax: rest (dot)"
       (lambda (t)
         (define result (let-syntax ((when (syntax-rules ()
                                             ((when test stmt1 . stmt2)
@@ -102,7 +102,7 @@
                          (when if (set! if 'now) if)))
         (t.is result 'now)))
 
-(test "syntax-rules: double splice"
+(test "syntax: double splice"
       (lambda (t)
 
         (define-syntax foo
@@ -114,7 +114,7 @@
               '(a b c d 1 2 3 4 moe larry curly))))
 
 
-(test "syntax-rules: when syntax hygiene"
+(test "syntax: when syntax hygiene"
       (lambda (t)
         (define result (let-syntax ((when (syntax-rules ()
                                             ((when test stmt1 stmt2 ...)
@@ -126,7 +126,7 @@
                            if)))
         (t.is result 'now)))
 
-(test "syntax-rules: function and macro"
+(test "syntax: function and macro"
       (lambda (t)
 
         (define even?
@@ -140,7 +140,7 @@
         (t.is (even? 10) #t)
         (t.is (even? 13) #f)))
 
-(test "syntax-rules: scope"
+(test "syntax: scope"
       (lambda (t)
         (let ()
           (define-syntax nil!
@@ -153,13 +153,13 @@
             (nil! x)
             (t.is x nil)))))
 
-(test "syntax-rules: skip second item in list"
+(test "syntax: skip second item in list"
    (lambda (t)
      (define-syntax foo
        (syntax-rules () ((_ (a . (b . (c ...))) ...) '(foo (a c ... ) ...))))
      (t.is (foo (1 2 3 4 5) (6 7 8 9 10)) '(foo (1 3 4 5) (6 8 9 10)))))
 
-(test "syntax-rules: only cddr (list)"
+(test "syntax: only cddr (list)"
    (lambda (t)
 
      (define-syntax foo
@@ -171,7 +171,7 @@
      (t.is (foo (1 2)) '(foo ()))
      (t.is (foo (1 2 3 4 5) (6 7 8 9 10)) '(foo (3 4 5) (8 9 10)))))
 
-(test "syntax-rules: only cddr (cons literals)"
+(test "syntax: only cddr (cons literals)"
    (lambda (t)
 
      (define-syntax foo
@@ -183,7 +183,7 @@
      (t.is (foo (1 2)) '(foo ()))
      (t.is (foo (1 2 3 4 5) (6 7 8 9 10)) '(foo (3 4 5) (8 9 10)))))
 
-(test "syntax-rules: map on cddr"
+(test "syntax: map on cddr"
    (lambda (t)
 
       (define-syntax foo
@@ -191,7 +191,7 @@
 
       (t.is (foo (1 2 3 4 5) (6 7 8 9 10)) '(foo (3 4 5) (8 9 10)))))
 
-(test "syntax-rules: extract 1st and 2nd items from list"
+(test "syntax: extract 1st and 2nd items from list"
    (lambda (t)
 
       (define-syntax foo
@@ -201,7 +201,7 @@
       (t.is (foo (1 2 3)) '(foo (1 . 3)))
       (t.is (foo (1 2 3) (4 5 6)) '(foo (1 . 3) (4 . 6)))))
 
-(test "syntax-rules: extract 2nd elements from lists"
+(test "syntax: extract 2nd elements from lists"
    (lambda (t)
 
       (define-syntax foo
@@ -215,7 +215,7 @@
       (t.is (foo (1 2 3) (4 5 6)) '(foo 2 5))
       (t.is (foo (1 2 3) (4 5 6) (7 8 9)) '(foo 2 5 8))))
 
-(test "syntax-rules: should spread elements"
+(test "syntax: should spread elements"
    (lambda (t)
 
       (define-syntax foo
@@ -231,7 +231,7 @@
       (t.is (foo (1 2 3)) '(foo 1 2 3))
       (t.is (foo (1 2 3) (4 5 6)) '(foo 1 4 2 5 3 6))))
 
-(test "syntax-rules: list quine"
+(test "syntax: list quine"
   (lambda (t)
     (define-syntax foo
       (syntax-rules ()
@@ -245,7 +245,7 @@
     (t.is (foo (x y)) '(foo (x y)))
     (t.is (foo (a b) (c d)) '(foo (a b) (c d)))))
 
-(test "syntax-rules: cons 1st and 2nd in lists"
+(test "syntax: cons 1st and 2nd in lists"
   (lambda (t)
 
     (define-syntax foo
@@ -260,7 +260,7 @@
     (t.is (foo (1 2) (3 4)) '((1 . 2) (3 . 4)))
     (t.is (foo (1 2) (3 4) (5 6)) '((1 . 2) (3 . 4) (5 . 6)))))
 
-(test "syntax-rules: zip trasformation"
+(test "syntax: zip trasformation"
   (lambda (t)
 
     (define-syntax foo
@@ -275,7 +275,7 @@
     (t.is (foo (1 2) (3 4)) '((1 . 3) (2 . 4)))
     (t.is (foo (1 2 3) (4 5 6)) '((1 . 4) (2 . 5) (3 . 6)))))
 
-(test "syntax-rules: merge lists"
+(test "syntax: merge lists"
       (lambda (t)
         (define-syntax merge
           (syntax-rules ()
@@ -290,7 +290,7 @@
         (t.is (merge (1 2 3) (4 5 6)) '(1 2 3 4 5 6))
         (t.is (merge (1 2 3) (4 5 6) (7 8 9)) '(1 2 3 4 5 6 7 8 9))))
 
-(test "syntax-rules: identifiers"
+(test "syntax: identifiers"
       (lambda (t)
         (define-syntax let+
           (syntax-rules (==>)
@@ -302,7 +302,7 @@
                     (+ a b))
               3)))
 
-(test "syntax-rules: basic ellipsis (srfi-46)"
+(test "syntax: basic ellipsis (srfi-46)"
       (lambda (t)
 
         (define-syntax funcall
@@ -311,7 +311,7 @@
 
         (t.is (funcall list 1 2 3) '(1 2 3))))
 
-(test "syntax-rules: macro define function"
+(test "syntax: macro define function"
       (lambda (t)
 
         (define-syntax def
@@ -322,7 +322,7 @@
         (def square ==> (x) (* x x))
         (t.is (square 10) 100)))
 
-(test "syntax-rules: macro define list of functions"
+(test "syntax: macro define list of functions"
       (lambda (t)
 
         (define-syntax defn
@@ -338,7 +338,7 @@
         (t.is (square (add 6 4)) 100)
         (t.is (sum 1 2 3) 6)))
 
-(test "syntax-rules: nested syntax-rules (srfi-46)"
+(test "syntax: nested syntax-rules (srfi-46)"
       (lambda (t)
 
         (define-syntax list+
@@ -357,7 +357,7 @@
         (t.is (list+ 1 2 3) '(1 2 3))
         (t.is (list- 4 5 6) '(4 5 6))))
 
-(test "syntax-rules: nested syntax-rules gensyms (srfi-46)"
+(test "syntax: nested syntax-rules gensyms (srfi-46)"
       (lambda (t)
 
         (define result (let-syntax
@@ -372,7 +372,7 @@
 
         (t.is result '((1) 2 (3) (4)))))
 
-(test "syntax-rules: tail of ellipsis (srfi-46)"
+(test "syntax: tail of ellipsis (srfi-46)"
       (lambda (t)
 
         (define result (let-syntax
@@ -391,7 +391,7 @@
 
         (t.is result '(1 (2 3) 4 5))))
 
-(test "syntax-rules: rec macro (srfi-31)"
+(test "syntax: rec macro (srfi-31)"
       (lambda (t)
 
         (define-syntax rec
@@ -409,7 +409,7 @@
 
         (t.is (F 10) 3628800)))
 
-(test "syntax-rules: join macros"
+(test "syntax: join macros"
       (lambda (t)
 
         (define-syntax join_1
@@ -428,7 +428,7 @@
         (t.is (join_2 (1 2 3) 4) '(1 2 3 4))
         (t.is (to.throw (join_2 (1 2 3) 4 5)) #t)))
 
-(test "syntax-rules: double ellipsis"
+(test "syntax: double ellipsis"
       (lambda (t)
 
         (define result (let-syntax
@@ -439,7 +439,7 @@
 
         (t.is result '(1 2 3 4 5 6))))
 
-(test_ "syntax-rules: lifted ellipsis"
+(test.failing "syntax: lifted ellipsis"
       (lambda (t)
         (define result
           (let-syntax
@@ -450,7 +450,7 @@
         (t.is result '(((bar 1) (bar 2)) ((baz 3) (baz 4))))))
 
 
-(test "syntax-rules: R6RS do macro"
+(test "syntax: R6RS do macro"
        (lambda (t)
          (define-syntax do
            (syntax-rules ()
@@ -488,7 +488,7 @@
                25)))
 
 ;; foo foo ... should match single element foo ... should match nil
-(test "syntax-rules: R6RS unless & when macros"
+(test "syntax: R6RS unless & when macros"
        (lambda (t)
 
          (define-syntax when
@@ -512,7 +512,7 @@
          (t.is (unless (< 3 2) 'foo) 'foo)))
 
 ;; guile example
-(test "syntax-rules: literal atoms"
+(test "syntax: literal atoms"
        (lambda (t)
           (define-syntax define-matcher-macro
             (syntax-rules ()
@@ -529,7 +529,7 @@
              (let ((foo "foo"))
                 (t.is (is-literal-foo? foo) #f))))
 
-(test "syntax-rules: my-or hygiene"
+(test "syntax: my-or hygiene"
       (lambda (t)
 
         (define-syntax my-or
@@ -546,7 +546,7 @@
          (t.is (let ((t #t)) (my-or #f t)) #t)))
 
 
-(test "syntax-rules: recursive do"
+(test "syntax: recursive do"
        (lambda (t)
          (define-syntax do
             (syntax-rules ()
@@ -573,7 +573,7 @@
                 '(1 2 3 4 5 6 7 8 9 10))))
 
 
-(test "syntax-rules: it should define nested syntax-rules"
+(test "syntax: it should define nested syntax-rules"
       (lambda (t)
         ;; be-like-begin from R7RS spec file
         (define-syntax be-like-begin
@@ -596,7 +596,7 @@
                  expr))
               '(10 . 10))))
 
-(test "syntax-rules: recursive call"
+(test "syntax: recursive call"
       (lambda (t)
 
         (define-syntax L
@@ -606,7 +606,7 @@
 
         (t.is (L 1 2 3) '(1 2 3))))
 
-(test_ "syntax-rules: should return list with ellipsis"
+(test.failing "syntax: should return list with ellipsis"
        (lambda (t)
 
          (define-syntax test
@@ -624,7 +624,7 @@
          (t.is (test) '((1 . ...) (2 . ...)))))
 
 
-(test "syntax-rules: it should handle identifiers"
+(test "syntax: it should handle identifiers"
        (lambda (t)
 
          (define-syntax for
@@ -649,7 +649,7 @@
                '(4 3 2 1 0))))
 
 
-(test "syntax-rules: it should define let*"
+(test "syntax: it should define let*"
       (lambda (t)
         ;; source https://www.scheme.com/tspl2d/syntax.html#g2252
         (t.is (type let*) "macro")
@@ -741,7 +741,7 @@
         (def-2 bar 20)
         (t.is (+ foo bar) 30)))
 
-(test_ "syntax: free variables"
+(test.failing "syntax: free variables"
       (lambda (t)
         (define-syntax def (syntax-rules ()
                              ((_ foo bar)
@@ -854,7 +854,7 @@
 
         (t.is (foo) '((1) (2) (3)))))
 
-(test "syntax-rules: it should ignore ellipsis in middle for 2 elements"
+(test "syntax: it should ignore ellipsis in middle for 2 elements"
       (lambda (t)
         ;; code for define-values from R7RS spec
         ;; macro defined in lib/R7RS.scm
@@ -885,7 +885,7 @@
 
 (test "syntax: reverse-syntax macro"
       (lambda (t)
-
+        ;; example from book Sketchy Scheme by Nils M Holm
         (define-syntax reverse-syntax
           (syntax-rules ()
             ((_ lst)
@@ -938,7 +938,7 @@
                            (+ a b c))
               6)))
 
-(test_ "syntax: nested _"
+(test.failing "syntax: nested _"
        (lambda (t)
          (define-syntax foo
            (syntax-rules ()
@@ -958,7 +958,7 @@
 
          (t.is (foo) '("foo" (10) bar "bar"))))
 
-(test_ "syntax: nesting, renaming and scope"
+(test.failing "syntax: nesting, renaming and scope"
        (lambda (t)
          (let ((result 10))
            (define-syntax foo
@@ -974,3 +974,123 @@
                   (%foo (foo))))))
            (foo)
            (t.is result '(foo)))))
+
+(test "syntax: nested syntax-rules scope conflict"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ bar)
+             (let ()
+               (define-syntax %foo
+                 (syntax-rules (bar)
+                   ((_ bar x)
+                    (list "foo" x))))
+               (%foo bar 10)))))
+
+        (t.is (foo x) '("foo" 10))
+
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ x)
+             (let ()
+               (define-syntax %foo
+                 (syntax-rules (bar)
+                   ((_ (bar) x)
+                    (list "foo" x))))
+               (%foo (bar) 10)))))
+
+        (t.is (foo 10) '("foo" 10))))
+
+(test "syntax: it should throw error on missing ellipsis symbol"
+      (lambda (t)
+        (t.is
+         (to.throw
+          (define-syntax foo
+            (syntax-rules (:c)
+              ((_ x ...)
+               (letrec-syntax ((bar (syntax-rules <:::> (:c)
+                                                  ((_ x)
+                                                   (print x))
+                                                  ((_ a b <:::>)
+                                                   (begin
+                                                     (display a)
+                                                     (display " ")
+                                                     (bar b <:::>))))))
+                 (bar x ...)))))
+          (foo 1 2 3))
+         true)))
+
+(test "syntax: it should create macro with dot notation as pattern variable"
+      (lambda (t)
+        (let* ((input #(1 0.1 2 3 10e-1))
+               (fn (lambda (x) (+ x 1)))
+               (expect (input.map fn)))
+          (let-syntax ((foo (syntax-rules ()
+                              ((_ x)
+                               (x.map fn)))))
+            (t.is (foo input) expect)))))
+
+(test "syntax: it should work with dot notation in lambda inside syntax-rules"
+      (lambda (t)
+        (let* ((input '(1 0.1 2 3 10e-1))
+               (expect (map (lambda (x) (x.isFloat)) input)))
+          (let-syntax ((foo (syntax-rules ()
+                              ((_)
+                               (lambda (num) (num.isFloat))))))
+            (let ((is-float (foo)))
+              (t.is (map is-float input) expect))))))
+
+(test "syntax: refsh macro"
+      (lambda (t)
+        (define-syntax fresh
+          (syntax-rules ()
+            ((_ (sym ...) expr exprs ...)
+             (let ((sym (if #f #f)) ...)
+               expr exprs ...))))
+
+        (t.is (fresh (a b c) (list a b c))
+              (list undefined undefined undefined))))
+
+(test "syntax: macro from Petrofsky"
+      (lambda (t)
+        ;; https://groups.google.com/g/comp.lang.scheme/c/FB1HgUx5d2s
+        (t.is (letrec-syntax ((foo (syntax-rules (foo) ((_ foo) #t) ((_ x) #f))))
+                (foo foo))
+              #t)
+        (define foo null)
+        (t.is (letrec-syntax ((foo (syntax-rules (foo) ((_ foo) #t) ((_ x) #f))))
+                (foo foo))
+              #t)))
+
+(test.failing "syntax: let-syntax and set! of definition"
+      (lambda (t)
+        ;; https://github.com/jcubic/lips/issues/172
+        (define-syntax g
+          (syntax-rules ()
+            ((g 2) -3)))
+
+        (t.is (let-syntax ((f (syntax-rules ()
+                          ((f 1) (g 2)))))
+                (set! g (lambda (x) -1000))
+                (f 1))
+              -3)))
+
+(test "syntax: syntax-rules -> syntax-rules"
+      (lambda (t)
+        ;; source: https://srfi.schemers.org/srfi-147/srfi-147.html
+        (define-syntax syntax-rules*
+          (syntax-rules ()
+            ((syntax-rules* (literal ...) (pattern . templates) ...)
+             (syntax-rules (literal ...) (pattern (begin . templates)) ...))
+            ((syntax-rules* ellipsis (literal ...) (pattern . templates) ...)
+             (syntax-rules ellipsis (literal ...) (pattern (begin . templates)) ...))))
+
+        (t.is (let-syntax
+                  ((foo
+                    (syntax-rules* ()
+                                   ((foo a b)
+                                    (define a 1)
+                                    (define b 2)))))
+                (foo x y)
+                (list x y))
+              '(1 2))))

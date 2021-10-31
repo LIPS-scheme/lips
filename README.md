@@ -2,8 +2,8 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.14-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.org/jcubic/lips.svg?branch=master&33e063347de4fa4e636ff631e2f3e1b9f3c513dc)](https://travis-ci.org/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&b1f4663d889bb79af569bd9409518530)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&8ec00c86ce896975ef16ca93c2df03c5b9019d06)](https://travis-ci.com/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&8c3211ada49521a8f2c41c9cc2095a91)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 [![GitHub license](https://img.shields.io/github/license/jcubic/lips.svg)](https://github.com/jcubic/lips/blob/master/LICENSE)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
@@ -109,9 +109,21 @@ on first script tag with `text/x-scheme` type. By default it will use CDN from
 [jsdelivr](https://www.jsdelivr.com/). To load each file using builtin load function
 (that will fetch the file using AJAX and evaluate it).
 
-```
+```html
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js" bootstrap></script>
 ```
+
+You can also specify the path where LIPS should search for standard library.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
+        bootstrap="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/std.xcb">
+</script>
+```
+
+You can use `bootstrap="./std.xcb"` if there is `std.xcb` file in local directory.
+You can also bootstrap with `std.scm` or `std.min.scm` but xcb file is the fastest,
+because it's already parsed and compiled into binary format.
 
 ## Running LIPS programmatically
 
@@ -181,31 +193,56 @@ chmod a+x foo.scm
 
 Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
+## Limitations
+Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
+process long arrays and use callback function. If the array is quite large each pice of code
+inside the callback may slow down the processing. For example see:
+
+script [reference.scm](https://github.com/jcubic/lips/blob/master/scripts/reference.scm)
+
+That generates reference documentation for all builtin functions and macros.
+The slow part is `(names.sort name-compare)` (`Array::sort`) that take quite time to calculate,
+because the array with functions and macros is quite large. If you came into performance issue,
+you can write the part of the code in JavaScript. If you want to do this in LIPS Scheme you can use
+something like this:
+
+```scheme
+(let ((fn (self.eval "(function(a, b) {
+                         /* any complex code in JS */
+                         return a.localeCompare(b);
+                      })")))
+   (arr.sort fn))
+```
+
 ## Links
 * [Gitter Chat](https://gitter.im/jcubic/lips)
 * [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 
 ## Roadmap
-
 ### 1.0
 - [x] Full support for R5RS
 - [ ] Full support for R7RS
   - [ ] R7RS libraries (`import`/`export`/`define-library`).
-- [ ] Continuations.
-- [ ] Tail Call Optimization (TCO).
-- [ ] Fully tested Numerical Tower.
-- [ ] All recursive function in JS don't consume stack.
-- [ ] Picture language (possibly inspired by P5.js).
+  - [ ] Continuations.
+  - [ ] Tail Call Optimization (TCO).
+  - [ ] Fully tested Numerical Tower.
+- [x] Fully working binary compiler (for faster parsing and loading std lib).
 - [ ] Finish `syntax-rules` (ignore limitations of current approach).
   - [ ] Objects.
   - [ ] Vectors.
 
 ### 1.1
-- [ ] Fully working JSON Compiler (for faster parsing and loading std lib).
+- [ ] Picture language (possibly inspired by P5.js).
+- [ ] Stepper/Debugger.
 - [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
 - [ ] Proper expansion time for both macro system.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
+- [ ] All recursive function in JS don't consume stack.
+
+### WIP Side projects
+- [ ] [KISS](https://github.com/jcubic/kiss) (chrome extension REPL).
+- [ ] [SMILE](https://github.com/jcubic/smile) (Web IDE), need to start over.
 
 ## Acknowledgments
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).

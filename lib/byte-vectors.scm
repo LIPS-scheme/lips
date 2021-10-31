@@ -1,7 +1,10 @@
-;; Implementation of byte vector functions - SRFI-4
+;; Implementation of byte vector functions - SRFI-4 and SRFI-160
 ;;
 ;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
-;; it use JavaScript typed arrays
+;; latest verion is defined in
+;; https://srfi.schemers.org/srfi-160/srfi-160.html
+;;
+;; it uses JavaScript typed arrays
 ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript

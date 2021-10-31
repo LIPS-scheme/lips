@@ -1,4 +1,4 @@
-(test_ "continuations: base"
+(test.failing "continuations: base"
   (lambda (t)
     (define x 0)
 
@@ -9,7 +9,7 @@
 
     (t.is (x 4) 6)))
 
-(test_ "continuations: return"
+(test.failing "continuations: return"
        (lambda (t)
           (let ((called #f))
 
@@ -24,7 +24,7 @@
             (t.is (foo) 10)
             (t.is called #f))))
 
-(test_ "continuations: calling"
+(test.failing "continuations: calling"
        (lambda (t)
           (let ((called))
             (t.is (let ((my-val (call/cc (lambda (c) c))))

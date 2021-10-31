@@ -30,6 +30,7 @@
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
+(define call-with-current-continuation call/cc)
 ;; -----------------------------------------------------------------------------
 (define-macro (define-symbol-macro type spec . rest)
   "(define-symbol-macro type (name . args) . body)
@@ -118,7 +119,7 @@
                                     (and (--> im.a (isNaN))
                                          (--> im.b (isNaN)))))))
                             (else (= a b))))))
-            ((pair? a) (and (null? a) (null? b)))
+            ((and (pair? a) (null? a)) (null? b))
             (else (eq? a b)))
       false))
 
@@ -373,7 +374,7 @@
 
    Return maximum of it's arguments."
   (numbers? "max" args)
-  (apply (.. Math.max) args))
+  (apply Math.max args))
 
 ;; -----------------------------------------------------------------------------
 (define (min . args)
@@ -381,7 +382,7 @@
 
    Return minimum of it's arguments."
   (numbers? "min" args)
-  (apply (.. Math.min) args))
+  (apply Math.min args))
 
 ;; -----------------------------------------------------------------------------
 (define (make-rectangular re im)
@@ -432,8 +433,29 @@
       n))
 
 ;; -----------------------------------------------------------------------------
+(define (log z)
+  "(log z)
+
+   Funcntion calculates natural logarithm of z. Where argument can be
+   any number (including complex negative and rational).
+   If the value is 0 it return NaN."
+  (cond ((real? z)
+         (cond ((zero? z) NaN)
+               ((> z 0) (Math.log z))
+               (else
+                (+ (Math.log (abs z))
+                   (* Math.PI +i)))))
+        ((complex? z)
+         (let ((arg (Math.atan2 (imag-part z)
+                                (real-part z))))
+           (+ (Math.log (z.modulus))
+              (* +i arg))))
+        ((rational? z)
+         (log (exact->inexact z)))))
+
+;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
-(define _maths (list "log" "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+(define _maths (list "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
 
 ;; -----------------------------------------------------------------------------
 (define _this_env (current-environment))
@@ -442,13 +464,12 @@
 (let iter ((fns _maths))
   (if (not (null? fns))
       (let* ((name (car fns))
-             (LNumber (.. lips.LNumber))
              (op (. Math name))
-             (fn (lambda (n) (LNumber (op n)))))
+             (fn (lambda (n) (lips.LNumber (op n)))))
         (--> _this_env (set name fn))
         (set-obj! fn '__doc__ (concat "(" name " n)\n\nFunction calculate " name
-                                  " math operation (it call JavaScript Math)." name
-                                  " function."))
+                                  " math operation (it call JavaScript Math." name
+                                  " function)"))
         (iter (cdr fns)))))
 
 ;; -----------------------------------------------------------------------------
@@ -1425,5 +1446,3 @@
       (else (throw (new Error (string-append "scheme-report-environment: version "
                                              (number->string version)
                                              " not supported"))))))
-
-;; -----------------------------------------------------------------------------

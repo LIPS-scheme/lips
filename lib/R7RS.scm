@@ -56,7 +56,7 @@
     ((_ (((x ...) values) ...) body ...)
      (apply (lambda (x ... ...)
               body ...)
-            (vector->list (apply vector-append (map (lambda (x) ((. x "valueOf")))
+            (vector->list (apply vector-append (map (lambda (arg) ((. arg "valueOf")))
                                                      (list values ...)))))))
   "(let-values binding body ...)
 
@@ -1175,14 +1175,31 @@
         (namespace-var (gensym))
         (name (car spec))
         (namespace (cadr spec)))
-    `(let ((,module-var (new-library ,(symbol->string name)
-                                     ,(symbol->string namespace)))
+    `(let ((,module-var (new-library ,(repr name)
+                                     ,(repr namespace)))
            (,namespace-var ',namespace))
        (define-macro (export . body)
          (%export ,module-var ,namespace-var body))
        ,@body
        (--> ,parent (set ',name ,module-var)))))
 
+;; -----------------------------------------------------------------------------
+(define-syntax define-library/export
+  (syntax-rules (rename :c)
+    ((_ :c (rename to from))
+     (print (string-append "export "
+                           (symbol->string 'from)
+                           " ==> "
+                           (symbol->string 'to))))
+    ((_ :c name)
+     (print (string-append "export " (symbol->string 'name))))
+    ((_ x ...)
+     (begin
+       (define-library/export :c x)
+       ...))))
+
+;; -----------------------------------------------------------------------------
+;; TODO: use browserFS or LightningFS
 ;; -----------------------------------------------------------------------------
 (define-values (current-directory set-current-directory!)
   (if (eq? self window)
@@ -1245,5 +1262,3 @@
    Returns a list of the irritants encapsulated by error-object."
   (if (error-object? obj)
       obj.args))
-
-;; -----------------------------------------------------------------------------

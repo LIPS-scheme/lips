@@ -4,7 +4,8 @@
   (let ((result (open-output-string)))
     (write expr result)
     (display (--> (get-output-string result)
-                  (replace #/\n/g "\\xA;")))
+                  (replace #/\n/g "\\xA;")
+                  (replace #/#<undefined>/g "undefined")))
     (newline)
     (close-port result)))
 
