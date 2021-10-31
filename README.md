@@ -2,11 +2,12 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.15-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&d432a122f0fe5acd069bd228e562903ee3820ca1)](https://travis-ci.com/github/jcubic/lips)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&f8e33173a30fd819c17afedf5700b1c78019b3c8)](https://travis-ci.com/github/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&8c3211ada49521a8f2c41c9cc2095a91)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
+<a href="https://codeclimate.com/github/jcubic/lips/maintainability"><img src="https://api.codeclimate.com/v1/badges/876398746c020dd1bb97/maintainability" /></a>
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjcubic%2Flips.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjcubic%2Flips?ref=badge_shield)
 
 [![GitHub stars](https://img.shields.io/github/stars/jcubic/lips.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/jcubic/lips/stargazers/)
