@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.15-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&446b4ff3ae7b524bc33cfc1033bd2b723a3b2259)](https://travis-ci.com/github/jcubic/lips)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&386f78cd75ed38f483038d486970f5c7400aafbd)](https://travis-ci.com/github/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&cfb98d5f41bc33797d28d0d3c8c0bfc9)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
@@ -216,9 +216,9 @@ something like this:
 
 ## Supported SRFI
 
-* built-in:
+### built-in
 
-| name | spec |
+| description | spec |
 | :--- | ---: |
 | Feature-based conditional expansion construct | [SRFI-0](https://srfi.schemers.org/srfi-0/) |
 | Homogeneous numeric vector datatypes | [SRFI-4](https://srfi.schemers.org/srfi-4/) |
@@ -228,9 +228,11 @@ something like this:
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 
-* require `(load "./lib/srfi/<number>.scm")` (they should be loaded as R7RS libraries in final 1.0.0  version)
+### require `(load "./lib/srfi/<number>.scm")`
 
-| name | spec |
+They should be loaded as R7RS libraries in final 1.0.0 version
+
+| description | spec |
 | :--- | ---: |
 | List Library | [SRFI-1](https://srfi.schemers.org/srfi-1/) |
 |  `AND-LET*`: an AND with local bindings, a guarded `LET*` special form | [SRFI-2](https://srfi.schemers.org/srfi-2/) |
@@ -243,7 +245,7 @@ something like this:
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
 
 ## Links
-* [Gitter Chat](https://gitter.im/jcubic/lips)
+* [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
 * [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 

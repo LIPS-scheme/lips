@@ -216,9 +216,9 @@ something like this:
 
 ## Supported SRFI
 
-* built-in:
+### built-in
 
-| name | spec |
+| description | spec |
 | :--- | ---: |
 | Feature-based conditional expansion construct | [SRFI-0](https://srfi.schemers.org/srfi-0/) |
 | Homogeneous numeric vector datatypes | [SRFI-4](https://srfi.schemers.org/srfi-4/) |
@@ -228,9 +228,11 @@ something like this:
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 
-* require `(load "./lib/srfi/<number>.scm")` (they should be loaded as R7RS libraries in final 1.0.0  version)
+### require `(load "./lib/srfi/<number>.scm")`
 
-| name | spec |
+They should be loaded as R7RS libraries in final 1.0.0 version
+
+| description | spec |
 | :--- | ---: |
 | List Library | [SRFI-1](https://srfi.schemers.org/srfi-1/) |
 |  `AND-LET*`: an AND with local bindings, a guarded `LET*` special form | [SRFI-2](https://srfi.schemers.org/srfi-2/) |
@@ -243,7 +245,7 @@ something like this:
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
 
 ## Links
-* [Gitter Chat](https://gitter.im/jcubic/lips)
+* [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
 * [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 
