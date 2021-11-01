@@ -230,6 +230,16 @@
       (alist->object (new lips.Pair undefined nil))))
 
 ;; -----------------------------------------------------------------------------
+(define (object->alist object)
+  "(object->alist object)
+
+   Function convert JavaScript object to Alist"
+  (typecheck "object->alist" object "object")
+  (vector->list (--> (Object.entries object)
+                     (map (lambda (arr)
+                            (apply cons (vector->list arr)))))))
+
+;; -----------------------------------------------------------------------------
 (define (parent.frames)
   "(parent.frames)
 

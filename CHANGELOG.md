@@ -1,4 +1,6 @@
-## 1.0.0-beta.16.2
+## 1.0.0-beta.16
+### Features
+* add `object->alist` procedure
 ### Bugfix
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 
