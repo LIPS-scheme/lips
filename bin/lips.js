@@ -313,6 +313,7 @@ if (options.version || options.V) {
         const compiled_name = filename.replace(/\.[^.]+$/, '') + ext;
         var code = readFile(filename);
         bootstrap(interp).then(function() {
+            process.chdir(path.dirname(filename));
             return compile(code, interp.__env__).then(code => {
                 if (!quiet) {
                     console.log(`Writing ${compiled_name} ...`);
@@ -356,6 +357,7 @@ if (options.version || options.V) {
         const code = readCode(filename);
         bootstrap(interp).then(() => {
             const dynamic = options.d || options.dynamic;
+            process.chdir(path.dirname(filename));
             return run(code, interp, dynamic, null, options.t || options.trace);
         });
     } catch (err) {
