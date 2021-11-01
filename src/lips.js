@@ -9638,6 +9638,9 @@ function type(obj) {
                     return 'async-iterator';
                 }
             }
+            if (obj.constructor.name === '') {
+                return 'object';
+            }
             return obj.constructor.name.toLowerCase();
         }
     }
