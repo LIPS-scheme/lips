@@ -927,6 +927,38 @@
                     (list first)))))))
 
 ;; -----------------------------------------------------------------------------
+;; mapping ~ and ~@ into longer form (the same as built-in , and ,@)
+;; -----------------------------------------------------------------------------
+(set-special! "~" 'sxml-unquote-mapper)
+(set-special! "~@" 'sxml-unquote-splicing-mapper)
+
+;; -----------------------------------------------------------------------------
+(define (sxml-unquote-mapper expression)
+  `(sxml-unquote ,expression))
+
+;; -----------------------------------------------------------------------------
+(define (sxml-unquote-splicing-mapper expression)
+  `(sxml-unquote-splicing ,expression))
+
+;; -----------------------------------------------------------------------------
+(define (sxml-unquote)
+  "(sxml-unquote expression)
+   ~expression
+
+  Thread expression as code and evaluate it inside sxml, similar to unquote
+  with quasiquote."
+  (throw "sxml-unquote: Can't use outside of sxml"))
+
+;; -----------------------------------------------------------------------------
+(define (sxml-unquote-splicing)
+  "(sxml-unquote-splicing expression)
+   ~@expression
+
+  Thread expression as code and evaluate it inside sxml, it splice the result
+  expression in place it was used, similar to unquote-splicing with quasiquote."
+  (throw "sxml-unquote-splicing: Can't use outside of sxml"))
+
+;; -----------------------------------------------------------------------------
 (define-macro (pragma->sxml pragma)
   `(define-macro (sxml expr)
      "(sxml expr)
