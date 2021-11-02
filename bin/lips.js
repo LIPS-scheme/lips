@@ -312,12 +312,14 @@ if (options.version || options.V) {
         const ext = '.xcb';
         const compiled_name = filename.replace(/\.[^.]+$/, '') + ext;
         var code = readFile(filename);
+        const cwd = process.cwd();
         bootstrap(interp).then(function() {
             process.chdir(path.dirname(filename));
             return compile(code, interp.__env__).then(code => {
                 if (!quiet) {
                     console.log(`Writing ${compiled_name} ...`);
                 }
+                process.chdir(cwd);
                 try {
                     const encoded = serialize_bin(code);
                     fs.writeFile(compiled_name, encoded, function(err) {
