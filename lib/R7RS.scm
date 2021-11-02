@@ -1262,3 +1262,21 @@
    Returns a list of the irritants encapsulated by error-object."
   (if (error-object? obj)
       obj.args))
+
+;; -----------------------------------------------------------------------------
+(define (get-environment-variables)
+  "(get-environment-variables)
+
+   Function returns all variables as alist. This funtion throws exception
+   when called in browser."
+  (if (eq? self window)
+      (throw "get-environment-variables: Node.js only funtion")
+      (object->alist process.env)))
+
+;; -----------------------------------------------------------------------------
+(define (get-environment-variable name)
+  "(get-environment-variable name)
+
+   Function return given environment variable. This funtion throws exception
+   when called in browser."
+  (. process.env name))
