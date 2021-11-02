@@ -7,7 +7,7 @@
 ### Bugfix
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 * fix type of `process.env`
-* fix current-directory when running when running executable from different path
+* fix module load path when load scripts from Node.js
 
 ## 1.0.0-beta.15
 ### Breaking

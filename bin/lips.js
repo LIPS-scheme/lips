@@ -323,12 +323,10 @@ if (options.version || options.V) {
         var code = readFile(filename);
         const cwd = process.cwd();
         bootstrap(interp).then(function() {
-            process.chdir(path.dirname(filename));
             return compile(code, interp.__env__).then(code => {
                 if (!quiet) {
                     console.log(`Writing ${compiled_name} ...`);
                 }
-                process.chdir(cwd);
                 try {
                     const encoded = serialize_bin(code);
                     fs.writeFile(compiled_name, encoded, function(err) {
@@ -369,7 +367,6 @@ if (options.version || options.V) {
         const code = readCode(filename);
         bootstrap(interp).then(() => {
             const dynamic = options.d || options.dynamic;
-            process.chdir(path.dirname(filename));
             return run(code, interp, dynamic, null, options.t || options.trace);
         });
     } catch (err) {

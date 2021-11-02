@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 02 Nov 2021 10:05:52 +0000
+ * build: Tue, 02 Nov 2021 12:03:38 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5003,7 +5003,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Tue, 02 Nov 2021 10:05:52 +0000
+   * Build time: Tue, 02 Nov 2021 12:03:38 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -14839,8 +14839,6 @@
     // ------------------------------------------------------------------
     gensym: doc('gensym', gensym, "(gensym)\n\n             Function generate unique symbol, to use with macros as meta name."),
     // ------------------------------------------------------------------
-    // TODO: (load filename environment-specifier)
-    // ------------------------------------------------------------------
     load: doc('load', function load(file, env) {
       typecheck('load', file, 'string');
       var g_env = this;
@@ -14857,7 +14855,8 @@
         } else {
           env = this.get('**interaction-environment**');
         }
-      }
+      } // TODO: move **module-path** to internal env
+
 
       var PATH = '**module-path**';
       var module_path = global_env.get(PATH, {
@@ -14908,6 +14907,13 @@
           if (module_path) {
             module_path = module_path.valueOf();
             file = path.join(module_path, file);
+          } else {
+            var _args19 = g_env.get('command-line')();
+
+            if (_args19 !== _nil) {
+              process.cwd();
+              file = path.join(path.dirname(_args19.car.valueOf()), file);
+            }
           }
 
           global_env.set(PATH, path.dirname(file));
@@ -18563,10 +18569,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 02 Nov 2021 10:05:52 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 02 Nov 2021 12:03:38 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 02 Nov 2021 10:05:52 +0000').valueOf();
+    var date = LString('Tue, 02 Nov 2021 12:03:38 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18612,7 +18618,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Tue, 02 Nov 2021 10:05:52 +0000',
+    date: 'Tue, 02 Nov 2021 12:03:38 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

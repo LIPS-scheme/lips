@@ -7204,8 +7204,6 @@ var global_env = new Environment({
 
              Function generate unique symbol, to use with macros as meta name.`),
     // ------------------------------------------------------------------
-    // TODO: (load filename environment-specifier)
-    // ------------------------------------------------------------------
     load: doc('load', function load(file, env) {
         typecheck('load', file, 'string');
         var g_env = this;
@@ -7221,6 +7219,7 @@ var global_env = new Environment({
                 env = this.get('**interaction-environment**');
             }
         }
+        // TODO: move **module-path** to internal env
         const PATH = '**module-path**';
         var module_path = global_env.get(PATH, { throwError: false });
         file = file.valueOf();
@@ -7254,10 +7253,17 @@ var global_env = new Environment({
         }
         if (is_node()) {
             return new Promise((resolve, reject) => {
-                var path = nodeRequire('path');
+                const path = nodeRequire('path');
+                let cwd;
                 if (module_path) {
                     module_path = module_path.valueOf();
                     file = path.join(module_path, file);
+                } else {
+                    const args = g_env.get('command-line')();
+                    if (args !== nil) {
+                        cwd = process.cwd();
+                        file = path.join(path.dirname(args.car.valueOf()), file);
+                    }
                 }
                 global_env.set(PATH, path.dirname(file));
                 nodeRequire('fs').readFile(file, function(err, data) {
