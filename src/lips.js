@@ -6411,10 +6411,10 @@ EOF.prototype.toString = function() {
 // -------------------------------------------------------------------------
 // simpler way to create interpreter with interaction-environment
 // -------------------------------------------------------------------------
-function Interpreter(name, { stderr, stdin, stdout, ...obj } = {}) {
+function Interpreter(name, { stderr, stdin, stdout, command_line = null, ...obj } = {}) {
     if (typeof this !== 'undefined' && !(this instanceof Interpreter) ||
         typeof this === 'undefined') {
-        return new Interpreter(name, { stdin, stdout, stderr, ...obj });
+        return new Interpreter(name, { stdin, stdout, stderr, command_line, ...obj });
     }
     if (typeof name === 'undefined') {
         name = 'anonymous';
@@ -6435,6 +6435,7 @@ function Interpreter(name, { stderr, stdin, stdout, ...obj } = {}) {
     if (is_port(stdout)) {
         inter.set('stdout', stdout);
     }
+    inter.set('command-line', command_line);
     set_interaction_env(this.__env__, inter);
 }
 // -------------------------------------------------------------------------

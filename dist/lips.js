@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 01 Nov 2021 16:13:06 +0000
+ * build: Tue, 02 Nov 2021 10:05:52 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5003,10 +5003,10 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Mon, 01 Nov 2021 16:13:06 +0000
+   * Build time: Tue, 02 Nov 2021 10:05:52 +0000
    */
   var _excluded = ["token"],
-      _excluded2 = ["stderr", "stdin", "stdout"];
+      _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
 
   function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
@@ -13809,13 +13809,16 @@
         stderr = _ref26.stderr,
         stdin = _ref26.stdin,
         stdout = _ref26.stdout,
+        _ref26$command_line = _ref26.command_line,
+        command_line = _ref26$command_line === void 0 ? null : _ref26$command_line,
         obj = _objectWithoutProperties(_ref26, _excluded2);
 
     if (typeof this !== 'undefined' && !(this instanceof Interpreter) || typeof this === 'undefined') {
       return new Interpreter(name, _objectSpread({
         stdin: stdin,
         stdout: stdout,
-        stderr: stderr
+        stderr: stderr,
+        command_line: command_line
       }, obj));
     }
 
@@ -13845,6 +13848,7 @@
       inter.set('stdout', stdout);
     }
 
+    inter.set('command-line', command_line);
     set_interaction_env(this.__env__, inter);
   } // -------------------------------------------------------------------------
 
@@ -18559,10 +18563,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 01 Nov 2021 16:13:06 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 02 Nov 2021 10:05:52 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 01 Nov 2021 16:13:06 +0000').valueOf();
+    var date = LString('Tue, 02 Nov 2021 10:05:52 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18608,7 +18612,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Mon, 01 Nov 2021 16:13:06 +0000',
+    date: 'Tue, 02 Nov 2021 10:05:52 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
