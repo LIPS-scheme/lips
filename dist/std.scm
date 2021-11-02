@@ -602,6 +602,17 @@
      (--> **internal-env** (get 'stdin))))
 
 ;; -----------------------------------------------------------------------------
+(define (command-line)
+  "(command-line)
+
+   Function return command line arguments or empty list"
+  (let ((args (let-env (interaction-environment)
+                         (--> **internal-env** (get 'command-line)))))
+    (if (null? args)
+        nil
+        (vector->list args))))
+
+;; -----------------------------------------------------------------------------
 (define (flush-output . rest)
   "(flush-output)
 
@@ -4333,6 +4344,24 @@
    Returns a list of the irritants encapsulated by error-object."
   (if (error-object? obj)
       obj.args))
+
+;; -----------------------------------------------------------------------------
+(define (get-environment-variables)
+  "(get-environment-variables)
+
+   Function returns all variables as alist. This funtion throws exception
+   when called in browser."
+  (if (eq? self window)
+      (throw "get-environment-variables: Node.js only funtion")
+      (object->alist process.env)))
+
+;; -----------------------------------------------------------------------------
+(define (get-environment-variable name)
+  "(get-environment-variable name)
+
+   Function return given environment variable. This funtion throws exception
+   when called in browser."
+  (. process.env name))
 ;; -----------------------------------------------------------------------------
 ;; init internal fs for LIPS Scheme Input/Output functions
 ;; -----------------------------------------------------------------------------

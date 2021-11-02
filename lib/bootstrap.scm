@@ -602,6 +602,17 @@
      (--> **internal-env** (get 'stdin))))
 
 ;; -----------------------------------------------------------------------------
+(define (command-line)
+  "(command-line)
+
+   Function return command line arguments or empty list"
+  (let ((args (let-env (interaction-environment)
+                         (--> **internal-env** (get 'command-line)))))
+    (if (null? args)
+        nil
+        (vector->list args))))
+
+;; -----------------------------------------------------------------------------
 (define (flush-output . rest)
   "(flush-output)
 
