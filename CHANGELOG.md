@@ -3,7 +3,7 @@
 * add `object->alist` procedure
 * add SRFI: 193
 * add `get-environment-variable` and `get-environment-variables`
-* add `command-line` procedure
+* add `command-line` and `load-script` procedures
 ### Bugfix
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 * fix type of `process.env`

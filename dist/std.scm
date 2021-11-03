@@ -1348,6 +1348,20 @@
              (%read-file binary (string-append (current-directory) path)))))))
 
 ;; -----------------------------------------------------------------------------
+(define (load-script url)
+  "(load-script url)
+
+   Function load JavaScript file and evaluate it. The url can be
+   local file or URL."
+  (typecheck "load-script" url "string")
+  (if (eq? self window)
+      (let ((script (document.createElement "script")))
+        (set! script.src url)
+        (--> document.head (appendChild script)))
+      (let ((code (%read-file false url)))
+        (self.eval code))))
+
+;; -----------------------------------------------------------------------------
 (define %read-binary-file (curry %read-file true))
 (define %read-text-file (curry %read-file false))
 
