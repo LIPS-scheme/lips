@@ -1507,6 +1507,14 @@
 ;; -----------------------------------------------------------------------------
 (define string-join join)
 (define string-split split)
+
+;; -----------------------------------------------------------------------------
+(define-macro (set-global! name)
+   "(set-global! name)
+
+    Macro make the name global variable."
+   (let ((var (string->symbol (string-append "self." (symbol->string name)))))
+     `(set! ,var ,name)))
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |

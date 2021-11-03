@@ -120,6 +120,7 @@
 (define (unfold fn init) "(unfold fn init)\u000A\u000AFunction returns list from given function and init value. The function should\u000Areturn cons where first is the item added to the list and second is next value\u000Apassed to the funtion. If function return false it end the loop." (typecheck "unfold" fn "function") (let iter ((pair (fn init)) (result (quote ()))) (if (not pair) (reverse result) (iter (fn (cdr pair)) (cons (car pair) result)))))
 (define string-join join)
 (define string-split split)
+(define-macro (set-global! name) "(set-global! name)\u000A\u000AMacro make the name global variable." (let ((var (string->symbol (string-append "self." (symbol->string name))))) (quasiquote (set! (unquote var) (unquote name)))))
 (define string-append concat)
 (define = ==)
 (define remainder %)

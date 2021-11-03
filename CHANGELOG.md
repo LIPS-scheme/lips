@@ -4,6 +4,7 @@
 * add SRFI: 193
 * add `get-environment-variable` and `get-environment-variables`
 * improve bootstraping by using same url of the script if possible
+* add `set-global!` macro
 ### Bugfix
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 * fix type of `process.env`
