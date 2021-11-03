@@ -10019,15 +10019,43 @@ function fworker(fn) {
     }
     return new root.Worker(URL.createObjectURL(blob));
 }
+
 // -------------------------------------------------------------------------
 function is_dev() {
     return lips.version.match(/^(\{\{VER\}\}|DEV)$/);
 }
+
+// -------------------------------------------------------------------------
+function get_current_script() {
+    if (is_node()) {
+        return;
+    }
+    if (document.currentScript) {
+        return document.currentScript;
+    } else {
+        const scripts = document.querySelectorAll('script');
+        if (!scripts.length) {
+            return;
+        }
+        const script = scripts[scripts.length - 1];
+        if (!script) {
+            return;
+        }
+        const url = script.getAttribute('src');
+        return url;
+    }
+}
+
+// -------------------------------------------------------------------------
+const current_script = get_current_script();
+
 // -------------------------------------------------------------------------
 function bootstrap(url = '') {
     const std = 'dist/std.xcb';
     if (url === '') {
-        if (is_dev()) {
+        if (current_script) {
+            url = current_script.replace(/[^/]*$/, 'std.xcb');
+        } else if (is_dev()) {
             url = `https://cdn.jsdelivr.net/gh/jcubic/lips@devel/${std}`;
         } else {
             url = `https://cdn.jsdelivr.net/npm/@jcubic/lips@${lips.version}/${std}`;

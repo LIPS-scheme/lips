@@ -3,6 +3,7 @@
 * add `object->alist`, `command-line`, and `load-script` procedures
 * add SRFI: 193
 * add `get-environment-variable` and `get-environment-variables`
+* improve bootstraping by using same url of the script if possible
 ### Bugfix
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 * fix type of `process.env`
