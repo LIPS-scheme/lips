@@ -1,18 +1,12 @@
-;; -*- scheme -*-
-
-
 (define (require url)
   "Load JS or script tag"
   (new Promise (lambda (resolve)
-                 (if (null? (match /.css$/ url))
+                 (if (null? (match #/.css$/ url))
                      ((. $ 'getScript) url resolve)
                      (let ((link ($ (concat "<link type=\"text/css\" rel=\"stylesheet\" href=\""
                                              url
                                              "\"/>"))))
                        (--> link (on "load" resolve) (appendTo "head")))))))
-
-(define-macro (global symbol)
-  `(set-obj! (try window (catch (e) global)) ,(symbol->string symbol) ,symbol))
 
 (define $ jQuery)
 ;; (require "https://unpkg.com/alasql@0.4.11/dist/alasql.min.js")
@@ -31,9 +25,8 @@
    inside let and get let variables in closure, Useful for universal macros."
   (if (pair? first)
       (let ((name (car first)))
-        `(--> (. lips 'env)
-              (set ,(symbol->string name) (lambda ,(cdr first) ,@rest))))
-      `(--> (. lips 'env) (set ,(symbol->string first) ,(car rest)))))
+        `(lips.env.set ,(symbol->string name) (lambda ,(cdr first) ,@rest)))
+      `(lips.env.set ,(symbol->string first) ,(car rest))))
 
 (define-macro (globalize expr . rest)
   "(globalize expr)
@@ -57,22 +50,20 @@
 
 
 ;; setup isomorphic-git and global fs methods as functions
+(define fs (let* ((fs (new LightningFS "fs"))
+                  (pfs fs.promises))
+             (git.plugins.set "fs" fs)
+             pfs))
 
-(let* ((fs (new LightningFS "fs"))
-       (pfs (. fs 'promises)))
-  (global fs)
-  (--> (. git 'plugins) (set "fs" fs))
-  (globalize git git.)
-  (globalize (let ((x pfs)) x) fs.))
 
 
 (define (new-repo dir)
   "Prepare new git repo with base app"
-  (let ((dir (if (null? (match /^\// dir)) (concat "/" dir) dir)))
+  (let ((dir (if (null? (match #/^\// dir)) (concat "/" dir) dir)))
     (if (not (directory? dir))
         (begin
           (fs.mkdir dir)
-          (git.init (make-object :dir dir))))))
+          (git.init (object :dir dir))))))
 
 (define (have-type type x)
   (try (eq? (. (fs.stat x) 'type) type)
@@ -83,54 +74,55 @@
 
 
 (define (resiter-service-worker file)
-  (let* ((scope (replace /\/[^\/]+$/ "/" (. location 'pathname)))
+  (let* ((scope (replace #/\/[^\/]+$/ "/" (. location 'pathname)))
          (register (. navigator 'serviceWorker 'register)))
-    (register "sw.js" (make-object :scope scope))))
+    (register "sw.js" (object :scope scope))))
 
 ;; registering service worker
 (ignore (try (let ((req (resiter-service-worker "sw.js")))
-               (global req)
-               (--> req (addEventListener "updatefound" (lambda ()
-                                                          (let ((msg "A new service worker is being installed"))
-                                                            (--> console (log msg))))))
-               (--> console (log (concat "Registration succeeded. Scope is " (. req 'scope)))))
+               (set-global! req)
+               (req.addEventListener "updatefound" (lambda ()
+                                                     (let ((msg "A new service worker is being installed"))
+                                                       (console.log msg))))
+               (console.log (concat "Registration succeeded. Scope is " req.scope)))
              (catch (e)
-                    (--> console (log (concat "Registration failed " e))))))
+                    (console.log (concat "Registration failed " e)))))
 
 (define refresh-editors (debounce (lambda ()
-                                    (for-each (lambda (editor) (--> editor (refresh)))
+                                    (for-each (lambda (editor)
+                                                (editor.refresh))
                                               (list html-editor css-editor lips-editor)))
                                   40))
 
 (--> ($ ".container")
-     (split (make-object :percent true
-                         :orientation "horizontal"
-                         :limit 10
-                         :onDrag refresh-editors
-                         :position (list->array '("50%" "30%"))))
+     (split (object :percent true
+                    :orientation "horizontal"
+                    :limit 10
+                    :onDrag refresh-editors
+                    :position #("50%" "30%")))
      (find ".panels")
-     (split (make-object :percent true
-                         :orientation "vertical"
-                         :onDrag refresh-editors
-                         :limit 10
-                         :position (list->array '("33%" "33%")))))
+     (split (object :percent true
+                    :orientation "vertical"
+                    :onDrag refresh-editors
+                    :limit 10
+                    :position #("33%" "33%"))))
 
 
 (define (editor selector mode)
   (--> CodeMirror (fromTextArea (--> document (querySelector selector))
-                                (make-object :mode mode
-                                             :theme "twilight"
-                                             :scrollbarStyle "simple"
-                                             :lineWrapping true
-                                             :matchBrackets true
-                                             :lineNumbers true))))
+                                (object :mode mode
+                                        :theme "twilight"
+                                        :scrollbarStyle "simple"
+                                        :lineWrapping true
+                                        :matchBrackets true
+                                        :lineNumbers true))))
 
 (define css-editor (editor ".css .code" "css"))
 (define lips-editor (editor ".lips .code" "scheme"))
 (define html-editor (editor ".html .code" "htmlmixed"))
 
 ;; terminal function defined in ../examples/terminal.js
-(define term (terminal (make-object :selector ($ ".term") :lips lips :name "lips-editor")))
+(define term (terminal (object :selector ($ ".term") :lips lips :name "lips-editor")))
 (--> (. $ 'terminal) (syntax "scheme"))
 
 
@@ -194,9 +186,9 @@
 (define (refresh-src $node)
   (let* ((old (--> $node (attr "src")))
          (now (--> Date (now)))
-         (new-src (if (null? (match /\?/ old))
+         (new-src (if (null? (match #/\?/ old))
                       (concat old "?" now)
-                      (replace /[^?]*$/ now))))
+                      (replace #/[^?]*$/ now))))
     (--> $node (attr "src" new-src))))
 
 
@@ -239,11 +231,11 @@
         (for-each (lambda (file)
                     (print file)
                     (if (not (eq? file ".git"))
-                        (git.add (make-object :dir dir :filepath file))))
+                        (git.add (object :dir dir :filepath file))))
                   (array->list (fs.readdir dir)))
-        (git.commit (make-object :dir dir
-                                 :author (:name "Anonymous" :email "mail@example.com")
-                                 :message (concat "save lips editor " now))))))
+        (git.commit (object :dir dir
+                            :author (:name "Anonymous" :email "mail@example.com")
+                            :message (concat "save lips editor " now))))))
 
 
 
@@ -252,7 +244,7 @@
     (if directory-first
         (callback "directory" dir))
     (for-each (lambda (name)
-                (if (not (match /^\.{1.2}/ name))
+                (if (not (match #/^\.{1.2}/ name))
                     (let ((path (concat dir "/" name)))
                       (if (directory? path)
                           (traverse-directory directory-first path callback)
@@ -277,7 +269,7 @@
                            (let* ((parts (--> rel-path (split "/")))
                                   (filename (--> parts (pop)))
                                   (dir (--> parts (join "/"))))
-                             ;;(--> console (log (make-object :dir dir :filename filename)))
+                             ;;(--> console (log (object :dir dir :filename filename)))
                              (let ((content (fs.readFile filepath))
                                    (pair (assoc dir directories)))
                                (--> (if (pair? pair)
@@ -288,7 +280,7 @@
          (download-zip (concat zip-name ".zip") zip))))
 
 (define (download-zip name zip)
-  (let* ((uint8array (--> zip (generateAsync (make-object :type "uint8array"))))
+  (let* ((uint8array (--> zip (generateAsync (object :type "uint8array"))))
          (blob (new Blob (list->array (list uint8array))))
          (reader (new FileReader)))
     (set-obj! reader 'onload (lambda (event)

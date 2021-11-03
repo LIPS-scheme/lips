@@ -6,8 +6,9 @@ require("codemirror/lib/codemirror.css");
 require('codemirror/addon/scroll/simplescrollbars');
 require('codemirror/addon/scroll/simplescrollbars.css');
 require("codemirror/addon/edit/matchbrackets");
-['css', 'xml', 'javascript', 'htmlmixed', 'scheme'].forEach(function(mode) {
+['css', 'xml', 'javascript', 'htmlmixed'].forEach(function(mode) {
     require(`codemirror/mode/${mode}/${mode}`);
 });
+require('@jcubic/lips/lib/js/codemirror');
 require("codemirror/theme/twilight.css");
 

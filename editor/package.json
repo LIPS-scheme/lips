@@ -1,7 +1,7 @@
 {
   "name": "editor",
-  "version": "1.0.0",
-  "description": "LIPS editor",
+  "version": "0.1.0",
+  "description": "LIPS Scheme sanbox",
   "main": "index.js",
   "scripts": {
     "build": "webpack"
@@ -13,6 +13,7 @@
   "author": "Jakub T. Jankiewicz <jcubic@onet.pl> (https://jcubic.pl/jakub-jankiewicz/)",
   "license": "MIT",
   "devDependencies": {
+    "@jcubic/lips": "^1.0.0-beta.15",
     "codemirror": "^5.46.0",
     "css-loader": "^2.1.1",
     "debounce": "^1.2.0",
@@ -20,13 +21,12 @@
     "isomorphic-git": "^0.54.2",
     "jquery": "^3.4.1",
     "jquery.splitter": "^0.28.1",
-    "jquery.terminal": "^2.4.1",
+    "jquery.terminal": "^2.29.4",
     "jszip": "^3.2.1",
-    "prismjs": "^1.16.0",
+    "prismjs": "^1.25.0",
     "style-loader": "^0.23.1",
     "wcwidth": "^1.0.1",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.1"
-  },
-  "dependencies": {}
+  }
 }
