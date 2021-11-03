@@ -88,6 +88,8 @@
     <ul>
       <li>Literal regular expression.</li>
       <li>Great integration with JavaScript. You can use any JS library out of the box.</li>
+      <li>Asynchronous execution (auto resolving of promises with optional promise quotation).</li>
+      <li>Functional helpers (inspired by <a href="https://ramdajs.com/">RamdaJS</a>)</li>
       <li>Possibility modify the parser at runtime (add new syntax, similar to vectors and object).</li>
       <li>Possibility to set represention of new data types for write and display.
           Witth parser extensions you can make new data types have different syntax and still be homoicoic.</li>
@@ -96,11 +98,9 @@
       <li>Support for SXML, that allow to write JSX like Preact/React apps.</li>
       <li>I/O Ports supports in browser with <a href="https://github.com/jvilk/BrowserFS">BrowserFS</a>.</li>
       <li>Binary Compiler that speed up the parsing of big files (e.g. standard library).</li>
-      <li>Functional helpers (inspired by <a href="https://ramdajs.com/">RamdaJS</a>)</li>
-      <li>Asynchronous execution (auto resolving of promises with optional promise quotation).</li>
       <li>Full numerical tower and Big Integer support.</li>
       <li>Powerful introspection (similar to the one in Python).</li>
-      <li>Auto formatting lisp of code (pretty print)</li>
+      <li>Auto formatting of lisp code (pretty print).</li>
       <li>Lisp/hygienic macros and macroexpand.</li>
       <li>Builtin help system.</li>
     </ul>
@@ -164,10 +164,10 @@
    (display (string-append "hello" " " what)))
 &lt;/script&gt;
     </code></pre>
-    <p><strong>NOTE:</strong> If you want to load started library, you should use boostrap attribute that will load it for you. You can optionaly specify the location of the files.</p>
+    <p><strong>NOTE:</strong> If you want to load standard library, you should use boostrap attribute that will load it for you. You can optionaly specify the location of the files.</p>
     <p>You can also use src attribute to link to source file.</p>
     <pre><code class="language-html">
-&lt;script type="text/x-scheme" src="example.lips"&gt;&lt;script&gt;
+&lt;script type="text/x-scheme" src="example.scm"&gt;&lt;script&gt;
     </code></pre>
     <header><h2>Node</h2></header>
     <img src="https://github.com/jcubic/lips/raw/master/assets/screencast.gif?raw=true" alt="Terminal with LIPS Scheme interprer"/>
