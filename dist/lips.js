@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 03 Nov 2021 11:52:19 +0000
+ * build: Wed, 03 Nov 2021 12:39:01 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -4995,7 +4995,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Wed, 03 Nov 2021 11:52:19 +0000
+   * Build time: Wed, 03 Nov 2021 12:39:01 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -18120,8 +18120,10 @@
       return;
     }
 
+    var script;
+
     if (document.currentScript) {
-      return document.currentScript;
+      script = document.currentScript;
     } else {
       var scripts = document.querySelectorAll('script');
 
@@ -18129,15 +18131,11 @@
         return;
       }
 
-      var script = scripts[scripts.length - 1];
-
-      if (!script) {
-        return;
-      }
-
-      var url = script.getAttribute('src');
-      return url;
+      script = scripts[scripts.length - 1];
     }
+
+    var url = script.getAttribute('src');
+    return url;
   } // -------------------------------------------------------------------------
 
 
@@ -18616,10 +18614,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 03 Nov 2021 11:52:19 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 03 Nov 2021 12:39:01 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 03 Nov 2021 11:52:19 +0000').valueOf();
+    var date = LString('Wed, 03 Nov 2021 12:39:01 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18665,7 +18663,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Wed, 03 Nov 2021 11:52:19 +0000',
+    date: 'Wed, 03 Nov 2021 12:39:01 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

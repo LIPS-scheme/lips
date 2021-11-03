@@ -10030,20 +10030,18 @@ function get_current_script() {
     if (is_node()) {
         return;
     }
+    let script;
     if (document.currentScript) {
-        return document.currentScript;
+        script = document.currentScript;
     } else {
         const scripts = document.querySelectorAll('script');
         if (!scripts.length) {
             return;
         }
-        const script = scripts[scripts.length - 1];
-        if (!script) {
-            return;
-        }
-        const url = script.getAttribute('src');
-        return url;
+        script = scripts[scripts.length - 1];
     }
+    const url = script.getAttribute('src');
+    return url;
 }
 
 // -------------------------------------------------------------------------
