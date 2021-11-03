@@ -1,9 +1,8 @@
 ## 1.0.0-beta.16
 ### Features
-* add `object->alist` procedure
+* add `object->alist`, `command-line`, and `load-script` procedures
 * add SRFI: 193
 * add `get-environment-variable` and `get-environment-variables`
-* add `command-line` and `load-script` procedures
 ### Bugfix
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 * fix type of `process.env`
