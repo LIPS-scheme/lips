@@ -142,7 +142,7 @@
     `(let ((,name ,expr))
        ,@(filter pair?
                  (map (lambda (key)
-                        (if (and (not (match /^_/ key)) (function? (. obj key)))
+                        (if (and (not (match #/^_/ key)) (function? (. obj key)))
                             (let* ((args (gensym "args")))
                               `(define-global (,(make-name key) . ,args)
                                  (apply (. ,name ,key) ,args)))))
@@ -1509,11 +1509,17 @@
 (define string-split split)
 
 ;; -----------------------------------------------------------------------------
+(define (symbol-append . rest)
+   "(symbol-append s1 s2 ...)
+
+    Function create new symbol from symbols passed as arguments."
+   (string->symbol (apply string-append (map symbol->string rest))))
+
 (define-macro (set-global! name)
    "(set-global! name)
 
     Macro make the name global variable."
-   (let ((var (string->symbol (string-append "self." (symbol->string name)))))
+   (let ((var (symbol-append 'self. name)))
      `(set! ,var ,name)))
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
