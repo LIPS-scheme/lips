@@ -14,42 +14,49 @@
 ;; Released under MIT license
 ;;
 
+;; -----------------------------------------------------------------------------
 (define (command-name)
   "(command-name)
-  
-   Function returns LIPS script that was executed."
-  (let ((cmd (command-line)))
-    (if (null? cmd)
-        #f
-        (car cmd))))
 
+   Function returns LIPS script that was executed."
+  (let* ((cmd (command-line))
+         (name (car cmd)))
+    (if (zero? (length name))
+        #f
+        name)))
+
+;; -----------------------------------------------------------------------------
 (define (command-args)
   "(command-args)
-  
-   Function returns list of arguments for LIPS script that was executed."
-  (let ((cmd (command-line)))
-    (if (null? cmd)
-        nil
-        (cdr cmd))))
 
+   Function returns list of arguments for LIPS script that was executed."
+  (let* ((cmd (command-line))
+         (args (cdr cmd)))
+    (if (null? args)
+        #f
+        args)))
+
+;; -----------------------------------------------------------------------------
 (define (script-file)
   "(script-file)
-  
-   Function returns list of absolute path for LIPS script that was executed."
-  (if (eq? self window)
-      ""
-      (let ((path (require "path"))
-            (cmd (command-line)))
-         (if (null? cmd)
-             ""
-            (path.resolve (car cmd))))))
 
+   Function returns absolute path for LIPS script that was executed or #f"
+  (if (eq? self window)
+      #f
+      (let ((name (command-name)))
+        (if name
+            (path.resolve name)
+            #f))))
+
+;; -----------------------------------------------------------------------------
 (define (script-directory)
   "(script-file)
-  
+
    Function returns list of absolute path for directory of LIPS script that was executed."
   (if (eq? self window)
-      ""
+      #f
       (let ((path (require "path"))
             (filename (script-file)))
-        (path.dirname filename))))
+        (if filename
+            (path.dirname filename)
+            #f))))

@@ -608,8 +608,8 @@
    Function return command line arguments or empty list"
   (let ((args (let-env (interaction-environment)
                        (--> **internal-env** (get 'command-line)))))
-    (if (null? args)
-        nil
+    (if (or (null? args) (zero? (length args)))
+        '("")
         (vector->list args))))
 
 ;; -----------------------------------------------------------------------------
