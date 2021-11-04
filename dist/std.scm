@@ -1003,21 +1003,36 @@
   (make-tags expr))
 
 ;; -----------------------------------------------------------------------------
-(define (get-script url)
-  "(get-script url)
+(define (get-resource url)
+  "(get-resource url)
 
-   Load JavaScript file in browser by adding script tag to head of the current document."
+   Load JavaScript or CSS file in browser by adding script tag to head of the current document.
+   When called from Node it allow it allow to load JavaScript files only."
+  (typecheck "get-resource" url "string")
   (if (not (bound? 'document))
-      (throw (new Error "get-script: document not defined"))
-      (let ((script (document.createElement "script")))
-        (new Promise (lambda (resolve reject)
-                        (set-obj! script 'src url)
-                        (set-obj! script 'onload (lambda ()
-                                                   (resolve)))
-                        (set-obj! script 'onerror (lambda ()
-                                                    (reject "get-script: Failed to load")))
-                        (if document.head
-                            (document.head.appendChild script)))))))
+      (if (eq? self global)
+          (let ((code (%read-file false url)))
+            (self.eval code))
+          (throw (new Error "get-script: document not defined")))
+      (let ((load (lambda (node)
+                    (new Promise (lambda (resolve reject)
+                                   (set! node.onload (lambda ()
+                                                       (resolve)))
+                                   (set! node.onerror (lambda ()
+                                                        (reject (string-append
+                                                                 "get-resource: Failed to load "
+                                                                 url))))
+                                   (if document.head
+                                       (document.head.appendChild node)))))))
+      (cond ((url.match #/.js$/)
+             (let ((script (document.createElement "script")))
+               (set! script.src url)
+               (load script)))
+            ((url.match #/.css$/)
+             (let ((link (document.createElement "link")))
+               (set! link.href url)
+               (set! link.rel "stylesheet")
+               (load link)))))))
 
 ;; -----------------------------------------------------------------------------
 (define (gensym? value)
@@ -1346,20 +1361,6 @@
              (fetch-url path binary))
             (else
              (%read-file binary (string-append (current-directory) path)))))))
-
-;; -----------------------------------------------------------------------------
-(define (load-script url)
-  "(load-script url)
-
-   Function load JavaScript file and evaluate it. The url can be
-   local file or URL."
-  (typecheck "load-script" url "string")
-  (if (eq? self window)
-      (let ((script (document.createElement "script")))
-        (set! script.src url)
-        (--> document.head (appendChild script)))
-      (let ((code (%read-file false url)))
-        (self.eval code))))
 
 ;; -----------------------------------------------------------------------------
 (define %read-binary-file (curry %read-file true))

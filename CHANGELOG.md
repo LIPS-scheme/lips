@@ -1,6 +1,8 @@
 ## 1.0.0-beta.16
+### Breaking
+* replace `get-script` with `get-resource` that work in Node and in browser allow to load CSS
 ### Features
-* add `object->alist`, `command-line`, `symbol-append`, and `load-script` procedures
+* add `object->alist`, `command-line`, and `symbol-append` procedures
 * add SRFI: 193
 * add `get-environment-variable` and `get-environment-variables`
 * improve bootstraping by using same url of the script if possible
