@@ -1,4 +1,7 @@
-![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/lips.svg?raw=true)
+<h1 align="center">
+  <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/lips.svg?raw=true"
+       alt="LIPS - Scheme Based Powerful Lisp Language" />
+</h1>
 
 [![npm](https://img.shields.io/badge/npm-{{VER_DASH}}-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
