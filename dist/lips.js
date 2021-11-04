@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 04 Nov 2021 14:08:56 +0000
+ * build: Thu, 04 Nov 2021 14:41:59 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5003,7 +5003,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Thu, 04 Nov 2021 14:08:56 +0000
+   * Build time: Thu, 04 Nov 2021 14:41:59 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -14372,6 +14372,7 @@
 
       (_console2 = console).error.apply(_console2, arguments);
     }),
+    'command-line': [],
     // ------------------------------------------------------------------
     stdin: InputPort(function () {
       return Promise.resolve(prompt(''));
@@ -14901,38 +14902,78 @@
       }
 
       if (is_node()) {
-        return new Promise(function (resolve, reject) {
-          var path = nodeRequire('path');
+        return new Promise( /*#__PURE__*/function () {
+          var _ref29 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(resolve, reject) {
+            var path, cmd, _args19;
 
-          if (module_path) {
-            module_path = module_path.valueOf();
-            file = path.join(module_path, file);
-          } else {
-            var _args19 = g_env.get('command-line')();
+            return regenerator.wrap(function _callee16$(_context17) {
+              while (1) {
+                switch (_context17.prev = _context17.next) {
+                  case 0:
+                    path = nodeRequire('path');
 
-            if (_args19 !== _nil) {
-              process.cwd();
-              file = path.join(path.dirname(_args19.car.valueOf()), file);
-            }
-          }
+                    if (!module_path) {
+                      _context17.next = 6;
+                      break;
+                    }
 
-          global_env.set(PATH, path.dirname(file));
-          nodeRequire('fs').readFile(file, function (err, data) {
-            if (err) {
-              reject(err);
-              global_env.set(PATH, module_path);
-            } else {
-              try {
-                run(data).then(function () {
-                  resolve();
-                  global_env.set(PATH, module_path);
-                })["catch"](reject);
-              } catch (e) {
-                reject(e);
+                    module_path = module_path.valueOf();
+                    file = path.join(module_path, file);
+                    _context17.next = 12;
+                    break;
+
+                  case 6:
+                    cmd = g_env.get('command-line', {
+                      throwError: false
+                    });
+
+                    if (!cmd) {
+                      _context17.next = 11;
+                      break;
+                    }
+
+                    _context17.next = 10;
+                    return cmd();
+
+                  case 10:
+                    _args19 = _context17.sent;
+
+                  case 11:
+                    if (_args19 && _args19 !== _nil) {
+                      process.cwd();
+                      file = path.join(path.dirname(_args19.car.valueOf()), file);
+                    }
+
+                  case 12:
+                    global_env.set(PATH, path.dirname(file));
+                    nodeRequire('fs').readFile(file, function (err, data) {
+                      if (err) {
+                        reject(err);
+                        global_env.set(PATH, module_path);
+                      } else {
+                        try {
+                          run(data).then(function () {
+                            resolve();
+                            global_env.set(PATH, module_path);
+                          })["catch"](reject);
+                        } catch (e) {
+                          reject(e);
+                        }
+                      }
+                    });
+
+                  case 14:
+                  case "end":
+                    return _context17.stop();
+                }
               }
-            }
-          });
-        });
+            }, _callee16);
+          }));
+
+          return function (_x12, _x13) {
+            return _ref29.apply(this, arguments);
+          };
+        }());
       }
 
       if (module_path) {
@@ -14949,14 +14990,14 @@
     }, "(load filename)\n            (load filename environment)\n\n            Function fetch the file and evaluate its content as LIPS code,\n            If second argument is provided and it's environment the evaluation\n            will happen in that environment."),
     // ------------------------------------------------------------------
     'do': doc(new Macro('do', /*#__PURE__*/function () {
-      var _ref29 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee17(code, _ref30) {
+      var _ref30 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee18(code, _ref31) {
         var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _loop3;
 
-        return regenerator.wrap(function _callee17$(_context18) {
+        return regenerator.wrap(function _callee18$(_context19) {
           while (1) {
-            switch (_context18.prev = _context18.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
-                dynamic_scope = _ref30.dynamic_scope, error = _ref30.error;
+                dynamic_scope = _ref31.dynamic_scope, error = _ref31.error;
                 self = this;
 
                 if (dynamic_scope) {
@@ -14981,23 +15022,23 @@
 
               case 10:
                 if (!(node !== _nil)) {
-                  _context18.next = 21;
+                  _context19.next = 21;
                   break;
                 }
 
                 item = node.car;
-                _context18.t0 = scope;
-                _context18.t1 = item.car;
-                _context18.next = 16;
+                _context19.t0 = scope;
+                _context19.t1 = item.car;
+                _context19.next = 16;
                 return _evaluate(item.cdr.car, eval_args);
 
               case 16:
-                _context18.t2 = _context18.sent;
+                _context19.t2 = _context19.sent;
 
-                _context18.t0.set.call(_context18.t0, _context18.t1, _context18.t2);
+                _context19.t0.set.call(_context19.t0, _context19.t1, _context19.t2);
 
                 node = node.cdr;
-                _context18.next = 10;
+                _context19.next = 10;
                 break;
 
               case 21:
@@ -15006,19 +15047,19 @@
                   dynamic_scope: dynamic_scope,
                   error: error
                 };
-                _loop3 = /*#__PURE__*/regenerator.mark(function _callee16() {
+                _loop3 = /*#__PURE__*/regenerator.mark(function _callee17() {
                   var node, next, _item, value, symbols;
 
-                  return regenerator.wrap(function _callee16$(_context17) {
+                  return regenerator.wrap(function _callee17$(_context18) {
                     while (1) {
-                      switch (_context17.prev = _context17.next) {
+                      switch (_context18.prev = _context18.next) {
                         case 0:
                           if (!(body !== _nil)) {
-                            _context17.next = 3;
+                            _context18.next = 3;
                             break;
                           }
 
-                          _context17.next = 3;
+                          _context18.next = 3;
                           return lips.evaluate(body, eval_args);
 
                         case 3:
@@ -15027,27 +15068,27 @@
 
                         case 5:
                           if (!(node !== _nil)) {
-                            _context17.next = 15;
+                            _context18.next = 15;
                             break;
                           }
 
                           _item = node.car;
 
                           if (!(_item.cdr.cdr !== _nil)) {
-                            _context17.next = 12;
+                            _context18.next = 12;
                             break;
                           }
 
-                          _context17.next = 10;
+                          _context18.next = 10;
                           return _evaluate(_item.cdr.cdr.car, eval_args);
 
                         case 10:
-                          value = _context17.sent;
+                          value = _context18.sent;
                           next[_item.car.valueOf()] = value;
 
                         case 12:
                           node = node.cdr;
-                          _context17.next = 5;
+                          _context18.next = 5;
                           break;
 
                         case 15:
@@ -15058,58 +15099,58 @@
 
                         case 17:
                         case "end":
-                          return _context17.stop();
+                          return _context18.stop();
                       }
                     }
-                  }, _callee16);
+                  }, _callee17);
                 });
 
               case 23:
-                _context18.next = 25;
+                _context19.next = 25;
                 return _evaluate(test.car, eval_args);
 
               case 25:
-                _context18.t3 = _context18.sent;
+                _context19.t3 = _context19.sent;
 
-                if (!(_context18.t3 === false)) {
-                  _context18.next = 30;
+                if (!(_context19.t3 === false)) {
+                  _context19.next = 30;
                   break;
                 }
 
-                return _context18.delegateYield(_loop3(), "t4", 28);
+                return _context19.delegateYield(_loop3(), "t4", 28);
 
               case 28:
-                _context18.next = 23;
+                _context19.next = 23;
                 break;
 
               case 30:
                 if (!(test.cdr !== _nil)) {
-                  _context18.next = 34;
+                  _context19.next = 34;
                   break;
                 }
 
-                _context18.next = 33;
+                _context19.next = 33;
                 return _evaluate(test.cdr.car, eval_args);
 
               case 33:
-                return _context18.abrupt("return", _context18.sent);
+                return _context19.abrupt("return", _context19.sent);
 
               case 34:
               case "end":
-                return _context18.stop();
+                return _context19.stop();
             }
           }
-        }, _callee17, this);
+        }, _callee18, this);
       }));
 
-      return function (_x12, _x13) {
-        return _ref29.apply(this, arguments);
+      return function (_x14, _x15) {
+        return _ref30.apply(this, arguments);
       };
     }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
     // ------------------------------------------------------------------
-    'if': doc(new Macro('if', function (code, _ref31) {
-      var dynamic_scope = _ref31.dynamic_scope,
-          error = _ref31.error;
+    'if': doc(new Macro('if', function (code, _ref32) {
+      var dynamic_scope = _ref32.dynamic_scope,
+          error = _ref32.error;
 
       if (dynamic_scope) {
         dynamic_scope = this;
@@ -15206,9 +15247,9 @@
       }();
     }), "(begin . args)\n\n             Macro runs list of expression and return valuate of the list one.\n             It can be used in place where you can only have single exression,\n             like if expression."),
     // ------------------------------------------------------------------
-    'ignore': new Macro('ignore', function (code, _ref32) {
-      var dynamic_scope = _ref32.dynamic_scope,
-          error = _ref32.error;
+    'ignore': new Macro('ignore', function (code, _ref33) {
+      var dynamic_scope = _ref33.dynamic_scope,
+          error = _ref33.error;
       var args = {
         env: this,
         error: error
@@ -15367,9 +15408,9 @@
     }, "(eval expr)\n            (eval expr environment)\n\n            Function evalute LIPS Scheme code."),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
-      var _ref33 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref33.dynamic_scope,
-          error = _ref33.error;
+      var _ref34 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref34.dynamic_scope,
+          error = _ref34.error;
 
       var self = this;
 
@@ -15483,9 +15524,9 @@
     'macroexpand': new Macro('macroexpand', macro_expand()),
     'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
     // ------------------------------------------------------------------
-    'define-macro': doc(new Macro(macro, function (macro, _ref34) {
-      var dynamic_scope = _ref34.dynamic_scope,
-          error = _ref34.error;
+    'define-macro': doc(new Macro(macro, function (macro, _ref35) {
+      var dynamic_scope = _ref35.dynamic_scope,
+          error = _ref35.error;
 
       if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
         var name = macro.car.car.__name__;
@@ -15597,8 +15638,8 @@
         validate_identifiers(macro.car);
       }
 
-      var syntax = new Syntax(function (code, _ref35) {
-        var macro_expand = _ref35.macro_expand;
+      var syntax = new Syntax(function (code, _ref36) {
+        var macro_expand = _ref36.macro_expand;
         var scope = env.inherit('syntax');
 
         if (dynamic_scope) {
@@ -15744,10 +15785,10 @@
           }
 
           if (is_promise(car) || is_promise(cdr)) {
-            return promise_all([car, cdr]).then(function (_ref36) {
-              var _ref37 = _slicedToArray(_ref36, 2),
-                  car = _ref37[0],
-                  cdr = _ref37[1];
+            return promise_all([car, cdr]).then(function (_ref37) {
+              var _ref38 = _slicedToArray(_ref37, 2),
+                  car = _ref38[0],
+                  cdr = _ref38[1];
 
               return new Pair(car, cdr);
             });
@@ -16431,11 +16472,11 @@
       return false;
     }, "(string->number number [radix])\n\n           Function convert string to number."),
     // ------------------------------------------------------------------
-    'try': doc(new Macro('try', function (code, _ref38) {
+    'try': doc(new Macro('try', function (code, _ref39) {
       var _this24 = this;
 
-      var dynamic_scope = _ref38.dynamic_scope,
-          _error = _ref38.error;
+      var dynamic_scope = _ref39.dynamic_scope,
+          _error = _ref39.error;
       return new Promise(function (resolve, reject) {
         var catch_clause, finally_clause;
 
@@ -16937,9 +16978,9 @@
     // ------------------------------------------------------------------
     'eq?': doc('eq?', equal, "(eq? a b)\n\n             Function compare two values if they are identical."),
     // ------------------------------------------------------------------
-    or: doc(new Macro('or', function (code, _ref39) {
-      var dynamic_scope = _ref39.dynamic_scope,
-          error = _ref39.error;
+    or: doc(new Macro('or', function (code, _ref40) {
+      var dynamic_scope = _ref40.dynamic_scope,
+          error = _ref40.error;
       var args = global_env.get('list->array')(code);
       var self = this;
 
@@ -16984,9 +17025,9 @@
     }), "(or . expressions)\n\n             Macro execute the values one by one and return the one that is truthy value.\n             If there are no expression that evaluate to true it return false."),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function (code) {
-      var _ref40 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          dynamic_scope = _ref40.dynamic_scope,
-          error = _ref40.error;
+      var _ref41 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          dynamic_scope = _ref41.dynamic_scope,
+          error = _ref41.error;
 
       var args = global_env.get('list->array')(code);
       var self = this;
@@ -17174,30 +17215,30 @@
 
 
   function _node_specific() {
-    _node_specific = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee20() {
+    _node_specific = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee21() {
       var _yield$import, createRequire, moduleURL, __dirname, __filename;
 
-      return regenerator.wrap(function _callee20$(_context21) {
+      return regenerator.wrap(function _callee21$(_context22) {
         while (1) {
-          switch (_context21.prev = _context21.next) {
+          switch (_context22.prev = _context22.next) {
             case 0:
-              _context21.next = 2;
+              _context22.next = 2;
               return Promise.resolve().then(function () { return empty$1; });
 
             case 2:
-              _yield$import = _context21.sent;
+              _yield$import = _context22.sent;
               createRequire = _yield$import.createRequire;
               nodeRequire = createRequire((typeof document === 'undefined' && typeof location === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : typeof document === 'undefined' ? location.href : (document.currentScript && document.currentScript.src || new URL('lips.js', document.baseURI).href)));
-              _context21.next = 7;
+              _context22.next = 7;
               return Promise.resolve().then(function () { return empty$1; });
 
             case 7:
-              fs = _context21.sent;
-              _context21.next = 10;
+              fs = _context22.sent;
+              _context22.next = 10;
               return Promise.resolve().then(function () { return path$1; });
 
             case 10:
-              path$2 = _context21.sent;
+              path$2 = _context22.sent;
               global_env.set('global', global);
               global_env.set('self', global);
               global_env.set('window', undefined);
@@ -17240,10 +17281,10 @@
 
             case 21:
             case "end":
-              return _context21.stop();
+              return _context22.stop();
           }
         }
-      }, _callee20);
+      }, _callee21);
     }));
     return _node_specific.apply(this, arguments);
   }
@@ -17481,70 +17522,70 @@
       }
     }
 
-    function promise(_x14) {
+    function promise(_x16) {
       return _promise.apply(this, arguments);
     }
 
     function _promise() {
-      _promise = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee18(node) {
+      _promise = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(node) {
         var pair;
-        return regenerator.wrap(function _callee18$(_context19) {
+        return regenerator.wrap(function _callee19$(_context20) {
           while (1) {
-            switch (_context19.prev = _context19.next) {
+            switch (_context20.prev = _context20.next) {
               case 0:
-                _context19.t0 = Pair;
+                _context20.t0 = Pair;
 
                 if (!node.haveCycles('car')) {
-                  _context19.next = 5;
+                  _context20.next = 5;
                   break;
                 }
 
-                _context19.t1 = node.car;
-                _context19.next = 8;
+                _context20.t1 = node.car;
+                _context20.next = 8;
                 break;
 
               case 5:
-                _context19.next = 7;
+                _context20.next = 7;
                 return resolve(node.car);
 
               case 7:
-                _context19.t1 = _context19.sent;
+                _context20.t1 = _context20.sent;
 
               case 8:
-                _context19.t2 = _context19.t1;
+                _context20.t2 = _context20.t1;
 
                 if (!node.haveCycles('cdr')) {
-                  _context19.next = 13;
+                  _context20.next = 13;
                   break;
                 }
 
-                _context19.t3 = node.cdr;
-                _context19.next = 16;
+                _context20.t3 = node.cdr;
+                _context20.next = 16;
                 break;
 
               case 13:
-                _context19.next = 15;
+                _context20.next = 15;
                 return resolve(node.cdr);
 
               case 15:
-                _context19.t3 = _context19.sent;
+                _context20.t3 = _context20.sent;
 
               case 16:
-                _context19.t4 = _context19.t3;
-                pair = new _context19.t0(_context19.t2, _context19.t4);
+                _context20.t4 = _context20.t3;
+                pair = new _context20.t0(_context20.t2, _context20.t4);
 
                 if (node[__data__]) {
                   pair[__data__] = true;
                 }
 
-                return _context19.abrupt("return", pair);
+                return _context20.abrupt("return", pair);
 
               case 20:
               case "end":
-                return _context19.stop();
+                return _context20.stop();
             }
           }
-        }, _callee18);
+        }, _callee19);
       }));
       return _promise.apply(this, arguments);
     }
@@ -17563,10 +17604,10 @@
   } // -------------------------------------------------------------------------
 
 
-  function evaluate_args(rest, _ref41) {
-    var env = _ref41.env,
-        dynamic_scope = _ref41.dynamic_scope,
-        error = _ref41.error;
+  function evaluate_args(rest, _ref42) {
+    var env = _ref42.env,
+        dynamic_scope = _ref42.dynamic_scope,
+        error = _ref42.error;
     var args = [];
     var node = rest;
     markCycles(node);
@@ -17696,11 +17737,11 @@
 
 
   function apply(fn, args) {
-    var _ref42 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-        env = _ref42.env,
-        dynamic_scope = _ref42.dynamic_scope,
-        _ref42$error = _ref42.error,
-        error = _ref42$error === void 0 ? function () {} : _ref42$error;
+    var _ref43 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+        env = _ref43.env,
+        dynamic_scope = _ref43.dynamic_scope,
+        _ref43$error = _ref43.error,
+        error = _ref43$error === void 0 ? function () {} : _ref43$error;
 
     args = evaluate_args(args, {
       env: env,
@@ -17763,11 +17804,11 @@
 
 
   function _evaluate(code) {
-    var _ref43 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        env = _ref43.env,
-        dynamic_scope = _ref43.dynamic_scope,
-        _ref43$error = _ref43.error,
-        error = _ref43$error === void 0 ? noop : _ref43$error;
+    var _ref44 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        env = _ref44.env,
+        dynamic_scope = _ref44.dynamic_scope,
+        _ref44$error = _ref44.error,
+        error = _ref44$error === void 0 ? noop : _ref44$error;
 
     try {
       if (dynamic_scope === true) {
@@ -17871,12 +17912,12 @@
 
   function exec_collect(collect_callback) {
     return /*#__PURE__*/function () {
-      var _exec_lambda = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(arg, env, dynamic_scope) {
+      var _exec_lambda = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee20(arg, env, dynamic_scope) {
         var results, input, _iteratorAbruptCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, code, value;
 
-        return regenerator.wrap(function _callee19$(_context20) {
+        return regenerator.wrap(function _callee20$(_context21) {
           while (1) {
-            switch (_context20.prev = _context20.next) {
+            switch (_context21.prev = _context21.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -17890,16 +17931,16 @@
                 input = Array.isArray(arg) ? arg : parse(arg);
                 _iteratorAbruptCompletion3 = false;
                 _didIteratorError3 = false;
-                _context20.prev = 5;
+                _context21.prev = 5;
                 _iterator3 = _asyncIterator(input);
 
               case 7:
-                _context20.next = 9;
+                _context21.next = 9;
                 return _iterator3.next();
 
               case 9:
-                if (!(_iteratorAbruptCompletion3 = !(_step3 = _context20.sent).done)) {
-                  _context20.next = 27;
+                if (!(_iteratorAbruptCompletion3 = !(_step3 = _context21.sent).done)) {
+                  _context21.next = 27;
                   break;
                 }
 
@@ -17930,82 +17971,82 @@
                 });
 
                 if (is_promise(value)) {
-                  _context20.next = 16;
+                  _context21.next = 16;
                   break;
                 }
 
                 results.push(collect_callback(code, value));
-                _context20.next = 24;
+                _context21.next = 24;
                 break;
 
               case 16:
-                _context20.t0 = results;
-                _context20.t1 = collect_callback;
-                _context20.t2 = code;
-                _context20.next = 21;
+                _context21.t0 = results;
+                _context21.t1 = collect_callback;
+                _context21.t2 = code;
+                _context21.next = 21;
                 return value;
 
               case 21:
-                _context20.t3 = _context20.sent;
-                _context20.t4 = (0, _context20.t1)(_context20.t2, _context20.t3);
+                _context21.t3 = _context21.sent;
+                _context21.t4 = (0, _context21.t1)(_context21.t2, _context21.t3);
 
-                _context20.t0.push.call(_context20.t0, _context20.t4);
+                _context21.t0.push.call(_context21.t0, _context21.t4);
 
               case 24:
                 _iteratorAbruptCompletion3 = false;
-                _context20.next = 7;
+                _context21.next = 7;
                 break;
 
               case 27:
-                _context20.next = 33;
+                _context21.next = 33;
                 break;
 
               case 29:
-                _context20.prev = 29;
-                _context20.t5 = _context20["catch"](5);
+                _context21.prev = 29;
+                _context21.t5 = _context21["catch"](5);
                 _didIteratorError3 = true;
-                _iteratorError3 = _context20.t5;
+                _iteratorError3 = _context21.t5;
 
               case 33:
-                _context20.prev = 33;
-                _context20.prev = 34;
+                _context21.prev = 33;
+                _context21.prev = 34;
 
                 if (!(_iteratorAbruptCompletion3 && _iterator3["return"] != null)) {
-                  _context20.next = 38;
+                  _context21.next = 38;
                   break;
                 }
 
-                _context20.next = 38;
+                _context21.next = 38;
                 return _iterator3["return"]();
 
               case 38:
-                _context20.prev = 38;
+                _context21.prev = 38;
 
                 if (!_didIteratorError3) {
-                  _context20.next = 41;
+                  _context21.next = 41;
                   break;
                 }
 
                 throw _iteratorError3;
 
               case 41:
-                return _context20.finish(38);
+                return _context21.finish(38);
 
               case 42:
-                return _context20.finish(33);
+                return _context21.finish(33);
 
               case 43:
-                return _context20.abrupt("return", results);
+                return _context21.abrupt("return", results);
 
               case 44:
               case "end":
-                return _context20.stop();
+                return _context21.stop();
             }
           }
-        }, _callee19, null, [[5, 29, 33, 43], [34,, 38, 42]]);
+        }, _callee20, null, [[5, 29, 33, 43], [34,, 38, 42]]);
       }));
 
-      function exec_lambda(_x15, _x16, _x17) {
+      function exec_lambda(_x17, _x18, _x19) {
         return _exec_lambda.apply(this, arguments);
       }
 
@@ -18252,10 +18293,10 @@
 
 
   var serialization_map = {
-    'pair': function pair(_ref44) {
-      var _ref45 = _slicedToArray(_ref44, 2),
-          car = _ref45[0],
-          cdr = _ref45[1];
+    'pair': function pair(_ref45) {
+      var _ref46 = _slicedToArray(_ref45, 2),
+          car = _ref46[0],
+          cdr = _ref46[1];
 
       return Pair(car, cdr);
     },
@@ -18266,10 +18307,10 @@
 
       return LNumber(value);
     },
-    'regex': function regex(_ref46) {
-      var _ref47 = _slicedToArray(_ref46, 2),
-          pattern = _ref47[0],
-          flag = _ref47[1];
+    'regex': function regex(_ref47) {
+      var _ref48 = _slicedToArray(_ref47, 2),
+          pattern = _ref48[0],
+          flag = _ref48[1];
 
       return new RegExp(pattern, flag);
     },
@@ -18597,10 +18638,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 04 Nov 2021 14:08:56 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 04 Nov 2021 14:41:59 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 04 Nov 2021 14:08:56 +0000').valueOf();
+    var date = LString('Thu, 04 Nov 2021 14:41:59 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18646,7 +18687,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Thu, 04 Nov 2021 14:08:56 +0000',
+    date: 'Thu, 04 Nov 2021 14:41:59 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

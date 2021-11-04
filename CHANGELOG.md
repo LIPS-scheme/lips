@@ -1,6 +1,6 @@
 ## 1.0.0-beta.16
 ### Features
-* add `object->alist`, `command-line`, and `load-script` procedures
+* add `object->alist`, `command-line`, `symbol-append`, and `load-script` procedures
 * add SRFI: 193
 * add `get-environment-variable` and `get-environment-variables`
 * improve bootstraping by using same url of the script if possible
@@ -9,6 +9,7 @@
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 * fix type of `process.env`
 * fix module load path when load scripts from Node.js
+* fix bug in `quasiquote` and `unquote-splicing` [#194](https://github.com/jcubic/lips/issues/194)
 
 ## 1.0.0-beta.15
 ### Breaking

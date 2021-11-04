@@ -2,8 +2,8 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.15-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&d9c368d29587b54386dbf943cf95e6831ae3f0e4)](https://travis-ci.com/github/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&5329ac2fd8754b0734f96921d528fdba)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&a3bd9e98fa258151b8b35f76850c46edb20496f7)](https://travis-ci.com/github/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&c62a5646276448b5be5f43bdb164c347)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)

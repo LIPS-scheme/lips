@@ -6862,6 +6862,7 @@ var internal_env = new Environment({
     stderr: new BufferedOutputPort(function(...args) {
         console.error(...args);
     }),
+    'command-line': [],
     // ------------------------------------------------------------------
     stdin: InputPort(function() {
         return Promise.resolve(prompt(''));
@@ -7252,15 +7253,19 @@ var global_env = new Environment({
                 });
         }
         if (is_node()) {
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 const path = nodeRequire('path');
                 let cwd;
                 if (module_path) {
                     module_path = module_path.valueOf();
                     file = path.join(module_path, file);
                 } else {
-                    const args = g_env.get('command-line')();
-                    if (args !== nil) {
+                    const cmd = g_env.get('command-line', { throwError: false });
+                    let args;
+                    if (cmd) {
+                        args = await cmd();
+                    }
+                    if (args && args !== nil) {
                         cwd = process.cwd();
                         file = path.join(path.dirname(args.car.valueOf()), file);
                     }
