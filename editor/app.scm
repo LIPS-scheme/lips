@@ -17,45 +17,11 @@
   (print x)
   x)
 
-(define-macro (define-global first . rest)
-  "(define-global var value)
-   (define-global (name . args) body)
-
-   Macro that define functions or variables in global context, so they can be used
-   inside let and get let variables in closure, Useful for universal macros."
-  (if (pair? first)
-      (let ((name (car first)))
-        `(lips.env.set ,(symbol->string name) (lambda ,(cdr first) ,@rest)))
-      `(lips.env.set ,(symbol->string first) ,(car rest))))
-
-(define-macro (globalize expr . rest)
-  "(globalize expr)
-
-   Macro will get the value of the expression and add each method as function to global
-   scope."
-  (let ((obj (eval expr (current-environment)))
-        (make-name (if (pair? rest)
-                       (let ((pre (symbol->string (car rest))))
-                         (lambda (name) (string->symbol (concat pre name))))
-                       string->symbol)))
-    `(begin
-       ,@(filter pair?
-                 (map (lambda (key)
-                        (if (function? (. obj key))
-                            (let* ((fname (gensym))
-                                   (args (gensym)))
-                              `(define-global (,(make-name key) . ,args)
-                                 (apply (. ,expr ,key) ,args)))))
-                        (array->list (--> Object (keys obj))))))))
-
-
 ;; setup isomorphic-git and global fs methods as functions
 (define fs (let* ((fs (new LightningFS "fs"))
                   (pfs fs.promises))
              (git.plugins.set "fs" fs)
              pfs))
-
-
 
 (define (new-repo dir)
   "Prepare new git repo with base app"
@@ -86,7 +52,7 @@
                                                        (console.log msg))))
                (console.log (concat "Registration succeeded. Scope is " req.scope)))
              (catch (e)
-                    (console.log (concat "Registration failed " e)))))
+                    (console.log (concat "Registration failed " (repr e))))))
 
 (define refresh-editors (debounce (lambda ()
                                     (for-each (lambda (editor)
