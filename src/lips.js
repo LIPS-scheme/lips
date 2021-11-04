@@ -1663,7 +1663,7 @@ function unpromise_array(array, fn, error) {
             if (Object.isFrozen(array)) {
                 Object.freeze(arr);
             }
-            return arr;
+            return fn(arr);
         }, error);
     }
     return fn(array);
