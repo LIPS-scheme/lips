@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 04 Nov 2021 14:41:59 +0000
+ * build: Fri, 05 Nov 2021 08:48:52 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5003,7 +5003,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Thu, 04 Nov 2021 14:41:59 +0000
+   * Build time: Fri, 05 Nov 2021 08:48:52 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -5025,7 +5025,29 @@
 
   if (!root.fetch) {
     root.fetch = unfetch;
-  }
+  } // -------------------------------------------------------------------------
+  // :: typechecking maps
+  // -------------------------------------------------------------------------
+
+
+  var type_mapping = {
+    'pair': Pair,
+    'symbol': LSymbol,
+    'number': LNumber,
+    'array': Array,
+    'nil': Nil,
+    'character': LCharacter,
+    'values': Values,
+    'input-port': InputPort,
+    'output-port': OutputPort,
+    'regex': RegExp,
+    'syntax': Syntax,
+    'eof': EOF,
+    'macro': Macro,
+    'string': LString,
+    'native-symbol': Symbol
+  };
+  var type_constants = new Map([[NaN, 'NaN'], [null, 'null']]); // -------------------------------------------------------------------------
 
   var fs, path$2, nodeRequire;
   var BN = root.BN;
@@ -11241,7 +11263,8 @@
     // + 1 so it inlcude function in guard_math_call
     return limit(n + 1, curry(guard_math_call, fn));
   } // -------------------------------------------------------------------------
-  // some functional magic
+  // :: some functional magic
+  // -------------------------------------------------------------------------
 
 
   var single_math_op = curry(limit_math_op, 1);
@@ -17414,46 +17437,40 @@
   } // -------------------------------------------------------------------------
 
 
-  function type(obj) {
-    var mapping = {
-      'pair': Pair,
-      'symbol': LSymbol,
-      'character': LCharacter,
-      'values': Values,
-      'input-port': InputPort,
-      'output-port': OutputPort,
-      'number': LNumber,
-      'regex': RegExp,
-      'syntax': Syntax,
-      'macro': Macro,
-      'string': LString,
-      'array': Array,
-      'native-symbol': Symbol
-    };
+  function memoize(fn) {
+    var memo = new WeakMap();
+    return function (arg) {
+      var result = memo.get(arg);
 
-    if (Number.isNaN(obj)) {
-      return 'NaN';
-    }
-
-    if (obj === _nil) {
-      return 'nil';
-    }
-
-    if (obj === null) {
-      return 'null';
-    }
-
-    for (var _i4 = 0, _Object$entries2 = Object.entries(mapping); _i4 < _Object$entries2.length; _i4++) {
-      var _Object$entries2$_i = _slicedToArray(_Object$entries2[_i4], 2),
-          _key45 = _Object$entries2$_i[0],
-          value = _Object$entries2$_i[1];
-
-      if (obj instanceof value) {
-        return _key45;
+      if (!result) {
+        result = fn(arg);
       }
+
+      return result;
+    };
+  } // -------------------------------------------------------------------------
+
+
+  type = memoize(type); // -------------------------------------------------------------------------
+
+  function type(obj) {
+    var t = type_constants.get(obj);
+
+    if (t) {
+      return t;
     }
 
     if (_typeof(obj) === 'object') {
+      for (var _i4 = 0, _Object$entries2 = Object.entries(type_mapping); _i4 < _Object$entries2.length; _i4++) {
+        var _Object$entries2$_i = _slicedToArray(_Object$entries2[_i4], 2),
+            _key45 = _Object$entries2$_i[0],
+            value = _Object$entries2$_i[1];
+
+        if (obj instanceof value) {
+          return _key45;
+        }
+      }
+
       if (obj.__instance__) {
         obj.__instance__ = false;
 
@@ -18638,10 +18655,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 04 Nov 2021 14:41:59 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 05 Nov 2021 08:48:52 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 04 Nov 2021 14:41:59 +0000').valueOf();
+    var date = LString('Fri, 05 Nov 2021 08:48:52 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18687,7 +18704,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Thu, 04 Nov 2021 14:41:59 +0000',
+    date: 'Fri, 05 Nov 2021 08:48:52 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

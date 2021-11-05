@@ -50,6 +50,32 @@ if (!root.fetch) {
     root.fetch = unfetch;
 }
 
+// -------------------------------------------------------------------------
+// :: typechecking maps
+// -------------------------------------------------------------------------
+const type_mapping = {
+    'pair': Pair,
+    'symbol': LSymbol,
+    'number': LNumber,
+    'array': Array,
+    'nil': Nil,
+    'character': LCharacter,
+    'values': Values,
+    'input-port': InputPort,
+    'output-port': OutputPort,
+    'regex': RegExp,
+    'syntax': Syntax,
+    'eof': EOF,
+    'macro': Macro,
+    'string': LString,
+    'native-symbol': Symbol
+};
+const type_constants = new Map([
+    [NaN, 'NaN'],
+    [null, 'null']
+]);
+// -------------------------------------------------------------------------
+
 let fs, path, nodeRequire;
 
 const BN = root.BN;
@@ -4570,7 +4596,8 @@ function limit_math_op(n, fn) {
     return limit(n + 1, curry(guard_math_call, fn));
 }
 // -------------------------------------------------------------------------
-// some functional magic
+// :: some functional magic
+// -------------------------------------------------------------------------
 var single_math_op = curry(limit_math_op, 1);
 var binary_math_op = curry(limit_math_op, 2);
 // -------------------------------------------------------------------------
@@ -9597,38 +9624,32 @@ function is_iterator(obj, symbol) {
         return is_function(obj[symbol]);
     }
 }
+
+// -------------------------------------------------------------------------
+function memoize(fn) {
+    var memo = new WeakMap();
+    return function(arg) {
+        var result = memo.get(arg);
+        if (!result) {
+            result = fn(arg);
+        }
+        return result;
+    };
+}
+// -------------------------------------------------------------------------
+type = memoize(type);
 // -------------------------------------------------------------------------
 function type(obj) {
-    var mapping = {
-        'pair': Pair,
-        'symbol': LSymbol,
-        'character': LCharacter,
-        'values': Values,
-        'input-port': InputPort,
-        'output-port': OutputPort,
-        'number': LNumber,
-        'regex': RegExp,
-        'syntax': Syntax,
-        'macro': Macro,
-        'string': LString,
-        'array': Array,
-        'native-symbol': Symbol
-    };
-    if (Number.isNaN(obj)) {
-        return 'NaN';
-    }
-    if (obj === nil) {
-        return 'nil';
-    }
-    if (obj === null) {
-        return 'null';
-    }
-    for (let [key, value] of Object.entries(mapping)) {
-        if (obj instanceof value) {
-            return key;
-        }
+    let t = type_constants.get(obj);
+    if (t) {
+        return t;
     }
     if (typeof obj === 'object') {
+        for (let [key, value] of Object.entries(type_mapping)) {
+            if (obj instanceof value) {
+                return key;
+            }
+        }
         if (obj.__instance__) {
             obj.__instance__ = false;
             if (obj.__instance__) {
