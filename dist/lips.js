@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 05 Nov 2021 08:48:52 +0000
+ * build: Fri, 05 Nov 2021 10:49:38 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5003,7 +5003,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Fri, 05 Nov 2021 08:48:52 +0000
+   * Build time: Fri, 05 Nov 2021 10:49:38 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -17450,8 +17450,12 @@
     };
   } // -------------------------------------------------------------------------
 
+  /* eslint-disable no-func-assign */
 
-  type = memoize(type); // -------------------------------------------------------------------------
+
+  type = memoize(type);
+  /* eslint-enable no-func-assign */
+  // -------------------------------------------------------------------------
 
   function type(obj) {
     var t = type_constants.get(obj);
@@ -18655,10 +18659,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 05 Nov 2021 08:48:52 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 05 Nov 2021 10:49:38 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 05 Nov 2021 08:48:52 +0000').valueOf();
+    var date = LString('Fri, 05 Nov 2021 10:49:38 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18704,7 +18708,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Fri, 05 Nov 2021 08:48:52 +0000',
+    date: 'Fri, 05 Nov 2021 10:49:38 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

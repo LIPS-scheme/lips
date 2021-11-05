@@ -37,7 +37,7 @@
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
-/* global jQuery, BigInt, Map, Set, Symbol, importScripts, Uint8Array */
+/* global jQuery, BigInt, Map, WeakMap, Set, Symbol, importScripts, Uint8Array */
 "use strict";
 
 const root = typeof global !== 'undefined' ? global : self;
@@ -9637,7 +9637,9 @@ function memoize(fn) {
     };
 }
 // -------------------------------------------------------------------------
+/* eslint-disable no-func-assign */
 type = memoize(type);
+/* eslint-enable no-func-assign */
 // -------------------------------------------------------------------------
 function type(obj) {
     let t = type_constants.get(obj);
