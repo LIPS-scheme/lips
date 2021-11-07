@@ -1280,3 +1280,31 @@
    Function return given environment variable. This funtion throws exception
    when called in browser."
   (. process.env name))
+
+;; -----------------------------------------------------------------------------
+(define (current-second)
+  "(current-second)
+
+   Functionn return exact integer of the seconds since January 1, 1970"
+  (inexact->exact (truncate (/ (+ %%start-jiffy (current-jiffy)) (jiffies-per-second)))))
+
+;; -----------------------------------------------------------------------------
+(define %%start-jiffy
+  (truncate (* 1000 (if (eq? self window)
+                        performance.timing.navigationStart
+                        performance.timeOrigin)))
+  "Constant value that indicates start jiffy of the scheme process.")
+
+;; -----------------------------------------------------------------------------
+(define (current-jiffy)
+  "(current-jiffy)
+
+   Retturn corrent jiffy. In LIPS is jiffy since start of the process.
+   You can divide this value by (jiffies-per-second) to get seconds since
+   start of the process. And you can add %%start-jiffy to get jiffy since
+   January 1, 1970."
+  (inexact->exact (truncate (* (performance.now) 1000))))
+
+;; -----------------------------------------------------------------------------
+(define (jiffies-per-second)
+  1000000)

@@ -7,6 +7,7 @@
 * add `get-environment-variable` and `get-environment-variables`
 * improve bootstraping by using same url of the script if possible
 * add `set-global!` macro
+* add `current-second`, `current-jiffy`, and `jiffies-per-second` functions
 ### Bugfix
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 * fix type of `process.env`

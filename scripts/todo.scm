@@ -1,6 +1,7 @@
 #!/usr/bin/env lips
 
 (define fs (require "fs"))
+(define path (require "path"))
 
 (define (get-list file)
   (--> (fs.promises.readFile file)
@@ -20,8 +21,10 @@
                         (if (not (bound? fn))
                             (print fn)))))))
 
+(define dir (path.dirname (path.resolve (car (command-line)))))
+
 (begin
   (print "R5RS")
-  (print-list "../assets/R5RS_list")
+  (print-list (path.join dir "../assets/R5RS_list"))
   (print "R7RS")
-  (print-list "../assets/R7RS_list"))
+  (print-list (path.join dir "../assets/R7RS_list")))

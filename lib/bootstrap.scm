@@ -1321,7 +1321,8 @@
        The code that use those function, in binary mode, need to check
        if the result is ArrayBuffer or Node.js/BrowserFS Buffer object."
       (if (not read-file)
-          (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+          (let ((fs (--> (interaction-environment)
+                         (get '**internal-env**) (get 'fs &(:throwError false)))))
             (if (null? fs)
                 (throw (new Error "open-input-file: fs not defined"))
                 (let ((*read-file* (promisify fs.readFile)))
@@ -1505,6 +1506,7 @@
     Function create new symbol from symbols passed as arguments."
    (string->symbol (apply string-append (map symbol->string rest))))
 
+;; -----------------------------------------------------------------------------
 (define-macro (set-global! name)
    "(set-global! name)
 
