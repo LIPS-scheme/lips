@@ -1401,6 +1401,9 @@ class Parser {
         read_only(this, '_meta', meta, { hidden: true });
         // datum labels
         read_only(this, '_refs', [], { hidden: true });
+        read_only(this, '_state', {
+            parentheses: 0
+        }, { hidden: true });
     }
     resolve(name) {
         return this.__env__ && this.__env__.get(name, { throwError: false });
@@ -1452,10 +1455,18 @@ class Parser {
         return m && m[1];
     }
     is_open(token) {
-        return ['(', '['].includes(token);
+        const result = ['(', '['].includes(token);
+        if (result) {
+            this._state.parentheses++
+        }
+        return result;
     }
     is_close(token) {
-        return [')', ']'].includes(token);
+        const result = [')', ']'].includes(token);
+        if (result) {
+            this._state.parentheses--;
+        }
+        return result;
     }
     async read_list() {
         let head = nil, prev = head;
@@ -1468,11 +1479,15 @@ class Parser {
                 this.skip();
                 break;
             }
+            const next = await this._read_object();
+            if (next === eof) {
+                throw new Error('Parser: Expected token eof found');
+            }
             if (token === '.' && head !== nil) {
                 this.skip();
-                prev.cdr = await this._read_object();
+                prev.cdr = next;
             } else {
-                const cur = new Pair(await this._read_object(), nil);
+                const cur = new Pair(next, nil);
                 if (head === nil) {
                     head = cur;
                 } else {
@@ -1509,6 +1524,16 @@ class Parser {
             return this._resolve_object(object);
         }
         return object;
+    }
+    ballanced() {
+        return this._state.parentheses === 0;
+    }
+    ballancing_error(expr) {
+        const count = this._state.parentheses;
+        const e = new Error('Parser: expected parenthesis but eof found');
+        const re = new RegExp(`\\){${count}}$`);
+        e.__code__ = [expr.toString().replace(re, '')];
+        throw e;
     }
     async _resolve_object(object) {
         if (Array.isArray(object)) {
@@ -1658,6 +1683,9 @@ async function* parse(arg, env) {
     const parser = new Parser(arg, { env });
     while (true) {
         const expr = await parser.read_object();
+        if (!parser.ballanced()) {
+            parser.ballancing_error(expr);
+        }
         if (expr === eof) {
             break;
         }

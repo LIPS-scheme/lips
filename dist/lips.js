@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 05 Nov 2021 10:49:38 +0000
+ * build: Thu, 11 Nov 2021 10:18:52 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5003,7 +5003,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Fri, 05 Nov 2021 10:49:38 +0000
+   * Build time: Thu, 11 Nov 2021 10:18:52 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -6676,6 +6676,11 @@
       read_only(this, '_refs', [], {
         hidden: true
       });
+      read_only(this, '_state', {
+        parentheses: 0
+      }, {
+        hidden: true
+      });
     }
 
     _createClass(Parser, [{
@@ -6821,18 +6826,30 @@
     }, {
       key: "is_open",
       value: function is_open(token) {
-        return ['(', '['].includes(token);
+        var result = ['(', '['].includes(token);
+
+        if (result) {
+          this._state.parentheses++;
+        }
+
+        return result;
       }
     }, {
       key: "is_close",
       value: function is_close(token) {
-        return [')', ']'].includes(token);
+        var result = [')', ']'].includes(token);
+
+        if (result) {
+          this._state.parentheses--;
+        }
+
+        return result;
       }
     }, {
       key: "read_list",
       value: function () {
         var _read_list = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3() {
-          var head, prev, token, cur;
+          var head, prev, token, next, cur;
           return regenerator.wrap(function _callee3$(_context4) {
             while (1) {
               switch (_context4.prev = _context4.next) {
@@ -6852,7 +6869,7 @@
                     break;
                   }
 
-                  return _context4.abrupt("break", 27);
+                  return _context4.abrupt("break", 18);
 
                 case 7:
                   if (!this.is_close(token)) {
@@ -6861,49 +6878,45 @@
                   }
 
                   this.skip();
-                  return _context4.abrupt("break", 27);
+                  return _context4.abrupt("break", 18);
 
                 case 10:
-                  if (!(token === '.' && head !== _nil)) {
-                    _context4.next = 17;
+                  _context4.next = 12;
+                  return this._read_object();
+
+                case 12:
+                  next = _context4.sent;
+
+                  if (!(next === eof)) {
+                    _context4.next = 15;
                     break;
                   }
 
-                  this.skip();
-                  _context4.next = 14;
-                  return this._read_object();
+                  throw new Error('Parser: Expected token eof found');
 
-                case 14:
-                  prev.cdr = _context4.sent;
-                  _context4.next = 25;
-                  break;
-
-                case 17:
-                  _context4.t0 = Pair;
-                  _context4.next = 20;
-                  return this._read_object();
-
-                case 20:
-                  _context4.t1 = _context4.sent;
-                  _context4.t2 = _nil;
-                  cur = new _context4.t0(_context4.t1, _context4.t2);
-
-                  if (head === _nil) {
-                    head = cur;
+                case 15:
+                  if (token === '.' && head !== _nil) {
+                    this.skip();
+                    prev.cdr = next;
                   } else {
-                    prev.cdr = cur;
+                    cur = new Pair(next, _nil);
+
+                    if (head === _nil) {
+                      head = cur;
+                    } else {
+                      prev.cdr = cur;
+                    }
+
+                    prev = cur;
                   }
 
-                  prev = cur;
-
-                case 25:
                   _context4.next = 1;
                   break;
 
-                case 27:
+                case 18:
                   return _context4.abrupt("return", head);
 
-                case 28:
+                case 19:
                 case "end":
                   return _context4.stop();
               }
@@ -7016,6 +7029,20 @@
 
         return read_object;
       }()
+    }, {
+      key: "ballanced",
+      value: function ballanced() {
+        return this._state.parentheses === 0;
+      }
+    }, {
+      key: "ballancing_error",
+      value: function ballancing_error(expr) {
+        var count = this._state.parentheses;
+        var e = new Error('Parser: expected parenthesis but eof found');
+        var re = new RegExp("\\){".concat(count, "}$"));
+        e.__code__ = [expr.toString().replace(re, '')];
+        throw e;
+      }
     }, {
       key: "_resolve_object",
       value: function () {
@@ -7376,22 +7403,26 @@
             case 5:
               expr = _context10.sent;
 
+              if (!parser.ballanced()) {
+                parser.ballancing_error(expr);
+              }
+
               if (!(expr === eof)) {
-                _context10.next = 8;
+                _context10.next = 9;
                 break;
               }
 
-              return _context10.abrupt("break", 12);
+              return _context10.abrupt("break", 13);
 
-            case 8:
-              _context10.next = 10;
+            case 9:
+              _context10.next = 11;
               return expr;
 
-            case 10:
+            case 11:
               _context10.next = 2;
               break;
 
-            case 12:
+            case 13:
             case "end":
               return _context10.stop();
           }
@@ -18659,10 +18690,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 05 Nov 2021 10:49:38 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 11 Nov 2021 10:18:52 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 05 Nov 2021 10:49:38 +0000').valueOf();
+    var date = LString('Thu, 11 Nov 2021 10:18:52 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18708,7 +18739,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Fri, 05 Nov 2021 10:49:38 +0000',
+    date: 'Thu, 11 Nov 2021 10:18:52 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
