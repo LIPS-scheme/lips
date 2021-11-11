@@ -160,7 +160,7 @@
 (define (exact? n) "(exact? n)" (typecheck "exact?" n "number") (let ((type n.__type__)) (or (string=? type "bigint") (string=? type "rational") (and (string=? type "complex") (exact? n.__im__) (exact? n.__re__)))))
 (define (inexact? n) "(inexact? n)" (typecheck "inexact?" n "number") (not (exact? n)))
 (define (exact->inexact n) "(exact->inexact n)\u000A\u000AConvert exact number to inexact." (typecheck "exact->inexact" n "number") (if (%number-type "complex" n) (lips.LComplex (object :im (exact->inexact (. n (quote __im__))) :re (exact->inexact (. n (quote __re__))))) (if (or (rational? n) (integer? n)) (lips.LFloat (--> n (valueOf)) #t) n)))
-(define (inexact->exact n) "(inexact->exact number)\u000A\u000AFuncion convert real number to exact ratioanl number." (typecheck "inexact->exact" n "number") (if (or (real? n) (%number-type "complex" n)) (--> n (toRational)) n))
+(define (inexact->exact n) "(inexact->exact number)\u000A\u000AFuncion convert real number to exact ratioanl number." (typecheck "inexact->exact" n "number") (if (exact? n) n (--> n (toRational))))
 (define (log z) "(log z)\u000A\u000AFuncntion calculates natural logarithm of z. Where argument can be\u000Aany number (including complex negative and rational).\u000AIf the value is 0 it return NaN." (cond ((real? z) (cond ((zero? z) +nan.0) ((> z 0) (Math.log z)) (else (+ (Math.log (abs z)) (* Math.PI +1i))))) ((complex? z) (let ((arg (Math.atan2 (imag-part z) (real-part z)))) (+ (Math.log (z.modulus)) (* +1i arg)))) ((rational? z) (log (exact->inexact z)))))
 (define _maths (list "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
 (define _this_env (current-environment))

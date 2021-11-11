@@ -1943,9 +1943,9 @@
 
    Funcion convert real number to exact ratioanl number."
   (typecheck "inexact->exact" n "number")
-  (if (or (real? n) (%number-type "complex" n))
-      (--> n (toRational))
-      n))
+  (if (exact? n)
+      n
+      (--> n (toRational))))
 
 ;; -----------------------------------------------------------------------------
 (define (log z)
