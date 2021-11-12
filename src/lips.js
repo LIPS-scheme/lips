@@ -1457,7 +1457,7 @@ class Parser {
     is_open(token) {
         const result = ['(', '['].includes(token);
         if (result) {
-            this._state.parentheses++
+            this._state.parentheses++;
         }
         return result;
     }

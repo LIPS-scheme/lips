@@ -8,6 +8,7 @@
 * improve bootstrapping by using same URL of the script if possible
 * add `set-global!` macro
 * add `current-second`, `current-jiffy`, and `jiffies-per-second` procedures
+* improve error message in `-->` macro when function not found
 ### Bugfix
 * fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
 * fix type of `process.env`

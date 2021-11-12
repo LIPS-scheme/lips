@@ -76,24 +76,19 @@
 ;; -----------------------------------------------------------------------------
 (define-macro (--> expr . code)
   "Helper macro that simplify calling methods on objects. It work with chaining
-
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
                (on \"click\" (lambda () (display \"click\"))))
-
           (--> document (querySelectorAll \"div\"))
-
           (--> (fetch \"https://jcubic.pl\")
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
-
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
                'innerHTML
                (replace #/<(\"[^\"]+\"|[^>])+>/g \"\"))
-
           (--> document.body
                (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
@@ -111,6 +106,7 @@
                          `(set! ,obj ,value)))))
               code)
        ,obj)))
+
 
 ;; -----------------------------------------------------------------------------
 (define-macro (define-global first . rest)

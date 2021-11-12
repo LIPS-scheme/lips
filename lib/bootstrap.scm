@@ -74,26 +74,21 @@
    (and (pair? x) (eq? (car x) 'quote) (symbol? (cadr x)) (null? (cddr x))))
 
 ;; -----------------------------------------------------------------------------
-(define-macro (--> expr . code)
+(define-macro (--> expr . body)
   "Helper macro that simplify calling methods on objects. It work with chaining
-
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
                (on \"click\" (lambda () (display \"click\"))))
-
           (--> document (querySelectorAll \"div\"))
-
           (--> (fetch \"https://jcubic.pl\")
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
-
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
                'innerHTML
                (replace #/<(\"[^\"]+\"|[^>])+>/g \"\"))
-
           (--> document.body
                (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
@@ -109,8 +104,9 @@
                      ,(if (and (pair? code) (not (quoted-symbol? code)))
                          `(set! ,obj (,value ,@(cdr code)))
                          `(set! ,obj ,value)))))
-              code)
+              body)
        ,obj)))
+
 
 ;; -----------------------------------------------------------------------------
 (define-macro (define-global first . rest)
