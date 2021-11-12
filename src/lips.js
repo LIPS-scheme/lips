@@ -1479,15 +1479,11 @@ class Parser {
                 this.skip();
                 break;
             }
-            const next = await this._read_object();
-            if (next === eof) {
-                throw new Error('Parser: Expected token eof found');
-            }
             if (token === '.' && head !== nil) {
                 this.skip();
-                prev.cdr = next;
+                prev.cdr = await this._read_object();
             } else {
-                const cur = new Pair(next, nil);
+                const cur = new Pair(await this._read_object(), nil);
                 if (head === nil) {
                     head = cur;
                 } else {
