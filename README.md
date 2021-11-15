@@ -1,12 +1,12 @@
 <h1 align="center">
-  <img src="https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true"
+  <img src="https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true"
        alt="LIPS - Scheme Based Powerful Lisp Language" />
 </h1>
 
-[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.15-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
+[![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.16-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=devel&1eec8b962e54e4acd16206ac4e5cf9609e281fbd)](https://travis-ci.com/github/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&17423cfd6c8eebb2ada372b7a12083bd)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&3dd32fccc26732d8149810e51027b525647c5579)](https://travis-ci.com/github/jcubic/lips)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&17423cfd6c8eebb2ada372b7a12083bd)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -159,7 +159,7 @@ npm install -g @jcubic/lips@beta
 
 you can run the interpreter from the terminal:
 
-![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
 
 
 You can also run code in a string with:
@@ -201,7 +201,7 @@ Because LIPS is tree walking interpreter sometimes it may be slow. Especially if
 process long arrays and use callback function. If the array is quite large each pice of code
 inside the callback may slow down the processing. For example see:
 
-script [reference.scm](https://github.com/jcubic/lips/blob/devel/scripts/reference.scm)
+script [reference.scm](https://github.com/jcubic/lips/blob/master/scripts/reference.scm)
 
 That generates reference documentation for all builtin functions and macros.
 The slow part is `(names.sort name-compare)` (`Array::sort`) that take quite time to calculate,

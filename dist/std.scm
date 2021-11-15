@@ -74,7 +74,7 @@
    (and (pair? x) (eq? (car x) 'quote) (symbol? (cadr x)) (null? (cddr x))))
 
 ;; -----------------------------------------------------------------------------
-(define-macro (--> expr . code)
+(define-macro (--> expr . body)
   "Helper macro that simplify calling methods on objects. It work with chaining
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
@@ -104,7 +104,7 @@
                      ,(if (and (pair? code) (not (quoted-symbol? code)))
                          `(set! ,obj (,value ,@(cdr code)))
                          `(set! ,obj ,value)))))
-              code)
+              body)
        ,obj)))
 
 
