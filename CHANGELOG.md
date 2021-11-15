@@ -1,6 +1,25 @@
+## 1.0.0-beta.16
+### Breaking
+* replace `get-script` with `get-resource` that work in Node and in browser and allows to load CSS
+### Features
+* add `object->alist`, `command-line`, and `symbol-append` procedures
+* add SRFI: 193
+* add `get-environment-variable` and `get-environment-variables`
+* improve bootstrapping by using same URL of the script if possible
+* add `set-global!` macro
+* add `current-second`, `current-jiffy`, and `jiffies-per-second` procedures
+* improve error message in `-->` macro when function not found
+### Bugfix
+* fix async script execution in browser [#190](https://github.com/jcubic/lips/issues/190)
+* fix type of `process.env`
+* fix module load path when load scripts from Node.js
+* fix bug in `quasiquote` and `unquote-splicing` [#194](https://github.com/jcubic/lips/issues/194)
+* fix `inexact->exact` on integers [#199](https://github.com/jcubic/lips/issues/199)
+* throw error on missing parentheses [#198](https://github.com/jcubic/lips/issues/198)
+
 ## 1.0.0-beta.15
 ### Breaking
-* bootstrap URL now require full url to the file with standard library
+* bootstrap URL now require full URL to the file with standard library
 ### Features
 * improve performance of `**` operator when JS support exponential operator
 * add alias for `string-join` and `string-split`

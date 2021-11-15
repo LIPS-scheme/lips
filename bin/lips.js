@@ -199,6 +199,7 @@ var newline;
 const moduleURL = new URL(import.meta.url);
 const __dirname = path.dirname(moduleURL.pathname);
 const __filename = path.basename(moduleURL.pathname);
+const command_line = [];
 var interp = Interpreter('repl', {
     stdin: InputPort(function() {
         return new Promise(function(resolve) {
@@ -223,6 +224,7 @@ var interp = Interpreter('repl', {
     // -------------------------------------------------------------------------
     __dirname: __dirname,
     __filename: __filename,
+    command_line,
     // -------------------------------------------------------------------------
     'stack-trace': doc(function() {
         if (strace) {
@@ -271,6 +273,13 @@ function readFile(filename) {
 }
 
 // -----------------------------------------------------------------------------
+function get_command_line_args() {
+    const filename = options._[0];
+    const index = process.argv.findIndex((item) => item === filename);
+    return process.argv.slice(index);
+}
+
+// -----------------------------------------------------------------------------
 if (options.version || options.V) {
     // SRFI 176
     global.output = Pair.fromArray([
@@ -278,7 +287,7 @@ if (options.version || options.V) {
         ["website", "https://lips.js.org"],
         ['languages', 'scheme', 'r5rs', 'r7rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
-        ["scheme.srfi", 0, 4, 6, 10, 22, 23, 46, 176],
+        ["scheme.srfi", 0, 1, 2, 4, 6, 8, 10, 22, 23, 26, 46, 69, 98, 111, 156, 176],
         ["release", version],
         ["os.uname", os.platform(), os.release()],
         ["os.env.LANG", process.env.LANG],
@@ -312,6 +321,7 @@ if (options.version || options.V) {
         const ext = '.xcb';
         const compiled_name = filename.replace(/\.[^.]+$/, '') + ext;
         var code = readFile(filename);
+        const cwd = process.cwd();
         bootstrap(interp).then(function() {
             return compile(code, interp.__env__).then(code => {
                 if (!quiet) {
@@ -352,6 +362,7 @@ if (options.version || options.V) {
         process.exit();
     });
     const filename = options._[0];
+    command_line.push(...get_command_line_args());
     try {
         const code = readCode(filename);
         bootstrap(interp).then(() => {

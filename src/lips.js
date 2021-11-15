@@ -37,7 +37,7 @@
 /*
  * TODO: consider using exec in env.eval or use different maybe_async code
  */
-/* global jQuery, BigInt, Map, Set, Symbol, importScripts, Uint8Array */
+/* global jQuery, BigInt, Map, WeakMap, Set, Symbol, importScripts, Uint8Array */
 "use strict";
 
 const root = typeof global !== 'undefined' ? global : self;
@@ -49,6 +49,32 @@ import unfetch from 'unfetch';
 if (!root.fetch) {
     root.fetch = unfetch;
 }
+
+// -------------------------------------------------------------------------
+// :: typechecking maps
+// -------------------------------------------------------------------------
+const type_mapping = {
+    'pair': Pair,
+    'symbol': LSymbol,
+    'number': LNumber,
+    'array': Array,
+    'nil': Nil,
+    'character': LCharacter,
+    'values': Values,
+    'input-port': InputPort,
+    'output-port': OutputPort,
+    'regex': RegExp,
+    'syntax': Syntax,
+    'eof': EOF,
+    'macro': Macro,
+    'string': LString,
+    'native-symbol': Symbol
+};
+const type_constants = new Map([
+    [NaN, 'NaN'],
+    [null, 'null']
+]);
+// -------------------------------------------------------------------------
 
 let fs, path, nodeRequire;
 
@@ -1375,6 +1401,9 @@ class Parser {
         read_only(this, '_meta', meta, { hidden: true });
         // datum labels
         read_only(this, '_refs', [], { hidden: true });
+        read_only(this, '_state', {
+            parentheses: 0
+        }, { hidden: true });
     }
     resolve(name) {
         return this.__env__ && this.__env__.get(name, { throwError: false });
@@ -1426,10 +1455,18 @@ class Parser {
         return m && m[1];
     }
     is_open(token) {
-        return ['(', '['].includes(token);
+        const result = ['(', '['].includes(token);
+        if (result) {
+            this._state.parentheses++;
+        }
+        return result;
     }
     is_close(token) {
-        return [')', ']'].includes(token);
+        const result = [')', ']'].includes(token);
+        if (result) {
+            this._state.parentheses--;
+        }
+        return result;
     }
     async read_list() {
         let head = nil, prev = head;
@@ -1483,6 +1520,16 @@ class Parser {
             return this._resolve_object(object);
         }
         return object;
+    }
+    ballanced() {
+        return this._state.parentheses === 0;
+    }
+    ballancing_error(expr) {
+        const count = this._state.parentheses;
+        const e = new Error('Parser: expected parenthesis but eof found');
+        const re = new RegExp(`\\){${count}}$`);
+        e.__code__ = [expr.toString().replace(re, '')];
+        throw e;
     }
     async _resolve_object(object) {
         if (Array.isArray(object)) {
@@ -1632,6 +1679,9 @@ async function* parse(arg, env) {
     const parser = new Parser(arg, { env });
     while (true) {
         const expr = await parser.read_object();
+        if (!parser.ballanced()) {
+            parser.ballancing_error(expr);
+        }
         if (expr === eof) {
             break;
         }
@@ -1663,7 +1713,7 @@ function unpromise_array(array, fn, error) {
             if (Object.isFrozen(array)) {
                 Object.freeze(arr);
             }
-            return arr;
+            return fn(arr);
         }, error);
     }
     return fn(array);
@@ -4570,7 +4620,8 @@ function limit_math_op(n, fn) {
     return limit(n + 1, curry(guard_math_call, fn));
 }
 // -------------------------------------------------------------------------
-// some functional magic
+// :: some functional magic
+// -------------------------------------------------------------------------
 var single_math_op = curry(limit_math_op, 1);
 var binary_math_op = curry(limit_math_op, 2);
 // -------------------------------------------------------------------------
@@ -6411,10 +6462,10 @@ EOF.prototype.toString = function() {
 // -------------------------------------------------------------------------
 // simpler way to create interpreter with interaction-environment
 // -------------------------------------------------------------------------
-function Interpreter(name, { stderr, stdin, stdout, ...obj } = {}) {
+function Interpreter(name, { stderr, stdin, stdout, command_line = null, ...obj } = {}) {
     if (typeof this !== 'undefined' && !(this instanceof Interpreter) ||
         typeof this === 'undefined') {
-        return new Interpreter(name, { stdin, stdout, stderr, ...obj });
+        return new Interpreter(name, { stdin, stdout, stderr, command_line, ...obj });
     }
     if (typeof name === 'undefined') {
         name = 'anonymous';
@@ -6435,6 +6486,7 @@ function Interpreter(name, { stderr, stdin, stdout, ...obj } = {}) {
     if (is_port(stdout)) {
         inter.set('stdout', stdout);
     }
+    inter.set('command-line', command_line);
     set_interaction_env(this.__env__, inter);
 }
 // -------------------------------------------------------------------------
@@ -6861,6 +6913,7 @@ var internal_env = new Environment({
     stderr: new BufferedOutputPort(function(...args) {
         console.error(...args);
     }),
+    'command-line': [],
     // ------------------------------------------------------------------
     stdin: InputPort(function() {
         return Promise.resolve(prompt(''));
@@ -7203,8 +7256,6 @@ var global_env = new Environment({
 
              Function generate unique symbol, to use with macros as meta name.`),
     // ------------------------------------------------------------------
-    // TODO: (load filename environment-specifier)
-    // ------------------------------------------------------------------
     load: doc('load', function load(file, env) {
         typecheck('load', file, 'string');
         var g_env = this;
@@ -7220,6 +7271,7 @@ var global_env = new Environment({
                 env = this.get('**interaction-environment**');
             }
         }
+        // TODO: move **module-path** to internal env
         const PATH = '**module-path**';
         var module_path = global_env.get(PATH, { throwError: false });
         file = file.valueOf();
@@ -7252,11 +7304,22 @@ var global_env = new Environment({
                 });
         }
         if (is_node()) {
-            return new Promise((resolve, reject) => {
-                var path = nodeRequire('path');
+            return new Promise(async (resolve, reject) => {
+                const path = nodeRequire('path');
+                let cwd;
                 if (module_path) {
                     module_path = module_path.valueOf();
                     file = path.join(module_path, file);
+                } else {
+                    const cmd = g_env.get('command-line', { throwError: false });
+                    let args;
+                    if (cmd) {
+                        args = await cmd();
+                    }
+                    if (args && args !== nil) {
+                        cwd = process.cwd();
+                        file = path.join(path.dirname(args.car.valueOf()), file);
+                    }
                 }
                 global_env.set(PATH, path.dirname(file));
                 nodeRequire('fs').readFile(file, function(err, data) {
@@ -9585,38 +9648,34 @@ function is_iterator(obj, symbol) {
         return is_function(obj[symbol]);
     }
 }
+
+// -------------------------------------------------------------------------
+function memoize(fn) {
+    var memo = new WeakMap();
+    return function(arg) {
+        var result = memo.get(arg);
+        if (!result) {
+            result = fn(arg);
+        }
+        return result;
+    };
+}
+// -------------------------------------------------------------------------
+/* eslint-disable no-func-assign */
+type = memoize(type);
+/* eslint-enable no-func-assign */
 // -------------------------------------------------------------------------
 function type(obj) {
-    var mapping = {
-        'pair': Pair,
-        'symbol': LSymbol,
-        'character': LCharacter,
-        'values': Values,
-        'input-port': InputPort,
-        'output-port': OutputPort,
-        'number': LNumber,
-        'regex': RegExp,
-        'syntax': Syntax,
-        'macro': Macro,
-        'string': LString,
-        'array': Array,
-        'native-symbol': Symbol
-    };
-    if (Number.isNaN(obj)) {
-        return 'NaN';
-    }
-    if (obj === nil) {
-        return 'nil';
-    }
-    if (obj === null) {
-        return 'null';
-    }
-    for (let [key, value] of Object.entries(mapping)) {
-        if (obj instanceof value) {
-            return key;
-        }
+    let t = type_constants.get(obj);
+    if (t) {
+        return t;
     }
     if (typeof obj === 'object') {
+        for (let [key, value] of Object.entries(type_mapping)) {
+            if (obj instanceof value) {
+                return key;
+            }
+        }
         if (obj.__instance__) {
             obj.__instance__ = false;
             if (obj.__instance__) {
@@ -9637,6 +9696,9 @@ function type(obj) {
                 if (is_iterator(obj, Symbol.asyncIterator)) {
                     return 'async-iterator';
                 }
+            }
+            if (obj.constructor.name === '') {
+                return 'object';
             }
             return obj.constructor.name.toLowerCase();
         }
@@ -10009,15 +10071,41 @@ function fworker(fn) {
     }
     return new root.Worker(URL.createObjectURL(blob));
 }
+
 // -------------------------------------------------------------------------
 function is_dev() {
     return lips.version.match(/^(\{\{VER\}\}|DEV)$/);
 }
+
+// -------------------------------------------------------------------------
+function get_current_script() {
+    if (is_node()) {
+        return;
+    }
+    let script;
+    if (document.currentScript) {
+        script = document.currentScript;
+    } else {
+        const scripts = document.querySelectorAll('script');
+        if (!scripts.length) {
+            return;
+        }
+        script = scripts[scripts.length - 1];
+    }
+    const url = script.getAttribute('src');
+    return url;
+}
+
+// -------------------------------------------------------------------------
+const current_script = get_current_script();
+
 // -------------------------------------------------------------------------
 function bootstrap(url = '') {
     const std = 'dist/std.xcb';
     if (url === '') {
-        if (is_dev()) {
+        if (current_script) {
+            url = current_script.replace(/[^/]*$/, 'std.xcb');
+        } else if (is_dev()) {
             url = `https://cdn.jsdelivr.net/gh/jcubic/lips@devel/${std}`;
         } else {
             url = `https://cdn.jsdelivr.net/npm/@jcubic/lips@${lips.version}/${std}`;
@@ -10359,13 +10447,13 @@ function init() {
                     if (lips_mimes.includes(type)) {
                         var bootstrap_attr = script.getAttribute('bootstrap');
                         if (!bootstraped && typeof bootstrap_attr === 'string') {
-                            bootstrap(bootstrap_attr).then(function() {
+                            return bootstrap(bootstrap_attr).then(function() {
                                 return load(script, function(e) {
                                     console.error(e);
                                 });
                             }).then(loop);
                         } else {
-                            load(script, function(e) {
+                            return load(script, function(e) {
                                 console.error(e);
                             }).then(loop);
                         }

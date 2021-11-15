@@ -776,7 +776,7 @@
         (t.is (last (1 2 3 4 5 6)) 6)
         (t.is (last (1)) 1)
         (t.is (last ()) ())
-        (t.is (to.throw (last)) true))
+        (t.is (to.throw (last)) true)))
 
 (test "syntax: it should find last item in argument list"
       (lambda (t)

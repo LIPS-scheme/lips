@@ -428,9 +428,9 @@
 
    Funcion convert real number to exact ratioanl number."
   (typecheck "inexact->exact" n "number")
-  (if (or (real? n) (%number-type "complex" n))
-      (--> n (toRational))
-      n))
+  (if (exact? n)
+      n
+      (--> n (toRational))))
 
 ;; -----------------------------------------------------------------------------
 (define (log z)
@@ -1298,15 +1298,7 @@
 
        Function return new Input Port with given filename. In Browser user need to
        provide global fs variable that is instance of FS interface."
-      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
-        (if (null? fs)
-            (throw (new Error "open-input-file: fs not defined"))
-            (begin
-              (if (not (procedure? readFile))
-                  (let ((_readFile (promisify fs.readFile)))
-                    (set! readFile (lambda (filename)
-                                     (--> (_readFile filename) (toString))))))
-              (new lips.InputFilePort (readFile filename) filename)))))))
+      (new lips.InputFilePort (%read-file false filename) filename))))
 
 ;; -----------------------------------------------------------------------------
 (define (close-input-port port)

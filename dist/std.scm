@@ -76,24 +76,19 @@
 ;; -----------------------------------------------------------------------------
 (define-macro (--> expr . code)
   "Helper macro that simplify calling methods on objects. It work with chaining
-
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
                (on \"click\" (lambda () (display \"click\"))))
-
           (--> document (querySelectorAll \"div\"))
-
           (--> (fetch \"https://jcubic.pl\")
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
-
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
                'innerHTML
                (replace #/<(\"[^\"]+\"|[^>])+>/g \"\"))
-
           (--> document.body
                (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
@@ -111,6 +106,7 @@
                          `(set! ,obj ,value)))))
               code)
        ,obj)))
+
 
 ;; -----------------------------------------------------------------------------
 (define-macro (define-global first . rest)
@@ -142,7 +138,7 @@
     `(let ((,name ,expr))
        ,@(filter pair?
                  (map (lambda (key)
-                        (if (and (not (match /^_/ key)) (function? (. obj key)))
+                        (if (and (not (match #/^_/ key)) (function? (. obj key)))
                             (let* ((args (gensym "args")))
                               `(define-global (,(make-name key) . ,args)
                                  (apply (. ,name ,key) ,args)))))
@@ -228,6 +224,16 @@
   (if (pair? alist)
       (alist.to_object)
       (alist->object (new lips.Pair undefined nil))))
+
+;; -----------------------------------------------------------------------------
+(define (object->alist object)
+  "(object->alist object)
+
+   Function convert JavaScript object to Alist"
+  (typecheck "object->alist" object "object")
+  (vector->list (--> (Object.entries object)
+                     (map (lambda (arr)
+                            (apply cons (vector->list arr)))))))
 
 ;; -----------------------------------------------------------------------------
 (define (parent.frames)
@@ -592,6 +598,17 @@
      (--> **internal-env** (get 'stdin))))
 
 ;; -----------------------------------------------------------------------------
+(define (command-line)
+  "(command-line)
+
+   Function return command line arguments or empty list"
+  (let ((args (let-env (interaction-environment)
+                       (--> **internal-env** (get 'command-line)))))
+    (if (or (null? args) (zero? (length args)))
+        '("")
+        (vector->list args))))
+
+;; -----------------------------------------------------------------------------
 (define (flush-output . rest)
   "(flush-output)
 
@@ -904,17 +921,38 @@
                 name
                 symbol))
          (alist->object (,'quasiquote ,(map (lambda (pair)
-                                             (cons (symbol->string (car pair))
-                                                   (list 'unquote (cadr pair))))
-                                           attrs)))
+                                              (cons (symbol->string (car pair))
+                                                    (list 'unquote (cadr pair))))
+                                            attrs)))
          ,@(if (null? rest)
               nil
               (let ((first (car rest)))
                 (if (pair? first)
-                    (map (lambda (expr)
-                           (%sxml h expr))
-                         rest)
+                    (cond ((symbol=? 'sxml-unquote (car first))
+                           (cdr first))
+                          (else
+                           (map (lambda (expr)
+                                  (%sxml h expr))
+                                rest)))
                     (list first)))))))
+
+;; -----------------------------------------------------------------------------
+;; mapping ~ and into longer form (the same as built-in , and ,@)
+;; -----------------------------------------------------------------------------
+(set-special! "~" 'sxml-unquote-mapper)
+
+;; -----------------------------------------------------------------------------
+(define (sxml-unquote-mapper expression)
+  `(sxml-unquote ,expression))
+
+;; -----------------------------------------------------------------------------
+(define (sxml-unquote)
+  "(sxml-unquote expression)
+   ~expression
+
+  Thread expression as code and evaluate it inside sxml, similar to unquote
+  with quasiquote."
+  (throw "sxml-unquote: Can't use outside of sxml"))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (pragma->sxml pragma)
@@ -950,21 +988,36 @@
   (make-tags expr))
 
 ;; -----------------------------------------------------------------------------
-(define (get-script url)
-  "(get-script url)
+(define (get-resource url)
+  "(get-resource url)
 
-   Load JavaScript file in browser by adding script tag to head of the current document."
+   Load JavaScript or CSS file in browser by adding script tag to head of the current document.
+   When called from Node it allow it allow to load JavaScript files only."
+  (typecheck "get-resource" url "string")
   (if (not (bound? 'document))
-      (throw (new Error "get-script: document not defined"))
-      (let ((script (document.createElement "script")))
-        (new Promise (lambda (resolve reject)
-                        (set-obj! script 'src url)
-                        (set-obj! script 'onload (lambda ()
-                                                   (resolve)))
-                        (set-obj! script 'onerror (lambda ()
-                                                    (reject "get-script: Failed to load")))
-                        (if document.head
-                            (document.head.appendChild script)))))))
+      (if (eq? self global)
+          (let ((code (%read-file false url)))
+            (self.eval code))
+          (throw (new Error "get-script: document not defined")))
+      (let ((load (lambda (node)
+                    (new Promise (lambda (resolve reject)
+                                   (set! node.onload (lambda ()
+                                                       (resolve)))
+                                   (set! node.onerror (lambda ()
+                                                        (reject (string-append
+                                                                 "get-resource: Failed to load "
+                                                                 url))))
+                                   (if document.head
+                                       (document.head.appendChild node)))))))
+      (cond ((url.match #/.js$/)
+             (let ((script (document.createElement "script")))
+               (set! script.src url)
+               (load script)))
+            ((url.match #/.css$/)
+             (let ((link (document.createElement "link")))
+               (set! link.href url)
+               (set! link.rel "stylesheet")
+               (load link)))))))
 
 ;; -----------------------------------------------------------------------------
 (define (gensym? value)
@@ -1264,7 +1317,8 @@
        The code that use those function, in binary mode, need to check
        if the result is ArrayBuffer or Node.js/BrowserFS Buffer object."
       (if (not read-file)
-          (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+          (let ((fs (--> (interaction-environment)
+                         (get '**internal-env**) (get 'fs &(:throwError false)))))
             (if (null? fs)
                 (throw (new Error "open-input-file: fs not defined"))
                 (let ((*read-file* (promisify fs.readFile)))
@@ -1440,6 +1494,21 @@
 ;; -----------------------------------------------------------------------------
 (define string-join join)
 (define string-split split)
+
+;; -----------------------------------------------------------------------------
+(define (symbol-append . rest)
+   "(symbol-append s1 s2 ...)
+
+    Function create new symbol from symbols passed as arguments."
+   (string->symbol (apply string-append (map symbol->string rest))))
+
+;; -----------------------------------------------------------------------------
+(define-macro (set-global! name)
+   "(set-global! name)
+
+    Macro make the name global variable."
+   (let ((var (symbol-append 'self. name)))
+     `(set! ,var ,name)))
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
@@ -1870,9 +1939,9 @@
 
    Funcion convert real number to exact ratioanl number."
   (typecheck "inexact->exact" n "number")
-  (if (or (real? n) (%number-type "complex" n))
-      (--> n (toRational))
-      n))
+  (if (exact? n)
+      n
+      (--> n (toRational))))
 
 ;; -----------------------------------------------------------------------------
 (define (log z)
@@ -2740,15 +2809,7 @@
 
        Function return new Input Port with given filename. In Browser user need to
        provide global fs variable that is instance of FS interface."
-      (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
-        (if (null? fs)
-            (throw (new Error "open-input-file: fs not defined"))
-            (begin
-              (if (not (procedure? readFile))
-                  (let ((_readFile (promisify fs.readFile)))
-                    (set! readFile (lambda (filename)
-                                     (--> (_readFile filename) (toString))))))
-              (new lips.InputFilePort (readFile filename) filename)))))))
+      (new lips.InputFilePort (%read-file false filename) filename))))
 
 ;; -----------------------------------------------------------------------------
 (define (close-input-port port)
@@ -4291,6 +4352,52 @@
    Returns a list of the irritants encapsulated by error-object."
   (if (error-object? obj)
       obj.args))
+
+;; -----------------------------------------------------------------------------
+(define (get-environment-variables)
+  "(get-environment-variables)
+
+   Function returns all variables as alist. This funtion throws exception
+   when called in browser."
+  (if (eq? self window)
+      (throw "get-environment-variables: Node.js only funtion")
+      (object->alist process.env)))
+
+;; -----------------------------------------------------------------------------
+(define (get-environment-variable name)
+  "(get-environment-variable name)
+
+   Function return given environment variable. This funtion throws exception
+   when called in browser."
+  (. process.env name))
+
+;; -----------------------------------------------------------------------------
+(define (current-second)
+  "(current-second)
+
+   Functionn return exact integer of the seconds since January 1, 1970"
+  (inexact->exact (truncate (/ (+ %%start-jiffy (current-jiffy)) (jiffies-per-second)))))
+
+;; -----------------------------------------------------------------------------
+(define %%start-jiffy
+  (truncate (* 1000 (if (eq? self window)
+                        performance.timing.navigationStart
+                        performance.timeOrigin)))
+  "Constant value that indicates start jiffy of the scheme process.")
+
+;; -----------------------------------------------------------------------------
+(define (current-jiffy)
+  "(current-jiffy)
+
+   Retturn corrent jiffy. In LIPS is jiffy since start of the process.
+   You can divide this value by (jiffies-per-second) to get seconds since
+   start of the process. And you can add %%start-jiffy to get jiffy since
+   January 1, 1970."
+  (inexact->exact (truncate (* (performance.now) 1000))))
+
+;; -----------------------------------------------------------------------------
+(define (jiffies-per-second)
+  1000000)
 ;; -----------------------------------------------------------------------------
 ;; init internal fs for LIPS Scheme Input/Output functions
 ;; -----------------------------------------------------------------------------

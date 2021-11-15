@@ -1,4 +1,7 @@
-![LIPS - Scheme Based Powerful Lisp Language](https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/lips.svg?raw=true)
+<h1 align="center">
+  <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/lips.svg?raw=true"
+       alt="LIPS - Scheme Based Powerful Lisp Language" />
+</h1>
 
 [![npm](https://img.shields.io/badge/npm-{{VER_DASH}}-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
@@ -214,8 +217,38 @@ something like this:
    (arr.sort fn))
 ```
 
+## Supported SRFI
+
+### built-in
+
+| description | spec |
+| :--- | ---: |
+| Feature-based conditional expansion construct | [SRFI-0](https://srfi.schemers.org/srfi-0/) |
+| Homogeneous numeric vector datatypes | [SRFI-4](https://srfi.schemers.org/srfi-4/) |
+| Basic String Ports | [SRFI-6](https://srfi.schemers.org/srfi-6/) |
+| Running Scheme Scripts on Unix  | [SRFI-22](https://srfi.schemers.org/srfi-22/) |
+| Error reporting mechanism | [SRFI-23](https://srfi.schemers.org/srfi-23/) |
+| Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
+| Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
+
+### require `(load "./lib/srfi/<number>.scm")`
+
+They should be loaded as R7RS libraries in final 1.0.0 version
+
+| description | spec |
+| :--- | ---: |
+| List Library | [SRFI-1](https://srfi.schemers.org/srfi-1/) |
+|  `AND-LET*`: an AND with local bindings, a guarded `LET*` special form | [SRFI-2](https://srfi.schemers.org/srfi-2/) |
+| receive: Binding to multiple values | [SRFI-8](https://srfi.schemers.org/srfi-8/) |
+| `#,` external form | [SRFI-10](https://srfi.schemers.org/srfi-10/) |
+| Notation for Specializing Parameters without Currying | [SRFI-26](https://srfi.schemers.org/srfi-26/) |
+| Basic hash tables | [SRFI-69](https://srfi.schemers.org/srfi-69/) |
+| An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
+| Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
+| Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
+
 ## Links
-* [Gitter Chat](https://gitter.im/jcubic/lips)
+* [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
 * [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 
