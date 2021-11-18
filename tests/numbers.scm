@@ -45,7 +45,7 @@
         (t.is (number->string 10.0-nan.0i) "10.0+nan.0i")
         (t.is (number->string 1/2-nan.0i) "1/2+nan.0i")))
 
-(test "numbers: operators + with NaN"
+(test "numbers: operator + with NaN"
       (lambda (t)
         (t.is (+ +nan.0+nan.0i 10) +nan.0+nan.0i)
         (t.is (+ +nan.0+nan.0i 10.0) +nan.0+nan.0i)
@@ -101,7 +101,7 @@
         (t.is (+ 1/2 +nan.0) +nan.0)
         (t.is (+ 10+10i +nan.0) +nan.0+10i)))
 
-(test "numbers: operators + with +inf.0"
+(test "numbers: operator + with +inf.0"
       (lambda (t)
         (t.is (+ +inf.0+inf.0i 10) +inf.0+inf.0i)
         (t.is (+ +inf.0+inf.0i 10.0) +inf.0+inf.0i)
@@ -157,7 +157,7 @@
         (t.is (+ 1/2 +inf.0) +inf.0)
         (t.is (+ 10+10i +inf.0) +inf.0+10i)))
 
-(test "operators: / with NaN"
+(test "numbers: operator / with NaN"
       (lambda (t)
         (t.is (/ +nan.0+nan.0i 10) +nan.0+nan.0i)
         (t.is (/ +nan.0+nan.0i 10.0) +nan.0+nan.0i)
@@ -504,7 +504,7 @@
 
         (t.is (remainder -13 -4.0) -1.0)))
 
-(test "numbers: operators +"
+(test "numbers: operator +"
       (lambda (t)
         (t.is (+ 1 1.0 1/10) 2.1)
         (t.is (number->string (+ 1/2 1/2 1.0)) "2.0")
@@ -564,7 +564,7 @@
         (t.is (+ 1/2+0.1i 1/2) 1+0.1i)
         (t.is (+ 1/2+0.1i 0.1) 0.6+0.1i)))
 
-(test "numbers: operators -"
+(test "numbers: operator -"
       (lambda (t)
         (t.is (- 1 1.0 1/10) -0.1)
         (t.is (number->string (- 1/2 1/2 1.0)) "-1.0")
@@ -626,19 +626,37 @@
         (t.is (- 1/2+0.1i 1/2) 0.1i)
         (t.is (- 1/2+0.1i 0.1) 0.4+0.1i)))
 
-(test "numbers: operators /"
+(test "numbers: operator /"
       (lambda (t)
         ;; single arg
         (t.is (/ 10) 1/10)
         (t.is (/ 10.0) 0.1)
         (t.is (/ 1/10) 10)
+
         (t.is (/ 10+10i) 1/20-1/20i)
+        (t.is (/ 0.1+0.1i) 5.0-5.0i)
+        (t.is (/ 1/10+1/10i) 5-5i)
+
+        (t.is (/ 1/10+0.1i) 5-5.0i)
+        (t.is (/ 1/10+10i) 10/10001-1000/10001i)
+
+        (t.is (/ 0.1+1/10i) 4.999999999999999-4.999999999999999i)
+        (t.is (/ 0.1+10i) 0.000999900009999-0.0999900009999i)
+
+        (t.is (/ 10+1/10i) 1000/10001-10/10001i)
+        (t.is (/ 10+0.1i) 0.0999900009999-0.000999900009999i)
+
 
         (t.is (/ 10 10) 1)
         (t.is (/ 10 1/10) 100)
         (t.is (/ 10 2) 5)
         (t.is (/ 10 3) 10/3)
         (t.is (/ 10 2.0) 5.0)
+
+        (t.is (/ 10+10i 10+10i) 1)
+        (t.is (/ 0.1+0.1i 0.1+0.1i) 1.0)
+        (t.is (/ 1/10+1/10i 1/10+1/10i) 1)
+        (t.is (/ 3+6i 2+4i) 3/2)
 
         (t.is (/ 1 10+10i) 1/20-1/20i)
         (t.is (/ 1 10+10.0i) 0.05-0.05i)
@@ -672,6 +690,9 @@
         (t.is (/ 1.0 2) 0.5)
         (t.is (/ 1.0 1/10) 10.0)
 
+        (t.is (/ 2 1.0) 2.0)
+        (t.is (/ 1/10 1.0) 0.1)
+
         (t.is (/ 1.0 1+1i) 0.5-0.5i)
         (t.is (/ 1.0 1+1.0i) 0.5-0.5i)
         (t.is (/ 1.0 1+1/2i) 0.8-0.4i)
@@ -682,9 +703,21 @@
 
         (t.is (/ 1.0 1/2+1/2i) 1.0-1.0i)
         (t.is (/ 1.0 1/2+1.0i) 0.4-0.8i)
-        (t.is (/ 1.0 1/2+1i) 0.4-0.8i)))
+        (t.is (/ 1.0 1/2+1i) 0.4-0.8i)
 
-(test "numbers: operators *"
+        (t.is (/ 1+1i 1.0) 1.0+1.0i)
+        (t.is (/ 1+1.0i 1.0) 1.0+1.0i)
+        (t.is (/ 1+1/2i 1.0) 1.0+0.5i)
+
+        (t.is (/ 1.0+1.0i 1.0) 1.0+1.0i)
+        (t.is (/ 1.0+1i 1.0) 1.0+1.0i)
+        (t.is (/ 1.0+1/2i 1.0) 1.0+0.5i)
+
+        (t.is (/ 1/2+1/2i 1.0) 0.5+0.5i)
+        (t.is (/ 1/2+1.0i 1.0) 0.5+1.0i)
+        (t.is (/ 1/2+1i 1.0) 0.5+1.0i)))
+
+(test "numbers: operator *"
       (lambda (t)
         (t.is (* 10 10) 100)
         (t.is (* 10 1/10) 1)
@@ -898,7 +931,7 @@
         (t.is (exact->inexact 1/2+10i) 0.5+10.0i)
         (t.is (exact->inexact 1/2+10.0i) 0.5+10.0i)))
 
-(test "operation: exp"
+(test "numbers: operation exp"
       (lambda (t)
         ;; big int
         (t.is (exp 2) 7.38905609893065)

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 15 Nov 2021 19:33:52 +0000
+ * build: Thu, 18 Nov 2021 10:26:07 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5003,7 +5003,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Mon, 15 Nov 2021 19:33:52 +0000
+   * Build time: Thu, 18 Nov 2021 10:26:07 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -12448,13 +12448,29 @@
       throw new Error('[LComplex::div] Invalid value');
     }
 
-    var _this$coerce5 = this.coerce(n),
-        _this$coerce6 = _slicedToArray(_this$coerce5, 2),
-        a = _this$coerce6[0],
-        b = _this$coerce6[1];
+    if (this.cmp(n) === 0) {
+      var _this$coerce5 = this.coerce(n),
+          _this$coerce6 = _slicedToArray(_this$coerce5, 2),
+          _a = _this$coerce6[0],
+          _b = _this$coerce6[1];
+
+      var ret = _a.__im__.div(_b.__im__);
+
+      return ret.coerce(_b.__re__)[0];
+    }
+
+    var _this$coerce7 = this.coerce(n),
+        _this$coerce8 = _slicedToArray(_this$coerce7, 2),
+        a = _this$coerce8[0],
+        b = _this$coerce8[1];
 
     var denom = b.factor();
-    var num = a.mul(b.conjugate());
+    var conj = b.conjugate();
+    var num = a.mul(conj);
+
+    if (!LNumber.isComplex(num)) {
+      return num.div(denom);
+    }
 
     var re = num.__re__.op('/', denom);
 
@@ -12495,7 +12511,7 @@
       var result = fn(_this7.__re__, re, _this7.__im__, im);
 
       if ('im' in result && 're' in result) {
-        if (result.im.cmp(0) === 0 && !LNumber.isFloat(result.im)) {
+        if (result.im.cmp(0) === 0) {
           return result.re;
         }
 
@@ -12544,10 +12560,10 @@
 
 
   LComplex.prototype.cmp = function (n) {
-    var _this$coerce7 = this.coerce(n),
-        _this$coerce8 = _slicedToArray(_this$coerce7, 2),
-        a = _this$coerce8[0],
-        b = _this$coerce8[1];
+    var _this$coerce9 = this.coerce(n),
+        _this$coerce10 = _slicedToArray(_this$coerce9, 2),
+        a = _this$coerce10[0],
+        b = _this$coerce10[1];
 
     var _a$__re__$coerce = a.__re__.coerce(b.__re__),
         _a$__re__$coerce2 = _slicedToArray(_a$__re__$coerce, 2),
@@ -18694,10 +18710,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 15 Nov 2021 19:33:52 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 18 Nov 2021 10:26:07 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 15 Nov 2021 19:33:52 +0000').valueOf();
+    var date = LString('Thu, 18 Nov 2021 10:26:07 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18743,7 +18759,7 @@
   var lips = {
     version: '1.0.0-beta.16',
     banner: banner,
-    date: 'Mon, 15 Nov 2021 19:33:52 +0000',
+    date: 'Thu, 18 Nov 2021 10:26:07 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

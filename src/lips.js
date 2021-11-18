@@ -5476,9 +5476,18 @@ LComplex.prototype.div = function(n) {
     } else if (!LNumber.isComplex(n)) {
         throw new Error('[LComplex::div] Invalid value');
     }
+    if (this.cmp(n) === 0) {
+        const [ a, b ] = this.coerce(n);
+        const ret = a.__im__.div(b.__im__);
+        return ret.coerce(b.__re__)[0];
+    }
     const [ a, b ] = this.coerce(n);
     const denom = b.factor();
-    const num = a.mul(b.conjugate());
+    const conj = b.conjugate();
+    const num = a.mul(conj);
+    if (!LNumber.isComplex(num)) {
+        return num.div(denom);
+    }
     const re = num.__re__.op('/', denom);
     const im = num.__im__.op('/', denom);
     return LComplex({ re, im });
@@ -5507,7 +5516,7 @@ LComplex.prototype.complex_op = function(name, n, fn) {
     const calc = (re, im) => {
         var result = fn(this.__re__, re, this.__im__, im);
         if ('im' in result && 're' in result) {
-            if (result.im.cmp(0) === 0 && !LNumber.isFloat(result.im)) {
+            if (result.im.cmp(0) === 0) {
                 return result.re;
             }
             return LComplex(result, true);
