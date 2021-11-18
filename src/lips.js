@@ -8333,18 +8333,19 @@ var global_env = new Environment({
         });
     }, `(quasiquote list ,value ,@value)
 
-            Similar macro to \`quote\` but inside it you can use special
-            expressions unquote abbreviated to , that will evaluate expresion inside
-            and return its value or unquote-splicing abbreviated to ,@ that will
-            evaluate expression but return value without parenthesis (it will join)
-            the list with its value. Best used with macros but it can be used outside`),
+            Similar macro to \`quote\` but inside it you can use the special
+            expression \`unquote\` (abbreviated to \`,\`) that will evaluate the
+            expresion inside and return its value or \`unquote-splicing\`
+            (abbreviated to \`,@\`) that will evaluate the expression but return
+            the value without parentheses. Best used in macros but it can be used
+            outside them.`),
     // ------------------------------------------------------------------
     clone: doc('clone', function clone(list) {
         typecheck('clone', list, 'pair');
         return list.clone();
     }, `(clone list)
 
-            Function return clone of the list.`),
+            This function returns a copy of the list.`),
     // ------------------------------------------------------------------
     append: doc('append', function append(...items) {
         items = items.map(item => {
@@ -8356,8 +8357,8 @@ var global_env = new Environment({
         return global_env.get('append!').call(this, ...items);
     }, `(append item ...)
 
-            Function will create new list with eac argument appended to the end.
-            It will always return new list and not modify it's arguments.`),
+            This function will create new list with each argument added to the end.
+            It will always return new list and not modify its arguments.`),
     // ------------------------------------------------------------------
     'append!': doc('append!', function(...items) {
         var is_list = global_env.get('list?');
@@ -8379,9 +8380,9 @@ var global_env = new Environment({
         }, nil);
     }, `(append! arg1 ...)
 
-             Destructive version of append, it modify the list in place. It return
-             new list where each argument is appened to the end. It may modify
-             lists added as arguments.`),
+             Destructive version of append. It modifies the list in place.
+             It returns a new list where each argument is added to the end.
+             It may modify one of its arguments.`),
     // ------------------------------------------------------------------
     reverse: doc('reverse', function reverse(arg) {
         typecheck('reverse', arg, ['array', 'pair', 'nil']);
@@ -8398,8 +8399,8 @@ var global_env = new Environment({
         }
     }, `(reverse list)
 
-            Function will reverse the list or array. If value is not a list
-            or array it will throw exception.`),
+            This function will reverse the list. If the value is not a list
+            it will error.`),
     // ------------------------------------------------------------------
     nth: doc('nth', function nth(index, obj) {
         typecheck('nth', index, 'number');
@@ -8422,14 +8423,14 @@ var global_env = new Environment({
         }
     }, `(nth index obj)
 
-            Function return nth element of the list or array. If used with different
-            value it will throw exception`),
+            This function returns the nth element of the list. If used with a different
+            value it will error.`),
     // ------------------------------------------------------------------
     list: doc('list', function list(...args) {
         return args.reverse().reduce((list, item) => new Pair(item, list), nil);
     }, `(list . args)
 
-            Function create new list out of its arguments.`),
+            This function creates a new list out of its arguments.`),
     // ------------------------------------------------------------------
     substring: doc('substring', function substring(string, start, end) {
         typecheck('substring', string, 'string');
@@ -8438,14 +8439,15 @@ var global_env = new Environment({
         return string.substring(start.valueOf(), end && end.valueOf());
     }, `(substring string start end)
 
-            Function return part of the string starting at start ending with end.`),
+            This function returns part of the string starting at \`start\`
+            and ending with \`end\`.`),
     // ------------------------------------------------------------------
     concat: doc('concat', function concat(...args) {
         args.forEach((arg, i) => typecheck('concat', arg, 'string', i + 1));
         return args.join('');
     }, `(concat . strings)
 
-            Function create new string by joining its arguments`),
+            This function creates a new string by joining its arguments.`),
     // ------------------------------------------------------------------
     join: doc('join', function join(separator, list) {
         typecheck('join', separator, 'string');
@@ -8453,7 +8455,7 @@ var global_env = new Environment({
         return global_env.get('list->array')(list).join(separator);
     }, `(join separator list)
 
-            Function return string by joining elements of the list`),
+            This function returns a string made by joining elements of the list`),
     // ------------------------------------------------------------------
     split: doc('split', function split(separator, string) {
         typecheck('split', separator, ['regex', 'string']);
@@ -8461,7 +8463,7 @@ var global_env = new Environment({
         return global_env.get('array->list')(string.split(separator));
     }, `(split separator string)
 
-            Function create list by splitting string by separatar that can
+            This function creates a list by splitting string by the separator that can
             be a string or regular expression.`),
     // ------------------------------------------------------------------
     replace: doc('replace', function replace(pattern, replacement, string) {
@@ -8471,8 +8473,8 @@ var global_env = new Environment({
         return string.replace(pattern, replacement);
     }, `(replace pattern replacement string)
 
-            Function change pattern to replacement inside string. Pattern can be string
-            or regex and replacement can be function or string.`),
+            This function changes \`pattern\` to \`replacement\` within string.
+            Pattern can be a string or regex and replacement can be function or string.`),
     // ------------------------------------------------------------------
     match: doc('match', function match(pattern, string) {
         typecheck('match', pattern, ['regex', 'string']);
@@ -8481,7 +8483,8 @@ var global_env = new Environment({
         return m ? global_env.get('array->list')(m) : false;
     }, `(match pattern string)
 
-            function return match object from JavaScript as list or #f if not match.`),
+            This function returns a match object from JavaScript as a list or
+            \`#f\` if it doesn't match.`),
     // ------------------------------------------------------------------
     search: doc('search', function search(pattern, string) {
         typecheck('search', pattern, ['regex', 'string']);
@@ -8489,22 +8492,23 @@ var global_env = new Environment({
         return string.search(pattern);
     }, `(search pattern string)
 
-            Function return first found index of the pattern inside a string`),
+            This function returns the first found index of the pattern inside the string.`),
     // ------------------------------------------------------------------
     repr: doc('repr', function repr(obj, quote) {
         return toString(obj, quote);
     }, `(repr obj)
 
-            Function return string LIPS representation of an object as string.`),
+            This function returns the LIPS string representation of an object.`),
     // ------------------------------------------------------------------
     'escape-regex': doc('escape-regex', function(string) {
         typecheck('escape-regex', string, 'string');
         return escape_regex(string.valueOf());
     }, `(escape-regex string)
 
-            Function return new string where all special operators used in regex,
-            are escaped with slash so they can be used in RegExp constructor
-            to match literal string`),
+            This function returns a new string where all special characters
+            used in regex, such as \`\\\`, \`+\` etc., are escaped with a
+            backslash so they can be used in the RegExp constructor
+            to match a string.`),
     // ------------------------------------------------------------------
     env: doc('env', function env(env) {
         env = env || this;
@@ -8523,23 +8527,24 @@ var global_env = new Environment({
     }, `(env)
             (env obj)
 
-            Function return list of values (functions, macros and variables)
-            inside environment and it's parents.`),
+            This function returns a list of values (functions, macros and variables)
+            inside the environment and its parents.`),
     // ------------------------------------------------------------------
     'new': doc('new', function(obj, ...args) {
         var instance = new (unbind(obj))(...args.map(x => unbox(x)));
         return instance;
     }, `(new obj . args)
 
-            Function create new JavaScript instance of an object.`),
+            This function creates a new JavaScript instance of an object.`),
     // ------------------------------------------------------------------
     'typecheck': doc(
         typecheck,
         `(typecheck label value type [position])
 
-             Function check type and throw exception if type don't match.
-             Type can be string or list of strings. Position optional argument
-             is used to created proper error message.`),
+             This function checks the type of its input and will error if its
+             type doesn't match. Type can be a string or a list of strings.
+             Position, an optional argument, is used to create the proper error
+             message.`),
     // ------------------------------------------------------------------
     'unset-special!': doc('unset-special!', function(symbol) {
         typecheck('remove-special!', symbol, 'string');
