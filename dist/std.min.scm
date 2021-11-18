@@ -118,6 +118,7 @@
 (define string-split split)
 (define (symbol-append . rest) "(symbol-append s1 s2 ...)\u000A\u000AFunction create new symbol from symbols passed as arguments." (string->symbol (apply string-append (map symbol->string rest))))
 (define-macro (set-global! name) "(set-global! name)\u000A\u000AMacro make the name global variable." (let ((var (symbol-append (quote self.) name))) (quasiquote (set! (unquote var) (unquote name)))))
+(define performance (if (and (eq? self global) (not (bound? (quote performance)))) (. (require "perf_hooks") (quote performance)) performance))
 (define string-append concat)
 (define = ==)
 (define remainder %)

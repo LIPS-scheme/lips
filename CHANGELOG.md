@@ -1,3 +1,7 @@
+## 1.0.0-beta.17
+### Bugfix
+* fix using performance object for older version of Node
+
 ## 1.0.0-beta.16
 ### Breaking
 * replace `get-script` with `get-resource` that work in Node and in browser and allows to load CSS

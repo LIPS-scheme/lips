@@ -1509,6 +1509,11 @@
     Macro make the name global variable."
    (let ((var (symbol-append 'self. name)))
      `(set! ,var ,name)))
+
+;; -----------------------------------------------------------------------------
+(define performance (if (and (eq? self global) (not (bound? 'performance)))
+                        (. (require "perf_hooks") 'performance)
+                        performance))
 ;;   __ __                          __
 ;;  / / \ \       _    _  ___  ___  \ \
 ;; | |   \ \     | |  | || . \/ __>  | |
