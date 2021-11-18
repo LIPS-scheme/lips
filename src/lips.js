@@ -6891,14 +6891,14 @@ var get = doc('get', function get(object, ...args) {
 }, `(. obj . args)
         (get obj . args)
 
-        Function use object as base and keep using arguments to get the
+        This function uses an object as a base and keep using arguments to get the
         property of JavaScript object. Arguments need to be a strings.
-        e.g. \`(. console "log")\` if you use any function inside LIPS is
-        will be weakly bind (can be rebind), so you can call this log function
+        e.g. \`(. console "log")\` if you use any function inside LIPS it
+        will be weakly bound (can be rebound), so you can call this log function
         without problem unlike in JavaScript when you use
        \`var log = console.log\`.
-       \`get\` is an alias because . don't work in every place, e.g. you can't
-        pass it as argument.`);
+       \`get\` is an alias because . doesn't work everywhere, e.g. you can't
+        pass it as an argument.`);
 // -------------------------------------------------------------------------
 // function get internal protected data
 // -------------------------------------------------------------------------
@@ -6961,8 +6961,8 @@ var global_env = new Environment({
         return port.peek_char();
     }, `(peek-char port)
 
-            Function get character from string port or EOF object if no more
-            data in string port.`),
+            This function returns a character from a string port or, if there are no more
+            data in the string port, EOF.`),
     // ------------------------------------------------------------------
     'read-line': doc('read-line', function(port = null) {
         if (port === null) {
@@ -6972,7 +6972,7 @@ var global_env = new Environment({
         return port.read_line();
     }, `(read-char port)
 
-            Function read next character from input port.`),
+            This function reads the next line from the input port.`),
     // ------------------------------------------------------------------
     'read-char': doc('read-char', function(port = null) {
         if (port === null) {
@@ -6982,7 +6982,7 @@ var global_env = new Environment({
         return port.read_char();
     }, `(read-char port)
 
-            Function read next character from input port.`),
+            This function reads the next character from the input port.`),
     // ------------------------------------------------------------------
     read: doc('read', async function read(arg = null) {
         if (LString.isString(arg)) {
@@ -7000,12 +7000,12 @@ var global_env = new Environment({
         return port.read.call(this);
     }, `(read [string])
 
-            Function if used with string will parse the string and return
-            list structure of LIPS code. If called without an argument it
-            will read string from standard input (using browser prompt or
-            user defined way) and call itself with that string (parse is)
-            function can be used together with eval to evaluate code from
-            string`),
+            This function, if used with a string, will parse it and
+            return the LIPS code, if there is any. If called without an
+            input, it will read a string from standard input (using browser
+            prompt or a user defined way) and call itself with that string.
+            This function can be used together with \`eval\` to evaluate
+            code from a string.`),
     // ------------------------------------------------------------------
     pprint: doc('pprint', function pprint(arg) {
         if (arg instanceof Pair) {
