@@ -217,6 +217,15 @@ something like this:
    (arr.sort fn))
 ```
 
+Another example of slow performace is using LIPS with React, the more code you put into components
+the slower the app will become.
+
+Examples:
+* [Preact app that update SVG](https://codepen.io/jcubic/pen/PojYxBP) - it requires to use debounce.
+* [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnigs in dev tools.
+
+The issue with performance is tracked in [#197](https://github.com/jcubic/lips/issues/197).
+
 ## Supported SRFI
 
 ### built-in
