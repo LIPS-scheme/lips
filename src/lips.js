@@ -6891,14 +6891,14 @@ var get = doc('get', function get(object, ...args) {
 }, `(. obj . args)
         (get obj . args)
 
-        Function use object as base and keep using arguments to get the
+        This function uses an object as a base and keep using arguments to get the
         property of JavaScript object. Arguments need to be a strings.
-        e.g. \`(. console "log")\` if you use any function inside LIPS is
-        will be weakly bind (can be rebind), so you can call this log function
+        e.g. \`(. console "log")\` if you use any function inside LIPS it
+        will be weakly bound (can be rebound), so you can call this log function
         without problem unlike in JavaScript when you use
        \`var log = console.log\`.
-       \`get\` is an alias because . don't work in every place, e.g. you can't
-        pass it as argument.`);
+       \`get\` is an alias because . doesn't work everywhere, e.g. you can't
+        pass it as an argument.`);
 // -------------------------------------------------------------------------
 // function get internal protected data
 // -------------------------------------------------------------------------
@@ -6961,8 +6961,9 @@ var global_env = new Environment({
         return port.peek_char();
     }, `(peek-char port)
 
-            Function get character from string port or EOF object if no more
-            data in string port.`),
+            This function reads and returns a character from the string
+            port, or, if there are no more data in the string port, it
+            returns an EOF.`),
     // ------------------------------------------------------------------
     'read-line': doc('read-line', function(port = null) {
         if (port === null) {
@@ -6972,7 +6973,8 @@ var global_env = new Environment({
         return port.read_line();
     }, `(read-char port)
 
-            Function read next character from input port.`),
+            This function reads and returns the next line from the input
+            port.`),
     // ------------------------------------------------------------------
     'read-char': doc('read-char', function(port = null) {
         if (port === null) {
@@ -6982,7 +6984,8 @@ var global_env = new Environment({
         return port.read_char();
     }, `(read-char port)
 
-            Function read next character from input port.`),
+            This function reads and returns the next character from the
+            input port.`),
     // ------------------------------------------------------------------
     read: doc('read', async function read(arg = null) {
         if (LString.isString(arg)) {
@@ -7000,12 +7003,12 @@ var global_env = new Environment({
         return port.read.call(this);
     }, `(read [string])
 
-            Function if used with string will parse the string and return
-            list structure of LIPS code. If called without an argument it
-            will read string from standard input (using browser prompt or
-            user defined way) and call itself with that string (parse is)
-            function can be used together with eval to evaluate code from
-            string`),
+            This function, if used with a string, will parse it and
+            return the LIPS code, if there is any. If called without an
+            input, it will read a string from standard input (using
+            the browser's prompt or a user defined input method) and
+            calls itself with that string. This function can be used
+            together with \`eval\` to evaluate code from a string.`),
     // ------------------------------------------------------------------
     pprint: doc('pprint', function pprint(arg) {
         if (arg instanceof Pair) {
@@ -7017,8 +7020,9 @@ var global_env = new Environment({
         global_env.get('newline').call(global_env);
     }, `(pprint expression)
 
-           Pretty print list expression, if called with non-pair it just call
-           print function with passed argument.`),
+           This function will pretty print its input. If it is called
+           with a non-list, it will just call the print function on its
+           input.`),
     // ------------------------------------------------------------------
     print: doc('print', function print(...args) {
         const display = global_env.get('display');
@@ -7029,9 +7033,10 @@ var global_env = new Environment({
         });
     }, `(print . args)
 
-            Function convert each argument to string and print the result to
-            standard output (by default it's console but it can be defined
-            it user code), the function call newline after printing each arg.`),
+            This function converts each input into a string and prints
+            the result to the standard output. (by default it's the
+            console but it can be defined in user code) This function
+            calls \`newline\` after printing each input.`),
     // ------------------------------------------------------------------
     format: doc('format', function format(str, ...args) {
         typecheck('format', str, 'string');
@@ -7064,15 +7069,16 @@ var global_env = new Environment({
         return str;
     }, `(format string n1 n2 ...)
 
-            Function accepts string template and replacing any escape sequences
-            by arguments:
+            This function accepts a string template and replaces any
+            escape sequences in its inputs:
 
-            * ~a value as if printed with display
-            * ~s value as if printed with write
+            * ~a value as if printed with \`display\`
+            * ~s value as if printed with \`write\`
             * ~% newline character
-            * ~~ literal tilde '~' is inserted
+            * ~~ literal tilde '~'
 
-            if there missing arguments or other escape character it throw exception.`),
+            If there are missing inputs or other escape characters it
+            will error.`),
     // ------------------------------------------------------------------
     display: doc('display', function display(arg, port = null) {
         if (port === null) {
@@ -7082,9 +7088,10 @@ var global_env = new Environment({
         }
         const value = global_env.get('repr')(arg);
         port.write.call(global_env, value);
-    }, `(display arg [port])
+    }, `(display string [port])
 
-            Function send string to standard output or provied port.`),
+            This function outputs the string to the standard output or
+            the port if given.`),
     // ------------------------------------------------------------------
     'display-error': doc('display-error', function error(...args) {
         const port = internal(this, 'stderr');
@@ -7094,7 +7101,7 @@ var global_env = new Environment({
         global_env.get('newline')(port);
     }, `(display-error . args)
 
-            Display error message.`),
+            Display an error message.`),
     // ------------------------------------------------------------------
     '%same-functions': doc('%same-functions', function(a, b) {
         if (!is_function(a)) {
@@ -7106,7 +7113,8 @@ var global_env = new Environment({
         return unbind(a) === unbind(b);
     }, `(%same-functions a b)
 
-            Helper function that check if two bound functions are the same`),
+            A helper function that checks if the two input functions are
+            the same.`),
     // ------------------------------------------------------------------
     help: doc(new Macro('help', function(code, { dynamic_scope, error }) {
         var symbol;
@@ -7140,29 +7148,31 @@ var global_env = new Environment({
         }
     }), `(help object)
 
-             Macro returns documentation for function or macro. You can save the function
-             or macro in variable and use it in context. But help for variable require
-             to pass the symbol itself.`),
+             This macro returns documentation for a function or macro.
+             You can save the function or macro in a variable and use it
+             here. But getting help for a variable requires passing the
+             variable in a \`quote\`.`),
     // ------------------------------------------------------------------
     cons: doc('cons', function cons(car, cdr) {
         return new Pair(car, cdr);
     }, `(cons left right)
 
-            Function return new Pair out of two arguments.`),
+            This function returns a new list with the first appended
+            before the second.`),
     // ------------------------------------------------------------------
     car: doc('car', function car(list) {
         typecheck('car', list, 'pair');
         return list.car;
     }, `(car pair)
 
-            Function returns car (head) of the list/pair.`),
+            This function returns the car (item 1) of the list.`),
     // ------------------------------------------------------------------
     cdr: doc('cdr', function cdr(list) {
         typecheck('cdr', list, 'pair');
         return list.cdr;
     }, `(cdr pair)
 
-            Function returns cdr (tail) of the list/pair.`),
+            This function returns the cdr (all but first) of the list.`),
     // ------------------------------------------------------------------
     'set!': doc(new Macro('set!', function(code, { dynamic_scope, error } = {}) {
         if (dynamic_scope) {
