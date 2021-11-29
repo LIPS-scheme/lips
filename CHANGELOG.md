@@ -1,6 +1,7 @@
 ## 1.0.0-beta.17
 ### Bugfix
 * fix using performance object for older version of Node
+* fixing escaped symbols in CodeMirror
 
 ## 1.0.0-beta.16
 ### Breaking
