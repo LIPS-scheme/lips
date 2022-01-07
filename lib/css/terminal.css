@@ -34,10 +34,13 @@
 .cmd .token.__doc__.right::before, .token.__doc__.top.right::before {
     transform: translate(-100%, -100%);
 }
-
-.shell-wrapper .terminal.lips {
-    font-size-adjust: none; --size: 1.2;
-    height: calc(100% - 26px);
+.shell-container {
+    position: fixed;
+    z-index: 99999;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
 }
 .shell-wrapper nav {
     cursor: row-resize; color:#ccc;
@@ -52,20 +55,40 @@
     height: auto;
     display: block;
 }
-.shell-container {
-    position: fixed;
-    z-index: 99999;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 150px;
+.shell-wrapper .shell-dock::before {
+    content: "[■]";
 }
+.shell-wrapper.docking .shell-dock::before {
+    content: "[_]";
+}
+.shell-wrapper .shell-dock,
 .shell-wrapper .shell-destroy {
-    padding: 5px;
+    padding: 5px 3px;
     cursor: pointer;
     display: inline-block;
 }
-.shell-wrapper .shell-mask{
+.shell-wrapper.docking nav {
+    cursor: default;
+}
+.shell-wrapper:not(.docking) .shell-container {
+    width: 100% !important;
+}
+.shell-wrapper.docking .shell-container {
+    bottom: auto;
+    right: auto;
+    top:  calc(var(--top, 0) * 1px);
+    left:  calc(var(--left, 0) * 1px);
+    width: calc(var(--width, 500) * 1px);
+    height: calc(var(--height, 400) * 1px);
+    resize: both;
+    overflow: hidden;
+    box-shadow: 1px 1px 10px 2px rgb(0 0 0 / 30%);
+}
+.shell-wrapper .terminal.lips {
+    font-size-adjust: none; --size: 1.2;
+    height: calc(100% - 26px);
+}
+.shell-wrapper .shell-mask {
     position: fixed;
     top: 0;
     bottom: 0;
