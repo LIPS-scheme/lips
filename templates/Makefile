@@ -116,4 +116,4 @@ coveralls:
 	$(NPM) run coverage
 
 lint:
-	$(ESLINT) src/lips.js
+	$(ESLINT) src/lips.js lib/js/bookmark.js
