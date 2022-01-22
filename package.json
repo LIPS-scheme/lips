@@ -94,7 +94,7 @@
       "no-return-assign": "error",
       "no-self-compare": "error",
       "no-throw-literal": "error",
-      "no-unused-labels": "error",
+      "no-unused-labels": 0,
       "no-useless-call": "error",
       "no-useless-escape": "error",
       "no-void": "error",
