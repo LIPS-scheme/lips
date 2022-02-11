@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 11 Feb 2022 11:48:30 +0000
+ * build: Fri, 11 Feb 2022 11:58:53 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -98,23 +98,20 @@
         configurable: true
       }
     });
+    Object.defineProperty(subClass, "prototype", {
+      writable: false
+    });
     if (superClass) _setPrototypeOf(subClass, superClass);
   }
 
   function _typeof(obj) {
     "@babel/helpers - typeof";
 
-    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-      _typeof = function _typeof(obj) {
-        return typeof obj;
-      };
-    } else {
-      _typeof = function _typeof(obj) {
-        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-      };
-    }
-
-    return _typeof(obj);
+    return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
+      return typeof obj;
+    } : function (obj) {
+      return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    }, _typeof(obj);
   }
 
   function _possibleConstructorReturn(self, call) {
@@ -236,6 +233,9 @@
   function _createClass(Constructor, protoProps, staticProps) {
     if (protoProps) _defineProperties(Constructor.prototype, protoProps);
     if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
     return Constructor;
   }
 
@@ -320,20 +320,6 @@
 
   function _slicedToArray(arr, i) {
     return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$1(arr, i) || _nonIterableRest();
-  }
-
-  function _asyncIterator(iterable) {
-    var method;
-
-    if (typeof Symbol !== "undefined") {
-      if (Symbol.asyncIterator) method = iterable[Symbol.asyncIterator];
-      if (method == null && Symbol.iterator) method = iterable[Symbol.iterator];
-    }
-
-    if (method == null) method = iterable["@@asyncIterator"];
-    if (method == null) method = iterable["@@iterator"];
-    if (method == null) throw new TypeError("Object is not async iterable");
-    return method.call(iterable);
   }
 
   function _AwaitValue(value) {
@@ -3184,15 +3170,22 @@
   let src;
   let srcEnd;
   let position$1 = 0;
-  const RECORD_TAG_ID = 0x69;
+  const LEGACY_RECORD_INLINE_ID = 105;
+  const RECORD_DEFINITIONS_ID = 0xdffe;
+  const RECORD_INLINE_ID = 0xdfff; // temporary first-come first-serve tag // proposed tag: 0x7265 // 're'
+  const BUNDLED_STRINGS_ID = 0xdff9;
+  const PACKED_REFERENCE_TAG_ID = 6;
   const STOP_CODE = {};
   let currentDecoder = {};
   let currentStructures;
   let srcString;
   let srcStringStart = 0;
   let srcStringEnd = 0;
+  let bundledStrings$1;
   let referenceMap;
   let currentExtensions = [];
+  let currentExtensionRanges = [];
+  let packedValues;
   let dataView;
   let restoreMapsAsObject;
   let defaultOptions = {
@@ -3204,13 +3197,70 @@
   class Decoder {
   	constructor(options) {
   		if (options) {
+  			if ((options.keyMap || options._keyMap) && !options.useRecords) {
+  				options.useRecords = false;
+  				options.mapsAsObjects = true;
+  			}
   			if (options.useRecords === false && options.mapsAsObjects === undefined)
   				options.mapsAsObjects = true;
-  			if (options.getStructures && !options.structures)
+  			if (options.getStructures)
+  				options.getShared = options.getStructures;
+  			if (options.getShared && !options.structures)
   				(options.structures = []).uninitialized = true; // this is what we use to denote an uninitialized structures
+  			if (options.keyMap) {
+  				this.mapKey = new Map();
+  				for (let [k,v] of Object.entries(options.keyMap)) this.mapKey.set(v,k);
+  			}
   		}
   		Object.assign(this, options);
   	}
+  	/*
+  	decodeKey(key) {
+  		return this.keyMap
+  			? Object.keys(this.keyMap)[Object.values(this.keyMap).indexOf(key)] || key
+  			: key
+  	}
+  	*/
+  	decodeKey(key) {
+  		return this.keyMap ? this.mapKey.get(key) || key : key
+  	}
+  	
+  	encodeKey(key) {
+  		return this.keyMap && this.keyMap.hasOwnProperty(key) ? this.keyMap[key] : key
+  	}
+
+  	encodeKeys(rec) {
+  		if (!this._keyMap) return rec
+  		let map = new Map();
+  		for (let [k,v] of Object.entries(rec)) map.set((this._keyMap.hasOwnProperty(k) ? this._keyMap[k] : k), v);
+  		return map
+  	}
+
+  	decodeKeys(map) {
+  		if (!this._keyMap || map.constructor.name != 'Map') return map
+  		if (!this._mapKey) {
+  			this._mapKey = new Map();
+  			for (let [k,v] of Object.entries(this._keyMap)) this._mapKey.set(v,k);
+  		}
+  		let res = {};
+  		//map.forEach((v,k) => res[Object.keys(this._keyMap)[Object.values(this._keyMap).indexOf(k)] || k] = v)
+  		map.forEach((v,k) => res[this._mapKey.has(k) ? this._mapKey.get(k) : k] =  v);
+  		return res
+  	}
+  	
+  	mapDecode(source, end) {
+  	
+  		let res = this.decode(source);
+  		if (this._keyMap) { 
+  			//Experiemntal support for Optimised KeyMap  decoding 
+  			switch (res.constructor.name) {
+  				case 'Array': return res.map(r => this.decodeKeys(r))
+  				//case 'Map': return this.decodeKeys(res)
+  			}
+  		}
+  		return res
+  	}
+
   	decode(source, end) {
   		if (src) {
   			// re-entrant execution, save the state and restore it after we do this decode
@@ -3223,13 +3273,25 @@
   		position$1 = 0;
   		srcStringEnd = 0;
   		srcString = null;
+  		bundledStrings$1 = null;
   		src = source;
   		// this provides cached access to the data view for a buffer if it is getting reused, which is a recommend
   		// technique for getting data from a database where it can be copied into an existing buffer instead of creating
   		// new ones
-  		dataView = source.dataView || (source.dataView = new DataView(source.buffer, source.byteOffset, source.byteLength));
-  		if (this) {
+  		try {
+  			dataView = source.dataView || (source.dataView = new DataView(source.buffer, source.byteOffset, source.byteLength));
+  		} catch(error) {
+  			// if it doesn't have a buffer, maybe it is the wrong type of object
+  			src = null;
+  			if (source instanceof Uint8Array)
+  				throw error
+  			throw new Error('Source must be a Uint8Array or Buffer but was a ' + ((source && typeof source == 'object') ? source.constructor.name : typeof source))
+  		}
+  		if (this instanceof Decoder) {
   			currentDecoder = this;
+  			packedValues = this.sharedValues &&
+  				(this.pack ? new Array(this.maxPrivatePackedValues || 16).concat(this.sharedValues) :
+  				this.sharedValues);
   			if (this.structures) {
   				currentStructures = this.structures;
   				return checkedRead()
@@ -3240,6 +3302,7 @@
   			currentDecoder = defaultOptions;
   			if (!currentStructures || currentStructures.length > 0)
   				currentStructures = [];
+  			packedValues = null;
   		}
   		return checkedRead()
   	}
@@ -3250,7 +3313,9 @@
   			sequentialMode = true;
   			let value = this ? this.decode(source, size) : defaultDecoder.decode(source, size);
   			if (forEach) {
-  				forEach(value);
+  				if (forEach(value) === false) {
+  					return
+  				}
   				while(position$1 < size) {
   					lastPosition = position$1;
   					if (forEach(checkedRead()) === false) {
@@ -3279,6 +3344,9 @@
   function checkedRead() {
   	try {
   		let result = read();
+  		if (bundledStrings$1) // bundled strings to skip past
+  			position$1 = bundledStrings$1.postBundlePosition;
+
   		if (position$1 == srcEnd) {
   			// finished reading this source, cleanup references
   			currentStructures = null;
@@ -3341,10 +3409,11 @@
   					position$1 += 8;
   					return value
   				}
-  				if (currentDecoder.uint64AsNumber)
-  					return src[position$1++] * 0x100000000000000 + src[position$1++] * 0x1000000000000 + src[position$1++] * 0x10000000000 + src[position$1++] * 0x100000000 +
-  						src[position$1++] * 0x1000000 + (src[position$1++] << 16) + (src[position$1++] << 8) + src[position$1++]
-  				token = dataView.getBigUint64(position$1);
+  				if (currentDecoder.int64AsNumber) {
+  					token = dataView.getUint32(position$1) * 0x100000000;
+  					token += dataView.getUint32(position$1 + 4);
+  				} else
+  					token = dataView.getBigUint64(position$1);
   				position$1 += 8;
   				break
   			case 0x1f: 
@@ -3352,6 +3421,7 @@
   				switch(majorType) {
   					case 2: // byte string
   					case 3: // text string
+  						throw new Error('Indefinite length not supported for byte or text strings')
   					case 4: // array
   						let array = [];
   						let value, i = 0;
@@ -3363,8 +3433,8 @@
   						let key;
   						if (currentDecoder.mapsAsObjects) {
   							let object = {};
-  							while ((key = readKey()) != STOP_CODE)
-  								object[key] = read();
+  							if (currentDecoder.keyMap) while((key = read()) != STOP_CODE) object[currentDecoder.decodeKey(key)] = read();
+  							else while ((key = read()) != STOP_CODE) object[key] = read();
   							return object
   						} else {
   							if (restoreMapsAsObject) {
@@ -3372,8 +3442,8 @@
   								restoreMapsAsObject = false;
   							}
   							let map = new Map();
-  							while ((key = read()) != STOP_CODE)
-  								map.set(key, read());
+  							if (currentDecoder.keyMap) while((key = read()) != STOP_CODE) map.set(currentDecoder.decodeKey(key), read());
+  							else while ((key = read()) != STOP_CODE) map.set(key, read());
   							return map
   						}
   					case 7:
@@ -3405,16 +3475,15 @@
   			return readFixedString(token)
   		case 4: // array
   			let array = new Array(token);
-  			for (let i = 0; i < token; i++) {
-  				array[i] = read();
-  			}
+  		  //if (currentDecoder.keyMap) for (let i = 0; i < token; i++) array[i] = currentDecoder.decodeKey(read())	
+  			//else 
+  			for (let i = 0; i < token; i++) array[i] = read();
   			return array
   		case 5: // map
   			if (currentDecoder.mapsAsObjects) {
   				let object = {};
-  				for (let i = 0; i < token; i++) {
-  					object[readKey()] = read();
-  				}
+  				if (currentDecoder.keyMap) for (let i = 0; i < token; i++) object[currentDecoder.decodeKey(read())] = read();
+  				else for (let i = 0; i < token; i++) object[read()] = read();
   				return object
   			} else {
   				if (restoreMapsAsObject) {
@@ -3422,47 +3491,56 @@
   					restoreMapsAsObject = false;
   				}
   				let map = new Map();
-  				for (let i = 0; i < token; i++) {
-  					map.set(read(), read());
-  				}
+  				if (currentDecoder.keyMap) for (let i = 0; i < token; i++) map.set(currentDecoder.decodeKey(read()),read());
+  				else for (let i = 0; i < token; i++) map.set(read(), read());
   				return map
   			}
   		case 6: // extension
-  			if ((token >> 8) == RECORD_TAG_ID) { // record structures
-  				let structure = currentStructures[token & 0xff];
+  			if (token >= BUNDLED_STRINGS_ID) {
+  				let structure = currentStructures[token & 0x1fff]; // check record structures first
+  				// At some point we may provide an option for dynamic tag assignment with a range like token >= 8 && (token < 16 || (token > 0x80 && token < 0xc0) || (token > 0x130 && token < 0x4000))
   				if (structure) {
-  					if (!structure.read)
-  						structure.read = createStructureReader(structure);
+  					if (!structure.read) structure.read = createStructureReader(structure);
   					return structure.read()
-  				} else if (currentDecoder.getStructures) {
-  					let updatedStructures = saveState(() => {
-  						// save the state in case getStructures modifies our buffer
-  						src = null;
-  						return currentDecoder.getStructures()
-  					});
-  					if (currentStructures === true)
-  						currentDecoder.structures = currentStructures = updatedStructures;
-  					else
-  						currentStructures.splice.apply(currentStructures, [0, updatedStructures.length].concat(updatedStructures));
-  					structure = currentStructures[token & 0xff];
-  					if (structure) {
-  						if (!structure.read)
-  							structure.read = createStructureReader(structure);
-  						return structure.read()
-  					} else
-  						return token
-  				} else
-  					return token
-  			} else {
-  				let extension = currentExtensions[token];
-  				if (extension) {
-  					if (extension.handlesRead)
-  						return extension(read)
-  					else
-  						return extension(read())
   				}
+  				if (token < 0x10000) {
+  					if (token == RECORD_INLINE_ID) // we do a special check for this so that we can keep the currentExtensions as densely stored array (v8 stores arrays densely under about 3000 elements)
+  						return recordDefinition(read())
+  					else if (token == RECORD_DEFINITIONS_ID) {
+  						let length = readJustLength();
+  						let id = read();
+  						for (let i = 2; i < length; i++) {
+  							recordDefinition([id++, read()]);
+  						}
+  						return read()
+  					} else if (token == BUNDLED_STRINGS_ID) {
+  						return readBundleExt()
+  					}
+  					if (currentDecoder.getShared) {
+  						loadShared();
+  						structure = currentStructures[token & 0x1fff];
+  						if (structure) {
+  							if (!structure.read)
+  								structure.read = createStructureReader(structure);
+  							return structure.read()
+  						}
+  					}
+  				}
+  			}
+  			let extension = currentExtensions[token];
+  			if (extension) {
+  				if (extension.handlesRead)
+  					return extension(read)
   				else
-  					return new Tag(read())
+  					return extension(read())
+  			} else {
+  				let input = read();
+  				for (let i = 0; i < currentExtensionRanges.length; i++) {
+  					let value = currentExtensionRanges[i](token, input);
+  					if (value !== undefined)
+  						return value
+  				}
+  				return new Tag(input, token)
   			}
   		case 7: // fixed value
   			switch (token) {
@@ -3470,8 +3548,11 @@
   				case 0x15: return true
   				case 0x16: return null
   				case 0x17: return; // undefined
-  				case 0x1f: 
+  				case 0x1f:
   				default:
+  					let packedValue = (packedValues || getPackedValues())[token];
+  					if (packedValue !== undefined)
+  						return packedValue
   					throw new Error('Unknown token ' + token)
   			}
   		default: // negative int
@@ -3485,39 +3566,45 @@
   }
   const validName = /^[a-zA-Z_$][a-zA-Z\d_$]*$/;
   function createStructureReader(structure) {
-  	let l = structure.length;
   	function readObject() {
+  		// get the array size from the header
+  		let length = src[position$1++];
+  		//let majorType = token >> 5
+  		length = length & 0x1f;
+  		if (length > 0x17) {
+  			switch (length) {
+  				case 0x18:
+  					length = src[position$1++];
+  					break
+  				case 0x19:
+  					length = dataView.getUint16(position$1);
+  					position$1 += 2;
+  					break
+  				case 0x1a:
+  					length = dataView.getUint32(position$1);
+  					position$1 += 4;
+  					break
+  				default:
+  					throw new Error('Expected array header, but got ' + src[position$1 - 1])
+  			}
+  		}
   		// This initial function is quick to instantiate, but runs slower. After several iterations pay the cost to build the faster function
-  		if (readObject.count++ > 2) {
-  			this.read = (new Function('a', 'r', 'return function(){a();return {' + structure.map(key => validName.test(key) ? key + ':r()' : ('[' + JSON.stringify(key) + ']:r()')).join(',') + '}}'))(readArrayHeader, read);
-  			return this.read()
+  		if (this.objectLiteralSize === length) // we have a fast object literal reader, use it (assuming it is the right length)
+  			return this.objectLiteral(read)
+  		if (this.count++ == 3) { // create a fast reader
+  			this.objectLiteralSize = length;
+  			this.objectLiteral = currentDecoder.keyMap 
+  				? new Function('r', 'return {' + this.map(k => currentDecoder.decodeKey(k)).map(k => validName.test(k) ? k + ':r()' : ('[' + JSON.stringify(k) + ']:r()')).join(',') + '}')
+  				: new Function('r', 'return {' + this.map(key => validName.test(key) ? key + ':r()' : ('[' + JSON.stringify(key) + ']:r()')).join(',') + '}');
+  			return this.objectLiteral(read)
   		}
-  		readArrayHeader();
   		let object = {};
-  		for (let i = 0; i < l; i++) {
-  			let key = structure[i];
-  			object[key] = read();
-  		}
+  		if (currentDecoder.keyMap) for (let i = 0; i < length; i++) object[currentDecoder.decodeKey(this[i])] = read();
+  		else for (let i = 0; i < length; i++) object[this[i]] = read();
   		return object
   	}
-  	readObject.count = 0;
+  	structure.count = 0;
   	return readObject
-  }
-
-  function readArrayHeader(expectedLength) {
-  	// consume the array header, TODO: check expected length
-  	let token = src[position$1++];
-  	//let majorType = token >> 5
-  	token = token & 0x1f;
-  	if (token > 0x17) {
-  		switch (token) {
-  			case 0x18: position$1++;
-  				break
-  			case 0x19: position$1 += 2;
-  				break
-  			case 0x1a: position$1 += 4;
-  		}
-  	}
   }
 
   let readFixedString = readStringJS;
@@ -3748,77 +3835,16 @@
   	return half & 0x8000 ? -val : val
   }
 
-  let keyCache = new Array(4096);
-  function readKey() {
-  	let length = src[position$1++];
-  	if (length >= 0x60 && length < 0x78) {
-  		// fixstr, potentially use key cache
-  		length = length - 0x60;
-  		if (srcStringEnd >= position$1) // if it has been extracted, must use it (and faster anyway)
-  			return srcString.slice(position$1 - srcStringStart, (position$1 += length) - srcStringStart)
-  		else if (!(srcStringEnd == 0 && srcEnd < 180))
-  			return readFixedString(length)
-  	} else { // not cacheable, go back and do a standard read
-  		position$1--;
-  		return read()
-  	}
-  	let key = ((length << 5) ^ (length > 1 ? dataView.getUint16(position$1) : length > 0 ? src[position$1] : 0)) & 0xfff;
-  	let entry = keyCache[key];
-  	let checkPosition = position$1;
-  	let end = position$1 + length - 3;
-  	let chunk;
-  	let i = 0;
-  	if (entry && entry.bytes == length) {
-  		while (checkPosition < end) {
-  			chunk = dataView.getUint32(checkPosition);
-  			if (chunk != entry[i++]) {
-  				checkPosition = 0x70000000;
-  				break
-  			}
-  			checkPosition += 4;
-  		}
-  		end += 3;
-  		while (checkPosition < end) {
-  			chunk = src[checkPosition++];
-  			if (chunk != entry[i++]) {
-  				checkPosition = 0x70000000;
-  				break
-  			}
-  		}
-  		if (checkPosition === end) {
-  			position$1 = checkPosition;
-  			return entry.string
-  		}
-  		end -= 3;
-  		checkPosition = position$1;
-  	}
-  	entry = [];
-  	keyCache[key] = entry;
-  	entry.bytes = length;
-  	while (checkPosition < end) {
-  		chunk = dataView.getUint32(checkPosition);
-  		entry.push(chunk);
-  		checkPosition += 4;
-  	}
-  	end += 3;
-  	while (checkPosition < end) {
-  		chunk = src[checkPosition++];
-  		entry.push(chunk);
-  	}
-  	// for small blocks, avoiding the overhead of the extract call is helpful
-  	let string = length < 16 ? shortStringInJS(length) : longStringInJS(length);
-  	if (string != null)
-  		return entry.string = string
-  	return entry.string = readFixedString(length)
-  }
+  new Array(4096);
 
   class Tag {
-  	constructor(value) {
+  	constructor(value, tag) {
   		this.value = value;
+  		this.tag = tag;
   	}
   }
 
-  let glbl = typeof window == 'object' ? window : global$1;
+  let glbl = typeof self == 'object' ? self : global$1;
 
   currentExtensions[0] = (dateString) => {
   	// string date extension
@@ -3832,40 +3858,102 @@
 
   currentExtensions[2] = (buffer) => {
   	// bigint extension
-  	return new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength).getBigUint64(0)
+  	let value = BigInt(0);
+  	for (let i = 0, l = buffer.byteLength; i < l; i++) {
+  		value = BigInt(buffer[i]) + value << BigInt(8);
+  	}
+  	return value
   };
 
   currentExtensions[3] = (buffer) => {
   	// negative bigint extension
-  	return BigInt(-1) - (new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength).getBigUint64(0))
+  	return BigInt(-1) - currentExtensions[2](buffer)
+  };
+  currentExtensions[4] = (fraction) => {
+  	// best to reparse to maintain accuracy
+  	return +(fraction[1] + 'e' + fraction[0])
+  };
+
+  currentExtensions[5] = (fraction) => {
+  	// probably not sufficiently accurate
+  	return fraction[1] * Math.exp(fraction[0] * Math.log(2))
   };
 
   // the registration of the record definition extension (tag 105)
-  const recordDefinition = () => {
-  	let definition = read();
-  	let structure = definition[0];
-  	let id = definition[1];
-  	currentStructures[id & 0xff] = structure;
+  const recordDefinition = (definition) => {
+  	let id = definition[0] - 0xe000;
+  	let structure = definition[1];
+  	currentStructures[id] = structure;
   	structure.read = createStructureReader(structure);
   	let object = {};
-  	for (let i = 2,l = definition.length; i < l; i++) {
-  		let key = structure[i - 2];
-  		object[key] = definition[i];
-  	}
+  	if (currentDecoder.keyMap) for (let i = 2,l = definition.length; i < l; i++) {
+  			let key = currentDecoder.decodeKey(structure[i - 2]);
+  			object[key] = definition[i];
+  		}
+  	else for (let i = 2,l = definition.length; i < l; i++) {
+  			let key = structure[i - 2];
+  			object[key] = definition[i];
+  		}
   	return object
   };
-
-  recordDefinition.handlesRead = true;
-  currentExtensions[RECORD_TAG_ID] = recordDefinition;
+  currentExtensions[LEGACY_RECORD_INLINE_ID] = recordDefinition;
+  currentExtensions[14] = (value) => {
+  	if (bundledStrings$1)
+  		return bundledStrings$1[0].slice(bundledStrings$1.position0, bundledStrings$1.position0 += value)
+  	return new Tag(value, 14)
+  };
+  currentExtensions[15] = (value) => {
+  	if (bundledStrings$1)
+  		return bundledStrings$1[1].slice(bundledStrings$1.position1, bundledStrings$1.position1 += value)
+  	return new Tag(value, 15)
+  };
 
   currentExtensions[27] = (data) => { // http://cbor.schmorp.de/generic-object
   	return (glbl[data[0]] || Error)(data[1], data[2])
   };
+  const packedTable = (read) => {
+  	if (src[position$1++] != 0x84)
+  		throw new Error('Packed values structure must be followed by a 4 element array')
+  	let newPackedValues = read(); // packed values
+  	packedValues = packedValues ? newPackedValues.concat(packedValues.slice(newPackedValues.length)) : newPackedValues;
+  	packedValues.prefixes = read();
+  	packedValues.suffixes = read();
+  	return read() // read the rump
+  };
+  packedTable.handlesRead = true;
+  currentExtensions[51] = packedTable;
 
-  currentExtensions[40009] = (id) => {
-  	// id extension (for structured clones)
-  	if (!referenceMap)
+  currentExtensions[PACKED_REFERENCE_TAG_ID] = (data) => { // packed reference
+  	if (!packedValues) {
+  		if (currentDecoder.getShared)
+  			loadShared();
+  		else
+  			return new Tag(data, PACKED_REFERENCE_TAG_ID)
+  	}
+  	if (typeof data == 'number')
+  		return packedValues[16 + (data >= 0 ? 2 * data : (-2 * data - 1))]
+  	throw new Error('No support for non-integer packed references yet')
+  };
+  currentExtensions[25] = (id) => {
+  	return stringRefs[id]
+  };
+  currentExtensions[256] = (read) => {
+  	stringRefs = [];
+  	try {
+  		return read()
+  	} finally {
+  		stringRefs = null;
+  	}
+  };
+  currentExtensions[256].handlesRead = true;
+
+  currentExtensions[28] = (read) => { 
+  	// shareable http://cbor.schmorp.de/value-sharing (for structured clones)
+  	if (!referenceMap) {
   		referenceMap = new Map();
+  		referenceMap.id = 0;
+  	}
+  	let id = referenceMap.id++;
   	let token = src[position$1];
   	let target;
   	// TODO: handle Maps, Sets, and other types that can cycle; this is complicated, because you potentially need to read
@@ -3883,9 +3971,10 @@
   	refEntry.target = targetProperties; // the placeholder wasn't used, replace with the deserialized one
   	return targetProperties // no cycle, can just use the returned read object
   };
+  currentExtensions[28].handlesRead = true;
 
-  currentExtensions[40010] = (id) => {
-  	// pointer extension (for structured clones)
+  currentExtensions[29] = (id) => {
+  	// sharedref http://cbor.schmorp.de/value-sharing (for structured clones)
   	let refEntry = referenceMap.get(id);
   	refEntry.used = true;
   	return refEntry.target
@@ -3901,7 +3990,44 @@
   	}
   	return read()
   }).handlesRead = true;
-
+  function combine(a, b) {
+  	if (typeof a === 'string')
+  		return a + b
+  	if (a instanceof Array)
+  		return a.concat(b)
+  	return Object.assign({}, a, b)
+  }
+  function getPackedValues() {
+  	if (!packedValues) {
+  		if (currentDecoder.getShared)
+  			loadShared();
+  		else
+  			throw new Error('No packed values available')
+  	}
+  	return packedValues
+  }
+  const SHARED_DATA_TAG_ID = 0x53687264; // ascii 'Shrd'
+  currentExtensionRanges.push((tag, input) => {
+  	if (tag >= 225 && tag <= 255)
+  		return combine(getPackedValues().prefixes[tag - 224], input)
+  	if (tag >= 28704 && tag <= 32767)
+  		return combine(getPackedValues().prefixes[tag - 28672], input)
+  	if (tag >= 1879052288 && tag <= 2147483647)
+  		return combine(getPackedValues().prefixes[tag - 1879048192], input)
+  	if (tag >= 216 && tag <= 223)
+  		return combine(input, getPackedValues().suffixes[tag - 216])
+  	if (tag >= 27647 && tag <= 28671)
+  		return combine(input, getPackedValues().suffixes[tag - 27639])
+  	if (tag >= 1811940352 && tag <= 1879048191)
+  		return combine(input, getPackedValues().suffixes[tag - 1811939328])
+  	if (tag == SHARED_DATA_TAG_ID) {// we do a special check for this so that we can keep the currentExtensions as densely stored array (v8 stores arrays densely under about 3000 elements)
+  		return {
+  			packedValues: packedValues,
+  			structures: currentStructures.slice(0),
+  			version: input,
+  		}
+  	}
+  });
 
   const typedArrays = ['Uint8', 'Uint8Clamped', 'Uint16', 'Uint32', 'BigUint64','Int8', 'Int16', 'Int32', 'BigInt64', 'Float32', 'Float64'].map(type => type + 'Array');
   const typedArrayTags = [64, 68, 69, 70, 71, 72, 77, 78, 79, 81, 82];
@@ -3917,6 +4043,61 @@
   	};
   }
 
+  function readBundleExt() {
+  	let length = readJustLength();
+  	let bundlePosition = position$1 + read();
+  	for (let i = 2; i < length; i++) {
+  		// skip past bundles that were already read
+  		let bundleLength = readJustLength(); // this will increment position, so must add to position afterwards
+  		position$1 += bundleLength;
+  	}
+  	let dataPosition = position$1;
+  	position$1 = bundlePosition;
+  	bundledStrings$1 = [readStringJS(readJustLength()), readStringJS(readJustLength())];
+  	bundledStrings$1.position0 = 0;
+  	bundledStrings$1.position1 = 0;
+  	bundledStrings$1.postBundlePosition = position$1;
+  	position$1 = dataPosition;
+  	return read()
+  }
+
+  function readJustLength() {
+  	let token = src[position$1++] & 0x1f;
+  	if (token > 0x17) {
+  		switch (token) {
+  			case 0x18:
+  				token = src[position$1++];
+  				break
+  			case 0x19:
+  				token = dataView.getUint16(position$1);
+  				position$1 += 2;
+  				break
+  			case 0x1a:
+  				token = dataView.getUint32(position$1);
+  				position$1 += 4;
+  				break
+  		}
+  	}
+  	return token
+  }
+
+  function loadShared() {
+  	if (currentDecoder.getShared) {
+  		let sharedData = saveState(() => {
+  			// save the state in case getShared modifies our buffer
+  			src = null;
+  			return currentDecoder.getShared()
+  		}) || {};
+  		let updatedStructures = sharedData.structures || [];
+  		currentDecoder.sharedVersion = sharedData.version;
+  		packedValues = currentDecoder.sharedValues = sharedData.packedValues;
+  		if (currentStructures === true)
+  			currentDecoder.structures = currentStructures = updatedStructures;
+  		else
+  			currentStructures.splice.apply(currentStructures, [0, updatedStructures.length].concat(updatedStructures));
+  	}
+  }
+
   function saveState(callback) {
   	let savedSrcEnd = srcEnd;
   	let savedPosition = position$1;
@@ -3924,6 +4105,8 @@
   	let savedSrcStringEnd = srcStringEnd;
   	let savedSrcString = srcString;
   	let savedReferenceMap = referenceMap;
+  	let savedBundledStrings = bundledStrings$1;
+
   	// TODO: We may need to revisit this if we do more external calls to user code (since it could be slow)
   	let savedSrc = new Uint8Array(src.slice(0, srcEnd)); // we copy the data in case it changes while external data is processed
   	let savedStructures = currentStructures;
@@ -3936,6 +4119,7 @@
   	srcStringEnd = savedSrcStringEnd;
   	srcString = savedSrcString;
   	referenceMap = savedReferenceMap;
+  	bundledStrings$1 = savedBundledStrings;
   	src = savedSrc;
   	sequentialMode = savedSequentialMode;
   	currentStructures = savedStructures;
@@ -3953,13 +4137,15 @@
   	currentExtensions[extension.tag] = extension.decode;
   }
 
-  let mult10 = new Array(147); // this is a table matching binary exponents to the multiplier to determine significant digit rounding
+  const mult10 = new Array(147); // this is a table matching binary exponents to the multiplier to determine significant digit rounding
   for (let i = 0; i < 256; i++) {
   	mult10[i] = +('1e' + Math.floor(45.15 - i * 0.30103));
   }
   let defaultDecoder = new Decoder({ useRecords: false });
   defaultDecoder.decode;
   defaultDecoder.decodeMultiple;
+  let f32Array = new Float32Array(1);
+  new Uint8Array(f32Array.buffer, 0, 4);
 
   let textEncoder;
   try {
@@ -3969,13 +4155,15 @@
   const hasNodeBuffer = typeof Buffer !== 'undefined';
   const ByteArrayAllocate = hasNodeBuffer ? Buffer.allocUnsafeSlow : Uint8Array;
   const ByteArray = hasNodeBuffer ? Buffer : Uint8Array;
-  const RECORD_STARTING_ID_PREFIX = 0x69; // tag 105/0x69
   const MAX_STRUCTURES = 0x100;
   const MAX_BUFFER_SIZE = hasNodeBuffer ? 0x100000000 : 0x7fd00000;
   let target;
   let targetView;
   let position = 0;
   let safeEnd;
+  let bundledStrings = null;
+  const MAX_BUNDLE_SIZE = 0xf000;
+  const hasNonLatin = /[\u0080-\uFFFF]/;
   const RECORD_SYMBOL = Symbol('record-id');
   class Encoder extends Decoder {
   	constructor(options) {
@@ -3986,7 +4174,7 @@
   		let hasSharedUpdate;
   		let structures;
   		let referenceMap;
-  		let lastSharedStructuresLength = 0;
+  		options = options || {};
   		let encodeUtf8 = ByteArray.prototype.utf8Write ? function(string, position, maxBytes) {
   			return target.utf8Write(string, position, maxBytes)
   		} : (textEncoder && textEncoder.encodeInto) ?
@@ -3995,20 +4183,44 @@
   			} : false;
 
   		let encoder = this;
-  		let maxSharedStructures = 64;
-  		let isSequential = options && options.sequential;
+  		let maxSharedStructures = options.maxSharedStructures || 128;
+  		let isSequential = options.sequential;
   		if (isSequential) {
   			maxSharedStructures = 0;
   			this.structures = [];
   		}
+  		if (this.saveStructures)
+  			this.saveShared = this.saveStructures;
+  		let samplingPackedValues, packedObjectMap, sharedValues = options.sharedValues;
+  		let sharedPackedObjectMap;
+  		if (sharedValues) {
+  			sharedPackedObjectMap = Object.create(null);
+  			for (let i = 0, l = sharedValues.length; i < l; i++) {
+  				sharedPackedObjectMap[sharedValues[i]] = i;
+  			}
+  		}
   		let recordIdsToRemove = [];
   		let transitionsCount = 0;
   		let serializationsSinceTransitionRebuild = 0;
-  		if (this.structures && this.structures.length > maxSharedStructures) {
-  			throw new Error('Too many shared structures')
-  		}
-
-  		this.encode = function(value) {
+  		
+  		this.mapEncode = function(value, encodeOptions) {
+  			// Experimental support for premapping keys using _keyMap instad of keyMap - not optiimised yet)
+  			if (this._keyMap && !this._mapped) {
+  				//console.log('encoding ', value)
+  				switch (value.constructor.name) {
+  					case 'Array': 
+  						value = value.map(r => this.encodeKeys(r));
+  						break
+  					//case 'Map': 
+  					//	value = this.encodeKeys(value)
+  					//	break
+  				}
+  				//this._mapped = true
+  			}
+  			return this.encode(value, encodeOptions)
+  		};
+  		
+  		this.encode = function(value, encodeOptions)	{
   			if (!target) {
   				target = new ByteArrayAllocate(8192);
   				targetView = new DataView(target.buffer, 0, 8192);
@@ -4021,26 +4233,43 @@
   				targetView = new DataView(target.buffer, 0, target.length);
   				safeEnd = target.length - 10;
   				position = 0;
-  			}
+  			} else if (encodeOptions === REUSE_BUFFER_MODE)
+  				position = (position + 7) & 0x7ffffff8; // Word align to make any future copying of this buffer faster
   			start = position;
   			referenceMap = encoder.structuredClone ? new Map() : null;
+  			if (encoder.bundleStrings && typeof value !== 'string') {
+  				bundledStrings = [];
+  				bundledStrings.size = Infinity; // force a new bundle start on first string
+  			} else
+  				bundledStrings = null;
+
   			sharedStructures = encoder.structures;
   			if (sharedStructures) {
-  				if (sharedStructures.uninitialized)
-  					encoder.structures = sharedStructures = encoder.getStructures();
+  				if (sharedStructures.uninitialized) {
+  					let sharedData = encoder.getShared() || {};
+  					encoder.structures = sharedStructures = sharedData.structures || [];
+  					encoder.sharedVersion = sharedData.version;
+  					let sharedValues = encoder.sharedValues = sharedData.packedValues;
+  					if (sharedValues) {
+  						sharedPackedObjectMap = {};
+  						for (let i = 0, l = sharedValues.length; i < l; i++)
+  							sharedPackedObjectMap[sharedValues[i]] = i;
+  					}
+  				}
   				let sharedStructuresLength = sharedStructures.length;
-  				if (sharedStructuresLength >  maxSharedStructures && !isSequential)
+  				if (sharedStructuresLength > maxSharedStructures && !isSequential)
   					sharedStructuresLength = maxSharedStructures;
   				if (!sharedStructures.transitions) {
   					// rebuild our structure transitions
   					sharedStructures.transitions = Object.create(null);
   					for (let i = 0; i < sharedStructuresLength; i++) {
   						let keys = sharedStructures[i];
+  						//console.log('shared struct keys:', keys)
   						if (!keys)
   							continue
   						let nextTransition, transition = sharedStructures.transitions;
-  						for (let i =0, l = keys.length; i < l; i++) {
-  							let key = keys[i];
+  						for (let j = 0, l = keys.length; j < l; j++) {
+  							let key = keys[j];
   							nextTransition = transition[key];
   							if (!nextTransition) {
   								nextTransition = transition[key] = Object.create(null);
@@ -4049,7 +4278,6 @@
   						}
   						transition[RECORD_SYMBOL] = i;
   					}
-  					lastSharedStructuresLength = sharedStructures.length;
   				}
   				if (!isSequential)
   					sharedStructures.nextId = sharedStructuresLength;
@@ -4057,11 +4285,37 @@
   			if (hasSharedUpdate)
   				hasSharedUpdate = false;
   			structures = sharedStructures || [];
+  			packedObjectMap = sharedPackedObjectMap;
+  			if (options.pack) {
+  				let packedValues = new Map();
+  				packedValues.values = [];
+  				packedValues.encoder = encoder;
+  				packedValues.maxValues = options.maxPrivatePackedValues || (sharedPackedObjectMap ? 16 : Infinity);
+  				packedValues.objectMap = sharedPackedObjectMap || false;
+  				packedValues.samplingPackedValues = samplingPackedValues;
+  				findRepetitiveStrings(value, packedValues);
+  				if (packedValues.values.length > 0) {
+  					target[position++] = 0xd8; // one-byte tag
+  					target[position++] = 51; // tag 51 for packed shared structures https://www.potaroo.net/ietf/ids/draft-ietf-cbor-packed-03.txt
+  					writeArrayHeader(4);
+  					let valuesArray = packedValues.values;
+  					encode(valuesArray);
+  					writeArrayHeader(0); // prefixes
+  					writeArrayHeader(0); // suffixes
+  					packedObjectMap = Object.create(sharedPackedObjectMap || null);
+  					for (let i = 0, l = valuesArray.length; i < l; i++) {
+  						packedObjectMap[valuesArray[i]] = i;
+  					}
+  				}
+  			}
   			try {
   				encode(value);
+  				if (bundledStrings) {
+  					writeBundles(start, encode);
+  				}
   				encoder.offset = position; // update the offset so next serialization doesn't write over our buffer, but can continue writing to same buffer sequentially
   				if (referenceMap && referenceMap.idsToInsert) {
-  					position += referenceMap.idsToInsert.length * 8;
+  					position += referenceMap.idsToInsert.length * 2;
   					if (position > safeEnd)
   						makeRoom(position);
   					encoder.offset = position;
@@ -4069,7 +4323,12 @@
   					referenceMap = null;
   					return serialized
   				}
-  				return target.subarray(start, position) // position can change if we call encode again in saveStructures, so we get the buffer now
+  				if (encodeOptions & REUSE_BUFFER_MODE) {
+  					target.start = start;
+  					target.end = position;
+  					return target
+  				}
+  				return target.subarray(start, position) // position can change if we call pack again in saveShared, so we get the buffer now
   			} finally {
   				if (sharedStructures) {
   					if (serializationsSinceTransitionRebuild < 10)
@@ -4087,19 +4346,39 @@
   						}
   						recordIdsToRemove = [];
   					}
-  					if (hasSharedUpdate && encoder.saveStructures) {
-  						if (encoder.structures.length > maxSharedStructures) {
-  							encoder.structures = encoder.structures.slice(0, maxSharedStructures);
-  						}
-
-  						if (encoder.saveStructures(encoder.structures, lastSharedStructuresLength) === false) {
-  							// get updated structures and try again if the update failed
-  							encoder.structures = encoder.getStructures() || [];
-  							return encoder.encode(value)
-  						}
-  						lastSharedStructuresLength = encoder.structures.length;
+  				}
+  				if (hasSharedUpdate && encoder.saveShared) {
+  					if (encoder.structures.length > maxSharedStructures) {
+  						encoder.structures = encoder.structures.slice(0, maxSharedStructures);
+  					}
+  					// we can't rely on start/end with REUSE_BUFFER_MODE since they will (probably) change when we save
+  					let returnBuffer = target.subarray(start, position);
+  					if (encoder.updateSharedData() === false)
+  						return encoder.encode(value) // re-encode if it fails
+  					return returnBuffer
+  				}
+  				if (encodeOptions & RESET_BUFFER_MODE)
+  					position = start;
+  			}
+  		};
+  		this.findCommonStringsToPack = () => {
+  			samplingPackedValues = new Map();
+  			if (!sharedPackedObjectMap)
+  				sharedPackedObjectMap = Object.create(null);
+  			return (options) => {
+  				let threshold = options && options.threshold || 4;
+  				let position = this.pack ? options.maxPrivatePackedValues || 16 : 0;
+  				if (!sharedValues)
+  					sharedValues = this.sharedValues = [];
+  				for (let [ key, status ] of samplingPackedValues) {
+  					if (status.count > threshold) {
+  						sharedPackedObjectMap[key] = position++;
+  						sharedValues.push(key);
+  						hasSharedUpdate = true;
   					}
   				}
+  				while (this.saveShared && this.updateSharedData() === false) {}
+  				samplingPackedValues = null;
   			}
   		};
   		const encode = (value) => {
@@ -4109,7 +4388,71 @@
   			var type = typeof value;
   			var length;
   			if (type === 'string') {
+  				if (packedObjectMap) {
+  					let packedPosition = packedObjectMap[value];
+  					if (packedPosition >= 0) {
+  						if (packedPosition < 16)
+  							target[position++] = packedPosition + 0xe0; // simple values, defined in https://www.potaroo.net/ietf/ids/draft-ietf-cbor-packed-03.txt
+  						else {
+  							target[position++] = 0xc6; // tag 6 defined in https://www.potaroo.net/ietf/ids/draft-ietf-cbor-packed-03.txt
+  							if (packedPosition & 1)
+  								encode((15 - packedPosition) >> 1);
+  							else
+  								encode((packedPosition - 16) >> 1);
+  						}
+  						return
+  /*						} else if (packedStatus.serializationId != serializationId) {
+  							packedStatus.serializationId = serializationId
+  							packedStatus.count = 1
+  							if (options.sharedPack) {
+  								let sharedCount = packedStatus.sharedCount = (packedStatus.sharedCount || 0) + 1
+  								if (shareCount > (options.sharedPack.threshold || 5)) {
+  									let sharedPosition = packedStatus.position = packedStatus.nextSharedPosition
+  									hasSharedUpdate = true
+  									if (sharedPosition < 16)
+  										target[position++] = sharedPosition + 0xc0
+
+  								}
+  							}
+  						} // else any in-doc incrementation?*/
+  					} else if (samplingPackedValues && !options.pack) {
+  						let status = samplingPackedValues.get(value);
+  						if (status)
+  							status.count++;
+  						else
+  							samplingPackedValues.set(value, {
+  								count: 1,
+  							});
+  					}
+  				}
   				let strLength = value.length;
+  				if (bundledStrings && strLength >= 4 && strLength < 0x400) {
+  					if ((bundledStrings.size += strLength) > MAX_BUNDLE_SIZE) {
+  						let extStart;
+  						let maxBytes = (bundledStrings[0] ? bundledStrings[0].length * 3 + bundledStrings[1].length : 0) + 10;
+  						if (position + maxBytes > safeEnd)
+  							target = makeRoom(position + maxBytes);
+  						target[position++] = 0xd9; // tag 16-bit
+  						target[position++] = 0xdf; // tag 0xdff9
+  						target[position++] = 0xf9;
+  						// TODO: If we only have one bundle with any string data, only write one string bundle
+  						target[position++] = bundledStrings.position ? 0x84 : 0x82; // array of 4 or 2 elements depending on if we write bundles
+  						target[position++] = 0x1a; // 32-bit unsigned int
+  						extStart = position - start;
+  						position += 4; // reserve for writing bundle reference
+  						if (bundledStrings.position) {
+  							writeBundles(start, encode); // write the last bundles
+  						}
+  						bundledStrings = ['', '']; // create new ones
+  						bundledStrings.size = 0;
+  						bundledStrings.position = extStart;
+  					}
+  					let twoByte = hasNonLatin.test(value);
+  					bundledStrings[twoByte ? 0 : 1] += value;
+  					target[position++] = twoByte ? 0xce : 0xcf;
+  					encode(strLength);
+  					return
+  				}
   				let headerSize;
   				// first we estimate the header size, so we can write to the correct location
   				if (strLength < 0x20) {
@@ -4218,7 +4561,7 @@
   						targetView.setFloat32(position, value);
   						let xShifted;
   						if (useFloat32 < 4 ||
-  							// this checks for  rounding of numbers that were encoded in 32-bit float to nearest significant decimal digit that could be preserved
+  								// this checks for rounding of numbers that were encoded in 32-bit float to nearest significant decimal digit that could be preserved
   								((xShifted = value * mult10[((target[position] & 0x7f) << 1) | (target[position + 1] >> 7)]) >> 0) === xShifted) {
   							position += 4;
   							return
@@ -4236,16 +4579,16 @@
   					if (referenceMap) {
   						let referee = referenceMap.get(value);
   						if (referee) {
-  							if (!referee.id) {
+  							target[position++] = 0xd8;
+  							target[position++] = 29; // http://cbor.schmorp.de/value-sharing
+  							target[position++] = 0x19; // 16-bit uint
+  							if (!referee.references) {
   								let idsToInsert = referenceMap.idsToInsert || (referenceMap.idsToInsert = []);
-  								referee.id = idsToInsert.push(referee);
+  								referee.references = [];
+  								idsToInsert.push(referee);
   							}
-  							target[position++] = 0xd9;
-  							target[position++] = 40010 >> 8;
-  							target[position++] = 40010 & 0xff;
-  							target[position++] = 0x1a; // uint32
-  							targetView.setUint32(position, referee.id);
-  							position += 4;
+  							referee.references.push(position - start);
+  							position += 2; // TODO: also support 32-bit
   							return
   						} else 
   							referenceMap.set(value, { offset: position - start });
@@ -4285,16 +4628,23 @@
   							targetView.setUint32(position, length);
   							position += 4;
   						}
-  						for (let [ key, entryValue ] of value) {
-  							encode(key);
-  							encode(entryValue);
+  						if (encoder.keyMap) { 
+  							for (let [ key, entryValue ] of value) {
+  								encode(encoder.encodeKey(key));
+  								encode(entryValue);
+  							} 
+  						} else { 
+  							for (let [ key, entryValue ] of value) {
+  								encode(key); 
+  								encode(entryValue);
+  							} 	
   						}
-  					} else {	
+  					} else {
   						for (let i = 0, l = extensions.length; i < l; i++) {
   							let extensionClass = extensionClasses[i];
   							if (value instanceof extensionClass) {
   								let extension = extensions[i];
-  								let tag = extension.tag;
+  								let tag = extension.tag || extension.getTag && extension.getTag(value);
   								if (tag < 0x18) {
   									target[position++] = 0xc0 | tag;
   								} else if (tag < 0x100) {
@@ -4349,13 +4699,14 @@
   			} else if (type === 'undefined') {
   				target[position++] = 0xf7;
   			} else {
-  				throw new Error('Unknown type ' + type)
+  				throw new Error('Unknown type: ' + type)
   			}
   		};
 
   		const writeObject = this.useRecords === false ? this.variableMapSize ? (object) => {
   			// this method is slightly slower, but generates "preferred serialization" (optimally small for smaller objects)
   			let keys = Object.keys(object);
+  			let vals = Object.values(object);
   			let length = keys.length;
   			if (length < 0x18) {
   				target[position++] = 0xa0 | length;
@@ -4371,10 +4722,16 @@
   				targetView.setUint32(position, length);
   				position += 4;
   			}
-  			let key;
-  			for (let i = 0; i < length; i++) {
-  				encode(key = keys[i]);
-  				encode(object[key]);
+  			if (encoder.keyMap) { 
+  				for (let i = 0; i < length; i++) {
+  					encode(encodeKey(keys[i]));
+  					encode(vals[i]);
+  				}
+  			} else {
+  				for (let i = 0; i < length; i++) {
+  					encode(keys[i]);
+  					encode(vals[i]);
+  				}
   			}
   		} :
   		(object, safePrototype) => {
@@ -4382,10 +4739,16 @@
   			let objectOffset = position - start;
   			position += 2;
   			let size = 0;
-  			for (let key in object) {
-  				if (safePrototype || object.hasOwnProperty(key)) {
-  					encode(key);
+  			if (encoder.keyMap) { 
+  				for (let key in object) if (safePrototype || object.hasOwnProperty(key)) {
+  					encode(encoder.encodeKey(key));
   					encode(object[key]);
+  					size++;
+  				}
+  			} else { 
+  				for (let key in object) if (safePrototype || object.hasOwnProperty(key)) {
+  						encode(key);
+  						encode(object[key]);
   					size++;
   				}
   			}
@@ -4435,11 +4798,16 @@
   		}*/
   		(object) => {
   			let keys = Object.keys(object);
+  			let vals = Object.values(object);
+  			if (this.keyMap) keys = keys.map(k => this.encodeKey(k));
   			let nextTransition, transition = structures.transitions || (structures.transitions = Object.create(null));
   			let newTransitions = 0;
   			let length = keys.length;
-  			for (let i =0; i < length; i++) {
+  			//let parentRecordId
+  			for (let i = 0; i < length; i++) {
+  				//if (!parentRecordId)
   				let key = keys[i];
+  				//	parentRecordId = transition[RECORD_SYMBOL]
   				nextTransition = transition[key];
   				if (!nextTransition) {
   					nextTransition = transition[key] = Object.create(null);
@@ -4449,9 +4817,9 @@
   			}
   			let recordId = transition[RECORD_SYMBOL];
   			if (recordId !== undefined) {
-  				target[position++] = 0xd9; // tag two byte
-  				target[position++] = RECORD_STARTING_ID_PREFIX;
-  				target[position++] = recordId;
+  				target[position++] = 0xd9;
+  				target[position++] = (recordId >> 8) | 0xe0;
+  				target[position++] = recordId & 0xff;
   			} else {
   				recordId = structures.nextId++;
   				if (!recordId) {
@@ -4464,30 +4832,23 @@
   				transition[RECORD_SYMBOL] = recordId;
   				structures[recordId] = keys;
   				if (sharedStructures && sharedStructures.length <= maxSharedStructures) {
-  					target[position++] = 0xd9; // tag two byte
-  					target[position++] = RECORD_STARTING_ID_PREFIX;
-  					target[position++] = recordId; // tag number
+  					target[position++] = 0xd9;
+  					target[position++] = (recordId >> 8) | 0xe0;
+  					target[position++] = recordId & 0xff;
   					hasSharedUpdate = true;
   				} else {
-  					target[position++] = 0xd8;
-  					target[position++] = RECORD_STARTING_ID_PREFIX;
+  					targetView.setUint32(position, 0xd9dfff00); // tag two byte, then record definition id
+  					position += 3;
   					if (newTransitions)
   						transitionsCount += serializationsSinceTransitionRebuild * newTransitions;
   					// record the removal of the id, we can maintain our shared structure
   					if (recordIdsToRemove.length >= MAX_STRUCTURES - maxSharedStructures)
   						recordIdsToRemove.shift()[RECORD_SYMBOL] = undefined; // we are cycling back through, and have to remove old ones
   					recordIdsToRemove.push(transition);
-  					if (length < 0x16)
-  						target[position++] = 0x82 + length; // array header, length of values + 2
-  					else
-  						writeArrayHeader(length + 2);
+  					writeArrayHeader(length + 2);
+  					encode(0xe000 + recordId);
   					encode(keys);
-  					target[position++] = 0x19; // uint16
-  					target[position++] = RECORD_STARTING_ID_PREFIX;
-  					target[position++] = recordId;
-  					// now write the values
-  					for (let i =0; i < length; i++)
-  						encode(object[keys[i]]);
+  					for (let v of Object.values(object)) encode(v);
   					return
   				}
   			}
@@ -4496,8 +4857,7 @@
   			} else {
   				writeArrayHeader(length);
   			}
-  			for (let i =0; i < length; i++)
-  				encode(object[keys[i]]);
+  			for (let i =0; i < length; i++) encode(vals[i]);
   		};
   		const makeRoom = (end) => {
   			let newSize;
@@ -4506,7 +4866,7 @@
   				if ((end - start) > MAX_BUFFER_SIZE)
   					throw new Error('Encoded buffer would be larger than maximum buffer size')
   				newSize = Math.min(MAX_BUFFER_SIZE,
-  					Math.round(Math.max((end - start) * (end > 0x4000000 ? 1.25 : 2), 0x1000000) / 0x1000) * 0x1000);
+  					Math.round(Math.max((end - start) * (end > 0x4000000 ? 1.25 : 2), 0x400000) / 0x1000) * 0x1000);
   			} else // faster handling for smaller buffers
   				newSize = ((Math.max((end - start) << 2, target.length - 1) >> 12) + 1) << 12;
   			let newBuffer = new ByteArrayAllocate(newSize);
@@ -4527,10 +4887,39 @@
   		targetView = new DataView(target.buffer, target.byteOffset, target.byteLength);
   		position = 0;
   	}
+  	clearSharedData() {
+  		if (this.structures)
+  			this.structures = [];
+  		if (this.sharedValues)
+  			this.sharedValues = undefined;
+  	}
+  	updateSharedData() {
+  		let lastVersion = this.sharedVersion || 0;
+  		this.sharedVersion = lastVersion + 1;
+  		let saveResults = this.saveShared(new SharedData(this.structures, this.sharedValues, this.sharedVersion),
+  				existingShared => (existingShared && existingShared.version || 0) == lastVersion);
+  		if (saveResults === false) {
+  			// get updated structures and try again if the update failed
+  			let sharedData = this.getShared() || {};
+  			this.structures = sharedData.structures || [];
+  			this.sharedValues = sharedData.packedValues;
+  			this.sharedVersion = sharedData.version;
+  		}
+  		return saveResults
+  	}
+  }
+  class SharedData {
+  	constructor(structures, values, version) {
+  		this.structures = structures;
+  		this.packedValues = values;
+  		this.version = version;
+  	}
   }
 
   function writeArrayHeader(length) {
-  	if (length < 0x100) {
+  	if (length < 0x18)
+  		target[position++] = 0x80 | length;
+  	else if (length < 0x100) {
   		target[position++] = 0x98;
   		target[position++] = length;
   	} else if (length < 0x10000) {
@@ -4544,9 +4933,61 @@
   	}
   }
 
-  extensionClasses = [ Date, Set, Error, RegExp, ArrayBuffer, ByteArray,
-  	Uint8Array, Uint8ClampedArray, Uint16Array, Uint32Array, BigUint64Array, Int8Array, Int16Array, Int32Array, BigInt64Array,
-  	Float32Array, Float64Array];
+  function findRepetitiveStrings(value, packedValues) {
+  	switch(typeof value) {
+  		case 'string':
+  			if (value.length > 3) {
+  				if (packedValues.objectMap[value] > -1 || packedValues.values.length >= packedValues.maxValues)
+  					return
+  				let packedStatus = packedValues.get(value);
+  				if (packedStatus) {
+  					if (++packedStatus.count == 2) {
+  						packedValues.values.push(value);
+  					}
+  				} else {
+  					packedValues.set(value, {
+  						count: 1,
+  					});
+  					if (packedValues.samplingPackedValues) {
+  						let status = packedValues.samplingPackedValues.get(value);
+  						if (status)
+  							status.count++;
+  						else
+  							packedValues.samplingPackedValues.set(value, {
+  								count: 1,
+  							});
+  					}
+  				}
+  			}
+  			break
+  		case 'object':
+  			if (value) {
+  				if (value instanceof Array) {
+  					for (let i = 0, l = value.length; i < l; i++) {
+  						findRepetitiveStrings(value[i], packedValues);
+  					}
+
+  				} else {
+  					let includeKeys = !packedValues.encoder.useRecords;
+  					for (var key in value) {
+  						if (value.hasOwnProperty(key)) {
+  							if (includeKeys)
+  								findRepetitiveStrings(key, packedValues);
+  							findRepetitiveStrings(value[key], packedValues);
+  						}
+  					}
+  				}
+  			}
+  			break
+  		case 'function': console.log(value);
+  	}
+  }
+
+  extensionClasses = [ Date, Set, Error, RegExp, Tag, ArrayBuffer, ByteArray,
+  	Uint8Array, Uint8ClampedArray, Uint16Array, Uint32Array,
+  	typeof BigUint64Array == 'undefined' ? function() {} : BigUint64Array, Int8Array, Int16Array, Int32Array,
+  	typeof BigInt64Array == 'undefined' ? function() {} : BigInt64Array,
+  	Float32Array, Float64Array, SharedData];
 
   //Object.getPrototypeOf(Uint8Array.prototype).constructor /*TypedArray*/
   extensions = [{
@@ -4582,6 +5023,13 @@
   		encode([ 'RegExp', regex.source, regex.flags ]);
   	}
   }, {
+  	getTag(tag) {
+  		return tag.tag
+  	},
+  	encode(tag, encode) {
+  		encode(tag.value);
+  	}
+  }, {
   	encode(arrayBuffer, encode, makeRoom) {
   		writeBuffer(arrayBuffer, makeRoom);
   	}
@@ -4599,7 +5047,35 @@
   	typedArrayEncoder(78),
   	typedArrayEncoder(79),
   	typedArrayEncoder(81),
-  	typedArrayEncoder(82)];
+  	typedArrayEncoder(82),
+  {
+  	encode(sharedData, encode) { // write SharedData
+  		let packedValues = sharedData.packedValues || [];
+  		let sharedStructures = sharedData.structures || [];
+  		if (packedValues.values.length > 0) {
+  			target[position++] = 0xd8; // one-byte tag
+  			target[position++] = 51; // tag 51 for packed shared structures https://www.potaroo.net/ietf/ids/draft-ietf-cbor-packed-03.txt
+  			writeArrayHeader(4);
+  			let valuesArray = packedValues.values;
+  			encode(valuesArray);
+  			writeArrayHeader(0); // prefixes
+  			writeArrayHeader(0); // suffixes
+  			packedObjectMap = Object.create(sharedPackedObjectMap || null);
+  			for (let i = 0, l = valuesArray.length; i < l; i++) {
+  				packedObjectMap[valuesArray[i]] = i;
+  			}
+  		}
+  		if (sharedStructures) {
+  			targetView.setUint32(position, 0xd9dffe00);
+  			position += 3;
+  			let definitions = sharedStructures.slice(0);
+  			definitions.unshift(0xe000);
+  			definitions.push(new Tag(sharedData.version, 0x53687264));
+  			encode(definitions);
+  		} else
+  			encode(new Tag(sharedData.version, 0x53687264));
+  		}
+  	}];
 
   function typedArrayEncoder(tag) {
   	return {
@@ -4639,26 +5115,34 @@
   function insertIds(serialized, idsToInsert) {
   	// insert the ids that need to be referenced for structured clones
   	let nextId;
-  	let distanceToMove = idsToInsert.length * 8;
+  	let distanceToMove = idsToInsert.length * 2;
   	let lastEnd = serialized.length - distanceToMove;
   	idsToInsert.sort((a, b) => a.offset > b.offset ? 1 : -1);
+  	for (let id = 0; id < idsToInsert.length; id++) {
+  		let referee = idsToInsert[id];
+  		referee.id = id;
+  		for (let position of referee.references) {
+  			serialized[position++] = id >> 8;
+  			serialized[position] = id & 0xff;
+  		}
+  	}
   	while (nextId = idsToInsert.pop()) {
   		let offset = nextId.offset;
-  		let id = nextId.id;
   		serialized.copyWithin(offset + distanceToMove, offset, lastEnd);
-  		distanceToMove -= 8;
+  		distanceToMove -= 2;
   		let position = offset + distanceToMove;
-  		serialized[position++] = 0xd9;
-  		serialized[position++] = 40009 >> 8;
-  		serialized[position++] = 40009 & 0xff;
-  		serialized[position++] = 0x1a; // uint32
-  		serialized[position++] = id >> 24;
-  		serialized[position++] = (id >> 16) & 0xff;
-  		serialized[position++] = (id >> 8) & 0xff;
-  		serialized[position++] = id & 0xff;
+  		serialized[position++] = 0xd8;
+  		serialized[position++] = 28; // http://cbor.schmorp.de/value-sharing
   		lastEnd = offset;
   	}
   	return serialized
+  }
+  function writeBundles(start, encode) {
+  	targetView.setUint32(bundledStrings.position + start, position - bundledStrings.position - start + 1); // the offset to bundle
+  	let writeStrings = bundledStrings;
+  	bundledStrings = null;
+  	encode(writeStrings[0]);
+  	encode(writeStrings[1]);
   }
 
   function addExtension(extension) {
@@ -4672,6 +5156,8 @@
   }
   let defaultEncoder = new Encoder({ useRecords: false });
   defaultEncoder.encode;
+  const REUSE_BUFFER_MODE = 512;
+  const RESET_BUFFER_MODE = 1024;
 
   var lzjbPack = {};
 
@@ -5003,7 +5489,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Fri, 11 Feb 2022 11:48:30 +0000
+   * Build time: Fri, 11 Feb 2022 11:58:53 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -5018,9 +5504,14 @@
 
   function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-  function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+  function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
-  function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+  function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+  function _asyncIterator(iterable) { var method, async, sync, retry = 2; for ("undefined" != typeof Symbol && (async = Symbol.asyncIterator, sync = Symbol.iterator); retry--;) { if (async && null != (method = iterable[async])) return method.call(iterable); if (sync && null != (method = iterable[sync])) return new AsyncFromSyncIterator(method.call(iterable)); async = "@@asyncIterator", sync = "@@iterator"; } throw new TypeError("Object is not async iterable"); }
+
+  function AsyncFromSyncIterator(s) { function AsyncFromSyncIteratorContinuation(r) { if (Object(r) !== r) return Promise.reject(new TypeError(r + " is not an object.")); var done = r.done; return Promise.resolve(r.value).then(function (value) { return { value: value, done: done }; }); } return AsyncFromSyncIterator = function AsyncFromSyncIterator(s) { this.s = s, this.n = s.next; }, AsyncFromSyncIterator.prototype = { s: null, n: null, next: function next() { return AsyncFromSyncIteratorContinuation(this.n.apply(this.s, arguments)); }, "return": function _return(value) { var ret = this.s["return"]; return void 0 === ret ? Promise.resolve({ value: value, done: !0 }) : AsyncFromSyncIteratorContinuation(ret.apply(this.s, arguments)); }, "throw": function _throw(value) { var thr = this.s["return"]; return void 0 === thr ? Promise.reject(value) : AsyncFromSyncIteratorContinuation(thr.apply(this.s, arguments)); } }, new AsyncFromSyncIterator(s); }
+
   var root = typeof global !== 'undefined' ? global : self;
 
   if (!root.fetch) {
@@ -6696,70 +7187,70 @@
       value: function () {
         var _peek = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
           var token;
-          return regenerator.wrap(function _callee$(_context2) {
+          return regenerator.wrap(function _callee$(_context) {
             while (1) {
-              switch (_context2.prev = _context2.next) {
+              switch (_context.prev = _context.next) {
                 case 0:
 
                   token = this.__lexer__.peek(true);
 
                   if (!(token === eof)) {
-                    _context2.next = 4;
+                    _context.next = 4;
                     break;
                   }
 
-                  return _context2.abrupt("return", eof);
+                  return _context.abrupt("return", eof);
 
                 case 4:
                   if (!this.is_comment(token.token)) {
-                    _context2.next = 7;
+                    _context.next = 7;
                     break;
                   }
 
                   this.skip();
-                  return _context2.abrupt("continue", 0);
+                  return _context.abrupt("continue", 0);
 
                 case 7:
                   if (!(token.token === '#;')) {
-                    _context2.next = 14;
+                    _context.next = 14;
                     break;
                   }
 
                   this.skip();
 
                   if (!(this.__lexer__.peek() === eof)) {
-                    _context2.next = 11;
+                    _context.next = 11;
                     break;
                   }
 
                   throw new Error('Lexer: syntax error eof found after comment');
 
                 case 11:
-                  _context2.next = 13;
+                  _context.next = 13;
                   return this._read_object();
 
                 case 13:
-                  return _context2.abrupt("continue", 0);
+                  return _context.abrupt("continue", 0);
 
                 case 14:
-                  return _context2.abrupt("break", 17);
+                  return _context.abrupt("break", 17);
 
                 case 17:
                   token = this._formatter(token);
 
                   if (!this._meta) {
-                    _context2.next = 20;
+                    _context.next = 20;
                     break;
                   }
 
-                  return _context2.abrupt("return", token);
+                  return _context.abrupt("return", token);
 
                 case 20:
-                  return _context2.abrupt("return", token.token);
+                  return _context.abrupt("return", token.token);
 
                 case 21:
                 case "end":
-                  return _context2.stop();
+                  return _context.stop();
               }
             }
           }, _callee, this);
@@ -6786,21 +7277,21 @@
       value: function () {
         var _read = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2() {
           var token;
-          return regenerator.wrap(function _callee2$(_context3) {
+          return regenerator.wrap(function _callee2$(_context2) {
             while (1) {
-              switch (_context3.prev = _context3.next) {
+              switch (_context2.prev = _context2.next) {
                 case 0:
-                  _context3.next = 2;
+                  _context2.next = 2;
                   return this.peek();
 
                 case 2:
-                  token = _context3.sent;
+                  token = _context2.sent;
                   this.skip();
-                  return _context3.abrupt("return", token);
+                  return _context2.abrupt("return", token);
 
                 case 5:
                 case "end":
-                  return _context3.stop();
+                  return _context2.stop();
               }
             }
           }, _callee2, this);
@@ -6851,60 +7342,60 @@
       value: function () {
         var _read_list = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3() {
           var head, prev, token, cur;
-          return regenerator.wrap(function _callee3$(_context4) {
+          return regenerator.wrap(function _callee3$(_context3) {
             while (1) {
-              switch (_context4.prev = _context4.next) {
+              switch (_context3.prev = _context3.next) {
                 case 0:
                   head = _nil, prev = head;
 
                 case 1:
 
-                  _context4.next = 4;
+                  _context3.next = 4;
                   return this.peek();
 
                 case 4:
-                  token = _context4.sent;
+                  token = _context3.sent;
 
                   if (!(token === eof)) {
-                    _context4.next = 7;
+                    _context3.next = 7;
                     break;
                   }
 
-                  return _context4.abrupt("break", 27);
+                  return _context3.abrupt("break", 27);
 
                 case 7:
                   if (!this.is_close(token)) {
-                    _context4.next = 10;
+                    _context3.next = 10;
                     break;
                   }
 
                   this.skip();
-                  return _context4.abrupt("break", 27);
+                  return _context3.abrupt("break", 27);
 
                 case 10:
                   if (!(token === '.' && head !== _nil)) {
-                    _context4.next = 17;
+                    _context3.next = 17;
                     break;
                   }
 
                   this.skip();
-                  _context4.next = 14;
+                  _context3.next = 14;
                   return this._read_object();
 
                 case 14:
-                  prev.cdr = _context4.sent;
-                  _context4.next = 25;
+                  prev.cdr = _context3.sent;
+                  _context3.next = 25;
                   break;
 
                 case 17:
-                  _context4.t0 = Pair;
-                  _context4.next = 20;
+                  _context3.t0 = Pair;
+                  _context3.next = 20;
                   return this._read_object();
 
                 case 20:
-                  _context4.t1 = _context4.sent;
-                  _context4.t2 = _nil;
-                  cur = new _context4.t0(_context4.t1, _context4.t2);
+                  _context3.t1 = _context3.sent;
+                  _context3.t2 = _nil;
+                  cur = new _context3.t0(_context3.t1, _context3.t2);
 
                   if (head === _nil) {
                     head = cur;
@@ -6915,15 +7406,15 @@
                   prev = cur;
 
                 case 25:
-                  _context4.next = 1;
+                  _context3.next = 1;
                   break;
 
                 case 27:
-                  return _context4.abrupt("return", head);
+                  return _context3.abrupt("return", head);
 
                 case 28:
                 case "end":
-                  return _context4.stop();
+                  return _context3.stop();
               }
             }
           }, _callee3, this);
@@ -6940,29 +7431,29 @@
       value: function () {
         var _read_value = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4() {
           var token;
-          return regenerator.wrap(function _callee4$(_context5) {
+          return regenerator.wrap(function _callee4$(_context4) {
             while (1) {
-              switch (_context5.prev = _context5.next) {
+              switch (_context4.prev = _context4.next) {
                 case 0:
-                  _context5.next = 2;
+                  _context4.next = 2;
                   return this.read();
 
                 case 2:
-                  token = _context5.sent;
+                  token = _context4.sent;
 
                   if (!(token === eof)) {
-                    _context5.next = 5;
+                    _context4.next = 5;
                     break;
                   }
 
                   throw new Error('Parser: Expected token eof found');
 
                 case 5:
-                  return _context5.abrupt("return", parse_argument(token));
+                  return _context4.abrupt("return", parse_argument(token));
 
                 case 6:
                 case "end":
-                  return _context5.stop();
+                  return _context4.stop();
               }
             }
           }, _callee4, this);
@@ -6995,34 +7486,34 @@
       value: function () {
         var _read_object2 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5() {
           var object;
-          return regenerator.wrap(function _callee5$(_context6) {
+          return regenerator.wrap(function _callee5$(_context5) {
             while (1) {
-              switch (_context6.prev = _context6.next) {
+              switch (_context5.prev = _context5.next) {
                 case 0:
                   this.reset();
-                  _context6.next = 3;
+                  _context5.next = 3;
                   return this._read_object();
 
                 case 3:
-                  object = _context6.sent;
+                  object = _context5.sent;
 
                   if (object instanceof DatumReference) {
                     object = object.valueOf();
                   }
 
                   if (!this._refs.length) {
-                    _context6.next = 7;
+                    _context5.next = 7;
                     break;
                   }
 
-                  return _context6.abrupt("return", this._resolve_object(object));
+                  return _context5.abrupt("return", this._resolve_object(object));
 
                 case 7:
-                  return _context6.abrupt("return", object);
+                  return _context5.abrupt("return", object);
 
                 case 8:
                 case "end":
-                  return _context6.stop();
+                  return _context5.stop();
               }
             }
           }, _callee5, this);
@@ -7055,22 +7546,22 @@
           var _this5 = this;
 
           var result;
-          return regenerator.wrap(function _callee6$(_context7) {
+          return regenerator.wrap(function _callee6$(_context6) {
             while (1) {
-              switch (_context7.prev = _context7.next) {
+              switch (_context6.prev = _context6.next) {
                 case 0:
                   if (!Array.isArray(object)) {
-                    _context7.next = 2;
+                    _context6.next = 2;
                     break;
                   }
 
-                  return _context7.abrupt("return", object.map(function (item) {
+                  return _context6.abrupt("return", object.map(function (item) {
                     return _this5._resolve_object(item);
                   }));
 
                 case 2:
                   if (!is_plain_object(object)) {
-                    _context7.next = 6;
+                    _context6.next = 6;
                     break;
                   }
 
@@ -7078,22 +7569,22 @@
                   Object.keys(object).forEach(function (key) {
                     result[key] = _this5._resolve_object(object[key]);
                   });
-                  return _context7.abrupt("return", result);
+                  return _context6.abrupt("return", result);
 
                 case 6:
                   if (!(object instanceof Pair)) {
-                    _context7.next = 8;
+                    _context6.next = 8;
                     break;
                   }
 
-                  return _context7.abrupt("return", this._resolve_pair(object));
+                  return _context6.abrupt("return", this._resolve_pair(object));
 
                 case 8:
-                  return _context7.abrupt("return", object);
+                  return _context6.abrupt("return", object);
 
                 case 9:
                 case "end":
-                  return _context7.stop();
+                  return _context6.stop();
               }
             }
           }, _callee6, this);
@@ -7109,26 +7600,26 @@
       key: "_resolve_pair",
       value: function () {
         var _resolve_pair2 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(pair) {
-          return regenerator.wrap(function _callee7$(_context8) {
+          return regenerator.wrap(function _callee7$(_context7) {
             while (1) {
-              switch (_context8.prev = _context8.next) {
+              switch (_context7.prev = _context7.next) {
                 case 0:
                   if (!(pair instanceof Pair)) {
-                    _context8.next = 15;
+                    _context7.next = 15;
                     break;
                   }
 
                   if (!(pair.car instanceof DatumReference)) {
-                    _context8.next = 7;
+                    _context7.next = 7;
                     break;
                   }
 
-                  _context8.next = 4;
+                  _context7.next = 4;
                   return pair.car.valueOf();
 
                 case 4:
-                  pair.car = _context8.sent;
-                  _context8.next = 8;
+                  pair.car = _context7.sent;
+                  _context7.next = 8;
                   break;
 
                 case 7:
@@ -7136,27 +7627,27 @@
 
                 case 8:
                   if (!(pair.cdr instanceof DatumReference)) {
-                    _context8.next = 14;
+                    _context7.next = 14;
                     break;
                   }
 
-                  _context8.next = 11;
+                  _context7.next = 11;
                   return pair.cdr.valueOf();
 
                 case 11:
-                  pair.cdr = _context8.sent;
-                  _context8.next = 15;
+                  pair.cdr = _context7.sent;
+                  _context7.next = 15;
                   break;
 
                 case 14:
                   this._resolve_pair(pair.cdr);
 
                 case 15:
-                  return _context8.abrupt("return", pair);
+                  return _context7.abrupt("return", pair);
 
                 case 16:
                 case "end":
-                  return _context8.stop();
+                  return _context7.stop();
               }
             }
           }, _callee7, this);
@@ -7173,26 +7664,26 @@
       value: function () {
         var _read_object3 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8() {
           var token, special, bultin, expr, object, extension, result, ref, ref_label;
-          return regenerator.wrap(function _callee8$(_context9) {
+          return regenerator.wrap(function _callee8$(_context8) {
             while (1) {
-              switch (_context9.prev = _context9.next) {
+              switch (_context8.prev = _context8.next) {
                 case 0:
-                  _context9.next = 2;
+                  _context8.next = 2;
                   return this.peek();
 
                 case 2:
-                  token = _context9.sent;
+                  token = _context8.sent;
 
                   if (!(token === eof)) {
-                    _context9.next = 5;
+                    _context8.next = 5;
                     break;
                   }
 
-                  return _context9.abrupt("return", token);
+                  return _context8.abrupt("return", token);
 
                 case 5:
                   if (!is_special(token)) {
-                    _context9.next = 35;
+                    _context8.next = 35;
                     break;
                   }
 
@@ -7206,38 +7697,38 @@
                   special = specials.get(token);
                   bultin = is_builtin(token);
                   this.skip();
-                  _context9.next = 11;
+                  _context8.next = 11;
                   return this._read_object();
 
                 case 11:
-                  object = _context9.sent;
+                  object = _context8.sent;
 
                   if (bultin) {
-                    _context9.next = 22;
+                    _context8.next = 22;
                     break;
                   }
 
                   extension = this.__env__.get(special.symbol);
 
                   if (!(typeof extension === 'function')) {
-                    _context9.next = 22;
+                    _context8.next = 22;
                     break;
                   }
 
                   if (!is_literal(token)) {
-                    _context9.next = 19;
+                    _context8.next = 19;
                     break;
                   }
 
-                  return _context9.abrupt("return", extension.call(this.__env__, object));
+                  return _context8.abrupt("return", extension.call(this.__env__, object));
 
                 case 19:
                   if (!(object instanceof Pair)) {
-                    _context9.next = 21;
+                    _context8.next = 21;
                     break;
                   }
 
-                  return _context9.abrupt("return", extension.apply(this.__env__, object.to_array(false)));
+                  return _context8.abrupt("return", extension.apply(this.__env__, object.to_array(false)));
 
                 case 21:
                   throw new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
@@ -7251,33 +7742,33 @@
 
 
                   if (!bultin) {
-                    _context9.next = 25;
+                    _context8.next = 25;
                     break;
                   }
 
-                  return _context9.abrupt("return", expr);
+                  return _context8.abrupt("return", expr);
 
                 case 25:
                   if (!(extension instanceof Macro)) {
-                    _context9.next = 34;
+                    _context8.next = 34;
                     break;
                   }
 
-                  _context9.next = 28;
+                  _context8.next = 28;
                   return this.evaluate(expr);
 
                 case 28:
-                  result = _context9.sent;
+                  result = _context8.sent;
 
                   if (!(result instanceof Pair || result instanceof LSymbol)) {
-                    _context9.next = 31;
+                    _context8.next = 31;
                     break;
                   }
 
-                  return _context9.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
+                  return _context8.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
 
                 case 31:
-                  return _context9.abrupt("return", result);
+                  return _context8.abrupt("return", result);
 
                 case 34:
                   throw new Error('Parse Error: invlid parser extension: ' + special.symbol);
@@ -7286,18 +7777,18 @@
                   ref = this.match_datum_ref(token);
 
                   if (!(ref !== null)) {
-                    _context9.next = 41;
+                    _context8.next = 41;
                     break;
                   }
 
                   this.skip();
 
                   if (!this._refs[ref]) {
-                    _context9.next = 40;
+                    _context8.next = 40;
                     break;
                   }
 
-                  return _context9.abrupt("return", new DatumReference(ref, this._refs[ref]));
+                  return _context8.abrupt("return", new DatumReference(ref, this._refs[ref]));
 
                 case 40:
                   throw new Error("Parse Error: invalid datum label #".concat(ref, "#"));
@@ -7306,29 +7797,29 @@
                   ref_label = this.match_datum_label(token);
 
                   if (!(ref_label !== null)) {
-                    _context9.next = 48;
+                    _context8.next = 48;
                     break;
                   }
 
                   this.skip();
                   this._refs[ref_label] = this._read_object();
-                  return _context9.abrupt("return", this._refs[ref_label]);
+                  return _context8.abrupt("return", this._refs[ref_label]);
 
                 case 48:
                   if (!this.is_open(token)) {
-                    _context9.next = 53;
+                    _context8.next = 53;
                     break;
                   }
 
                   this.skip();
-                  return _context9.abrupt("return", this.read_list());
+                  return _context8.abrupt("return", this.read_list());
 
                 case 53:
-                  return _context9.abrupt("return", this.read_value());
+                  return _context8.abrupt("return", this.read_value());
 
                 case 54:
                 case "end":
-                  return _context9.stop();
+                  return _context8.stop();
               }
             }
           }, _callee8, this);
@@ -7382,9 +7873,9 @@
   function _parse() {
     _parse = _wrapAsyncGenerator( /*#__PURE__*/regenerator.mark(function _callee9(arg, env) {
       var parser, expr;
-      return regenerator.wrap(function _callee9$(_context10) {
+      return regenerator.wrap(function _callee9$(_context9) {
         while (1) {
-          switch (_context10.prev = _context10.next) {
+          switch (_context9.prev = _context9.next) {
             case 0:
               if (!env) {
                 if (global_env) {
@@ -7402,34 +7893,34 @@
 
             case 2:
 
-              _context10.next = 5;
+              _context9.next = 5;
               return _awaitAsyncGenerator(parser.read_object());
 
             case 5:
-              expr = _context10.sent;
+              expr = _context9.sent;
 
               if (!parser.ballanced()) {
                 parser.ballancing_error(expr);
               }
 
               if (!(expr === eof)) {
-                _context10.next = 9;
+                _context9.next = 9;
                 break;
               }
 
-              return _context10.abrupt("break", 13);
+              return _context9.abrupt("break", 13);
 
             case 9:
-              _context10.next = 11;
+              _context9.next = 11;
               return expr;
 
             case 11:
-              _context10.next = 2;
+              _context9.next = 2;
               break;
 
             case 13:
             case "end":
-              return _context10.stop();
+              return _context9.stop();
           }
         }
       }, _callee9);
@@ -7531,88 +8022,95 @@
   // ----------------------------------------------------------------------
 
 
-  function uniterate_async(object) {
-    var result, _iteratorAbruptCompletion, _didIteratorError, _iteratorError, _iterator, _step, item;
-
-    return regenerator.async(function uniterate_async$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            result = [];
-            _iteratorAbruptCompletion = false;
-            _didIteratorError = false;
-            _context.prev = 3;
-            _iterator = _asyncIterator(object);
-
-          case 5:
-            _context.next = 7;
-            return regenerator.awrap(_iterator.next());
-
-          case 7:
-            if (!(_iteratorAbruptCompletion = !(_step = _context.sent).done)) {
-              _context.next = 13;
-              break;
-            }
-
-            item = _step.value;
-            result.push(item);
-
-          case 10:
-            _iteratorAbruptCompletion = false;
-            _context.next = 5;
-            break;
-
-          case 13:
-            _context.next = 19;
-            break;
-
-          case 15:
-            _context.prev = 15;
-            _context.t0 = _context["catch"](3);
-            _didIteratorError = true;
-            _iteratorError = _context.t0;
-
-          case 19:
-            _context.prev = 19;
-            _context.prev = 20;
-
-            if (!(_iteratorAbruptCompletion && _iterator["return"] != null)) {
-              _context.next = 24;
-              break;
-            }
-
-            _context.next = 24;
-            return regenerator.awrap(_iterator["return"]());
-
-          case 24:
-            _context.prev = 24;
-
-            if (!_didIteratorError) {
-              _context.next = 27;
-              break;
-            }
-
-            throw _iteratorError;
-
-          case 27:
-            return _context.finish(24);
-
-          case 28:
-            return _context.finish(19);
-
-          case 29:
-            return _context.abrupt("return", result);
-
-          case 30:
-          case "end":
-            return _context.stop();
-        }
-      }
-    }, null, null, [[3, 15, 19, 29], [20,, 24, 28]], Promise);
+  function uniterate_async(_x5) {
+    return _uniterate_async.apply(this, arguments);
   } // ----------------------------------------------------------------------
   // :: function that return mather function that match string against string
   // ----------------------------------------------------------------------
 
+
+  function _uniterate_async() {
+    _uniterate_async = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee21(object) {
+      var result, _iteratorAbruptCompletion, _didIteratorError, _iteratorError, _iterator, _step, item;
+
+      return regenerator.wrap(function _callee21$(_context21) {
+        while (1) {
+          switch (_context21.prev = _context21.next) {
+            case 0:
+              result = [];
+              _iteratorAbruptCompletion = false;
+              _didIteratorError = false;
+              _context21.prev = 3;
+              _iterator = _asyncIterator(object);
+
+            case 5:
+              _context21.next = 7;
+              return _iterator.next();
+
+            case 7:
+              if (!(_iteratorAbruptCompletion = !(_step = _context21.sent).done)) {
+                _context21.next = 13;
+                break;
+              }
+
+              item = _step.value;
+              result.push(item);
+
+            case 10:
+              _iteratorAbruptCompletion = false;
+              _context21.next = 5;
+              break;
+
+            case 13:
+              _context21.next = 19;
+              break;
+
+            case 15:
+              _context21.prev = 15;
+              _context21.t0 = _context21["catch"](3);
+              _didIteratorError = true;
+              _iteratorError = _context21.t0;
+
+            case 19:
+              _context21.prev = 19;
+              _context21.prev = 20;
+
+              if (!(_iteratorAbruptCompletion && _iterator["return"] != null)) {
+                _context21.next = 24;
+                break;
+              }
+
+              _context21.next = 24;
+              return _iterator["return"]();
+
+            case 24:
+              _context21.prev = 24;
+
+              if (!_didIteratorError) {
+                _context21.next = 27;
+                break;
+              }
+
+              throw _iteratorError;
+
+            case 27:
+              return _context21.finish(24);
+
+            case 28:
+              return _context21.finish(19);
+
+            case 29:
+              return _context21.abrupt("return", result);
+
+            case 30:
+            case "end":
+              return _context21.stop();
+          }
+        }
+      }, _callee21, null, [[3, 15, 19, 29], [20,, 24, 28]]);
+    }));
+    return _uniterate_async.apply(this, arguments);
+  }
 
   function matcher(name, arg) {
     if (arg instanceof RegExp) {
@@ -9250,9 +9748,9 @@
 
 
   function seq_compare(fn, args) {
-    var _args12 = _toArray(args),
-        a = _args12[0],
-        rest = _args12.slice(1);
+    var _args11 = _toArray(args),
+        a = _args11[0],
+        rest = _args11.slice(1);
 
     while (rest.length > 0) {
       var _rest = rest,
@@ -9435,29 +9933,29 @@
       var _ref20 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(code, args) {
         var env, bindings, let_macros, lambda, define, is_let_macro, is_procedure, is_lambda, proc_bindings, let_binding, is_macro, expand_let_binding, _expand_let_binding, traverse, _traverse;
 
-        return regenerator.wrap(function _callee12$(_context13) {
+        return regenerator.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
                 _traverse = function _traverse3() {
                   _traverse = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(node, n, env) {
                     var name, value, is_let, is_binding, second, code, result, _result, expr, scope, car, cdr, pair;
 
-                    return regenerator.wrap(function _callee11$(_context12) {
+                    return regenerator.wrap(function _callee11$(_context11) {
                       while (1) {
-                        switch (_context12.prev = _context12.next) {
+                        switch (_context11.prev = _context11.next) {
                           case 0:
                             if (!(node instanceof Pair && node.car instanceof LSymbol)) {
-                              _context12.next = 50;
+                              _context11.next = 50;
                               break;
                             }
 
                             if (!node[__data__]) {
-                              _context12.next = 3;
+                              _context11.next = 3;
                               break;
                             }
 
-                            return _context12.abrupt("return", node);
+                            return _context11.abrupt("return", node);
 
                           case 3:
                             name = node.car.valueOf();
@@ -9468,22 +9966,22 @@
                             is_binding = is_let || is_procedure(value, node) || is_lambda(value);
 
                             if (!(is_binding && node.cdr.car instanceof Pair)) {
-                              _context12.next = 28;
+                              _context11.next = 28;
                               break;
                             }
 
                             if (!is_let) {
-                              _context12.next = 15;
+                              _context11.next = 15;
                               break;
                             }
 
                             bindings = let_binding(node.cdr.car);
-                            _context12.next = 12;
+                            _context11.next = 12;
                             return expand_let_binding(node.cdr.car, n);
 
                           case 12:
-                            second = _context12.sent;
-                            _context12.next = 17;
+                            second = _context11.sent;
+                            _context11.next = 17;
                             break;
 
                           case 15:
@@ -9491,134 +9989,134 @@
                             second = node.cdr.car;
 
                           case 17:
-                            _context12.t0 = Pair;
-                            _context12.t1 = node.car;
-                            _context12.t2 = Pair;
-                            _context12.t3 = second;
-                            _context12.next = 23;
+                            _context11.t0 = Pair;
+                            _context11.t1 = node.car;
+                            _context11.t2 = Pair;
+                            _context11.t3 = second;
+                            _context11.next = 23;
                             return traverse(node.cdr.cdr, n, env);
 
                           case 23:
-                            _context12.t4 = _context12.sent;
-                            _context12.t5 = new _context12.t2(_context12.t3, _context12.t4);
-                            return _context12.abrupt("return", new _context12.t0(_context12.t1, _context12.t5));
+                            _context11.t4 = _context11.sent;
+                            _context11.t5 = new _context11.t2(_context11.t3, _context11.t4);
+                            return _context11.abrupt("return", new _context11.t0(_context11.t1, _context11.t5));
 
                           case 28:
                             if (!is_macro(name, value)) {
-                              _context12.next = 50;
+                              _context11.next = 50;
                               break;
                             }
 
                             code = value instanceof Syntax ? node : node.cdr;
-                            _context12.next = 32;
+                            _context11.next = 32;
                             return value.invoke(code, _objectSpread(_objectSpread({}, args), {}, {
                               env: env
                             }), true);
 
                           case 32:
-                            result = _context12.sent;
+                            result = _context11.sent;
 
                             if (!(value instanceof Syntax)) {
-                              _context12.next = 41;
+                              _context11.next = 41;
                               break;
                             }
 
                             _result = result, expr = _result.expr, scope = _result.scope;
 
                             if (!(expr instanceof Pair)) {
-                              _context12.next = 40;
+                              _context11.next = 40;
                               break;
                             }
 
                             if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                              _context12.next = 38;
+                              _context11.next = 38;
                               break;
                             }
 
-                            return _context12.abrupt("return", expr);
+                            return _context11.abrupt("return", expr);
 
                           case 38:
                             if (n !== -1) {
                               n = n - 1;
                             }
 
-                            return _context12.abrupt("return", traverse(expr, n, scope));
+                            return _context11.abrupt("return", traverse(expr, n, scope));
 
                           case 40:
                             result = expr;
 
                           case 41:
                             if (!(result instanceof LSymbol)) {
-                              _context12.next = 43;
+                              _context11.next = 43;
                               break;
                             }
 
-                            return _context12.abrupt("return", quote(result));
+                            return _context11.abrupt("return", quote(result));
 
                           case 43:
                             if (!(result instanceof Pair)) {
-                              _context12.next = 48;
+                              _context11.next = 48;
                               break;
                             }
 
                             if (!(n !== -1 && n <= 1 || n < recur_guard)) {
-                              _context12.next = 46;
+                              _context11.next = 46;
                               break;
                             }
 
-                            return _context12.abrupt("return", result);
+                            return _context11.abrupt("return", result);
 
                           case 46:
                             if (n !== -1) {
                               n = n - 1;
                             }
 
-                            return _context12.abrupt("return", traverse(result, n, env));
+                            return _context11.abrupt("return", traverse(result, n, env));
 
                           case 48:
                             if (!is_atom(result)) {
-                              _context12.next = 50;
+                              _context11.next = 50;
                               break;
                             }
 
-                            return _context12.abrupt("return", result);
+                            return _context11.abrupt("return", result);
 
                           case 50:
                             // TODO: CYCLE DETECT
                             car = node.car;
 
                             if (!(car instanceof Pair)) {
-                              _context12.next = 55;
+                              _context11.next = 55;
                               break;
                             }
 
-                            _context12.next = 54;
+                            _context11.next = 54;
                             return traverse(car, n, env);
 
                           case 54:
-                            car = _context12.sent;
+                            car = _context11.sent;
 
                           case 55:
                             cdr = node.cdr;
 
                             if (!(cdr instanceof Pair)) {
-                              _context12.next = 60;
+                              _context11.next = 60;
                               break;
                             }
 
-                            _context12.next = 59;
+                            _context11.next = 59;
                             return traverse(cdr, n, env);
 
                           case 59:
-                            cdr = _context12.sent;
+                            cdr = _context11.sent;
 
                           case 60:
                             pair = new Pair(car, cdr);
-                            return _context12.abrupt("return", pair);
+                            return _context11.abrupt("return", pair);
 
                           case 62:
                           case "end":
-                            return _context12.stop();
+                            return _context11.stop();
                         }
                       }
                     }, _callee11);
@@ -9626,45 +10124,45 @@
                   return _traverse.apply(this, arguments);
                 };
 
-                traverse = function _traverse2(_x9, _x10, _x11) {
+                traverse = function _traverse2(_x10, _x11, _x12) {
                   return _traverse.apply(this, arguments);
                 };
 
                 _expand_let_binding = function _expand_let_binding3() {
                   _expand_let_binding = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(node, n) {
                     var pair;
-                    return regenerator.wrap(function _callee10$(_context11) {
+                    return regenerator.wrap(function _callee10$(_context10) {
                       while (1) {
-                        switch (_context11.prev = _context11.next) {
+                        switch (_context10.prev = _context10.next) {
                           case 0:
                             if (!(node === _nil)) {
-                              _context11.next = 2;
+                              _context10.next = 2;
                               break;
                             }
 
-                            return _context11.abrupt("return", _nil);
+                            return _context10.abrupt("return", _nil);
 
                           case 2:
                             pair = node.car;
-                            _context11.t0 = Pair;
-                            _context11.t1 = Pair;
-                            _context11.t2 = pair.car;
-                            _context11.next = 8;
+                            _context10.t0 = Pair;
+                            _context10.t1 = Pair;
+                            _context10.t2 = pair.car;
+                            _context10.next = 8;
                             return traverse(pair.cdr, n, env);
 
                           case 8:
-                            _context11.t3 = _context11.sent;
-                            _context11.t4 = new _context11.t1(_context11.t2, _context11.t3);
-                            _context11.next = 12;
+                            _context10.t3 = _context10.sent;
+                            _context10.t4 = new _context10.t1(_context10.t2, _context10.t3);
+                            _context10.next = 12;
                             return expand_let_binding(node.cdr);
 
                           case 12:
-                            _context11.t5 = _context11.sent;
-                            return _context11.abrupt("return", new _context11.t0(_context11.t4, _context11.t5));
+                            _context10.t5 = _context10.sent;
+                            return _context10.abrupt("return", new _context10.t0(_context10.t4, _context10.t5));
 
                           case 14:
                           case "end":
-                            return _context11.stop();
+                            return _context10.stop();
                         }
                       }
                     }, _callee10);
@@ -9672,7 +10170,7 @@
                   return _expand_let_binding.apply(this, arguments);
                 };
 
-                expand_let_binding = function _expand_let_binding2(_x7, _x8) {
+                expand_let_binding = function _expand_let_binding2(_x8, _x9) {
                   return _expand_let_binding.apply(this, arguments);
                 };
 
@@ -9730,50 +10228,50 @@
                 define = global_env.get('define');
 
                 if (!(code.cdr instanceof Pair && LNumber.isNumber(code.cdr.car))) {
-                  _context13.next = 21;
+                  _context12.next = 21;
                   break;
                 }
 
-                _context13.t0 = quote;
-                _context13.next = 19;
+                _context12.t0 = quote;
+                _context12.next = 19;
                 return traverse(code, code.cdr.car.valueOf(), env);
 
               case 19:
-                _context13.t1 = _context13.sent.car;
-                return _context13.abrupt("return", (0, _context13.t0)(_context13.t1));
+                _context12.t1 = _context12.sent.car;
+                return _context12.abrupt("return", (0, _context12.t0)(_context12.t1));
 
               case 21:
                 if (!single) {
-                  _context13.next = 27;
+                  _context12.next = 27;
                   break;
                 }
 
-                _context13.t2 = quote;
-                _context13.next = 25;
+                _context12.t2 = quote;
+                _context12.next = 25;
                 return traverse(code, 1, env);
 
               case 25:
-                _context13.t3 = _context13.sent.car;
-                return _context13.abrupt("return", (0, _context13.t2)(_context13.t3));
+                _context12.t3 = _context12.sent.car;
+                return _context12.abrupt("return", (0, _context12.t2)(_context12.t3));
 
               case 27:
-                _context13.t4 = quote;
-                _context13.next = 30;
+                _context12.t4 = quote;
+                _context12.next = 30;
                 return traverse(code, -1, env);
 
               case 30:
-                _context13.t5 = _context13.sent.car;
-                return _context13.abrupt("return", (0, _context13.t4)(_context13.t5));
+                _context12.t5 = _context12.sent.car;
+                return _context12.abrupt("return", (0, _context12.t4)(_context12.t5));
 
               case 32:
               case "end":
-                return _context13.stop();
+                return _context12.stop();
             }
           }
         }, _callee12, this);
       }));
 
-      return function (_x5, _x6) {
+      return function (_x6, _x7) {
         return _ref20.apply(this, arguments);
       };
     }();
@@ -9830,7 +10328,7 @@
       return _super.apply(this, arguments);
     }
 
-    return Parameter;
+    return _createClass(Parameter);
   }(Syntax);
 
   Syntax.Parameter = Parameter; // ----------------------------------------------------------------------
@@ -13244,30 +13742,30 @@
     this._read = read;
     this._with_parser = this._with_init_parser.bind(this, /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13() {
       var line;
-      return regenerator.wrap(function _callee13$(_context14) {
+      return regenerator.wrap(function _callee13$(_context13) {
         while (1) {
-          switch (_context14.prev = _context14.next) {
+          switch (_context13.prev = _context13.next) {
             case 0:
               if (_this8.char_ready()) {
-                _context14.next = 5;
+                _context13.next = 5;
                 break;
               }
 
-              _context14.next = 3;
+              _context13.next = 3;
               return _this8._read();
 
             case 3:
-              line = _context14.sent;
+              line = _context13.sent;
               parser = new Parser(line, {
                 env: _this8
               });
 
             case 5:
-              return _context14.abrupt("return", _this8.__parser__);
+              return _context13.abrupt("return", _this8.__parser__);
 
             case 6:
             case "end":
-              return _context14.stop();
+              return _context13.stop();
           }
         }
       }, _callee13);
@@ -13306,42 +13804,36 @@
 
   InputPort.prototype._with_init_parser = function (make_parser, fn) {
     var self = this;
-    return /*#__PURE__*/function () {
-      var _ref25 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14() {
-        var parser,
-            _len16,
-            args,
-            _key16,
-            _args17 = arguments;
+    return /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14() {
+      var parser,
+          _len16,
+          args,
+          _key16,
+          _args16 = arguments;
 
-        return regenerator.wrap(function _callee14$(_context15) {
-          while (1) {
-            switch (_context15.prev = _context15.next) {
-              case 0:
-                _context15.next = 2;
-                return make_parser.call(self);
+      return regenerator.wrap(function _callee14$(_context14) {
+        while (1) {
+          switch (_context14.prev = _context14.next) {
+            case 0:
+              _context14.next = 2;
+              return make_parser.call(self);
 
-              case 2:
-                parser = _context15.sent;
+            case 2:
+              parser = _context14.sent;
 
-                for (_len16 = _args17.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-                  args[_key16] = _args17[_key16];
-                }
+              for (_len16 = _args16.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+                args[_key16] = _args16[_key16];
+              }
 
-                return _context15.abrupt("return", fn.apply(void 0, [parser].concat(args)));
+              return _context14.abrupt("return", fn.apply(void 0, [parser].concat(args)));
 
-              case 5:
-              case "end":
-                return _context15.stop();
-            }
+            case 5:
+            case "end":
+              return _context14.stop();
           }
-        }, _callee14);
-      }));
-
-      return function () {
-        return _ref25.apply(this, arguments);
-      };
-    }();
+        }
+      }, _callee14);
+    }));
   };
 
   InputPort.prototype.is_open = function () {
@@ -14522,79 +15014,79 @@
             _step2,
             value,
             port,
-            _args18 = arguments;
+            _args17 = arguments;
 
-        return regenerator.wrap(function _callee15$(_context16) {
+        return regenerator.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
-                arg = _args18.length > 0 && _args18[0] !== undefined ? _args18[0] : null;
+                arg = _args17.length > 0 && _args17[0] !== undefined ? _args17[0] : null;
 
                 if (!LString.isString(arg)) {
-                  _context16.next = 30;
+                  _context15.next = 30;
                   break;
                 }
 
                 _iteratorAbruptCompletion2 = false;
                 _didIteratorError2 = false;
-                _context16.prev = 4;
+                _context15.prev = 4;
                 _iterator2 = _asyncIterator(parse(arg, this));
 
               case 6:
-                _context16.next = 8;
+                _context15.next = 8;
                 return _iterator2.next();
 
               case 8:
-                if (!(_iteratorAbruptCompletion2 = !(_step2 = _context16.sent).done)) {
-                  _context16.next = 14;
+                if (!(_iteratorAbruptCompletion2 = !(_step2 = _context15.sent).done)) {
+                  _context15.next = 14;
                   break;
                 }
 
                 value = _step2.value;
-                return _context16.abrupt("return", value);
+                return _context15.abrupt("return", value);
 
               case 11:
                 _iteratorAbruptCompletion2 = false;
-                _context16.next = 6;
+                _context15.next = 6;
                 break;
 
               case 14:
-                _context16.next = 20;
+                _context15.next = 20;
                 break;
 
               case 16:
-                _context16.prev = 16;
-                _context16.t0 = _context16["catch"](4);
+                _context15.prev = 16;
+                _context15.t0 = _context15["catch"](4);
                 _didIteratorError2 = true;
-                _iteratorError2 = _context16.t0;
+                _iteratorError2 = _context15.t0;
 
               case 20:
-                _context16.prev = 20;
-                _context16.prev = 21;
+                _context15.prev = 20;
+                _context15.prev = 21;
 
                 if (!(_iteratorAbruptCompletion2 && _iterator2["return"] != null)) {
-                  _context16.next = 25;
+                  _context15.next = 25;
                   break;
                 }
 
-                _context16.next = 25;
+                _context15.next = 25;
                 return _iterator2["return"]();
 
               case 25:
-                _context16.prev = 25;
+                _context15.prev = 25;
 
                 if (!_didIteratorError2) {
-                  _context16.next = 28;
+                  _context15.next = 28;
                   break;
                 }
 
                 throw _iteratorError2;
 
               case 28:
-                return _context16.finish(25);
+                return _context15.finish(25);
 
               case 29:
-                return _context16.finish(20);
+                return _context15.finish(20);
 
               case 30:
                 if (arg === null) {
@@ -14604,11 +15096,11 @@
                 }
 
                 typecheck_text_port('read', port, 'input-port');
-                return _context16.abrupt("return", port.read.call(this));
+                return _context15.abrupt("return", port.read.call(this));
 
               case 33:
               case "end":
-                return _context16.stop();
+                return _context15.stop();
             }
           }
         }, _callee15, this, [[4, 16, 20, 30], [21,, 25, 29]]);
@@ -14979,22 +15471,22 @@
       if (is_node()) {
         return new Promise( /*#__PURE__*/function () {
           var _ref29 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(resolve, reject) {
-            var path, cmd, _args19;
+            var path, cmd, _args18;
 
-            return regenerator.wrap(function _callee16$(_context17) {
+            return regenerator.wrap(function _callee16$(_context16) {
               while (1) {
-                switch (_context17.prev = _context17.next) {
+                switch (_context16.prev = _context16.next) {
                   case 0:
                     path = nodeRequire('path');
 
                     if (!module_path) {
-                      _context17.next = 6;
+                      _context16.next = 6;
                       break;
                     }
 
                     module_path = module_path.valueOf();
                     file = path.join(module_path, file);
-                    _context17.next = 12;
+                    _context16.next = 12;
                     break;
 
                   case 6:
@@ -15003,20 +15495,20 @@
                     });
 
                     if (!cmd) {
-                      _context17.next = 11;
+                      _context16.next = 11;
                       break;
                     }
 
-                    _context17.next = 10;
+                    _context16.next = 10;
                     return cmd();
 
                   case 10:
-                    _args19 = _context17.sent;
+                    _args18 = _context16.sent;
 
                   case 11:
-                    if (_args19 && _args19 !== _nil) {
+                    if (_args18 && _args18 !== _nil) {
                       process.cwd();
-                      file = path.join(path.dirname(_args19.car.valueOf()), file);
+                      file = path.join(path.dirname(_args18.car.valueOf()), file);
                     }
 
                   case 12:
@@ -15039,13 +15531,13 @@
 
                   case 14:
                   case "end":
-                    return _context17.stop();
+                    return _context16.stop();
                 }
               }
             }, _callee16);
           }));
 
-          return function (_x12, _x13) {
+          return function (_x13, _x14) {
             return _ref29.apply(this, arguments);
           };
         }());
@@ -15068,9 +15560,9 @@
       var _ref30 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee18(code, _ref31) {
         var dynamic_scope, error, self, scope, vars, test, body, eval_args, node, item, _loop3;
 
-        return regenerator.wrap(function _callee18$(_context19) {
+        return regenerator.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context19.prev = _context19.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
                 dynamic_scope = _ref31.dynamic_scope, error = _ref31.error;
                 self = this;
@@ -15097,23 +15589,23 @@
 
               case 10:
                 if (!(node !== _nil)) {
-                  _context19.next = 21;
+                  _context18.next = 21;
                   break;
                 }
 
                 item = node.car;
-                _context19.t0 = scope;
-                _context19.t1 = item.car;
-                _context19.next = 16;
+                _context18.t0 = scope;
+                _context18.t1 = item.car;
+                _context18.next = 16;
                 return _evaluate(item.cdr.car, eval_args);
 
               case 16:
-                _context19.t2 = _context19.sent;
+                _context18.t2 = _context18.sent;
 
-                _context19.t0.set.call(_context19.t0, _context19.t1, _context19.t2);
+                _context18.t0.set.call(_context18.t0, _context18.t1, _context18.t2);
 
                 node = node.cdr;
-                _context19.next = 10;
+                _context18.next = 10;
                 break;
 
               case 21:
@@ -15125,16 +15617,16 @@
                 _loop3 = /*#__PURE__*/regenerator.mark(function _callee17() {
                   var node, next, _item, value, symbols;
 
-                  return regenerator.wrap(function _callee17$(_context18) {
+                  return regenerator.wrap(function _callee17$(_context17) {
                     while (1) {
-                      switch (_context18.prev = _context18.next) {
+                      switch (_context17.prev = _context17.next) {
                         case 0:
                           if (!(body !== _nil)) {
-                            _context18.next = 3;
+                            _context17.next = 3;
                             break;
                           }
 
-                          _context18.next = 3;
+                          _context17.next = 3;
                           return lips.evaluate(body, eval_args);
 
                         case 3:
@@ -15143,27 +15635,27 @@
 
                         case 5:
                           if (!(node !== _nil)) {
-                            _context18.next = 15;
+                            _context17.next = 15;
                             break;
                           }
 
                           _item = node.car;
 
                           if (!(_item.cdr.cdr !== _nil)) {
-                            _context18.next = 12;
+                            _context17.next = 12;
                             break;
                           }
 
-                          _context18.next = 10;
+                          _context17.next = 10;
                           return _evaluate(_item.cdr.cdr.car, eval_args);
 
                         case 10:
-                          value = _context18.sent;
+                          value = _context17.sent;
                           next[_item.car.valueOf()] = value;
 
                         case 12:
                           node = node.cdr;
-                          _context18.next = 5;
+                          _context17.next = 5;
                           break;
 
                         case 15:
@@ -15174,51 +15666,51 @@
 
                         case 17:
                         case "end":
-                          return _context18.stop();
+                          return _context17.stop();
                       }
                     }
                   }, _callee17);
                 });
 
               case 23:
-                _context19.next = 25;
+                _context18.next = 25;
                 return _evaluate(test.car, eval_args);
 
               case 25:
-                _context19.t3 = _context19.sent;
+                _context18.t3 = _context18.sent;
 
-                if (!(_context19.t3 === false)) {
-                  _context19.next = 30;
+                if (!(_context18.t3 === false)) {
+                  _context18.next = 30;
                   break;
                 }
 
-                return _context19.delegateYield(_loop3(), "t4", 28);
+                return _context18.delegateYield(_loop3(), "t4", 28);
 
               case 28:
-                _context19.next = 23;
+                _context18.next = 23;
                 break;
 
               case 30:
                 if (!(test.cdr !== _nil)) {
-                  _context19.next = 34;
+                  _context18.next = 34;
                   break;
                 }
 
-                _context19.next = 33;
+                _context18.next = 33;
                 return _evaluate(test.cdr.car, eval_args);
 
               case 33:
-                return _context19.abrupt("return", _context19.sent);
+                return _context18.abrupt("return", _context18.sent);
 
               case 34:
               case "end":
-                return _context19.stop();
+                return _context18.stop();
             }
           }
         }, _callee18, this);
       }));
 
-      return function (_x14, _x15) {
+      return function (_x15, _x16) {
         return _ref30.apply(this, arguments);
       };
     }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n             Iteration macro that evaluate the expression body in scope of the variables.\n             On Eeach loop it increase the variables according to next expression and run\n             test to check if the loop should continue. If test is signle call the macro\n             will not return anything. If the test is pair of expression and value the\n             macro will return that value after finish."),
@@ -17290,10 +17782,10 @@
 
 
   function _node_specific() {
-    _node_specific = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee21() {
+    _node_specific = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee22() {
       var _yield$import, createRequire, moduleURL, __dirname, __filename;
 
-      return regenerator.wrap(function _callee21$(_context22) {
+      return regenerator.wrap(function _callee22$(_context22) {
         while (1) {
           switch (_context22.prev = _context22.next) {
             case 0:
@@ -17359,7 +17851,7 @@
               return _context22.stop();
           }
         }
-      }, _callee21);
+      }, _callee22);
     }));
     return _node_specific.apply(this, arguments);
   }
@@ -17595,67 +18087,67 @@
       }
     }
 
-    function promise(_x16) {
+    function promise(_x17) {
       return _promise.apply(this, arguments);
     }
 
     function _promise() {
       _promise = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(node) {
         var pair;
-        return regenerator.wrap(function _callee19$(_context20) {
+        return regenerator.wrap(function _callee19$(_context19) {
           while (1) {
-            switch (_context20.prev = _context20.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
-                _context20.t0 = Pair;
+                _context19.t0 = Pair;
 
                 if (!node.haveCycles('car')) {
-                  _context20.next = 5;
+                  _context19.next = 5;
                   break;
                 }
 
-                _context20.t1 = node.car;
-                _context20.next = 8;
+                _context19.t1 = node.car;
+                _context19.next = 8;
                 break;
 
               case 5:
-                _context20.next = 7;
+                _context19.next = 7;
                 return resolve(node.car);
 
               case 7:
-                _context20.t1 = _context20.sent;
+                _context19.t1 = _context19.sent;
 
               case 8:
-                _context20.t2 = _context20.t1;
+                _context19.t2 = _context19.t1;
 
                 if (!node.haveCycles('cdr')) {
-                  _context20.next = 13;
+                  _context19.next = 13;
                   break;
                 }
 
-                _context20.t3 = node.cdr;
-                _context20.next = 16;
+                _context19.t3 = node.cdr;
+                _context19.next = 16;
                 break;
 
               case 13:
-                _context20.next = 15;
+                _context19.next = 15;
                 return resolve(node.cdr);
 
               case 15:
-                _context20.t3 = _context20.sent;
+                _context19.t3 = _context19.sent;
 
               case 16:
-                _context20.t4 = _context20.t3;
-                pair = new _context20.t0(_context20.t2, _context20.t4);
+                _context19.t4 = _context19.t3;
+                pair = new _context19.t0(_context19.t2, _context19.t4);
 
                 if (node[__data__]) {
                   pair[__data__] = true;
                 }
 
-                return _context20.abrupt("return", pair);
+                return _context19.abrupt("return", pair);
 
               case 20:
               case "end":
-                return _context20.stop();
+                return _context19.stop();
             }
           }
         }, _callee19);
@@ -17988,9 +18480,9 @@
       var _exec_lambda = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee20(arg, env, dynamic_scope) {
         var results, input, _iteratorAbruptCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, code, value;
 
-        return regenerator.wrap(function _callee20$(_context21) {
+        return regenerator.wrap(function _callee20$(_context20) {
           while (1) {
-            switch (_context21.prev = _context21.next) {
+            switch (_context20.prev = _context20.next) {
               case 0:
                 if (dynamic_scope === true) {
                   env = dynamic_scope = env || user_env;
@@ -18004,16 +18496,16 @@
                 input = Array.isArray(arg) ? arg : parse(arg);
                 _iteratorAbruptCompletion3 = false;
                 _didIteratorError3 = false;
-                _context21.prev = 5;
+                _context20.prev = 5;
                 _iterator3 = _asyncIterator(input);
 
               case 7:
-                _context21.next = 9;
+                _context20.next = 9;
                 return _iterator3.next();
 
               case 9:
-                if (!(_iteratorAbruptCompletion3 = !(_step3 = _context21.sent).done)) {
-                  _context21.next = 27;
+                if (!(_iteratorAbruptCompletion3 = !(_step3 = _context20.sent).done)) {
+                  _context20.next = 27;
                   break;
                 }
 
@@ -18044,82 +18536,82 @@
                 });
 
                 if (is_promise(value)) {
-                  _context21.next = 16;
+                  _context20.next = 16;
                   break;
                 }
 
                 results.push(collect_callback(code, value));
-                _context21.next = 24;
+                _context20.next = 24;
                 break;
 
               case 16:
-                _context21.t0 = results;
-                _context21.t1 = collect_callback;
-                _context21.t2 = code;
-                _context21.next = 21;
+                _context20.t0 = results;
+                _context20.t1 = collect_callback;
+                _context20.t2 = code;
+                _context20.next = 21;
                 return value;
 
               case 21:
-                _context21.t3 = _context21.sent;
-                _context21.t4 = (0, _context21.t1)(_context21.t2, _context21.t3);
+                _context20.t3 = _context20.sent;
+                _context20.t4 = (0, _context20.t1)(_context20.t2, _context20.t3);
 
-                _context21.t0.push.call(_context21.t0, _context21.t4);
+                _context20.t0.push.call(_context20.t0, _context20.t4);
 
               case 24:
                 _iteratorAbruptCompletion3 = false;
-                _context21.next = 7;
+                _context20.next = 7;
                 break;
 
               case 27:
-                _context21.next = 33;
+                _context20.next = 33;
                 break;
 
               case 29:
-                _context21.prev = 29;
-                _context21.t5 = _context21["catch"](5);
+                _context20.prev = 29;
+                _context20.t5 = _context20["catch"](5);
                 _didIteratorError3 = true;
-                _iteratorError3 = _context21.t5;
+                _iteratorError3 = _context20.t5;
 
               case 33:
-                _context21.prev = 33;
-                _context21.prev = 34;
+                _context20.prev = 33;
+                _context20.prev = 34;
 
                 if (!(_iteratorAbruptCompletion3 && _iterator3["return"] != null)) {
-                  _context21.next = 38;
+                  _context20.next = 38;
                   break;
                 }
 
-                _context21.next = 38;
+                _context20.next = 38;
                 return _iterator3["return"]();
 
               case 38:
-                _context21.prev = 38;
+                _context20.prev = 38;
 
                 if (!_didIteratorError3) {
-                  _context21.next = 41;
+                  _context20.next = 41;
                   break;
                 }
 
                 throw _iteratorError3;
 
               case 41:
-                return _context21.finish(38);
+                return _context20.finish(38);
 
               case 42:
-                return _context21.finish(33);
+                return _context20.finish(33);
 
               case 43:
-                return _context21.abrupt("return", results);
+                return _context20.abrupt("return", results);
 
               case 44:
               case "end":
-                return _context21.stop();
+                return _context20.stop();
             }
           }
         }, _callee20, null, [[5, 29, 33, 43], [34,, 38, 42]]);
       }));
 
-      function exec_lambda(_x17, _x18, _x19) {
+      function exec_lambda(_x18, _x19, _x20) {
         return _exec_lambda.apply(this, arguments);
       }
 
@@ -18711,10 +19203,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 11 Feb 2022 11:48:30 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 11 Feb 2022 11:58:53 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 11 Feb 2022 11:48:30 +0000').valueOf();
+    var date = LString('Fri, 11 Feb 2022 11:58:53 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18760,7 +19252,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Fri, 11 Feb 2022 11:48:30 +0000',
+    date: 'Fri, 11 Feb 2022 11:58:53 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
