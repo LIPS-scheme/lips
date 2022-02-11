@@ -2,6 +2,7 @@
 ### Bugfix
 * fix using performance object for older version of Node
 * fixing escaped symbols in CodeMirror
+* fix parsing strings [#193](https://github.com/jcubic/lips/issues/193)
 
 ## 1.0.0-beta.16
 ### Breaking

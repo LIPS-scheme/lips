@@ -1240,6 +1240,7 @@ Lexer.literal_rule = function literal_rule(string, symbol, p_re = null, n_re = n
 };
 // ----------------------------------------------------------------------
 Lexer.string = Symbol.for('string');
+Lexer.string_escape = Symbol.for('string_escape');
 Lexer.symbol = Symbol.for('symbol');
 Lexer.comment = Symbol.for('comment');
 Lexer.regex = Symbol.for('regex');
@@ -1258,8 +1259,11 @@ Lexer._rules = [
     // char_re prev_re next_re from_state to_state
     // null as to_state mean that is single char token
     // string
-    [/"/, /^$|[^\\]/, null, null, Lexer.string],
-    [/"/, /^$|[^\\]/, null, Lexer.string, null],
+    [/"/,  null, null, Lexer.string, null],
+    [/"/, null, null, null, Lexer.string],
+    [/"/, null, null, Lexer.string_escape, Lexer.string],
+    [/\\/, null, null, Lexer.string, Lexer.string_escape],
+    [/./, /\\/, null, Lexer.string_escape, Lexer.string],
 
     // hash special symbols, lexer don't need to distingiush those
     // we only care if it's not pick up by vectors literals
