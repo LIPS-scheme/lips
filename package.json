@@ -253,7 +253,7 @@
     "cbor-x": "^0.8.3",
     "lzjb-pack": "^0.2.0",
     "prism-cli": "^0.5.3",
-    "prismjs": "^1.26.0",
+    "prismjs": "^1.27.0",
     "unfetch": "^4.2.0"
   }
 }
