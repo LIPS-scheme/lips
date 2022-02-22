@@ -1,8 +1,12 @@
 ## 1.0.0-beta.17
+### Features
+* make bookmark REPL dockable [#205](https://github.com/jcubic/lips/issues/205)
 ### Bugfix
 * fix using performance object for older version of Node
 * fixing escaped symbols in CodeMirror
 * fix parsing strings [#193](https://github.com/jcubic/lips/issues/193)
+* add proper error message to `-->` macro [#200](https://github.com/jcubic/lips/issues/200)
+* fix `performance.timeOrigin` on Node 12 [#207](https://github.com/jcubic/lips/issues/207)
 
 ## 1.0.0-beta.16
 ### Breaking
