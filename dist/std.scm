@@ -79,31 +79,42 @@
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
                (on \"click\" (lambda () (display \"click\"))))
+
           (--> document (querySelectorAll \"div\"))
+
           (--> (fetch \"https://jcubic.pl\")
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
+
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
                'innerHTML
                (replace #/<(\"[^\"]+\"|[^>])+>/g \"\"))
+
           (--> document.body
                (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
     `(let* ((,obj ,expr))
        ,@(map (lambda (code)
-                (let ((value (gensym "value")))
-                  `(let* ((,value ,(let ((name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
-                                                     ((pair? code) (symbol->string (car code)))
-                                                     (true code))))
-                                       (if (string? name)
-                                           `(. ,obj ,@(split "." name))
-                                           `(. ,obj ,name)))))
-                     ,(if (and (pair? code) (not (quoted-symbol? code)))
-                         `(set! ,obj (,value ,@(cdr code)))
-                         `(set! ,obj ,value)))))
+                (let* ((value (gensym "value"))
+                       (name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
+                                   ((pair? code) (symbol->string (car code)))
+                                   (true code)))
+                       (accessor (if (string? name)
+                                     `(. ,obj ,@(split "." name))
+                                     `(. ,obj ,name)))
+                       (call (and (pair? code) (not (quoted-symbol? code)))))
+                  `(let ((,value ,accessor))
+                     ,(if call
+                          `(if (not (function? ,value))
+                               (throw (new Error (string-append "--> " ,(repr name)
+                                                                " is not a function"
+                                                                " in expression "
+                                                                ,(repr `(--> ,expr . ,body)))))
+                               (set! ,obj (,value ,@(cdr code))))
+                          `(set! ,obj ,value)))))
               body)
        ,obj)))
 
