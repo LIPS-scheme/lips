@@ -114,3 +114,6 @@ body .token.string, body .token.char {
         overflow: auto;
     }
 }
+pre[class*="language-"]:before, pre[class*="language-"]:after {
+  display: none;
+}
