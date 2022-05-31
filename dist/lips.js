@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 05 Mar 2022 08:44:09 +0000
+ * build: Tue, 31 May 2022 18:40:07 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -4989,7 +4989,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Sat, 05 Mar 2022 08:44:09 +0000
+   * Build time: Tue, 31 May 2022 18:40:07 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -18703,10 +18703,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sat, 05 Mar 2022 08:44:09 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 31 May 2022 18:40:07 +0000' == '{{' + 'DATE}}'; can be removed
     // but disablig Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sat, 05 Mar 2022 08:44:09 +0000').valueOf();
+    var date = LString('Tue, 31 May 2022 18:40:07 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18752,7 +18752,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Sat, 05 Mar 2022 08:44:09 +0000',
+    date: 'Tue, 31 May 2022 18:40:07 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
