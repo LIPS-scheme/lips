@@ -1116,12 +1116,26 @@
         (array->list (--> (new Array n) (fill fill))))))
 
 ;; -----------------------------------------------------------------------------
-(define (range n)
-  "(range n)
+(define (range stop . rest)
+  "(range stop)
+   (range start stop)
+   (range start stop step)
 
-   Function return list of n numbers from 0 to n - 1"
-  (typecheck "range" n "number")
-  (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
+   Function return list of n numbers from start to stop with optonal step
+   if start is not defined it starts from 0."
+  (let ((i (if (null? rest) 0 stop))
+        (stop (if (null? rest) stop (car rest)))
+        (step (if (or (null? rest) (null? (cdr rest)))
+                  1
+                  (cadr rest)))
+        (result (vector)))
+    (typecheck "range" i "number" 1)
+    (typecheck "range" step "number" 2)
+    (typecheck "range" stop "number" 3)
+    (while (< i stop)
+      (result.push i)
+      (set! i (+ i step)))
+    (array->list result)))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (do-iterator spec cond . body)
