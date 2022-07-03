@@ -1122,17 +1122,24 @@
    (range start stop step)
 
    Function returns list of numbers from start to stop with optonal step.
-   If start is not defined it starts from 0."
-  (let ((i (if (null? rest) 0 stop))
-        (stop (if (null? rest) stop (car rest)))
-        (step (if (or (null? rest) (null? (cdr rest)))
-                  1
-                  (cadr rest)))
-        (result (vector)))
+   If start is not defined it starts from 0. If start is larger than stop
+   the step need to be negative."
+  (let* ((i (if (null? rest) 0 stop))
+         (stop (if (null? rest) stop (car rest)))
+         (step (if (or (null? rest) (null? (cdr rest)))
+                   1
+                   (cadr rest)))
+         (test (cond
+                ((> i stop) (lambda (i)
+                              (and (< step 0) (>= i stop))))
+                ((< i stop) (lambda
+                              (i) (and (> step 0) (<= i stop))))
+                (else (lambda () false))))
+         (result (vector)))
     (typecheck "range" i "number" 1)
     (typecheck "range" step "number" 2)
     (typecheck "range" stop "number" 3)
-    (while (< i stop)
+    (while (test i)
       (result.push i)
       (set! i (+ i step)))
     (array->list result)))
