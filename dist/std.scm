@@ -1133,7 +1133,7 @@
                 ((> i stop) (lambda (i)
                               (and (< step 0) (>= i stop))))
                 ((< i stop) (lambda
-                              (i) (and (> step 0) (<= i stop))))
+                              (i) (and (> step 0) (< i stop))))
                 (else (lambda () false))))
          (result (vector)))
     (typecheck "range" i "number" 1)
