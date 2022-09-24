@@ -8,7 +8,7 @@ const writeFile = fs.promises.writeFile;
 Promise.all([readFile('head.html'), readFile('footer.html')]).then(([head, footer]) => {
   head = head.toString();
   footer = footer.toString();
-  ['index', 'docs'].forEach(file => {
+  ['index', 'docs', 'screenshot'].forEach(file => {
     readFile(`${file}.tmpl`).then(content => {
         content = content.toString()
             .replace(/\{\{HEAD\}\}/, head)
