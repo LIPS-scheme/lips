@@ -251,7 +251,7 @@
     <pre><code class="language-scheme">
 (let* ((res (fetch "https://terminal.jcubic.pl"))
        (text ((. res "text"))))
-   (. ((. text "match") "&lt;title&gt;([^<]+)") 1))
+   (. ((. text "match") "&lt;title&gt;([^&lt;]+)") 1))
     </code></pre>
 
     <h3>Currying</h3>
@@ -324,7 +324,7 @@ var env = lips.env.inherit('name', {
 
     <h3>Math and boolean operators (functions and macros)</h3>
 
-    <pre>< > => <= 1+ 1- ++ -- + - * / % and or not</pre>
+    <pre>&lt; &gt; =&gt; &gt;= 1+ 1- ++ -- + - * / % and or not</pre>
     <h3>Bit operation</h3>
 
     <pre>| &amp; ~ &lt;&lt; &gt;&gt;</pre>
@@ -390,7 +390,7 @@ env.set('async', new Macro('async', function(code, {dynamic_scope, error}) {
       and <code>code.toArray()</code>.
     </p>
   </section>
-  <footer>
+    <footer>
     <p>Copyright (c) 2018-2021 <a href="https://jcubic.pl/me">Jakub T. Jankiewicz</a></p>
     <!-- Start Open Web Analytics Tracker -->
     <script type="text/javascript">
