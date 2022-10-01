@@ -7,7 +7,7 @@
 ;;
 ;; <https://lips.js.org>
 ;;
-;; This file contain essential functions and macros for LIPS
+;; This file contains essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
 ;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
@@ -24,8 +24,8 @@
 (define-macro (let-syntax vars . body)
   "(let-syntax ((name fn)) body)
 
-    Macro works like combination of let and define-syntax. It creaates
-    local macros and evaluate body in context of those macros.
+    Macro works like a combination of let and define syntax. It creates
+    local macros and evaluate the body in the context of those macros.
     The macro to letrec-syntax is like letrec is to let."
   `(let ,vars
      ,@(map (lambda (rule)
@@ -37,8 +37,8 @@
 (define-macro (letrec-syntax vars . body)
   "(letrec-syntax ((name fn)) body)
 
-    Macro works like combination of letrec and define-syntax. It creaates
-    local macros and evaluate body in context of those macros."
+    Macro works like a combination of letrec and define-syntax. It creates
+    local macros and evaluate body in the context of those macros."
   `(letrec ,vars
      ,@(map (lambda (rule)
               `(typecheck "letrec-syntax" ,(car rule) "syntax"))
@@ -49,7 +49,7 @@
 (define-macro (define-syntax name expr . rest)
   "(define-syntax name expression [__doc__])
 
-   Macro define new hygienic macro using syntax-rules with optional documentation"
+   Macro define new hygienic macro using syntax rules with optional documentation."
   (let ((expr-name (gensym "expr-name")))
     `(define ,name
        (let ((,expr-name ,expr))
@@ -61,8 +61,8 @@
 (define (quoted-symbol? x)
    "(quoted-symbol? code)
 
-   Helper function that test if value is quoted symbol. To be used in macros
-   that pass literal code that is transformed by parser.
+   Helper function that tests if the value is quoted symbol. To be used in macros
+   that pass literal code that is transformed by the parser.
 
    usage:
 
@@ -75,24 +75,24 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (--> expr . body)
-  "Helper macro that simplify calling methods on objects. It work with chaining
+  "Helper macro that simplifies calling methods on objects. It works with chaining
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
                (on \"click\" (lambda () (display \"click\"))))
-
+         
           (--> document (querySelectorAll \"div\"))
-
+          
           (--> (fetch \"https://jcubic.pl\")
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
-
+          
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
                'innerHTML
                (replace #/<(\"[^\"]+\"|[^>])+>/g \"\"))
-
+          
           (--> document.body
                (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
@@ -124,8 +124,8 @@
   "(define-global var value)
    (define-global (name . args) body)
 
-   Macro that define functions or variables in global context, so they can be used
-   inside let and get let variables in closure, Useful for universal macros."
+   A macro that defines functions or variables in a global context so that they can be used
+   inside let and get let variables in the closure, Useful for universal macros."
   (if (pair? first)
       (let ((name (car first)))
         `(--> lips.env
@@ -136,7 +136,7 @@
 (define-macro (globalize expr . rest)
   "(globalize expr)
 
-    Macro will get the value of the expression and add each method as function to global
+    Macro will get the value of the expression and add each method as a function to global
     scope."
   (let* ((env (current-environment))
          (obj (eval expr env))
@@ -159,21 +159,21 @@
 (define (single list)
   "(single list)
 
-   Function check if argument is list with single element"
+   Function check if the argument is a list with a single element."
   (and (pair? list) (not (cdr list))))
 
 ;; -----------------------------------------------------------------------------
 (define (iterator? x)
    "(iterator? x)
 
-     Function check if value is JavaScript iterator object"
+     Function check if the value is JavaScript iterator object."
    (and (object? x) (procedure? (. x Symbol.iterator))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (.. expr)
   "(.. foo.bar.baz)
 
-   Macro that gets value from nested object where argument is comma separated symbol"
+   A macro that gets value from a nested object where the argument is a comma-separated symbol."
   (if (not (symbol? expr))
       expr
       (let ((parts (split "." (symbol->string expr))))
@@ -188,15 +188,15 @@
 (define (gensym-interal symbol)
   "(gensym-interal symbol)
 
-   Parser extension that create new quoted named gensym."
+   Parser extension that creates new quoted named gensym."
   `(quote ,(gensym symbol)))
 
 ;; -----------------------------------------------------------------------------
 (define (plain-object? x)
   "(plain-object? x)
 
-   Function check if value is plain JavaScript object. Created using object macro."
-  ;; here we don't use string=? or equal? because it may not be defined
+   Function checks if the value is a plain JavaScript object. Created using object macro."
+  ;; here, we don't use string=? or equal? because it may not be defined
   (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
 ;; -----------------------------------------------------------------------------
@@ -205,14 +205,14 @@
     (lambda (o)
       "(typed-array? o)
 
-      Function test if argumnet is JavaScript typed array (Scheme byte vector)."
+      Function test if the argument is JavaScript typed array (Scheme byte vector)."
       (instanceof TypedArray o))))
 
 ;; -----------------------------------------------------------------------------
 (define (symbol->string s)
   "(symbol->string symbol)
 
-   Function convert LIPS symbol to string."
+   The function converts LIPS symbol to string."
   (typecheck "symbol->string" s "symbol")
   (let ((name s.__name__))
     (if (string? name)
@@ -231,7 +231,7 @@
 (define (alist->object alist)
   "(alist->object alist)
 
-   Function convert alist pairs to JavaScript object."
+   The function converts alist pairs to JavaScript object."
   (if (pair? alist)
       (alist.to_object)
       (alist->object (new lips.Pair undefined nil))))
@@ -240,7 +240,7 @@
 (define (object->alist object)
   "(object->alist object)
 
-   Function convert JavaScript object to Alist"
+   The function converts JavaScript object to alist."
   (typecheck "object->alist" object "object")
   (vector->list (--> (Object.entries object)
                      (map (lambda (arr)
@@ -250,7 +250,7 @@
 (define (parent.frames)
   "(parent.frames)
 
-   Funcion return list of environments from parent frames (lambda function calls)"
+   Function return list of environments from parent frames (lambda function calls)."
   (let iter ((result '()) (frame (parent.frame 1)))
     (if (eq? frame (interaction-environment))
         (cons frame result)
@@ -266,7 +266,7 @@
   "(pair-map fn list)
 
    Function call fn argument for pairs in a list and return combined list with
-   values returned from function fn. It work like the map but take two items from list"
+   values returned from function fn. It works like the map but takes two items from the list."
   (let iter ((seq-list seq-list) (result '()))
     (if (null? seq-list)
         result
@@ -285,9 +285,9 @@
    (object-expander reaonly '(:foo :bar))
 
 
-   Recursive function helper for defining LIPS code for create objects
-   using key like syntax. if no values are used it will create JavaScript
-   shorthand objects where keys are used for keys and values"
+   Recursive function helper for defining LIPS code to create objects
+   using key-like syntax. If no values are used, it will create JavaScript
+   shorthand objects where keys are used for keys and values."
   (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
@@ -324,7 +324,7 @@
 (define-macro (object . expr)
   "(object :name value)
 
-   Macro that create JavaScript object using key like syntax."
+   A macro that creates a JavaScript object using a key-like syntax."
   (try
     (object-expander false expr)
     (catch (e)
@@ -334,8 +334,8 @@
 (define-macro (object-literal . expr)
   "(object-literal :name value)
 
-   Macro that create JavaScript object using key like syntax. This is similar,
-   to object but all values are quoted. This macro is used with & object literal."
+   A macro that creates a JavaScript object using key-like syntax. This is similar
+   to the object, but all values are quoted. This macro is used with & object literal."
   (try
     (object-expander true expr true)
     (catch (e)
@@ -345,7 +345,7 @@
 (define (alist->assign desc . sources)
   "(alist->assign alist . list-of-alists)
 
-   Function that work like Object.assign but for LIPS alist."
+   A function that works like Object.assign but for LIPS alist."
   (for-each (lambda (source)
               (for-each (lambda (pair)
                           (let* ((key (car pair))
@@ -362,15 +362,15 @@
 (define (key? symbol)
   "(key? symbol)
 
-   Function check if symbol is key symbol, have colon as first character."
-  ;; we can't use string=? because it's in R5RS.scm we use same code that use cmp
+   Function checks if the symbol is the key symbol and has a colon as the first character."
+  ;; we can't use string=? because it's in R5RS.scm, we use the same code that uses cmp
   (and (symbol? symbol) (== (--> (substring (symbol->string symbol) 0 1) (cmp ":")) 0)))
 
 ;; -----------------------------------------------------------------------------
 (define (key->string symbol)
   "(key->string symbol)
 
-   If symbol is key it convert that to string - remove colon."
+   If the symbol is key, convert that to string - remove the colon."
   (if (key? symbol)
       (substring (symbol->string symbol) 1)))
 
@@ -389,7 +389,7 @@
   "(%hidden-props obj)
 
    Function return hidden names of an object, for ES6 class prototype
-   it return all methods since they are indistinguishable from hidden property
+   it returns all methods since they are indistinguishable from hidden property
    created using defineProperty."
   (let* ((descriptors (Object.getOwnPropertyDescriptors obj))
          (names (Object.keys descriptors)))
@@ -401,7 +401,7 @@
 (define (dir obj . rest)
   "(dir obj)
 
-   Function return all props on the object including those in prototype chain."
+   The function returns all props on the object, including those in the prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
       nil
       (let ((proto (if (null? rest) false (car rest)))
@@ -418,7 +418,7 @@
 (define (tree-map f tree)
   "(tree-map fn tree)
 
-   Tree version of map. Function is invoked on every leaf."
+   Tree version of the map. The function is invoked on every leaf."
   (if (pair? tree)
       (cons (tree-map f (car tree)) (tree-map f (cdr tree)))
       (f tree)))
@@ -427,7 +427,7 @@
 (define (native.number x)
   "(native.number obj)
 
-   If argument is number it will convert to native number."
+   If the argument is number, it will convert to native number."
   (if (number? x)
       (value x)
       x))
@@ -463,10 +463,10 @@
 
 
 ;; -----------------------------------------------------------------------------
-;; macro code taken from https://stackoverflow.com/a/27507779/387194
+;; macro code is taken from https://stackoverflow.com/a/27507779/387194
 ;; which is based on https://srfi.schemers.org/srfi-61/srfi-61.html
 ;; but with lowercase tokens
-;; NOTE: this code make everything really slow
+;; NOTE: this code makes everything really slow
 ;;       unit tests run from 1min to 6min.
 ;; TODO: test this when syntax macros are compiled before evaluation
 ;; -----------------------------------------------------------------------------
@@ -476,9 +476,9 @@
     ((cond (else else1 else2 ...))
      ;; The (if #t (begin ...)) wrapper ensures that there may be no
      ;; internal definitions in the body of the clause.  R5RS mandates
-     ;; this in text (by referring to each subform of the clauses as
+     ;; this in the text (by referring to each subform of the clauses as
      ;; <expression>) but not in its reference implementation of cond,
-     ;; which just expands to (begin ...) with no (if #t ...) wrapper.
+     ;; which expands to (begin ...) with no (if #t ...) wrapper.
      (if #t (begin else1 else2 ...)))
 
     ((cond (test => receiver) more-clause ...)
@@ -532,7 +532,7 @@
 
    Macro for condition checks. For usage instead of nested ifs.
    You can use predicate and any number of expressions. Or symbol =>
-   Followed by procedure that will be invoked with result
+   Followed by a procedure that will be invoked with the result
    of the predicate."
   (if (pair? list)
       (let* ((item (car list))
@@ -562,13 +562,13 @@
 (define (%r re . rest)
   "(%r re)
 
-   Create new regular expression from string, to not break Emacs formatting"
+   Create new regular expression from string, to not break Emacs formatting."
    (if (null? rest)
      (new RegExp re)
      (new RegExp re (car rest))))
 
 ;; -----------------------------------------------------------------------------
-;; replaced by more general formatter in JS, this is left as example of usage
+;; replaced by more general formatter in JS; this is left as an example of usage
 ;; -----------------------------------------------------------------------------
 #;(define-formatter-rule ((list (list "("
                                     (%r "(?:#:)?cond")
@@ -580,8 +580,8 @@
 (define (interaction-environment)
   "(interaction-environment)
 
-   Function return interaction environement equal to lips.env can be overwritten,
-   when creating new interpreter with lips.Interpreter."
+   Function return interaction environment equal to lips.env can be overwritten
+   when creating a new interpreter with lips.Interpreter."
   **interaction-environment**)
 
 ;; -----------------------------------------------------------------------------
@@ -612,7 +612,7 @@
 (define (command-line)
   "(command-line)
 
-   Function return command line arguments or empty list"
+   Function return command line arguments or an empty list."
   (let ((args (let-env (interaction-environment)
                        (--> **internal-env** (get 'command-line)))))
     (if (or (null? args) (zero? (length args)))
@@ -623,8 +623,8 @@
 (define (flush-output . rest)
   "(flush-output)
 
-   If output-port is buffered, this causes the contents of its buffer to be written to
-   the output device. Otherwise it has no effect. Returns an unspecified value."
+   If the output port is buffered, this causes the contents of its buffer to be written to
+   the output device. Otherwise, it has no effect. Returns an unspecified value."
   (let ((port (if (null? rest) (current-output-port) (car rest))))
     (typecheck "flush-output" port "output-port")
     (--> port (flush))))
@@ -633,18 +633,18 @@
 (define (regex? x)
   "(regex? x)
 
-   Function return true of value is regular expression, it return false otherwise."
+   The function returns true if the value is a regular expression. Otherwise, it returns false."
   (== (--> (type x) (cmp "regex")) 0))
 
 ;; -----------------------------------------------------------------------------
 (define (set-repr! type fn)
   "(add-repr! type fn)
 
-   Function add string represention to the type, which should be constructor function.
+   The function adds string representation to the type, which should be a constructor function.
 
-   Function fn should have args (obj q) and it should return string, obj is vlaue that
-   need to be converted to string, if the object is nested and you need to use `repr`,
-   it should pass second parameter q to repr, so string will be quoted when it's true.
+   Function fn should have args (obj q), and it should return a string; obj is a value that
+   need to be converted to a string, if the object is nested and you need to use `repr`,
+   it should pass the second parameter q to repr, so the string will be quoted when it's true.
 
    e.g.: (lambda (obj q) (string-append \"<\" (repr obj q) \">\"))"
   (typecheck "add-repr!" type "function")
@@ -655,7 +655,7 @@
 (define (unset-repr! type)
   "(unset-repr! type)
 
-   Function remove string represention to the type, which should be constructor function,
+   Function remove string representation to the type, which should be constructor function,
    added by add-repr! function."
   (typecheck "unset-repr!" type "function")
   (ignore (--> lips.repr (delete type))))
@@ -680,7 +680,7 @@
 (define (bound? x . rest)
   "(bound? x [env])
 
-   Function check if variable is defined in given environement or interaction environment
+   Function checks if the variable is defined in the given environment or interaction environment
    if not specified."
   (let ((env (if (null? rest) (interaction-environment) (car rest))))
     (try (begin
@@ -693,7 +693,7 @@
 (define (environment-bound? env x)
   "(environment-bound? env symbol)
 
-   Function check if symbol is bound variable similar to bound?."
+   Function check if the symbol is bound variable similar to bound?."
   (typecheck "environment-bound?" env "environment" 1)
   (typecheck "environment-bound?" x "symbol" 2)
   (bound? x env))
@@ -704,7 +704,7 @@
 (define (qsort e predicate)
   "(qsort list predicate)
 
-   Sort the list using quick sort alorithm according to predicate."
+   Sort the list using a quick sort algorithm according to the predicate."
   (if (or (null? e) (<= (length e) 1))
       e
       (let loop ((left nil) (right nil)
@@ -719,7 +719,7 @@
 (define (sort list . rest)
   "(sort list [predicate])
 
-   Sort the list using optional predicate function. if not function is specified
+   Sort the list using the optional predicate function. if not function is specified
    it will use <= and sort in increasing order."
   (let ((predicate (if (null? rest) <= (car rest))))
     (typecheck "sort" list "pair")
@@ -730,8 +730,8 @@
 (define (every fn list)
   "(every fn list)
 
-   Function call function fn on each item of the list, if every value is true
-   it will return true otherwise it return false."
+   Function call function fn on each item of the list. If every value is true,
+   it will return true. Otherwise, it returns false."
   (if (null? list)
       true
       (and (fn (car list)) (every fn (cdr list)))))
@@ -740,7 +740,7 @@
 (define-macro (promise . body)
   "(promise . body)
 
-   Anaphoric macro that expose resolve and reject functions from JS promise"
+   An anaphoric macro that exposes resolve and rejects functions from JS promise."
   `(new Promise (lambda (resolve reject)
                   (try (begin ,@body)
                        (catch (e)
@@ -750,8 +750,8 @@
 (define-macro (timer time . body)
   "(timer time . body)
 
-   Macro evaluate expression after delay, it return timer. To clear the timer you can use
-   native JS clearTimeout function."
+   Macro evaluates expression after delay; it returns timer. To clear the timer, you can use
+   the native JS clearTimeout function."
   `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
 
 ;; -----------------------------------------------------------------------------
@@ -765,7 +765,7 @@
 (define (await value)
   "(await value)
 
-   Function unquote quoted promise so it can be automagicaly evaluated (resolved
+   Function unquote quoted promise so it can be automatically evaluated (resolved
    to its value)."
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)
@@ -777,8 +777,8 @@
    '>expr
 
   Macro used to escape promise the whole expression, will be wrapped
-  with JavaScript class that behave like Promise but will not
-  auto resolve like normal promise."
+  with JavaScript class that behaves like Promise but will not
+  auto-resolve like a normal promise."
   `(let ((env))
       (set! env (current-environment))
       (env.set (Symbol.for "__promise__") true)
@@ -788,14 +788,14 @@
 (define (defmacro? obj)
   "(defmacro? expression)
 
-   Function check if object is macro and it's expandable."
+   Function check if the object is macro and it's expandable."
   (and (macro? obj) (. obj 'defmacro)))
 
 ;; -----------------------------------------------------------------------------
 (define (n-ary n fn)
   "(n-ary n fn)
 
-   Return new function that limit number of arguments to n."
+   Return a new function that limits the number of arguments to n."
   (lambda args
     (apply fn (take n args))))
 
@@ -812,13 +812,13 @@
 ;; -----------------------------------------------------------------------------
 (define unary (%doc "(unary fn)
 
-                     Function return new function with arguments limited to one."
+                     The function returns a new function with arguments limited to one."
                     (curry n-ary 1)))
 
 ;; -----------------------------------------------------------------------------
 (define binary (%doc "(binary fn)
 
-                      Function return new function with arguments limited to two."
+                      The function returns a new function with arguments limited to two."
                       (curry n-ary 2)))
 
 ;; -----------------------------------------------------------------------------
@@ -828,7 +828,7 @@
 (define (%class-lambda expr)
   "(class-lambda expr)
 
-   Return lambda expression where input expression lambda have `this` as first argument."
+   Return lambda expression where input expression lambda have `this` as the first argument."
   (let ((args (gensym 'args)))
     `(lambda ,args
        (apply ,(cadr expr) this ,args))))
@@ -837,7 +837,7 @@
 (define (%class-method-name expr)
   "(%class-method-name expr)
 
-   Helper function that allow to use [Symbol.asyncIterator] inside method name."
+   Helper function that allows using [Symbol.asyncIterator] inside method name."
   (if (pair? expr)
       (car expr)
       (list 'quote expr)))
@@ -846,7 +846,7 @@
 (define-macro (define-class name parent . body)
   "(define-class name parent . body)
 
-   Define class - JavaScript function constructor with prototype.
+   Define class - JavaScript function constructor with a prototype.
 
    usage:
 
@@ -863,7 +863,7 @@
         `(begin
            (define ,name ,(if (null? constructor)
                               `(lambda ())
-                              ;; we return this to solve issue when constructor
+                              ;; we return this to solve the issue when the constructor
                               ;; return a promise
                               ;; ref: https://stackoverflow.com/a/50885340/387194
                               (append (%class-lambda constructor)
@@ -895,13 +895,13 @@
        temp)))
   "(class <parent> body ...)
 
-   Macro allow to create anonymous classes. See define-class for details.")
+   Macro allows the creation of anonymous classes. See define-class for details.")
 
 ;; -----------------------------------------------------------------------------
 (define (make-tags expr)
   "(make-tags expression)
 
-   Function that return list structure of code with better syntax then raw LIPS"
+   A function that returns the list structure of code with better syntax than raw LIPS."
   `(h ,(let ((val (car expr))) (if (key? val) (key->string val) val))
       (alist->object (,'quasiquote ,(pair-map (lambda (car cdr)
                                                 `(,(key->string car) . (,'unquote ,cdr)))
@@ -916,7 +916,7 @@
 (define (%sxml h expr)
   "(%sxml h expr)
 
-   Helper function that render expression using create element function."
+   Helper function that renders expression using create element function."
   (let* ((have-attrs (and (not (null? (cdr expr)))
                           (pair? (cadr expr))
                           (eq? (caadr expr) '@)))
@@ -948,7 +948,7 @@
                     (list first)))))))
 
 ;; -----------------------------------------------------------------------------
-;; mapping ~ and into longer form (the same as built-in , and ,@)
+;; mapping ~ and into longer form (the same as built-in, and,@)
 ;; -----------------------------------------------------------------------------
 (set-special! "~" 'sxml-unquote-mapper)
 
@@ -970,7 +970,7 @@
   `(define-macro (sxml expr)
      "(sxml expr)
 
-     Macro for JSX like syntax but with SXML.
+     Macro for JSX-like syntax but with SXML.
      e.g. usage:
 
      (sxml (div (@ (data-foo \"hello\")
@@ -986,7 +986,7 @@
 (define-macro (with-tags expr)
   "(with-tags expression)
 
-   Macro that evalute LIPS shorter code for S-Expression equivalent of JSX.
+   A macro that evaluates LIPS shorter code for S-Expression equivalent of JSX.
    e.g.:
 
    (with-tags (:div (:class \"item\" :id \"item-1\")
@@ -994,16 +994,16 @@
                           (:a (:onclick (lambda (e) (alert \"close\")))
                               \"close\"))))
 
-   Above expression can be passed to function that renders JSX (like render in React, Preact)
-   To get the string from the macro you can use vhtml library from npm."
+   The above expression can be passed to a function that renders JSX (like render in React, Preact)
+   To get the string from the macro, you can use the vhtml library from npm."
   (make-tags expr))
 
 ;; -----------------------------------------------------------------------------
 (define (get-resource url)
   "(get-resource url)
 
-   Load JavaScript or CSS file in browser by adding script tag to head of the current document.
-   When called from Node it allow it allow to load JavaScript files only."
+   Load JavaScript or CSS files in the browser by adding a script tag to the head of the current document.
+   When called from Node, it allows it to load JavaScript files only."
   (typecheck "get-resource" url "string")
   (if (not (bound? 'document))
       (if (eq? self global)
@@ -1016,7 +1016,7 @@
                                                        (resolve)))
                                    (set! node.onerror (lambda ()
                                                         (reject (string-append
-                                                                 "get-resource: Failed to load "
+                                                                 "get-resource: Failed to load."
                                                                  url))))
                                    (if document.head
                                        (document.head.appendChild node)))))))
@@ -1034,7 +1034,7 @@
 (define (gensym? value)
   "(gensym? value)
 
-   Function return #t if value is symbol and it's gensym. It returns #f otherwise."
+   Function returns #t if the value is a symbol and it is gensym. It returns #f otherwise."
   (and (symbol? value) (--> value (is_gensym))))
 
 ;; -----------------------------------------------------------------------------
@@ -1048,7 +1048,7 @@
 (define (radians->degree x)
   "(radians->degree x)
 
-   Convert radians to degree."
+   Convert radians to degrees."
   (* x (/ 180 Math.PI)))
 
 ;; -----------------------------------------------------------------------------
@@ -1060,7 +1060,7 @@
        body ...)))
   "(while cond . body)
 
-   Macro that create a loop, it exectue body until cond expression is false.")
+   A macro that creates a loop, it executes body until the cond expression is false.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax ++
@@ -1071,7 +1071,7 @@
        tmp)))
   "(++ variable)
 
-   Macro that work only on variables and increment the value by one.")
+   A macro that works only on variables and increments the value by one.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax --
@@ -1082,7 +1082,7 @@
        tmp)))
   "(-- variable)
 
-   Macro that decrement the value it work only on symbols")
+   A macro that decrements the value. It works only on symbols")
 
 ;; -----------------------------------------------------------------------------
 (define (pretty-format . lists)
@@ -1100,7 +1100,7 @@
 (define (reset)
   "(reset)
 
-  Function reset environment and remove all user defined variables."
+  Function reset environment and remove all user-defined variables."
   (let-env **interaction-environment**
            (let ((defaults **interaction-environment-defaults**)
                  (env **interaction-environment**))
@@ -1150,9 +1150,9 @@
 
    Macro iterate over iterators (e.g. create with JavaScript generator function)
    it works with normal and async iterators. You can loop over infinite iterators
-   and break the loop if you want, using expression like in do macro, long sync iterators
-   will block main thread (you can't print 1000 numbers from inf iterators,
-   because it will freeze the browser), but if you use async iterators you can process
+   and break the loop if you want, using an expression like in do macro, long sync iterators
+   will block the main thread (you can't print 1000 numbers from inf iterators,
+   because it will freeze the browser), but if you use async iterators, you can process
    the values as they are generated."
   (let ((gen (gensym "name"))
         (name (car spec))
@@ -1191,7 +1191,7 @@
 (define (native-symbol? x)
   "(native-symbol? object)
 
-   Function check if value is JavaScript symbol."
+   Function checks if the value is a JavaScript symbol."
   (and (string=? (type x) "symbol") (not (symbol? x))))
 
 ;; -----------------------------------------------------------------------------
@@ -1201,7 +1201,7 @@
 (define-macro (warn-quote)
   "(warn-quote)
 
-   Simple macro that throw error, when you try to use ’ symbol as quote in code"
+   A simple macro that throws an error when you try to use the ’ symbol as a quote in code."
   (throw (new Error (string-append "You're using invalid quote character run: "
                                    "(set-special! \"’\" 'quote)"
                                    " to allow running this type of quote"))))
@@ -1211,7 +1211,7 @@
   "(let-env-values env ((name var)) . body)
 
    Macro add mapping for variables var from specified env,
-   Macro work similar to let-env but lexical scope is working with it."
+   Macro work is similar to let-env, but the lexical scope works with it."
   (let ((env-name (gensym 'env)))
     `(let ((,env-name ,env))
        (let ,(map (lambda (pair)
@@ -1224,7 +1224,7 @@
   "(apropos name)
 
    Search environment and display names that match the given name.
-   name can be regex, string or symbol."
+   Name can be a regex, string or symbol."
   (typecheck "apropos" name '("string" "regex" "symbol"))
   (let ((regex (lambda (string)
                  (new RegExp (escape-regex string)))))
@@ -1237,7 +1237,7 @@
 (define (promisify fn)
   "(promisify fn)
 
-   Simple function for adding promises to NodeJS callback based function.
+   Simple function for adding promises to NodeJS callback-based function.
    Function tested only with fs module."
   (lambda args
     (new Promise (lambda (resolve reject)
@@ -1250,7 +1250,7 @@
 (define-macro (list* . args)
   "(list* arg1 ...)
 
-   Parallel version of list."
+   A parallel version of list."
   (let ((result (gensym "result")))
      `(let ((,result (vector)))
         ,@(map (lambda (arg)
@@ -1262,19 +1262,19 @@
 (define-macro (%not-implemented name)
   "(not-implemented name)
 
-   Returns new function taht throw exception that function is not implmeneted"
+   Returns a new function that throws an exception if the function is not implemented."
   (let ((str-name (symbol->string name)))
     `(lambda ()
        ,(string-append "(" str-name ")\n\nThis function is not yet implemented.")
-       (throw (new Error ,(string-append str-name " has not beed implemented"))))))
+       (throw (new Error ,(string-append str-name " has not been implemented"))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (%make-env name . names)
   "(%make-env name f1 f2 ...)
 
-   Create new Environment with given name and defined symbols in it from global env.
-   If given function name f1 f2 ... don't exists, it will define function that
-   throw exception that function is not yet implemented."
+   Create a new Environment with a given name and defined symbols from the global env.
+   If the given function name f1 f2 ... doesn't exist, it will define a function that
+   throws an exception that function is not yet implemented."
   `(new lips.Environment (alist->object (list ,@(map (lambda (name)
                                                        `(cons ',name ,(let ((ref (lips.env.ref name)))
                                                                        (if (null? ref)
@@ -1331,7 +1331,7 @@
 (define (environment? obj)
   "(environment? obj)
 
-   Function check if object is LIPS environment."
+   A function that checks if the object is LIPS environment."
   (instanceof lips.Environment obj))
 
 ;; -----------------------------------------------------------------------------
@@ -1340,13 +1340,13 @@
     (lambda (binary path)
       "(%read-file binary path)
 
-       Read file from url or file system. If binary is false it will return
-       string that contain all the content. For HTTP requests, If binary
-       is false it will: when in browser return ArrayBuffer and in Node
-       it will return Buffer object. When reading from file system
-       in both cases it will return Buffer objects.
+       Read a file from a URL or file system. If binary is false, it will return
+       a string that contains all the content. For HTTP requests, if binary
+       is false, it will: when in browser return ArrayBuffer and in Node,
+       it will return Buffer object. When reading from the file system
+       in both cases, it will return Buffer objects.
 
-       The code that use those function, in binary mode, need to check
+       The code that uses those functions, in binary mode, needs to check
        if the result is ArrayBuffer or Node.js/BrowserFS Buffer object."
       (if (not read-file)
           (let ((fs (--> (interaction-environment)
@@ -1388,7 +1388,7 @@
 (define (%fs-promisify-proc fn message)
   "(%fs-promisify-proc fn string)
 
-   Function return promisified version of fs function or throw exception
+   Function returns promised version of fs function or throws an exception
    if fs is not available."
   (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
     (if (null? fs)
@@ -1400,9 +1400,9 @@
   "(response->text binary res)
 
    Function read all text from Node.js HTTP response object. If binary argument
-   is true it will return Buffer object that can be converted to u8vector.
+   is true, it will return a Buffer object that can be converted to u8vector.
 
-   ***Warrning:*** it may overflow the stack (part of Node) when converting
+   ***Warning:*** it may overflow the stack (part of Node) when converting
    whole buffer to u8vector."
   (let ((result (vector))
         (append (if binary
@@ -1428,7 +1428,7 @@
       (lambda (url binary)
         "(http-get url)
 
-         Node.js Function that send HTTP Request and return string or
+         Node.js Function that sends HTTP Request and returns string or
          binary Buffer object."
         (throw (new Error "http-get: function is Node.js only.")))
       (let* ((http (. (require "http") 'get))
@@ -1436,7 +1436,7 @@
         (lambda (url binary)
           "(http-get url)
 
-           Node.js Function that send HTTP Request and return string or
+           Node.js Function that sends HTTP Request and returns string or
            binary Buffer object."
           (let ((request (if (null? (url.match #/^https/)) http https)))
             (new Promise
@@ -1456,8 +1456,8 @@
 (define (buffer->u8vector bin)
   "(buffer->u8vector bin)
 
-   Cross platform function that can be used in both Node and Browser.
-   It can be used together with %read-file or %read-binary-file and convert
+   A cross-platform function that can be used in both Node and Browser.
+   It can be used with %read-file or %read-binary-file and convert
    the result ArrayBuffer or Buffer to u8vector."
   (if (instanceof ArrayBuffer bin)
       (new Uint8Array bin)
@@ -1467,9 +1467,9 @@
 (define (complement fn)
   "(complement fn)
 
-   Higer order function that returns complement of the given function. If the function fn
-   for a given arguments return true the result function will return false, if it would
-   return false, the result function will return true."
+   Higher order function that returns complement of the given function. If the function fn
+   for given arguments returns true, the result function will return false, if it would
+   return false; the result function will return true."
   (typecheck "complement" fn "function")
   (lambda args
     (not (apply fn args))))
@@ -1478,7 +1478,7 @@
 (define (always constant)
   "(always constant)
 
-   Higher order function returns new function that always return given constant."
+   Higher order function returns a new function that always returns given constant."
   (lambda ()
     constant))
 
@@ -1486,7 +1486,7 @@
 (define (once fn)
   "(once fn)
 
-   Higher order function that return new function, that is guarantee
+   Higher order function that returns a new function that is guaranteed
    to be called only once."
   (typecheck "once" fn "function")
   (let ((result))
@@ -1499,7 +1499,7 @@
 (define (flip fn)
   "(flip fn)
 
-   Higher order function that return new function where first two arguments are swapped.
+   Higher order function that returns new function where first two arguments are swapped.
 
    Example:
 
@@ -1514,9 +1514,9 @@
 (define (unfold fn init)
   "(unfold fn init)
 
-   Function returns list from given function and init value. The function should
-   return cons where first is the item added to the list and second is next value
-   passed to the funtion. If function return false it end the loop."
+   The function returns a list from the given function and an init value. The function should
+   return cons where the first item is added to the list and the second is the next value
+   passed to the function. If the function returns false, it ends the loop."
   (typecheck "unfold" fn "function")
   (let iter ((pair (fn init)) (result '()))
     (if (not pair)
@@ -1531,7 +1531,7 @@
 (define (symbol-append . rest)
    "(symbol-append s1 s2 ...)
 
-    Function create new symbol from symbols passed as arguments."
+    The function creates a new symbol from symbols passed as arguments."
    (string->symbol (apply string-append (map symbol->string rest))))
 
 ;; -----------------------------------------------------------------------------
