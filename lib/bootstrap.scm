@@ -24,8 +24,8 @@
 (define-macro (let-syntax vars . body)
   "(let-syntax ((name fn)) body)
 
-    Macro works like combination of let and define-syntax. It creaates
-    local macros and evaluate body in context of those macros.
+    Macro works like combination of let and define-syntax. It creates
+    local macros and evaluate the body in the context of those macros.
     The macro to letrec-syntax is like letrec is to let."
   `(let ,vars
      ,@(map (lambda (rule)
@@ -37,8 +37,8 @@
 (define-macro (letrec-syntax vars . body)
   "(letrec-syntax ((name fn)) body)
 
-    Macro works like combination of letrec and define-syntax. It creaates
-    local macros and evaluate body in context of those macros."
+    Macro works like combination of letrec and define-syntax. It creates
+    local macros and evaluate the body in the context of those macros."
   `(letrec ,vars
      ,@(map (lambda (rule)
               `(typecheck "letrec-syntax" ,(car rule) "syntax"))
@@ -75,7 +75,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (--> expr . body)
-  "Helper macro that simplify calling methods on objects. It work with chaining
+  "Helper macro that simplify calling methods on objects. It works with chaining
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
                (on \"click\" (lambda () (display \"click\"))))
@@ -113,8 +113,8 @@
   "(define-global var value)
    (define-global (name . args) body)
 
-   Macro that define functions or variables in global context, so they can be used
-   inside let and get let variables in closure, Useful for universal macros."
+   Macro that defines functions or variables in the global context, so they can be used
+   inside let and get let variables in closure, useful for universal macros."
   (if (pair? first)
       (let ((name (car first)))
         `(--> lips.env
@@ -148,21 +148,21 @@
 (define (single list)
   "(single list)
 
-   Function check if argument is list with single element"
+   Function check if the argument is list with single element"
   (and (pair? list) (not (cdr list))))
 
 ;; -----------------------------------------------------------------------------
 (define (iterator? x)
    "(iterator? x)
 
-     Function check if value is JavaScript iterator object"
+     Function check if the value is a JavaScript iterator object"
    (and (object? x) (procedure? (. x Symbol.iterator))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (.. expr)
   "(.. foo.bar.baz)
 
-   Macro that gets value from nested object where argument is comma separated symbol"
+   Macro that gets value from nested object where the argument is a comma-separated symbol"
   (if (not (symbol? expr))
       expr
       (let ((parts (split "." (symbol->string expr))))
@@ -194,7 +194,7 @@
     (lambda (o)
       "(typed-array? o)
 
-      Function test if argumnet is JavaScript typed array (Scheme byte vector)."
+      Function test if argument is JavaScript typed array (Scheme byte vector)."
       (instanceof TypedArray o))))
 
 ;; -----------------------------------------------------------------------------
@@ -220,7 +220,7 @@
 (define (alist->object alist)
   "(alist->object alist)
 
-   Function convert alist pairs to JavaScript object."
+   Function converts Alist pair to JavaScript object."
   (if (pair? alist)
       (alist.to_object)
       (alist->object (new lips.Pair undefined nil))))
@@ -229,7 +229,7 @@
 (define (object->alist object)
   "(object->alist object)
 
-   Function convert JavaScript object to Alist"
+   Function converts JavaScript object to Alist"
   (typecheck "object->alist" object "object")
   (vector->list (--> (Object.entries object)
                      (map (lambda (arr)
@@ -239,7 +239,7 @@
 (define (parent.frames)
   "(parent.frames)
 
-   Funcion return list of environments from parent frames (lambda function calls)"
+   Function return list of environments from parent frames (lambda function calls)"
   (let iter ((result '()) (frame (parent.frame 1)))
     (if (eq? frame (interaction-environment))
         (cons frame result)
@@ -255,7 +255,7 @@
   "(pair-map fn list)
 
    Function call fn argument for pairs in a list and return combined list with
-   values returned from function fn. It work like the map but take two items from list"
+   values returned from function fn. It works like the map but take two items from list"
   (let iter ((seq-list seq-list) (result '()))
     (if (null? seq-list)
         result
@@ -455,7 +455,7 @@
 ;; macro code taken from https://stackoverflow.com/a/27507779/387194
 ;; which is based on https://srfi.schemers.org/srfi-61/srfi-61.html
 ;; but with lowercase tokens
-;; NOTE: this code make everything really slow
+;; NOTE: this code makes everything really slow
 ;;       unit tests run from 1min to 6min.
 ;; TODO: test this when syntax macros are compiled before evaluation
 ;; -----------------------------------------------------------------------------
@@ -569,7 +569,7 @@
 (define (interaction-environment)
   "(interaction-environment)
 
-   Function return interaction environement equal to lips.env can be overwritten,
+   Function return interaction environment equal to lips.env can be overwritten,
    when creating new interpreter with lips.Interpreter."
   **interaction-environment**)
 
@@ -631,7 +631,7 @@
 
    Function add string represention to the type, which should be constructor function.
 
-   Function fn should have args (obj q) and it should return string, obj is vlaue that
+   Function fn should have args (obj q) and it should return string, obj is value that
    need to be converted to string, if the object is nested and you need to use `repr`,
    it should pass second parameter q to repr, so string will be quoted when it's true.
 
@@ -669,7 +669,7 @@
 (define (bound? x . rest)
   "(bound? x [env])
 
-   Function check if variable is defined in given environement or interaction environment
+   Function check if variable is defined in given environment or interaction environment
    if not specified."
   (let ((env (if (null? rest) (interaction-environment) (car rest))))
     (try (begin
@@ -693,7 +693,7 @@
 (define (qsort e predicate)
   "(qsort list predicate)
 
-   Sort the list using quick sort alorithm according to predicate."
+   Sort the list using quick sort algorithm according to predicate."
   (if (or (null? e) (<= (length e) 1))
       e
       (let loop ((left nil) (right nil)
@@ -754,7 +754,7 @@
 (define (await value)
   "(await value)
 
-   Function unquote quoted promise so it can be automagicaly evaluated (resolved
+   Function unquote quoted promise so it can be automatically evaluated (resolved
    to its value)."
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)
@@ -767,7 +767,7 @@
 
   Macro used to escape promise the whole expression, will be wrapped
   with JavaScript class that behave like Promise but will not
-  auto resolve like normal promise."
+  auto-resolve like normal promise."
   `(let ((env))
       (set! env (current-environment))
       (env.set (Symbol.for "__promise__") true)
@@ -784,7 +784,7 @@
 (define (n-ary n fn)
   "(n-ary n fn)
 
-   Return new function that limit number of arguments to n."
+   Return new function that limits the number of arguments to n."
   (lambda args
     (apply fn (take n args))))
 
@@ -826,7 +826,7 @@
 (define (%class-method-name expr)
   "(%class-method-name expr)
 
-   Helper function that allow to use [Symbol.asyncIterator] inside method name."
+   Helper function that allows using [Symbol.asyncIterator] inside method name."
   (if (pair? expr)
       (car expr)
       (list 'quote expr)))
@@ -975,7 +975,7 @@
 (define-macro (with-tags expr)
   "(with-tags expression)
 
-   Macro that evalute LIPS shorter code for S-Expression equivalent of JSX.
+   Macro that evaluate LIPS shorter code for S-Expression equivalent of JSX.
    e.g.:
 
    (with-tags (:div (:class \"item\" :id \"item-1\")
@@ -984,7 +984,7 @@
                               \"close\"))))
 
    Above expression can be passed to function that renders JSX (like render in React, Preact)
-   To get the string from the macro you can use vhtml library from npm."
+   To get the string from the macro you can use the vhtml library from npm."
   (make-tags expr))
 
 ;; -----------------------------------------------------------------------------
@@ -1049,7 +1049,7 @@
        body ...)))
   "(while cond . body)
 
-   Macro that create a loop, it exectue body until cond expression is false.")
+   Macro that create a loop, it execute body until cond expression is false.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax ++
@@ -1192,7 +1192,7 @@
   "(apropos name)
 
    Search environment and display names that match the given name.
-   name can be regex, string or symbol."
+   name can be a regex, string or symbol."
   (typecheck "apropos" name '("string" "regex" "symbol"))
   (let ((regex (lambda (string)
                  (new RegExp (escape-regex string)))))
@@ -1205,7 +1205,7 @@
 (define (promisify fn)
   "(promisify fn)
 
-   Simple function for adding promises to NodeJS callback based function.
+   Simple function for adding promises to NodeJS callback-based function.
    Function tested only with fs module."
   (lambda args
     (new Promise (lambda (resolve reject)
@@ -1370,7 +1370,7 @@
    Function read all text from Node.js HTTP response object. If binary argument
    is true it will return Buffer object that can be converted to u8vector.
 
-   ***Warrning:*** it may overflow the stack (part of Node) when converting
+   ***Warning:*** it may overflow the stack (part of Node) when converting
    whole buffer to u8vector."
   (let ((result (vector))
         (append (if binary
@@ -1435,7 +1435,7 @@
 (define (complement fn)
   "(complement fn)
 
-   Higer order function that returns complement of the given function. If the function fn
+   Higher order function that returns complement of the given function. If the function fn
    for a given arguments return true the result function will return false, if it would
    return false, the result function will return true."
   (typecheck "complement" fn "function")
@@ -1454,7 +1454,7 @@
 (define (once fn)
   "(once fn)
 
-   Higher order function that return new function, that is guarantee
+   Higher order function that return new function, that is a guarantee
    to be called only once."
   (typecheck "once" fn "function")
   (let ((result))
@@ -1484,7 +1484,7 @@
 
    Function returns list from given function and init value. The function should
    return cons where first is the item added to the list and second is next value
-   passed to the funtion. If function return false it end the loop."
+   passed to the function. If function return false it end the loop."
   (typecheck "unfold" fn "function")
   (let iter ((pair (fn init)) (result '()))
     (if (not pair)
