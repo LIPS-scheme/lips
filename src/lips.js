@@ -2139,7 +2139,7 @@ Ahead.prototype.match = function(string) {
     return string.match(this.pattern);
 };
 // ----------------------------------------------------------------------
-// Pattern has any number of patterns that it matchs using OR operator
+// Pattern has any number of patterns that it matches using OR operator
 // Pattern is in form of array with regular expressions
 // ----------------------------------------------------------------------
 function Pattern(...args) {
