@@ -8,12 +8,12 @@
  *
  * <https://lips.js.org>
  *
- * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
+ * LIPS is Pretty Simple - Scheme based powerful LISP in JavaScript
  *
  * Copyright (c) 2018-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
- * includes:
+ * Includes:
  *
  * ucs2decode function from Punycode v 2.1.1 by Mathias Bynens MIT License
  *
@@ -129,7 +129,7 @@ function log(x, regex = null) {
             console.log(global_env.get('type')(x) + ": " + value);
         }
         if (literal) {
-            console.log(x);
+            console.log(x); 
         }
     }
     if (is_promise(x)) {
@@ -261,7 +261,7 @@ function ucs2decode(string) {
 const character_symbols = Object.keys(characters).join('|');
 const char_sre_re = `#\\\\(?:x[0-9a-f]+|${character_symbols}|[\\s\\S])`;
 const char_re = new RegExp(`^${char_sre_re}$`, 'i');
-// complex with (int) (float) (rational)
+// Complex with (int) (float) (rational)
 function make_num_stre(fn) {
     const ranges = [
         ['o', '[0-7]'],
@@ -691,7 +691,7 @@ function strip_s_comments(tokens) {
     return tokens;
 }
 // ----------------------------------------------------------------------
-// detect if object is ES6 Symbol that work with polyfills
+// Detect if object is ES6 Symbol that work with polyfills
 // ----------------------------------------------------------------------
 function isSymbol(x) {
     return typeof x === 'symbol' ||
@@ -798,7 +798,7 @@ var gensym = (function() {
     };
 })();
 // ----------------------------------------------------------------------
-// class used to escape promises feature #54
+// Class used to escape promises: feature #54
 // ----------------------------------------------------------------------
 function QuotedPromise(promise) {
     var internal = {
@@ -1209,7 +1209,7 @@ Lexer.symbol_rule = function symbol_rule(string, symbol) {
     ]);
 };
 // ----------------------------------------------------------------------
-// state rule for literal symbol
+// State rule for literal symbol
 // ----------------------------------------------------------------------
 Lexer.literal_rule = function literal_rule(string, symbol, p_re = null, n_re = null) {
     if (string.length === 0) {
@@ -1330,8 +1330,8 @@ Lexer._symbol_rules = [
     [/\S/, null, Lexer.boundary, Lexer.symbol, null]
 ];
 // ----------------------------------------------------------------------
-// :: dynamic getter or Lexer state rules, parser use this
-// :: so in fact user code can modify lexer using syntax extensions
+// :: Dynamic getter or Lexer state rules, parser uses this
+// :: so user code can modify Lexer using syntax extensions
 // ----------------------------------------------------------------------
 Lexer._cache = {
     valid: false,
@@ -1572,13 +1572,13 @@ class Parser {
             return token;
         }
         if (is_special(token)) {
-            // bultin parser extensions are mapping short symbol to longer symbol
-            // that can be function or macro, parser don't care
-            // if it's not bultin then the extension can be macro or function
-            // FUNCTION: when it's used, it get arguments like FEXPR and
-            // result is returned by parser as is
-            // MACRO: if macros are used they are evaluated in place and
-            // result is returned by parser but they are quoted
+            // Built-in parser extensions are mapping short symbols to longer symbols
+            // that can be function or macro. Parser doesn't care
+            // if it's not built-in and the extension can be macro or function.
+            // FUNCTION: when it's used, it gets arguments like FEXPR and the
+            // result is returned by parser as is the macro.
+            // MACRO: if macro is used, then it is evaluated in place and the
+            // result is returned by parser and it is quoted.
             const special = specials.get(token);
             const bultin = is_builtin(token);
             this.skip();
@@ -1610,16 +1610,16 @@ class Parser {
                     object
                 );
             }
-            // builtin parser extensions just expand into lists like 'x ==> (quote x)
+            // Built-in parser extensions just expand into lists like 'x ==> (quote x)
             if (bultin) {
                 return expr;
             }
-            // evaluate parser extension at parse time
+            // Evaluate parser extension at parse time
             if (extension instanceof Macro) {
                 var result = await this.evaluate(expr);
-                // we need literal quote to make macro that return pair works
-                // because after parser return the value it will be evaluated again
-                // by the interpreter, so we create quoted expression
+                // We need literal quotes to make that macro's return pairs works
+                // because after the parser returns the value it will be evaluated again
+                // by the interpreter, so we create quoted expressions.
                 if (result instanceof Pair || result instanceof LSymbol) {
                     return Pair.fromArray([LSymbol('quote'), result]);
                 }
@@ -1651,7 +1651,7 @@ class Parser {
     }
 }
 // ----------------------------------------------------------------------
-// :: parser helper that allow to handle circular list structures
+// :: Parser helper that handles circular list structures
 // :: using datum labels
 // ----------------------------------------------------------------------
 class DatumReference {
@@ -1664,11 +1664,11 @@ class DatumReference {
     }
 }
 // ----------------------------------------------------------------------
-// :: tokens are the array of strings from tokenizer
-// :: the return value is array of lips code created out of Pair class
+// :: Tokens are the array of strings from tokenizer
+// :: the return value is an array of lips code created out of Pair class.
 // :: env is needed for parser extensions that will invoke the function
 // :: or macro assigned to symbol, this function is async because
-// :: it evaluate the code, from parser extensions, that may return promise
+// :: it evaluates the code, from parser extensions, that may return a promise.
 // ----------------------------------------------------------------------
 async function* parse(arg, env) {
     if (!env) {
@@ -1769,7 +1769,7 @@ async function uniterate_async(object) {
     return result;
 }
 // ----------------------------------------------------------------------
-// :: function that return matcher function that match string against string
+// :: Function that return matcher function that match string against string
 // ----------------------------------------------------------------------
 function matcher(name, arg) {
     if (arg instanceof RegExp) {
@@ -1781,8 +1781,8 @@ function matcher(name, arg) {
     throw new Error('Invalid matcher');
 }
 // ----------------------------------------------------------------------
-// :: documentation decorator to LIPS functions if lines starts with :
-// :: they are ignored (not trim) otherwise it trim so
+// :: Documentation decorator to LIPS functions if lines starts with :
+// :: they are ignored (not trimed) otherwise it trims so
 // :: so you can have indent in source code
 // ----------------------------------------------------------------------
 function doc(name, fn, doc, dump) {
@@ -1840,7 +1840,7 @@ function previousSexp(tokens, sexp = 1) {
     return tokens.slice(i + 1);
 }
 // ----------------------------------------------------------------------
-// :: find number of spaces in line
+// :: Find the number of spaces in line
 // ----------------------------------------------------------------------
 function lineIndent(tokens) {
     if (!tokens || !tokens.length) {
@@ -1861,10 +1861,10 @@ function lineIndent(tokens) {
     return 0;
 }
 // ----------------------------------------------------------------------
-// :: token based pattern matching (used by formatter)
+// :: Token based pattern matching (used by formatter)
 // ----------------------------------------------------------------------
 /*
-  function nested_pattern(pattern) {
+  Function nested_pattern(pattern) {
   return pattern instanceof Array ||
   pattern instanceof Pattern;
   }
@@ -2010,7 +2010,7 @@ Formatter.defaults = {
 };
 Formatter.match = match;
 // ----------------------------------------------------------------------
-// :: return indent for next line
+// :: Return indent for next line
 // ----------------------------------------------------------------------
 Formatter.prototype._options = function _options(options) {
     var defaults = Formatter.defaults;
@@ -2139,8 +2139,8 @@ Ahead.prototype.match = function(string) {
     return string.match(this.pattern);
 };
 // ----------------------------------------------------------------------
-// Pattern have any number of patterns that is match using OR operator
-// pattern is in form of array with regular expressions
+// Pattern has any number of patterns that it matches using OR operator
+// Pattern is in form of array with regular expressions
 // ----------------------------------------------------------------------
 function Pattern(...args) {
     var flag = args.pop();
@@ -2214,7 +2214,7 @@ Formatter.prototype.break = function() {
             }
         }
     };
-    // tokenize is part of the parser/lexer that split code into tokens and inclue
+    // Tokenize is part of the parser/lexer that split code into tokens and includes
     // meta data like number of column or line
     var tokens = tokenize(code, true).map(token).filter(t => t !== '\n');
     const { rules } = Formatter;
@@ -2263,7 +2263,7 @@ Formatter.prototype._spaces = function(i) {
     return new Array(i + 1).join(' ');
 };
 // ----------------------------------------------------------------------
-// :: auto formatting of code, it require to have newlines
+// :: Auto formatting of code, it requires to have newlines
 // ----------------------------------------------------------------------
 Formatter.prototype.format = function format(options) {
     // prepare code with single space after newline
@@ -2309,7 +2309,7 @@ Formatter.prototype.format = function format(options) {
     }).join('');
 };
 // ----------------------------------------------------------------------
-// :: flatten nested arrays
+// :: Flatten nested arrays
 // :: ref: https://stackoverflow.com/a/27282907/387194
 // ----------------------------------------------------------------------
 function flatten(array, mutable) {
@@ -2525,9 +2525,9 @@ Pair.fromArray = function(array, deep = true, quote = false) {
 };
 
 // ----------------------------------------------------------------------
-// by default to_object was created to create JavaScript objects,
-// so it use valueOf to get native values
-// literal parameter was a hack to allow create LComplex from LIPS code
+// By default to_object was created to create JavaScript objects,
+// so it uses valueOf to get native values.
+// Literal parameter was a hack to allow creating LComplex from LIPS code
 // ----------------------------------------------------------------------
 Pair.prototype.to_object = function(literal = false) {
     var node = this;
@@ -2698,7 +2698,7 @@ var str_mapping = new Map();
     str_mapping.set(key, value);
 });
 // ----------------------------------------------------------------------
-// :: debug function that can be used with JSON.stringify
+// :: Debug function that can be used with JSON.stringify
 // :: that will show symbols
 // ----------------------------------------------------------------------
 /* istanbul ignore next */
@@ -2766,7 +2766,7 @@ function function_to_string(fn) {
     }
 }
 // ----------------------------------------------------------------------
-// instances extracted to make cyclomatic complexity of toString smaller
+// Instances extracted to make cyclomatic complexity of toString smaller
 const instances = new Map();
 // ----------------------------------------------------------------------
 [
@@ -2850,8 +2850,8 @@ function toString(obj, quote, skip_cycles, ...pair_args) {
     if (typeof obj === 'object') {
         var constructor = obj.constructor;
         if (!constructor) {
-            // this is case of fs.constants in Node.js that is null constructor object
-            // this object can be handled like normal object that have properties
+            // This is case of fs.constants in Node.js that is null constructor object.
+            // This object can be handled like normal objects that have properties
             constructor = Object;
         }
         var name;
@@ -2987,7 +2987,7 @@ function markCycles(pair) {
 }
 
 // ----------------------------------------------------------------------
-// trampoline based recursive pair to string that don't overflow the stack
+// Trampoline based recursive pair to string that don't overflow the stack
 // ----------------------------------------------------------------------
 /* eslint-disable no-unused-vars */
 /* istanbul ignore next */
@@ -4195,7 +4195,7 @@ function transform_syntax(options = {}) {
     return traverse(expr, {});
 }
 // ----------------------------------------------------------------------
-// :: check for nullish values
+// :: Check for nullish values
 // ----------------------------------------------------------------------
 function is_null(value) {
     return is_undef(value) || value === nil || value === null;
@@ -4230,8 +4230,8 @@ function is_undef(value) {
 // :: Function utilities
 // ----------------------------------------------------------------------
 function box(object) {
-    // we only need to box lips data, arrays and object don't need
-    // to be boxed, values from objects will be boxed when accessed
+    // We only need to box lips data and arrays. Object don't need
+    // to be boxed, but values from objects will be boxed when accessed.
     switch (typeof object) {
         case 'string':
             return LString(object);
@@ -4294,7 +4294,7 @@ function patch_value(value, context) {
     return box(value);
 }
 // ----------------------------------------------------------------------
-// :: function get original function that was binded with props
+// :: Function gets original function that was binded with props
 // ----------------------------------------------------------------------
 function unbind(obj) {
     if (is_bound(obj)) {
@@ -4303,7 +4303,7 @@ function unbind(obj) {
     return obj;
 }
 // ----------------------------------------------------------------------
-// :: function bind with contex that can be optionally unbind
+// :: Function binds with contex that can be optionally unbind
 // :: get original function with unbind
 // ----------------------------------------------------------------------
 function bind(fn, context) {
@@ -4336,7 +4336,7 @@ function bind(fn, context) {
     return bound;
 }
 // ----------------------------------------------------------------------
-// function used to check if function should not get unboxed arguments,
+// Function used to check if function should not get unboxed arguments,
 // so you can call Object.getPrototypeOf for lips data types
 // this is case, see dir function and #73
 // ----------------------------------------------------------------------
@@ -4373,7 +4373,7 @@ function is_port_method(obj) {
     return false;
 }
 // ----------------------------------------------------------------------
-// hidden props
+// Hidden props
 // ----------------------------------------------------------------------
 var __context__ = Symbol.for('__context__');
 var __fn__ = Symbol.for('__fn__');
@@ -4385,7 +4385,7 @@ var __method__ = Symbol.for('__method__');
 var __prototype__ = Symbol.for('__prototype__');
 var __lambda__ = Symbol.for('__lambda__');
 // ----------------------------------------------------------------------
-// :: function bind fn with context but it also move all props
+// :: Function bind fn with context but it also move all props
 // :: mostly used for Object function
 // ----------------------------------------------------------------------
 var exluded_names = ['name', 'length', 'caller', 'callee', 'arguments', 'prototype'];
@@ -4663,7 +4663,7 @@ function limit(n, fn) {
     };
 }
 // -------------------------------------------------------------------------
-// :: character object representation
+// :: Character object representation
 // -------------------------------------------------------------------------
 function LCharacter(char) {
     if (typeof this !== 'undefined' && !(this instanceof LCharacter) ||
@@ -5069,7 +5069,7 @@ LNumber.prototype.valueOf = function() {
     }
 };
 // -------------------------------------------------------------------------
-// type coercion matrix
+// Type coercion matrix
 // -------------------------------------------------------------------------
 const matrix = (function() {
     var i = (a, b) => [a, b];
@@ -5694,7 +5694,7 @@ function approxRatio(eps) {
     };
 }
 // -------------------------------------------------------------------------
-// :: source: Kawa gnu.math.RatNum.java
+// :: Source: Kawa gnu.math.RatNum.java
 // :: This algorithm is by Alan Bawden. It has been transcribed
 // :: with permission from Kawa copyright M.A. Bothner.
 // :: which was transcribed from from C-Gambit, copyright Marc Feeley.
@@ -6473,7 +6473,7 @@ EOF.prototype.toString = function() {
     return '#<eof>';
 };
 // -------------------------------------------------------------------------
-// simpler way to create interpreter with interaction-environment
+// Simpler way to create interpreter with interaction-environment
 // -------------------------------------------------------------------------
 function Interpreter(name, { stderr, stdin, stdout, command_line = null, ...obj } = {}) {
     if (typeof this !== 'undefined' && !(this instanceof Interpreter) ||
@@ -6589,7 +6589,7 @@ Environment.prototype.inherit = function(name, obj = {}) {
     return new Environment(obj || {}, this, name);
 };
 // -------------------------------------------------------------------------
-// :: lookup function for variable doc strings
+// :: Lookup function for variable doc strings
 // -------------------------------------------------------------------------
 Environment.prototype.doc = function(name, value = null, dump = false) {
     if (name instanceof LSymbol) {
@@ -6613,7 +6613,7 @@ Environment.prototype.doc = function(name, value = null, dump = false) {
     }
 };
 // -------------------------------------------------------------------------
-// :: function create frame environment for usage in functions
+// :: Function creates frame environment for usage in functions
 // :: frames are used to it's easier to find environments of the functions
 // :: in scope chain, they are dummy environments just for lookup
 // -------------------------------------------------------------------------
@@ -6670,7 +6670,7 @@ Environment.prototype.merge = function(env, name = 'merge') {
     return this.inherit(name, env.__env__);
 };
 // -------------------------------------------------------------------------
-// value returned in lookup if found value in env and in promise_all
+// Value returned in lookup if found value in env and in promise_all
 // -------------------------------------------------------------------------
 function Value(value) {
     if (typeof this !== 'undefined' && !(this instanceof Value) ||
@@ -6688,7 +6688,7 @@ Value.prototype.valueOf = function() {
     return this.value;
 };
 // -------------------------------------------------------------------------
-// :: differnt object than value used as object for (values)
+// :: Differnt object than value used as object for (values)
 // -------------------------------------------------------------------------
 function Values(values) {
     if (values.length) {
@@ -6783,7 +6783,7 @@ Environment.prototype.set = function(name, value, doc = null) {
     return this;
 };
 // -------------------------------------------------------------------------
-// for internal use only
+// For internal use only
 // -------------------------------------------------------------------------
 Environment.prototype.constant = function(name, value) {
     if (this.__env__.hasOwnProperty(name)) {
@@ -6895,7 +6895,7 @@ var get = doc('get', function get(object, ...args) {
 }, `(. obj . args)
     (get obj . args)
 
-    This function uses an object as a base and keep using arguments to get the
+    This function uses an object as a base and keeps using arguments to get the
     property of JavaScript object. Arguments need to be a strings.
     e.g. \`(. console "log")\` if you use any function inside LIPS it
     will be weakly bound (can be rebound), so you can call this log function
@@ -6904,14 +6904,14 @@ var get = doc('get', function get(object, ...args) {
     \`get\` is an alias because . doesn't work everywhere, e.g. you can't
     pass it as an argument.`);
 // -------------------------------------------------------------------------
-// function get internal protected data
+// Function gets internal protected data
 // -------------------------------------------------------------------------
 function internal(env, name) {
     var internal_env = interaction(env, '**internal-env**');
     return internal_env.get(name);
 }
 // -------------------------------------------------------------------------
-// get variable from interaction environment
+// Get variable from interaction environment
 // -------------------------------------------------------------------------
 function interaction(env, name) {
     var interaction_env = env.get('**interaction-environment**');
@@ -6966,7 +6966,7 @@ var global_env = new Environment({
     }, `(peek-char port)
 
         This function reads and returns a character from the string
-        port, or, if there are no more data in the string port, it
+        port, or, if there is no more data in the string port, it
         returns an EOF.`),
     // ------------------------------------------------------------------
     'read-line': doc('read-line', function(port = null) {
@@ -7424,8 +7424,8 @@ var global_env = new Environment({
     }), `(do ((<var> <init> <next>)) (test expression) . body)
 
          Iteration macro that evaluate the expression body in scope of the variables.
-         On Eeach loop it increase the variables according to next expression and run
-         test to check if the loop should continue. If test is signle call the macro
+         On each loop it increase the variables according to next expression and runs
+         test to check if the loop should continue. If test is single called, the macro
          will not return anything. If the test is pair of expression and value the
          macro will return that value after finish.`),
     // ------------------------------------------------------------------
