@@ -1538,7 +1538,7 @@
 (define-macro (set-global! name)
    "(set-global! name)
 
-    Macro make the name global variable."
+    The macro makes the name a global variable."
    (let ((var (symbol-append 'self. name)))
      `(set! ,var ,name)))
 
