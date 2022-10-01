@@ -146,7 +146,7 @@ function is_debug() {
 }
 /* eslint-enable */
 /* eslint-disable max-len */
-// functions generate regexes to match number rational, integer, complex, complex+ratioanl
+// functions generate regexes to match number rational, integer, complex, complex+rational
 function num_mnemicic_re(mnemonic) {
     return mnemonic ? `(?:#${mnemonic}(?:#[ie])?|#[ie]#${mnemonic})` : '(?:#[ie])?';
 }
@@ -1156,7 +1156,7 @@ class Lexer {
                     return true;
                 }
             }
-            // skip leadning spaces
+            // skip leading spaces
             if (start && this._state === null && char.match(/\s/)) {
                 if (this._whitespace) {
                     if (!next_char.match(/\s/)) {
@@ -1174,7 +1174,7 @@ class Lexer {
             start = false;
             for (let rule of Lexer.rules) {
                 if (this.match_rule(rule, { prev_char, char, next_char })) {
-                    // change state to null is end of the token
+                    // change state to null if end of the token
                     var next_state = rule[rule.length - 1];
                     this._state = next_state;
                     if (this._state === null) {
@@ -1575,7 +1575,7 @@ class Parser {
             // bultin parser extensions are mapping short symbol to longer symbol
             // that can be function or macro, parser don't care
             // if it's not bultin then the extension can be macro or function
-            // FUNCTION: when it's used it get arguments like FEXPR and
+            // FUNCTION: when it's used, it get arguments like FEXPR and
             // result is returned by parser as is
             // MACRO: if macros are used they are evaluated in place and
             // result is returned by parser but they are quoted
@@ -1665,7 +1665,7 @@ class DatumReference {
 }
 // ----------------------------------------------------------------------
 // :: tokens are the array of strings from tokenizer
-// :: the return value is array of lisp code created out of Pair class
+// :: the return value is array of lips code created out of Pair class
 // :: env is needed for parser extensions that will invoke the function
 // :: or macro assigned to symbol, this function is async because
 // :: it evaluate the code, from parser extensions, that may return promise
@@ -1769,7 +1769,7 @@ async function uniterate_async(object) {
     return result;
 }
 // ----------------------------------------------------------------------
-// :: function that return mather function that match string against string
+// :: function that return matcher function that match string against string
 // ----------------------------------------------------------------------
 function matcher(name, arg) {
     if (arg instanceof RegExp) {
@@ -1781,7 +1781,7 @@ function matcher(name, arg) {
     throw new Error('Invalid matcher');
 }
 // ----------------------------------------------------------------------
-// :: documentaton decorator to LIPS functions if lines starts with :
+// :: documentation decorator to LIPS functions if lines starts with :
 // :: they are ignored (not trim) otherwise it trim so
 // :: so you can have indent in source code
 // ----------------------------------------------------------------------
@@ -4303,7 +4303,7 @@ function unbind(obj) {
     return obj;
 }
 // ----------------------------------------------------------------------
-// :: function bind with contex that can be optionaly unbind
+// :: function bind with contex that can be optionally unbind
 // :: get original function with unbind
 // ----------------------------------------------------------------------
 function bind(fn, context) {
@@ -4484,7 +4484,7 @@ function let_macro(symbol) {
                 Pair(code.car, args)
             ]);
         } else if (macro_expand) {
-            // Macro.defmacro are special macros that should return lisp code
+            // Macro.defmacro are special macros that should return lips code
             // here we use evaluate, so we need to check special flag set by
             // macroexpand to prevent evaluation of code in normal let
             return;
@@ -10513,7 +10513,7 @@ if (typeof window !== 'undefined') {
 var banner = (function() {
     // Rollup tree-shaking is removing the variable if it's normal string because
     // obviously '{{DATE}}' == '{{' + 'DATE}}'; can be removed
-    // but disablig Tree-shaking is adding lot of not used code so we use this
+    // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
     var date = LString('{{DATE}}').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
