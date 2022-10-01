@@ -878,7 +878,7 @@
 
    The macro defines a procedure that tests character against a regular expression."
   `(define ,spec
-     , str
+     ,str
      (typecheck ,(symbol->string (car spec)) ,(cadr spec) "character")
      (not (null? (--> chr (toString) (match ,re))))))
 
@@ -1003,7 +1003,7 @@
   (> (%char-ci-cmp "char-ci>=?" chr1 chr2) -1))
 
 ;; -----------------------------------------------------------------------------
-(define (char-case char)
+(define (char-upcase char)
   "(char-upcase char)
 
    Create an uppercase version of the character."
