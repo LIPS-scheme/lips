@@ -22,7 +22,7 @@
 It is based on the Scheme dialect and the R5RS/R7RS specifications. It has extensions to make it easier
 to interact with JavaScript. It work both in the browser and with Node.js.
 
-The name is a recursive acronym which stands for LIPS Is Pretty Simple.
+The name is a recursive acronym which stands for LIPS ita pretty simple.
 
 ## Demo
 
@@ -43,7 +43,7 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 ## Installation
 
 To install you can use npm (or yarn)<br/>
-**NOTE:** The version that is on NPM is heavily outdated, use beta version:
+**NOTE:** The version that is on NPM is heavily outdated, use the beta version:
 
 
 ```
@@ -78,11 +78,11 @@ https://github.com/jcubic/lips/blob/master/lib/js/bookmark.js
 ```
 
 Create any link in your bookmarks, edit it and copy paste the content of that file.
-Affter you click on the link it will create the REPL at the bottom of the page.
+After you click on the link it will create the REPL at the bottom of the page.
 (NOTE: It may not work on every page because of content security policy;
-e.g. google.com or gihub.com)
+e.g. google.com or github.com)
 
-If you have trouble with creating the bookmarklet you can open
+If you have trouble with creating the bookmark you can open
 [LISP Scheme home page](https://lips.js.org/#bookmark) where you can
 find a link that you can drag to your bookmarks.
 
@@ -198,7 +198,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 
 ## Limitations
 Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
-process long arrays and use callback function. If the array is quite large each pice of code
+process long arrays and use callback function. If the array is quite large each piece of code
 inside the callback may slow down the processing. For example see:
 
 script [reference.scm](https://github.com/jcubic/lips/blob/master/scripts/reference.scm)
