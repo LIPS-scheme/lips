@@ -126,10 +126,10 @@ function log(x, regex = null) {
         }
         var value = global_env.get('repr')(x);
         if (regex === null || regex instanceof RegExp && regex.test(value)) {
-            console.log(global_env.get('type')(x) + ": " + value); // @jcubic can you enter what this console.log returns here
+            console.log(global_env.get('type')(x) + ": " + value);
         }
         if (literal) {
-            console.log(x); // @jcubic can you enter what this console.log returns here
+            console.log(x); 
         }
     }
     if (is_promise(x)) {
@@ -988,7 +988,7 @@ defined_specials.forEach(([seq, symbol, type]) => {
    var DEBUG = false;
    function log(...args) {
    if (DEBUG) {
-   console.log(...args); // @jcubic can you enter what this console log returns here
+   console.log(...args);
    }
    }
 */
@@ -3499,7 +3499,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
     function log(x) {
         /* istanbul ignore next */
         if (is_debug()) {
-            console.log(x); // @jcubic can you enter what this console log returns here
+            console.log(x);
         }
     }
     log(symbols);
@@ -3833,7 +3833,7 @@ function transform_syntax(options = {}) {
     function log(x) {
         /* istanbul ignore next */
         if (is_debug()) {
-            console.log(x); // @jcubic can you enter what this console log returns here
+            console.log(x);
         }
     }
     function rename(name) {
@@ -6920,11 +6920,11 @@ function interaction(env, name) {
 // -------------------------------------------------------------------------
 var internal_env = new Environment({
     stdout: new BufferedOutputPort(function(...args) {
-        console.log(...args); // @jcubic can you enter what this console log returns here
+        console.log(...args);
     }),
     // ------------------------------------------------------------------
     stderr: new BufferedOutputPort(function(...args) {
-        console.error(...args); // @jcubic can you enter what this console log returns here
+        console.error(...args);
     }),
     'command-line': [],
     // ------------------------------------------------------------------
@@ -7950,7 +7950,7 @@ var global_env = new Environment({
                     if (bindings) {
                         /* istanbul ignore next */
                         if (is_debug()) {
-                            console.log(JSON.stringify(symbolize(bindings), true, 2)); // @jcubic can you enter what this console log returns here
+                            console.log(JSON.stringify(symbolize(bindings), true, 2));
                             console.log('PATTERN: ' + rule.toString(true));
                             console.log('MACRO: ' + code.toString(true));
                         }
