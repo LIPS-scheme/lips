@@ -36,7 +36,7 @@
   "(define-symbol-macro type (name . args) . body)
 
    Macro that creates special symbol macro for evaluator similar to build in , or `.
-   It's like alias for real macro. Similar to CL reader macros but it receive already
+   It's like an alias for real macro. Similar to CL reader macros but it receives already
    parsed code like normal macros. Type can be SPLICE or LITERAL symbols.
    ALL default symbol macros are literal."
   (let* ((name (car spec))
@@ -71,12 +71,12 @@
 
    Macro for defining vectors (JavaScript arrays). Vectors literals are
    automatically quoted. So you can use expressions inside them. Only other
-   literals, like other vectors or object.")
+   literals, like other vectors or objects.")
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
            (lambda (arr q)
-             ;; Array.from is used to convert emtpy to undefined
+             ;; Array.from is used to convert empty to undefined
              ;; but we can't use the value because Array.from call
              ;; valueOf on its arguments
              (let ((result (--> (Array.from arr)
@@ -90,8 +90,8 @@
 (define (eqv? a b)
   "(eqv? a b)
 
-   Function compare the values. It return true if they are the same, they
-   need to have same type"
+   Function compares the values. It returns true if they are the same, they
+   need to have the same type"
   (if (string=? (type a) (type b))
       (cond ((number? a)
              (or (and (exact? a) (exact? b) (= a b))
@@ -127,8 +127,8 @@
 (define (equal? a b)
   "(equal? a b)
 
-   Function check if values are equal if both are pair or array
-   it compares the their elements recursivly."
+   Function check if values are equal if both are pair or array.
+   It compares the elements recursively."
   (cond ((and (pair? a))
          (and (pair? b)
               (equal? (car a) (car b))
@@ -210,7 +210,7 @@
 (define (force promise)
   "(force promise)
 
-   Function force the promise and evaluate delayed expression."
+   Function force the promise and evaluate the delayed expression."
   (promise))
 
 ;; -----------------------------------------------------------------------------
@@ -224,7 +224,7 @@
 (define (positive? x)
   "(positive? x)
 
-   Function check if number is larger then 0"
+   Function check if the number is larger then 0"
   (typecheck "positive?" x "number")
   (> x 0))
 
@@ -232,7 +232,7 @@
 (define (negative? x)
   "(negative? x)
 
-   Function check if number is smaller then 0"
+   Function check if the number is smaller then 0"
   (typecheck "negative?" x "number")
   (< x 0))
 
@@ -240,7 +240,7 @@
 (define (zero? x)
   "(zero? x)
 
-   Function check if number is equal to 0"
+   Function check if the number is equal to 0"
   (typecheck "zero?" x "number")
   (= x 0))
 
@@ -248,11 +248,11 @@
 (define (quotient a b)
   "(quotient a b)
 
-   Return quotient from divition as integer."
+   Return quotient from division as an integer."
   (typecheck "quotient" a "number")
   (typecheck "quotient" b "number")
   (if (zero? b 0)
-     (throw (new Error "quotient: divition by zero"))
+     (throw (new Error "quotient: division by zero"))
      (let ((quotient (/ a b)))
        (if (integer? quotient)
            quotient
@@ -274,7 +274,7 @@
 (define (boolean? x)
   "(boolean? x)
 
-   Function return true if value is boolean."
+   Function return true if the value is boolean."
    (string=? (type x) "boolean"))
 
 ;; -----------------------------------------------------------------------------
@@ -311,7 +311,7 @@
 (define (real? x)
   "(real? x)
 
-   Function check if argument x is real."
+   Function check if the argument x is real."
   (and (number? x) (or (eq? x NaN)
                        (eq? x Number.NEGATIVE_INFINITY)
                        (eq? x Number.POSITIVE_INFINITY)
@@ -324,7 +324,7 @@
 (define (integer? x)
   "(integer? x)
 
-  Function check if argument x is integer."
+  Function check if the argument x is an integer."
   (and (number? x)
        (not (eq? x NaN))
        (not (eq? x Number.NEGATIVE_INFINITY))
@@ -337,7 +337,7 @@
 (define (complex? x)
   "(complex? x)
 
-  Function check if argument x is complex."
+  Function check if the argument x is complex."
   (and (number? x) (or (eq? x NaN)
                        (eq? x Number.NEGATIVE_INFINITY)
                        (eq? x Number.POSITIVE_INFINITY)
@@ -347,7 +347,7 @@
 (define (rational? x)
   "(rational? x)
 
-  Function check if value is rational."
+  Function check if the value is rational."
   (and (number? x)
        (not (eq? x NaN))
        (not (eq? x Number.NEGATIVE_INFINITY))
@@ -358,7 +358,7 @@
 (define (typecheck-args _type name _list)
   "(typecheck-args args type)
 
-   Function check if all items in array are of same type."
+   Function check if all items in the array are of the same type."
   (let iter ((n 1) (_list _list))
     (if (pair? _list)
         (begin
@@ -388,7 +388,7 @@
 (define (make-rectangular re im)
   "(make-rectangular im re)
 
-   Create complex number from imaginary and real part."
+   Create complex number from the imaginary and real part."
   (let ((value `((re . ,re) (im . ,im))))
     (lips.LComplex (--> value (to_object true)))))
 
@@ -426,7 +426,7 @@
 (define (inexact->exact n)
   "(inexact->exact number)
 
-   Funcion convert real number to exact ratioanl number."
+   Function convert real number to exact rational number."
   (typecheck "inexact->exact" n "number")
   (if (exact? n)
       n
@@ -436,9 +436,9 @@
 (define (log z)
   "(log z)
 
-   Funcntion calculates natural logarithm of z. Where argument can be
-   any number (including complex negative and rational).
-   If the value is 0 it return NaN."
+   Function calculates natural logarithm of z where the argument can be
+   any number (including complex, negative and rational).
+   If the value is 0, it returns NaN."
   (cond ((real? z)
          (cond ((zero? z) NaN)
                ((> z 0) (Math.log z))
@@ -487,7 +487,7 @@
 (define (modulo a b)
   "(modulo a b)
 
-   Function return modulo operation on it's argumennts."
+   Function returns modulo operation on it's argumennts."
   (typecheck "modulo" a "number" 1)
   (typecheck "modulo" b "number" 2)
   (- a (* b (floor (/ a b)))))
@@ -495,7 +495,7 @@
 (define (remainder__ a b)
   "(modulo a b)
 
-   Function return reminder from division operation."
+   Function returns reminder from division operation."
   (typecheck "remainder" a "number" 1)
   (typecheck "remainder" b "number" 2)
   (- a (* b (truncate (/ a b)))))
@@ -504,7 +504,7 @@
 (define (list-tail l k)
   "(list-tail list k)
 
-   Returns the sublist of list obtained by omitting the first k elements."
+   Returns the sublist of the list obtained by omitting the first k elements."
   (typecheck "list-tail" l '("pair" "nil"))
   (if (< k 0)
       (throw (new Error "list-ref: index out of range"))
@@ -538,7 +538,7 @@
 (define (not x)
   "(not x)
 
-   Function return true if value is false and false otherwise."
+   Function returns true if the value is false and false otherwise."
   (if x false true))
 
 ;; -----------------------------------------------------------------------------
@@ -556,7 +556,7 @@
   "(%member obj list function)
 
    Helper method to get first list where car equal to obj
-   using provied functions as comparator."
+   using provided functions as comparator."
   (if (null? list)
       false
       (if (op (access list) obj)
@@ -639,7 +639,7 @@
 (define (make-string k . rest)
   "(make-string k [char])
 
-   Function return new string with k elements, if char is provied
+   Function return new string with k elements, if char is provided
    it's filled with that character."
   (let ((char (if (null? rest) #\space (car rest))))
     (typecheck "make-string" k "number" 1)
@@ -653,8 +653,8 @@
 (define (string . args)
   "(string chr1 chr2 ...)
 
-   Function create new string from it's arguments. Each argument
-   Need to be a character object."
+   Function creates a new string from it's arguments. Each argument
+   needs to be a character object."
   (for-each (lambda (x)
               (typecheck "string" x "character"))
             args)
@@ -721,9 +721,9 @@
 (define-macro (string-set! object index char)
   "(string-set! object index char)
 
-   Macro that replace character in string in given index, it create new JavaScript
-   string and replace old value. Object need to be symbol that point to variable
-   that hold the string."
+   Macro that replaces character in string in given index, it creates a new JavaScript
+   string and replaces the old value.The object needs to be a symbol that points to a variable
+   that holds the string."
   (typecheck "string-set!" object "symbol")
   (let ((chars (gensym "chars")))
     `(begin
@@ -755,7 +755,7 @@
   "(%string-cmp name a b)
 
    Function compare two strings and return 0 if they are equal,
-   -1 second is smaller and 1 if is larget. The function compare
+   -1 second is smaller and 1 if is larger. The function compare
    the codepoints of the character."
   (typecheck name string1 "string" 1)
   (typecheck name string2 "string" 2)
@@ -765,43 +765,43 @@
 (define (string=? string1 string2)
   "(string=? string1 string2)
 
-   Function check if two string s are equal."
+   Function checks if two string s are equal."
   (= (%string-cmp "string=?" string1 string2) 0))
 
 ;; -----------------------------------------------------------------------------
 (define (string<? string1 string2)
   "(string<? string1 string2)
 
-   Function return true if second string is smaller then the first one."
+   Function returns true if second string is smaller then the first one."
   (= (%string-cmp "string<?" string1 string2) -1))
 
 ;; -----------------------------------------------------------------------------
 (define (string>? string1 string2)
   "(string<? string1 string2)
 
-   Function return true if second string is larger then the first one."
+   Function returns true if second string is larger then the first one."
   (= (%string-cmp "string>?" string1 string2) 1))
 
 ;; -----------------------------------------------------------------------------
 (define (string<=? string1 string2)
   "(string<? string1 string2)
 
-   Function return true if second string is not larger then the first one."
+   Function returns true if second string is not larger then the first one."
   (< (%string-cmp "string<=?" string1 string2) 1))
 
 ;; -----------------------------------------------------------------------------
 (define (string>=? string1 string2)
   "(string<? string1 string2)
 
-   Function return true if second character is not smaller then the first one."
+   Function returns true if second character is not smaller then the first one."
   (> (%string-cmp "string>=?" string1 string2) -1))
 
 ;; -----------------------------------------------------------------------------
 (define (%string-ci-cmp name string1 string2)
   "(%string-ci-cmp name a b)
 
-   Function compare two strings ingoring case and return 0 if they are equal,
-   -1 second is smaller and 1 if is larget. The function compare
+   Function compares two strings ignoring case and returns 0 if they are equal,
+   -1 second is smaller and 1 if is larger. The function compares
    the codepoints of the character."
   (typecheck name string1 "string" 1)
   (typecheck name string2 "string" 2)
@@ -811,35 +811,35 @@
 (define (string-ci=? string1 string2)
   "(string-ci=? string1 string2)
 
-   Function check if two string s are equal."
+   Function checks if two string s are equal."
   (= (%string-ci-cmp "string-ci=?" string1 string2) 0))
 
 ;; -----------------------------------------------------------------------------
 (define (string-ci<? string1 string2)
   "(string-ci<? string1 string2)
 
-   Function return true if second string is smaller then the first one."
+   Function returns true if the second string is smaller then the first one."
   (= (%string-ci-cmp "string-ci<?" string1 string2) -1))
 
 ;; -----------------------------------------------------------------------------
 (define (string-ci>? string1 string2)
   "(string-ci<? string1 string2)
 
-   Function return true if second string is larger then the first one."
+   Function returns true if the second string is larger then the first one."
   (= (%string-ci-cmp "string-ci>?" string1 string2) 1))
 
 ;; -----------------------------------------------------------------------------
 (define (string-ci<=? string1 string2)
   "(string-ci<? string1 string2)
 
-   Function return true if second string is not larger then the first one."
+   Function returns true if the second string is not larger then the first one."
   (< (%string-ci-cmp "string-ci<=?" string1 string2) 1))
 
 ;; -----------------------------------------------------------------------------
 (define (string-ci>=? string1 string2)
   "(string-ci>=? string1 string2)
 
-   Function return true if second character is not smaller then the first one."
+   Function returns true if the second character is not smaller then the first one."
   (> (%string-ci-cmp "string-ci>=?" string1 string2) -1))
 
 ;; -----------------------------------------------------------------------------
@@ -866,7 +866,7 @@
 (define (integer->char n)
   "(integer->char chr)
 
-   Function convert number argument to chararacter."
+   Function convert number argument to character."
   (typecheck "integer->char" n "number")
   (if (integer? n)
       (string-ref (String.fromCodePoint n) 0)
@@ -876,7 +876,7 @@
 (define-macro (%define-chr-re spec str re)
   "(%define-chr-re (name chr) sring re)
 
-   Macro define procedure that test character agains regular expression."
+   Macro defines a procedure that tests characters against regular expression."
   `(define ,spec
      ,str
      (typecheck ,(symbol->string (car spec)) ,(cadr spec) "character")
@@ -886,7 +886,7 @@
 (%define-chr-re (char-whitespace? chr)
   "(char-whitespace? chr)
 
-   Function return true if character is whitespace."
+   Function that returns true if the character is whitespace."
   (let-env (interaction-environment)
            (--> **internal-env** (get 'space-unicode-regex))))
 
@@ -894,7 +894,7 @@
 (%define-chr-re (char-numeric? chr)
   "(char-numeric? chr)
 
-   Function return true if character is number."
+   Function that returns true if the character is a number."
   (let-env (interaction-environment)
            (--> **internal-env** (get 'numeral-unicode-regex))))
 
@@ -902,7 +902,7 @@
 (%define-chr-re (char-alphabetic? chr)
   "(char-alphabetic? chr)
 
-   Function return true if character is leter of the ASCII alphabet."
+   Function that returns true if the character is a letter of the ASCII alphabet."
   (let-env (interaction-environment)
            (--> **internal-env** (get 'letter-unicode-regex))))
 
@@ -910,8 +910,8 @@
 (define (%char-cmp name chr1 chr2)
   "(%char-cmp name a b)
 
-   Function compare two characters and return 0 if they are equal,
-   -1 second is smaller and 1 if is larget. The function compare
+   Function compares two characters and returns 0 if they are equal,
+   -1 second is smaller and 1 if second is larger. The function compares
    the codepoints of the character."
   (typecheck name chr1 "character" 1)
   (typecheck name chr2 "character" 2)
@@ -925,35 +925,35 @@
 (define (char=? chr1 chr2)
   "(char=? chr1 chr2)
 
-   Function check if two characters are equal."
+   Function checks if two characters are equal."
   (= (%char-cmp "char=?" chr1 chr2) 0))
 
 ;; -----------------------------------------------------------------------------
 (define (char<? chr1 chr2)
   "(char<? chr1 chr2)
 
-   Function return true if second character is smaller then the first one."
+   Function returns true if the second character is smaller than the first one."
   (= (%char-cmp "char<?" chr1 chr2) -1))
 
 ;; -----------------------------------------------------------------------------
 (define (char>? chr1 chr2)
   "(char<? chr1 chr2)
 
-   Function return true if second character is larger then the first one."
+   Function returns true if the second character is larger than the first one."
   (= (%char-cmp "char>?" chr1 chr2) 1))
 
 ;; -----------------------------------------------------------------------------
 (define (char<=? chr1 chr2)
   "(char<? chr1 chr2)
 
-   Function return true if second character is not larger then the first one."
+   Function returns true if the second character is not larger than the first one."
   (< (%char-cmp "char<=?" chr1 chr2) 1))
 
 ;; -----------------------------------------------------------------------------
 (define (char>=? chr1 chr2)
   "(char<? chr1 chr2)
 
-   Function return true if second character is not smaller then the first one."
+   Function return true if the second character is not smaller than the first one."
   (> (%char-cmp "char>=?" chr1 chr2) -1))
 
 ;; -----------------------------------------------------------------------------
@@ -961,7 +961,7 @@
   "(%char-cmp name a b)
 
    Function compare two characters and return 0 if they are equal,
-   -1 second is smaller and 1 if is larget. The function compare
+   -1 second is smaller and 1 if second is larger. The function compares
    the codepoints of the character."
   (typecheck name chr1 "character" 1)
   (typecheck name chr2 "character" 2)
@@ -971,42 +971,42 @@
 (define (char-ci=? chr1 chr2)
   "(char-ci=? chr1 chr2)
 
-   Function check if two characters are equal."
+   Function checks if two characters are equal."
   (= (%char-ci-cmp "char-ci=?" chr1 chr2) 0))
 
 ;; -----------------------------------------------------------------------------
 (define (char-ci<? chr1 chr2)
   "(char-ci<? chr1 chr2)
 
-   Function return true if second character is smaller then the first one."
+   Function returns true if the second character is smaller than the first one."
   (= (%char-ci-cmp "char-ci<?" chr1 chr2) -1))
 
 ;; -----------------------------------------------------------------------------
 (define (char-ci>? chr1 chr2)
   "(char-ci<? chr1 chr2)
 
-   Function return true if second character is larger then the first one."
+   Function returns true if the second character is larger than the first one."
   (= (%char-ci-cmp "char-ci>?" chr1 chr2) 1))
 
 ;; -----------------------------------------------------------------------------
 (define (char-ci<=? chr1 chr2)
   "(char-ci<? chr1 chr2)
 
-   Function return true if second character is not larger then the first one."
+   Function returns true if the second character is not larger than the first one."
   (< (%char-ci-cmp "char-ci<=?" chr1 chr2) 1))
 
 ;; -----------------------------------------------------------------------------
 (define (char-ci>=? chr1 chr2)
   "(char-ci<? chr1 chr2)
 
-   Function return true if second character is not smaller then the first one."
+   Function returns true if the second character is not smaller than the first one."
   (> (%char-ci-cmp "char-ci>=?" chr1 chr2) -1))
 
 ;; -----------------------------------------------------------------------------
 (define (char-upcase char)
   "(char-upcase char)
 
-   Create uppercase version of the character."
+   Creates uppercase version of the character."
   (typecheck "char-upcase" char "character")
   (char.toUpperCase))
 
@@ -1014,7 +1014,7 @@
 (define (char-downcase char)
   "(char-downcase chr)
 
-   Create lowercase version of the character."
+   Creates lowercase version of the character."
   (typecheck "char-upcase" char "character")
   (char.toLowerCase))
 
@@ -1022,7 +1022,7 @@
 (define (char-upper-case? char)
   "(char-upper-case? char)
 
-   Function check if character is upper case."
+   Function checks if the character is Uppercase."
   (typecheck "char-upper-case?" char "character")
   (and (char-alphabetic? char)
        (char=? (char-upcase char) char)))
@@ -1031,7 +1031,7 @@
 (define (char-lower-case? char)
   "(char-upper-case? char)
 
-   Function check if character is lower case."
+   Function checks if the character is Lowercase."
   (typecheck "char-lower-case?" char "character")
   (and (char-alphabetic? char)
        (char=? (char-downcase char) char)))
@@ -1048,7 +1048,7 @@
 (define (write obj . rest)
   "(write obj [port])
 
-   Write object to standard output or give port. For strings it will include
+   Writes object to standard output or give port. For strings it will include
    wrap in quotes."
   (let ((port (if (null? rest) (current-output-port) (car rest))))
     (display (repr obj true) port)))
@@ -1057,7 +1057,7 @@
 (define (write-char char . rest)
   "(write-char char [port])
 
-   Write single character to given port using write function."
+   Writes a single character to given port using write function."
   (typecheck "write-char" char "character")
   (if (not (null? rest))
       (typecheck "write-char" (car rest) "output-port"))
@@ -1071,7 +1071,7 @@
 (define (make-vector n . rest)
   "(make-vector n [fill])
 
-   Create new vector with n empty elements. If fill is specified it will set
+   Creates new vector with n empty elements. If fill is specified it will set
    all elements of the vector to that value."
   (let ((result (new Array n)))
     (if (not (null? rest))
@@ -1082,7 +1082,7 @@
 (define (vector? n)
   "(vector? n)
 
-   Function return true of value is vector and false if not."
+   Function returns true if value is a vector and false if not."
   (string=? (type n) "array"))
 
 ;; -----------------------------------------------------------------------------
@@ -1107,7 +1107,7 @@
 (define (vector-fill! vec value)
   "(vector-fill! vec value)
 
-   Set every element of the vector to given value."
+   Set every element of the vector to a given value."
   (typecheck "vector-ref" vec "array")
   (let recur ((n (- (length vec) 1)))
     (if (>= n 0)
@@ -1119,7 +1119,7 @@
 (define (vector-length vec)
   "(vector-length vec)
 
-   Function return length of the vector. If argument is not vector it throw exception."
+   Function returns the length of the vector. If the argument is not vector it throws an exception."
   (typecheck "vector-length" vec "array")
   (length vec))
 
@@ -1163,9 +1163,9 @@
         ((<items>) result2)
         [else result3])
 
-   Macro for switch case statement. It test if value is any of the item. If
-   item match the value it will return coresponding result expression value.
-   If no value match and there is else it will return that result.")
+   Macro for switch case statement. It tests if the value is any of the item. If
+   the item matches the value it will return the corresponding result expression value.
+   If no value matches and there is else it will return that result.")
 
 ;; -----------------------------------------------------------------------------
 (--> lips.Formatter.defaults.exceptions.specials (push "case")) ;; 2 indent
@@ -1174,7 +1174,7 @@
 (define (numerator n)
   "(numerator n)
 
-   Return numberator of rational or same number if n is not rational."
+   Return numerator of rational or same number if n is not rational."
   (typecheck "numerator" n "number")
   (if (and (rational? n) (not (integer? n)))
       n.num
@@ -1227,7 +1227,7 @@
 (define (angle x)
   "(angle x)
 
-   Returns angle of the complex number in polar coordinate system."
+   Returns angle of the complex number in the polar coordinate system."
   (if (not (%number-type "complex" x))
       (error "angle: number need to be complex")
       (Math.atan2 x.__im__ x.__re__)))
@@ -1236,7 +1236,7 @@
 (define (magnitude x)
   "(magnitude x)
 
-   Returns magnitude of the complex number in polar coordinate system."
+   Returns magnitude of the complex number in the polar coordinate system."
   (if (not (%number-type "complex" x))
       (error "magnitude: number need to be complex")
       (sqrt (+ (* x.__im__ x.__im__) (* x.__re__ x.__re__)))))
@@ -1250,7 +1250,7 @@
       "(random)
        (random seed)
 
-       Function generate new random real number using Knuth algorithm."
+       Function generates new random real number using Knuth algorithm."
       (if (pair? new-seed)
           (set! seed (car new-seed))
           (set! seed (modulo (+ (* seed a) c) m)))
@@ -1268,14 +1268,14 @@
 (define (output-port? obj)
   "(output-port? arg)
 
-   Function return true if argument is output port."
+   Function returns true if argument is output port."
   (instanceof lips.OutputPort obj))
 
 ;; -----------------------------------------------------------------------------
 (define (input-port? obj)
   "(input-port? arg)
 
-   Function return true if argument is input port."
+   Function returns true if argument is input port."
   (instanceof lips.InputPort obj))
 
 ;; -----------------------------------------------------------------------------
@@ -1283,7 +1283,7 @@
   "(char-ready?)
    (char-ready? port)
 
-   Function check it characters is ready in input port. This is usefull mostly
+   Function checks if characters is ready in input port. This is useful mostly
    for interactive ports that return false if it would wait for user input.
    It return false if port is closed."
   (let ((port (if (null? rest) (current-input-port) (car rest))))
@@ -1296,8 +1296,8 @@
     (lambda(filename)
       "(open-input-file filename)
 
-       Function return new Input Port with given filename. In Browser user need to
-       provide global fs variable that is instance of FS interface."
+       Function returns new Input Port with given filename. In browser, 
+       user needs to provide global fs variable that is instance of FS interface."
       (new lips.InputFilePort (%read-file false filename) filename))))
 
 ;; -----------------------------------------------------------------------------
@@ -1305,7 +1305,7 @@
   "(close-input-port port)
 
    Procedure close port that was opened with open-input-file. After that
-   it no longer accept reading from that port."
+   it no longer accepts reading from that port."
   (typecheck "close-input-port" port "input-port")
   (port.close))
 
@@ -1314,7 +1314,7 @@
   "(close-output-port port)
 
    Procedure close port that was opened with open-output-file. After that
-   it no longer accept write to that port."
+   it no longer accepts write to that port."
   (typecheck "close-output-port" port "output-port")
   (port.close))
 
@@ -1322,9 +1322,9 @@
 (define (call-with-input-file filename proc)
   "(call-with-input-file filename proc)
 
-   Procedure open file for reading, call user defined procedure with given port
-   and then close the port. It return value that was returned by user proc
-   and it close the port even if user proc throw exception."
+   Procedure open file for reading, call user-defined procedure with given port
+   and then closes the port. It returns the value that was returned by user proc
+   and it closes the port even if user proc throws exception."
   (let ((p (open-input-file filename)))
     (try (proc p)
          (finally
@@ -1335,8 +1335,8 @@
   "(call-with-output-file filename proc)
 
    Procedure open file for writing, call user defined procedure with port
-   and then close the port. It return value that was returned by user proc and it close the port
-   even if user proc throw exception."
+   and then closes the port. It returns the value that was returned by user proc and it closes the port
+   even if user proc throws exception."
   (let ((p (open-output-file filename)))
     (try (proc p)
          (finally
@@ -1393,7 +1393,7 @@
       "(open-output-file filename)
 
        Function open file and return port that can be used for writing. If file
-       exists it will throw an Error."
+       exists it will throw an error."
       (typecheck "open-output-file" filename "string")
       (if (not (procedure? open))
           (set! open (%fs-promisify-proc 'open "open-output-file")))
@@ -1405,7 +1405,7 @@
 (define (scheme-report-environment version)
   "(scheme-report-environment version)
 
-   Function return new Environment object for given Scheme Spec version.
+   Function returns new Environment object for given Scheme Spec version.
    Only argument 5 is supported that create environemnt for R5RS."
   (typecheck "scheme-report-environment" version "number")
   (case version
