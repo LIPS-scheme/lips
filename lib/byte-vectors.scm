@@ -1,10 +1,10 @@
 ;; Implementation of byte vector functions - SRFI-4 and SRFI-160
 ;;
-;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
-;; latest verion is defined in
+;; Original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
+;; latest version is defined in
 ;; https://srfi.schemers.org/srfi-160/srfi-160.html
 ;;
-;; it uses JavaScript typed arrays
+;; It uses JavaScript typed arrays
 ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
@@ -67,7 +67,7 @@
        (define (,vector? x)
          ,(format "(~a x)
 
-                   Function return #t of argument is ~a otherwise it return #f."
+                   Function returns #t of argument is ~a otherwise it returns #f."
                   vector?
                   help)
          (and (object? x) (equal? (. x 'constructor) ,type)))
@@ -86,7 +86,7 @@
        (define (,vector-ref vector k)
          ,(format "(~a vector k)
 
-                  Function return value frome vector at index k. If index is out of range it throw exception."
+                  Function returns value from vector at index k. If index is out of range, it throws an exception."
                   vector-ref
                   help)
          (typecheck ,(symbol->string vector-ref) vector ,l-type)
@@ -102,7 +102,7 @@
        (define (,vector-set! vector k v)
          ,(format "(~a vector k)
 
-                   Function set value of ~a at index k. If index is out of range it throw exception."
+                   Function set value of ~a at index k. If index is out of range, it throws an exception."
                   vector-set!
                   help)
          (typecheck ,(symbol->string vector-set!) vector ,l-type)
