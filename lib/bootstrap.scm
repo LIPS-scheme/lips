@@ -7,7 +7,7 @@
 ;;
 ;; <https://lips.js.org>
 ;;
-;; This file contain essential functions and macros for LIPS
+;; This file contains essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
 ;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
@@ -24,8 +24,8 @@
 (define-macro (let-syntax vars . body)
   "(let-syntax ((name fn)) body)
 
-    Macro works like combination of let and define-syntax. It creaates
-    local macros and evaluate body in context of those macros.
+    Macro works like a combination of let and define-syntax. It creates
+    local macros and evaluate the body in the context of those macros.
     The macro to letrec-syntax is like letrec is to let."
   `(let ,vars
      ,@(map (lambda (rule)
@@ -37,8 +37,8 @@
 (define-macro (letrec-syntax vars . body)
   "(letrec-syntax ((name fn)) body)
 
-    Macro works like combination of letrec and define-syntax. It creaates
-    local macros and evaluate body in context of those macros."
+    Macro works like a combination of letrec and define-syntax. It creates
+    local macros and evaluate body in the context of those macros."
   `(letrec ,vars
      ,@(map (lambda (rule)
               `(typecheck "letrec-syntax" ,(car rule) "syntax"))
@@ -61,8 +61,8 @@
 (define (quoted-symbol? x)
    "(quoted-symbol? code)
 
-   Helper function that test if value is quoted symbol. To be used in macros
-   that pass literal code that is transformed by parser.
+   Helper function that tests if the value is quoted symbol. To be used in macros
+   that pass literal code that is transformed by the parser.
 
    usage:
 
@@ -75,7 +75,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (--> expr . body)
-  "Helper macro that simplify calling methods on objects. It work with chaining
+  "Helper macro that simplifies calling methods on objects. It works with chaining
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
                (on \"click\" (lambda () (display \"click\"))))
@@ -113,8 +113,8 @@
   "(define-global var value)
    (define-global (name . args) body)
 
-   Macro that define functions or variables in global context, so they can be used
-   inside let and get let variables in closure, Useful for universal macros."
+   Macro that defines functions or variables in a global context, so they can be used
+   inside let and get let variables in the closure, Useful for universal macros."
   (if (pair? first)
       (let ((name (car first)))
         `(--> lips.env
@@ -125,7 +125,7 @@
 (define-macro (globalize expr . rest)
   "(globalize expr)
 
-    Macro will get the value of the expression and add each method as function to global
+    Macro will get the value of the expression and add each method as a function to global
     scope."
   (let* ((env (current-environment))
          (obj (eval expr env))
@@ -148,21 +148,21 @@
 (define (single list)
   "(single list)
 
-   Function check if argument is list with single element"
+   Function check if an argument is a list with a single element"
   (and (pair? list) (not (cdr list))))
 
 ;; -----------------------------------------------------------------------------
 (define (iterator? x)
    "(iterator? x)
 
-     Function check if value is JavaScript iterator object"
+     Function check if a value is JavaScript iterator object"
    (and (object? x) (procedure? (. x Symbol.iterator))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (.. expr)
   "(.. foo.bar.baz)
 
-   Macro that gets value from nested object where argument is comma separated symbol"
+   Macro that gets value from the nested object where the argument is comma-separated symbol"
   (if (not (symbol? expr))
       expr
       (let ((parts (split "." (symbol->string expr))))
@@ -184,7 +184,7 @@
 (define (plain-object? x)
   "(plain-object? x)
 
-   Function check if value is plain JavaScript object. Created using object macro."
+   Function check if the value is plain JavaScript object. Created using object macro."
   ;; here we don't use string=? or equal? because it may not be defined
   (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
@@ -201,7 +201,7 @@
 (define (symbol->string s)
   "(symbol->string symbol)
 
-   Function convert LIPS symbol to string."
+   Function converts LIPS symbol to string."
   (typecheck "symbol->string" s "symbol")
   (let ((name s.__name__))
     (if (string? name)
@@ -220,7 +220,7 @@
 (define (alist->object alist)
   "(alist->object alist)
 
-   Function convert alist pairs to JavaScript object."
+   Function converts alist pairs to JavaScript object."
   (if (pair? alist)
       (alist.to_object)
       (alist->object (new lips.Pair undefined nil))))
@@ -229,7 +229,7 @@
 (define (object->alist object)
   "(object->alist object)
 
-   Function convert JavaScript object to Alist"
+   Function converts JavaScript object to alist"
   (typecheck "object->alist" object "object")
   (vector->list (--> (Object.entries object)
                      (map (lambda (arr)
@@ -239,7 +239,7 @@
 (define (parent.frames)
   "(parent.frames)
 
-   Funcion return list of environments from parent frames (lambda function calls)"
+   Funcion returns list of environments from parent frames (lambda function calls)"
   (let iter ((result '()) (frame (parent.frame 1)))
     (if (eq? frame (interaction-environment))
         (cons frame result)
@@ -255,7 +255,7 @@
   "(pair-map fn list)
 
    Function call fn argument for pairs in a list and return combined list with
-   values returned from function fn. It work like the map but take two items from list"
+   values returned from function fn. It works like the map but takes two items from the list"
   (let iter ((seq-list seq-list) (result '()))
     (if (null? seq-list)
         result
@@ -274,8 +274,8 @@
    (object-expander reaonly '(:foo :bar))
 
 
-   Recursive function helper for defining LIPS code for create objects
-   using key like syntax. if no values are used it will create JavaScript
+   Recursive function helper for defining LIPS code for creating objects
+   using key-like syntax. if no values are used it will create JavaScript
    shorthand objects where keys are used for keys and values"
   (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
     (if (null? expr)
@@ -313,7 +313,7 @@
 (define-macro (object . expr)
   "(object :name value)
 
-   Macro that create JavaScript object using key like syntax."
+   Macro that creates JavaScript object using a key like syntax."
   (try
     (object-expander false expr)
     (catch (e)
