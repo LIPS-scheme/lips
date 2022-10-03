@@ -1,4 +1,4 @@
-.PHONY: publish test coveralls lint zero
+.PHONY: publish test coveralls lint zero coverage
 
 VERSION={{VERSION}}
 VERSION_DASH=`echo -n "{{VERSION}}" | sed "s/-/%E2%80%93/"`
@@ -112,7 +112,7 @@ watch-lint:
 watch-make:
 	@inotifywait -m -e close_write src/lips.js | while read even; do $(MAKE) --no-print-directory; done
 
-coveralls:
+coverage:
 	$(NPM) run coverage
 
 lint:
