@@ -20,7 +20,7 @@
 
 [LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://lips.js.org).
 It is based on the Scheme dialect and the R5RS/R7RS specifications. It has extensions to make it easier
-to interact with JavaScript. It work both in the browser and with Node.js.
+to interact with JavaScript. It works both in the browser and with Node.js.
 
 The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
@@ -32,7 +32,7 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
 * Literal regular expression.
 * Asynchronous execution (auto resolving of promises).
-* Possibility to add new syntax (similar to vectors and object).
+* Possibility to add new syntax (similar to vectors and objects).
 * Numerical tower and Big Integer support.
 * Powerful introspection.
 * Great integration with JavaScript.
@@ -43,7 +43,7 @@ The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 ## Installation
 
 To install you can use npm (or yarn)<br/>
-**NOTE:** The version that is on NPM is heavily outdated, use beta version:
+**NOTE:** The version that is on NPM is heavily outdated, use the beta version:
 
 
 ```
@@ -62,7 +62,7 @@ then include the file in the script tag. You can grab the version from unpkg.com
 https://unpkg.com/@jcubic/lips@beta
 ```
 
-or from jsDelivr (that's seems a bit faster)
+or from jsDelivr (that seems a bit faster)
 
 ```
 https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js
@@ -77,8 +77,8 @@ You can also run the REPL on any page while you learn Scheme using the bookmarkl
 https://github.com/jcubic/lips/blob/master/lib/js/bookmark.js
 ```
 
-Create any link in your bookmarks, edit it and copy paste the content of that file.
-Affter you click on the link it will create the REPL at the bottom of the page.
+Create any link in your bookmarks, edit it and copy-paste the content of that file.
+After you click on the link it will create the REPL at the bottom of the page.
 (NOTE: It may not work on every page because of content security policy;
 e.g. google.com or gihub.com)
 
@@ -106,17 +106,17 @@ or use the `src` attribute:
 
 ## Bootstrapping Scheme system
 
-Big part of LIPS is written in LIPS itself, but to use full power of LIPS you need
-to load those additional Scheme files. The easiest way is to add `bootstrap` attribute
-on first script tag with `text/x-scheme` type. By default it will use CDN from
-[jsdelivr](https://www.jsdelivr.com/). To load each file using builtin load function
+A big part of LIPS is written in LIPS itself, but to use the full power of LIPS you need
+to load those additional Scheme files. The easiest way is to add the `bootstrap` attribute
+on the first script tag with the `text/x-scheme` type. By default, it will use CDN from
+[jsdelivr](https://www.jsdelivr.com/). To load each file using the builtin load function
 (that will fetch the file using AJAX and evaluate it).
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js" bootstrap></script>
 ```
 
-You can also specify the path where LIPS should search for standard library.
+You can also specify the path where LIPS should search for the standard library.
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"
@@ -125,7 +125,7 @@ You can also specify the path where LIPS should search for standard library.
 ```
 
 You can use `bootstrap="./std.xcb"` if there is `std.xcb` file in local directory.
-You can also bootstrap with `std.scm` or `std.min.scm` but xcb file is the fastest,
+You can also bootstrap with `std.scm` or `std.min.scm` but xcb file is the fastest
 because it's already parsed and compiled into binary format.
 
 ## Running LIPS programmatically
@@ -144,12 +144,12 @@ exec(string).then(function(results) {
 
 When running exec you will also need to bootstrap the language and loaded files from `/lib/` directory.
 
-Documentation about beta version can be found in
+Documentation about the beta version can be found in
 [Wiki](https://github.com/jcubic/lips/wiki/v1.0.0).
 
 ## Standalone executable
 
-**NOTE:** Executable don't require bootstrapping lib files.
+**NOTE:** Executable doesn't require bootstrapping lib files.
 
 If you install lips globally with:
 
@@ -194,18 +194,18 @@ chmod a+x foo.scm
 ./foo.scm
 ```
 
-Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
+Executables also return an S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
 
 ## Limitations
-Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
-process long arrays and use callback function. If the array is quite large each pice of code
-inside the callback may slow down the processing. For example see:
+Because LIPS is a tree walking interpreter sometimes it may be slow. Especially if you want to
+process long arrays and use a callback function. If the array is quite large each piece of code
+inside the callback may slow down the processing. For example, see:
 
 script [reference.scm](https://github.com/jcubic/lips/blob/master/scripts/reference.scm)
 
-That generates reference documentation for all builtin functions and macros.
-The slow part is `(names.sort name-compare)` (`Array::sort`) that take quite time to calculate,
-because the array with functions and macros is quite large. If you came into performance issue,
+That generates reference documentation for all built-in functions and macros.
+The slow part is `(names.sort name-compare)` (`Array::sort`) which takes quite a time to calculate
+because the array with functions and macros is quite large. If you came into a performance issue,
 you can write the part of the code in JavaScript. If you want to do this in LIPS Scheme you can use
 something like this:
 
@@ -217,14 +217,14 @@ something like this:
    (arr.sort fn))
 ```
 
-Another example of slow performace is using LIPS with React, the more code you put into components
+Another example of slow performance is using LIPS with React, the more code you put into components
 the slower the app will become.
 
 Examples:
 * [Preact app that update SVG](https://codepen.io/jcubic/pen/PojYxBP) - it requires to use debounce.
-* [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnigs in dev tools.
+* [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnings in dev tools.
 
-The issue with performance is tracked in [#197](https://github.com/jcubic/lips/issues/197).
+The performance issue is tracked in [#197](https://github.com/jcubic/lips/issues/197).
 
 ## Supported SRFI
 
@@ -242,7 +242,7 @@ The issue with performance is tracked in [#197](https://github.com/jcubic/lips/i
 
 ### require `(load "./lib/srfi/<number>.scm")`
 
-They should be loaded as R7RS libraries in final 1.0.0 version
+They should be loaded as R7RS libraries in the final 1.0.0 version
 
 | description | spec |
 | :--- | ---: |
@@ -278,7 +278,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 - [ ] Picture language (possibly inspired by P5.js).
 - [ ] Stepper/Debugger.
 - [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
-- [ ] Proper expansion time for both macro system.
+- [ ] Proper expansion time for both macro systems.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 - [ ] All recursive function in JS don't consume stack.
 
@@ -302,7 +302,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
   * [flatten](https://stackoverflow.com/a/27282907/387194),
   * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
-* Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
+* Some helpers in the standard library are inspired by the same functions from [RamdaJS library](https://ramdajs.com/).
 
 
 ## License
