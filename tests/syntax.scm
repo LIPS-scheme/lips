@@ -524,7 +524,7 @@
 
              (define-matcher-macro is-literal-foo? "foo")
 
-             (t.is (is-literal-foo? "foo") #t) ;; this fail
+             (t.is (is-literal-foo? "foo") #t)
              (t.is (is-literal-foo? "bar") #f)
              (let ((foo "foo"))
                 (t.is (is-literal-foo? foo) #f))))

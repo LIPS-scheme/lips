@@ -79,31 +79,42 @@
    usage: (--> ($ \"body\")
                (css \"color\" \"red\")
                (on \"click\" (lambda () (display \"click\"))))
+
           (--> document (querySelectorAll \"div\"))
+
           (--> (fetch \"https://jcubic.pl\")
                (text)
                (match #/<title>([^<]+)<\\/title>/)
                1)
+
           (--> document
                (querySelectorAll \".cmd-prompt\")
                0
                'innerHTML
                (replace #/<(\"[^\"]+\"|[^>])+>/g \"\"))
+
           (--> document.body
                (style.setProperty \"--color\" \"red\"))"
   (let ((obj (gensym "obj")))
     `(let* ((,obj ,expr))
        ,@(map (lambda (code)
-                (let ((value (gensym "value")))
-                  `(let* ((,value ,(let ((name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
-                                                     ((pair? code) (symbol->string (car code)))
-                                                     (true code))))
-                                       (if (string? name)
-                                           `(. ,obj ,@(split "." name))
-                                           `(. ,obj ,name)))))
-                     ,(if (and (pair? code) (not (quoted-symbol? code)))
-                         `(set! ,obj (,value ,@(cdr code)))
-                         `(set! ,obj ,value)))))
+                (let* ((value (gensym "value"))
+                       (name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
+                                   ((pair? code) (symbol->string (car code)))
+                                   (true code)))
+                       (accessor (if (string? name)
+                                     `(. ,obj ,@(split "." name))
+                                     `(. ,obj ,name)))
+                       (call (and (pair? code) (not (quoted-symbol? code)))))
+                  `(let ((,value ,accessor))
+                     ,(if call
+                          `(if (not (function? ,value))
+                               (throw (new Error (string-append "--> " ,(repr name)
+                                                                " is not a function"
+                                                                " in expression "
+                                                                ,(repr `(--> ,expr . ,body)))))
+                               (set! ,obj (,value ,@(cdr code))))
+                          `(set! ,obj ,value)))))
               body)
        ,obj)))
 
@@ -1105,12 +1116,33 @@
         (array->list (--> (new Array n) (fill fill))))))
 
 ;; -----------------------------------------------------------------------------
-(define (range n)
-  "(range n)
+(define (range stop . rest)
+  "(range stop)
+   (range start stop)
+   (range start stop step)
 
-   Function return list of n numbers from 0 to n - 1"
-  (typecheck "range" n "number")
-  (array->list (--> (new Array n) (fill 0) (map (lambda (_ i) i)))))
+   Function returns list of numbers from start to stop with optonal step.
+   If start is not defined it starts from 0. If start is larger than stop
+   the step need to be negative."
+  (let* ((i (if (null? rest) 0 stop))
+         (stop (if (null? rest) stop (car rest)))
+         (step (if (or (null? rest) (null? (cdr rest)))
+                   1
+                   (cadr rest)))
+         (test (cond
+                ((> i stop) (lambda (i)
+                              (and (< step 0) (>= i stop))))
+                ((< i stop) (lambda
+                              (i) (and (> step 0) (< i stop))))
+                (else (lambda () false))))
+         (result (vector)))
+    (typecheck "range" i "number" 1)
+    (typecheck "range" step "number" 2)
+    (typecheck "range" stop "number" 3)
+    (while (test i)
+      (result.push i)
+      (set! i (+ i step)))
+    (array->list result)))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (do-iterator spec cond . body)
@@ -1509,3 +1541,8 @@
     Macro make the name global variable."
    (let ((var (symbol-append 'self. name)))
      `(set! ,var ,name)))
+
+;; -----------------------------------------------------------------------------
+(define performance (if (and (eq? self global) (not (bound? 'performance)))
+                        (. (require "perf_hooks") 'performance)
+                        performance))

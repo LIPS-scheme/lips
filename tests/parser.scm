@@ -150,6 +150,10 @@
                                        1)"))
         (t.is (eval (. code 0)) "hello-world")))
 
+(test "parser: processig strings"
+      (lambda (t)
+        (define list "\\" "\"" "\\\\" "\\\"")
+        (t.is true true)))
 
 (test "parse: datum labels"
       (lambda (t)
