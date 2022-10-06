@@ -4,13 +4,13 @@
 ;; Copyright (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
 ;; Released under MIT license
 ;;
-;; the macro defstruct generate bunch of helper functions
+;; the macro defstruct generates a bunch of helper functions
 ;; to work with single type of structures like in Common Lisp
 ;; original macro was created for Guile Scheme
-;; at the begging there are functions that were missing in LIPS
+;; at the beginning there are functions that were missing in LIPS
 ;;
-;; when you call macro amd if name is `point` and
-;; arguments are `x` and `y` it will create those functions:
+;; when you call macro and if name is `point` and
+;; arguments are `x` and `y` it will create these functions:
 ;;
 ;;   make-point
 ;;   point-x
@@ -32,12 +32,12 @@
 ;;
 
 (define (defstruct:alist->object arg)
-  "Function create JavaScript object from AList"
+  "Function creates JavaScript object from AList"
   (typecheck "defstruct:every" arg "pair")
   (--> arg (to_object)))
 
 (define (defstruct:every fn list)
-  "return true if every element return true for a function applied to every element"
+  "return true if every element returns true for a function applied to every element"
   (typecheck "defstruct:every" fn "function")
   (typecheck "defstruct:every" list "pair")
   (== (length list) (length (filter fn list))))
@@ -62,7 +62,7 @@
 
 
 (define (defstruct:make-getter name field)
-  "create filed acess function name."
+  "create filed access function name."
   (typecheck "defstruct:make-getter" name "symbol")
   (typecheck "defstruct:make-getter" field "symbol")
   (string->symbol (string-append (symbol->string name) "-"
@@ -112,18 +112,18 @@
 
 
 (define (defstruct:unique item lst)
-  "check if item ocour only once."
+  "check if item occurs only once."
   (typecheck "last" lst "pair" 2)
   (== (length (filter (lambda (i) (eq? item i)) lst)) 1))
 
 (define (defstruct:every-unique lst)
-  "check if every element ocour only once."
+  "check if every element occurs only once."
   (typecheck "last" lst "pair")
   (defstruct:every (lambda (item) (defstruct:unique item lst)) lst))
 
 
 (define (struct? struct)
-  "check if argument is structure (not that structures are alist)."
+  "check if argument is structure (not that structures are AList)."
   (and (pair? struct) (defstruct:every pair? struct)))
 
 

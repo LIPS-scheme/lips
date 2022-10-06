@@ -1,17 +1,17 @@
 /**
- * This is example how you can extend LIPS parser using reader macros
+ * This is an example of how you can extend LIPS parser using reader macros
  *
  * This is part of the LIPS JavaScript interpter
- * Copyriht (C) Jakub T. Jankiewicz <https://jcubic.pl>
+ * Copyright (C) Jakub T. Jankiewicz <https://jcubic.pl>
  * Released under MIT license
  */
 /* global lips */
 (function() {
     const { env, specials, Symbol, Pair, Macro, evaluate, LNumber } = lips;
     // new vector type #(1 2 3) will create new array
-    // you can use any expression inside that will evalute to list that in turn will be
-    // converter to array by the macro. Parser will convert #(1 2 3) into (vector (1 2 3))
-    // so vector need to be LIPS macro
+    // you can use any expression inside that will evaluate to list that in turn will be
+    // converted to array by the macro. Parser will convert #(1 2 3) into (vector (1 2 3))
+    // so vector needs to be LIPS macro
     specials['#'] = Symbol('vector');
     env.set('vector', new Macro('vector', function(code, { dynamic_scope, error }) {
         const args = { env: this, error };

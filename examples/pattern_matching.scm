@@ -1,7 +1,7 @@
 ;; Example pattern matching macro
 ;;
 ;; This file is part of the LIPS - Scheme implementation in JavaScript
-;; Copyriht (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 
 (cond-expand
@@ -21,8 +21,8 @@
 (define (compare a b)
   "(compare a b)
 
-   Function that compare two values. it compare lists and any element of the list
-   can be a function that will be called with other value. e.g.:
+   Function that compares two values. it compares lists and any element of the list
+   can be a function that will be called with another value. e.g.:
    (compare (list (list 'a) 'b) (list pair? 'b))"
   (cond ((and (pair? a) (pair? b))
          (and (compare (car a) (car b))
@@ -43,7 +43,7 @@
 (define-macro (auto-quote arg)
   "(auto-quote list)
 
-   Macro that create list recursively but take symbols from scope"
+   Macro that creates list recursively but takes symbols from scope"
   (if (pair? arg)
       `(list ,@(map (lambda (item)
                       (if (symbol? item)
