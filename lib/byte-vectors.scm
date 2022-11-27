@@ -130,8 +130,8 @@
 (%make-vector s8 Int8Array "signed 8-bit integer vector")
 (%make-vector u16 Uint16Array "usigned 16-bit integer vector")
 (%make-vector s16 Int16Array "signed 16-bit integer vector")
-(%make-vector u32 Uint16Array "usigned 32-bit integer vector")
-(%make-vector s32 Int16Array "signed 32-bit integer vector")
+(%make-vector u32 Uint32Array "usigned 32-bit integer vector")
+(%make-vector s32 Int32Array "signed 32-bit integer vector")
 (%make-vector f32 Float32Array "32-bit IEEE floating point number vector")
 (%make-vector f64 Float64Array "64-bit IEEE floating point number vector")
 

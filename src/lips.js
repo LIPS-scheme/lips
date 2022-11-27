@@ -129,7 +129,7 @@ function log(x, regex = null) {
             console.log(global_env.get('type')(x) + ": " + value);
         }
         if (literal) {
-            console.log(x); 
+            console.log(x);
         }
     }
     if (is_promise(x)) {
@@ -3513,7 +3513,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             return same_atom(pattern, code);
         }
         if (pattern instanceof LSymbol &&
-            symbols.includes(pattern.literal())) {
+            symbols.includes(pattern.literal())) { // TODO: literal() may be SLOW
             const ref = expansion.ref(code);
             // shadowing the indentifier works only with lambda and let
             if (LSymbol.is(code, pattern)) {
@@ -4180,7 +4180,7 @@ function transform_syntax(options = {}) {
                 return expr;
             }
             const symbols = Object.keys(bindings['...'].symbols);
-            const name = expr.literal();
+            const name = expr.literal(); // TODO: slow
             if (symbols.includes(name)) {
                 const msg = `missing ellipsis symbol next to name \`${name}'`;
                 throw new Error(`syntax-rules: ${msg}`);
