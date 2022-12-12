@@ -4747,6 +4747,12 @@ function LString(string) {
         LString.prototype[key] = wrap(String.prototype[key]);
     }
 }
+LString.prototype[Symbol.iterator] = function*() {
+    const chars = Array.from(this.__string__);
+    for (const char of chars) {
+        yield LCharacter(char);
+    }
+};
 LString.prototype.serialize = function() {
     return this.valueOf();
 };

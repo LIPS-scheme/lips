@@ -1176,10 +1176,10 @@
                         (,stop #f)
                         (,name (. ,item "value")))
                    (while (not (or (eq? (. ,item "done") #t) ,stop))
-                      (if ,test
-                           (set! ,stop #t)
-                           (begin
-                              ,@body))
+                     (if ,test
+                         (set! ,stop #t)
+                         (begin
+                           ,@body))
                       (set! ,item (,next))
                       (set! ,name (. ,item "value")))))))))
 

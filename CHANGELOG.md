@@ -10,6 +10,7 @@
 * add proper error message to `-->` macro [#200](https://github.com/jcubic/lips/issues/200)
 * fix `performance.timeOrigin` on Node 12 [#207](https://github.com/jcubic/lips/issues/207)
 * fix string->list to handle longer code points
+* make Strings iterators that return characters
 
 ## 1.0.0-beta.16
 ### Breaking
