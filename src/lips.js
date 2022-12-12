@@ -4263,7 +4263,8 @@ function map_object(object, fn) {
 }
 // ----------------------------------------------------------------------
 function unbox(object) {
-    var lips_type = [LString, LCharacter, LNumber].some(x => object instanceof x);
+    // LCharacter is unboxable #233
+    var lips_type = [LString, LNumber].some(x => object instanceof x);
     if (lips_type) {
         return object.valueOf();
     }
