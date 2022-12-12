@@ -2726,9 +2726,10 @@
 
    Return numberator of rational or same number if n is not rational."
   (typecheck "numerator" n "number")
-  (if (and (rational? n) (not (integer? n)))
-      n.num
-      n))
+  (cond ((integer? n) n)
+        ((rational? n) n.__num__)
+        (else
+         (numerator (inexact->exact n)))))
 
 ;; -----------------------------------------------------------------------------
 (define (denominator n)
@@ -2736,9 +2737,11 @@
 
    Return denominator of rational or same number if one is not rational."
   (typecheck "denominator" n "number")
-  (if (and (rational? n) (not (integer? n)))
-      n.denom
-      (if (exact? n) 1 1.0)))
+  (cond ((integer? n) n)
+        ((rational? n) n.__denom__)
+        ((exact? n) 1)
+        (else
+         (denominator (inexact->exact n)))))
 
 ;; -----------------------------------------------------------------------------
 (define (imag-part n)

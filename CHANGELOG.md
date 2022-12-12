@@ -3,6 +3,7 @@
 * chars are now not automatically unboxed to strings [#233](https://github.com/jcubic/lips/issues/233)
 ### Features
 * make bookmark REPL dockable [#205](https://github.com/jcubic/lips/issues/205)
+* make Strings iterators that return characters
 ### Bugfix
 * fix using performance object for older version of Node
 * fixing escaped symbols in CodeMirror
@@ -10,7 +11,7 @@
 * add proper error message to `-->` macro [#200](https://github.com/jcubic/lips/issues/200)
 * fix `performance.timeOrigin` on Node 12 [#207](https://github.com/jcubic/lips/issues/207)
 * fix string->list to handle longer code points
-* make Strings iterators that return characters
+* fix numerator and denominator [#213](https://github.com/jcubic/lips/issues/213)
 
 ## 1.0.0-beta.16
 ### Breaking
