@@ -714,7 +714,9 @@
 
    Function returns a list of characters created from string."
   (typecheck "string->list" string "string")
-  (array->list (--> string (split "") (map (lambda (x) (lips.LCharacter x))))))
+  (array->list (--> (Array.from string)
+                    (map (lambda (x)
+                           (lips.LCharacter x))))))
 
 ;; -----------------------------------------------------------------------------
 ;; (let ((x "hello")) (string-set! x 0 #\H) x)
