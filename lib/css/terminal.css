@@ -1,3 +1,9 @@
+:root {
+    --background: white;
+}
+.terminal {
+    --terminal: black;
+}
 .terminal-output > :not(.raw) {
     position: relative;
 }
