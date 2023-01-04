@@ -97,7 +97,7 @@ body .token.string, body .token.char {
     color: #df3189;
 }
 :root {
-    --background: white;
+    --background: transparent;
 }
 .terminal {
     --terminal: black;
