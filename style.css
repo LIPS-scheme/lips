@@ -96,6 +96,12 @@ footer p {
 body .token.string, body .token.char {
     color: #df3189;
 }
+:root {
+    --background: white;
+}
+.terminal {
+    --terminal: black;
+}
 @media (max-width: 720px) {
     header.main h1 {
         margin: 0;
