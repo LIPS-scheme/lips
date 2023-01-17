@@ -15,6 +15,15 @@
          margin: 0;
          height: 100vh;
      }
+     /* Note to self: never use internals of other Open Source project,
+      *               even if that project is yours ;)
+      */
+     .terminal {
+         --background: black;
+     }
+     .terminal .token.__doc__::before {
+         color: var(--base-background, #000);
+     }
     </style>
     <script src="https://cdn.jsdelivr.net/combine/npm/jquery,npm/prismjs,npm/prismjs/components/prism-scheme.min.js,gh/jcubic/lips@devel/lib/js/prism.js,npm/js-polyfills/keyboard.js,npm/jquery.terminal@2.x.x,npm/@jcubic/lips@beta/lib/js/terminal.js,npm/jquery.terminal/js/prism.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/dist/lips.min.js"></script>

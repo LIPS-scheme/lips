@@ -58,7 +58,18 @@
 
     "sdLicense": "https://github.com/jcubic/lips/blob/master/LICENSE",
     "license": "MIT"
-}</script>
+     }</script>
+    <style>
+     /* Note to self: never use internals of other Open Source project,
+      *               even if that project is yours ;)
+      */
+     .terminal {
+         --background: black;
+     }
+     .terminal .token.__doc__::before {
+         color: var(--base-background, #000);
+     }
+    </style>
 </head>
 <body>
   <header class="main">
