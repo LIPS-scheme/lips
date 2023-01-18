@@ -1,8 +1,8 @@
-:root {
-    --background: white;
-}
-.terminal {
+.lips.terminal {
     --terminal: black;
+}
+.terminal .token.__doc__::before {
+    color: var(--base-background, #000);
 }
 .terminal-output > :not(.raw) {
     position: relative;
