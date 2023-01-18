@@ -14,30 +14,29 @@
     display: block;
     content: attr(data-doc);
 }
-.token.__doc__::before {
+.terminal-tooltip {
     position: absolute;
     top: clac(var(--top) * 1px);
     left: calc(var(--left, 0) * 1px);
-    z-index: 400;
+    z-index: 999999;
     background: var(--color, #ccc);
     color: var(--background, #000);
     white-space: pre;
     padding: 5px;
     pointer-events:none;
 }
-.token.__doc__.top::before {
-    top: calc(var(--top) * 1px - var(--size, 1) * 14px);
+.terminal-tooltip.__doc__.top {
+    top: calc(var(--top) * 1px);
     transform: translateY(-100%);
 }
-.cmd .token.__doc__::before {
-    top: 0;
-    transform: translateY(-100%);
+.terminal-tooltip.__doc__ {
+    top: calc(var(--top) * 1px + var(--size, 1) * 16px);
 }
-.token.__doc__.right::before {
+.terminal-tooltip.__doc__.right {
     left: calc(var(--right) * 1px);
     transform: translateX(-100%);
 }
-.cmd .token.__doc__.right::before, .token.__doc__.top.right::before {
+.terminal-tooltip.__doc__.right.top {
     transform: translate(-100%, -100%);
 }
 .shell-container {
@@ -90,8 +89,17 @@
     overflow: hidden;
     box-shadow: 1px 1px 10px 2px rgb(0 0 0 / 30%);
 }
+.terminal.lips, .terminal.terminal-tooltip {
+    --size: 1.2;
+}
+.terminal.terminal-tooltip {
+    display: none;
+}
+.terminal.terminal-tooltip.__doc__ {
+    display: block;
+}
 .shell-wrapper .terminal.lips {
-    font-size-adjust: none; --size: 1.2;
+    font-size-adjust: none;
     height: calc(100% - 26px);
 }
 .shell-wrapper .shell-mask {
