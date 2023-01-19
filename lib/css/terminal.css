@@ -2,7 +2,7 @@
     --background: transparent;
 }
 .terminal {
-    --terminal: black;
+    --background: black;
 }
 .terminal-output > :not(.raw) {
     position: relative;
