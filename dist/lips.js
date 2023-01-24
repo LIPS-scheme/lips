@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 24 Jan 2023 15:03:43 +0000
+ * build: Tue, 24 Jan 2023 15:16:55 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5004,7 +5004,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Tue, 24 Jan 2023 15:03:43 +0000
+   * Build time: Tue, 24 Jan 2023 15:16:55 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -6095,13 +6095,13 @@
     SPLICE: Symbol["for"]('splice'),
     SYMBOL: Symbol["for"]('symbol'),
     names: function names() {
-      return Object.keys(this._specials);
+      return Object.keys(this.__list__);
     },
     type: function type(name) {
       return this.get(name).type;
     },
     get: function get(name) {
-      return this._specials[name];
+      return this.__list__[name];
     },
     // events are used in Lexer dynamic rules
     off: function off(name) {
@@ -6114,9 +6114,9 @@
           return _this2.off(name, fn);
         });
       } else if (fn === null) {
-        delete this._events[name];
+        delete this.__events__[name];
       } else {
-        this._events = this._events.filter(function (test) {
+        this.__events__ = this.__events__.filter(function (test) {
           return test !== fn;
         });
       }
@@ -6128,10 +6128,10 @@
         name.forEach(function (name) {
           return _this3.on(name, fn);
         });
-      } else if (!this._events[name]) {
-        this._events[name] = [fn];
+      } else if (!this.__events__[name]) {
+        this.__events__[name] = [fn];
       } else {
-        this._events[name].push(fn);
+        this.__events__[name].push(fn);
       }
     },
     trigger: function trigger(name) {
@@ -6139,26 +6139,26 @@
         args[_key2 - 1] = arguments[_key2];
       }
 
-      if (this._events[name]) {
-        this._events[name].forEach(function (fn) {
+      if (this.__events__[name]) {
+        this.__events__[name].forEach(function (fn) {
           return fn.apply(void 0, args);
         });
       }
     },
     remove: function remove(name) {
       this.trigger('remove');
-      delete this._specials[name];
+      delete this.__list__[name];
     },
     append: function append(name, value, type) {
       this.trigger('append');
-      this._specials[name] = {
+      this.__list__[name] = {
         seq: name,
         symbol: value,
         type: type
       };
     },
-    _events: {},
-    _specials: {}
+    __events__: {},
+    __list__: {}
   };
 
   function is_special(token) {
@@ -6166,7 +6166,7 @@
   }
 
   function is_builtin(token) {
-    return specials.builtin.includes(token);
+    return specials.__builtins__.includes(token);
   }
 
   function is_literal(special) {
@@ -6175,11 +6175,13 @@
 
 
   var defined_specials = [["'", new LSymbol('quote'), specials.LITERAL], ['`', new LSymbol('quasiquote'), specials.LITERAL], [',@', new LSymbol('unquote-splicing'), specials.LITERAL], [',', new LSymbol('unquote'), specials.LITERAL], ["'>", new LSymbol('quote-promise'), specials.LITERAL]];
-  Object.defineProperty(specials, 'builtin', {
+  var builtins = defined_specials.map(function (arr) {
+    return arr[0];
+  });
+  Object.freeze(builtins);
+  Object.defineProperty(specials, '__builtins__', {
     writable: false,
-    value: defined_specials.map(function (arr) {
-      return arr[0];
-    })
+    value: builtins
   });
   defined_specials.forEach(function (_ref5) {
     var _ref6 = _slicedToArray(_ref5, 3),
@@ -18760,10 +18762,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 24 Jan 2023 15:03:43 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 24 Jan 2023 15:16:55 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 24 Jan 2023 15:03:43 +0000').valueOf();
+    var date = LString('Tue, 24 Jan 2023 15:16:55 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18809,7 +18811,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Tue, 24 Jan 2023 15:03:43 +0000',
+    date: 'Tue, 24 Jan 2023 15:16:55 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

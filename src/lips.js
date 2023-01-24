@@ -910,73 +910,77 @@ var specials = {
     SPLICE: Symbol.for('splice'),
     SYMBOL: Symbol.for('symbol'),
     names: function() {
-        return Object.keys(this._specials);
+        return Object.keys(this.__list__);
     },
     type: function(name) {
         return this.get(name).type;
     },
     get: function(name) {
-        return this._specials[name];
+        return this.__list__[name];
     },
     // events are used in Lexer dynamic rules
     off: function(name, fn = null) {
         if (Array.isArray(name)) {
             name.forEach(name => this.off(name, fn));
         } else if (fn === null) {
-            delete this._events[name];
+            delete this.__events__[name];
         } else {
-            this._events = this._events.filter(test => test !== fn);
+            this.__events__ = this.__events__.filter(test => test !== fn);
         }
     },
     on: function(name, fn) {
         if (Array.isArray(name)) {
             name.forEach(name => this.on(name, fn));
-        } else if (!this._events[name]) {
-            this._events[name] = [fn];
+        } else if (!this.__events__[name]) {
+            this.__events__[name] = [fn];
         } else {
-            this._events[name].push(fn);
+            this.__events__[name].push(fn);
         }
     },
     trigger: function(name, ...args) {
-        if (this._events[name]) {
-            this._events[name].forEach(fn => fn(...args));
+        if (this.__events__[name]) {
+            this.__events__[name].forEach(fn => fn(...args));
         }
     },
     remove: function(name) {
         this.trigger('remove');
-        delete this._specials[name];
+        delete this.__list__[name];
     },
     append: function(name, value, type) {
         this.trigger('append');
-        this._specials[name] = {
+        this.__list__[name] = {
             seq: name,
             symbol: value,
             type
         };
     },
-    _events: {},
-    _specials: {}
+    __events__: {},
+    __list__: {}
 };
 function is_special(token) {
     return specials.names().includes(token);
 }
 function is_builtin(token) {
-    return specials.builtin.includes(token);
+    return specials.__builtins__.includes(token);
 }
 function is_literal(special) {
     return specials.type(special) === specials.LITERAL;
 }
 // ----------------------------------------------------------------------
-var defined_specials = [
+const defined_specials = [
     ["'", new LSymbol('quote'), specials.LITERAL],
     ['`', new LSymbol('quasiquote'), specials.LITERAL],
     [',@', new LSymbol('unquote-splicing'), specials.LITERAL],
     [',', new LSymbol('unquote'), specials.LITERAL],
     ["'>", new LSymbol('quote-promise'), specials.LITERAL]
 ];
-Object.defineProperty(specials, 'builtin', {
+
+const builtins = defined_specials.map(arr => arr[0]);
+Object.freeze(builtins);
+
+Object.defineProperty(specials, '__builtins__', {
     writable: false,
-    value: defined_specials.map(arr => arr[0])
+    value: builtins
 });
 defined_specials.forEach(([seq, symbol, type]) => {
     specials.append(seq, symbol, type);
