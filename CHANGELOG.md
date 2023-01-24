@@ -32,6 +32,7 @@
 * fix bug in `quasiquote` and `unquote-splicing` [#194](https://github.com/jcubic/lips/issues/194)
 * fix `inexact->exact` on integers [#199](https://github.com/jcubic/lips/issues/199)
 * throw error on missing parentheses [#198](https://github.com/jcubic/lips/issues/198)
+* fix empty syntax extensions as functions
 
 ## 1.0.0-beta.15
 ### Breaking

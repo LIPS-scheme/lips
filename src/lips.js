@@ -1589,6 +1589,8 @@ class Parser {
                 if (typeof extension === 'function') {
                     if (is_literal(token)) {
                         return extension.call(this.__env__, object);
+                    } else if (object === nil) {
+                        return extension.apply(this.__env__);
                     } else if (object instanceof Pair) {
                         return extension.apply(this.__env__, object.to_array(false));
                     }

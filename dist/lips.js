@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 12 Dec 2022 18:12:38 +0000
+ * build: Tue, 24 Jan 2023 15:03:43 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5004,7 +5004,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Mon, 12 Dec 2022 18:12:38 +0000
+   * Build time: Tue, 24 Jan 2023 15:03:43 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -7198,7 +7198,7 @@
 
                 case 5:
                   if (!is_special(token)) {
-                    _context8.next = 35;
+                    _context8.next = 39;
                     break;
                   }
 
@@ -7219,14 +7219,14 @@
                   object = _context8.sent;
 
                   if (bultin) {
-                    _context8.next = 22;
+                    _context8.next = 26;
                     break;
                   }
 
                   extension = this.__env__.get(special.symbol);
 
                   if (!(typeof extension === 'function')) {
-                    _context8.next = 22;
+                    _context8.next = 26;
                     break;
                   }
 
@@ -7238,17 +7238,25 @@
                   return _context8.abrupt("return", extension.call(this.__env__, object));
 
                 case 19:
+                  if (!(object === _nil)) {
+                    _context8.next = 23;
+                    break;
+                  }
+
+                  return _context8.abrupt("return", extension.apply(this.__env__));
+
+                case 23:
                   if (!(object instanceof Pair)) {
-                    _context8.next = 21;
+                    _context8.next = 25;
                     break;
                   }
 
                   return _context8.abrupt("return", extension.apply(this.__env__, object.to_array(false)));
 
-                case 21:
+                case 25:
                   throw new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
 
-                case 22:
+                case 26:
                   if (is_literal(token)) {
                     expr = new Pair(special.symbol, new Pair(object, _nil));
                   } else {
@@ -7257,62 +7265,62 @@
 
 
                   if (!bultin) {
-                    _context8.next = 25;
+                    _context8.next = 29;
                     break;
                   }
 
                   return _context8.abrupt("return", expr);
 
-                case 25:
+                case 29:
                   if (!(extension instanceof Macro)) {
-                    _context8.next = 34;
+                    _context8.next = 38;
                     break;
                   }
 
-                  _context8.next = 28;
+                  _context8.next = 32;
                   return this.evaluate(expr);
 
-                case 28:
+                case 32:
                   result = _context8.sent;
 
                   if (!(result instanceof Pair || result instanceof LSymbol)) {
-                    _context8.next = 31;
+                    _context8.next = 35;
                     break;
                   }
 
                   return _context8.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
 
-                case 31:
+                case 35:
                   return _context8.abrupt("return", result);
 
-                case 34:
+                case 38:
                   throw new Error('Parse Error: invlid parser extension: ' + special.symbol);
 
-                case 35:
+                case 39:
                   ref = this.match_datum_ref(token);
 
                   if (!(ref !== null)) {
-                    _context8.next = 41;
+                    _context8.next = 45;
                     break;
                   }
 
                   this.skip();
 
                   if (!this._refs[ref]) {
-                    _context8.next = 40;
+                    _context8.next = 44;
                     break;
                   }
 
                   return _context8.abrupt("return", new DatumReference(ref, this._refs[ref]));
 
-                case 40:
+                case 44:
                   throw new Error("Parse Error: invalid datum label #".concat(ref, "#"));
 
-                case 41:
+                case 45:
                   ref_label = this.match_datum_label(token);
 
                   if (!(ref_label !== null)) {
-                    _context8.next = 48;
+                    _context8.next = 52;
                     break;
                   }
 
@@ -7320,19 +7328,19 @@
                   this._refs[ref_label] = this._read_object();
                   return _context8.abrupt("return", this._refs[ref_label]);
 
-                case 48:
+                case 52:
                   if (!this.is_open(token)) {
-                    _context8.next = 53;
+                    _context8.next = 57;
                     break;
                   }
 
                   this.skip();
                   return _context8.abrupt("return", this.read_list());
 
-                case 53:
+                case 57:
                   return _context8.abrupt("return", this.read_value());
 
-                case 54:
+                case 58:
                 case "end":
                   return _context8.stop();
               }
@@ -18752,10 +18760,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 12 Dec 2022 18:12:38 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 24 Jan 2023 15:03:43 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 12 Dec 2022 18:12:38 +0000').valueOf();
+    var date = LString('Tue, 24 Jan 2023 15:03:43 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18801,7 +18809,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Mon, 12 Dec 2022 18:12:38 +0000',
+    date: 'Tue, 24 Jan 2023 15:03:43 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
