@@ -13,6 +13,7 @@
 * fix `performance.timeOrigin` on Node 12 [#207](https://github.com/jcubic/lips/issues/207)
 * fix string->list to handle longer code points
 * fix numerator and denominator [#213](https://github.com/jcubic/lips/issues/213)
+* fix Map object repr
 
 ## 1.0.0-beta.16
 ### Breaking
