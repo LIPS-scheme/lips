@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 24 Jan 2023 15:16:55 +0000
+ * build: Tue, 24 Jan 2023 19:24:32 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5004,7 +5004,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Tue, 24 Jan 2023 15:16:55 +0000
+   * Build time: Tue, 24 Jan 2023 19:24:32 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -15453,6 +15453,8 @@
     }), "(define name expression)\n         (define name expression \"doc string\")\n         (define (function-name . args) body)\n\n         Macro for defining values. It can be used to define variables,\n         or function. If first argument is list it will create function\n         with name beeing first element of the list. The macro evalute\n         code `(define function (lambda args body))`"),
     // ------------------------------------------------------------------
     'set-obj!': doc('set-obj!', function (obj, key, value) {
+      var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+
       var obj_type = _typeof(obj);
 
       if (is_null(obj) || obj_type !== 'object' && obj_type !== 'function') {
@@ -15474,7 +15476,14 @@
       } else {
         obj[key] = value && !is_prototype(value) ? value.valueOf() : value;
       }
-    }, "(set-obj! obj key value)\n\n        Function set property of JavaScript object"),
+
+      if (props) {
+        var _value4 = obj[key];
+        Object.defineProperty(obj, key, _objectSpread(_objectSpread({}, options), {}, {
+          value: _value4
+        }));
+      }
+    }, "(set-obj! obj key value)\n        (set-obj! obj key value props)\n\n        Function set property of JavaScript object. Props should be vector of pairs,\n        passed to Object.defineProperty."),
     // ------------------------------------------------------------------
     'null-environment': doc('null-environment', function () {
       return global_env.inherit('null');
@@ -18762,10 +18771,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 24 Jan 2023 15:16:55 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 24 Jan 2023 19:24:32 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 24 Jan 2023 15:16:55 +0000').valueOf();
+    var date = LString('Tue, 24 Jan 2023 19:24:32 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18811,7 +18820,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Tue, 24 Jan 2023 15:16:55 +0000',
+    date: 'Tue, 24 Jan 2023 19:24:32 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

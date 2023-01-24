@@ -91,12 +91,13 @@
           (set! obj.x 10)
           (t.is obj &(:x 10 :y &(:foo "bar"))))))
 
-#;(test "core: it should throw when change object literals long property after short property"
+(test "core: it should throw when change object literals long property after short property"
       (lambda (t)
         (let ((obj &(:x :y 20)))
           (set! obj.x 10)
           (t.is (to.throw (set! obj.y 30)) true)
           (t.is obj &(:x 10 :y 20)))))
+
 
 (test "core: it should throw when change nested object in shorthand object literals"
       (lambda (t)

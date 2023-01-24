@@ -7649,7 +7649,7 @@ var global_env = new Environment({
          with name beeing first element of the list. The macro evalute
          code \`(define function (lambda args body))\``),
     // ------------------------------------------------------------------
-    'set-obj!': doc('set-obj!', function(obj, key, value) {
+    'set-obj!': doc('set-obj!', function(obj, key, value, options = null) {
         var obj_type = typeof obj;
         if (is_null(obj) || (obj_type !== 'object' && obj_type !== 'function')) {
             var msg = typeErrorMessage('set-obj!', type(obj), ['object', 'function']);
@@ -7668,9 +7668,15 @@ var global_env = new Environment({
         } else {
             obj[key] = value && !is_prototype(value) ? value.valueOf() : value;
         }
+        if (props) {
+            const value = obj[key];
+            Object.defineProperty(obj, key, { ...options, value });
+        }
     }, `(set-obj! obj key value)
+        (set-obj! obj key value props)
 
-        Function set property of JavaScript object`),
+        Function set property of JavaScript object. Props should be vector of pairs,
+        passed to Object.defineProperty.`),
     // ------------------------------------------------------------------
     'null-environment': doc('null-environment', function() {
         return global_env.inherit('null');

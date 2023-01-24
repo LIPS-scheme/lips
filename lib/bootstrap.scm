@@ -288,11 +288,13 @@
    using key like syntax. if no values are used it will create JavaScript
    shorthand objects where keys are used for keys and values"
   (let ((name (gensym "name"))
+        (r-only (gensym "r-only"))
         (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
-        `(let ((,name (alist->object '())))
-           ,@(let loop ((lst expr) (result nil) (local-readonly readonly))
+        `(let ((,name ,(Object.fromEntries (new Array)))
+               (,r-only ,(Object.fromEntries (new Array (new Array "writable" false)))))
+           ,@(let loop ((lst expr) (result nil))
                (if (null? lst)
                    (reverse result)
                    (let ((first (car lst))
@@ -305,19 +307,27 @@
                            (throw msg))
                          (let ((prop (key->string first)))
                            (if (or (key? second) (null? second))
-                               (let ((code `(set-obj! ,name ,prop ,(string->symbol prop))))
-                                 (set! readonly false)
-                                 (loop (cdr lst) (cons code result) local-readonly))
-                               (let ((code (if (and (pair? second) (key? (car second)))
-                                               `(set-obj! ,name
-                                                          ,prop
-                                                          ,(object-expander local-readonly second))
-                                               (if quot
-                                                   `(set-obj! ,name ,prop ',second)
-                                                   `(set-obj! ,name ,prop ,second)))))
-                                 (loop (cddr lst) (cons code result) local-readonly))))))))
+                               (let ((code `(set-obj! ,name ,prop undefined)))
+                                 (loop (cdr lst) (cons code result)))
+                               (let ((code (if readonly
+                                               (if (and (pair? second) (key? (car second)))
+                                                   `(set-obj! ,name
+                                                              ,prop
+                                                              ,(object-expander readonly second quot)
+                                                              ,r-only)
+                                                   (if quot
+                                                       `(set-obj! ,name ,prop ',second ,r-only)
+                                                       `(set-obj! ,name ,prop ,second ,r-only)))
+                                               (if (and (pair? second) (key? (car second)))
+                                                   `(set-obj! ,name
+                                                              ,prop
+                                                              ,(object-expander readonly second))
+                                                   (if quot
+                                                       `(set-obj! ,name ,prop ',second)
+                                                       `(set-obj! ,name ,prop ,second))))))
+                                 (loop (cddr lst) (cons code result)))))))))
            ,(if readonly
-                `(Object.freeze ,name))
+               `(Object.preventExtensions ,name))
            ,name))))
 
 ;; -----------------------------------------------------------------------------
@@ -328,7 +338,10 @@
   (try
     (object-expander false expr)
     (catch (e)
-      (error e.message))))
+      (try
+       (error e.message)
+       (catch (e)
+         (console.error e.message))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (object-literal . expr)
@@ -337,18 +350,12 @@
    Macro that create JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used with & object literal."
   (try
-    (object-expander true expr)
+    (object-expander true expr true)
     (catch (e)
-      (error e.message))))
-
-;; -----------------------------------------------------------------------------
-(define (object-literal-mapper expr)
-  "(object-literal-mapper :name value)
-   (object-literal-mapper :name)
-
-   Simple mapper that return (object-literal) expression. This is used as syntax
-   extension."
-   `(object-literal ,@expr))
+      (try
+        (error e.message)
+        (catch (e)
+          (console.error e.message))))))
 
 ;; -----------------------------------------------------------------------------
 (define (alist->assign desc . sources)
@@ -672,7 +679,7 @@
 ;; -----------------------------------------------------------------------------
 ;; add syntax &(:foo 10) that evaluates (object :foo 10)
 ;; -----------------------------------------------------------------------------
-(set-special! "&" 'object-literal-mapper)
+(set-special! "&" 'object-literal lips.specials.SPLICE)
 ;; -----------------------------------------------------------------------------
 (set-repr! Object
            (lambda (x q)
