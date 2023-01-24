@@ -342,6 +342,15 @@
       (error e.message))))
 
 ;; -----------------------------------------------------------------------------
+(define (object-literal-mapper expr)
+  "(object-literal-mapper :name value)
+   (object-literal-mapper :name)
+
+   Simple mapper that return (object-literal) expression. This is used as syntax
+   extension."
+   `(object-literal ,@expr))
+
+;; -----------------------------------------------------------------------------
 (define (alist->assign desc . sources)
   "(alist->assign alist . list-of-alists)
 
@@ -663,7 +672,7 @@
 ;; -----------------------------------------------------------------------------
 ;; add syntax &(:foo 10) that evaluates (object :foo 10)
 ;; -----------------------------------------------------------------------------
-(set-special! "&" 'object-literal lips.specials.SPLICE)
+(set-special! "&" 'object-literal-mapper)
 ;; -----------------------------------------------------------------------------
 (set-repr! Object
            (lambda (x q)
