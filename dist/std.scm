@@ -284,11 +284,11 @@
   "(object-expander reaonly '(:foo (:bar 10) (:baz (1 2 3))))
    (object-expander reaonly '(:foo :bar))
 
-
    Recursive function helper for defining LIPS code for create objects
    using key like syntax. if no values are used it will create JavaScript
    shorthand objects where keys are used for keys and values"
-  (let ((name (gensym "name")) (quot (if (null? rest) false (car rest))))
+  (let ((name (gensym "name"))
+        (quot (if (null? rest) false (car rest))))
     (if (null? expr)
         `(alist->object ())
         `(let ((,name (alist->object '())))
@@ -305,7 +305,7 @@
                            (throw msg))
                          (let ((prop (key->string first)))
                            (if (or (key? second) (null? second))
-                               (let ((code `(set-obj! ,name ,prop undefined)))
+                               (let ((code `(set-obj! ,name ,prop ,(string->symbol prop))))
                                  (set! readonly false)
                                  (loop (cdr lst) (cons code result) local-readonly))
                                (let ((code (if (and (pair? second) (key? (car second)))

@@ -4,6 +4,7 @@
 ### Features
 * make bookmark REPL dockable [#205](https://github.com/jcubic/lips/issues/205)
 * make Strings iterators that return characters
+* allow to use object shorthand [#237](https://github.com/jcubic/lips/issues/237)
 ### Bugfix
 * fix using performance object for older version of Node
 * fixing escaped symbols in CodeMirror
