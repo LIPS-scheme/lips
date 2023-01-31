@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 24 Jan 2023 19:24:32 +0000
+ * build: Tue, 31 Jan 2023 09:15:45 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5004,7 +5004,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Tue, 24 Jan 2023 19:24:32 +0000
+   * Build time: Tue, 31 Jan 2023 09:15:45 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -6564,6 +6564,7 @@
   Lexer.symbol = Symbol["for"]('symbol');
   Lexer.comment = Symbol["for"]('comment');
   Lexer.regex = Symbol["for"]('regex');
+  Lexer.regex_init = Symbol["for"]('regex_init');
   Lexer.regex_class = Symbol["for"]('regex_class');
   Lexer.character = Symbol["for"]('character');
   Lexer.bracket = Symbol["for"]('bracket');
@@ -6582,7 +6583,7 @@
   // we only care if it's not pick up by vectors literals
   [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
   [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null], // regex
-  [/#/, Lexer.boundary, /\//, null, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/\[/, null, null, Lexer.regex, Lexer.regex_class], [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /\\/, null, Lexer.regex, Lexer.regex], [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null], // comment
+  [/#/, Lexer.boundary, /\//, null, Lexer.regex_init], [/./, /\//, Lexer.boundary, Lexer.regex_init, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/\[/, null, null, Lexer.regex, Lexer.regex_class], [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /\\/, null, Lexer.regex, Lexer.regex], [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null], // comment
   [/;/, /^$|[^#]/, null, null, Lexer.comment], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment], // block comment
   [/#/, null, /\|/, null, Lexer.b_comment], [/\s/, null, null, Lexer.b_comment, Lexer.b_comment], [/#/, /\|/, null, Lexer.b_comment, null], // inline commentss
   [/#/, null, /;/, null, Lexer.i_comment], [/;/, /#/, null, Lexer.i_comment, null], // datum label
@@ -18771,10 +18772,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 24 Jan 2023 19:24:32 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 31 Jan 2023 09:15:45 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 24 Jan 2023 19:24:32 +0000').valueOf();
+    var date = LString('Tue, 31 Jan 2023 09:15:45 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18820,7 +18821,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Tue, 24 Jan 2023 19:24:32 +0000',
+    date: 'Tue, 31 Jan 2023 09:15:45 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

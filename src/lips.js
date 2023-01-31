@@ -1248,6 +1248,7 @@ Lexer.string_escape = Symbol.for('string_escape');
 Lexer.symbol = Symbol.for('symbol');
 Lexer.comment = Symbol.for('comment');
 Lexer.regex = Symbol.for('regex');
+Lexer.regex_init = Symbol.for('regex_init');
 Lexer.regex_class = Symbol.for('regex_class');
 Lexer.character = Symbol.for('character');
 Lexer.bracket = Symbol.for('bracket');
@@ -1281,7 +1282,8 @@ Lexer._rules = [
     [/\S/, null, Lexer.boundary, Lexer.character, null],
 
     // regex
-    [/#/, Lexer.boundary, /\//, null, Lexer.regex],
+    [/#/, Lexer.boundary, /\//, null, Lexer.regex_init],
+    [/./, /\//, Lexer.boundary, Lexer.regex_init, Lexer.regex],
     [/[ \t]/, null, null, Lexer.regex, Lexer.regex],
     [/\[/, null, null, Lexer.regex, Lexer.regex_class],
     [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex],
