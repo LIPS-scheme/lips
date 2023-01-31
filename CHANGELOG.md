@@ -5,6 +5,7 @@
 * make bookmark REPL dockable [#205](https://github.com/jcubic/lips/issues/205)
 * make Strings iterators that return characters
 * improve object literals [#237](https://github.com/jcubic/lips/issues/237)
+* better error message with exception on invalid string literal
 ### Bugfix
 * fix using performance object for older version of Node
 * fixing escaped symbols in CodeMirror
@@ -14,6 +15,7 @@
 * fix string->list to handle longer code points
 * fix numerator and denominator [#213](https://github.com/jcubic/lips/issues/213)
 * fix Map object repr
+* fix parsing regular expressions [#238](https://github.com/jcubic/lips/issues/238)
 
 ## 1.0.0-beta.16
 ### Breaking

@@ -480,7 +480,8 @@ function parse_string(string) {
     try {
         return LString(JSON.parse(string));
     } catch (e) {
-        throw new Error('Invalid string literal');
+        const msg = e.message.replace(/in JSON /, '').replace(/.*Error: /, '');
+        throw new Error(`Invalid string literal: ${msg}`);
     }
 }
 // ----------------------------------------------------------------------
