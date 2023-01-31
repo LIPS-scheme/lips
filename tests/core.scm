@@ -313,9 +313,6 @@
                     '("#/(\\((?:env|dir|help|apropos)[^)]*\\))/g"
                       "#/u[0-9]+/")))) ;; regex for #238
 
-(test "core: regex (#238)"
-      (lambda (t)
-
 (test "core: try..catch"
       (lambda (t)
         (let ((x))
