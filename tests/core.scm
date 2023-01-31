@@ -306,10 +306,15 @@
 
 (test "core: regex"
       (lambda (t)
-        (let* ((str "#/(\\((?:env|dir|help|apropos)[^)]*\\))/g")
-               (re (. (lips.parse str) 0)))
-          (t.is (regex? re) true)
-          (t.is (repr re) str))))
+          (for-each (lambda (str)
+                      (let ((re (. (lips.parse str) 0)))
+                        (t.is (regex? re) true)
+                        (t.is (repr re) str)))
+                    '("#/(\\((?:env|dir|help|apropos)[^)]*\\))/g"
+                      "#/u[0-9]+/")))) ;; regex for #238
+
+(test "core: regex (#238)"
+      (lambda (t)
 
 (test "core: try..catch"
       (lambda (t)

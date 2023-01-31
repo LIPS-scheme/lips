@@ -1283,7 +1283,7 @@ Lexer._rules = [
 
     // regex
     [/#/, Lexer.boundary, /\//, null, Lexer.regex_init],
-    [/./, /\//, Lexer.boundary, Lexer.regex_init, Lexer.regex],
+    [/./, /\//, null, Lexer.regex_init, Lexer.regex],
     [/[ \t]/, null, null, Lexer.regex, Lexer.regex],
     [/\[/, null, null, Lexer.regex, Lexer.regex_class],
     [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex],
