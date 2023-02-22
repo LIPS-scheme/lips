@@ -1,3 +1,4 @@
+
 <h1 align="center">
   <img src="https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true"
        alt="LIPS - Scheme Based Powerful Lisp Language" />
@@ -5,7 +6,7 @@
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.16-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&07b0b58e633e6121e876b64f24138c2dd1308a65)](https://travis-ci.com/github/jcubic/lips)
+[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&57a9bc0fb6a4457d5aac82ba3acc8237d85f4db9)](https://travis-ci.com/github/jcubic/lips)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&1abe29427d5cfaa14ca0afda5bb5d3b4)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
@@ -195,6 +196,10 @@ chmod a+x foo.scm
 ```
 
 Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
+
+## FOSDEM'23 Presentation [Video]
+
+[![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/master/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
 
 ## Limitations
 Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
