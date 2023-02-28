@@ -109,6 +109,7 @@
         (t.is (list #;(foo bar (quux)) 10 20) (list 10 20))
         (t.is (list #;foo 10 20) (list 10 20))
         (t.is (list 10 #;10+10i 20) (list 10 20))
+        (t.is (list #;#;42 10 10) (list 10))
         (t.is (list 10 ;foo bar
                     20)
               (list 10
