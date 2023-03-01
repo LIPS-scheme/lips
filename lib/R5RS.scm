@@ -1347,15 +1347,13 @@
          (finally
           (close-output-port p)))))
 
-;; -----------------------------------------------------------------------------
-(define (with-input-from-file string thunk)
-  "(with-input-from-file string thunk)
+(define (with-input-from-port port thunk)
+  "(with-input-from-port port thunk)
 
-   Procedure open file and make it current-input-port then thunk is executed.
-   After thunk is executed current-input-port is restored and file port
+   Procedure use port and make it current-input-port then thunk is executed.
+   After thunk is executed current-input-port is restored and given port
    is closed."
-  (let* ((port (open-input-file string))
-         (env **interaction-environment**)
+  (let* ((env **interaction-environment**)
          (internal-env (env.get '**internal-env**))
          (old-stdin (internal-env.get "stdin")))
     (internal-env.set "stdin" port)
@@ -1364,6 +1362,24 @@
      (finally
       (internal-env.set "stdin" old-stdin)
       (close-input-port port)))))
+
+;; -----------------------------------------------------------------------------
+(define (with-input-from-file string thunk)
+  "(with-input-from-file string thunk)
+
+   Procedure open file and make it current-input-port then thunk is executed.
+   After thunk is executed current-input-port is restored and file port
+   is closed."
+  (with-input-from-port (open-input-file string) thunk))
+
+;; -----------------------------------------------------------------------------
+(define (with-input-from-string string thunk)
+  "(with-input-from-string string thunk)
+
+   Procedure open string and make it current-input-port then thunk is executed.
+   After thunk is executed current-input-port is restored and string port
+   is closed."
+  (with-input-from-port (open-input-string string) thunk))
 
 ;; -----------------------------------------------------------------------------
 (define (with-output-to-file string thunk)

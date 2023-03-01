@@ -6,6 +6,7 @@
 * make Strings iterators that return characters
 * improve object literals [#237](https://github.com/jcubic/lips/issues/237)
 * better error message with exception on invalid string literal
+* add non-standard `with-input-from-string` function
 ### Bugfix
 * fix using performance object for older version of Node
 * fixing escaped symbols in CodeMirror
