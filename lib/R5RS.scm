@@ -27,7 +27,6 @@
 (define -inf.0 Number.NEGATIVE_INFINITY)
 (define +inf.0 Number.POSITIVE_INFINITY)
 (define procedure? function?)
-(define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
 (define call-with-current-continuation call/cc)
@@ -482,6 +481,15 @@
          (make-rectangular (* factor (cos im))
                            (* factor (sin im))))
        (Math.exp x)))
+
+;; -----------------------------------------------------------------------------
+(define (expt x y)
+  (typecheck "exp" x "number")
+  (typecheck "exp" y "number")
+  (if (or (string=? x.__type__ "complex")
+          (string=? y.__type__ "complex"))
+      (exp (* (log x) y))
+      (** x y)))
 
 ;; -----------------------------------------------------------------------------
 (define (modulo a b)
