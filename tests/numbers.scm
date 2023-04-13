@@ -798,6 +798,17 @@
 
         (t.is (sqrt -9) 3i)))
 
+(test "numbers: expt"
+      (lambda (t)
+        (for-each (lambda (x)
+                    (let ((base (car x))
+                          (expontent (cadr x))
+                          (result (caddr x)))
+                      (t.is (= (expt base expontent) result) #t)))
+                  '((1/2 2 1/4)
+                    (3.0 10 59049.0)
+                    (10 3.0 1000.0)))))
+
 (test "numbers: eq?"
       (lambda (t)
 

@@ -5311,10 +5311,13 @@ try {
 // -------------------------------------------------------------------------
 LNumber.prototype.pow = function(n) {
     var value;
-    if (LNumber.isBN(this.__value__)) {
+    const [a, b] = this.coerce(n);
+    if (LNumber.isNative(a.__value__) && LNumber.isNative(b.__value__)) {
+        value = pow(a.__value__, b.__value__);
+    } else if (LNumber.isBN(a.__value__) && LNumber.isBN(b.__value__)) {
         value = this.__value__.pow(n.__value__);
-    } else {
-        value = pow(this.__value__, n.__value__);
+    } else if (a.pow) {
+        return a.pow(b);
     }
     return LNumber(value);
 };
@@ -5422,6 +5425,10 @@ LComplex.prototype.toRational = function(n) {
         return LComplex({ im, re });
     }
     return this;
+};
+// -------------------------------------------------------------------------
+LComplex.prototype.pow = function(n) {
+    throw new Error('Not yet implemented');
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.add = function(n) {
@@ -6022,7 +6029,7 @@ LBigInteger.prototype._op = function(op, n) {
     // use native calucaltion becuase it's real bigint value
     return LBigInteger(ret, true);
 };
-// -------------------------- -----------------------------------------------
+// -------------------------------------------------------------------------
 LBigInteger.prototype.sqrt = function() {
     var value;
     var minus = this.cmp(0) < 0;

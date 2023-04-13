@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 28 Feb 2023 20:01:33 +0000
+ * build: Thu, 13 Apr 2023 17:06:34 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5004,7 +5004,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Tue, 28 Feb 2023 20:01:33 +0000
+   * Build time: Thu, 13 Apr 2023 17:06:34 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -12268,10 +12268,17 @@
   LNumber.prototype.pow = function (n) {
     var value;
 
-    if (LNumber.isBN(this.__value__)) {
+    var _this$coerce3 = this.coerce(n),
+        _this$coerce4 = _slicedToArray(_this$coerce3, 2),
+        a = _this$coerce4[0],
+        b = _this$coerce4[1];
+
+    if (LNumber.isNative(a.__value__) && LNumber.isNative(b.__value__)) {
+      value = pow(a.__value__, b.__value__);
+    } else if (LNumber.isBN(a.__value__) && LNumber.isBN(b.__value__)) {
       value = this.__value__.pow(n.__value__);
-    } else {
-      value = pow(this.__value__, n.__value__);
+    } else if (a.pow) {
+      return a.pow(b);
     }
 
     return LNumber(value);
@@ -12312,10 +12319,10 @@
 
 
   LNumber.prototype.cmp = function (n) {
-    var _this$coerce3 = this.coerce(n),
-        _this$coerce4 = _slicedToArray(_this$coerce3, 2),
-        a = _this$coerce4[0],
-        b = _this$coerce4[1];
+    var _this$coerce5 = this.coerce(n),
+        _this$coerce6 = _slicedToArray(_this$coerce5, 2),
+        a = _this$coerce6[0],
+        b = _this$coerce6[1];
 
     function cmp(a, b) {
       if (a.__value__ < b.__value__) {
@@ -12407,6 +12414,11 @@
     }
 
     return this;
+  }; // -------------------------------------------------------------------------
+
+
+  LComplex.prototype.pow = function (n) {
+    throw new Error('Not yet implemented');
   }; // -------------------------------------------------------------------------
 
 
@@ -12509,20 +12521,20 @@
     }
 
     if (this.cmp(n) === 0) {
-      var _this$coerce5 = this.coerce(n),
-          _this$coerce6 = _slicedToArray(_this$coerce5, 2),
-          _a = _this$coerce6[0],
-          _b = _this$coerce6[1];
+      var _this$coerce7 = this.coerce(n),
+          _this$coerce8 = _slicedToArray(_this$coerce7, 2),
+          _a = _this$coerce8[0],
+          _b = _this$coerce8[1];
 
       var ret = _a.__im__.div(_b.__im__);
 
       return ret.coerce(_b.__re__)[0];
     }
 
-    var _this$coerce7 = this.coerce(n),
-        _this$coerce8 = _slicedToArray(_this$coerce7, 2),
-        a = _this$coerce8[0],
-        b = _this$coerce8[1];
+    var _this$coerce9 = this.coerce(n),
+        _this$coerce10 = _slicedToArray(_this$coerce9, 2),
+        a = _this$coerce10[0],
+        b = _this$coerce10[1];
 
     var denom = b.factor();
     var conj = b.conjugate();
@@ -12620,10 +12632,10 @@
 
 
   LComplex.prototype.cmp = function (n) {
-    var _this$coerce9 = this.coerce(n),
-        _this$coerce10 = _slicedToArray(_this$coerce9, 2),
-        a = _this$coerce10[0],
-        b = _this$coerce10[1];
+    var _this$coerce11 = this.coerce(n),
+        _this$coerce12 = _slicedToArray(_this$coerce11, 2),
+        a = _this$coerce12[0],
+        b = _this$coerce12[1];
 
     var _a$__re__$coerce = a.__re__.coerce(b.__re__),
         _a$__re__$coerce2 = _slicedToArray(_a$__re__$coerce, 2),
@@ -13252,7 +13264,7 @@
 
 
     return LBigInteger(ret, true);
-  }; // -------------------------- -----------------------------------------------
+  }; // -------------------------------------------------------------------------
 
 
   LBigInteger.prototype.sqrt = function () {
@@ -18773,10 +18785,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 28 Feb 2023 20:01:33 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 13 Apr 2023 17:06:34 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 28 Feb 2023 20:01:33 +0000').valueOf();
+    var date = LString('Thu, 13 Apr 2023 17:06:34 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18822,7 +18834,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Tue, 28 Feb 2023 20:01:33 +0000',
+    date: 'Thu, 13 Apr 2023 17:06:34 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
