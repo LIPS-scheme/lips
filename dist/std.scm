@@ -2037,15 +2037,33 @@
         (iter (cdr fns)))))
 
 ;; -----------------------------------------------------------------------------
-(define (exp x)
-  (typecheck "exp" x "number")
-  (if (string=? x.__type__ "complex")
-      (let* ((re (real-part x))
-             (im (imag-part x))
+(define (sin n)
+  "(sin n)
+
+  Function calculate sine of a number."
+  (typecheck "sin" n "number")
+  (if (string=? n.__type__ "complex")
+      (let ((re (real-part n))
+            (im (imag-part n)))
+        (lips.LComplex (object :re (* (Math.sin re)
+                                      (Math.cosh im))
+                               :im (* (Math.cos re)
+                                      (Math.sinh im)))))
+      (Math.sin n)))
+
+;; -----------------------------------------------------------------------------
+(define (exp n)
+  "(exp n)
+
+  Function calculate e rised to the power of n."
+  (typecheck "exp" n "number")
+  (if (string=? n.__type__ "complex")
+      (let* ((re (real-part n))
+             (im (imag-part n))
              (factor (Math.exp re)))
          (make-rectangular (* factor (cos im))
                            (* factor (sin im))))
-       (Math.exp x)))
+       (Math.exp n)))
 
 ;; -----------------------------------------------------------------------------
 (define (modulo a b)
