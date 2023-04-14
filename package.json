@@ -221,7 +221,7 @@
     "@babel/preset-env": "^7.16.11",
     "@babel/runtime": "^7.17.2",
     "@babel/runtime-corejs2": "^7.17.2",
-    "@mermaid-js/mermaid-cli": "^9.1.2",
+    "@mermaid-js/mermaid-cli": "^10.0.2",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
