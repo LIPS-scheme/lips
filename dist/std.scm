@@ -2067,6 +2067,25 @@
       (Math.cos n)))
 
 ;; -----------------------------------------------------------------------------
+(define (tan n)
+  "(tan n)
+
+  Function calculate tanent of a number."
+  (typecheck "tan" n "number")
+  (if (string=? n.__type__ "complex")
+      (let* ((re (real-part n))
+             (im (imag-part n))
+             (re2 (* 2 re))
+             (im2 (* 2 im)))
+        (lips.LComplex (object :re (/ (Math.sin re2)
+                                      (+ (Math.cos re2)
+                                         (Math.cosh im2)))
+                               :im (/ (Math.sinh im2)
+                                      (+ (Math.cos re2)
+                                         (Math.cosh im2))))))
+      (Math.tan n)))
+
+;; -----------------------------------------------------------------------------
 (define (exp n)
   "(exp n)
 
