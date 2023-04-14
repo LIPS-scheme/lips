@@ -488,6 +488,21 @@
       (Math.sin n)))
 
 ;; -----------------------------------------------------------------------------
+(define (cos n)
+  "(cos n)
+
+  Function calculate cosine of a number."
+  (typecheck "cos" n "number")
+  (if (string=? n.__type__ "complex")
+      (let ((re (real-part n))
+            (im (imag-part n)))
+        (lips.LComplex (object :re (* (Math.cos re)
+                                      (Math.cosh im))
+                               :im (- (* (Math.sin re)
+                                         (Math.sinh im))))))
+      (Math.cos n)))
+
+;; -----------------------------------------------------------------------------
 (define (exp n)
   "(exp n)
 
