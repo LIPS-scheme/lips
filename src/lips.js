@@ -5386,7 +5386,9 @@ function LComplex(n, force = false) {
             return Number(n);
         }
     } else if (!LNumber.isComplex(n)) {
-        throw new Error('Invalid constructor call for LComplex');
+        const msg = `Invalid constructor call for LComplex expect &(:im <num> :re <num>) \
+object but got ${toString(n)}`;
+        throw new Error(msg);
     }
     var im = n.im instanceof LNumber ? n.im : LNumber(n.im);
     var re = n.re instanceof LNumber ? n.re : LNumber(n.re);
