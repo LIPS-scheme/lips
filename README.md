@@ -95,7 +95,7 @@ The simplest way is to include the lips code in the script tag:
 <script type="text/x-scheme" bootstrap>
 (let ((what "world")
       (greet "hello"))
-   (display (string-append "hello" " " what)))
+   (display (string-append greet " " what)))
 </script>
 ```
 
