@@ -76,6 +76,9 @@ section header h2 {
   width: 300px;
   text-transform: uppercase;
 }
+section img {
+  max-width: 100%;
+}
 .term {
   height: 200px;
   background: black;
