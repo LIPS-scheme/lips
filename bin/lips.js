@@ -454,8 +454,23 @@ function run_repl(err, rl) {
             if (cmd.match(/\x1b\[201~$/)) {
                 cmd = cmd.replace(re, '');
             }
-            cmd += '\n';
             const code = cmd.replace(re, '');
+            const lines = code.split('\n');
+            if (terminal && lines.length > 2) {
+                const stdout = scheme(code).split('\n').map((line, i) => {
+                    let prefix;
+                    if (i === 0) {
+                        prefix = unify_prompt(prompt, continuePrompt);
+                    } else {
+                        prefix = unify_prompt(continuePrompt, prompt);
+                    }
+                    return '\x1b[K' + prefix + line;
+                }).join('\n');
+                let num = lines.length;
+                const format = `\x1b[${num}F${stdout}\n`;
+                process.stdout.write(format);
+            }
+            cmd += '\n';
             try {
                 if (balanced_parenthesis(code)) {
                     // we need to clear the prompt because resume
