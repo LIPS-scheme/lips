@@ -3983,7 +3983,7 @@ function transform_syntax(options = {}) {
     }
     /* eslint-disable complexity */
     function traverse(expr, { disabled } = {}) {
-        log('traverse>> ' + expr.toString());
+        log('traverse>> ' + toString(expr));
         if (expr instanceof Pair) {
             // escape ellispsis from R7RS e.g. (... ...)
             if (!disabled && expr.car instanceof Pair &&
