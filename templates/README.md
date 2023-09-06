@@ -1,3 +1,4 @@
+
 <h1 align="center">
   <img src="https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/lips.svg?raw=true"
        alt="LIPS - Scheme Based Powerful Lisp Language" />
@@ -195,6 +196,10 @@ chmod a+x foo.scm
 ```
 
 Executables also return a S-Expression according to SRFI-176 use `lips --version` or `lips -V`.
+
+## FOSDEM'23 Presentation [Video]
+
+[![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/{{BRANCH}}/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
 
 ## Limitations
 Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
