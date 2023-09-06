@@ -232,6 +232,7 @@
     "babel-preset-stage-0": "^6.24.1",
     "benchmark": "^2.1.4",
     "c8": "^7.11.0",
+    "compare-versions": "^6.1.0",
     "coveralls": "^3.1.1",
     "eslint": "^8.8.0",
     "microtime": "^3.0.0",
