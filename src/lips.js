@@ -7033,10 +7033,11 @@ var global_env = new Environment({
     }, `(read [string])
 
         This function, if used with a string, will parse it and
-        return the LIPS code, if there is any. If called without an
-        input, it will read a string from standard input (using
-        the browser's prompt or a user defined input method) and
-        calls itself with that string. This function can be used
+        return the LIPS code, if there is any. If called with a
+        port, it will parse the next item from the port. If called
+        without an input, it will read a string from standard input
+        (using the browser's prompt or a user defined input method)
+        and calls itself with that string. This function can be used
         together with \`eval\` to evaluate code from a string.`),
     // ------------------------------------------------------------------
     pprint: doc('pprint', function pprint(arg) {
@@ -7049,7 +7050,7 @@ var global_env = new Environment({
         global_env.get('newline').call(global_env);
     }, `(pprint expression)
 
-        This function will pretty print its input. If it is called
+        This function will pretty print its input to stdout. If it is called
         with a non-list, it will just call the print function on its
         input.`),
     // ------------------------------------------------------------------
@@ -7063,9 +7064,9 @@ var global_env = new Environment({
     }, `(print . args)
 
         This function converts each input into a string and prints
-        the result to the standard output. (by default it's the
-        console but it can be defined in user code) This function
-        calls \`newline\` after printing each input.`),
+        the result to the standard output (by default it's the
+        console but it can be defined in user code). This function
+        calls \`(newline)\` after printing each input.`),
     // ------------------------------------------------------------------
     format: doc('format', function format(str, ...args) {
         typecheck('format', str, 'string');
@@ -7120,7 +7121,7 @@ var global_env = new Environment({
     }, `(display string [port])
 
         This function outputs the string to the standard output or
-        the port if given.`),
+        the port if given. No newline.`),
     // ------------------------------------------------------------------
     'display-error': doc('display-error', function error(...args) {
         const port = internal(this, 'stderr');
@@ -7130,7 +7131,7 @@ var global_env = new Environment({
         global_env.get('newline')(port);
     }, `(display-error . args)
 
-        Display an error message.`),
+        Display an error message on stderr.`),
     // ------------------------------------------------------------------
     '%same-functions': doc('%same-functions', function(a, b) {
         if (!is_function(a)) {
@@ -7187,7 +7188,8 @@ var global_env = new Environment({
     }, `(cons left right)
 
         This function returns a new list with the first appended
-        before the second.`),
+        before the second. If the second is not a list cons will
+        return a dotted pair.`),
     // ------------------------------------------------------------------
     car: doc('car', function car(list) {
         typecheck('car', list, 'pair');
@@ -7258,8 +7260,8 @@ var global_env = new Environment({
         });
     }), `(set! name value)
 
-         Macro that can be used to set the value of the variable (mutate)
-         it search the scope chain until it finds first non emtpy slot and set it.`),
+         Macro that can be used to set the value of the variable or slot (mutate it).
+         set! searches the scope chain until it finds first non emtpy slot and sets it.`),
     // ------------------------------------------------------------------
     'unset!': doc(new Macro('set!', function(code) {
         if (!(code.car instanceof LSymbol)) {
@@ -7273,36 +7275,38 @@ var global_env = new Environment({
         }
     }), `(unset! name)
 
-         Function delete specified name from environment.`),
+         Function to delete the specified name from environment.
+         Trying to access the name afterwards will error.`),
     // ------------------------------------------------------------------
     'set-car!': doc('set-car!', function(slot, value) {
         typecheck('set-car!', slot, 'pair');
         slot.car = value;
     }, `(set-car! obj value)
 
-         Function that set car (head) of the list/pair to specified value.
-         It can destroy the list. Old value is lost.`),
+         Function that sets the car (first item) of the list/pair to specified value.
+         The old value is lost.`),
     // ------------------------------------------------------------------
     'set-cdr!': doc('set-cdr!', function(slot, value) {
         typecheck('set-cdr!', slot, 'pair');
         slot.cdr = value;
     }, `(set-cdr! obj value)
 
-         Function that set cdr (tail) of the list/pair to specified value.
-         It can destroy the list. Old value is lost.`),
+         Function that sets the cdr (tail) of the list/pair to specified value.
+         It will destroy the list. The old tail is lost.`),
     // ------------------------------------------------------------------
     'empty?': doc('empty?', function(x) {
         return typeof x === 'undefined' || x === nil;
     }, `(empty? object)
 
-         Function return true if value is undfined empty list.`),
+         Function that returns #t if value is nil (an empty list) or undefined.`),
     // ------------------------------------------------------------------
     gensym: doc(
         'gensym',
         gensym,
         `(gensym)
 
-         Function generate unique symbol, to use with macros as meta name.`),
+         Generates a unique symbol that is not bound anywhere,
+         to use with macros as meta name.`),
     // ------------------------------------------------------------------
     load: doc('load', function load(file, env) {
         typecheck('load', file, 'string');
@@ -7400,8 +7404,8 @@ var global_env = new Environment({
     }, `(load filename)
         (load filename environment)
 
-        Function fetch the file and evaluate its content as LIPS code,
-        If second argument is provided and it's environment the evaluation
+        Fetches the file (from disk or network) and evaluates its content as LIPS code.
+        If the second argument is provided and it's an environment the evaluation
         will happen in that environment.`),
     // ------------------------------------------------------------------
     'do': doc(new Macro('do', async function(code, { dynamic_scope, error }) {
@@ -7446,13 +7450,13 @@ var global_env = new Environment({
         if (test.cdr !== nil) {
             return await evaluate(test.cdr.car, eval_args);
         }
-    }), `(do ((<var> <init> <next>)) (test expression) . body)
+    }), `(do ((<var> <init> <next>)) (test return) . body)
 
-         Iteration macro that evaluate the expression body in scope of the variables.
-         On each loop it increase the variables according to next expression and runs
-         test to check if the loop should continue. If test is single called, the macro
-         will not return anything. If the test is pair of expression and value the
-         macro will return that value after finish.`),
+         Iteration macro that evaluates the expression body in scope of the variables.
+         On each loop it changes the variables according to the <next> expression and runs
+         test to check if the loop should continue. If test is a single value, the macro
+         will return undefined. If the test is a pair of expressions the macro will evaluate
+         and return the second expression after the loop exits.`),
     // ------------------------------------------------------------------
     'if': doc(new Macro('if', function(code, { dynamic_scope, error }) {
         if (dynamic_scope) {
@@ -7481,9 +7485,9 @@ var global_env = new Environment({
         return unpromise(cond, resolve);
     }), `(if cond true-expr false-expr)
 
-         Macro evaluate condition expression and if the value is true, it
-         evaluate and return true expression if not it evaluate and return
-         false expression`),
+         Macro that evaluates cond expression and if the value is true, it
+         evaluates and returns true-expression, if not it evaluates and returns
+         false-expression.`),
     // ------------------------------------------------------------------
     'let-env': new Macro('let-env', function(code, options = {}) {
         const { dynamic_scope, error } = options;
@@ -7497,51 +7501,53 @@ var global_env = new Environment({
         });
     }, `(let-env env . body)
 
-        Special macro that evaluate body in context of given environment
+        Special macro that evaluates body in context of given environment
         object.`),
     // ------------------------------------------------------------------
     'letrec': doc(
         let_macro(Symbol.for('letrec')),
-        `(letrec ((a value-a) (b value-b)) body)
+        `(letrec ((a value-a) (b value-b) ...) . body)
 
-         Macro that creates new environment, then evaluate and assign values to
-         names and then evaluate the body in context of that environment.
-         Values are evaluated sequentialy and next value can access to
+         Macro that creates a new environment, then evaluates and assigns values to
+         names and then evaluates the body in context of that environment.
+         Values are evaluated sequentialy and the next value can access the
          previous values/names.`),
     // ---------------------------------------------------------------------
     'letrec*': doc(
         let_macro(Symbol.for('letrec')),
-        `(letrec* ((a value-a) (b value-b)) body)
+        `(letrec* ((a value-a) (b value-b) ...) . body)
 
          Same as letrec but the order of execution of the binding is guaranteed,
-         so use can use recursive code as well as reference previous binding.
+         so you can use recursive code as well as referencing the previous binding.
+
          In LIPS both letrec and letrec* behave the same.`),
     // ---------------------------------------------------------------------
     'let*': doc(
         let_macro(Symbol.for('let*')),
-        `(let* ((a value-a) (b value-b)) body)
+        `(let* ((a value-a) (b value-b) ...) . body)
 
-         Macro similar to \`let\` but next argument get environment
-         from previous let variable, so they you can define one variable,
-         and use in next argument.`),
+         Macro similar to \`let\`, but the subsequent bindings after the first
+         are evaluated in the environment including the previous let variables,
+         so you can define one variable, and use it in the next's definition.`),
     // ---------------------------------------------------------------------
     'let': doc(
         let_macro(Symbol.for('let')),
-        `(let ((a value-a) (b value-b)) body)
+        `(let ((a value-a) (b value-b) ...) . body)
 
-         Macro that creates new environment, then evaluate and assign values to
-         names and then evaluate the body in context of that environment.
-         Values are evaluated sequentialy but you can't access
-         previous values/names when next are evaluated. You can only get them
-         from body of let expression.`),
+         Macro that creates a new environment, then evaluates and assigns values to
+         names, and then evaluates the body in context of that environment.
+         Values are evaluated sequentialy but you can't access previous values/names
+         when the next are evaluated. You can only get them in the body of the let expression.
+         (If you want to define multiple variables and use them in each other's definitions,
+         use \`let*\`.)`),
     // ------------------------------------------------------------------
     'begin*': doc(pararel('begin*', function(values) {
         return values.pop();
-    }), `(begin* . expr)
+    }), `(begin* . body)
 
-         This macro is parallel version of begin. It evaluate each expression and
-         if it's a promise it will evaluate it in parallel and return value
-         of last expression.`),
+         This macro is a parallel version of begin. It evaluates each expression
+         in the body and if it's a promise it will await it in parallel and return 
+         the value of the last expression (i.e. it uses Promise.all()).`),
     // ------------------------------------------------------------------
     'begin': doc(new Macro('begin', function(code, options) {
         var args = Object.assign({ }, options);
@@ -7565,9 +7571,9 @@ var global_env = new Environment({
         })();
     }), `(begin . args)
 
-         Macro runs list of expression and return valuate of the list one.
-         It can be used in place where you can only have single exression,
-         like if expression.`),
+         Macro that runs a list of expressions in order and returns the value
+         of the last one. It can be used in places where you can only have a
+         single expression, like (if).`),
     // ------------------------------------------------------------------
     'ignore': new Macro('ignore', function(code, { dynamic_scope, error }) {
         var args = { env: this, error };
@@ -7575,10 +7581,10 @@ var global_env = new Environment({
             args.dynamic_scope = this;
         }
         evaluate(new Pair(new LSymbol('begin'), code), args);
-    }, `(ignore expression)
+    }, `(ignore . body)
 
-        Macro that will evaluate expression and swallow any promises that may
-        be created. It wil run and ignore any value that may be returned by
+        Macro that will evaluate the expression and swallow any promises that may
+        be created. It wil discard any value that may be returned by the last body
         expression. The code should have side effects and/or when it's promise
         it should resolve to undefined.`),
     // ------------------------------------------------------------------
@@ -7594,7 +7600,9 @@ var global_env = new Environment({
         });
     }), `(call/cc proc)
 
-         TODO`),
+         Call-with-current-continuation.
+
+         NOT SUPPORED BY LIPS RIGHT NOW`),
     // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function(code, eval_args) {
         var env = this;
@@ -7654,12 +7662,12 @@ var global_env = new Environment({
         });
     }), `(define name expression)
          (define name expression "doc string")
-         (define (function-name . args) body)
+         (define (function-name . args) . body)
 
          Macro for defining values. It can be used to define variables,
-         or function. If first argument is list it will create function
-         with name beeing first element of the list. The macro evalute
-         code \`(define function (lambda args body))\``),
+         or functions. If the first argument is list it will create a function
+         with name being first element of the list. This form expands to
+         \`(define function-name (lambda args body))\``),
     // ------------------------------------------------------------------
     'set-obj!': doc('set-obj!', function(obj, key, value, options = null) {
         var obj_type = typeof obj;
@@ -7687,21 +7695,21 @@ var global_env = new Environment({
     }, `(set-obj! obj key value)
         (set-obj! obj key value props)
 
-        Function set property of JavaScript object. Props should be vector of pairs,
+        Function set a property of a JavaScript object. props should be a vector of pairs,
         passed to Object.defineProperty.`),
     // ------------------------------------------------------------------
     'null-environment': doc('null-environment', function() {
         return global_env.inherit('null');
     }, `(null-environment)
 
-        Function return new base environment with std lib.`),
+        Returns a clean environment with only the standard library.`),
     // ------------------------------------------------------------------
     'values': doc('values', function values(...args) {
         return Values(args);
     }, `(values a1 a2 ...)
 
-        If called with more then one elment it will create special
-        Values object that can be used in call-with-values function`),
+        If called with more then one elment it will create a special
+        Values object that can be used in the call-with-values function.`),
     // ------------------------------------------------------------------
     'call-with-values': doc('call-with-values', function(producer, consumer) {
         typecheck('call-with-values', producer, 'function', 1);
@@ -7713,9 +7721,10 @@ var global_env = new Environment({
         return consumer(maybe);
     }, `(call-with-values producer consumer)
 
-        Calls its producer argument with no values and a continuation that,
-        when passed some values, calls the consumer procedure with those
-        values as arguments.`),
+        Calls the producer procedure with no arguments, then calls the
+        consumer procedure with the returned value as an argument -- unless
+        the returned value is a special Values object created by (values), if it is
+        the values are unpacked and the consumer is called with multiple arguments.`),
     // ------------------------------------------------------------------
     'current-environment': doc('current-environment', function() {
         if (this.__name__ === '__frame__') {
@@ -7724,14 +7733,14 @@ var global_env = new Environment({
         return this;
     }, `(current-environment)
 
-        Function return current environement.`),
+        Function that returns the current environement (they're first-class objects!)`),
     // ------------------------------------------------------------------
     'parent.frame': doc('parent.frame', function() {
         return user_env;
     }, `(parent.frame)
 
-        Return parent environment if called from inside function.
-        If no parent frame found it return nil.`),
+        Returns the parent environment if called from inside a function.
+        If no parent frame can be found it returns nil.`),
     // ------------------------------------------------------------------
     'eval': doc('eval', function(code, env) {
         env = env || this.get('current-environment').call(this);
@@ -7752,7 +7761,8 @@ var global_env = new Environment({
     }, `(eval expr)
         (eval expr environment)
 
-        Function evalute LIPS Scheme code.`),
+        Function that evalutes LIPS Scheme code. If the second argument is provided
+        it will be the environment that the code is evaluated in.`),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function(code, { dynamic_scope, error } = {}) {
         var self = this;
@@ -7841,9 +7851,9 @@ var global_env = new Environment({
         (lambda args body)
         (lambda (a b . rest) body)
 
-        Macro lambda create new anonymous function, if first element of the body
-        is string and there is more elements it will be documentation, that can
-        be read using (help fn)`),
+        The lambda macro creates a new anonymous function. If the first element of
+        the body is a string and there is more elements the string is used as the
+        documentation string, that can be read using (help fn).`),
     'macroexpand': new Macro('macroexpand', macro_expand()),
     'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
     // ------------------------------------------------------------------
@@ -7911,12 +7921,13 @@ var global_env = new Environment({
         }
     }), `(define-macro (name . args) body)
 
-         Meta macro, macro that create new macros, if return value is list structure
-         it will be evaluated when macro is invoked. You can use quasiquote \` and
-         unquote , and unquote-splicing ,@ inside to create expression that will be
-         evaluated on runtime. Macros works like this: if you pass any expression to
-         macro the arguments will not be evaluated unless macro itself evaluate it.
-         Because of this macro can manipulate expression (arguments) as lists.`),
+         The meta-macro, that creates new macros. If the return value is a list structure
+         it will be evaluated where the macro is invoked from. You can use quasiquote \` and
+         unquote , and unquote-splicing ,@ inside to create an expression that will be
+         evaluated at runtime. Macros works like this: if you pass any expression to a
+         macro the arguments will not be evaluated unless the macro's body explicitly
+         calls (eval) on it. Because of this a macro can manipulate the expression (arguments)
+         as lists.`),
     // ------------------------------------------------------------------
     'syntax-rules': new Macro('syntax-rules', function(macro, options) {
         var { dynamic_scope, error } = options;
@@ -8023,33 +8034,30 @@ var global_env = new Environment({
         return syntax;
     }, `(syntax-rules () (pattern expression) ...)
 
-        Base of Hygienic macro, it will return new syntax expander
-        that works like lisp macros.`),
+        Base of hygienic macros, it will return a new syntax expander
+        that works like Lisp macros.`),
     // ------------------------------------------------------------------
     quote: doc(new Macro('quote', function(arg) {
         return quote(arg.car);
-    }), `(quote expression)
+    }), `(quote expression) or 'expression
 
-         Macro that return single lips expression as data (it don't evaluate its
-         argument). It will return list of pairs if put in front of lips code.
-         And if put in fron of symbol it will return that symbol not value
-         associated with that name.`),
+         Macro that returns a single LIPS expression as data (it won't evaluate the
+         argument). It will return a list if put in front of LIPS code.
+         And if put in front of a symbol it will return the symbol itself, not the value
+         bound to that name.`),
     'unquote-splicing': doc('unquote-splicing', function() {
         throw new Error(`You can't call \`unquote-splicing\` outside of quasiquote`);
-    }, `(unquote-splicing code)
+    }, `(unquote-splicing code) or ,@code
 
-        Special form to be used in quasiquote macro, parser is processing special
-        characters ,@ and create call to this pseudo function. It can be used
-        to evalute expression inside and return the value without parenthesis.
-        the value will be joined to the output list structure.`),
+        Special form used in the quasiquote macro. It evaluates the expression inside and
+        splices the list into quasiquote's result. If it is not the last element of the expression,
+        the computed value must be a pair.`),
     'unquote': doc('unquote', function() {
         throw new Error(`You can't call \`unquote\` outside of quasiquote`);
-    }, `(unquote code)
+    }, `(unquote code) or ,code
 
-        Special form to be used in quasiquote macro, parser is processing special
-        characters , and create call to this pseudo function. It can be used
-        to evalute expression inside and return the value, the output is inserted
-        into list structure created by queasiquote.`),
+        Special form used in the quasiquote macro. It evaluates the expression inside and
+        substitutes the value into quasiquote's result.`),
     // ------------------------------------------------------------------
     quasiquote: Macro.defmacro('quasiquote', function(arg, env) {
         var { dynamic_scope, error } = env;
@@ -8385,20 +8393,20 @@ var global_env = new Environment({
             clear(value);
             return quote(value);
         });
-    }, `(quasiquote list ,value ,@value)
+    }, `(quasiquote list)
 
         Similar macro to \`quote\` but inside it you can use special
-        expressions unquote abbreviated to , that will evaluate expresion inside
-        and return its value or unquote-splicing abbreviated to ,@ that will
-        evaluate expression but return value without parenthesis (it will join)
-        the list with its value. Best used with macros but it can be used outside`),
+        expressions (unquote x) abbreviated to ,x that will evaluate x
+        and insert its value verbatim or (unquote-splicing x) abbreviated to ,@x that will
+        evaluate x and splice the value into the result. Best used with macros but it can be used outside.`),
     // ------------------------------------------------------------------
     clone: doc('clone', function clone(list) {
         typecheck('clone', list, 'pair');
         return list.clone();
     }, `(clone list)
 
-        Function return clone of the list.`),
+        Function that returns a clone of the list, that does not share any pairs
+        with the original, so the clone can be safely mutated without affecting the original.`),
     // ------------------------------------------------------------------
     append: doc('append', function append(...items) {
         items = items.map(item => {
@@ -8410,8 +8418,8 @@ var global_env = new Environment({
         return global_env.get('append!').call(this, ...items);
     }, `(append item ...)
 
-        Function will create new list with eac argument appended to the end.
-        It will always return new list and not modify it's arguments.`),
+        Function that creates a new list with each argument appended end-to-end.
+        It will always return a new list and not modify its arguments.`),
     // ------------------------------------------------------------------
     'append!': doc('append!', function(...items) {
         var is_list = global_env.get('list?');
@@ -8433,8 +8441,8 @@ var global_env = new Environment({
         }, nil);
     }, `(append! arg1 ...)
 
-        Destructive version of append, it modify the list in place. It return
-        new list where each argument is appened to the end. It may modify
+        Destructive version of append, it can modify the lists in place. It returns
+        a new list where each argument is appened to the end. It may modify
         lists added as arguments.`),
     // ------------------------------------------------------------------
     reverse: doc('reverse', function reverse(arg) {
@@ -8452,8 +8460,8 @@ var global_env = new Environment({
         }
     }, `(reverse list)
 
-        Function will reverse the list or array. If value is not a list
-        or array it will throw exception.`),
+        Function that reverses the list or array. If value is not a list
+        or array it will error.`),
     // ------------------------------------------------------------------
     nth: doc('nth', function nth(index, obj) {
         typecheck('nth', index, 'number');
@@ -8476,14 +8484,14 @@ var global_env = new Environment({
         }
     }, `(nth index obj)
 
-        Function return nth element of the list or array. If used with different
-        value it will throw exception`),
+        Function that returns the nth element of the list or array.
+        If used with a non-indexable value it will error.`),
     // ------------------------------------------------------------------
     list: doc('list', function list(...args) {
         return args.reverse().reduce((list, item) => new Pair(item, list), nil);
     }, `(list . args)
 
-        Function create new list out of its arguments.`),
+        Function that creates a new list out of its arguments.`),
     // ------------------------------------------------------------------
     substring: doc('substring', function substring(string, start, end) {
         typecheck('substring', string, 'string');
@@ -8492,14 +8500,14 @@ var global_env = new Environment({
         return string.substring(start.valueOf(), end && end.valueOf());
     }, `(substring string start end)
 
-            Function return part of the string starting at start ending with end.`),
+        Function that returns the slice of the string starting at start and ending with end.`),
     // ------------------------------------------------------------------
     concat: doc('concat', function concat(...args) {
         args.forEach((arg, i) => typecheck('concat', arg, 'string', i + 1));
         return args.join('');
     }, `(concat . strings)
 
-        Function create new string by joining its arguments`),
+        Function that creates a new string by joining its arguments.`),
     // ------------------------------------------------------------------
     join: doc('join', function join(separator, list) {
         typecheck('join', separator, 'string');
@@ -8507,7 +8515,7 @@ var global_env = new Environment({
         return global_env.get('list->array')(list).join(separator);
     }, `(join separator list)
 
-        Function return string by joining elements of the list`),
+        Function that returns a string by joining elements of the list using separator.`),
     // ------------------------------------------------------------------
     split: doc('split', function split(separator, string) {
         typecheck('split', separator, ['regex', 'string']);
@@ -8515,8 +8523,8 @@ var global_env = new Environment({
         return global_env.get('array->list')(string.split(separator));
     }, `(split separator string)
 
-            Function create list by splitting string by separatar that can
-            be a string or regular expression.`),
+        Function that creates a list by splitting string by separator which can
+        be a string or regular expression.`),
     // ------------------------------------------------------------------
     replace: doc('replace', function replace(pattern, replacement, string) {
         typecheck('replace', pattern, ['regex', 'string']);
@@ -8525,8 +8533,8 @@ var global_env = new Environment({
         return string.replace(pattern, replacement);
     }, `(replace pattern replacement string)
 
-        Function change pattern to replacement inside string. Pattern can be string
-        or regex and replacement can be function or string.`),
+        Function that changes pattern to replacement inside string. Pattern can be a string
+        or regex and replacement can be function or string. See Javascript String.replace().`),
     // ------------------------------------------------------------------
     match: doc('match', function match(pattern, string) {
         typecheck('match', pattern, ['regex', 'string']);
@@ -8535,7 +8543,7 @@ var global_env = new Environment({
         return m ? global_env.get('array->list')(m) : false;
     }, `(match pattern string)
 
-        function return match object from JavaScript as list or #f if not match.`),
+        Function that returns a match object from JavaScript as a list or #f if no match.`),
     // ------------------------------------------------------------------
     search: doc('search', function search(pattern, string) {
         typecheck('search', pattern, ['regex', 'string']);
@@ -8543,22 +8551,22 @@ var global_env = new Environment({
         return string.search(pattern);
     }, `(search pattern string)
 
-        Function return first found index of the pattern inside a string`),
+        Function that returns the first found index of the pattern inside a string.`),
     // ------------------------------------------------------------------
     repr: doc('repr', function repr(obj, quote) {
         return toString(obj, quote);
     }, `(repr obj)
 
-        Function return string LIPS representation of an object as string.`),
+        Function that returns a LIPS code representation of the object as a string.`),
     // ------------------------------------------------------------------
     'escape-regex': doc('escape-regex', function(string) {
         typecheck('escape-regex', string, 'string');
         return escape_regex(string.valueOf());
     }, `(escape-regex string)
 
-        Function return new string where all special operators used in regex,
-        are escaped with slash so they can be used in RegExp constructor
-        to match literal string`),
+        Function that returns a new string where all special operators used in regex,
+        are escaped with backslashes so they can be used in the RegExp constructor
+        to match a literal string.`),
     // ------------------------------------------------------------------
     env: doc('env', function env(env) {
         env = env || this;
@@ -8577,30 +8585,30 @@ var global_env = new Environment({
     }, `(env)
         (env obj)
 
-        Function return list of values (functions, macros and variables)
-        inside environment and it's parents.`),
+        Function that returns a list of names (functions, macros and variables)
+        that are bound in the current environment or one of its parents.`),
     // ------------------------------------------------------------------
     'new': doc('new', function(obj, ...args) {
         var instance = new (unbind(obj))(...args.map(x => unbox(x)));
         return instance;
     }, `(new obj . args)
 
-        Function create new JavaScript instance of an object.`),
+        Function that creates new JavaScript instance of an object.`),
     // ------------------------------------------------------------------
     'typecheck': doc(
         typecheck,
         `(typecheck label value type [position])
 
-         Function check type and throw exception if type don't match.
-         Type can be string or list of strings. Position optional argument
-         is used to created proper error message.`),
+         Function that checks the type of value and errors if the type is not one allowed.
+         Type can be string or list of strings. The position optional argument
+         is used to create a proper error message for the nth argument of function calls.`),
     // ------------------------------------------------------------------
     'unset-special!': doc('unset-special!', function(symbol) {
         typecheck('remove-special!', symbol, 'string');
         delete specials.remove(symbol.valueOf());
     }, `(unset-special! name)
 
-        Function remove special symbol from parser. Added by \`set-special!\`,
+        Function that removes a special symbol from parser added by \`set-special!\`,
         name must be a string.`),
     // ------------------------------------------------------------------
     'set-special!': doc('set-special!', function(seq, name, type = specials.LITERAL) {
@@ -8609,12 +8617,14 @@ var global_env = new Environment({
         specials.append(seq.valueOf(), name, type);
     }, `(set-special! symbol name [type])
 
-        Add special symbol to the list of transforming operators by the parser.
+        Add a special symbol to the list of transforming operators by the parser.
         e.g.: \`(add-special! "#" 'x)\` will allow to use \`#(1 2 3)\` and it will be
         transformed into (x (1 2 3)) so you can write x macro that will process
-        the list. 3rd argument is optional and it can be constant value
-        lips.specials.SPLICE if this constant is used it will transform
-        \`#(1 2 3)\` into (x 1 2 3) that is required by # that define vectors.`),
+        the list. 3rd argument is optional, and it can be one of two values:
+        lips.specials.LITERAL, which is the default behavior, or
+        lips.specials.SPLICE which causes the value to be unpacked into the expression.
+        This can be used for e.g. to make \`#(1 2 3)\` into (x 1 2 3) that is needed
+        by # that defines vectors.`),
     // ------------------------------------------------------------------
     'get': get,
     '.': get,
@@ -8623,13 +8633,14 @@ var global_env = new Environment({
         unbind,
         `(unbind fn)
 
-         Function remove bidning from function so you can get props from it.`),
+         Function that removes the weak 'this' binding from a function so you
+         can get properties from the actual function object.`),
     // ------------------------------------------------------------------
     type: doc(
         type,
         `(type object)
 
-         Function return type of an object as string.`),
+         Function that returns the type of an object as string.`),
     // ------------------------------------------------------------------
     'debugger': doc('debugger', function() {
         /* eslint-disable */
@@ -8637,7 +8648,9 @@ var global_env = new Environment({
         /* eslint-enable */
     }, `(debugger)
 
-            Function stop JavaScript code in debugger.`),
+        Function that triggers the JavaScript debugger (e.g. the browser devtools)
+        using the "debugger;" statement. If a debugger is not running this
+        function does nothing.`),
     // ------------------------------------------------------------------
     'in': doc('in', function(a, b) {
         if (a instanceof LSymbol ||
@@ -8648,33 +8661,35 @@ var global_env = new Environment({
         return a in unbox(b);
     }, `(in key value)
 
-        Function use is in operator to check if value is in object.`),
+        Function that uses the Javascript "in" operator to check if key is
+        a valid property in the value.`),
     // ------------------------------------------------------------------
     'instanceof': doc('instanceof', function(type, obj) {
         return obj instanceof unbind(type);
     }, `(instanceof type obj)
 
-        Function check of object is instance of object.`),
+        Predicate that tests if the obj is an instance of type.`),
     // ------------------------------------------------------------------
     'prototype?': doc(
         'prototype?',
         is_prototype,
         `(prototype? obj)
 
-         Function check if value is JavaScript Object prototype.`),
+         Predicate that tests if value is a valid JavaScript prototype,
+         i.e. calling (new) with it will not throw '<x> is not a constructor'.`),
     // ------------------------------------------------------------------
     'macro?': doc('macro?', function(obj) {
         return obj instanceof Macro;
     }, `(macro? expression)
 
-        Function check if value is a macro.`),
+        Predicate that tests if value is a macro.`),
     // ------------------------------------------------------------------
     'function?': doc(
         'function?',
         is_function,
         `(function? expression)
 
-         Function check if value is a function.`),
+         Predicate that tests if value is a callable function.`),
     // ------------------------------------------------------------------
     'real?': doc('real?', function(value) {
         if (type(value) !== 'number') {
@@ -8686,55 +8701,55 @@ var global_env = new Environment({
         return LNumber.isFloat(value);
     }, `(real? number)
 
-        Function check if value is real number.`),
+        Predicate that tests if value is a real number (not complex).`),
     // ------------------------------------------------------------------
     'number?': doc('number?', function(x) {
         return Number.isNaN(x) || LNumber.isNumber(x);
     }, `(number? expression)
 
-        Function check if value is a number or NaN value.`),
+        Predicate that tests if value is a number or NaN value.`),
     // ------------------------------------------------------------------
     'string?': doc('string?', function(obj) {
         return LString.isString(obj);
     }, `(string? expression)
 
-        Function check if value is a string.`),
+        Predicate that tests if value is a string.`),
     // ------------------------------------------------------------------
     'pair?': doc('pair?', function(obj) {
         return obj instanceof Pair;
     }, `(pair? expression)
 
-            Function check if value is a pair or list structure.`),
+        Predicate that tests if value is a pair or list structure.`),
     // ------------------------------------------------------------------
     'regex?': doc('regex?', function(obj) {
         return obj instanceof RegExp;
     }, `(regex? expression)
 
-        Function check if value is regular expression.`),
+        Predicate that tests if value is a regular expression.`),
     // ------------------------------------------------------------------
     'null?': doc('null?', function(obj) {
         return is_null(obj);
     }, `(null? expression)
 
-        Function check if value is nulish.`),
+        Predicate that tests if value is null-ish (i.e. undefined, nil, or Javascript null).`),
     // ------------------------------------------------------------------
     'boolean?': doc('boolean?', function(obj) {
         return typeof obj === 'boolean';
     }, `(boolean? expression)
 
-        Function check if value is boolean.`),
+        Predicate that tests if value is a boolean (#t or #f).`),
     // ------------------------------------------------------------------
     'symbol?': doc('symbol?', function(obj) {
         return obj instanceof LSymbol;
     }, `(symbol? expression)
 
-        Function check if value is LIPS symbol`),
+        Predicate that tests if value is a LIPS symbol.`),
     // ------------------------------------------------------------------
     'array?': doc('array?', function(obj) {
         return obj instanceof Array;
     }, `(array? expression)
 
-        Function check if value is an arrray.`),
+        Predicate that tests if value is an arrray.`),
     // ------------------------------------------------------------------
     'object?': doc('object?', function(obj) {
         return obj !== nil && obj !== null &&
@@ -8747,35 +8762,35 @@ var global_env = new Environment({
             !(obj instanceof Array);
     }, `(object? expression)
 
-        Function check if value is an plain object.`),
+        Predicate that tests if value is an plain object (not another LIPS type).`),
     // ------------------------------------------------------------------
     flatten: doc('flatten', function flatten(list) {
         typecheck('flatten', list, 'pair');
         return list.flatten();
     }, `(flatten list)
 
-        Return shallow list from tree structure (pairs).`),
+        Returns a shallow list from tree structure (pairs).`),
     // ------------------------------------------------------------------
     'array->list': doc('array->list', function(array) {
         typecheck('array->list', array, 'array');
         return Pair.fromArray(array);
     }, `(array->list array)
 
-        Function convert JavaScript array to LIPS list.`),
+        Function that converts a JavaScript array to a LIPS cons list.`),
     // ------------------------------------------------------------------
     'tree->array': doc(
         'tree->array',
         to_array('tree->array', true),
         `(tree->array list)
 
-         Function convert LIPS list structure into JavaScript array.`),
+         Function that converts a LIPS cons tree structure into a JavaScript array.`),
     // ------------------------------------------------------------------
     'list->array': doc(
         'list->array',
         to_array('list->array'),
         `(list->array list)
 
-         Function convert LIPS list into JavaScript array.`),
+         Function that converts a LIPS list into a JavaScript array.`),
     // ------------------------------------------------------------------
     apply: doc('apply', function apply(fn, ...args) {
         typecheck('apply', fn, 'function', 1);
@@ -8785,7 +8800,7 @@ var global_env = new Environment({
         return fn.apply(this, prepare_fn_args(fn, args));
     }, `(apply fn list)
 
-        Function that call function with list of arguments.`),
+        Function that calls fn with the list of arguments.`),
     // ------------------------------------------------------------------
     length: doc('length', function length(obj) {
         if (!obj || obj === nil) {
@@ -8799,8 +8814,9 @@ var global_env = new Environment({
         }
     }, `(length expression)
 
-        Function return length of the object, the object can be list
-        or any object that have length property.`),
+        Function that returns the length of the object. The object can be a LIPS
+        list or any object that has a "length" property. Returns undefined if the
+        length could not be found.`),
     // ------------------------------------------------------------------
     'string->number': doc('string->number', function(arg, radix = 10) {
         typecheck('string->number', arg, 'string', 1);
@@ -8823,7 +8839,7 @@ var global_env = new Environment({
         return false;
     }, `(string->number number [radix])
 
-        Function convert string to number.`),
+        Function that parses a string into a number.`),
     // ------------------------------------------------------------------
     'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
         return new Promise((resolve, reject) => {
@@ -8893,20 +8909,20 @@ var global_env = new Environment({
          (try expr (catch (e) code) (finally code))
          (try expr (finally code))
 
-         Macro execute user code and catch exception. If catch is provided
-         it's executed when expression expr throw error. If finally is provide
-         it's always executed at the end.`),
+         Macro that executes expr and catches any exceptions thrown. If catch is provided
+         it's executed when an error is thown. If finally is provided it's always executed
+         at the end.`),
     // ------------------------------------------------------------------
     'raise': doc('raise', function(obj) {
         throw obj;
     }, `(raise obj)
 
-        Throws new exception with given object.`),
+        Throws the object verbatim (no wrapping an a new Error).`),
     'throw': doc('throw', function(message) {
         throw new Error(message);
     }, `(throw string)
 
-        Throws new expection.`),
+        Throws a new exception.`),
     // ------------------------------------------------------------------
     find: doc('find', function find(arg, list) {
         typecheck('find', arg, ['regex', 'function']);
@@ -8924,8 +8940,8 @@ var global_env = new Environment({
     }, `(find fn list)
         (find regex list)
 
-        Higher order Function find first value for which function return true.
-        If called with regex it will create matcher function.`),
+        Higher-order function that finds the first value for which fn return true.
+        If called with a regex it will create a matcher function.`),
     // ------------------------------------------------------------------
     'for-each': doc('for-each', function(fn, ...lists) {
         typecheck('for-each', fn, 'function');
@@ -8941,10 +8957,10 @@ var global_env = new Environment({
         }
     }, `(for-each fn . lists)
 
-        Higher order function that call function \`fn\` by for each
-        value of the argument. If you provide more then one list as argument
+        Higher-order function that calls function \`fn\` on each
+        value of the argument. If you provide more than one list
         it will take each value from each list and call \`fn\` function
-        with that many argument as number of list arguments.`),
+        with that many arguments as number of list arguments.`),
     // ------------------------------------------------------------------
     map: doc('map', function map(fn, ...lists) {
         typecheck('map', fn, 'function');
@@ -8973,12 +8989,12 @@ var global_env = new Environment({
         });
     }, `(map fn . lists)
 
-        Higher order function that call function \`fn\` by for each
-        value of the argument. If you provide more then one list as argument
+        Higher-order function that calls function \`fn\` with each
+        value of the list. If you provide more then one list as argument
         it will take each value from each list and call \`fn\` function
         with that many argument as number of list arguments. The return
-        values of the function call is acumulated in result list and
-        returned by the call to map.`),
+        values of the fn calls are acumulated in a result list and
+        returned by map.`),
     // ------------------------------------------------------------------
     'list?': doc('list?', function(obj) {
         var node = obj;
@@ -8996,8 +9012,8 @@ var global_env = new Environment({
         }
     }, `(list? obj)
 
-        Function test if value is proper linked list structure.
-        The car of each pair can be any value. It return false on cycles."`),
+        Predicate that tests if value is a proper linked list structure.
+        The car of each pair can be any value. It returns false on cyclic lists."`),
     // ------------------------------------------------------------------
     some: doc('some', function some(fn, list) {
         typecheck('some', fn, 'function');
@@ -9011,9 +9027,10 @@ var global_env = new Environment({
         }
     }, `(some fn list)
 
-        Higher order function that call argument on each element of the list.
-        It stops when function fn return true for a value if so it will
-        return true. If none of the values give true, the function return false`),
+        Higher-order function that calls fn on each element of the list.
+        It stops and returns true when fn returns true for a value.
+        If none of the values give true, some will return false.
+        Analagous to Python's any().`),
     // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function(fold, fn, init, ...lists) {
         typecheck('fold', fn, 'function');
@@ -9029,10 +9046,10 @@ var global_env = new Environment({
         });
     }), `(fold fn init . lists)
 
-         Function fold is reverse of the reduce. it call function \`fn\`
-         on each elements of the list and return single value.
-         e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))
-         for: (fold fn '() alist blist)`),
+         Function fold is left-to-right reversal of reduce. It call \`fn\`
+         on each pair of elements of the list and returns a single value.
+         e.g. it computes (fn 'a 'x (fn 'b 'y (fn 'c 'z 'foo)))
+         for: (fold fn 'foo '(a b c) '(x y z))`),
     // ------------------------------------------------------------------
     pluck: doc('pluck', function pluck(...keys) {
         return function(obj) {
@@ -9049,11 +9066,12 @@ var global_env = new Environment({
             });
             return result;
         };
-    }, `(pluck . string)
+    }, `(pluck . strings)
 
-        If called with single string it will return function that will return
-        key from object. If called with more then one argument function will
-        return new object by taking all properties from given object.`),
+        If called with a single string it will return a function that when
+        called with an object will return that key from the object.
+        If called with more then one string the returned function will
+        create a new object by copying all properties from the given object.`),
     // ------------------------------------------------------------------
     reduce: doc('reduce', fold('reduce', function(reduce, fn, init, ...lists) {
         typecheck('reduce', fn, 'function');
@@ -9068,12 +9086,12 @@ var global_env = new Environment({
         });
     }), `(reduce fn init list . lists)
 
-         Higher order function take each element of the list and call
-         the function with result of previous call or init and next element
-         on the list until each element is processed and return single value
+         Higher-order function that takes each element of the list and calls
+         the fn with result of previous call or init and the next element
+         of the list until each element is processed, and returns a single value
          as result of last call to \`fn\` function.
-         e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))
-         for (reduce fn init alist blist)`),
+         e.g. it computes (fn 'c 'z (fn 'b 'y (fn 'a 'x 'foo)))
+         for: (reduce fn 'foo '(a b c) '(x y z))`),
     // ------------------------------------------------------------------
     filter: doc('filter', function filter(arg, list) {
         typecheck('filter', arg, ['regex', 'function']);
@@ -9097,35 +9115,34 @@ var global_env = new Environment({
     }, `(filter fn list)
         (filter regex list)
 
-        Higher order function that call \`fn\` for each element of the list
-        and return list for only those elements for which funtion return
-        true value. If called with regex it will create matcher function.`),
+        Higher-order function that calls \`fn\` for each element of the list
+        and return a new list for only those elements for which fn returns
+        a truthy value. If called with a regex it will create a matcher function.`),
     // ------------------------------------------------------------------
     compose: doc(
         compose,
         `(compose . fns)
 
-         Higher order function and create new function that apply all functions
-         From right to left and return it's value. Reverse of compose.
+         Higher-order function that creates a new function that applies all functions
+         from right to left and returns the last value. Reverse of pipe.
          e.g.:
-         ((compose (curry + 2) (curry * 3)) 3)
-         11`),
+         ((compose (curry + 2) (curry * 3)) 10) --> (+ 2 (* 3 10)) --> 32`),
     pipe: doc(
         pipe,
         `(pipe . fns)
 
-         Higher order function and create new function that apply all functions
-         From left to right and return it's value. Reverse of compose.
+         Higher-order function that creates a new function that applies all functions
+         from left to right and returns the last value. Reverse of compose.
          e.g.:
-         ((pipe (curry + 2) (curry * 3)) 3)
-         15`),
+         ((pipe (curry + 2) (curry * 3)) 10) --> (* 3 (+ 2 10)) --> 36`),
     curry: doc(
         curry,
         `(curry fn . args)
 
-         Higher order function that create curried version of the function.
+         Higher-order function that creates a curried version of the function.
          The result function will have parially applied arguments and it
-         will keep returning functions until all arguments are added
+         will keep returning one-argument functions until all arguments are provided,
+         then it calls the original function with the accumulated arguments.
 
          e.g.:
          (define (add a b c d) (+ a b c d))
@@ -9142,7 +9159,7 @@ var global_env = new Environment({
         });
     }, `(gcd n1 n2 ...)
 
-            Function return the greatest common divisor of their arguments.`),
+        Function that returns the greatest common divisor of the arguments.`),
     // ------------------------------------------------------------------
     lcm: doc('lcm', function lcm(...args) {
         typecheck_args('lcm', args, 'number');
@@ -9158,33 +9175,33 @@ var global_env = new Environment({
         return LNumber(a);
     }, `(lcm n1 n2 ...)
 
-        Function return the least common multiple of their arguments.`),
+        Function that returns the least common multiple of the arguments.`),
     // ------------------------------------------------------------------
     'odd?': doc('odd?', single_math_op(function(num) {
         return LNumber(num).isOdd();
     }), `(odd? number)
 
-         Function check if number os odd.`),
+         Function that checks if number is odd.`),
     // ------------------------------------------------------------------
     'even?': doc('even?', single_math_op(function(num) {
         return LNumber(num).isEven();
     }), `(even? number)
 
-         Function check if number is even.`),
+         Function that checks if number is even.`),
     // ------------------------------------------------------------------
     // math functions
     '*': doc('*', reduce_math_op(function(a, b) {
         return LNumber(a).mul(b);
     }, LNumber(1)), `(* . numbers)
 
-        Multiplicate all numbers passed as arguments. If single value is passed
+        Multiplies all numbers passed as arguments. If single value is passed
         it will return that value.`),
     // ------------------------------------------------------------------
     '+': doc('+', reduce_math_op(function(a, b) {
         return LNumber(a).add(b);
     }, LNumber(0)), `(+ . numbers)
 
-        Sum all numbers passed as arguments. If single value is passed it will
+        Sums all numbers passed as arguments. If single value is passed it will
         return that value.`),
     // ------------------------------------------------------------------
     '-': doc('-', function(...args) {
@@ -9203,7 +9220,7 @@ var global_env = new Environment({
     }, `(- n1 n2 ...)
         (- n)
 
-        Substract number passed as argument. If only one argument is passed
+        Subtracts n2 and subsequent numbers from n1. If only one argument is passed
         it will negate the value.`),
     // ------------------------------------------------------------------
     '/': doc('/', function(...args) {
@@ -9220,14 +9237,14 @@ var global_env = new Environment({
     }, `(/ n1 n2 ...)
         (/ n)
 
-        Divide number passed as arguments one by one. If single argument
-        is passed it will calculate (/ 1 n1).`),
+        Divides n1 by n2 and subsequent arguments one by one. If single argument
+        is passed it will calculate (/ 1 n).`),
     // ------------------------------------------------------------------
     abs: doc('abs', single_math_op(function(n) {
         return LNumber(n).abs();
     }), `(abs number)
 
-         Function create absolute value from number.`),
+         Function that returns the absolute value (magnitude) of number.`),
     // ------------------------------------------------------------------
     truncate: doc('truncate', function(n) {
         typecheck('truncate', n, 'number');
@@ -9240,13 +9257,13 @@ var global_env = new Environment({
         return n;
     }, `(truncate n)
 
-        Function return integer value from real number.`),
+        Function that returns the integer part (floor) of a real number.`),
     // ------------------------------------------------------------------
     sqrt: doc('sqrt', single_math_op(function(n) {
         return LNumber(n).sqrt();
     }), `(sqrt number)
 
-         Function return square root of the number.`),
+         Function that returns the square root of the number.`),
     // ------------------------------------------------------------------
     '**': doc('**', binary_math_op(function(a, b) {
         a = LNumber(a);
@@ -9257,26 +9274,26 @@ var global_env = new Environment({
         return a.pow(b);
     }), `(** a b)
 
-         Function calculate number a to to the power of b.`),
+         Function that calculates number a to to the power of b.`),
     // ------------------------------------------------------------------
     '1+': doc('1+', single_math_op(function(number) {
         return LNumber(number).add(1);
     }), `(1+ number)
 
-             Function add 1 to the number and return result.`),
+         Function that adds 1 to the number and return result.`),
     // ------------------------------------------------------------------
     '1-': doc(single_math_op(function(number) {
         return LNumber(number).sub(1);
     }), `(1- number)
 
-         Function substract 1 from the number and return result.`),
+         Function that subtracts 1 from the number and return result.`),
     // ------------------------------------------------------------------
     '%': doc('%', function(a, b) {
         typecheck_args('%', [a, b], 'number');
         return LNumber(a).rem(b);
     }, `(% n1 n2)
 
-        Function get reminder of it's arguments.`),
+        Function returns the remainder of n1/n2 (modulo).`),
     // ------------------------------------------------------------------
     // Booleans
     '==': doc('==', function(...args) {
@@ -9284,7 +9301,7 @@ var global_env = new Environment({
         return seq_compare((a, b) => LNumber(a).cmp(b) === 0, args);
     }, `(== x1 x2 ...)
 
-        Function compare its numerical arguments and check if they are equal`),
+        Function that compares its numerical arguments and check if they are all equal.`),
     // ------------------------------------------------------------------
     '>': doc('>', function(...args) {
         typecheck_args('>', args, 'number');
