@@ -15,8 +15,8 @@
 (define-macro (%make-vector prefix type help)
   "(%make-vector prefix type help)
 
-   Mega helper macro that create list of functions for single byte vector
-   based on typed array from JavaScript"
+   Mega-helper macro that creates a list of functions for single byte vectors
+   based on typed arrays from JavaScript."
   (letrec ((prefix-str (symbol->string prefix))
            (type-str (symbol->string type))
            (l-type (--> type-str (toLowerCase)))
@@ -126,14 +126,14 @@
                     (string-append ,repr-str (repr (,vector->list x) _quote))))
        )))
 ;; -----------------------------------------------------------------------------
-(%make-vector u8 Uint8Array "usigned 8-bit integer vector")
-(%make-vector s8 Int8Array "signed 8-bit integer vector")
-(%make-vector u16 Uint16Array "usigned 16-bit integer vector")
-(%make-vector s16 Int16Array "signed 16-bit integer vector")
-(%make-vector u32 Uint32Array "usigned 32-bit integer vector")
-(%make-vector s32 Int32Array "signed 32-bit integer vector")
-(%make-vector f32 Float32Array "32-bit IEEE floating point number vector")
-(%make-vector f64 Float64Array "64-bit IEEE floating point number vector")
+(%make-vector u8 Uint8Array "unsigned 8-bit integer vector (C unsigned char)")
+(%make-vector s8 Int8Array "signed 8-bit integer vector (C signed char)")
+(%make-vector u16 Uint16Array "unsigned 16-bit integer vector (C unsigned short)")
+(%make-vector s16 Int16Array "signed 16-bit integer vector (C short)")
+(%make-vector u32 Uint32Array "unsigned 32-bit integer vector (C int)")
+(%make-vector s32 Int32Array "signed 32-bit integer vector (C unsigned int)")
+(%make-vector f32 Float32Array "32-bit IEEE-754 floating point number vector (C float)")
+(%make-vector f64 Float64Array "64-bit IEEE-754 floating point number vector (C double)")
 
 ;;vector->[type]vector!
 ;;list->[type]vector!
