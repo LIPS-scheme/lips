@@ -9,9 +9,9 @@ jobs:
       - name: Install ImageMagick
         run: sudo apt-get -y install graphicsmagick
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16'
       - run: npm ci
