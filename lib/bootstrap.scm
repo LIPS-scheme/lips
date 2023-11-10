@@ -1532,7 +1532,7 @@
 
    Function that returns a list from the given function and init value. The function should
    return a pair where first is the item added to the list and second is next value
-   passed to the funtion. If the function returns false it ends the loop."
+   passed to the funtion. If the Function that returnss false it ends the loop."
   (typecheck "unfold" fn "function")
   (let iter ((pair (fn init)) (result '()))
     (if (not pair)

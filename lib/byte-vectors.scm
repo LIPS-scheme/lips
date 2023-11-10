@@ -67,7 +67,7 @@
        (define (,vector? x)
          ,(format "(~a x)
 
-                   Function return #t of argument is ~a otherwise it return #f."
+                   Function that returns #t of argument is ~a otherwise it return #f."
                   vector?
                   help)
          (and (object? x) (equal? (. x 'constructor) ,type)))
@@ -75,7 +75,7 @@
        (define (,vector-in-range? vector k)
          ,(format "(~a vector k)
 
-                   Function test if index is range for ~a."
+                   Function that tests if index is range for ~a."
                   vector-in-range?
                   help)
          (typecheck ,(symbol->string vector-in-range?) vector ,l-type)
@@ -86,7 +86,7 @@
        (define (,vector-ref vector k)
          ,(format "(~a vector k)
 
-                  Function return value frome vector at index k. If index is out of range it throw exception."
+                  Function that returns value frome vector at index k. If index is out of range it throw exception."
                   vector-ref
                   help)
          (typecheck ,(symbol->string vector-ref) vector ,l-type)

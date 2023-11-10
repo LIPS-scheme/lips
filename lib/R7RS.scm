@@ -20,7 +20,7 @@
 (define (list-match? predicate list)
   "(list-match? predicate list)
 
-   Function check if consecutive elements of the list match the predicate function."
+   Function that checks if consecutive elements of the list match the predicate function."
   (typecheck "list-match?" predicate #("function" "macro"))
   (typecheck "list-match?" list "pair")
   (or (or (null? list)
@@ -32,7 +32,7 @@
 (define (symbol=? . args)
   "(symbol=? s1 s2 ...)
 
-   Function check if each value is symbol and it's the same acording to string=? predicate."
+   Function that checks if each value is symbol and it's the same acording to string=? predicate."
   (list-match? (lambda (a b)
                  (and (symbol? a) (symbol? b) (equal? a b)))
                args))
@@ -43,7 +43,7 @@
 (define (values-ref values n)
   "(values-ref values n)
 
-   Function return n value of values object which is result of value function."
+   Function that returns n value of values object which is result of value function."
   (typecheck "values-ref" values "values" 1)
   (typecheck "values-ref" n "number" 1)
   (--> values (valueOf) n))
@@ -67,7 +67,7 @@
 (define (vector-append . args)
   "(vector-append v1 v2 ...)
 
-   Function return new vector by combining it's arguments that should be vectors."
+   Function that returns new vector by combining it's arguments that should be vectors."
   (if (null? args)
       (vector)
       (begin
@@ -102,7 +102,7 @@
   (vector->list vector start)
   (vector->list vector start end)
 
-  Function copy given range of vector to list. If no start is specified it use
+  Function that copies given range of vector to list. If no start is specified it use
   start of the vector, if no end is specified it convert to the end of the vector."
  (typecheck "vector->list" vector "array")
  (array->list (vector.slice start end)))
@@ -114,7 +114,7 @@
   (string->list string start)
   (string->list string start end)
 
-  Function copy given range of string to list. If no start is specified it use
+  Function that copies given range of string to list. If no start is specified it use
   start of the string, if no end is specified it convert to the end of the string."
  (typecheck "string->vector" string "string")
  (--> (string.substring start end)
@@ -128,7 +128,7 @@
    (vector->string vector start)
    (vector->string vector start end)
 
-   Function return new string created from vector of characters in given range.
+   Function that returns new string created from vector of characters in given range.
    If no start is given it create string from 0, if no end is given it return
    string to the end."
   (typecheck "vector->string" vector "array")
@@ -237,7 +237,7 @@
 (define (boolean=? . args)
   "(boolean=? b1 b2 ...)
 
-   Function check if all arguments are boolean and if they are the same."
+   Function that checks if all arguments are boolean and if they are the same."
   (if (< (length args) 2)
       (error "boolean=?: too few arguments")
       (reduce (lambda (acc item)
@@ -249,7 +249,7 @@
 (define (port? x)
   "(port? x)
 
-   Function return true of argumet is nput or output port port object."
+   Function that returns true of argumet is nput or output port port object."
   (or (output-port? x) (input-port? x)))
 
 ;; -----------------------------------------------------------------------------
@@ -287,7 +287,7 @@
 (define (exact-integer? n)
   "(exact-integer? n)
 
-   Function returns #t if z is both exact and an integer; otherwise
+   Function that returnss #t if z is both exact and an integer; otherwise
    returns #f."
   (and (integer? n) (exact? n)))
 
@@ -295,7 +295,7 @@
 (define (vector-map fn . rest)
   "(vector-map fn vector1 vector2 ...)
 
-   Function return new vector from applying function fn to each element
+   Function that returns new vector from applying function fn to each element
    of the vectors, similar to map for lists."
   (if (or (= (length rest) 0) (not (every vector? rest)))
       (error "vector-map: function require at least 1 vector")
@@ -311,7 +311,7 @@
 (define (string-map fn . rest)
   "(string-map fn string1 stringr2 ...)
 
-   Function return new string from applying function fn to each element
+   Function that returns new string from applying function fn to each element
    of the strings, similar to map for lists."
   (if (or (= (length rest) 0) (not (every string? rest)))
       (error "string-map: function require at least 1 string")
@@ -695,7 +695,7 @@
 (define (open-binary-input-file filename)
   "(open-binary-input-file filename)
 
-  Function return new Input Binary Port with given filename. In Browser
+  Function that returns new Input Binary Port with given filename. In Browser
   user need to provide global fs variable that is instance of FS interface."
   (let ((u8vector (buffer->u8vector (%read-binary-file filename))))
     (new lips.InputBinaryFilePort u8vector filename)))
@@ -704,14 +704,14 @@
 (define (binary-port? port)
   "(binary-port? port)
 
-   Function test if argument is binary port."
+   Function that tests if argument is binary port."
   (and (port? port) (eq? port.__type__ (Symbol.for "binary"))))
 
 ;; -----------------------------------------------------------------------------
 (define (textual-port? port)
   "(textual-port? port)
 
-   Function test if argument is string port."
+   Function that tests if argument is string port."
   (and (port? port) (eq? port.__type__ (Symbol.for "text"))))
 
 ;; -----------------------------------------------------------------------------
@@ -900,14 +900,14 @@
 (define (output-port-open? port)
   "(output-port-open? port)
 
-   Function check if argument is output-port and if you can write to it."
+   Function that checks if argument is output-port and if you can write to it."
   (and (output-port? port) (port.is_open)))
 
 ;; -----------------------------------------------------------------------------
 (define (input-port-open? port)
   "(input-port-open? port)
 
-   Function check if argument is input-port and if you can read from it."
+   Function that checks if argument is input-port and if you can read from it."
   (and (input-port? port) (port.is_open)))
 
 ;; -----------------------------------------------------------------------------
@@ -1039,7 +1039,7 @@
 (define (nan? x)
   "(nan? x)
 
-  Function check if argument x is Not a Number (NaN) value."
+  Function that checks if argument x is Not a Number (NaN) value."
   (and (number? x)
        (or (x.isNaN)
            (and (%number-type "complex" x)
@@ -1050,7 +1050,7 @@
 (define (infinite? x)
   "(infinite? x)
 
-  Function check if value is infinite."
+  Function that checks if value is infinite."
   (or (eq? x Number.NEGATIVE_INFINITY)
       (eq? x Number.POSITIVE_INFINITY)
       (and (number? x)
@@ -1063,7 +1063,7 @@
 (define (finite? x)
   "(finite? x)
 
-  Function check if value is finite."
+  Function that checks if value is finite."
   (not (infinite? x)))
 
 ;; -----------------------------------------------------------------------------
@@ -1244,7 +1244,7 @@
 (define (error-object? obj)
   "(error-object? obj)
 
-   Function check if object is of Error object throwed by error function."
+   Function that checks if object is of Error object throwed by error function."
   (instanceof lips.Error obj))
 
 ;; -----------------------------------------------------------------------------
@@ -1267,7 +1267,7 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Function returns all variables as alist. This funtion throws exception
+   Function that returnss all variables as alist. This funtion throws exception
    when called in browser."
   (if (eq? self window)
       (throw "get-environment-variables: Node.js only funtion")
@@ -1277,7 +1277,7 @@
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Function return given environment variable. This funtion throws exception
+   Function that returns given environment variable. This funtion throws exception
    when called in browser."
   (. process.env name))
 

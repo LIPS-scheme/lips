@@ -18,7 +18,7 @@
 (define (command-name)
   "(command-name)
 
-   Function returns LIPS script that was executed or #f."
+   Function that returnss LIPS script that was executed or #f."
   (let* ((cmd (command-line))
          (name (car cmd)))
     (and (> (length name) 0) name)))
@@ -27,7 +27,7 @@
 (define (command-args)
   "(command-args)
 
-   Function returns list of arguments for LIPS script that was executed."
+   Function that returnss list of arguments for LIPS script that was executed."
   (let* ((cmd (command-line))
          (args (cdr cmd)))
     (if (null? args)
@@ -38,7 +38,7 @@
 (define (script-file)
   "(script-file)
 
-   Function returns absolute path for LIPS script that was executed or #f."
+   Function that returnss absolute path for LIPS script that was executed or #f."
   (if (eq? self window)
       #f
       (let ((name (command-name)))
@@ -48,7 +48,7 @@
 (define (script-directory)
   "(script-file)
 
-   Function returns list of absolute path for directory of LIPS script that was executed or #f."
+   Function that returnss list of absolute path for directory of LIPS script that was executed or #f."
   (if (eq? self window)
       #f
       (let ((path (require "path"))
