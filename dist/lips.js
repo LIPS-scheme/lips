@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 06 Sep 2023 20:32:14 +0000
+ * build: Fri, 10 Nov 2023 16:25:41 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -1439,7 +1439,7 @@
    * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
    * get the Object implementation, which is slower but behaves correctly.
    */
-  Buffer.TYPED_ARRAY_SUPPORT = global$1.TYPED_ARRAY_SUPPORT !== undefined
+  Buffer$1.TYPED_ARRAY_SUPPORT = global$1.TYPED_ARRAY_SUPPORT !== undefined
     ? global$1.TYPED_ARRAY_SUPPORT
     : true;
 
@@ -1449,7 +1449,7 @@
   kMaxLength();
 
   function kMaxLength () {
-    return Buffer.TYPED_ARRAY_SUPPORT
+    return Buffer$1.TYPED_ARRAY_SUPPORT
       ? 0x7fffffff
       : 0x3fffffff
   }
@@ -1458,14 +1458,14 @@
     if (kMaxLength() < length) {
       throw new RangeError('Invalid typed array length')
     }
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       // Return an augmented `Uint8Array` instance, for best performance
       that = new Uint8Array(length);
-      that.__proto__ = Buffer.prototype;
+      that.__proto__ = Buffer$1.prototype;
     } else {
       // Fallback: Return an object instance of the Buffer class
       if (that === null) {
-        that = new Buffer(length);
+        that = new Buffer$1(length);
       }
       that.length = length;
     }
@@ -1483,9 +1483,9 @@
    * The `Uint8Array` prototype remains unmodified.
    */
 
-  function Buffer (arg, encodingOrOffset, length) {
-    if (!Buffer.TYPED_ARRAY_SUPPORT && !(this instanceof Buffer)) {
-      return new Buffer(arg, encodingOrOffset, length)
+  function Buffer$1 (arg, encodingOrOffset, length) {
+    if (!Buffer$1.TYPED_ARRAY_SUPPORT && !(this instanceof Buffer$1)) {
+      return new Buffer$1(arg, encodingOrOffset, length)
     }
 
     // Common case.
@@ -1500,11 +1500,11 @@
     return from(this, arg, encodingOrOffset, length)
   }
 
-  Buffer.poolSize = 8192; // not used by this implementation
+  Buffer$1.poolSize = 8192; // not used by this implementation
 
   // TODO: Legacy, not needed anymore. Remove in next major version.
-  Buffer._augment = function (arr) {
-    arr.__proto__ = Buffer.prototype;
+  Buffer$1._augment = function (arr) {
+    arr.__proto__ = Buffer$1.prototype;
     return arr
   };
 
@@ -1532,13 +1532,13 @@
    * Buffer.from(buffer)
    * Buffer.from(arrayBuffer[, byteOffset[, length]])
    **/
-  Buffer.from = function (value, encodingOrOffset, length) {
+  Buffer$1.from = function (value, encodingOrOffset, length) {
     return from(null, value, encodingOrOffset, length)
   };
 
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    Buffer.prototype.__proto__ = Uint8Array.prototype;
-    Buffer.__proto__ = Uint8Array;
+  if (Buffer$1.TYPED_ARRAY_SUPPORT) {
+    Buffer$1.prototype.__proto__ = Uint8Array.prototype;
+    Buffer$1.__proto__ = Uint8Array;
   }
 
   function assertSize (size) {
@@ -1569,14 +1569,14 @@
    * Creates a new filled Buffer instance.
    * alloc(size[, fill[, encoding]])
    **/
-  Buffer.alloc = function (size, fill, encoding) {
+  Buffer$1.alloc = function (size, fill, encoding) {
     return alloc(null, size, fill, encoding)
   };
 
   function allocUnsafe (that, size) {
     assertSize(size);
     that = createBuffer(that, size < 0 ? 0 : checked(size) | 0);
-    if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    if (!Buffer$1.TYPED_ARRAY_SUPPORT) {
       for (var i = 0; i < size; ++i) {
         that[i] = 0;
       }
@@ -1587,13 +1587,13 @@
   /**
    * Equivalent to Buffer(num), by default creates a non-zero-filled Buffer instance.
    * */
-  Buffer.allocUnsafe = function (size) {
+  Buffer$1.allocUnsafe = function (size) {
     return allocUnsafe(null, size)
   };
   /**
    * Equivalent to SlowBuffer(num), by default creates a non-zero-filled Buffer instance.
    */
-  Buffer.allocUnsafeSlow = function (size) {
+  Buffer$1.allocUnsafeSlow = function (size) {
     return allocUnsafe(null, size)
   };
 
@@ -1602,7 +1602,7 @@
       encoding = 'utf8';
     }
 
-    if (!Buffer.isEncoding(encoding)) {
+    if (!Buffer$1.isEncoding(encoding)) {
       throw new TypeError('"encoding" must be a valid string encoding')
     }
 
@@ -1649,10 +1649,10 @@
       array = new Uint8Array(array, byteOffset, length);
     }
 
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       // Return an augmented `Uint8Array` instance, for best performance
       that = array;
-      that.__proto__ = Buffer.prototype;
+      that.__proto__ = Buffer$1.prototype;
     } else {
       // Fallback: Return an object instance of the Buffer class
       that = fromArrayLike(that, array);
@@ -1699,12 +1699,12 @@
     }
     return length | 0
   }
-  Buffer.isBuffer = isBuffer;
+  Buffer$1.isBuffer = isBuffer;
   function internalIsBuffer (b) {
     return !!(b != null && b._isBuffer)
   }
 
-  Buffer.compare = function compare (a, b) {
+  Buffer$1.compare = function compare (a, b) {
     if (!internalIsBuffer(a) || !internalIsBuffer(b)) {
       throw new TypeError('Arguments must be Buffers')
     }
@@ -1727,7 +1727,7 @@
     return 0
   };
 
-  Buffer.isEncoding = function isEncoding (encoding) {
+  Buffer$1.isEncoding = function isEncoding (encoding) {
     switch (String(encoding).toLowerCase()) {
       case 'hex':
       case 'utf8':
@@ -1746,13 +1746,13 @@
     }
   };
 
-  Buffer.concat = function concat (list, length) {
+  Buffer$1.concat = function concat (list, length) {
     if (!isArray(list)) {
       throw new TypeError('"list" argument must be an Array of Buffers')
     }
 
     if (list.length === 0) {
-      return Buffer.alloc(0)
+      return Buffer$1.alloc(0)
     }
 
     var i;
@@ -1763,7 +1763,7 @@
       }
     }
 
-    var buffer = Buffer.allocUnsafe(length);
+    var buffer = Buffer$1.allocUnsafe(length);
     var pos = 0;
     for (i = 0; i < list.length; ++i) {
       var buf = list[i];
@@ -1819,7 +1819,7 @@
       }
     }
   }
-  Buffer.byteLength = byteLength;
+  Buffer$1.byteLength = byteLength;
 
   function slowToString (encoding, start, end) {
     var loweredCase = false;
@@ -1893,7 +1893,7 @@
 
   // The property is used by `Buffer.isBuffer` and `is-buffer` (in Safari 5-7) to detect
   // Buffer instances.
-  Buffer.prototype._isBuffer = true;
+  Buffer$1.prototype._isBuffer = true;
 
   function swap (b, n, m) {
     var i = b[n];
@@ -1901,7 +1901,7 @@
     b[m] = i;
   }
 
-  Buffer.prototype.swap16 = function swap16 () {
+  Buffer$1.prototype.swap16 = function swap16 () {
     var len = this.length;
     if (len % 2 !== 0) {
       throw new RangeError('Buffer size must be a multiple of 16-bits')
@@ -1912,7 +1912,7 @@
     return this
   };
 
-  Buffer.prototype.swap32 = function swap32 () {
+  Buffer$1.prototype.swap32 = function swap32 () {
     var len = this.length;
     if (len % 4 !== 0) {
       throw new RangeError('Buffer size must be a multiple of 32-bits')
@@ -1924,7 +1924,7 @@
     return this
   };
 
-  Buffer.prototype.swap64 = function swap64 () {
+  Buffer$1.prototype.swap64 = function swap64 () {
     var len = this.length;
     if (len % 8 !== 0) {
       throw new RangeError('Buffer size must be a multiple of 64-bits')
@@ -1938,20 +1938,20 @@
     return this
   };
 
-  Buffer.prototype.toString = function toString () {
+  Buffer$1.prototype.toString = function toString () {
     var length = this.length | 0;
     if (length === 0) return ''
     if (arguments.length === 0) return utf8Slice(this, 0, length)
     return slowToString.apply(this, arguments)
   };
 
-  Buffer.prototype.equals = function equals (b) {
+  Buffer$1.prototype.equals = function equals (b) {
     if (!internalIsBuffer(b)) throw new TypeError('Argument must be a Buffer')
     if (this === b) return true
-    return Buffer.compare(this, b) === 0
+    return Buffer$1.compare(this, b) === 0
   };
 
-  Buffer.prototype.inspect = function inspect () {
+  Buffer$1.prototype.inspect = function inspect () {
     var str = '';
     var max = INSPECT_MAX_BYTES;
     if (this.length > 0) {
@@ -1961,7 +1961,7 @@
     return '<Buffer ' + str + '>'
   };
 
-  Buffer.prototype.compare = function compare (target, start, end, thisStart, thisEnd) {
+  Buffer$1.prototype.compare = function compare (target, start, end, thisStart, thisEnd) {
     if (!internalIsBuffer(target)) {
       throw new TypeError('Argument must be a Buffer')
     }
@@ -2060,7 +2060,7 @@
 
     // Normalize val
     if (typeof val === 'string') {
-      val = Buffer.from(val, encoding);
+      val = Buffer$1.from(val, encoding);
     }
 
     // Finally, search either indexOf (if dir is true) or lastIndexOf
@@ -2072,7 +2072,7 @@
       return arrayIndexOf(buffer, val, byteOffset, encoding, dir)
     } else if (typeof val === 'number') {
       val = val & 0xFF; // Search for a byte value [0-255]
-      if (Buffer.TYPED_ARRAY_SUPPORT &&
+      if (Buffer$1.TYPED_ARRAY_SUPPORT &&
           typeof Uint8Array.prototype.indexOf === 'function') {
         if (dir) {
           return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset)
@@ -2142,15 +2142,15 @@
     return -1
   }
 
-  Buffer.prototype.includes = function includes (val, byteOffset, encoding) {
+  Buffer$1.prototype.includes = function includes (val, byteOffset, encoding) {
     return this.indexOf(val, byteOffset, encoding) !== -1
   };
 
-  Buffer.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
+  Buffer$1.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
     return bidirectionalIndexOf(this, val, byteOffset, encoding, true)
   };
 
-  Buffer.prototype.lastIndexOf = function lastIndexOf (val, byteOffset, encoding) {
+  Buffer$1.prototype.lastIndexOf = function lastIndexOf (val, byteOffset, encoding) {
     return bidirectionalIndexOf(this, val, byteOffset, encoding, false)
   };
 
@@ -2201,7 +2201,7 @@
     return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
   }
 
-  Buffer.prototype.write = function write (string, offset, length, encoding) {
+  Buffer$1.prototype.write = function write (string, offset, length, encoding) {
     // Buffer#write(string)
     if (offset === undefined) {
       encoding = 'utf8';
@@ -2273,7 +2273,7 @@
     }
   };
 
-  Buffer.prototype.toJSON = function toJSON () {
+  Buffer$1.prototype.toJSON = function toJSON () {
     return {
       type: 'Buffer',
       data: Array.prototype.slice.call(this._arr || this, 0)
@@ -2426,7 +2426,7 @@
     return res
   }
 
-  Buffer.prototype.slice = function slice (start, end) {
+  Buffer$1.prototype.slice = function slice (start, end) {
     var len = this.length;
     start = ~~start;
     end = end === undefined ? len : ~~end;
@@ -2448,12 +2448,12 @@
     if (end < start) end = start;
 
     var newBuf;
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       newBuf = this.subarray(start, end);
-      newBuf.__proto__ = Buffer.prototype;
+      newBuf.__proto__ = Buffer$1.prototype;
     } else {
       var sliceLen = end - start;
-      newBuf = new Buffer(sliceLen, undefined);
+      newBuf = new Buffer$1(sliceLen, undefined);
       for (var i = 0; i < sliceLen; ++i) {
         newBuf[i] = this[i + start];
       }
@@ -2470,7 +2470,7 @@
     if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
   }
 
-  Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
+  Buffer$1.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
     offset = offset | 0;
     byteLength = byteLength | 0;
     if (!noAssert) checkOffset(offset, byteLength, this.length);
@@ -2485,7 +2485,7 @@
     return val
   };
 
-  Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
+  Buffer$1.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
     offset = offset | 0;
     byteLength = byteLength | 0;
     if (!noAssert) {
@@ -2501,22 +2501,22 @@
     return val
   };
 
-  Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+  Buffer$1.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 1, this.length);
     return this[offset]
   };
 
-  Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+  Buffer$1.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 2, this.length);
     return this[offset] | (this[offset + 1] << 8)
   };
 
-  Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+  Buffer$1.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 2, this.length);
     return (this[offset] << 8) | this[offset + 1]
   };
 
-  Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+  Buffer$1.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 4, this.length);
 
     return ((this[offset]) |
@@ -2525,7 +2525,7 @@
         (this[offset + 3] * 0x1000000)
   };
 
-  Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+  Buffer$1.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 4, this.length);
 
     return (this[offset] * 0x1000000) +
@@ -2534,7 +2534,7 @@
       this[offset + 3])
   };
 
-  Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
+  Buffer$1.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
     offset = offset | 0;
     byteLength = byteLength | 0;
     if (!noAssert) checkOffset(offset, byteLength, this.length);
@@ -2552,7 +2552,7 @@
     return val
   };
 
-  Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
+  Buffer$1.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
     offset = offset | 0;
     byteLength = byteLength | 0;
     if (!noAssert) checkOffset(offset, byteLength, this.length);
@@ -2570,25 +2570,25 @@
     return val
   };
 
-  Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+  Buffer$1.prototype.readInt8 = function readInt8 (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 1, this.length);
     if (!(this[offset] & 0x80)) return (this[offset])
     return ((0xff - this[offset] + 1) * -1)
   };
 
-  Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+  Buffer$1.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 2, this.length);
     var val = this[offset] | (this[offset + 1] << 8);
     return (val & 0x8000) ? val | 0xFFFF0000 : val
   };
 
-  Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+  Buffer$1.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 2, this.length);
     var val = this[offset + 1] | (this[offset] << 8);
     return (val & 0x8000) ? val | 0xFFFF0000 : val
   };
 
-  Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+  Buffer$1.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 4, this.length);
 
     return (this[offset]) |
@@ -2597,7 +2597,7 @@
       (this[offset + 3] << 24)
   };
 
-  Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+  Buffer$1.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 4, this.length);
 
     return (this[offset] << 24) |
@@ -2606,22 +2606,22 @@
       (this[offset + 3])
   };
 
-  Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+  Buffer$1.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 4, this.length);
     return read$1(this, offset, true, 23, 4)
   };
 
-  Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+  Buffer$1.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 4, this.length);
     return read$1(this, offset, false, 23, 4)
   };
 
-  Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+  Buffer$1.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 8, this.length);
     return read$1(this, offset, true, 52, 8)
   };
 
-  Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+  Buffer$1.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
     if (!noAssert) checkOffset(offset, 8, this.length);
     return read$1(this, offset, false, 52, 8)
   };
@@ -2632,7 +2632,7 @@
     if (offset + ext > buf.length) throw new RangeError('Index out of range')
   }
 
-  Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
+  Buffer$1.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
     value = +value;
     offset = offset | 0;
     byteLength = byteLength | 0;
@@ -2651,7 +2651,7 @@
     return offset + byteLength
   };
 
-  Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
+  Buffer$1.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
     value = +value;
     offset = offset | 0;
     byteLength = byteLength | 0;
@@ -2670,11 +2670,11 @@
     return offset + byteLength
   };
 
-  Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
+  Buffer$1.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0);
-    if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value);
+    if (!Buffer$1.TYPED_ARRAY_SUPPORT) value = Math.floor(value);
     this[offset] = (value & 0xff);
     return offset + 1
   };
@@ -2687,11 +2687,11 @@
     }
   }
 
-  Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
+  Buffer$1.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0);
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       this[offset] = (value & 0xff);
       this[offset + 1] = (value >>> 8);
     } else {
@@ -2700,11 +2700,11 @@
     return offset + 2
   };
 
-  Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
+  Buffer$1.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0);
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       this[offset] = (value >>> 8);
       this[offset + 1] = (value & 0xff);
     } else {
@@ -2720,11 +2720,11 @@
     }
   }
 
-  Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
+  Buffer$1.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0);
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       this[offset + 3] = (value >>> 24);
       this[offset + 2] = (value >>> 16);
       this[offset + 1] = (value >>> 8);
@@ -2735,11 +2735,11 @@
     return offset + 4
   };
 
-  Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
+  Buffer$1.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0);
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       this[offset] = (value >>> 24);
       this[offset + 1] = (value >>> 16);
       this[offset + 2] = (value >>> 8);
@@ -2750,7 +2750,7 @@
     return offset + 4
   };
 
-  Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
+  Buffer$1.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) {
@@ -2773,7 +2773,7 @@
     return offset + byteLength
   };
 
-  Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
+  Buffer$1.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) {
@@ -2796,21 +2796,21 @@
     return offset + byteLength
   };
 
-  Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
+  Buffer$1.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80);
-    if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value);
+    if (!Buffer$1.TYPED_ARRAY_SUPPORT) value = Math.floor(value);
     if (value < 0) value = 0xff + value + 1;
     this[offset] = (value & 0xff);
     return offset + 1
   };
 
-  Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
+  Buffer$1.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000);
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       this[offset] = (value & 0xff);
       this[offset + 1] = (value >>> 8);
     } else {
@@ -2819,11 +2819,11 @@
     return offset + 2
   };
 
-  Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
+  Buffer$1.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000);
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       this[offset] = (value >>> 8);
       this[offset + 1] = (value & 0xff);
     } else {
@@ -2832,11 +2832,11 @@
     return offset + 2
   };
 
-  Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
+  Buffer$1.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000);
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       this[offset] = (value & 0xff);
       this[offset + 1] = (value >>> 8);
       this[offset + 2] = (value >>> 16);
@@ -2847,12 +2847,12 @@
     return offset + 4
   };
 
-  Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
+  Buffer$1.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
     value = +value;
     offset = offset | 0;
     if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000);
     if (value < 0) value = 0xffffffff + value + 1;
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
+    if (Buffer$1.TYPED_ARRAY_SUPPORT) {
       this[offset] = (value >>> 24);
       this[offset + 1] = (value >>> 16);
       this[offset + 2] = (value >>> 8);
@@ -2876,11 +2876,11 @@
     return offset + 4
   }
 
-  Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
+  Buffer$1.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
     return writeFloat(this, value, offset, true, noAssert)
   };
 
-  Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
+  Buffer$1.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
     return writeFloat(this, value, offset, false, noAssert)
   };
 
@@ -2892,16 +2892,16 @@
     return offset + 8
   }
 
-  Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
+  Buffer$1.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
     return writeDouble(this, value, offset, true, noAssert)
   };
 
-  Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
+  Buffer$1.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
     return writeDouble(this, value, offset, false, noAssert)
   };
 
   // copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
-  Buffer.prototype.copy = function copy (target, targetStart, start, end) {
+  Buffer$1.prototype.copy = function copy (target, targetStart, start, end) {
     if (!start) start = 0;
     if (!end && end !== 0) end = this.length;
     if (targetStart >= target.length) targetStart = target.length;
@@ -2933,7 +2933,7 @@
       for (i = len - 1; i >= 0; --i) {
         target[i + targetStart] = this[i + start];
       }
-    } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    } else if (len < 1000 || !Buffer$1.TYPED_ARRAY_SUPPORT) {
       // ascending copy from start
       for (i = 0; i < len; ++i) {
         target[i + targetStart] = this[i + start];
@@ -2953,7 +2953,7 @@
   //    buffer.fill(number[, offset[, end]])
   //    buffer.fill(buffer[, offset[, end]])
   //    buffer.fill(string[, offset[, end]][, encoding])
-  Buffer.prototype.fill = function fill (val, start, end, encoding) {
+  Buffer$1.prototype.fill = function fill (val, start, end, encoding) {
     // Handle string cases:
     if (typeof val === 'string') {
       if (typeof start === 'string') {
@@ -2973,7 +2973,7 @@
       if (encoding !== undefined && typeof encoding !== 'string') {
         throw new TypeError('encoding must be a string')
       }
-      if (typeof encoding === 'string' && !Buffer.isEncoding(encoding)) {
+      if (typeof encoding === 'string' && !Buffer$1.isEncoding(encoding)) {
         throw new TypeError('Unknown encoding: ' + encoding)
       }
     } else if (typeof val === 'number') {
@@ -3002,7 +3002,7 @@
     } else {
       var bytes = internalIsBuffer(val)
         ? val
-        : utf8ToBytes(new Buffer(val, encoding).toString());
+        : utf8ToBytes(new Buffer$1(val, encoding).toString());
       var len = bytes.length;
       for (i = 0; i < end - start; ++i) {
         this[i + start] = bytes[i % len];
@@ -3185,15 +3185,22 @@
   let src;
   let srcEnd;
   let position$1 = 0;
-  const RECORD_TAG_ID = 0x69;
+  const LEGACY_RECORD_INLINE_ID = 105;
+  const RECORD_DEFINITIONS_ID = 0xdffe;
+  const RECORD_INLINE_ID = 0xdfff; // temporary first-come first-serve tag // proposed tag: 0x7265 // 're'
+  const BUNDLED_STRINGS_ID = 0xdff9;
+  const PACKED_REFERENCE_TAG_ID = 6;
   const STOP_CODE = {};
   let currentDecoder = {};
   let currentStructures;
   let srcString;
   let srcStringStart = 0;
   let srcStringEnd = 0;
+  let bundledStrings$1;
   let referenceMap;
   let currentExtensions = [];
+  let currentExtensionRanges = [];
+  let packedValues;
   let dataView;
   let restoreMapsAsObject;
   let defaultOptions = {
@@ -3201,17 +3208,84 @@
   	mapsAsObjects: true
   };
   let sequentialMode = false;
+  let inlineObjectReadThreshold = 2;
+  // no-eval build
+  try {
+  	new Function('');
+  } catch(error) {
+  	// if eval variants are not supported, do not create inline object readers ever
+  	inlineObjectReadThreshold = Infinity;
+  }
+
+
 
   class Decoder {
   	constructor(options) {
   		if (options) {
+  			if ((options.keyMap || options._keyMap) && !options.useRecords) {
+  				options.useRecords = false;
+  				options.mapsAsObjects = true;
+  			}
   			if (options.useRecords === false && options.mapsAsObjects === undefined)
   				options.mapsAsObjects = true;
-  			if (options.getStructures && !options.structures)
+  			if (options.getStructures)
+  				options.getShared = options.getStructures;
+  			if (options.getShared && !options.structures)
   				(options.structures = []).uninitialized = true; // this is what we use to denote an uninitialized structures
+  			if (options.keyMap) {
+  				this.mapKey = new Map();
+  				for (let [k,v] of Object.entries(options.keyMap)) this.mapKey.set(v,k);
+  			}
   		}
   		Object.assign(this, options);
   	}
+  	/*
+  	decodeKey(key) {
+  		return this.keyMap
+  			? Object.keys(this.keyMap)[Object.values(this.keyMap).indexOf(key)] || key
+  			: key
+  	}
+  	*/
+  	decodeKey(key) {
+  		return this.keyMap ? this.mapKey.get(key) || key : key
+  	}
+  	
+  	encodeKey(key) {
+  		return this.keyMap && this.keyMap.hasOwnProperty(key) ? this.keyMap[key] : key
+  	}
+
+  	encodeKeys(rec) {
+  		if (!this._keyMap) return rec
+  		let map = new Map();
+  		for (let [k,v] of Object.entries(rec)) map.set((this._keyMap.hasOwnProperty(k) ? this._keyMap[k] : k), v);
+  		return map
+  	}
+
+  	decodeKeys(map) {
+  		if (!this._keyMap || map.constructor.name != 'Map') return map
+  		if (!this._mapKey) {
+  			this._mapKey = new Map();
+  			for (let [k,v] of Object.entries(this._keyMap)) this._mapKey.set(v,k);
+  		}
+  		let res = {};
+  		//map.forEach((v,k) => res[Object.keys(this._keyMap)[Object.values(this._keyMap).indexOf(k)] || k] = v)
+  		map.forEach((v,k) => res[safeKey(this._mapKey.has(k) ? this._mapKey.get(k) : k)] =  v);
+  		return res
+  	}
+  	
+  	mapDecode(source, end) {
+  	
+  		let res = this.decode(source);
+  		if (this._keyMap) { 
+  			//Experiemntal support for Optimised KeyMap  decoding 
+  			switch (res.constructor.name) {
+  				case 'Array': return res.map(r => this.decodeKeys(r))
+  				//case 'Map': return this.decodeKeys(res)
+  			}
+  		}
+  		return res
+  	}
+
   	decode(source, end) {
   		if (src) {
   			// re-entrant execution, save the state and restore it after we do this decode
@@ -3224,13 +3298,25 @@
   		position$1 = 0;
   		srcStringEnd = 0;
   		srcString = null;
+  		bundledStrings$1 = null;
   		src = source;
   		// this provides cached access to the data view for a buffer if it is getting reused, which is a recommend
   		// technique for getting data from a database where it can be copied into an existing buffer instead of creating
   		// new ones
-  		dataView = source.dataView || (source.dataView = new DataView(source.buffer, source.byteOffset, source.byteLength));
-  		if (this) {
+  		try {
+  			dataView = source.dataView || (source.dataView = new DataView(source.buffer, source.byteOffset, source.byteLength));
+  		} catch(error) {
+  			// if it doesn't have a buffer, maybe it is the wrong type of object
+  			src = null;
+  			if (source instanceof Uint8Array)
+  				throw error
+  			throw new Error('Source must be a Uint8Array or Buffer but was a ' + ((source && typeof source == 'object') ? source.constructor.name : typeof source))
+  		}
+  		if (this instanceof Decoder) {
   			currentDecoder = this;
+  			packedValues = this.sharedValues &&
+  				(this.pack ? new Array(this.maxPrivatePackedValues || 16).concat(this.sharedValues) :
+  				this.sharedValues);
   			if (this.structures) {
   				currentStructures = this.structures;
   				return checkedRead()
@@ -3241,6 +3327,7 @@
   			currentDecoder = defaultOptions;
   			if (!currentStructures || currentStructures.length > 0)
   				currentStructures = [];
+  			packedValues = null;
   		}
   		return checkedRead()
   	}
@@ -3251,7 +3338,9 @@
   			sequentialMode = true;
   			let value = this ? this.decode(source, size) : defaultDecoder.decode(source, size);
   			if (forEach) {
-  				forEach(value);
+  				if (forEach(value) === false) {
+  					return
+  				}
   				while(position$1 < size) {
   					lastPosition = position$1;
   					if (forEach(checkedRead()) === false) {
@@ -3280,6 +3369,17 @@
   function checkedRead() {
   	try {
   		let result = read();
+  		if (bundledStrings$1) {
+  			if (position$1 >= bundledStrings$1.postBundlePosition) {
+  				let error = new Error('Unexpected bundle position');
+  				error.incomplete = true;
+  				throw error
+  			}
+  			// bundled strings to skip past
+  			position$1 = bundledStrings$1.postBundlePosition;
+  			bundledStrings$1 = null;
+  		}
+
   		if (position$1 == srcEnd) {
   			// finished reading this source, cleanup references
   			currentStructures = null;
@@ -3342,10 +3442,15 @@
   					position$1 += 8;
   					return value
   				}
-  				if (currentDecoder.uint64AsNumber)
-  					return src[position$1++] * 0x100000000000000 + src[position$1++] * 0x1000000000000 + src[position$1++] * 0x10000000000 + src[position$1++] * 0x100000000 +
-  						src[position$1++] * 0x1000000 + (src[position$1++] << 16) + (src[position$1++] << 8) + src[position$1++]
-  				token = dataView.getBigUint64(position$1);
+  				if (majorType > 1) {
+  					if (dataView.getUint32(position$1) > 0)
+  						throw new Error('JavaScript does not support arrays, maps, or strings with length over 4294967295')
+  					token = dataView.getUint32(position$1 + 4);
+  				} else if (currentDecoder.int64AsNumber) {
+  					token = dataView.getUint32(position$1) * 0x100000000;
+  					token += dataView.getUint32(position$1 + 4);
+  				} else
+  					token = dataView.getBigUint64(position$1);
   				position$1 += 8;
   				break
   			case 0x1f: 
@@ -3353,19 +3458,20 @@
   				switch(majorType) {
   					case 2: // byte string
   					case 3: // text string
+  						throw new Error('Indefinite length not supported for byte or text strings')
   					case 4: // array
   						let array = [];
   						let value, i = 0;
   						while ((value = read()) != STOP_CODE) {
   							array[i++] = value;
   						}
-  						return majorType == 4 ? array : majorType == 3 ? array.join('') : Buffer.concat(array)
+  						return majorType == 4 ? array : majorType == 3 ? array.join('') : Buffer$1.concat(array)
   					case 5: // map
   						let key;
   						if (currentDecoder.mapsAsObjects) {
   							let object = {};
-  							while ((key = readKey()) != STOP_CODE)
-  								object[key] = read();
+  							if (currentDecoder.keyMap) while((key = read()) != STOP_CODE) object[safeKey(currentDecoder.decodeKey(key))] = read();
+  							else while ((key = read()) != STOP_CODE) object[safeKey(key)] = read();
   							return object
   						} else {
   							if (restoreMapsAsObject) {
@@ -3373,8 +3479,8 @@
   								restoreMapsAsObject = false;
   							}
   							let map = new Map();
-  							while ((key = read()) != STOP_CODE)
-  								map.set(key, read());
+  							if (currentDecoder.keyMap) while((key = read()) != STOP_CODE) map.set(currentDecoder.decodeKey(key), read());
+  							else while ((key = read()) != STOP_CODE) map.set(key, read());
   							return map
   						}
   					case 7:
@@ -3406,16 +3512,15 @@
   			return readFixedString(token)
   		case 4: // array
   			let array = new Array(token);
-  			for (let i = 0; i < token; i++) {
-  				array[i] = read();
-  			}
+  		  //if (currentDecoder.keyMap) for (let i = 0; i < token; i++) array[i] = currentDecoder.decodeKey(read())	
+  			//else 
+  			for (let i = 0; i < token; i++) array[i] = read();
   			return array
   		case 5: // map
   			if (currentDecoder.mapsAsObjects) {
   				let object = {};
-  				for (let i = 0; i < token; i++) {
-  					object[readKey()] = read();
-  				}
+  				if (currentDecoder.keyMap) for (let i = 0; i < token; i++) object[safeKey(currentDecoder.decodeKey(read()))] = read();
+  				else for (let i = 0; i < token; i++) object[safeKey(read())] = read();
   				return object
   			} else {
   				if (restoreMapsAsObject) {
@@ -3423,47 +3528,71 @@
   					restoreMapsAsObject = false;
   				}
   				let map = new Map();
-  				for (let i = 0; i < token; i++) {
-  					map.set(read(), read());
-  				}
+  				if (currentDecoder.keyMap) for (let i = 0; i < token; i++) map.set(currentDecoder.decodeKey(read()),read());
+  				else for (let i = 0; i < token; i++) map.set(read(), read());
   				return map
   			}
   		case 6: // extension
-  			if ((token >> 8) == RECORD_TAG_ID) { // record structures
-  				let structure = currentStructures[token & 0xff];
+  			if (token >= BUNDLED_STRINGS_ID) {
+  				let structure = currentStructures[token & 0x1fff]; // check record structures first
+  				// At some point we may provide an option for dynamic tag assignment with a range like token >= 8 && (token < 16 || (token > 0x80 && token < 0xc0) || (token > 0x130 && token < 0x4000))
   				if (structure) {
-  					if (!structure.read)
-  						structure.read = createStructureReader(structure);
+  					if (!structure.read) structure.read = createStructureReader(structure);
   					return structure.read()
-  				} else if (currentDecoder.getStructures) {
-  					let updatedStructures = saveState(() => {
-  						// save the state in case getStructures modifies our buffer
-  						src = null;
-  						return currentDecoder.getStructures()
-  					});
-  					if (currentStructures === true)
-  						currentDecoder.structures = currentStructures = updatedStructures;
-  					else
-  						currentStructures.splice.apply(currentStructures, [0, updatedStructures.length].concat(updatedStructures));
-  					structure = currentStructures[token & 0xff];
-  					if (structure) {
-  						if (!structure.read)
-  							structure.read = createStructureReader(structure);
-  						return structure.read()
-  					} else
-  						return token
-  				} else
-  					return token
-  			} else {
-  				let extension = currentExtensions[token];
-  				if (extension) {
-  					if (extension.handlesRead)
-  						return extension(read)
-  					else
-  						return extension(read())
   				}
+  				if (token < 0x10000) {
+  					if (token == RECORD_INLINE_ID) { // we do a special check for this so that we can keep the
+  						// currentExtensions as densely stored array (v8 stores arrays densely under about 3000 elements)
+  						let length = readJustLength();
+  						let id = read();
+  						let structure = read();
+  						recordDefinition(id, structure);
+  						let object = {};
+  						if (currentDecoder.keyMap) for (let i = 2; i < length; i++) {
+  							let key = currentDecoder.decodeKey(structure[i - 2]);
+  							object[safeKey(key)] = read();
+  						}
+  						else for (let i = 2; i < length; i++) {
+  							let key = structure[i - 2];
+  							object[safeKey(key)] = read();
+  						}
+  						return object
+  					}
+  					else if (token == RECORD_DEFINITIONS_ID) {
+  						let length = readJustLength();
+  						let id = read();
+  						for (let i = 2; i < length; i++) {
+  							recordDefinition(id++, read());
+  						}
+  						return read()
+  					} else if (token == BUNDLED_STRINGS_ID) {
+  						return readBundleExt()
+  					}
+  					if (currentDecoder.getShared) {
+  						loadShared();
+  						structure = currentStructures[token & 0x1fff];
+  						if (structure) {
+  							if (!structure.read)
+  								structure.read = createStructureReader(structure);
+  							return structure.read()
+  						}
+  					}
+  				}
+  			}
+  			let extension = currentExtensions[token];
+  			if (extension) {
+  				if (extension.handlesRead)
+  					return extension(read)
   				else
-  					return new Tag(read())
+  					return extension(read())
+  			} else {
+  				let input = read();
+  				for (let i = 0; i < currentExtensionRanges.length; i++) {
+  					let value = currentExtensionRanges[i](token, input);
+  					if (value !== undefined)
+  						return value
+  				}
+  				return new Tag(input, token)
   			}
   		case 7: // fixed value
   			switch (token) {
@@ -3471,8 +3600,11 @@
   				case 0x15: return true
   				case 0x16: return null
   				case 0x17: return; // undefined
-  				case 0x1f: 
+  				case 0x1f:
   				default:
+  					let packedValue = (packedValues || getPackedValues())[token];
+  					if (packedValue !== undefined)
+  						return packedValue
   					throw new Error('Unknown token ' + token)
   			}
   		default: // negative int
@@ -3486,39 +3618,60 @@
   }
   const validName = /^[a-zA-Z_$][a-zA-Z\d_$]*$/;
   function createStructureReader(structure) {
-  	let l = structure.length;
   	function readObject() {
-  		// This initial function is quick to instantiate, but runs slower. After several iterations pay the cost to build the faster function
-  		if (readObject.count++ > 2) {
-  			this.read = (new Function('a', 'r', 'return function(){a();return {' + structure.map(key => validName.test(key) ? key + ':r()' : ('[' + JSON.stringify(key) + ']:r()')).join(',') + '}}'))(readArrayHeader, read);
-  			return this.read()
+  		// get the array size from the header
+  		let length = src[position$1++];
+  		//let majorType = token >> 5
+  		length = length & 0x1f;
+  		if (length > 0x17) {
+  			switch (length) {
+  				case 0x18:
+  					length = src[position$1++];
+  					break
+  				case 0x19:
+  					length = dataView.getUint16(position$1);
+  					position$1 += 2;
+  					break
+  				case 0x1a:
+  					length = dataView.getUint32(position$1);
+  					position$1 += 4;
+  					break
+  				default:
+  					throw new Error('Expected array header, but got ' + src[position$1 - 1])
+  			}
   		}
-  		readArrayHeader();
+  		// This initial function is quick to instantiate, but runs slower. After several iterations pay the cost to build the faster function
+  		let compiledReader = this.compiledReader; // first look to see if we have the fast compiled function
+  		while(compiledReader) {
+  			// we have a fast compiled object literal reader
+  			if (compiledReader.propertyCount === length)
+  				return compiledReader(read) // with the right length, so we use it
+  			compiledReader = compiledReader.next; // see if there is another reader with the right length
+  		}
+  		if (this.slowReads++ >= inlineObjectReadThreshold) { // create a fast compiled reader
+  			let array = this.length == length ? this : this.slice(0, length);
+  			compiledReader = currentDecoder.keyMap 
+  			? new Function('r', 'return {' + array.map(k => currentDecoder.decodeKey(k)).map(k => validName.test(k) ? safeKey(k) + ':r()' : ('[' + JSON.stringify(k) + ']:r()')).join(',') + '}')
+  			: new Function('r', 'return {' + array.map(key => validName.test(key) ? safeKey(key) + ':r()' : ('[' + JSON.stringify(key) + ']:r()')).join(',') + '}');
+  			if (this.compiledReader)
+  				compiledReader.next = this.compiledReader; // if there is an existing one, we store multiple readers as a linked list because it is usually pretty rare to have multiple readers (of different length) for the same structure
+  			compiledReader.propertyCount = length;
+  			this.compiledReader = compiledReader;
+  			return compiledReader(read)
+  		}
   		let object = {};
-  		for (let i = 0; i < l; i++) {
-  			let key = structure[i];
-  			object[key] = read();
+  		if (currentDecoder.keyMap) for (let i = 0; i < length; i++) object[safeKey(currentDecoder.decodeKey(this[i]))] = read();
+  		else for (let i = 0; i < length; i++) {
+  			object[safeKey(this[i])] = read();
   		}
   		return object
   	}
-  	readObject.count = 0;
+  	structure.slowReads = 0;
   	return readObject
   }
 
-  function readArrayHeader(expectedLength) {
-  	// consume the array header, TODO: check expected length
-  	let token = src[position$1++];
-  	//let majorType = token >> 5
-  	token = token & 0x1f;
-  	if (token > 0x17) {
-  		switch (token) {
-  			case 0x18: position$1++;
-  				break
-  			case 0x19: position$1 += 2;
-  				break
-  			case 0x1a: position$1 += 4;
-  		}
-  	}
+  function safeKey(key) {
+  	return key === '__proto__' ? '__proto_' : key
   }
 
   let readFixedString = readStringJS;
@@ -3735,91 +3888,40 @@
   		Uint8Array.prototype.slice.call(src, position$1, position$1 += length) :
   		src.subarray(position$1, position$1 += length)
   }
-
+  let f32Array = new Float32Array(1);
+  let u8Array = new Uint8Array(f32Array.buffer, 0, 4);
   function getFloat16() {
   	let byte0 = src[position$1++];
   	let byte1 = src[position$1++];
-  	let half = (byte0 << 8) + byte1;
-  	let exp = (half >> 10) & 0x1f;
-  	let mant = half & 0x3ff;
-  	let val;
-  	if (exp == 0) val = Math.exp(mant, -24);
-  	else if (exp != 31) val = Math.exp(mant + 1024, exp - 25);
-  	else val = mant == 0 ? Infinity : NaN;
-  	return half & 0x8000 ? -val : val
+  	let exponent = (byte0 & 0x7f) >> 2;
+  	if (exponent === 0x1f) { // specials
+  		if (byte1 || (byte0 & 3))
+  			return NaN;
+  		return (byte0 & 0x80) ? -Infinity : Infinity;
+  	}
+  	if (exponent === 0) { // sub-normals
+  		// significand with 10 fractional bits and divided by 2^14
+  		let abs = (((byte0 & 3) << 8) | byte1) / (1 << 24);
+  		return (byte0 & 0x80) ? -abs : abs
+  	}
+
+  	u8Array[3] = (byte0 & 0x80) | // sign bit
+  		((exponent >> 1) + 56); // 4 of 5 of the exponent bits, re-offset-ed
+  	u8Array[2] = ((byte0 & 7) << 5) | // last exponent bit and first two mantissa bits
+  		(byte1 >> 3); // next 5 bits of mantissa
+  	u8Array[1] = byte1 << 5; // last three bits of mantissa
+  	u8Array[0] = 0;
+  	return f32Array[0];
   }
 
-  let keyCache = new Array(4096);
-  function readKey() {
-  	let length = src[position$1++];
-  	if (length >= 0x60 && length < 0x78) {
-  		// fixstr, potentially use key cache
-  		length = length - 0x60;
-  		if (srcStringEnd >= position$1) // if it has been extracted, must use it (and faster anyway)
-  			return srcString.slice(position$1 - srcStringStart, (position$1 += length) - srcStringStart)
-  		else if (!(srcStringEnd == 0 && srcEnd < 180))
-  			return readFixedString(length)
-  	} else { // not cacheable, go back and do a standard read
-  		position$1--;
-  		return read()
-  	}
-  	let key = ((length << 5) ^ (length > 1 ? dataView.getUint16(position$1) : length > 0 ? src[position$1] : 0)) & 0xfff;
-  	let entry = keyCache[key];
-  	let checkPosition = position$1;
-  	let end = position$1 + length - 3;
-  	let chunk;
-  	let i = 0;
-  	if (entry && entry.bytes == length) {
-  		while (checkPosition < end) {
-  			chunk = dataView.getUint32(checkPosition);
-  			if (chunk != entry[i++]) {
-  				checkPosition = 0x70000000;
-  				break
-  			}
-  			checkPosition += 4;
-  		}
-  		end += 3;
-  		while (checkPosition < end) {
-  			chunk = src[checkPosition++];
-  			if (chunk != entry[i++]) {
-  				checkPosition = 0x70000000;
-  				break
-  			}
-  		}
-  		if (checkPosition === end) {
-  			position$1 = checkPosition;
-  			return entry.string
-  		}
-  		end -= 3;
-  		checkPosition = position$1;
-  	}
-  	entry = [];
-  	keyCache[key] = entry;
-  	entry.bytes = length;
-  	while (checkPosition < end) {
-  		chunk = dataView.getUint32(checkPosition);
-  		entry.push(chunk);
-  		checkPosition += 4;
-  	}
-  	end += 3;
-  	while (checkPosition < end) {
-  		chunk = src[checkPosition++];
-  		entry.push(chunk);
-  	}
-  	// for small blocks, avoiding the overhead of the extract call is helpful
-  	let string = length < 16 ? shortStringInJS(length) : longStringInJS(length);
-  	if (string != null)
-  		return entry.string = string
-  	return entry.string = readFixedString(length)
-  }
+  new Array(4096);
 
   class Tag {
-  	constructor(value) {
+  	constructor(value, tag) {
   		this.value = value;
+  		this.tag = tag;
   	}
   }
-
-  let glbl = typeof window == 'object' ? window : global$1;
 
   currentExtensions[0] = (dateString) => {
   	// string date extension
@@ -3828,45 +3930,116 @@
 
   currentExtensions[1] = (epochSec) => {
   	// numeric date extension
-  	return new Date(epochSec * 1000)
+  	return new Date(Math.round(epochSec * 1000))
   };
 
   currentExtensions[2] = (buffer) => {
   	// bigint extension
-  	return new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength).getBigUint64(0)
+  	let value = BigInt(0);
+  	for (let i = 0, l = buffer.byteLength; i < l; i++) {
+  		value = BigInt(buffer[i]) + value << BigInt(8);
+  	}
+  	return value
   };
 
   currentExtensions[3] = (buffer) => {
   	// negative bigint extension
-  	return BigInt(-1) - (new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength).getBigUint64(0))
+  	return BigInt(-1) - currentExtensions[2](buffer)
+  };
+  currentExtensions[4] = (fraction) => {
+  	// best to reparse to maintain accuracy
+  	return +(fraction[1] + 'e' + fraction[0])
   };
 
-  // the registration of the record definition extension (tag 105)
-  const recordDefinition = () => {
-  	let definition = read();
-  	let structure = definition[0];
-  	let id = definition[1];
-  	currentStructures[id & 0xff] = structure;
+  currentExtensions[5] = (fraction) => {
+  	// probably not sufficiently accurate
+  	return fraction[1] * Math.exp(fraction[0] * Math.log(2))
+  };
+
+  // the registration of the record definition extension
+  const recordDefinition = (id, structure) => {
+  	id = id - 0xe000;
+  	let existingStructure = currentStructures[id];
+  	if (existingStructure && existingStructure.isShared) {
+  		(currentStructures.restoreStructures || (currentStructures.restoreStructures = []))[id] = existingStructure;
+  	}
+  	currentStructures[id] = structure;
+
   	structure.read = createStructureReader(structure);
+  };
+  currentExtensions[LEGACY_RECORD_INLINE_ID] = (data) => {
+  	let length = data.length;
+  	let structure = data[1];
+  	recordDefinition(data[0], structure);
   	let object = {};
-  	for (let i = 2,l = definition.length; i < l; i++) {
+  	for (let i = 2; i < length; i++) {
   		let key = structure[i - 2];
-  		object[key] = definition[i];
+  		object[safeKey(key)] = data[i];
   	}
   	return object
   };
-
-  recordDefinition.handlesRead = true;
-  currentExtensions[RECORD_TAG_ID] = recordDefinition;
-
+  currentExtensions[14] = (value) => {
+  	if (bundledStrings$1)
+  		return bundledStrings$1[0].slice(bundledStrings$1.position0, bundledStrings$1.position0 += value)
+  	return new Tag(value, 14)
+  };
+  currentExtensions[15] = (value) => {
+  	if (bundledStrings$1)
+  		return bundledStrings$1[1].slice(bundledStrings$1.position1, bundledStrings$1.position1 += value)
+  	return new Tag(value, 15)
+  };
+  let glbl = { Error, RegExp };
   currentExtensions[27] = (data) => { // http://cbor.schmorp.de/generic-object
   	return (glbl[data[0]] || Error)(data[1], data[2])
   };
+  const packedTable = (read) => {
+  	if (src[position$1++] != 0x84)
+  		throw new Error('Packed values structure must be followed by a 4 element array')
+  	let newPackedValues = read(); // packed values
+  	packedValues = packedValues ? newPackedValues.concat(packedValues.slice(newPackedValues.length)) : newPackedValues;
+  	packedValues.prefixes = read();
+  	packedValues.suffixes = read();
+  	return read() // read the rump
+  };
+  packedTable.handlesRead = true;
+  currentExtensions[51] = packedTable;
 
-  currentExtensions[40009] = (id) => {
-  	// id extension (for structured clones)
-  	if (!referenceMap)
+  currentExtensions[PACKED_REFERENCE_TAG_ID] = (data) => { // packed reference
+  	if (!packedValues) {
+  		if (currentDecoder.getShared)
+  			loadShared();
+  		else
+  			return new Tag(data, PACKED_REFERENCE_TAG_ID)
+  	}
+  	if (typeof data == 'number')
+  		return packedValues[16 + (data >= 0 ? 2 * data : (-2 * data - 1))]
+  	throw new Error('No support for non-integer packed references yet')
+  };
+
+  // The following code is an incomplete implementation of http://cbor.schmorp.de/stringref
+  // the real thing would need to implemennt more logic to populate the stringRefs table and
+  // maintain a stack of stringRef "namespaces".
+  //
+  // currentExtensions[25] = (id) => {
+  // 	return stringRefs[id]
+  // }
+  // currentExtensions[256] = (read) => {
+  // 	stringRefs = []
+  // 	try {
+  // 		return read()
+  // 	} finally {
+  // 		stringRefs = null
+  // 	}
+  // }
+  // currentExtensions[256].handlesRead = true
+
+  currentExtensions[28] = (read) => { 
+  	// shareable http://cbor.schmorp.de/value-sharing (for structured clones)
+  	if (!referenceMap) {
   		referenceMap = new Map();
+  		referenceMap.id = 0;
+  	}
+  	let id = referenceMap.id++;
   	let token = src[position$1];
   	let target;
   	// TODO: handle Maps, Sets, and other types that can cycle; this is complicated, because you potentially need to read
@@ -3884,9 +4057,10 @@
   	refEntry.target = targetProperties; // the placeholder wasn't used, replace with the deserialized one
   	return targetProperties // no cycle, can just use the returned read object
   };
+  currentExtensions[28].handlesRead = true;
 
-  currentExtensions[40010] = (id) => {
-  	// pointer extension (for structured clones)
+  currentExtensions[29] = (id) => {
+  	// sharedref http://cbor.schmorp.de/value-sharing (for structured clones)
   	let refEntry = referenceMap.get(id);
   	refEntry.used = true;
   	return refEntry.target
@@ -3902,20 +4076,139 @@
   	}
   	return read()
   }).handlesRead = true;
+  function combine(a, b) {
+  	if (typeof a === 'string')
+  		return a + b
+  	if (a instanceof Array)
+  		return a.concat(b)
+  	return Object.assign({}, a, b)
+  }
+  function getPackedValues() {
+  	if (!packedValues) {
+  		if (currentDecoder.getShared)
+  			loadShared();
+  		else
+  			throw new Error('No packed values available')
+  	}
+  	return packedValues
+  }
+  const SHARED_DATA_TAG_ID = 0x53687264; // ascii 'Shrd'
+  currentExtensionRanges.push((tag, input) => {
+  	if (tag >= 225 && tag <= 255)
+  		return combine(getPackedValues().prefixes[tag - 224], input)
+  	if (tag >= 28704 && tag <= 32767)
+  		return combine(getPackedValues().prefixes[tag - 28672], input)
+  	if (tag >= 1879052288 && tag <= 2147483647)
+  		return combine(getPackedValues().prefixes[tag - 1879048192], input)
+  	if (tag >= 216 && tag <= 223)
+  		return combine(input, getPackedValues().suffixes[tag - 216])
+  	if (tag >= 27647 && tag <= 28671)
+  		return combine(input, getPackedValues().suffixes[tag - 27639])
+  	if (tag >= 1811940352 && tag <= 1879048191)
+  		return combine(input, getPackedValues().suffixes[tag - 1811939328])
+  	if (tag == SHARED_DATA_TAG_ID) {// we do a special check for this so that we can keep the currentExtensions as densely stored array (v8 stores arrays densely under about 3000 elements)
+  		return {
+  			packedValues: packedValues,
+  			structures: currentStructures.slice(0),
+  			version: input,
+  		}
+  	}
+  	if (tag == 55799) // self-descriptive CBOR tag, just return input value
+  		return input
+  });
 
-
-  const typedArrays = ['Uint8', 'Uint8Clamped', 'Uint16', 'Uint32', 'BigUint64','Int8', 'Int16', 'Int32', 'BigInt64', 'Float32', 'Float64'].map(type => type + 'Array');
-  const typedArrayTags = [64, 68, 69, 70, 71, 72, 77, 78, 79, 81, 82];
+  const isLittleEndianMachine$1 = new Uint8Array(new Uint16Array([1]).buffer)[0] == 1;
+  const typedArrays = [Uint8Array, Uint8ClampedArray, Uint16Array, Uint32Array,
+  	typeof BigUint64Array == 'undefined' ? { name:'BigUint64Array' } : BigUint64Array, Int8Array, Int16Array, Int32Array,
+  	typeof BigInt64Array == 'undefined' ? { name:'BigInt64Array' } : BigInt64Array, Float32Array, Float64Array];
+  const typedArrayTags = [64, 68, 69, 70, 71, 72, 77, 78, 79, 85, 86];
   for (let i = 0; i < typedArrays.length; i++) {
   	registerTypedArray(typedArrays[i], typedArrayTags[i]);
   }
-  function registerTypedArray(typedArrayName, tag) {
-  	currentExtensions[tag] = (buffer) => {
-  		if (!typedArrayName)
-  			throw new Error('Could not find typed array for code ' + typeCode)
-  		// we have to always slice/copy here to get a new ArrayBuffer that is word/byte aligned
-  		return new glbl[typedArrayName](Uint8Array.prototype.slice.call(buffer, 0).buffer)
-  	};
+  function registerTypedArray(TypedArray, tag) {
+  	let dvMethod = 'get' + TypedArray.name.slice(0, -5);
+  	let bytesPerElement;
+  	if (typeof TypedArray === 'function')
+  		bytesPerElement = TypedArray.BYTES_PER_ELEMENT;
+  	else
+  		TypedArray = null;
+  	for (let littleEndian = 0; littleEndian < 2; littleEndian++) {
+  		if (!littleEndian && bytesPerElement == 1)
+  			continue
+  		let sizeShift = bytesPerElement == 2 ? 1 : bytesPerElement == 4 ? 2 : 3;
+  		currentExtensions[littleEndian ? tag : (tag - 4)] = (bytesPerElement == 1 || littleEndian == isLittleEndianMachine$1) ? (buffer) => {
+  			if (!TypedArray)
+  				throw new Error('Could not find typed array for code ' + tag)
+  			// we have to always slice/copy here to get a new ArrayBuffer that is word/byte aligned
+  			return new TypedArray(Uint8Array.prototype.slice.call(buffer, 0).buffer)
+  		} : buffer => {
+  			if (!TypedArray)
+  				throw new Error('Could not find typed array for code ' + tag)
+  			let dv = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+  			let elements = buffer.length >> sizeShift;
+  			let ta = new TypedArray(elements);
+  			let method = dv[dvMethod];
+  			for (let i = 0; i < elements; i++) {
+  				ta[i] = method.call(dv, i << sizeShift, littleEndian);
+  			}
+  			return ta
+  		};
+  	}
+  }
+
+  function readBundleExt() {
+  	let length = readJustLength();
+  	let bundlePosition = position$1 + read();
+  	for (let i = 2; i < length; i++) {
+  		// skip past bundles that were already read
+  		let bundleLength = readJustLength(); // this will increment position, so must add to position afterwards
+  		position$1 += bundleLength;
+  	}
+  	let dataPosition = position$1;
+  	position$1 = bundlePosition;
+  	bundledStrings$1 = [readStringJS(readJustLength()), readStringJS(readJustLength())];
+  	bundledStrings$1.position0 = 0;
+  	bundledStrings$1.position1 = 0;
+  	bundledStrings$1.postBundlePosition = position$1;
+  	position$1 = dataPosition;
+  	return read()
+  }
+
+  function readJustLength() {
+  	let token = src[position$1++] & 0x1f;
+  	if (token > 0x17) {
+  		switch (token) {
+  			case 0x18:
+  				token = src[position$1++];
+  				break
+  			case 0x19:
+  				token = dataView.getUint16(position$1);
+  				position$1 += 2;
+  				break
+  			case 0x1a:
+  				token = dataView.getUint32(position$1);
+  				position$1 += 4;
+  				break
+  		}
+  	}
+  	return token
+  }
+
+  function loadShared() {
+  	if (currentDecoder.getShared) {
+  		let sharedData = saveState(() => {
+  			// save the state in case getShared modifies our buffer
+  			src = null;
+  			return currentDecoder.getShared()
+  		}) || {};
+  		let updatedStructures = sharedData.structures || [];
+  		currentDecoder.sharedVersion = sharedData.version;
+  		packedValues = currentDecoder.sharedValues = sharedData.packedValues;
+  		if (currentStructures === true)
+  			currentDecoder.structures = currentStructures = updatedStructures;
+  		else
+  			currentStructures.splice.apply(currentStructures, [0, updatedStructures.length].concat(updatedStructures));
+  	}
   }
 
   function saveState(callback) {
@@ -3925,6 +4218,8 @@
   	let savedSrcStringEnd = srcStringEnd;
   	let savedSrcString = srcString;
   	let savedReferenceMap = referenceMap;
+  	let savedBundledStrings = bundledStrings$1;
+
   	// TODO: We may need to revisit this if we do more external calls to user code (since it could be slow)
   	let savedSrc = new Uint8Array(src.slice(0, srcEnd)); // we copy the data in case it changes while external data is processed
   	let savedStructures = currentStructures;
@@ -3937,6 +4232,7 @@
   	srcStringEnd = savedSrcStringEnd;
   	srcString = savedSrcString;
   	referenceMap = savedReferenceMap;
+  	bundledStrings$1 = savedBundledStrings;
   	src = savedSrc;
   	sequentialMode = savedSequentialMode;
   	currentStructures = savedStructures;
@@ -3954,7 +4250,7 @@
   	currentExtensions[extension.tag] = extension.decode;
   }
 
-  let mult10 = new Array(147); // this is a table matching binary exponents to the multiplier to determine significant digit rounding
+  const mult10 = new Array(147); // this is a table matching binary exponents to the multiplier to determine significant digit rounding
   for (let i = 0; i < 256; i++) {
   	mult10[i] = +('1e' + Math.floor(45.15 - i * 0.30103));
   }
@@ -3967,16 +4263,20 @@
   	textEncoder = new TextEncoder();
   } catch (error) {}
   let extensions, extensionClasses;
+  const Buffer = typeof globalThis === 'object' && globalThis.Buffer;
   const hasNodeBuffer = typeof Buffer !== 'undefined';
   const ByteArrayAllocate = hasNodeBuffer ? Buffer.allocUnsafeSlow : Uint8Array;
   const ByteArray = hasNodeBuffer ? Buffer : Uint8Array;
-  const RECORD_STARTING_ID_PREFIX = 0x69; // tag 105/0x69
   const MAX_STRUCTURES = 0x100;
   const MAX_BUFFER_SIZE = hasNodeBuffer ? 0x100000000 : 0x7fd00000;
+  let throwOnIterable;
   let target;
   let targetView;
   let position = 0;
   let safeEnd;
+  let bundledStrings = null;
+  const MAX_BUNDLE_SIZE = 0xf000;
+  const hasNonLatin = /[\u0080-\uFFFF]/;
   const RECORD_SYMBOL = Symbol('record-id');
   class Encoder extends Decoder {
   	constructor(options) {
@@ -3987,7 +4287,7 @@
   		let hasSharedUpdate;
   		let structures;
   		let referenceMap;
-  		let lastSharedStructuresLength = 0;
+  		options = options || {};
   		let encodeUtf8 = ByteArray.prototype.utf8Write ? function(string, position, maxBytes) {
   			return target.utf8Write(string, position, maxBytes)
   		} : (textEncoder && textEncoder.encodeInto) ?
@@ -3996,20 +4296,50 @@
   			} : false;
 
   		let encoder = this;
-  		let maxSharedStructures = 64;
-  		let isSequential = options && options.sequential;
+  		let hasSharedStructures = options.structures || options.saveStructures;
+  		let maxSharedStructures = options.maxSharedStructures;
+  		if (maxSharedStructures == null)
+  			maxSharedStructures = hasSharedStructures ? 128 : 0;
+  		if (maxSharedStructures > 8190)
+  			throw new Error('Maximum maxSharedStructure is 8190')
+  		let isSequential = options.sequential;
   		if (isSequential) {
   			maxSharedStructures = 0;
+  		}
+  		if (!this.structures)
   			this.structures = [];
+  		if (this.saveStructures)
+  			this.saveShared = this.saveStructures;
+  		let samplingPackedValues, packedObjectMap, sharedValues = options.sharedValues;
+  		let sharedPackedObjectMap;
+  		if (sharedValues) {
+  			sharedPackedObjectMap = Object.create(null);
+  			for (let i = 0, l = sharedValues.length; i < l; i++) {
+  				sharedPackedObjectMap[sharedValues[i]] = i;
+  			}
   		}
   		let recordIdsToRemove = [];
   		let transitionsCount = 0;
   		let serializationsSinceTransitionRebuild = 0;
-  		if (this.structures && this.structures.length > maxSharedStructures) {
-  			throw new Error('Too many shared structures')
-  		}
-
-  		this.encode = function(value) {
+  		
+  		this.mapEncode = function(value, encodeOptions) {
+  			// Experimental support for premapping keys using _keyMap instad of keyMap - not optiimised yet)
+  			if (this._keyMap && !this._mapped) {
+  				//console.log('encoding ', value)
+  				switch (value.constructor.name) {
+  					case 'Array': 
+  						value = value.map(r => this.encodeKeys(r));
+  						break
+  					//case 'Map': 
+  					//	value = this.encodeKeys(value)
+  					//	break
+  				}
+  				//this._mapped = true
+  			}
+  			return this.encode(value, encodeOptions)
+  		};
+  		
+  		this.encode = function(value, encodeOptions)	{
   			if (!target) {
   				target = new ByteArrayAllocate(8192);
   				targetView = new DataView(target.buffer, 0, 8192);
@@ -4022,35 +4352,57 @@
   				targetView = new DataView(target.buffer, 0, target.length);
   				safeEnd = target.length - 10;
   				position = 0;
-  			}
+  			} else if (encodeOptions === REUSE_BUFFER_MODE)
+  				position = (position + 7) & 0x7ffffff8; // Word align to make any future copying of this buffer faster
   			start = position;
+  			if (encoder.useSelfDescribedHeader) {
+  				targetView.setUint32(position, 0xd9d9f700); // tag two byte, then self-descriptive tag
+  				position += 3;
+  			}
   			referenceMap = encoder.structuredClone ? new Map() : null;
+  			if (encoder.bundleStrings && typeof value !== 'string') {
+  				bundledStrings = [];
+  				bundledStrings.size = Infinity; // force a new bundle start on first string
+  			} else
+  				bundledStrings = null;
+
   			sharedStructures = encoder.structures;
   			if (sharedStructures) {
-  				if (sharedStructures.uninitialized)
-  					encoder.structures = sharedStructures = encoder.getStructures();
+  				if (sharedStructures.uninitialized) {
+  					let sharedData = encoder.getShared() || {};
+  					encoder.structures = sharedStructures = sharedData.structures || [];
+  					encoder.sharedVersion = sharedData.version;
+  					let sharedValues = encoder.sharedValues = sharedData.packedValues;
+  					if (sharedValues) {
+  						sharedPackedObjectMap = {};
+  						for (let i = 0, l = sharedValues.length; i < l; i++)
+  							sharedPackedObjectMap[sharedValues[i]] = i;
+  					}
+  				}
   				let sharedStructuresLength = sharedStructures.length;
-  				if (sharedStructuresLength >  maxSharedStructures && !isSequential)
+  				if (sharedStructuresLength > maxSharedStructures && !isSequential)
   					sharedStructuresLength = maxSharedStructures;
   				if (!sharedStructures.transitions) {
   					// rebuild our structure transitions
   					sharedStructures.transitions = Object.create(null);
   					for (let i = 0; i < sharedStructuresLength; i++) {
   						let keys = sharedStructures[i];
+  						//console.log('shared struct keys:', keys)
   						if (!keys)
   							continue
   						let nextTransition, transition = sharedStructures.transitions;
-  						for (let i =0, l = keys.length; i < l; i++) {
-  							let key = keys[i];
+  						for (let j = 0, l = keys.length; j < l; j++) {
+  							if (transition[RECORD_SYMBOL] === undefined)
+  								transition[RECORD_SYMBOL] = i;
+  							let key = keys[j];
   							nextTransition = transition[key];
   							if (!nextTransition) {
   								nextTransition = transition[key] = Object.create(null);
   							}
   							transition = nextTransition;
   						}
-  						transition[RECORD_SYMBOL] = i;
+  						transition[RECORD_SYMBOL] = i | 0x100000;
   					}
-  					lastSharedStructuresLength = sharedStructures.length;
   				}
   				if (!isSequential)
   					sharedStructures.nextId = sharedStructuresLength;
@@ -4058,11 +4410,40 @@
   			if (hasSharedUpdate)
   				hasSharedUpdate = false;
   			structures = sharedStructures || [];
+  			packedObjectMap = sharedPackedObjectMap;
+  			if (options.pack) {
+  				let packedValues = new Map();
+  				packedValues.values = [];
+  				packedValues.encoder = encoder;
+  				packedValues.maxValues = options.maxPrivatePackedValues || (sharedPackedObjectMap ? 16 : Infinity);
+  				packedValues.objectMap = sharedPackedObjectMap || false;
+  				packedValues.samplingPackedValues = samplingPackedValues;
+  				findRepetitiveStrings(value, packedValues);
+  				if (packedValues.values.length > 0) {
+  					target[position++] = 0xd8; // one-byte tag
+  					target[position++] = 51; // tag 51 for packed shared structures https://www.potaroo.net/ietf/ids/draft-ietf-cbor-packed-03.txt
+  					writeArrayHeader(4);
+  					let valuesArray = packedValues.values;
+  					encode(valuesArray);
+  					writeArrayHeader(0); // prefixes
+  					writeArrayHeader(0); // suffixes
+  					packedObjectMap = Object.create(sharedPackedObjectMap || null);
+  					for (let i = 0, l = valuesArray.length; i < l; i++) {
+  						packedObjectMap[valuesArray[i]] = i;
+  					}
+  				}
+  			}
+  			throwOnIterable = encodeOptions & THROW_ON_ITERABLE;
   			try {
+  				if (throwOnIterable)
+  					return;
   				encode(value);
+  				if (bundledStrings) {
+  					writeBundles(start, encode);
+  				}
   				encoder.offset = position; // update the offset so next serialization doesn't write over our buffer, but can continue writing to same buffer sequentially
   				if (referenceMap && referenceMap.idsToInsert) {
-  					position += referenceMap.idsToInsert.length * 8;
+  					position += referenceMap.idsToInsert.length * 2;
   					if (position > safeEnd)
   						makeRoom(position);
   					encoder.offset = position;
@@ -4070,11 +4451,18 @@
   					referenceMap = null;
   					return serialized
   				}
-  				return target.subarray(start, position) // position can change if we call encode again in saveStructures, so we get the buffer now
+  				if (encodeOptions & REUSE_BUFFER_MODE) {
+  					target.start = start;
+  					target.end = position;
+  					return target
+  				}
+  				return target.subarray(start, position) // position can change if we call encode again in saveShared, so we get the buffer now
   			} finally {
   				if (sharedStructures) {
   					if (serializationsSinceTransitionRebuild < 10)
   						serializationsSinceTransitionRebuild++;
+  					if (sharedStructures.length > maxSharedStructures)
+  						sharedStructures.length = maxSharedStructures;
   					if (transitionsCount > 10000) {
   						// force a rebuild occasionally after a lot of transitions so it can get cleaned up
   						sharedStructures.transitions = null;
@@ -4087,20 +4475,41 @@
   							recordIdsToRemove[i][RECORD_SYMBOL] = undefined;
   						}
   						recordIdsToRemove = [];
-  					}
-  					if (hasSharedUpdate && encoder.saveStructures) {
-  						if (encoder.structures.length > maxSharedStructures) {
-  							encoder.structures = encoder.structures.slice(0, maxSharedStructures);
-  						}
-
-  						if (encoder.saveStructures(encoder.structures, lastSharedStructuresLength) === false) {
-  							// get updated structures and try again if the update failed
-  							encoder.structures = encoder.getStructures() || [];
-  							return encoder.encode(value)
-  						}
-  						lastSharedStructuresLength = encoder.structures.length;
+  						//sharedStructures.nextId = maxSharedStructures
   					}
   				}
+  				if (hasSharedUpdate && encoder.saveShared) {
+  					if (encoder.structures.length > maxSharedStructures) {
+  						encoder.structures = encoder.structures.slice(0, maxSharedStructures);
+  					}
+  					// we can't rely on start/end with REUSE_BUFFER_MODE since they will (probably) change when we save
+  					let returnBuffer = target.subarray(start, position);
+  					if (encoder.updateSharedData() === false)
+  						return encoder.encode(value) // re-encode if it fails
+  					return returnBuffer
+  				}
+  				if (encodeOptions & RESET_BUFFER_MODE)
+  					position = start;
+  			}
+  		};
+  		this.findCommonStringsToPack = () => {
+  			samplingPackedValues = new Map();
+  			if (!sharedPackedObjectMap)
+  				sharedPackedObjectMap = Object.create(null);
+  			return (options) => {
+  				let threshold = options && options.threshold || 4;
+  				let position = this.pack ? options.maxPrivatePackedValues || 16 : 0;
+  				if (!sharedValues)
+  					sharedValues = this.sharedValues = [];
+  				for (let [ key, status ] of samplingPackedValues) {
+  					if (status.count > threshold) {
+  						sharedPackedObjectMap[key] = position++;
+  						sharedValues.push(key);
+  						hasSharedUpdate = true;
+  					}
+  				}
+  				while (this.saveShared && this.updateSharedData() === false) {}
+  				samplingPackedValues = null;
   			}
   		};
   		const encode = (value) => {
@@ -4110,7 +4519,71 @@
   			var type = typeof value;
   			var length;
   			if (type === 'string') {
+  				if (packedObjectMap) {
+  					let packedPosition = packedObjectMap[value];
+  					if (packedPosition >= 0) {
+  						if (packedPosition < 16)
+  							target[position++] = packedPosition + 0xe0; // simple values, defined in https://www.potaroo.net/ietf/ids/draft-ietf-cbor-packed-03.txt
+  						else {
+  							target[position++] = 0xc6; // tag 6 defined in https://www.potaroo.net/ietf/ids/draft-ietf-cbor-packed-03.txt
+  							if (packedPosition & 1)
+  								encode((15 - packedPosition) >> 1);
+  							else
+  								encode((packedPosition - 16) >> 1);
+  						}
+  						return
+  /*						} else if (packedStatus.serializationId != serializationId) {
+  							packedStatus.serializationId = serializationId
+  							packedStatus.count = 1
+  							if (options.sharedPack) {
+  								let sharedCount = packedStatus.sharedCount = (packedStatus.sharedCount || 0) + 1
+  								if (shareCount > (options.sharedPack.threshold || 5)) {
+  									let sharedPosition = packedStatus.position = packedStatus.nextSharedPosition
+  									hasSharedUpdate = true
+  									if (sharedPosition < 16)
+  										target[position++] = sharedPosition + 0xc0
+
+  								}
+  							}
+  						} // else any in-doc incrementation?*/
+  					} else if (samplingPackedValues && !options.pack) {
+  						let status = samplingPackedValues.get(value);
+  						if (status)
+  							status.count++;
+  						else
+  							samplingPackedValues.set(value, {
+  								count: 1,
+  							});
+  					}
+  				}
   				let strLength = value.length;
+  				if (bundledStrings && strLength >= 4 && strLength < 0x400) {
+  					if ((bundledStrings.size += strLength) > MAX_BUNDLE_SIZE) {
+  						let extStart;
+  						let maxBytes = (bundledStrings[0] ? bundledStrings[0].length * 3 + bundledStrings[1].length : 0) + 10;
+  						if (position + maxBytes > safeEnd)
+  							target = makeRoom(position + maxBytes);
+  						target[position++] = 0xd9; // tag 16-bit
+  						target[position++] = 0xdf; // tag 0xdff9
+  						target[position++] = 0xf9;
+  						// TODO: If we only have one bundle with any string data, only write one string bundle
+  						target[position++] = bundledStrings.position ? 0x84 : 0x82; // array of 4 or 2 elements depending on if we write bundles
+  						target[position++] = 0x1a; // 32-bit unsigned int
+  						extStart = position - start;
+  						position += 4; // reserve for writing bundle reference
+  						if (bundledStrings.position) {
+  							writeBundles(start, encode); // write the last bundles
+  						}
+  						bundledStrings = ['', '']; // create new ones
+  						bundledStrings.size = 0;
+  						bundledStrings.position = extStart;
+  					}
+  					let twoByte = hasNonLatin.test(value);
+  					bundledStrings[twoByte ? 0 : 1] += value;
+  					target[position++] = twoByte ? 0xce : 0xcf;
+  					encode(strLength);
+  					return
+  				}
   				let headerSize;
   				// first we estimate the header size, so we can write to the correct location
   				if (strLength < 0x20) {
@@ -4181,7 +4654,7 @@
   				}
   				position += length;
   			} else if (type === 'number') {
-  				if (value >>> 0 === value) {// positive integer, 32-bit or less
+  				if (!this.alwaysUseFloat && value >>> 0 === value) {// positive integer, 32-bit or less
   					// positive uint
   					if (value < 0x18) {
   						target[position++] = value;
@@ -4197,7 +4670,7 @@
   						targetView.setUint32(position, value);
   						position += 4;
   					}
-  				} else if (value >> 0 === value) { // negative integer
+  				} else if (!this.alwaysUseFloat && value >> 0 === value) { // negative integer
   					if (value >= -0x18) {
   						target[position++] = 0x1f - value;
   					} else if (value >= -0x100) {
@@ -4219,7 +4692,7 @@
   						targetView.setFloat32(position, value);
   						let xShifted;
   						if (useFloat32 < 4 ||
-  							// this checks for  rounding of numbers that were encoded in 32-bit float to nearest significant decimal digit that could be preserved
+  								// this checks for rounding of numbers that were encoded in 32-bit float to nearest significant decimal digit that could be preserved
   								((xShifted = value * mult10[((target[position] & 0x7f) << 1) | (target[position + 1] >> 7)]) >> 0) === xShifted) {
   							position += 4;
   							return
@@ -4237,16 +4710,16 @@
   					if (referenceMap) {
   						let referee = referenceMap.get(value);
   						if (referee) {
-  							if (!referee.id) {
+  							target[position++] = 0xd8;
+  							target[position++] = 29; // http://cbor.schmorp.de/value-sharing
+  							target[position++] = 0x19; // 16-bit uint
+  							if (!referee.references) {
   								let idsToInsert = referenceMap.idsToInsert || (referenceMap.idsToInsert = []);
-  								referee.id = idsToInsert.push(referee);
+  								referee.references = [];
+  								idsToInsert.push(referee);
   							}
-  							target[position++] = 0xd9;
-  							target[position++] = 40010 >> 8;
-  							target[position++] = 40010 & 0xff;
-  							target[position++] = 0x1a; // uint32
-  							targetView.setUint32(position, referee.id);
-  							position += 4;
+  							referee.references.push(position - start);
+  							position += 2; // TODO: also support 32-bit
   							return
   						} else 
   							referenceMap.set(value, { offset: position - start });
@@ -4286,16 +4759,25 @@
   							targetView.setUint32(position, length);
   							position += 4;
   						}
-  						for (let [ key, entryValue ] of value) {
-  							encode(key);
-  							encode(entryValue);
+  						if (encoder.keyMap) { 
+  							for (let [ key, entryValue ] of value) {
+  								encode(encoder.encodeKey(key));
+  								encode(entryValue);
+  							} 
+  						} else { 
+  							for (let [ key, entryValue ] of value) {
+  								encode(key); 
+  								encode(entryValue);
+  							} 	
   						}
-  					} else {	
+  					} else {
   						for (let i = 0, l = extensions.length; i < l; i++) {
   							let extensionClass = extensionClasses[i];
   							if (value instanceof extensionClass) {
   								let extension = extensions[i];
   								let tag = extension.tag;
+  								if (tag == undefined)
+  									tag = extension.getTag && extension.getTag.call(this, value);
   								if (tag < 0x18) {
   									target[position++] = 0xc0 | tag;
   								} else if (tag < 0x100) {
@@ -4315,6 +4797,11 @@
   							}
   						}
   						if (value[Symbol.iterator]) {
+  							if (throwOnIterable) {
+  								let error = new Error('Iterable should be serialized as iterator');
+  								error.iteratorNotHandled = true;
+  								throw error;
+  							}
   							target[position++] = 0x9f; // indefinite length array
   							for (let entry of value) {
   								encode(entry);
@@ -4322,6 +4809,18 @@
   							target[position++] = 0xff; // stop-code
   							return
   						}
+  						if (value[Symbol.asyncIterator] || isBlob(value)) {
+  							let error = new Error('Iterable/blob should be serialized as iterator');
+  							error.iteratorNotHandled = true;
+  							throw error;
+  						}
+  						if (this.useToJSON && value.toJSON) {
+  							const json = value.toJSON();
+  							// if for some reason value.toJSON returns itself it'll loop forever
+  							if (json !== value)
+  								return encode(json)
+  						}
+
   						// no extension found, write as object
   						writeObject(value, !value.hasOwnProperty); // if it doesn't have hasOwnProperty, don't do hasOwnProperty checks
   					}
@@ -4350,13 +4849,14 @@
   			} else if (type === 'undefined') {
   				target[position++] = 0xf7;
   			} else {
-  				throw new Error('Unknown type ' + type)
+  				throw new Error('Unknown type: ' + type)
   			}
   		};
 
   		const writeObject = this.useRecords === false ? this.variableMapSize ? (object) => {
   			// this method is slightly slower, but generates "preferred serialization" (optimally small for smaller objects)
   			let keys = Object.keys(object);
+  			let vals = Object.values(object);
   			let length = keys.length;
   			if (length < 0x18) {
   				target[position++] = 0xa0 | length;
@@ -4372,10 +4872,16 @@
   				targetView.setUint32(position, length);
   				position += 4;
   			}
-  			let key;
-  			for (let i = 0; i < length; i++) {
-  				encode(key = keys[i]);
-  				encode(object[key]);
+  			if (encoder.keyMap) { 
+  				for (let i = 0; i < length; i++) {
+  					encode(encoder.encodeKey(keys[i]));
+  					encode(vals[i]);
+  				}
+  			} else {
+  				for (let i = 0; i < length; i++) {
+  					encode(keys[i]);
+  					encode(vals[i]);
+  				}
   			}
   		} :
   		(object, safePrototype) => {
@@ -4383,112 +4889,105 @@
   			let objectOffset = position - start;
   			position += 2;
   			let size = 0;
-  			for (let key in object) {
-  				if (safePrototype || object.hasOwnProperty(key)) {
-  					encode(key);
+  			if (encoder.keyMap) { 
+  				for (let key in object) if (safePrototype || object.hasOwnProperty(key)) {
+  					encode(encoder.encodeKey(key));
   					encode(object[key]);
+  					size++;
+  				}
+  			} else { 
+  				for (let key in object) if (safePrototype || object.hasOwnProperty(key)) {
+  						encode(key);
+  						encode(object[key]);
   					size++;
   				}
   			}
   			target[objectOffset++ + start] = size >> 8;
   			target[objectOffset + start] = size & 0xff;
   		} :
-
-  	/*	sharedStructures ?  // For highly stable structures, using for-in can a little bit faster
   		(object, safePrototype) => {
-  			let nextTransition, transition = structures.transitions || (structures.transitions = Object.create(null))
-  			let objectOffset = position++ - start
-  			let wroteKeys
-  			for (let key in object) {
-  				if (safePrototype || object.hasOwnProperty(key)) {
-  					nextTransition = transition[key]
-  					if (!nextTransition) {
-  						nextTransition = transition[key] = Object.create(null)
-  						nextTransition.__keys__ = (transition.__keys__ || []).concat([key])
-  						/*let keys = Object.keys(object)
-  						if 
-  						let size = 0
-  						let startBranch = transition.__keys__ ? transition.__keys__.length : 0
-  						for (let i = 0, l = keys.length; i++) {
-  							let key = keys[i]
-  							size += key.length << 2
-  							if (i >= startBranch) {
-  								nextTransition = nextTransition[key] = Object.create(null)
-  								nextTransition.__keys__ = keys.slice(0, i + 1)
-  							}
-  						}
-  						makeRoom(position + size)
-  						nextTransition = transition[key]
-  						target.copy(target, )
-  						objectOffset
-  					}
-  					transition = nextTransition
-  					encode(object[key])
-  				}
-  			}
-  			let id = transition.id
-  			if (!id) {
-  				id = transition.id = structures.push(transition.__keys__) + 63
-  				if (sharedStructures.onUpdate)
-  					sharedStructures.onUpdate(id, transition.__keys__)
-  			}
-  			target[objectOffset + start] = id
-  		}*/
-  		(object) => {
-  			let keys = Object.keys(object);
   			let nextTransition, transition = structures.transitions || (structures.transitions = Object.create(null));
   			let newTransitions = 0;
-  			let length = keys.length;
-  			for (let i =0; i < length; i++) {
-  				let key = keys[i];
-  				nextTransition = transition[key];
-  				if (!nextTransition) {
-  					nextTransition = transition[key] = Object.create(null);
-  					newTransitions++;
+  			let length = 0;
+  			let parentRecordId;
+  			let keys;
+  			if (this.keyMap) {
+  				keys = Object.keys(object).map(k => this.encodeKey(k));
+  				length = keys.length;
+  				for (let i = 0; i < length; i++) {
+  					let key = keys[i];
+  					nextTransition = transition[key];
+  					if (!nextTransition) {
+  						nextTransition = transition[key] = Object.create(null);
+  						newTransitions++;
+  					}
+  					transition = nextTransition;
+  				}				
+  			} else {
+  				for (let key in object) if (safePrototype || object.hasOwnProperty(key)) {
+  					nextTransition = transition[key];
+  					if (!nextTransition) {
+  						if (transition[RECORD_SYMBOL] & 0x100000) {// this indicates it is a brancheable/extendable terminal node, so we will use this record id and extend it
+  							parentRecordId = transition[RECORD_SYMBOL] & 0xffff;
+  						}
+  						nextTransition = transition[key] = Object.create(null);
+  						newTransitions++;
+  					}
+  					transition = nextTransition;
+  					length++;
   				}
-  				transition = nextTransition;
   			}
   			let recordId = transition[RECORD_SYMBOL];
   			if (recordId !== undefined) {
-  				target[position++] = 0xd9; // tag two byte
-  				target[position++] = RECORD_STARTING_ID_PREFIX;
-  				target[position++] = recordId;
+  				recordId &= 0xffff;
+  				target[position++] = 0xd9;
+  				target[position++] = (recordId >> 8) | 0xe0;
+  				target[position++] = recordId & 0xff;
   			} else {
-  				recordId = structures.nextId++;
-  				if (!recordId) {
-  					recordId = 0;
-  					structures.nextId = 1;
+  				if (!keys)
+  					keys = transition.__keys__ || (transition.__keys__ = Object.keys(object));
+  				if (parentRecordId === undefined) {
+  					recordId = structures.nextId++;
+  					if (!recordId) {
+  						recordId = 0;
+  						structures.nextId = 1;
+  					}
+  					if (recordId >= MAX_STRUCTURES) {// cycle back around
+  						structures.nextId = (recordId = maxSharedStructures) + 1;
+  					}
+  				} else {
+  					recordId = parentRecordId;
   				}
-  				if (recordId >= MAX_STRUCTURES) {// cycle back around
-  					structures.nextId = (recordId = maxSharedStructures) + 1;
-  				}
-  				transition[RECORD_SYMBOL] = recordId;
   				structures[recordId] = keys;
-  				if (sharedStructures && sharedStructures.length <= maxSharedStructures) {
-  					target[position++] = 0xd9; // tag two byte
-  					target[position++] = RECORD_STARTING_ID_PREFIX;
-  					target[position++] = recordId; // tag number
+  				if (recordId < maxSharedStructures) {
+  					target[position++] = 0xd9;
+  					target[position++] = (recordId >> 8) | 0xe0;
+  					target[position++] = recordId & 0xff;
+  					transition = structures.transitions;
+  					for (let i = 0; i < length; i++) {
+  						if (transition[RECORD_SYMBOL] === undefined || (transition[RECORD_SYMBOL] & 0x100000))
+  							transition[RECORD_SYMBOL] = recordId;
+  						transition = transition[keys[i]];
+  					}
+  					transition[RECORD_SYMBOL] = recordId | 0x100000; // indicates it is a extendable terminal
   					hasSharedUpdate = true;
   				} else {
-  					target[position++] = 0xd8;
-  					target[position++] = RECORD_STARTING_ID_PREFIX;
+  					transition[RECORD_SYMBOL] = recordId;
+  					targetView.setUint32(position, 0xd9dfff00); // tag two byte, then record definition id
+  					position += 3;
   					if (newTransitions)
   						transitionsCount += serializationsSinceTransitionRebuild * newTransitions;
   					// record the removal of the id, we can maintain our shared structure
   					if (recordIdsToRemove.length >= MAX_STRUCTURES - maxSharedStructures)
   						recordIdsToRemove.shift()[RECORD_SYMBOL] = undefined; // we are cycling back through, and have to remove old ones
   					recordIdsToRemove.push(transition);
-  					if (length < 0x16)
-  						target[position++] = 0x82 + length; // array header, length of values + 2
-  					else
-  						writeArrayHeader(length + 2);
+  					writeArrayHeader(length + 2);
+  					encode(0xe000 + recordId);
   					encode(keys);
-  					target[position++] = 0x19; // uint16
-  					target[position++] = RECORD_STARTING_ID_PREFIX;
-  					target[position++] = recordId;
-  					// now write the values
-  					for (let i =0; i < length; i++)
-  						encode(object[keys[i]]);
+  					if (safePrototype === null) return; // special exit for iterator
+  					for (let key in object)
+  						if (safePrototype || object.hasOwnProperty(key))
+  							encode(object[key]);
   					return
   				}
   			}
@@ -4497,8 +4996,10 @@
   			} else {
   				writeArrayHeader(length);
   			}
-  			for (let i =0; i < length; i++)
-  				encode(object[keys[i]]);
+  			if (safePrototype === null) return; // special exit for iterator
+  			for (let key in object)
+  				if (safePrototype || object.hasOwnProperty(key))
+  					encode(object[key]);
   		};
   		const makeRoom = (end) => {
   			let newSize;
@@ -4507,7 +5008,7 @@
   				if ((end - start) > MAX_BUFFER_SIZE)
   					throw new Error('Encoded buffer would be larger than maximum buffer size')
   				newSize = Math.min(MAX_BUFFER_SIZE,
-  					Math.round(Math.max((end - start) * (end > 0x4000000 ? 1.25 : 2), 0x1000000) / 0x1000) * 0x1000);
+  					Math.round(Math.max((end - start) * (end > 0x4000000 ? 1.25 : 2), 0x400000) / 0x1000) * 0x1000);
   			} else // faster handling for smaller buffers
   				newSize = ((Math.max((end - start) << 2, target.length - 1) >> 12) + 1) << 12;
   			let newBuffer = new ByteArrayAllocate(newSize);
@@ -4521,6 +5022,131 @@
   			safeEnd = newBuffer.length - 10;
   			return target = newBuffer
   		};
+  		let chunkThreshold = 100;
+  		let continuedChunkThreshold = 1000;
+  		this.encodeAsIterable = function(value, options) {
+  			return startEncoding(value, options, encodeObjectAsIterable);
+  		};
+  		this.encodeAsAsyncIterable = function(value, options) {
+  			return startEncoding(value, options, encodeObjectAsAsyncIterable);
+  		};
+
+  		function* encodeObjectAsIterable(object, iterateProperties, finalIterable) {
+  			let constructor = object.constructor;
+  			if (constructor === Object) {
+  				let useRecords = encoder.useRecords !== false;
+  				if (useRecords)
+  					writeObject(object, null); // write the record identifier
+  				else
+  					writeEntityLength(Object.keys(object).length, 0xa0);
+  				for (let key in object) {
+  					let value = object[key];
+  					if (!useRecords) encode(key);
+  					if (value && typeof value === 'object') {
+  						if (iterateProperties[key])
+  							yield* encodeObjectAsIterable(value, iterateProperties[key]);
+  						else
+  							yield* tryEncode(value, iterateProperties, key);
+  					} else encode(value);
+  				}
+  			} else if (constructor === Array) {
+  				let length = object.length;
+  				writeArrayHeader(length);
+  				for (let i = 0; i < length; i++) {
+  					let value = object[i];
+  					if (value && (typeof value === 'object' || position - start > chunkThreshold)) {
+  						if (iterateProperties.element)
+  							yield* encodeObjectAsIterable(value, iterateProperties.element);
+  						else
+  							yield* tryEncode(value, iterateProperties, 'element');
+  					} else encode(value);
+  				}
+  			} else if (object[Symbol.iterator]) {
+  				target[position++] = 0x9f; // start indefinite array
+  				for (let value of object) {
+  					if (value && (typeof value === 'object' || position - start > chunkThreshold)) {
+  						if (iterateProperties.element)
+  							yield* encodeObjectAsIterable(value, iterateProperties.element);
+  						else
+  							yield* tryEncode(value, iterateProperties, 'element');
+  					} else encode(value);
+  				}
+  				target[position++] = 0xff; // stop byte
+  			} else if (isBlob(object)){
+  				writeEntityLength(object.size, 0x40); // encode as binary data
+  				yield target.subarray(start, position);
+  				yield object; // directly return blobs, they have to be encoded asynchronously
+  				restartEncoding();
+  			} else if (object[Symbol.asyncIterator]) {
+  				target[position++] = 0x9f; // start indefinite array
+  				yield target.subarray(start, position);
+  				yield object; // directly return async iterators, they have to be encoded asynchronously
+  				restartEncoding();
+  				target[position++] = 0xff; // stop byte
+  			} else {
+  				encode(object);
+  			}
+  			if (finalIterable && position > start) yield target.subarray(start, position);
+  			else if (position - start > chunkThreshold) {
+  				yield target.subarray(start, position);
+  				restartEncoding();
+  			}
+  		}
+  		function* tryEncode(value, iterateProperties, key) {
+  			let restart = position - start;
+  			try {
+  				encode(value);
+  				if (position - start > chunkThreshold) {
+  					yield target.subarray(start, position);
+  					restartEncoding();
+  				}
+  			} catch (error) {
+  				if (error.iteratorNotHandled) {
+  					iterateProperties[key] = {};
+  					position = start + restart; // restart our position so we don't have partial data from last encode
+  					yield* encodeObjectAsIterable.call(this, value, iterateProperties[key]);
+  				} else throw error;
+  			}
+  		}
+  		function restartEncoding() {
+  			chunkThreshold = continuedChunkThreshold;
+  			encoder.encode(null, THROW_ON_ITERABLE); // restart encoding
+  		}
+  		function startEncoding(value, options, encodeIterable) {
+  			if (options && options.chunkThreshold) // explicitly specified chunk sizes
+  				chunkThreshold = continuedChunkThreshold = options.chunkThreshold;
+  			else // we start with a smaller threshold to get initial bytes sent quickly
+  				chunkThreshold = 100;
+  			if (value && typeof value === 'object') {
+  				encoder.encode(null, THROW_ON_ITERABLE); // start encoding
+  				return encodeIterable(value, encoder.iterateProperties || (encoder.iterateProperties = {}), true);
+  			}
+  			return [encoder.encode(value)];
+  		}
+
+  		async function* encodeObjectAsAsyncIterable(value, iterateProperties) {
+  			for (let encodedValue of encodeObjectAsIterable(value, iterateProperties, true)) {
+  				let constructor = encodedValue.constructor;
+  				if (constructor === ByteArray || constructor === Uint8Array)
+  					yield encodedValue;
+  				else if (isBlob(encodedValue)) {
+  					let reader = encodedValue.stream().getReader();
+  					let next;
+  					while (!(next = await reader.read()).done) {
+  						yield next.value;
+  					}
+  				} else if (encodedValue[Symbol.asyncIterator]) {
+  					for await (let asyncValue of encodedValue) {
+  						restartEncoding();
+  						if (asyncValue)
+  							yield* encodeObjectAsAsyncIterable(asyncValue, iterateProperties.async || (iterateProperties.async = {}));
+  						else yield encoder.encode(asyncValue);
+  					}
+  				} else {
+  					yield encodedValue;
+  				}
+  			}
+  		}
   	}
   	useBuffer(buffer) {
   		// this means we are finished using our own buffer and we can write over it safely
@@ -4528,10 +5154,63 @@
   		targetView = new DataView(target.buffer, target.byteOffset, target.byteLength);
   		position = 0;
   	}
+  	clearSharedData() {
+  		if (this.structures)
+  			this.structures = [];
+  		if (this.sharedValues)
+  			this.sharedValues = undefined;
+  	}
+  	updateSharedData() {
+  		let lastVersion = this.sharedVersion || 0;
+  		this.sharedVersion = lastVersion + 1;
+  		let structuresCopy = this.structures.slice(0);
+  		let sharedData = new SharedData(structuresCopy, this.sharedValues, this.sharedVersion);
+  		let saveResults = this.saveShared(sharedData,
+  				existingShared => (existingShared && existingShared.version || 0) == lastVersion);
+  		if (saveResults === false) {
+  			// get updated structures and try again if the update failed
+  			sharedData = this.getShared() || {};
+  			this.structures = sharedData.structures || [];
+  			this.sharedValues = sharedData.packedValues;
+  			this.sharedVersion = sharedData.version;
+  			this.structures.nextId = this.structures.length;
+  		} else {
+  			// restore structures
+  			structuresCopy.forEach((structure, i) => this.structures[i] = structure);
+  		}
+  		// saveShared may fail to write and reload, or may have reloaded to check compatibility and overwrite saved data, either way load the correct shared data
+  		return saveResults
+  	}
+  }
+  function writeEntityLength(length, majorValue) {
+  	if (length < 0x18)
+  		target[position++] = majorValue | length;
+  	else if (length < 0x100) {
+  		target[position++] = majorValue | 0x18;
+  		target[position++] = length;
+  	} else if (length < 0x10000) {
+  		target[position++] = majorValue | 0x19;
+  		target[position++] = length >> 8;
+  		target[position++] = length & 0xff;
+  	} else {
+  		target[position++] = majorValue | 0x1a;
+  		targetView.setUint32(position, length);
+  		position += 4;
+  	}
+
+  }
+  class SharedData {
+  	constructor(structures, values, version) {
+  		this.structures = structures;
+  		this.packedValues = values;
+  		this.version = version;
+  	}
   }
 
   function writeArrayHeader(length) {
-  	if (length < 0x100) {
+  	if (length < 0x18)
+  		target[position++] = 0x80 | length;
+  	else if (length < 0x100) {
   		target[position++] = 0x98;
   		target[position++] = length;
   	} else if (length < 0x10000) {
@@ -4545,12 +5224,71 @@
   	}
   }
 
-  extensionClasses = [ Date, Set, Error, RegExp, ArrayBuffer, ByteArray,
-  	Uint8Array, Uint8ClampedArray, Uint16Array, Uint32Array, BigUint64Array, Int8Array, Int16Array, Int32Array, BigInt64Array,
-  	Float32Array, Float64Array];
+  const BlobConstructor = typeof Blob === 'undefined' ? function(){} : Blob;
+  function isBlob(object) {
+  	if (object instanceof BlobConstructor)
+  		return true;
+  	let tag = object[Symbol.toStringTag];
+  	return tag === 'Blob' || tag === 'File';
+  }
+  function findRepetitiveStrings(value, packedValues) {
+  	switch(typeof value) {
+  		case 'string':
+  			if (value.length > 3) {
+  				if (packedValues.objectMap[value] > -1 || packedValues.values.length >= packedValues.maxValues)
+  					return
+  				let packedStatus = packedValues.get(value);
+  				if (packedStatus) {
+  					if (++packedStatus.count == 2) {
+  						packedValues.values.push(value);
+  					}
+  				} else {
+  					packedValues.set(value, {
+  						count: 1,
+  					});
+  					if (packedValues.samplingPackedValues) {
+  						let status = packedValues.samplingPackedValues.get(value);
+  						if (status)
+  							status.count++;
+  						else
+  							packedValues.samplingPackedValues.set(value, {
+  								count: 1,
+  							});
+  					}
+  				}
+  			}
+  			break
+  		case 'object':
+  			if (value) {
+  				if (value instanceof Array) {
+  					for (let i = 0, l = value.length; i < l; i++) {
+  						findRepetitiveStrings(value[i], packedValues);
+  					}
+
+  				} else {
+  					let includeKeys = !packedValues.encoder.useRecords;
+  					for (var key in value) {
+  						if (value.hasOwnProperty(key)) {
+  							if (includeKeys)
+  								findRepetitiveStrings(key, packedValues);
+  							findRepetitiveStrings(value[key], packedValues);
+  						}
+  					}
+  				}
+  			}
+  			break
+  		case 'function': console.log(value);
+  	}
+  }
+  const isLittleEndianMachine = new Uint8Array(new Uint16Array([1]).buffer)[0] == 1;
+  extensionClasses = [ Date, Set, Error, RegExp, Tag, ArrayBuffer,
+  	Uint8Array, Uint8ClampedArray, Uint16Array, Uint32Array,
+  	typeof BigUint64Array == 'undefined' ? function() {} : BigUint64Array, Int8Array, Int16Array, Int32Array,
+  	typeof BigInt64Array == 'undefined' ? function() {} : BigInt64Array,
+  	Float32Array, Float64Array, SharedData ];
 
   //Object.getPrototypeOf(Uint8Array.prototype).constructor /*TypedArray*/
-  extensions = [{
+  extensions = [{ // Date
   	tag: 1,
   	encode(date, encode) {
   		let seconds = date.getTime() / 1000;
@@ -4566,43 +5304,85 @@
   			position += 8;
   		}
   	}
-  }, {
+  }, { // Set
   	tag: 258, // https://github.com/input-output-hk/cbor-sets-spec/blob/master/CBOR_SETS.md
   	encode(set, encode) {
   		let array = Array.from(set);
   		encode(array);
   	}
-  }, {
+  }, { // Error
   	tag: 27, // http://cbor.schmorp.de/generic-object
   	encode(error, encode) {
   		encode([ error.name, error.message ]);
   	}
-  }, {
+  }, { // RegExp
   	tag: 27, // http://cbor.schmorp.de/generic-object
   	encode(regex, encode) {
   		encode([ 'RegExp', regex.source, regex.flags ]);
   	}
-  }, {
+  }, { // Tag
+  	getTag(tag) {
+  		return tag.tag
+  	},
+  	encode(tag, encode) {
+  		encode(tag.value);
+  	}
+  }, { // ArrayBuffer
   	encode(arrayBuffer, encode, makeRoom) {
   		writeBuffer(arrayBuffer, makeRoom);
   	}
-  }, {
-  	encode(arrayBuffer, encode, makeRoom) {
-  		writeBuffer(arrayBuffer, makeRoom);
+  }, { // Uint8Array
+  	getTag(typedArray) {
+  		if (typedArray.constructor === Uint8Array) {
+  			if (this.tagUint8Array || hasNodeBuffer && this.tagUint8Array !== false)
+  				return 64;
+  		} // else no tag
+  	},
+  	encode(typedArray, encode, makeRoom) {
+  		writeBuffer(typedArray, makeRoom);
   	}
-  }, typedArrayEncoder(64),
-  	typedArrayEncoder(68),
-  	typedArrayEncoder(69),
-  	typedArrayEncoder(70),
-  	typedArrayEncoder(71),
-  	typedArrayEncoder(72),
-  	typedArrayEncoder(77),
-  	typedArrayEncoder(78),
-  	typedArrayEncoder(79),
-  	typedArrayEncoder(81),
-  	typedArrayEncoder(82)];
-
-  function typedArrayEncoder(tag) {
+  },
+  	typedArrayEncoder(68, 1),
+  	typedArrayEncoder(69, 2),
+  	typedArrayEncoder(70, 4),
+  	typedArrayEncoder(71, 8),
+  	typedArrayEncoder(72, 1),
+  	typedArrayEncoder(77, 2),
+  	typedArrayEncoder(78, 4),
+  	typedArrayEncoder(79, 8),
+  	typedArrayEncoder(85, 4),
+  	typedArrayEncoder(86, 8),
+  {
+  	encode(sharedData, encode) { // write SharedData
+  		let packedValues = sharedData.packedValues || [];
+  		let sharedStructures = sharedData.structures || [];
+  		if (packedValues.values.length > 0) {
+  			target[position++] = 0xd8; // one-byte tag
+  			target[position++] = 51; // tag 51 for packed shared structures https://www.potaroo.net/ietf/ids/draft-ietf-cbor-packed-03.txt
+  			writeArrayHeader(4);
+  			let valuesArray = packedValues.values;
+  			encode(valuesArray);
+  			writeArrayHeader(0); // prefixes
+  			writeArrayHeader(0); // suffixes
+  			packedObjectMap = Object.create(sharedPackedObjectMap || null);
+  			for (let i = 0, l = valuesArray.length; i < l; i++) {
+  				packedObjectMap[valuesArray[i]] = i;
+  			}
+  		}
+  		if (sharedStructures) {
+  			targetView.setUint32(position, 0xd9dffe00);
+  			position += 3;
+  			let definitions = sharedStructures.slice(0);
+  			definitions.unshift(0xe000);
+  			definitions.push(new Tag(sharedData.version, 0x53687264));
+  			encode(definitions);
+  		} else
+  			encode(new Tag(sharedData.version, 0x53687264));
+  		}
+  	}];
+  function typedArrayEncoder(tag, size) {
+  	if (!isLittleEndianMachine && size > 1)
+  		tag -= 4; // the big endian equivalents are 4 less
   	return {
   		tag: tag,
   		encode: function writeExtBuffer(typedArray, encode) {
@@ -4633,33 +5413,43 @@
   	if (position + length >= target.length) {
   		makeRoom(position + length);
   	}
-  	target.set(buffer, position);
+  	// if it is already a typed array (has an ArrayBuffer), use that, but if it is an ArrayBuffer itself,
+  	// must wrap it to set it.
+  	target.set(buffer.buffer ? buffer : new Uint8Array(buffer), position);
   	position += length;
   }
 
   function insertIds(serialized, idsToInsert) {
   	// insert the ids that need to be referenced for structured clones
   	let nextId;
-  	let distanceToMove = idsToInsert.length * 8;
+  	let distanceToMove = idsToInsert.length * 2;
   	let lastEnd = serialized.length - distanceToMove;
   	idsToInsert.sort((a, b) => a.offset > b.offset ? 1 : -1);
+  	for (let id = 0; id < idsToInsert.length; id++) {
+  		let referee = idsToInsert[id];
+  		referee.id = id;
+  		for (let position of referee.references) {
+  			serialized[position++] = id >> 8;
+  			serialized[position] = id & 0xff;
+  		}
+  	}
   	while (nextId = idsToInsert.pop()) {
   		let offset = nextId.offset;
-  		let id = nextId.id;
   		serialized.copyWithin(offset + distanceToMove, offset, lastEnd);
-  		distanceToMove -= 8;
+  		distanceToMove -= 2;
   		let position = offset + distanceToMove;
-  		serialized[position++] = 0xd9;
-  		serialized[position++] = 40009 >> 8;
-  		serialized[position++] = 40009 & 0xff;
-  		serialized[position++] = 0x1a; // uint32
-  		serialized[position++] = id >> 24;
-  		serialized[position++] = (id >> 16) & 0xff;
-  		serialized[position++] = (id >> 8) & 0xff;
-  		serialized[position++] = id & 0xff;
+  		serialized[position++] = 0xd8;
+  		serialized[position++] = 28; // http://cbor.schmorp.de/value-sharing
   		lastEnd = offset;
   	}
   	return serialized
+  }
+  function writeBundles(start, encode) {
+  	targetView.setUint32(bundledStrings.position + start, position - bundledStrings.position - start + 1); // the offset to bundle
+  	let writeStrings = bundledStrings;
+  	bundledStrings = null;
+  	encode(writeStrings[0]);
+  	encode(writeStrings[1]);
   }
 
   function addExtension(extension) {
@@ -4673,6 +5463,11 @@
   }
   let defaultEncoder = new Encoder({ useRecords: false });
   defaultEncoder.encode;
+  defaultEncoder.encodeAsIterable;
+  defaultEncoder.encodeAsAsyncIterable;
+  const REUSE_BUFFER_MODE = 512;
+  const RESET_BUFFER_MODE = 1024;
+  const THROW_ON_ITERABLE = 2048;
 
   var lzjbPack = {};
 
@@ -5004,7 +5799,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Wed, 06 Sep 2023 20:32:14 +0000
+   * Build time: Fri, 10 Nov 2023 16:25:41 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -14685,7 +15480,7 @@
       }
 
       return read;
-    }(), "(read [string])\n\n        This function, if used with a string, will parse it and\n        return the LIPS code, if there is any. If called without an\n        input, it will read a string from standard input (using\n        the browser's prompt or a user defined input method) and\n        calls itself with that string. This function can be used\n        together with `eval` to evaluate code from a string."),
+    }(), "(read [string])\n\n        This function, if used with a string, will parse it and\n        return the LIPS code, if there is any. If called with a\n        port, it will parse the next item from the port. If called\n        without an input, it will read a string from standard input\n        (using the browser's prompt or a user defined input method)\n        and calls itself with that string. This function can be used\n        together with `eval` to evaluate code from a string."),
     // ------------------------------------------------------------------
     pprint: doc('pprint', function pprint(arg) {
       if (arg instanceof Pair) {
@@ -14696,7 +15491,7 @@
       }
 
       global_env.get('newline').call(global_env);
-    }, "(pprint expression)\n\n        This function will pretty print its input. If it is called\n        with a non-list, it will just call the print function on its\n        input."),
+    }, "(pprint expression)\n\n        This function will pretty print its input to stdout. If it is called\n        with a non-list, it will just call the print function on its\n        input."),
     // ------------------------------------------------------------------
     print: doc('print', function print() {
       var display = global_env.get('display');
@@ -14710,7 +15505,7 @@
         display.call(global_env, arg);
         newline.call(global_env);
       });
-    }, "(print . args)\n\n        This function converts each input into a string and prints\n        the result to the standard output. (by default it's the\n        console but it can be defined in user code) This function\n        calls `newline` after printing each input."),
+    }, "(print . args)\n\n        This function converts each input into a string and prints\n        the result to the standard output (by default it's the\n        console but it can be defined in user code). This function\n        calls `(newline)` after printing each input."),
     // ------------------------------------------------------------------
     format: doc('format', function format(str) {
       for (var _len20 = arguments.length, args = new Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
@@ -14764,7 +15559,7 @@
 
       var value = global_env.get('repr')(arg);
       port.write.call(global_env, value);
-    }, "(display string [port])\n\n        This function outputs the string to the standard output or\n        the port if given."),
+    }, "(display string [port])\n\n        This function outputs the string to the standard output or\n        the port if given. No newline."),
     // ------------------------------------------------------------------
     'display-error': doc('display-error', function error() {
       var port = internal(this, 'stderr');
@@ -14777,7 +15572,7 @@
       var value = args.map(repr).join(' ');
       port.write.call(global_env, value);
       global_env.get('newline')(port);
-    }, "(display-error . args)\n\n        Display an error message."),
+    }, "(display-error . args)\n\n        Display an error message on stderr."),
     // ------------------------------------------------------------------
     '%same-functions': doc('%same-functions', function (a, b) {
       if (!is_function(a)) {
@@ -14842,7 +15637,7 @@
     // ------------------------------------------------------------------
     cons: doc('cons', function cons(car, cdr) {
       return new Pair(car, cdr);
-    }, "(cons left right)\n\n        This function returns a new list with the first appended\n        before the second."),
+    }, "(cons left right)\n\n        This function returns a new list with the first appended\n        before the second. If the second is not a list cons will\n        return a dotted pair."),
     // ------------------------------------------------------------------
     car: doc('car', function car(list) {
       typecheck('car', list, 'pair');
@@ -14950,7 +15745,7 @@
 
         ref.set(symbol, value);
       });
-    }), "(set! name value)\n\n         Macro that can be used to set the value of the variable (mutate)\n         it search the scope chain until it finds first non emtpy slot and set it."),
+    }), "(set! name value)\n\n         Macro that can be used to set the value of the variable or slot (mutate it).\n         set! searches the scope chain until it finds first non emtpy slot and sets it."),
     // ------------------------------------------------------------------
     'unset!': doc(new Macro('set!', function (code) {
       if (!(code.car instanceof LSymbol)) {
@@ -14963,23 +15758,23 @@
       if (ref) {
         delete ref.__env__[symbol.__name__];
       }
-    }), "(unset! name)\n\n         Function delete specified name from environment."),
+    }), "(unset! name)\n\n         Function to delete the specified name from environment.\n         Trying to access the name afterwards will error."),
     // ------------------------------------------------------------------
     'set-car!': doc('set-car!', function (slot, value) {
       typecheck('set-car!', slot, 'pair');
       slot.car = value;
-    }, "(set-car! obj value)\n\n         Function that set car (head) of the list/pair to specified value.\n         It can destroy the list. Old value is lost."),
+    }, "(set-car! obj value)\n\n         Function that sets the car (first item) of the list/pair to specified value.\n         The old value is lost."),
     // ------------------------------------------------------------------
     'set-cdr!': doc('set-cdr!', function (slot, value) {
       typecheck('set-cdr!', slot, 'pair');
       slot.cdr = value;
-    }, "(set-cdr! obj value)\n\n         Function that set cdr (tail) of the list/pair to specified value.\n         It can destroy the list. Old value is lost."),
+    }, "(set-cdr! obj value)\n\n         Function that sets the cdr (tail) of the list/pair to specified value.\n         It will destroy the list. The old tail is lost."),
     // ------------------------------------------------------------------
     'empty?': doc('empty?', function (x) {
       return typeof x === 'undefined' || x === _nil;
-    }, "(empty? object)\n\n         Function return true if value is undfined empty list."),
+    }, "(empty? object)\n\n         Function that returns #t if value is nil (an empty list) or undefined."),
     // ------------------------------------------------------------------
-    gensym: doc('gensym', gensym, "(gensym)\n\n         Function generate unique symbol, to use with macros as meta name."),
+    gensym: doc('gensym', gensym, "(gensym)\n\n         Generates a unique symbol that is not bound anywhere,\n         to use with macros as meta name."),
     // ------------------------------------------------------------------
     load: doc('load', function load(file, env) {
       typecheck('load', file, 'string');
@@ -15128,7 +15923,7 @@
       }).then(function () {})["finally"](function () {
         global_env.set(PATH, module_path);
       });
-    }, "(load filename)\n        (load filename environment)\n\n        Function fetch the file and evaluate its content as LIPS code,\n        If second argument is provided and it's environment the evaluation\n        will happen in that environment."),
+    }, "(load filename)\n        (load filename environment)\n\n        Fetches the file (from disk or network) and evaluates its content as LIPS code.\n        If the second argument is provided and it's an environment the evaluation\n        will happen in that environment."),
     // ------------------------------------------------------------------
     'do': doc(new Macro('do', /*#__PURE__*/function () {
       var _ref30 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(code, _ref31) {
@@ -15287,7 +16082,7 @@
       return function (_x15, _x16) {
         return _ref30.apply(this, arguments);
       };
-    }()), "(do ((<var> <init> <next>)) (test expression) . body)\n\n         Iteration macro that evaluate the expression body in scope of the variables.\n         On each loop it increase the variables according to next expression and runs\n         test to check if the loop should continue. If test is single called, the macro\n         will not return anything. If the test is pair of expression and value the\n         macro will return that value after finish."),
+    }()), "(do ((<var> <init> <next>)) (test return) . body)\n\n         Iteration macro that evaluates the expression body in scope of the variables.\n         On each loop it changes the variables according to the <next> expression and runs\n         test to check if the loop should continue. If test is a single value, the macro\n         will return undefined. If the test is a pair of expressions the macro will evaluate\n         and return the second expression after the loop exits."),
     // ------------------------------------------------------------------
     'if': doc(new Macro('if', function (code, _ref32) {
       var dynamic_scope = _ref32.dynamic_scope,
@@ -15326,7 +16121,7 @@
       });
 
       return unpromise(cond, resolve);
-    }), "(if cond true-expr false-expr)\n\n         Macro evaluate condition expression and if the value is true, it\n         evaluate and return true expression if not it evaluate and return\n         false expression"),
+    }), "(if cond true-expr false-expr)\n\n         Macro that evaluates cond expression and if the value is true, it\n         evaluates and returns true-expression, if not it evaluates and returns\n         false-expression."),
     // ------------------------------------------------------------------
     'let-env': new Macro('let-env', function (code) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -15348,19 +16143,19 @@
           error: error
         });
       });
-    }, "(let-env env . body)\n\n        Special macro that evaluate body in context of given environment\n        object."),
+    }, "(let-env env . body)\n\n        Special macro that evaluates body in context of given environment\n        object."),
     // ------------------------------------------------------------------
-    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b)) body)\n\n         Macro that creates new environment, then evaluate and assign values to\n         names and then evaluate the body in context of that environment.\n         Values are evaluated sequentialy and next value can access to\n         previous values/names."),
+    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to\n         names and then evaluates the body in context of that environment.\n         Values are evaluated sequentialy and the next value can access the\n         previous values/names."),
     // ---------------------------------------------------------------------
-    'letrec*': doc(let_macro(Symbol["for"]('letrec')), "(letrec* ((a value-a) (b value-b)) body)\n\n         Same as letrec but the order of execution of the binding is guaranteed,\n         so use can use recursive code as well as reference previous binding.\n         In LIPS both letrec and letrec* behave the same."),
+    'letrec*': doc(let_macro(Symbol["for"]('letrec')), "(letrec* ((a value-a) (b value-b) ...) . body)\n\n         Same as letrec but the order of execution of the binding is guaranteed,\n         so you can use recursive code as well as referencing the previous binding.\n\n         In LIPS both letrec and letrec* behave the same."),
     // ---------------------------------------------------------------------
-    'let*': doc(let_macro(Symbol["for"]('let*')), "(let* ((a value-a) (b value-b)) body)\n\n         Macro similar to `let` but next argument get environment\n         from previous let variable, so they you can define one variable,\n         and use in next argument."),
+    'let*': doc(let_macro(Symbol["for"]('let*')), "(let* ((a value-a) (b value-b) ...) . body)\n\n         Macro similar to `let`, but the subsequent bindings after the first\n         are evaluated in the environment including the previous let variables,\n         so you can define one variable, and use it in the next's definition."),
     // ---------------------------------------------------------------------
-    'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b)) body)\n\n         Macro that creates new environment, then evaluate and assign values to\n         names and then evaluate the body in context of that environment.\n         Values are evaluated sequentialy but you can't access\n         previous values/names when next are evaluated. You can only get them\n         from body of let expression."),
+    'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to\n         names, and then evaluates the body in context of that environment.\n         Values are evaluated sequentialy but you can't access previous values/names\n         when the next are evaluated. You can only get them in the body of the let expression.\n         (If you want to define multiple variables and use them in each other's definitions,\n         use `let*`.)"),
     // ------------------------------------------------------------------
     'begin*': doc(pararel('begin*', function (values) {
       return values.pop();
-    }), "(begin* . expr)\n\n         This macro is parallel version of begin. It evaluate each expression and\n         if it's a promise it will evaluate it in parallel and return value\n         of last expression."),
+    }), "(begin* . body)\n\n         This macro is a parallel version of begin. It evaluates each expression\n         in the body and if it's a promise it will await it in parallel and return \n         the value of the last expression (i.e. it uses Promise.all())."),
     // ------------------------------------------------------------------
     'begin': doc(new Macro('begin', function (code, options) {
       var args = Object.assign({}, options);
@@ -15386,7 +16181,7 @@
           return result;
         }
       }();
-    }), "(begin . args)\n\n         Macro runs list of expression and return valuate of the list one.\n         It can be used in place where you can only have single exression,\n         like if expression."),
+    }), "(begin . args)\n\n         Macro that runs a list of expressions in order and returns the value\n         of the last one. It can be used in places where you can only have a\n         single expression, like (if)."),
     // ------------------------------------------------------------------
     'ignore': new Macro('ignore', function (code, _ref33) {
       var dynamic_scope = _ref33.dynamic_scope,
@@ -15401,7 +16196,7 @@
       }
 
       _evaluate(new Pair(new LSymbol('begin'), code), args);
-    }, "(ignore expression)\n\n        Macro that will evaluate expression and swallow any promises that may\n        be created. It wil run and ignore any value that may be returned by\n        expression. The code should have side effects and/or when it's promise\n        it should resolve to undefined."),
+    }, "(ignore . body)\n\n        Macro that will evaluate the expression and swallow any promises that may\n        be created. It wil discard any value that may be returned by the last body\n        expression. The code should have side effects and/or when it's promise\n        it should resolve to undefined."),
     // ------------------------------------------------------------------
     'call/cc': doc(Macro.defmacro('call/cc', function (code) {
       var eval_args = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -15415,7 +16210,7 @@
           return result(new Continuation(null));
         }
       });
-    }), "(call/cc proc)\n\n         TODO"),
+    }), "(call/cc proc)\n\n         Call-with-current-continuation.\n\n         NOT SUPPORED BY LIPS RIGHT NOW"),
     // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function (code, eval_args) {
       var env = this;
@@ -15465,7 +16260,7 @@
 
         env.set(code.car, value, __doc__, true);
       });
-    }), "(define name expression)\n         (define name expression \"doc string\")\n         (define (function-name . args) body)\n\n         Macro for defining values. It can be used to define variables,\n         or function. If first argument is list it will create function\n         with name beeing first element of the list. The macro evalute\n         code `(define function (lambda args body))`"),
+    }), "(define name expression)\n         (define name expression \"doc string\")\n         (define (function-name . args) . body)\n\n         Macro for defining values. It can be used to define variables,\n         or functions. If the first argument is list it will create a function\n         with name being first element of the list. This form expands to\n         `(define function-name (lambda args body))`"),
     // ------------------------------------------------------------------
     'set-obj!': doc('set-obj!', function (obj, key, value) {
       var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -15498,11 +16293,11 @@
           value: _value4
         }));
       }
-    }, "(set-obj! obj key value)\n        (set-obj! obj key value props)\n\n        Function set property of JavaScript object. Props should be vector of pairs,\n        passed to Object.defineProperty."),
+    }, "(set-obj! obj key value)\n        (set-obj! obj key value props)\n\n        Function set a property of a JavaScript object. props should be a vector of pairs,\n        passed to Object.defineProperty."),
     // ------------------------------------------------------------------
     'null-environment': doc('null-environment', function () {
       return global_env.inherit('null');
-    }, "(null-environment)\n\n        Function return new base environment with std lib."),
+    }, "(null-environment)\n\n        Returns a clean environment with only the standard library."),
     // ------------------------------------------------------------------
     'values': doc('values', function values() {
       for (var _len22 = arguments.length, args = new Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
@@ -15510,7 +16305,7 @@
       }
 
       return Values(args);
-    }, "(values a1 a2 ...)\n\n        If called with more then one elment it will create special\n        Values object that can be used in call-with-values function"),
+    }, "(values a1 a2 ...)\n\n        If called with more then one elment it will create a special\n        Values object that can be used in the call-with-values function."),
     // ------------------------------------------------------------------
     'call-with-values': doc('call-with-values', function (producer, consumer) {
       typecheck('call-with-values', producer, 'function', 1);
@@ -15522,7 +16317,7 @@
       }
 
       return consumer(maybe);
-    }, "(call-with-values producer consumer)\n\n        Calls its producer argument with no values and a continuation that,\n        when passed some values, calls the consumer procedure with those\n        values as arguments."),
+    }, "(call-with-values producer consumer)\n\n        Calls the producer procedure with no arguments, then calls the\n        consumer procedure with the returned value as an argument -- unless\n        the returned value is a special Values object created by (values), if it is\n        the values are unpacked and the consumer is called with multiple arguments."),
     // ------------------------------------------------------------------
     'current-environment': doc('current-environment', function () {
       if (this.__name__ === '__frame__') {
@@ -15530,11 +16325,11 @@
       }
 
       return this;
-    }, "(current-environment)\n\n        Function return current environement."),
+    }, "(current-environment)\n\n        Function that returns the current environement (they're first-class objects!)"),
     // ------------------------------------------------------------------
     'parent.frame': doc('parent.frame', function () {
       return user_env;
-    }, "(parent.frame)\n\n        Return parent environment if called from inside function.\n        If no parent frame found it return nil."),
+    }, "(parent.frame)\n\n        Returns the parent environment if called from inside a function.\n        If no parent frame can be found it returns nil."),
     // ------------------------------------------------------------------
     'eval': doc('eval', function (code, env) {
       var _this23 = this;
@@ -15555,7 +16350,7 @@
           }
         }
       });
-    }, "(eval expr)\n        (eval expr environment)\n\n        Function evalute LIPS Scheme code."),
+    }, "(eval expr)\n        (eval expr environment)\n\n        Function that evalutes LIPS Scheme code. If the second argument is provided\n        it will be the environment that the code is evaluated in."),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
       var _ref34 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
@@ -15670,7 +16465,7 @@
 
 
       return doc(set_fn_length(lambda, length), __doc__, true);
-    }, "(lambda (a b) body)\n        (lambda args body)\n        (lambda (a b . rest) body)\n\n        Macro lambda create new anonymous function, if first element of the body\n        is string and there is more elements it will be documentation, that can\n        be read using (help fn)"),
+    }, "(lambda (a b) body)\n        (lambda args body)\n        (lambda (a b . rest) body)\n\n        The lambda macro creates a new anonymous function. If the first element of\n        the body is a string and there is more elements the string is used as the\n        documentation string, that can be read using (help fn)."),
     'macroexpand': new Macro('macroexpand', macro_expand()),
     'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
     // ------------------------------------------------------------------
@@ -15751,7 +16546,7 @@
         makro_instance.__code__ = new Pair(new LSymbol('define-macro'), macro);
         this.set(name, makro_instance);
       }
-    }), "(define-macro (name . args) body)\n\n         Meta macro, macro that create new macros, if return value is list structure\n         it will be evaluated when macro is invoked. You can use quasiquote ` and\n         unquote , and unquote-splicing ,@ inside to create expression that will be\n         evaluated on runtime. Macros works like this: if you pass any expression to\n         macro the arguments will not be evaluated unless macro itself evaluate it.\n         Because of this macro can manipulate expression (arguments) as lists."),
+    }), "(define-macro (name . args) body)\n\n         The meta-macro, that creates new macros. If the return value is a list structure\n         it will be evaluated where the macro is invoked from. You can use quasiquote ` and\n         unquote , and unquote-splicing ,@ inside to create an expression that will be\n         evaluated at runtime. Macros works like this: if you pass any expression to a\n         macro the arguments will not be evaluated unless the macro's body explicitly\n         calls (eval) on it. Because of this a macro can manipulate the expression (arguments)\n         as lists."),
     // ------------------------------------------------------------------
     'syntax-rules': new Macro('syntax-rules', function (macro, options) {
       var dynamic_scope = options.dynamic_scope,
@@ -15892,17 +16687,17 @@
       }, env);
       syntax.__code__ = macro;
       return syntax;
-    }, "(syntax-rules () (pattern expression) ...)\n\n        Base of Hygienic macro, it will return new syntax expander\n        that works like lisp macros."),
+    }, "(syntax-rules () (pattern expression) ...)\n\n        Base of hygienic macros, it will return a new syntax expander\n        that works like Lisp macros."),
     // ------------------------------------------------------------------
     quote: doc(new Macro('quote', function (arg) {
       return quote(arg.car);
-    }), "(quote expression)\n\n         Macro that return single lips expression as data (it don't evaluate its\n         argument). It will return list of pairs if put in front of lips code.\n         And if put in fron of symbol it will return that symbol not value\n         associated with that name."),
+    }), "(quote expression) or 'expression\n\n         Macro that returns a single LIPS expression as data (it won't evaluate the\n         argument). It will return a list if put in front of LIPS code.\n         And if put in front of a symbol it will return the symbol itself, not the value\n         bound to that name."),
     'unquote-splicing': doc('unquote-splicing', function () {
       throw new Error("You can't call `unquote-splicing` outside of quasiquote");
-    }, "(unquote-splicing code)\n\n        Special form to be used in quasiquote macro, parser is processing special\n        characters ,@ and create call to this pseudo function. It can be used\n        to evalute expression inside and return the value without parenthesis.\n        the value will be joined to the output list structure."),
+    }, "(unquote-splicing code) or ,@code\n\n        Special form used in the quasiquote macro. It evaluates the expression inside and\n        splices the list into quasiquote's result. If it is not the last element of the expression,\n        the computed value must be a pair."),
     'unquote': doc('unquote', function () {
       throw new Error("You can't call `unquote` outside of quasiquote");
-    }, "(unquote code)\n\n        Special form to be used in quasiquote macro, parser is processing special\n        characters , and create call to this pseudo function. It can be used\n        to evalute expression inside and return the value, the output is inserted\n        into list structure created by queasiquote."),
+    }, "(unquote code) or ,code\n\n        Special form used in the quasiquote macro. It evaluates the expression inside and\n        substitutes the value into quasiquote's result."),
     // ------------------------------------------------------------------
     quasiquote: Macro.defmacro('quasiquote', function (arg, env) {
       var dynamic_scope = env.dynamic_scope,
@@ -16265,12 +17060,12 @@
         clear(value);
         return quote(value);
       });
-    }, "(quasiquote list ,value ,@value)\n\n        Similar macro to `quote` but inside it you can use special\n        expressions unquote abbreviated to , that will evaluate expresion inside\n        and return its value or unquote-splicing abbreviated to ,@ that will\n        evaluate expression but return value without parenthesis (it will join)\n        the list with its value. Best used with macros but it can be used outside"),
+    }, "(quasiquote list)\n\n        Similar macro to `quote` but inside it you can use special\n        expressions (unquote x) abbreviated to ,x that will evaluate x\n        and insert its value verbatim or (unquote-splicing x) abbreviated to ,@x that will\n        evaluate x and splice the value into the result. Best used with macros but it can be used outside."),
     // ------------------------------------------------------------------
     clone: doc('clone', function clone(list) {
       typecheck('clone', list, 'pair');
       return list.clone();
-    }, "(clone list)\n\n        Function return clone of the list."),
+    }, "(clone list)\n\n        Function that returns a clone of the list, that does not share any pairs\n        with the original, so the clone can be safely mutated without affecting the original."),
     // ------------------------------------------------------------------
     append: doc('append', function append() {
       var _global_env$get;
@@ -16287,7 +17082,7 @@
         return item;
       });
       return (_global_env$get = global_env.get('append!')).call.apply(_global_env$get, [this].concat(_toConsumableArray(items)));
-    }, "(append item ...)\n\n        Function will create new list with eac argument appended to the end.\n        It will always return new list and not modify it's arguments."),
+    }, "(append item ...)\n\n        Function that creates a new list with each argument appended end-to-end.\n        It will always return a new list and not modify its arguments."),
     // ------------------------------------------------------------------
     'append!': doc('append!', function () {
       var is_list = global_env.get('list?');
@@ -16317,7 +17112,7 @@
 
         return acc.append(item);
       }, _nil);
-    }, "(append! arg1 ...)\n\n        Destructive version of append, it modify the list in place. It return\n        new list where each argument is appened to the end. It may modify\n        lists added as arguments."),
+    }, "(append! arg1 ...)\n\n        Destructive version of append, it can modify the lists in place. It returns\n        a new list where each argument is appened to the end. It may modify\n        lists added as arguments."),
     // ------------------------------------------------------------------
     reverse: doc('reverse', function reverse(arg) {
       typecheck('reverse', arg, ['array', 'pair', 'nil']);
@@ -16334,7 +17129,7 @@
       } else {
         return arg.reverse();
       }
-    }, "(reverse list)\n\n        Function will reverse the list or array. If value is not a list\n        or array it will throw exception."),
+    }, "(reverse list)\n\n        Function that reverses the list or array. If value is not a list\n        or array it will error."),
     // ------------------------------------------------------------------
     nth: doc('nth', function nth(index, obj) {
       typecheck('nth', index, 'number');
@@ -16359,7 +17154,7 @@
       } else {
         throw new Error(typeErrorMessage('nth', type(obj), 'array or pair', 2));
       }
-    }, "(nth index obj)\n\n        Function return nth element of the list or array. If used with different\n        value it will throw exception"),
+    }, "(nth index obj)\n\n        Function that returns the nth element of the list or array.\n        If used with a non-indexable value it will error."),
     // ------------------------------------------------------------------
     list: doc('list', function list() {
       for (var _len26 = arguments.length, args = new Array(_len26), _key26 = 0; _key26 < _len26; _key26++) {
@@ -16369,14 +17164,14 @@
       return args.reverse().reduce(function (list, item) {
         return new Pair(item, list);
       }, _nil);
-    }, "(list . args)\n\n        Function create new list out of its arguments."),
+    }, "(list . args)\n\n        Function that creates a new list out of its arguments."),
     // ------------------------------------------------------------------
     substring: doc('substring', function substring(string, start, end) {
       typecheck('substring', string, 'string');
       typecheck('substring', start, 'number');
       typecheck('substring', end, ['number', 'undefined']);
       return string.substring(start.valueOf(), end && end.valueOf());
-    }, "(substring string start end)\n\n            Function return part of the string starting at start ending with end."),
+    }, "(substring string start end)\n\n        Function that returns the slice of the string starting at start and ending with end."),
     // ------------------------------------------------------------------
     concat: doc('concat', function concat() {
       for (var _len27 = arguments.length, args = new Array(_len27), _key27 = 0; _key27 < _len27; _key27++) {
@@ -16387,48 +17182,48 @@
         return typecheck('concat', arg, 'string', i + 1);
       });
       return args.join('');
-    }, "(concat . strings)\n\n        Function create new string by joining its arguments"),
+    }, "(concat . strings)\n\n        Function that creates a new string by joining its arguments."),
     // ------------------------------------------------------------------
     join: doc('join', function join(separator, list) {
       typecheck('join', separator, 'string');
       typecheck('join', list, ['pair', 'nil']);
       return global_env.get('list->array')(list).join(separator);
-    }, "(join separator list)\n\n        Function return string by joining elements of the list"),
+    }, "(join separator list)\n\n        Function that returns a string by joining elements of the list using separator."),
     // ------------------------------------------------------------------
     split: doc('split', function split(separator, string) {
       typecheck('split', separator, ['regex', 'string']);
       typecheck('split', string, 'string');
       return global_env.get('array->list')(string.split(separator));
-    }, "(split separator string)\n\n            Function create list by splitting string by separatar that can\n            be a string or regular expression."),
+    }, "(split separator string)\n\n        Function that creates a list by splitting string by separator which can\n        be a string or regular expression."),
     // ------------------------------------------------------------------
     replace: doc('replace', function replace(pattern, replacement, string) {
       typecheck('replace', pattern, ['regex', 'string']);
       typecheck('replace', replacement, ['string', 'function']);
       typecheck('replace', string, 'string');
       return string.replace(pattern, replacement);
-    }, "(replace pattern replacement string)\n\n        Function change pattern to replacement inside string. Pattern can be string\n        or regex and replacement can be function or string."),
+    }, "(replace pattern replacement string)\n\n        Function that changes pattern to replacement inside string. Pattern can be a string\n        or regex and replacement can be function or string. See Javascript String.replace()."),
     // ------------------------------------------------------------------
     match: doc('match', function match(pattern, string) {
       typecheck('match', pattern, ['regex', 'string']);
       typecheck('match', string, 'string');
       var m = string.match(pattern);
       return m ? global_env.get('array->list')(m) : false;
-    }, "(match pattern string)\n\n        function return match object from JavaScript as list or #f if not match."),
+    }, "(match pattern string)\n\n        Function that returns a match object from JavaScript as a list or #f if no match."),
     // ------------------------------------------------------------------
     search: doc('search', function search(pattern, string) {
       typecheck('search', pattern, ['regex', 'string']);
       typecheck('search', string, 'string');
       return string.search(pattern);
-    }, "(search pattern string)\n\n        Function return first found index of the pattern inside a string"),
+    }, "(search pattern string)\n\n        Function that returns the first found index of the pattern inside a string."),
     // ------------------------------------------------------------------
     repr: doc('repr', function repr(obj, quote) {
       return toString(obj, quote);
-    }, "(repr obj)\n\n        Function return string LIPS representation of an object as string."),
+    }, "(repr obj)\n\n        Function that returns a LIPS code representation of the object as a string."),
     // ------------------------------------------------------------------
     'escape-regex': doc('escape-regex', function (string) {
       typecheck('escape-regex', string, 'string');
       return escape_regex(string.valueOf());
-    }, "(escape-regex string)\n\n        Function return new string where all special operators used in regex,\n        are escaped with slash so they can be used in RegExp constructor\n        to match literal string"),
+    }, "(escape-regex string)\n\n        Function that returns a new string where all special operators used in regex,\n        are escaped with backslashes so they can be used in the RegExp constructor\n        to match a literal string."),
     // ------------------------------------------------------------------
     env: doc('env', function env(env) {
       env = env || this;
@@ -16447,7 +17242,7 @@
       }
 
       return result;
-    }, "(env)\n        (env obj)\n\n        Function return list of values (functions, macros and variables)\n        inside environment and it's parents."),
+    }, "(env)\n        (env obj)\n\n        Function that returns a list of names (functions, macros and variables)\n        that are bound in the current environment or one of its parents."),
     // ------------------------------------------------------------------
     'new': doc('new', function (obj) {
       for (var _len28 = arguments.length, args = new Array(_len28 > 1 ? _len28 - 1 : 0), _key28 = 1; _key28 < _len28; _key28++) {
@@ -16459,34 +17254,34 @@
       })));
 
       return instance;
-    }, "(new obj . args)\n\n        Function create new JavaScript instance of an object."),
+    }, "(new obj . args)\n\n        Function that creates new JavaScript instance of an object."),
     // ------------------------------------------------------------------
-    'typecheck': doc(typecheck, "(typecheck label value type [position])\n\n         Function check type and throw exception if type don't match.\n         Type can be string or list of strings. Position optional argument\n         is used to created proper error message."),
+    'typecheck': doc(typecheck, "(typecheck label value type [position])\n\n         Checks the type of value and errors if the type is not one allowed.\n         Type can be string or list of strings. The position optional argument\n         is used to create a proper error message for the nth argument of function calls."),
     // ------------------------------------------------------------------
     'unset-special!': doc('unset-special!', function (symbol) {
       typecheck('remove-special!', symbol, 'string');
       delete specials.remove(symbol.valueOf());
-    }, "(unset-special! name)\n\n        Function remove special symbol from parser. Added by `set-special!`,\n        name must be a string."),
+    }, "(unset-special! name)\n\n        Function that removes a special symbol from parser added by `set-special!`,\n        name must be a string."),
     // ------------------------------------------------------------------
     'set-special!': doc('set-special!', function (seq, name) {
       var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : specials.LITERAL;
       typecheck('set-special!', seq, 'string', 1);
       typecheck('set-special!', name, 'symbol', 2);
       specials.append(seq.valueOf(), name, type);
-    }, "(set-special! symbol name [type])\n\n        Add special symbol to the list of transforming operators by the parser.\n        e.g.: `(add-special! \"#\" 'x)` will allow to use `#(1 2 3)` and it will be\n        transformed into (x (1 2 3)) so you can write x macro that will process\n        the list. 3rd argument is optional and it can be constant value\n        lips.specials.SPLICE if this constant is used it will transform\n        `#(1 2 3)` into (x 1 2 3) that is required by # that define vectors."),
+    }, "(set-special! symbol name [type])\n\n        Add a special symbol to the list of transforming operators by the parser.\n        e.g.: `(add-special! \"#\" 'x)` will allow to use `#(1 2 3)` and it will be\n        transformed into (x (1 2 3)) so you can write x macro that will process\n        the list. 3rd argument is optional, and it can be one of two values:\n        lips.specials.LITERAL, which is the default behavior, or\n        lips.specials.SPLICE which causes the value to be unpacked into the expression.\n        This can be used for e.g. to make `#(1 2 3)` into (x 1 2 3) that is needed\n        by # that defines vectors."),
     // ------------------------------------------------------------------
     'get': get,
     '.': get,
     // ------------------------------------------------------------------
-    'unbind': doc(unbind, "(unbind fn)\n\n         Function remove bidning from function so you can get props from it."),
+    'unbind': doc(unbind, "(unbind fn)\n\n         Function that removes the weak 'this' binding from a function so you\n         can get properties from the actual function object."),
     // ------------------------------------------------------------------
-    type: doc(type, "(type object)\n\n         Function return type of an object as string."),
+    type: doc(type, "(type object)\n\n         Function that returns the type of an object as string."),
     // ------------------------------------------------------------------
     'debugger': doc('debugger', function () {
       /* eslint-disable */
       debugger;
       /* eslint-enable */
-    }, "(debugger)\n\n            Function stop JavaScript code in debugger."),
+    }, "(debugger)\n\n        Function that triggers the JavaScript debugger (e.g. the browser devtools)\n        using the \"debugger;\" statement. If a debugger is not running this\n        function does nothing."),
     // ------------------------------------------------------------------
     'in': doc('in', function (a, b) {
       if (a instanceof LSymbol || a instanceof LString || a instanceof LNumber) {
@@ -16494,19 +17289,19 @@
       }
 
       return a in unbox(b);
-    }, "(in key value)\n\n        Function use is in operator to check if value is in object."),
+    }, "(in key value)\n\n        Function that uses the Javascript \"in\" operator to check if key is\n        a valid property in the value."),
     // ------------------------------------------------------------------
     'instanceof': doc('instanceof', function (type, obj) {
       return obj instanceof unbind(type);
-    }, "(instanceof type obj)\n\n        Function check of object is instance of object."),
+    }, "(instanceof type obj)\n\n        Predicate that tests if the obj is an instance of type."),
     // ------------------------------------------------------------------
-    'prototype?': doc('prototype?', is_prototype, "(prototype? obj)\n\n         Function check if value is JavaScript Object prototype."),
+    'prototype?': doc('prototype?', is_prototype, "(prototype? obj)\n\n         Predicate that tests if value is a valid JavaScript prototype,\n         i.e. calling (new) with it will not throw '<x> is not a constructor'."),
     // ------------------------------------------------------------------
     'macro?': doc('macro?', function (obj) {
       return obj instanceof Macro;
-    }, "(macro? expression)\n\n        Function check if value is a macro."),
+    }, "(macro? expression)\n\n        Predicate that tests if value is a macro."),
     // ------------------------------------------------------------------
-    'function?': doc('function?', is_function, "(function? expression)\n\n         Function check if value is a function."),
+    'function?': doc('function?', is_function, "(function? expression)\n\n         Predicate that tests if value is a callable function."),
     // ------------------------------------------------------------------
     'real?': doc('real?', function (value) {
       if (type(value) !== 'number') {
@@ -16518,57 +17313,57 @@
       }
 
       return LNumber.isFloat(value);
-    }, "(real? number)\n\n        Function check if value is real number."),
+    }, "(real? number)\n\n        Predicate that tests if value is a real number (not complex)."),
     // ------------------------------------------------------------------
     'number?': doc('number?', function (x) {
       return Number.isNaN(x) || LNumber.isNumber(x);
-    }, "(number? expression)\n\n        Function check if value is a number or NaN value."),
+    }, "(number? expression)\n\n        Predicate that tests if value is a number or NaN value."),
     // ------------------------------------------------------------------
     'string?': doc('string?', function (obj) {
       return LString.isString(obj);
-    }, "(string? expression)\n\n        Function check if value is a string."),
+    }, "(string? expression)\n\n        Predicate that tests if value is a string."),
     // ------------------------------------------------------------------
     'pair?': doc('pair?', function (obj) {
       return obj instanceof Pair;
-    }, "(pair? expression)\n\n            Function check if value is a pair or list structure."),
+    }, "(pair? expression)\n\n        Predicate that tests if value is a pair or list structure."),
     // ------------------------------------------------------------------
     'regex?': doc('regex?', function (obj) {
       return obj instanceof RegExp;
-    }, "(regex? expression)\n\n        Function check if value is regular expression."),
+    }, "(regex? expression)\n\n        Predicate that tests if value is a regular expression."),
     // ------------------------------------------------------------------
     'null?': doc('null?', function (obj) {
       return is_null(obj);
-    }, "(null? expression)\n\n        Function check if value is nulish."),
+    }, "(null? expression)\n\n        Predicate that tests if value is null-ish (i.e. undefined, nil, or Javascript null)."),
     // ------------------------------------------------------------------
     'boolean?': doc('boolean?', function (obj) {
       return typeof obj === 'boolean';
-    }, "(boolean? expression)\n\n        Function check if value is boolean."),
+    }, "(boolean? expression)\n\n        Predicate that tests if value is a boolean (#t or #f)."),
     // ------------------------------------------------------------------
     'symbol?': doc('symbol?', function (obj) {
       return obj instanceof LSymbol;
-    }, "(symbol? expression)\n\n        Function check if value is LIPS symbol"),
+    }, "(symbol? expression)\n\n        Predicate that tests if value is a LIPS symbol."),
     // ------------------------------------------------------------------
     'array?': doc('array?', function (obj) {
       return obj instanceof Array;
-    }, "(array? expression)\n\n        Function check if value is an arrray."),
+    }, "(array? expression)\n\n        Predicate that tests if value is an arrray."),
     // ------------------------------------------------------------------
     'object?': doc('object?', function (obj) {
       return obj !== _nil && obj !== null && !(obj instanceof LCharacter) && !(obj instanceof RegExp) && !(obj instanceof LString) && !(obj instanceof Pair) && !(obj instanceof LNumber) && _typeof(obj) === 'object' && !(obj instanceof Array);
-    }, "(object? expression)\n\n        Function check if value is an plain object."),
+    }, "(object? expression)\n\n        Predicate that tests if value is an plain object (not another LIPS type)."),
     // ------------------------------------------------------------------
     flatten: doc('flatten', function flatten(list) {
       typecheck('flatten', list, 'pair');
       return list.flatten();
-    }, "(flatten list)\n\n        Return shallow list from tree structure (pairs)."),
+    }, "(flatten list)\n\n        Returns a shallow list from tree structure (pairs)."),
     // ------------------------------------------------------------------
     'array->list': doc('array->list', function (array) {
       typecheck('array->list', array, 'array');
       return Pair.fromArray(array);
-    }, "(array->list array)\n\n        Function convert JavaScript array to LIPS list."),
+    }, "(array->list array)\n\n        Function that converts a JavaScript array to a LIPS cons list."),
     // ------------------------------------------------------------------
-    'tree->array': doc('tree->array', to_array('tree->array', true), "(tree->array list)\n\n         Function convert LIPS list structure into JavaScript array."),
+    'tree->array': doc('tree->array', to_array('tree->array', true), "(tree->array list)\n\n         Function that converts a LIPS cons tree structure into a JavaScript array."),
     // ------------------------------------------------------------------
-    'list->array': doc('list->array', to_array('list->array'), "(list->array list)\n\n         Function convert LIPS list into JavaScript array."),
+    'list->array': doc('list->array', to_array('list->array'), "(list->array list)\n\n         Function that converts a LIPS list into a JavaScript array."),
     // ------------------------------------------------------------------
     apply: doc('apply', function apply(fn) {
       for (var _len29 = arguments.length, args = new Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
@@ -16580,7 +17375,7 @@
       typecheck('apply', last, ['pair', 'nil'], args.length + 2);
       args = args.concat(global_env.get('list->array').call(this, last));
       return fn.apply(this, prepare_fn_args(fn, args));
-    }, "(apply fn list)\n\n        Function that call function with list of arguments."),
+    }, "(apply fn list)\n\n        Function that calls fn with the list of arguments."),
     // ------------------------------------------------------------------
     length: doc('length', function length(obj) {
       if (!obj || obj === _nil) {
@@ -16594,7 +17389,7 @@
       if ("length" in obj) {
         return obj.length;
       }
-    }, "(length expression)\n\n        Function return length of the object, the object can be list\n        or any object that have length property."),
+    }, "(length expression)\n\n        Function that returns the length of the object. The object can be a LIPS\n        list or any object that has a \"length\" property. Returns undefined if the\n        length could not be found."),
     // ------------------------------------------------------------------
     'string->number': doc('string->number', function (arg) {
       var radix = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
@@ -16620,7 +17415,7 @@
       }
 
       return false;
-    }, "(string->number number [radix])\n\n        Function convert string to number."),
+    }, "(string->number number [radix])\n\n        Function that parses a string into a number."),
     // ------------------------------------------------------------------
     'try': doc(new Macro('try', function (code, _ref39) {
       var _this24 = this;
@@ -16695,14 +17490,14 @@
           _next(result, resolve);
         }
       });
-    }), "(try expr (catch (e) code))\n         (try expr (catch (e) code) (finally code))\n         (try expr (finally code))\n\n         Macro execute user code and catch exception. If catch is provided\n         it's executed when expression expr throw error. If finally is provide\n         it's always executed at the end."),
+    }), "(try expr (catch (e) code))\n         (try expr (catch (e) code) (finally code))\n         (try expr (finally code))\n\n         Macro that executes expr and catches any exceptions thrown. If catch is provided\n         it's executed when an error is thown. If finally is provided it's always executed\n         at the end."),
     // ------------------------------------------------------------------
     'raise': doc('raise', function (obj) {
       throw obj;
-    }, "(raise obj)\n\n        Throws new exception with given object."),
+    }, "(raise obj)\n\n        Throws the object verbatim (no wrapping an a new Error)."),
     'throw': doc('throw', function (message) {
       throw new Error(message);
-    }, "(throw string)\n\n        Throws new expection."),
+    }, "(throw string)\n\n        Throws a new exception."),
     // ------------------------------------------------------------------
     find: doc('find', function find(arg, list) {
       typecheck('find', arg, ['regex', 'function']);
@@ -16720,7 +17515,7 @@
 
         return find(arg, list.cdr);
       });
-    }, "(find fn list)\n        (find regex list)\n\n        Higher order Function find first value for which function return true.\n        If called with regex it will create matcher function."),
+    }, "(find fn list)\n        (find regex list)\n\n        Higher-order function that finds the first value for which fn return true.\n        If called with a regex it will create a matcher function."),
     // ------------------------------------------------------------------
     'for-each': doc('for-each', function (fn) {
       var _global_env$get2;
@@ -16742,7 +17537,7 @@
       if (is_promise(ret)) {
         return ret.then(function () {});
       }
-    }, "(for-each fn . lists)\n\n        Higher order function that call function `fn` by for each\n        value of the argument. If you provide more then one list as argument\n        it will take each value from each list and call `fn` function\n        with that many argument as number of list arguments."),
+    }, "(for-each fn . lists)\n\n        Higher-order function that calls function `fn` on each\n        value of the argument. If you provide more than one list\n        it will take each value from each list and call `fn` function\n        with that many arguments as number of list arguments."),
     // ------------------------------------------------------------------
     map: doc('map', function map(fn) {
       var _this25 = this;
@@ -16784,7 +17579,7 @@
           return new Pair(head, rest);
         });
       });
-    }, "(map fn . lists)\n\n        Higher order function that call function `fn` by for each\n        value of the argument. If you provide more then one list as argument\n        it will take each value from each list and call `fn` function\n        with that many argument as number of list arguments. The return\n        values of the function call is acumulated in result list and\n        returned by the call to map."),
+    }, "(map fn . lists)\n\n        Higher-order function that calls function `fn` with each\n        value of the list. If you provide more then one list as argument\n        it will take each value from each list and call `fn` function\n        with that many argument as number of list arguments. The return\n        values of the fn calls are acumulated in a result list and\n        returned by map."),
     // ------------------------------------------------------------------
     'list?': doc('list?', function (obj) {
       var node = obj;
@@ -16804,7 +17599,7 @@
 
         node = node.cdr;
       }
-    }, "(list? obj)\n\n        Function test if value is proper linked list structure.\n        The car of each pair can be any value. It return false on cycles.\""),
+    }, "(list? obj)\n\n        Predicate that tests if value is a proper linked list structure.\n        The car of each pair can be any value. It returns false on cyclic lists.\""),
     // ------------------------------------------------------------------
     some: doc('some', function some(fn, list) {
       typecheck('some', fn, 'function');
@@ -16817,7 +17612,7 @@
           return value || some(fn, list.cdr);
         });
       }
-    }, "(some fn list)\n\n        Higher order function that call argument on each element of the list.\n        It stops when function fn return true for a value if so it will\n        return true. If none of the values give true, the function return false"),
+    }, "(some fn list)\n\n        Higher-order function that calls fn on each element of the list.\n        It stops and returns true when fn returns true for a value.\n        If none of the values give true, some will return false.\n        Analagous to Python any(map(fn, list))."),
     // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function (fold, fn, init) {
       for (var _len32 = arguments.length, lists = new Array(_len32 > 3 ? _len32 - 3 : 0), _key32 = 3; _key32 < _len32; _key32++) {
@@ -16843,7 +17638,7 @@
           return l.car;
         })).concat([value]));
       });
-    }), "(fold fn init . lists)\n\n         Function fold is reverse of the reduce. it call function `fn`\n         on each elements of the list and return single value.\n         e.g. it call (fn a1 b1 (fn a2 b2 (fn a3 b3 '())))\n         for: (fold fn '() alist blist)"),
+    }), "(fold fn init . lists)\n\n         Function fold is left-to-right reversal of reduce. It call `fn`\n         on each pair of elements of the list and returns a single value.\n         e.g. it computes (fn 'a 'x (fn 'b 'y (fn 'c 'z 'foo)))\n         for: (fold fn 'foo '(a b c) '(x y z))"),
     // ------------------------------------------------------------------
     pluck: doc('pluck', function pluck() {
       for (var _len33 = arguments.length, keys = new Array(_len33), _key33 = 0; _key33 < _len33; _key33++) {
@@ -16871,7 +17666,7 @@
         });
         return result;
       };
-    }, "(pluck . string)\n\n        If called with single string it will return function that will return\n        key from object. If called with more then one argument function will\n        return new object by taking all properties from given object."),
+    }, "(pluck . strings)\n\n        If called with a single string it will return a function that when\n        called with an object will return that key from the object.\n        If called with more then one string the returned function will\n        create a new object by copying all properties from the given object."),
     // ------------------------------------------------------------------
     reduce: doc('reduce', fold('reduce', function (reduce, fn, init) {
       var _this26 = this;
@@ -16898,7 +17693,7 @@
           return l.cdr;
         }))));
       });
-    }), "(reduce fn init list . lists)\n\n         Higher order function take each element of the list and call\n         the function with result of previous call or init and next element\n         on the list until each element is processed and return single value\n         as result of last call to `fn` function.\n         e.g. it call (fn a3 b3 (fn a2 b2 (fn a1 b1 init)))\n         for (reduce fn init alist blist)"),
+    }), "(reduce fn init list . lists)\n\n         Higher-order function that takes each element of the list and calls\n         the fn with result of previous call or init and the next element\n         of the list until each element is processed, and returns a single value\n         as result of last call to `fn` function.\n         e.g. it computes (fn 'c 'z (fn 'b 'y (fn 'a 'x 'foo)))\n         for: (reduce fn 'foo '(a b c) '(x y z))"),
     // ------------------------------------------------------------------
     filter: doc('filter', function filter(arg, list) {
       typecheck('filter', arg, ['regex', 'function']);
@@ -16922,11 +17717,11 @@
         var item = array[i];
         return unpromise(fn(item), next);
       }(0);
-    }, "(filter fn list)\n        (filter regex list)\n\n        Higher order function that call `fn` for each element of the list\n        and return list for only those elements for which funtion return\n        true value. If called with regex it will create matcher function."),
+    }, "(filter fn list)\n        (filter regex list)\n\n        Higher-order function that calls `fn` for each element of the list\n        and return a new list for only those elements for which fn returns\n        a truthy value. If called with a regex it will create a matcher function."),
     // ------------------------------------------------------------------
-    compose: doc(compose, "(compose . fns)\n\n         Higher order function and create new function that apply all functions\n         From right to left and return it's value. Reverse of compose.\n         e.g.:\n         ((compose (curry + 2) (curry * 3)) 3)\n         11"),
-    pipe: doc(pipe, "(pipe . fns)\n\n         Higher order function and create new function that apply all functions\n         From left to right and return it's value. Reverse of compose.\n         e.g.:\n         ((pipe (curry + 2) (curry * 3)) 3)\n         15"),
-    curry: doc(curry, "(curry fn . args)\n\n         Higher order function that create curried version of the function.\n         The result function will have parially applied arguments and it\n         will keep returning functions until all arguments are added\n\n         e.g.:\n         (define (add a b c d) (+ a b c d))\n         (define add1 (curry add 1))\n         (define add12 (add 2))\n         (display (add12 3 4))"),
+    compose: doc(compose, "(compose . fns)\n\n         Higher-order function that creates a new function that applies all functions\n         from right to left and returns the last value. Reverse of pipe.\n         e.g.:\n         ((compose (curry + 2) (curry * 3)) 10) --> (+ 2 (* 3 10)) --> 32"),
+    pipe: doc(pipe, "(pipe . fns)\n\n         Higher-order function that creates a new function that applies all functions\n         from left to right and returns the last value. Reverse of compose.\n         e.g.:\n         ((pipe (curry + 2) (curry * 3)) 10) --> (* 3 (+ 2 10)) --> 36"),
+    curry: doc(curry, "(curry fn . args)\n\n         Higher-order function that creates a curried version of the function.\n         The result function will have parially applied arguments and it\n         will keep returning one-argument functions until all arguments are provided,\n         then it calls the original function with the accumulated arguments.\n\n         e.g.:\n         (define (add a b c d) (+ a b c d))\n         (define add1 (curry add 1))\n         (define add12 (add 2))\n         (display (add12 3 4))"),
     // ------------------------------------------------------------------
     // Numbers
     // ------------------------------------------------------------------
@@ -16939,7 +17734,7 @@
       return args.reduce(function (result, item) {
         return result.gcd(item);
       });
-    }, "(gcd n1 n2 ...)\n\n            Function return the greatest common divisor of their arguments."),
+    }, "(gcd n1 n2 ...)\n\n        Function that returns the greatest common divisor of the arguments."),
     // ------------------------------------------------------------------
     lcm: doc('lcm', function lcm() {
       for (var _len36 = arguments.length, args = new Array(_len36), _key37 = 0; _key37 < _len36; _key37++) {
@@ -16963,24 +17758,24 @@
       }
 
       return LNumber(a);
-    }, "(lcm n1 n2 ...)\n\n        Function return the least common multiple of their arguments."),
+    }, "(lcm n1 n2 ...)\n\n        Function that returns the least common multiple of the arguments."),
     // ------------------------------------------------------------------
     'odd?': doc('odd?', single_math_op(function (num) {
       return LNumber(num).isOdd();
-    }), "(odd? number)\n\n         Function check if number os odd."),
+    }), "(odd? number)\n\n         Checks if number is odd."),
     // ------------------------------------------------------------------
     'even?': doc('even?', single_math_op(function (num) {
       return LNumber(num).isEven();
-    }), "(even? number)\n\n         Function check if number is even."),
+    }), "(even? number)\n\n         Checks if number is even."),
     // ------------------------------------------------------------------
     // math functions
     '*': doc('*', reduce_math_op(function (a, b) {
       return LNumber(a).mul(b);
-    }, LNumber(1)), "(* . numbers)\n\n        Multiplicate all numbers passed as arguments. If single value is passed\n        it will return that value."),
+    }, LNumber(1)), "(* . numbers)\n\n        Multiplies all numbers passed as arguments. If single value is passed\n        it will return that value."),
     // ------------------------------------------------------------------
     '+': doc('+', reduce_math_op(function (a, b) {
       return LNumber(a).add(b);
-    }, LNumber(0)), "(+ . numbers)\n\n        Sum all numbers passed as arguments. If single value is passed it will\n        return that value."),
+    }, LNumber(0)), "(+ . numbers)\n\n        Sums all numbers passed as arguments. If single value is passed it will\n        return that value."),
     // ------------------------------------------------------------------
     '-': doc('-', function () {
       for (var _len37 = arguments.length, args = new Array(_len37), _key38 = 0; _key38 < _len37; _key38++) {
@@ -17002,7 +17797,7 @@
           return LNumber(a).sub(b);
         }));
       }
-    }, "(- n1 n2 ...)\n        (- n)\n\n        Substract number passed as argument. If only one argument is passed\n        it will negate the value."),
+    }, "(- n1 n2 ...)\n        (- n)\n\n        Subtracts n2 and subsequent numbers from n1. If only one argument is passed\n        it will negate the value."),
     // ------------------------------------------------------------------
     '/': doc('/', function () {
       for (var _len38 = arguments.length, args = new Array(_len38), _key39 = 0; _key39 < _len38; _key39++) {
@@ -17022,11 +17817,11 @@
       return args.reduce(binary_math_op(function (a, b) {
         return LNumber(a).div(b);
       }));
-    }, "(/ n1 n2 ...)\n        (/ n)\n\n        Divide number passed as arguments one by one. If single argument\n        is passed it will calculate (/ 1 n1)."),
+    }, "(/ n1 n2 ...)\n        (/ n)\n\n        Divides n1 by n2 and subsequent arguments one by one. If single argument\n        is passed it will calculate (/ 1 n)."),
     // ------------------------------------------------------------------
     abs: doc('abs', single_math_op(function (n) {
       return LNumber(n).abs();
-    }), "(abs number)\n\n         Function create absolute value from number."),
+    }), "(abs number)\n\n         Function that returns the absolute value (magnitude) of number."),
     // ------------------------------------------------------------------
     truncate: doc('truncate', function (n) {
       typecheck('truncate', n, 'number');
@@ -17040,11 +17835,11 @@
       }
 
       return n;
-    }, "(truncate n)\n\n        Function return integer value from real number."),
+    }, "(truncate n)\n\n        Function that returns the integer part (floor) of a real number."),
     // ------------------------------------------------------------------
     sqrt: doc('sqrt', single_math_op(function (n) {
       return LNumber(n).sqrt();
-    }), "(sqrt number)\n\n         Function return square root of the number."),
+    }), "(sqrt number)\n\n         Function that returns the square root of the number."),
     // ------------------------------------------------------------------
     '**': doc('**', binary_math_op(function (a, b) {
       a = LNumber(a);
@@ -17055,20 +17850,20 @@
       }
 
       return a.pow(b);
-    }), "(** a b)\n\n         Function calculate number a to to the power of b."),
+    }), "(** a b)\n\n         Function that calculates number a to to the power of b."),
     // ------------------------------------------------------------------
     '1+': doc('1+', single_math_op(function (number) {
       return LNumber(number).add(1);
-    }), "(1+ number)\n\n             Function add 1 to the number and return result."),
+    }), "(1+ number)\n\n         Function that adds 1 to the number and return result."),
     // ------------------------------------------------------------------
     '1-': doc(single_math_op(function (number) {
       return LNumber(number).sub(1);
-    }), "(1- number)\n\n         Function substract 1 from the number and return result."),
+    }), "(1- number)\n\n         Function that subtracts 1 from the number and return result."),
     // ------------------------------------------------------------------
     '%': doc('%', function (a, b) {
       typecheck_args('%', [a, b], 'number');
       return LNumber(a).rem(b);
-    }, "(% n1 n2)\n\n        Function get reminder of it's arguments."),
+    }, "(% n1 n2)\n\n        Function returns the remainder of n1/n2 (modulo)."),
     // ------------------------------------------------------------------
     // Booleans
     '==': doc('==', function () {
@@ -17080,7 +17875,7 @@
       return seq_compare(function (a, b) {
         return LNumber(a).cmp(b) === 0;
       }, args);
-    }, "(== x1 x2 ...)\n\n        Function compare its numerical arguments and check if they are equal"),
+    }, "(== x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are all equal."),
     // ------------------------------------------------------------------
     '>': doc('>', function () {
       for (var _len40 = arguments.length, args = new Array(_len40), _key41 = 0; _key41 < _len40; _key41++) {
@@ -17091,7 +17886,7 @@
       return seq_compare(function (a, b) {
         return LNumber(a).cmp(b) === 1;
       }, args);
-    }, "(> x1 x2 ...)\n\n        Function compare its numerical arguments and check if they are\n        monotonically increasing"),
+    }, "(> x1 x2 x3 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        monotonically decreasing, i.e. x1 > x2 and x2 > x3 and so on."),
     // ------------------------------------------------------------------
     '<': doc('<', function () {
       for (var _len41 = arguments.length, args = new Array(_len41), _key42 = 0; _key42 < _len41; _key42++) {
@@ -17102,7 +17897,7 @@
       return seq_compare(function (a, b) {
         return LNumber(a).cmp(b) === -1;
       }, args);
-    }, "(< x1 x2 ...)\n\n        Function compare its numerical arguments and check if they are\n        monotonically decreasing"),
+    }, "(< x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        monotonically increasing, i.e. x1 < x2 and x2 < x3 and so on."),
     // ------------------------------------------------------------------
     '<=': doc('<=', function () {
       for (var _len42 = arguments.length, args = new Array(_len42), _key43 = 0; _key43 < _len42; _key43++) {
@@ -17113,7 +17908,7 @@
       return seq_compare(function (a, b) {
         return [0, -1].includes(LNumber(a).cmp(b));
       }, args);
-    }, "(<= x1 x2 ...)\n\n        Function compare its numerical arguments and check if they are\n        monotonically nonincreasing"),
+    }, "(<= x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        monotonically nondecreasing, i.e. x1 <= x2 and x2 <= x3 and so on."),
     // ------------------------------------------------------------------
     '>=': doc('>=', function () {
       for (var _len43 = arguments.length, args = new Array(_len43), _key44 = 0; _key44 < _len43; _key44++) {
@@ -17124,9 +17919,9 @@
       return seq_compare(function (a, b) {
         return [0, 1].includes(LNumber(a).cmp(b));
       }, args);
-    }, "(>= x1 x2 ...)\n\n        Function compare its numerical arguments and check if they are\n        monotonically nondecreasing"),
+    }, "(>= x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        monotonically nonincreasing, i.e. x1 >= x2 and x2 >= x3 and so on."),
     // ------------------------------------------------------------------
-    'eq?': doc('eq?', equal, "(eq? a b)\n\n         Function compare two values if they are identical."),
+    'eq?': doc('eq?', equal, "(eq? a b)\n\n         Function that compares two values if they are identical."),
     // ------------------------------------------------------------------
     or: doc(new Macro('or', function (code, _ref40) {
       var dynamic_scope = _ref40.dynamic_scope,
@@ -17172,7 +17967,7 @@
           return unpromise(value, next);
         }
       }();
-    }), "(or . expressions)\n\n         Macro execute the values one by one and return the one that is truthy value.\n         If there are no expression that evaluate to true it return false."),
+    }), "(or . expressions)\n\n         Macro that executes the values one by one and returns the first that is\n         a truthy value. If there are no expressions that evaluate to true it\n         returns false."),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function (code) {
       var _ref41 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
@@ -17220,42 +18015,42 @@
           return unpromise(value, next);
         }
       }();
-    }), "(and . expressions)\n\n         Macro evalute each expression in sequence if any value return false it will\n         return false. If each value return true it will return the last value.\n         If it's called without arguments it will return true."),
+    }), "(and . expressions)\n\n         Macro that evalutes each expression in sequence and if any value returns false\n         it will stop and return false. If each value returns true it will return the\n         last value. If it's called without arguments it will return true."),
     // bit operations
     '|': doc('|', function (a, b) {
       return LNumber(a).or(b);
-    }, "(| a b)\n\n        Function calculate or bit operation."),
+    }, "(| a b)\n\n        Function that calculates the bitwise or operation."),
     '&': doc('&', function (a, b) {
       return LNumber(a).and(b);
-    }, "(& a b)\n\n        Function calculate and bit operation."),
+    }, "(& a b)\n\n        Function that calculates the bitwise and operation."),
     '~': doc('~', function (a) {
       return LNumber(a).neg();
-    }, "(~ number)\n\n        Function negate the value."),
+    }, "(~ number)\n\n        Function that calculates the bitwise inverse (flip all the bits)."),
     '>>': doc('>>', function (a, b) {
       return LNumber(a).shr(b);
-    }, "(>> a b)\n\n        Function right shit the value a by value b."),
+    }, "(>> a b)\n\n        Function that right shifts the value a by value b bits."),
     '<<': doc('<<', function (a, b) {
       return LNumber(a).shl(b);
-    }, "(<< a b)\n\n        Function left shit the value a by value b."),
+    }, "(<< a b)\n\n        Function that left shifts the value a by value b bits."),
     not: doc('not', function not(value) {
       if (is_null(value)) {
         return true;
       }
 
       return !value;
-    }, "(not object)\n\n        Function return negation of the argument.")
+    }, "(not object)\n\n        Function that returns the Boolean negation of its argument.")
   }, undefined, 'global');
   var user_env = global_env.inherit('user-env'); // -------------------------------------------------------------------------
 
   function set_interaction_env(interaction, internal) {
     interaction.constant('**internal-env**', internal);
-    interaction.doc('**internal-env**', "**internal-env**\n\n         Constant used to hide stdin, stdout and stderr so they don't interfere\n         with variables with the same name. Constants are internal type\n         of variables that can't be redefined, defining variable with same name\n         will throw an error.");
+    interaction.doc('**internal-env**', "**internal-env**\n\n         Constant used to hide stdin, stdout and stderr so they don't interfere\n         with variables with the same name. Constants are an internal type\n         of variable that can't be redefined, defining a variable with the same name\n         will throw an error.");
     global_env.set('**interaction-environment**', interaction);
   } // -------------------------------------------------------------------------
 
 
   set_interaction_env(user_env, internal_env);
-  global_env.doc('**interaction-environment**', "**interaction-environment**\n\n    Internal dynamic, global variable used to find interpreter environment.\n    It's used so the read and write functions can locate **internal-env**\n    that contain references to stdin, stdout and stderr."); // -------------------------------------------------------------------------
+  global_env.doc('**interaction-environment**', "**interaction-environment**\n\n    Internal dynamic, global variable used to find interpreter environment.\n    It's used so the read and write functions can locate **internal-env**\n    that contains the references to stdin, stdout and stderr."); // -------------------------------------------------------------------------
 
   (function () {
     var map = {
@@ -17269,7 +18064,7 @@
         if (value instanceof LNumber) {
           return value[fn]();
         }
-      }, "(".concat(name, " number)\n\n            Function calculate ").concat(name, " of a number.")));
+      }, "(".concat(name, " number)\n\n            Function that calculates the ").concat(name, " of a number.")));
     });
   })(); // -------------------------------------------------------------------------
   // ref: https://stackoverflow.com/a/4331218/387194
@@ -17329,7 +18124,7 @@
           return list.cdr;
         }
       }, arg);
-    }, "(".concat(name, " arg)\n\n        Function calculate ").concat(code)));
+    }, "(".concat(name, " arg)\n\n        Function that calculates ").concat(code)));
   }); // -----------------------------------------------------------------------------
 
   function reversseFind(dir, fn) {
@@ -17402,7 +18197,7 @@
                 typecheck('require.resolve', path, 'string');
                 var name = path.valueOf();
                 return nodeRequire.resolve(name);
-              }, "(require.resolve path)\n\n        Return path relative the current module.")); // ---------------------------------------------------------------------
+              }, "(require.resolve path)\n\n        Returns the path relative to the current module.\n\n        Only available when LIPS is running under Node.js.")); // ---------------------------------------------------------------------
 
               global_env.set('require', doc('require', function (module) {
                 typecheck('require', module, 'string');
@@ -17427,7 +18222,7 @@
                 }
 
                 return patch_value(value, global);
-              }, "(require module)\n\n        Function to be used inside Node.js to import the module."));
+              }, "(require module)\n\n        Function used inside Node.js to import a module."));
 
             case 21:
             case "end":
@@ -17461,12 +18256,12 @@
     }
 
     if (is_function(expected)) {
-      return "Invalid type got ".concat(got).concat(postfix);
+      return "Invalid type: got ".concat(got).concat(postfix);
     }
 
     if (expected instanceof Array) {
       if (expected.length === 1) {
-        expected = expected[0];
+        expected = "a" + ("aeiou".includes(expected[0].toLowerCase()) ? "n " : " ") + expected[0];
       } else {
         var last = expected[expected.length - 1];
         expected = expected.slice(0, -1).join(', ') + ' or ' + last;
@@ -18786,10 +19581,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 06 Sep 2023 20:32:14 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 10 Nov 2023 16:25:41 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 06 Sep 2023 20:32:14 +0000').valueOf();
+    var date = LString('Fri, 10 Nov 2023 16:25:41 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -18835,7 +19630,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Wed, 06 Sep 2023 20:32:14 +0000',
+    date: 'Fri, 10 Nov 2023 16:25:41 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

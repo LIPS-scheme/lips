@@ -216,14 +216,14 @@
 (define (promise? obj)
   "(promise? obj)
 
-   Function that checks if the value is a promise created with delay or make-promise."
+   Checks if the value is a promise created with delay or make-promise."
   (string=? (type obj) "promise"))
 
 ;; -----------------------------------------------------------------------------
 (define (positive? x)
   "(positive? x)
 
-   Function that checks if the number is larger then 0"
+   Checks if the number is larger then 0"
   (typecheck "positive?" x "number")
   (> x 0))
 
@@ -231,7 +231,7 @@
 (define (negative? x)
   "(negative? x)
 
-   Function that checks if the number is smaller then 0"
+   Checks if the number is smaller then 0"
   (typecheck "negative?" x "number")
   (< x 0))
 
@@ -239,7 +239,7 @@
 (define (zero? x)
   "(zero? x)
 
-   Function that checks if the number is equal to 0"
+   Checks if the number is equal to 0"
   (typecheck "zero?" x "number")
   (= x 0))
 
@@ -310,7 +310,7 @@
 (define (real? x)
   "(real? x)
 
-   Function that checks if the argument x is real."
+   Checks if the argument x is real."
   (and (number? x) (or (eq? x NaN)
                        (eq? x Number.NEGATIVE_INFINITY)
                        (eq? x Number.POSITIVE_INFINITY)
@@ -323,7 +323,7 @@
 (define (integer? x)
   "(integer? x)
 
-  Function that checks if the argument x is integer."
+  Checks if the argument x is integer."
   (and (number? x)
        (not (eq? x NaN))
        (not (eq? x Number.NEGATIVE_INFINITY))
@@ -336,7 +336,7 @@
 (define (complex? x)
   "(complex? x)
 
-  Function that checks if argument x is complex."
+  Checks if argument x is complex."
   (and (number? x) (or (eq? x NaN)
                        (eq? x Number.NEGATIVE_INFINITY)
                        (eq? x Number.POSITIVE_INFINITY)
@@ -346,7 +346,7 @@
 (define (rational? x)
   "(rational? x)
 
-  Function that checks if the value is rational."
+  Checks if the value is rational."
   (and (number? x)
        (not (eq? x NaN))
        (not (eq? x Number.NEGATIVE_INFINITY))
@@ -818,7 +818,7 @@
 (define (string=? string1 string2)
   "(string=? string1 string2)
 
-   Function that checks if two strings are equal."
+   Checks if two strings are equal."
   (= (%string-cmp "string=?" string1 string2) 0))
 
 ;; -----------------------------------------------------------------------------
@@ -864,7 +864,7 @@
 (define (string-ci=? string1 string2)
   "(string-ci=? string1 string2)
 
-   Function that checks if two strings are equal, ignoring case."
+   Checks if two strings are equal, ignoring case."
   (= (%string-ci-cmp "string-ci=?" string1 string2) 0))
 
 ;; -----------------------------------------------------------------------------
@@ -904,7 +904,7 @@
 (define char? (%doc
         "(char? obj)
 
-         Function that checks if the object is a character."
+         Checks if the object is a character."
         (curry instanceof lips.LCharacter)))
 
 ;; -----------------------------------------------------------------------------
@@ -978,7 +978,7 @@
 (define (char=? chr1 chr2)
   "(char=? chr1 chr2)
 
-   Function that checks if two characters are equal."
+   Checks if two characters are equal."
   (= (%char-cmp "char=?" chr1 chr2) 0))
 
 ;; -----------------------------------------------------------------------------
@@ -1024,7 +1024,7 @@
 (define (char-ci=? chr1 chr2)
   "(char-ci=? chr1 chr2)
 
-   Function that checks if two characters are equal."
+   Checks if two characters are equal."
   (= (%char-ci-cmp "char-ci=?" chr1 chr2) 0))
 
 ;; -----------------------------------------------------------------------------
@@ -1075,7 +1075,7 @@
 (define (char-upper-case? char)
   "(char-upper-case? char)
 
-   Function that checks if character is upper case."
+   Checks if character is upper case."
   (typecheck "char-upper-case?" char "character")
   (and (char-alphabetic? char)
        (char=? (char-upcase char) char)))
@@ -1084,7 +1084,7 @@
 (define (char-lower-case? char)
   "(char-upper-case? char)
 
-   Function that checks if character is lower case."
+   Checks if character is lower case."
   (typecheck "char-lower-case?" char "character")
   (and (char-alphabetic? char)
        (char=? (char-downcase char) char)))
@@ -1316,7 +1316,7 @@
 (define (eof-object? obj)
   "(eof-object? arg)
 
-   Function that checks if value is eof object, returned from input string
+   Checks if value is eof object, returned from input string
    port when there are no more data to read."
   (eq? obj eof))
 
@@ -1339,7 +1339,7 @@
   "(char-ready?)
    (char-ready? port)
 
-   Function that checks if characters is ready in input port. This is useful mostly
+   Checks if characters is ready in input port. This is useful mostly
    for interactive ports that return false if it would wait for user input.
    It return false if port is closed."
   (let ((port (if (null? rest) (current-input-port) (car rest))))

@@ -8599,7 +8599,7 @@ var global_env = new Environment({
         typecheck,
         `(typecheck label value type [position])
 
-         Function that checks the type of value and errors if the type is not one allowed.
+         Checks the type of value and errors if the type is not one allowed.
          Type can be string or list of strings. The position optional argument
          is used to create a proper error message for the nth argument of function calls.`),
     // ------------------------------------------------------------------
@@ -9181,13 +9181,13 @@ var global_env = new Environment({
         return LNumber(num).isOdd();
     }), `(odd? number)
 
-         Function that checks if number is odd.`),
+         Checks if number is odd.`),
     // ------------------------------------------------------------------
     'even?': doc('even?', single_math_op(function(num) {
         return LNumber(num).isEven();
     }), `(even? number)
 
-         Function that checks if number is even.`),
+         Checks if number is even.`),
     // ------------------------------------------------------------------
     // math functions
     '*': doc('*', reduce_math_op(function(a, b) {

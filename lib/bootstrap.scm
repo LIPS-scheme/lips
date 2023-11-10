@@ -159,14 +159,14 @@
 (define (single list)
   "(single list)
 
-   Function that checks if argument is list with one element."
+   Checks if argument is list with one element."
   (and (pair? list) (not (cdr list))))
 
 ;; -----------------------------------------------------------------------------
 (define (iterator? x)
    "(iterator? x)
 
-     Function that checks if value is JavaScript iterator object."
+     Checks if value is JavaScript iterator object."
    (and (object? x) (procedure? (. x Symbol.iterator))))
 
 ;; -----------------------------------------------------------------------------
@@ -195,7 +195,7 @@
 (define (plain-object? x)
   "(plain-object? x)
 
-   Function that checks if value is a plain JavaScript object created using the object macro."
+   Checks if value is a plain JavaScript object created using the object macro."
   ;; here we don't use string=? or equal? because it may not be defined
   (and (== (--> (type x) (cmp "object")) 0) (eq? (. x 'constructor) Object)))
 
@@ -378,7 +378,7 @@
 (define (key? symbol)
   "(key? symbol)
 
-   Function that checks if symbol is a keyword (has a colon as first character)."
+   Checks if symbol is a keyword (has a colon as first character)."
   ;; we can't use string=? because it's in R5RS.scm we use same code that use cmp
   (and (symbol? symbol) (== (--> (substring (symbol->string symbol) 0 1) (cmp ":")) 0)))
 
@@ -709,7 +709,7 @@
 (define (environment-bound? env x)
   "(environment-bound? env symbol)
 
-   Function that checks if symbol is a bound variable similar to bound?."
+   Checks if symbol is a bound variable similar to bound?."
   (typecheck "environment-bound?" env "environment" 1)
   (typecheck "environment-bound?" x "symbol" 2)
   (bound? x env))
@@ -804,7 +804,7 @@
 (define (defmacro? obj)
   "(defmacro? expression)
 
-   Function that checks if object is a macro and it's expandable."
+   Checks if object is a macro and it's expandable."
   (and (macro? obj) (. obj 'defmacro)))
 
 ;; -----------------------------------------------------------------------------
@@ -1347,7 +1347,7 @@
 (define (environment? obj)
   "(environment? obj)
 
-   Function that checks if object is a LIPS environment."
+   Checks if object is a LIPS environment."
   (instanceof lips.Environment obj))
 
 ;; -----------------------------------------------------------------------------

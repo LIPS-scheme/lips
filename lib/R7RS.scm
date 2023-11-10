@@ -20,7 +20,7 @@
 (define (list-match? predicate list)
   "(list-match? predicate list)
 
-   Function that checks if consecutive elements of the list match the predicate function."
+   Checks if consecutive elements of the list match the predicate function."
   (typecheck "list-match?" predicate #("function" "macro"))
   (typecheck "list-match?" list "pair")
   (or (or (null? list)
@@ -32,7 +32,7 @@
 (define (symbol=? . args)
   "(symbol=? s1 s2 ...)
 
-   Function that checks if each value is symbol and it's the same acording to string=? predicate."
+   Checks if each value is symbol and it's the same acording to string=? predicate."
   (list-match? (lambda (a b)
                  (and (symbol? a) (symbol? b) (equal? a b)))
                args))
@@ -237,7 +237,7 @@
 (define (boolean=? . args)
   "(boolean=? b1 b2 ...)
 
-   Function that checks if all arguments are boolean and if they are the same."
+   Checks if all arguments are boolean and if they are the same."
   (if (< (length args) 2)
       (error "boolean=?: too few arguments")
       (reduce (lambda (acc item)
@@ -901,14 +901,14 @@
 (define (output-port-open? port)
   "(output-port-open? port)
 
-   Function that checks if argument is output-port and if you can write to it."
+   Checks if argument is output-port and if you can write to it."
   (and (output-port? port) (port.is_open)))
 
 ;; -----------------------------------------------------------------------------
 (define (input-port-open? port)
   "(input-port-open? port)
 
-   Function that checks if argument is input-port and if you can read from it."
+   Checks if argument is input-port and if you can read from it."
   (and (input-port? port) (port.is_open)))
 
 ;; -----------------------------------------------------------------------------
@@ -1040,7 +1040,7 @@
 (define (nan? x)
   "(nan? x)
 
-  Function that checks if argument x is Not a Number (NaN) value."
+  Checks if argument x is Not a Number (NaN) value."
   (and (number? x)
        (or (x.isNaN)
            (and (%number-type "complex" x)
@@ -1051,7 +1051,7 @@
 (define (infinite? x)
   "(infinite? x)
 
-  Function that checks if value is infinite."
+  Checks if value is infinite."
   (or (eq? x Number.NEGATIVE_INFINITY)
       (eq? x Number.POSITIVE_INFINITY)
       (and (number? x)
@@ -1064,7 +1064,7 @@
 (define (finite? x)
   "(finite? x)
 
-  Function that checks if value is finite."
+  Checks if value is finite."
   (not (infinite? x)))
 
 ;; -----------------------------------------------------------------------------
@@ -1245,7 +1245,7 @@
 (define (error-object? obj)
   "(error-object? obj)
 
-   Function that checks if object is of Error object throwed by error function."
+   Checks if object is of Error object throwed by error function."
   (instanceof lips.Error obj))
 
 ;; -----------------------------------------------------------------------------
