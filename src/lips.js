@@ -9301,46 +9301,46 @@ var global_env = new Environment({
         return seq_compare((a, b) => LNumber(a).cmp(b) === 0, args);
     }, `(== x1 x2 ...)
 
-        Function that compares its numerical arguments and check if they are all equal.`),
+        Function that compares its numerical arguments and checks if they are all equal.`),
     // ------------------------------------------------------------------
     '>': doc('>', function(...args) {
         typecheck_args('>', args, 'number');
         return seq_compare((a, b) => LNumber(a).cmp(b) === 1, args);
-    }, `(> x1 x2 ...)
+    }, `(> x1 x2 x3 ...)
 
-        Function compare its numerical arguments and check if they are
-        monotonically increasing`),
+        Function that compares its numerical arguments and checks if they are
+        monotonically decreasing, i.e. x1 > x2 and x2 > x3 and so on.`),
     // ------------------------------------------------------------------
     '<': doc('<', function(...args) {
         typecheck_args('<', args, 'number');
         return seq_compare((a, b) => LNumber(a).cmp(b) === -1, args);
     }, `(< x1 x2 ...)
 
-        Function compare its numerical arguments and check if they are
-        monotonically decreasing`),
+        Function that compares its numerical arguments and checks if they are
+        monotonically increasing, i.e. x1 < x2 and x2 < x3 and so on.`),
     // ------------------------------------------------------------------
     '<=': doc('<=', function(...args) {
         typecheck_args('<=', args, 'number');
         return seq_compare((a, b) => [0, -1].includes(LNumber(a).cmp(b)), args);
     }, `(<= x1 x2 ...)
 
-        Function compare its numerical arguments and check if they are
-        monotonically nonincreasing`),
+        Function that compares its numerical arguments and checks if they are
+        monotonically nondecreasing, i.e. x1 <= x2 and x2 <= x3 and so on.`),
     // ------------------------------------------------------------------
     '>=': doc('>=', function(...args) {
         typecheck_args('>=', args, 'number');
         return seq_compare((a, b) => [0, 1].includes(LNumber(a).cmp(b)), args);
     }, `(>= x1 x2 ...)
 
-        Function compare its numerical arguments and check if they are
-        monotonically nondecreasing`),
+        Function that compares its numerical arguments and checks if they are
+        monotonically nonincreasing, i.e. x1 >= x2 and x2 >= x3 and so on.`),
     // ------------------------------------------------------------------
     'eq?': doc(
         'eq?',
         equal,
         `(eq? a b)
 
-         Function compare two values if they are identical.`),
+         Function that compares two values if they are identical.`),
     // ------------------------------------------------------------------
     or: doc(new Macro('or', function(code, { dynamic_scope, error }) {
         var args = global_env.get('list->array')(code);
@@ -9375,8 +9375,9 @@ var global_env = new Environment({
         })();
     }), `(or . expressions)
 
-         Macro execute the values one by one and return the one that is truthy value.
-         If there are no expression that evaluate to true it return false.`),
+         Macro that executes the values one by one and returns the first that is
+         a truthy value. If there are no expressions that evaluate to true it
+         returns false.`),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function(code, { dynamic_scope, error } = {}) {
         var args = global_env.get('list->array')(code);
@@ -9411,35 +9412,35 @@ var global_env = new Environment({
         })();
     }), `(and . expressions)
 
-         Macro evalute each expression in sequence if any value return false it will
-         return false. If each value return true it will return the last value.
-         If it's called without arguments it will return true.`),
+         Macro that evalutes each expression in sequence and if any value returns false
+         it will stop and return false. If each value returns true it will return the
+         last value. If it's called without arguments it will return true.`),
     // bit operations
     '|': doc('|', function(a, b) {
         return LNumber(a).or(b);
     }, `(| a b)
 
-        Function calculate or bit operation.`),
+        Function that calculates the bitwise or operation.`),
     '&': doc('&', function(a, b) {
         return LNumber(a).and(b);
     }, `(& a b)
 
-        Function calculate and bit operation.`),
+        Function that calculates the bitwise and operation.`),
     '~': doc('~', function(a) {
         return LNumber(a).neg();
     }, `(~ number)
 
-        Function negate the value.`),
+        Function that calculates the bitwise inverse (flip all the bits).`),
     '>>': doc('>>', function(a, b) {
         return LNumber(a).shr(b);
     }, `(>> a b)
 
-        Function right shit the value a by value b.`),
+        Function that right shifts the value a by value b bits.`),
     '<<': doc('<<', function(a, b) {
         return LNumber(a).shl(b);
     }, `(<< a b)
 
-        Function left shit the value a by value b.`),
+        Function that left shifts the value a by value b bits.`),
     not: doc('not', function not(value) {
         if (is_null(value)) {
             return true;
@@ -9447,7 +9448,7 @@ var global_env = new Environment({
         return !value;
     }, `(not object)
 
-        Function return negation of the argument.`)
+        Function that returns the Boolean negation of its argument.`)
 }, undefined, 'global');
 var user_env = global_env.inherit('user-env');
 // -------------------------------------------------------------------------
@@ -9458,8 +9459,8 @@ function set_interaction_env(interaction, internal) {
         `**internal-env**
 
          Constant used to hide stdin, stdout and stderr so they don't interfere
-         with variables with the same name. Constants are internal type
-         of variables that can't be redefined, defining variable with same name
+         with variables with the same name. Constants are an internal type
+         of variable that can't be redefined, defining a variable with the same name
          will throw an error.`
     );
     global_env.set('**interaction-environment**', interaction);
@@ -9472,7 +9473,7 @@ global_env.doc(
 
     Internal dynamic, global variable used to find interpreter environment.
     It's used so the read and write functions can locate **internal-env**
-    that contain references to stdin, stdout and stderr.`
+    that contains the references to stdin, stdout and stderr.`
 );
 // -------------------------------------------------------------------------
 (function() {
@@ -9486,7 +9487,7 @@ global_env.doc(
             }
         }, `(${name} number)
 
-            Function calculate ${name} of a number.`));
+            Function that calculates the ${name} of a number.`));
     });
 })();
 // -------------------------------------------------------------------------
@@ -9538,7 +9539,7 @@ combinations(['d', 'a'], 2, 5).forEach(spec => {
         }, arg);
     }, `(${name} arg)
 
-        Function calculate ${code}`));
+        Function that calculates ${code}`));
 });
 // -----------------------------------------------------------------------------
 function reversseFind(dir, fn) {
@@ -9584,7 +9585,9 @@ async function node_specific() {
         return nodeRequire.resolve(name);
     }, `(require.resolve path)
 
-        Return path relative the current module.`));
+        Returns the path relative to the current module.
+
+        Only available when LIPS is running under Node.js.`));
     // ---------------------------------------------------------------------
     global_env.set('require', doc('require', function(module) {
         typecheck('require', module, 'string');
@@ -9608,7 +9611,7 @@ async function node_specific() {
         return patch_value(value, global);
     }, `(require module)
 
-        Function to be used inside Node.js to import the module.`));
+        Function used inside Node.js to import a module.`));
 }
 // -------------------------------------------------------------------------
 if (is_node()) {
@@ -9629,11 +9632,11 @@ function typeErrorMessage(fn, got, expected, position = null) {
         postfix += ` (argument ${position})`;
     }
     if (is_function(expected)) {
-        return `Invalid type got ${got}${postfix}`;
+        return `Invalid type: got ${got}${postfix}`;
     }
     if (expected instanceof Array) {
         if (expected.length === 1) {
-            expected = expected[0];
+            expected = "a" + ("aeiou".includes(expected[0].toLowerCase()) ? "n " : " ") + expected[0];
         } else {
             const last = expected[expected.length - 1];
             expected = expected.slice(0, -1).join(', ') + ' or ' + last;
