@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. DEV
+ *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.16
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 10 Nov 2023 16:25:41 +0000
+ * build: Fri, 10 Nov 2023 18:56:54 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5799,7 +5799,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Fri, 10 Nov 2023 16:25:41 +0000
+   * Build time: Fri, 10 Nov 2023 18:56:54 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -16082,7 +16082,7 @@
       return function (_x15, _x16) {
         return _ref30.apply(this, arguments);
       };
-    }()), "(do ((<var> <init> <next>)) (test return) . body)\n\n         Iteration macro that evaluates the expression body in scope of the variables.\n         On each loop it changes the variables according to the <next> expression and runs\n         test to check if the loop should continue. If test is a single value, the macro\n         will return undefined. If the test is a pair of expressions the macro will evaluate\n         and return the second expression after the loop exits."),
+    }()), "(do ((<var> <init> <next>)) (test return) . body)\n\n         Iteration macro that evaluates the expression body in scope of the variables.\n         On each loop it changes the variables according to the <next> expression and runs\n         test to check if the loop should continue. If test is a single value, the macro\n         will return undefined. If the test is a pair of expressions the macro will\n         evaluate and return the second expression after the loop exits."),
     // ------------------------------------------------------------------
     'if': doc(new Macro('if', function (code, _ref32) {
       var dynamic_scope = _ref32.dynamic_scope,
@@ -16151,11 +16151,11 @@
     // ---------------------------------------------------------------------
     'let*': doc(let_macro(Symbol["for"]('let*')), "(let* ((a value-a) (b value-b) ...) . body)\n\n         Macro similar to `let`, but the subsequent bindings after the first\n         are evaluated in the environment including the previous let variables,\n         so you can define one variable, and use it in the next's definition."),
     // ---------------------------------------------------------------------
-    'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to\n         names, and then evaluates the body in context of that environment.\n         Values are evaluated sequentialy but you can't access previous values/names\n         when the next are evaluated. You can only get them in the body of the let expression.\n         (If you want to define multiple variables and use them in each other's definitions,\n         use `let*`.)"),
+    'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to names,\n         and then evaluates the body in context of that environment.  Values are evaluated\n         sequentialy but you can't access previous values/names when the next are\n         evaluated. You can only get them in the body of the let expression.  (If you want\n         to define multiple variables and use them in each other's definitions, use\n         `let*`.)"),
     // ------------------------------------------------------------------
     'begin*': doc(pararel('begin*', function (values) {
       return values.pop();
-    }), "(begin* . body)\n\n         This macro is a parallel version of begin. It evaluates each expression\n         in the body and if it's a promise it will await it in parallel and return \n         the value of the last expression (i.e. it uses Promise.all())."),
+    }), "(begin* . body)\n\n         This macro is a parallel version of begin. It evaluates each expression\n         in the body and if it's a promise it will await it in parallel and return\n         the value of the last expression (i.e. it uses Promise.all())."),
     // ------------------------------------------------------------------
     'begin': doc(new Macro('begin', function (code, options) {
       var args = Object.assign({}, options);
@@ -16546,7 +16546,7 @@
         makro_instance.__code__ = new Pair(new LSymbol('define-macro'), macro);
         this.set(name, makro_instance);
       }
-    }), "(define-macro (name . args) body)\n\n         The meta-macro, that creates new macros. If the return value is a list structure\n         it will be evaluated where the macro is invoked from. You can use quasiquote ` and\n         unquote , and unquote-splicing ,@ inside to create an expression that will be\n         evaluated at runtime. Macros works like this: if you pass any expression to a\n         macro the arguments will not be evaluated unless the macro's body explicitly\n         calls (eval) on it. Because of this a macro can manipulate the expression (arguments)\n         as lists."),
+    }), "(define-macro (name . args) body)\n\n         The meta-macro, that creates new macros. If the return value is a list structure\n         it will be evaluated where the macro is invoked from. You can use quasiquote `\n         and unquote , and unquote-splicing ,@ inside to create an expression that will be\n         evaluated at runtime. Macros works like this: if you pass any expression to a\n         macro the arguments will not be evaluated unless the macro's body explicitly\n         calls (eval) on it. Because of this a macro can manipulate the expression\n         (arguments) as lists."),
     // ------------------------------------------------------------------
     'syntax-rules': new Macro('syntax-rules', function (macro, options) {
       var dynamic_scope = options.dynamic_scope,
@@ -16694,7 +16694,7 @@
     }), "(quote expression) or 'expression\n\n         Macro that returns a single LIPS expression as data (it won't evaluate the\n         argument). It will return a list if put in front of LIPS code.\n         And if put in front of a symbol it will return the symbol itself, not the value\n         bound to that name."),
     'unquote-splicing': doc('unquote-splicing', function () {
       throw new Error("You can't call `unquote-splicing` outside of quasiquote");
-    }, "(unquote-splicing code) or ,@code\n\n        Special form used in the quasiquote macro. It evaluates the expression inside and\n        splices the list into quasiquote's result. If it is not the last element of the expression,\n        the computed value must be a pair."),
+    }, "(unquote-splicing code) or ,@code\n\n        Special form used in the quasiquote macro. It evaluates the expression inside and\n        splices the list into quasiquote's result. If it is not the last element of the\n        expression, the computed value must be a pair."),
     'unquote': doc('unquote', function () {
       throw new Error("You can't call `unquote` outside of quasiquote");
     }, "(unquote code) or ,code\n\n        Special form used in the quasiquote macro. It evaluates the expression inside and\n        substitutes the value into quasiquote's result."),
@@ -17060,12 +17060,12 @@
         clear(value);
         return quote(value);
       });
-    }, "(quasiquote list)\n\n        Similar macro to `quote` but inside it you can use special\n        expressions (unquote x) abbreviated to ,x that will evaluate x\n        and insert its value verbatim or (unquote-splicing x) abbreviated to ,@x that will\n        evaluate x and splice the value into the result. Best used with macros but it can be used outside."),
+    }, "(quasiquote list)\n\n        Similar macro to `quote` but inside it you can use special expressions (unquote\n        x) abbreviated to ,x that will evaluate x and insert its value verbatim or\n        (unquote-splicing x) abbreviated to ,@x that will evaluate x and splice the value\n        into the result. Best used with macros but it can be used outside."),
     // ------------------------------------------------------------------
     clone: doc('clone', function clone(list) {
       typecheck('clone', list, 'pair');
       return list.clone();
-    }, "(clone list)\n\n        Function that returns a clone of the list, that does not share any pairs\n        with the original, so the clone can be safely mutated without affecting the original."),
+    }, "(clone list)\n\n        Function that returns a clone of the list, that does not share any pairs with the\n        original, so the clone can be safely mutated without affecting the original."),
     // ------------------------------------------------------------------
     append: doc('append', function append() {
       var _global_env$get;
@@ -17171,7 +17171,7 @@
       typecheck('substring', start, 'number');
       typecheck('substring', end, ['number', 'undefined']);
       return string.substring(start.valueOf(), end && end.valueOf());
-    }, "(substring string start end)\n\n        Function that returns the slice of the string starting at start and ending with end."),
+    }, "(substring string start end)\n\n        Function that returns the slice of the string starting at start and ending\n        with end."),
     // ------------------------------------------------------------------
     concat: doc('concat', function concat() {
       for (var _len27 = arguments.length, args = new Array(_len27), _key27 = 0; _key27 < _len27; _key27++) {
@@ -17201,14 +17201,14 @@
       typecheck('replace', replacement, ['string', 'function']);
       typecheck('replace', string, 'string');
       return string.replace(pattern, replacement);
-    }, "(replace pattern replacement string)\n\n        Function that changes pattern to replacement inside string. Pattern can be a string\n        or regex and replacement can be function or string. See Javascript String.replace()."),
+    }, "(replace pattern replacement string)\n\n        Function that changes pattern to replacement inside string. Pattern can be a\n        string or regex and replacement can be function or string. See Javascript\n        String.replace()."),
     // ------------------------------------------------------------------
     match: doc('match', function match(pattern, string) {
       typecheck('match', pattern, ['regex', 'string']);
       typecheck('match', string, 'string');
       var m = string.match(pattern);
       return m ? global_env.get('array->list')(m) : false;
-    }, "(match pattern string)\n\n        Function that returns a match object from JavaScript as a list or #f if no match."),
+    }, "(match pattern string)\n\n        Function that returns a match object from JavaScript as a list or #f if\n        no match."),
     // ------------------------------------------------------------------
     search: doc('search', function search(pattern, string) {
       typecheck('search', pattern, ['regex', 'string']);
@@ -17256,7 +17256,7 @@
       return instance;
     }, "(new obj . args)\n\n        Function that creates new JavaScript instance of an object."),
     // ------------------------------------------------------------------
-    'typecheck': doc(typecheck, "(typecheck label value type [position])\n\n         Checks the type of value and errors if the type is not one allowed.\n         Type can be string or list of strings. The position optional argument\n         is used to create a proper error message for the nth argument of function calls."),
+    'typecheck': doc(typecheck, "(typecheck label value type [position])\n\n         Checks the type of value and errors if the type is not one allowed.  Type can be\n         string or list of strings. The position optional argument is used to create a\n         proper error message for the nth argument of function calls."),
     // ------------------------------------------------------------------
     'unset-special!': doc('unset-special!', function (symbol) {
       typecheck('remove-special!', symbol, 'string');
@@ -17333,7 +17333,7 @@
     // ------------------------------------------------------------------
     'null?': doc('null?', function (obj) {
       return is_null(obj);
-    }, "(null? expression)\n\n        Predicate that tests if value is null-ish (i.e. undefined, nil, or Javascript null)."),
+    }, "(null? expression)\n\n        Predicate that tests if value is null-ish (i.e. undefined, nil, or\n        Javascript null)."),
     // ------------------------------------------------------------------
     'boolean?': doc('boolean?', function (obj) {
       return typeof obj === 'boolean';
@@ -17875,7 +17875,7 @@
       return seq_compare(function (a, b) {
         return LNumber(a).cmp(b) === 0;
       }, args);
-    }, "(== x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are all equal."),
+    }, "(== x1 x2 ...)\n\n        Function that compares its numerical arguments and checks if they are\n        all equal."),
     // ------------------------------------------------------------------
     '>': doc('>', function () {
       for (var _len40 = arguments.length, args = new Array(_len40), _key41 = 0; _key41 < _len40; _key41++) {
@@ -18261,7 +18261,8 @@
 
     if (expected instanceof Array) {
       if (expected.length === 1) {
-        expected = "a" + ("aeiou".includes(expected[0].toLowerCase()) ? "n " : " ") + expected[0];
+        var first = expected[0].toLowerCase();
+        expected = 'a' + ('aeiou'.includes(first) ? 'n ' : ' ') + expected[0];
       } else {
         var last = expected[expected.length - 1];
         expected = expected.slice(0, -1).join(', ') + ' or ' + last;
@@ -19581,10 +19582,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 10 Nov 2023 16:25:41 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 10 Nov 2023 18:56:54 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 10 Nov 2023 16:25:41 +0000').valueOf();
+    var date = LString('Fri, 10 Nov 2023 18:56:54 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -19596,7 +19597,7 @@
 
     var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specic function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
+    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.16 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specic function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
     return banner;
   }(); // -------------------------------------------------------------------------
   // to be used with string function when code is minified
@@ -19628,9 +19629,9 @@
   read_only(QuotedPromise, '__class__', 'promise'); // -------------------------------------------------------------------------
 
   var lips = {
-    version: 'DEV',
+    version: '1.0.0-beta.16',
     banner: banner,
-    date: 'Fri, 10 Nov 2023 16:25:41 +0000',
+    date: 'Fri, 10 Nov 2023 18:56:54 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

@@ -7455,8 +7455,8 @@ var global_env = new Environment({
          Iteration macro that evaluates the expression body in scope of the variables.
          On each loop it changes the variables according to the <next> expression and runs
          test to check if the loop should continue. If test is a single value, the macro
-         will return undefined. If the test is a pair of expressions the macro will evaluate
-         and return the second expression after the loop exits.`),
+         will return undefined. If the test is a pair of expressions the macro will
+         evaluate and return the second expression after the loop exits.`),
     // ------------------------------------------------------------------
     'if': doc(new Macro('if', function(code, { dynamic_scope, error }) {
         if (dynamic_scope) {
@@ -7534,19 +7534,19 @@ var global_env = new Environment({
         let_macro(Symbol.for('let')),
         `(let ((a value-a) (b value-b) ...) . body)
 
-         Macro that creates a new environment, then evaluates and assigns values to
-         names, and then evaluates the body in context of that environment.
-         Values are evaluated sequentialy but you can't access previous values/names
-         when the next are evaluated. You can only get them in the body of the let expression.
-         (If you want to define multiple variables and use them in each other's definitions,
-         use \`let*\`.)`),
+         Macro that creates a new environment, then evaluates and assigns values to names,
+         and then evaluates the body in context of that environment.  Values are evaluated
+         sequentialy but you can't access previous values/names when the next are
+         evaluated. You can only get them in the body of the let expression.  (If you want
+         to define multiple variables and use them in each other's definitions, use
+         \`let*\`.)`),
     // ------------------------------------------------------------------
     'begin*': doc(pararel('begin*', function(values) {
         return values.pop();
     }), `(begin* . body)
 
          This macro is a parallel version of begin. It evaluates each expression
-         in the body and if it's a promise it will await it in parallel and return 
+         in the body and if it's a promise it will await it in parallel and return
          the value of the last expression (i.e. it uses Promise.all()).`),
     // ------------------------------------------------------------------
     'begin': doc(new Macro('begin', function(code, options) {
@@ -7922,12 +7922,12 @@ var global_env = new Environment({
     }), `(define-macro (name . args) body)
 
          The meta-macro, that creates new macros. If the return value is a list structure
-         it will be evaluated where the macro is invoked from. You can use quasiquote \` and
-         unquote , and unquote-splicing ,@ inside to create an expression that will be
+         it will be evaluated where the macro is invoked from. You can use quasiquote \`
+         and unquote , and unquote-splicing ,@ inside to create an expression that will be
          evaluated at runtime. Macros works like this: if you pass any expression to a
          macro the arguments will not be evaluated unless the macro's body explicitly
-         calls (eval) on it. Because of this a macro can manipulate the expression (arguments)
-         as lists.`),
+         calls (eval) on it. Because of this a macro can manipulate the expression
+         (arguments) as lists.`),
     // ------------------------------------------------------------------
     'syntax-rules': new Macro('syntax-rules', function(macro, options) {
         var { dynamic_scope, error } = options;
@@ -8050,8 +8050,8 @@ var global_env = new Environment({
     }, `(unquote-splicing code) or ,@code
 
         Special form used in the quasiquote macro. It evaluates the expression inside and
-        splices the list into quasiquote's result. If it is not the last element of the expression,
-        the computed value must be a pair.`),
+        splices the list into quasiquote's result. If it is not the last element of the
+        expression, the computed value must be a pair.`),
     'unquote': doc('unquote', function() {
         throw new Error(`You can't call \`unquote\` outside of quasiquote`);
     }, `(unquote code) or ,code
@@ -8395,18 +8395,18 @@ var global_env = new Environment({
         });
     }, `(quasiquote list)
 
-        Similar macro to \`quote\` but inside it you can use special
-        expressions (unquote x) abbreviated to ,x that will evaluate x
-        and insert its value verbatim or (unquote-splicing x) abbreviated to ,@x that will
-        evaluate x and splice the value into the result. Best used with macros but it can be used outside.`),
+        Similar macro to \`quote\` but inside it you can use special expressions (unquote
+        x) abbreviated to ,x that will evaluate x and insert its value verbatim or
+        (unquote-splicing x) abbreviated to ,@x that will evaluate x and splice the value
+        into the result. Best used with macros but it can be used outside.`),
     // ------------------------------------------------------------------
     clone: doc('clone', function clone(list) {
         typecheck('clone', list, 'pair');
         return list.clone();
     }, `(clone list)
 
-        Function that returns a clone of the list, that does not share any pairs
-        with the original, so the clone can be safely mutated without affecting the original.`),
+        Function that returns a clone of the list, that does not share any pairs with the
+        original, so the clone can be safely mutated without affecting the original.`),
     // ------------------------------------------------------------------
     append: doc('append', function append(...items) {
         items = items.map(item => {
@@ -8500,7 +8500,8 @@ var global_env = new Environment({
         return string.substring(start.valueOf(), end && end.valueOf());
     }, `(substring string start end)
 
-        Function that returns the slice of the string starting at start and ending with end.`),
+        Function that returns the slice of the string starting at start and ending
+        with end.`),
     // ------------------------------------------------------------------
     concat: doc('concat', function concat(...args) {
         args.forEach((arg, i) => typecheck('concat', arg, 'string', i + 1));
@@ -8533,8 +8534,9 @@ var global_env = new Environment({
         return string.replace(pattern, replacement);
     }, `(replace pattern replacement string)
 
-        Function that changes pattern to replacement inside string. Pattern can be a string
-        or regex and replacement can be function or string. See Javascript String.replace().`),
+        Function that changes pattern to replacement inside string. Pattern can be a
+        string or regex and replacement can be function or string. See Javascript
+        String.replace().`),
     // ------------------------------------------------------------------
     match: doc('match', function match(pattern, string) {
         typecheck('match', pattern, ['regex', 'string']);
@@ -8543,7 +8545,8 @@ var global_env = new Environment({
         return m ? global_env.get('array->list')(m) : false;
     }, `(match pattern string)
 
-        Function that returns a match object from JavaScript as a list or #f if no match.`),
+        Function that returns a match object from JavaScript as a list or #f if
+        no match.`),
     // ------------------------------------------------------------------
     search: doc('search', function search(pattern, string) {
         typecheck('search', pattern, ['regex', 'string']);
@@ -8599,9 +8602,9 @@ var global_env = new Environment({
         typecheck,
         `(typecheck label value type [position])
 
-         Checks the type of value and errors if the type is not one allowed.
-         Type can be string or list of strings. The position optional argument
-         is used to create a proper error message for the nth argument of function calls.`),
+         Checks the type of value and errors if the type is not one allowed.  Type can be
+         string or list of strings. The position optional argument is used to create a
+         proper error message for the nth argument of function calls.`),
     // ------------------------------------------------------------------
     'unset-special!': doc('unset-special!', function(symbol) {
         typecheck('remove-special!', symbol, 'string');
@@ -8731,7 +8734,8 @@ var global_env = new Environment({
         return is_null(obj);
     }, `(null? expression)
 
-        Predicate that tests if value is null-ish (i.e. undefined, nil, or Javascript null).`),
+        Predicate that tests if value is null-ish (i.e. undefined, nil, or
+        Javascript null).`),
     // ------------------------------------------------------------------
     'boolean?': doc('boolean?', function(obj) {
         return typeof obj === 'boolean';
@@ -9301,7 +9305,8 @@ var global_env = new Environment({
         return seq_compare((a, b) => LNumber(a).cmp(b) === 0, args);
     }, `(== x1 x2 ...)
 
-        Function that compares its numerical arguments and checks if they are all equal.`),
+        Function that compares its numerical arguments and checks if they are
+        all equal.`),
     // ------------------------------------------------------------------
     '>': doc('>', function(...args) {
         typecheck_args('>', args, 'number');
@@ -9636,7 +9641,8 @@ function typeErrorMessage(fn, got, expected, position = null) {
     }
     if (expected instanceof Array) {
         if (expected.length === 1) {
-            expected = "a" + ("aeiou".includes(expected[0].toLowerCase()) ? "n " : " ") + expected[0];
+            const first = expected[0].toLowerCase();
+            expected = 'a' + ('aeiou'.includes(first) ? 'n ' : ' ') + expected[0];
         } else {
             const last = expected[expected.length - 1];
             expected = expected.slice(0, -1).join(', ') + ' or ' + last;
