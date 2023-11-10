@@ -9030,7 +9030,7 @@ var global_env = new Environment({
         Higher-order function that calls fn on each element of the list.
         It stops and returns true when fn returns true for a value.
         If none of the values give true, some will return false.
-        Analagous to Python's any().`),
+        Analagous to Python any(map(fn, list)).`),
     // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function(fold, fn, init, ...lists) {
         typecheck('fold', fn, 'function');
