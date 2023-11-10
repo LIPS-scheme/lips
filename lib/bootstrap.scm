@@ -24,7 +24,7 @@
 (define-macro (let-syntax vars . body)
   "(let-syntax ((name fn) ...) . body)
 
-    Macro that works like a combination of let and define-syntax. It creates
+    Works like a combination of let and define-syntax. It creates
     local macros and evaluates body in context of those macros.
     The macro to letrec-syntax is like letrec is to let."
   `(let ,vars
@@ -37,7 +37,7 @@
 (define-macro (letrec-syntax vars . body)
   "(letrec-syntax ((name fn) ...) . body)
 
-    Macro that works like a combination of letrec and define-syntax. It creates
+    Works like a combination of letrec and define-syntax. It creates
     local macros and evaluates the body in context of those macros."
   `(letrec ,vars
      ,@(map (lambda (rule)
@@ -49,7 +49,7 @@
 (define-macro (define-syntax name expr . rest)
   "(define-syntax name expression [__doc__])
 
-   Macro that defines a new hygienic macro using syntax-rules with optional documentation."
+   Defines a new hygienic macro using syntax-rules with optional documentation."
   (let ((expr-name (gensym "expr-name")))
     `(define ,name
        (let ((,expr-name ,expr))
@@ -124,7 +124,7 @@
   "(define-global var value)
    (define-global (name . args) body)
 
-   Macro that defines functions or variables in the global context, so they can be used
+   Defines functions or variables in the global context, so they can be used
    inside let and get let variables in a closure. Useful for universal macros."
   (if (pair? first)
       (let ((name (car first)))
@@ -173,7 +173,7 @@
 (define-macro (.. expr)
   "(.. foo.bar.baz)
 
-   Macro that gets the value from a nested object where the argument is a period separated symbol."
+   Gets the value from a nested object where the argument is a period separated symbol."
   (if (not (symbol? expr))
       expr
       (let ((parts (split "." (symbol->string expr))))
@@ -250,7 +250,7 @@
 (define (parent.frames)
   "(parent.frames)
 
-   Function that returns the list of environments from parent frames (lambda function calls)"
+   Returns the list of environments from parent frames (lambda function calls)"
   (let iter ((result '()) (frame (parent.frame 1)))
     (if (eq? frame (interaction-environment))
         (cons frame result)
@@ -334,7 +334,7 @@
 (define-macro (object . expr)
   "(object :name value)
 
-   Macro that creates a JavaScript object using key like syntax."
+   Creates a JavaScript object using key like syntax."
   (try
     (object-expander false expr)
     (catch (e)
@@ -347,7 +347,7 @@
 (define-macro (object-literal . expr)
   "(object-literal :name value)
 
-   Macro that creates a JavaScript object using key like syntax. This is similar,
+   Creates a JavaScript object using key like syntax. This is similar,
    to object but all values are quoted. This macro is used by the & object literal."
   (try
     (object-expander true expr true)
@@ -404,7 +404,7 @@
 (define (%hidden-props obj)
   "(%hidden-props obj)
 
-   Function that returns the hidden names of an object, for ES6 class prototypes
+   Returns the hidden names of an object, for ES6 class prototypes
    it returns all methods since they are indistinguishable from hidden properties
    created using defineProperty."
   (let* ((descriptors (Object.getOwnPropertyDescriptors obj))
@@ -417,7 +417,7 @@
 (define (dir obj . rest)
   "(dir obj)
 
-   Function that returns all props on the object including those in prototype chain."
+   Returns all props on the object including those in prototype chain."
   (if (or (null? obj) (eq? obj Object.prototype))
       nil
       (let ((proto (if (null? rest) false (car rest)))
@@ -596,7 +596,7 @@
 (define (interaction-environment)
   "(interaction-environment)
 
-   Function that returns the interaction environement equal to lips.env. This can be overwritten
+   Returns the interaction environement equal to lips.env. This can be overwritten
    when creating new interpreter with lips.Interpreter."
   **interaction-environment**)
 
@@ -604,7 +604,7 @@
 (define (current-output-port)
   "(current-output-port)
 
-   Function that returns the default stdout port."
+   Returns the default stdout port."
   (let-env (interaction-environment)
            (--> **internal-env** (get 'stdout))))
 
@@ -612,7 +612,7 @@
 (define (current-error-port)
   "(current-output-port)
 
-   Function that returns the default stderr port."
+   Returns the default stderr port."
   (let-env (interaction-environment)
      (--> **internal-env** (get 'stderr))))
 
@@ -620,7 +620,7 @@
 (define (current-input-port)
   "(current-input-port)
 
-   Function that returns the default stdin port."
+   Returns the default stdin port."
   (let-env (interaction-environment)
      (--> **internal-env** (get 'stdin))))
 
@@ -628,7 +628,7 @@
 (define (command-line)
   "(command-line)
 
-   Function that returns the command line arguments, or an empty list if not running under Node.js."
+   Returns the command line arguments, or an empty list if not running under Node.js."
   (let ((args (let-env (interaction-environment)
                        (--> **internal-env** (get 'command-line)))))
     (if (or (null? args) (zero? (length args)))
@@ -649,7 +649,7 @@
 (define (regex? x)
   "(regex? x)
 
-   Function that returns true if value is a regular expression, or false otherwise."
+   Returns true if value is a regular expression, or false otherwise."
   (== (--> (type x) (cmp "regex")) 0))
 
 ;; -----------------------------------------------------------------------------
@@ -671,7 +671,7 @@
 (define (unset-repr! type)
   "(unset-repr! type)
 
-   Function that removes the string represention of the type, which should be constructor function,
+   Removes the string represention of the type, which should be constructor function,
    added by add-repr! function."
   (typecheck "unset-repr!" type "function")
   (ignore (--> lips.repr (delete type))))
@@ -767,7 +767,7 @@
 (define-macro (timer time . body)
   "(timer time . body)
 
-   Macro that evaluates body after delay, it returns the timer ID from setTimeout.
+   valuates body after delay, it returns the timer ID from setTimeout.
    To clear the timer you can use native JS clearTimeout function."
   `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
 
@@ -775,7 +775,7 @@
 (define-macro (wait time . expr)
   "(wait time . expr)
 
-   Function that returns a promise that will resolve with the expression after delay."
+   Returns a promise that will resolve with the expression after delay."
   `(promise (timer ,time (resolve (begin ,@expr)))))
 
 ;; -----------------------------------------------------------------------------
@@ -828,13 +828,13 @@
 ;; -----------------------------------------------------------------------------
 (define unary (%doc "(unary fn)
 
-                     Function that returns a new function with arguments limited to one."
+                     Returns a new function with arguments limited to one."
                     (curry n-ary 1)))
 
 ;; -----------------------------------------------------------------------------
 (define binary (%doc "(binary fn)
 
-                      Function that returns a new function with arguments limited to two."
+                      Returns a new function with arguments limited to two."
                       (curry n-ary 2)))
 
 ;; -----------------------------------------------------------------------------
@@ -911,13 +911,13 @@
        temp)))
   "(class <parent> body ...)
 
-   Macro that allows to create anonymous classes. See define-class for details.")
+   Allows to create anonymous classes. See define-class for details.")
 
 ;; -----------------------------------------------------------------------------
 (define (make-tags expr)
   "(make-tags expression)
 
-   Function that returns a list structure of code with better syntax then raw LIPS"
+   Returns a list structure of code with better syntax then raw LIPS"
   `(h ,(let ((val (car expr))) (if (key? val) (key->string val) val))
       (alist->object (,'quasiquote ,(pair-map (lambda (car cdr)
                                                 `(,(key->string car) . (,'unquote ,cdr)))
@@ -1002,7 +1002,7 @@
 (define-macro (with-tags expr)
   "(with-tags expression)
 
-   Macro that evalutes LIPS shorter code for S-Expression equivalent of JSX.
+   valutes LIPS shorter code for S-Expression equivalent of JSX.
    e.g.:
 
    (with-tags (:div (:class \"item\" :id \"item-1\")
@@ -1050,7 +1050,7 @@
 (define (gensym? value)
   "(gensym? value)
 
-   Function that returns #t if value is a symbol created by gensym. It returns #f otherwise."
+   Returns #t if value is a symbol created by gensym. It returns #f otherwise."
   (and (symbol? value) (--> value (is_gensym))))
 
 ;; -----------------------------------------------------------------------------
@@ -1076,7 +1076,7 @@
        body ...)))
   "(while cond . body)
 
-   Macro that creates a loop, it executes cond and body until cond expression is false.")
+   Creates a loop, it executes cond and body until cond expression is false.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax ++
@@ -1087,7 +1087,7 @@
        tmp)))
   "(++ variable)
 
-   Macro that works only on variables and increment the value by one.")
+   Works only on variables and increment the value by one.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax --
@@ -1098,13 +1098,13 @@
        tmp)))
   "(-- variable)
 
-   Macro that works only on variables and decrements the value by one.")
+   Works only on variables and decrements the value by one.")
 
 ;; -----------------------------------------------------------------------------
 (define (pretty-format . lists)
   "(pretty-format pair)
 
-   Function that returns a pretty printed string from pair expression."
+   Returns a pretty printed string from pair expression."
   (let ((code (--> (list->vector lists)
                    (map (lambda (pair i)
                           (typecheck "pretty-pair" pair "pair" i)
@@ -1137,7 +1137,7 @@
    (range start stop)
    (range start stop step)
 
-   Function that returns a list of numbers from start to stop with optional step.
+   Returns a list of numbers from start to stop with optional step.
    If start is not defined it starts from 0. If start is larger than stop
    the step needs to be negative otherwise it will hang in an infinite loop."
   (let* ((i (if (null? rest) 0 stop))
@@ -1164,7 +1164,7 @@
 (define-macro (do-iterator spec cond . body)
   "(do-iterator (var expr) (test) body ...)
 
-   Macro that iterates over iterators (e.g. creates with JavaScript generator function)
+   Iterates over iterators (e.g. creates with JavaScript generator function)
    that works with normal and async iterators. You can loop over infinite iterators
    and break the loop if you want, using expression like in do macro. Long synchronous iterators
    will block the main thread (you can't print 1000 numbers from infinite iterators,
@@ -1226,7 +1226,7 @@
 (define-macro (let-env-values env spec . body)
   "(let-env-values env ((name var)) . body)
 
-   Macro that adds mappings for variables var from specified env.
+   Adds mappings for variables var from specified env.
    it is similar to let-env but lexical scope is working with it."
   (let ((env-name (gensym 'env)))
     `(let ((,env-name ,env))
@@ -1404,7 +1404,7 @@
 (define (%fs-promisify-proc fn message)
   "(%fs-promisify-proc fn string)
 
-   Function that returns a promisified version of a fs function or throws an exception
+   Returns a promisified version of a fs function or throws an exception
    if fs is not available."
   (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
     (if (null? fs)
@@ -1415,7 +1415,7 @@
 (define (response->content binary res)
   "(response->text binary res)
 
-   Function that reads all text from a Node.js HTTP response object. If binary argument
+   Reads all text from a Node.js HTTP response object. If binary argument
    is true it will return Buffer object that can be converted to u8vector.
 
    ***Warrning:*** it may overflow the Javascript call stack when converting the
@@ -1530,9 +1530,9 @@
 (define (unfold fn init)
   "(unfold fn init)
 
-   Function that returns a list from the given function and init value. The function should
+   Returns a list from the given function and init value. The function should
    return a pair where first is the item added to the list and second is next value
-   passed to the funtion. If the Function that returnss false it ends the loop."
+   passed to the funtion. If the Returnss false it ends the loop."
   (typecheck "unfold" fn "function")
   (let iter ((pair (fn init)) (result '()))
     (if (not pair)

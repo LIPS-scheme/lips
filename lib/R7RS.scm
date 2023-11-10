@@ -43,7 +43,7 @@
 (define (values-ref values n)
   "(values-ref values n)
 
-   Function that returns n value of values object which is result of value function."
+   Returns n value of values object which is result of value function."
   (typecheck "values-ref" values "values" 1)
   (typecheck "values-ref" n "number" 1)
   (--> values (valueOf) n))
@@ -67,7 +67,7 @@
 (define (vector-append . args)
   "(vector-append v1 v2 ...)
 
-   Function that returns new vector by combining it's arguments that should be vectors."
+   Returns new vector by combining it's arguments that should be vectors."
   (if (null? args)
       (vector)
       (begin
@@ -78,7 +78,7 @@
 (define-macro (%range-function spec . body)
   "(%range-function spec . body)
 
-   Macro that creates R7RS vector functions that have range start end."
+   Creates R7RS vector functions that have range start end."
   (let* ((name (car spec))
          (name-str (symbol->string name))
          (args (append (cdr spec) 'rest)))
@@ -128,7 +128,7 @@
    (vector->string vector start)
    (vector->string vector start end)
 
-   Function that returns new string created from vector of characters in given range.
+   Returns new string created from vector of characters in given range.
    If no start is given it create string from 0, if no end is given it return
    string to the end."
   (typecheck "vector->string" vector "array")
@@ -249,7 +249,7 @@
 (define (port? x)
   "(port? x)
 
-   Function that returns true of argumet is nput or output port port object."
+   Returns true if the argument is an input or output port object."
   (or (output-port? x) (input-port? x)))
 
 ;; -----------------------------------------------------------------------------
@@ -267,7 +267,7 @@
          (begin result1 result2 ...))))
   "(when test body ...)
 
-   Macro execute body when test expression is true.")
+   xecutes body when test expression is true.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax unless
@@ -277,7 +277,7 @@
          (begin result1 result2 ...))))
   "(unless test body ...)
 
-   Macro execute body when test expression is false.")
+   xecutes body when test expression is false.")
 
 ;; -----------------------------------------------------------------------------
 (define inexact exact->inexact)
@@ -287,7 +287,7 @@
 (define (exact-integer? n)
   "(exact-integer? n)
 
-   Function that returnss #t if z is both exact and an integer; otherwise
+   Returnss #t if z is both exact and an integer; otherwise
    returns #f."
   (and (integer? n) (exact? n)))
 
@@ -295,7 +295,7 @@
 (define (vector-map fn . rest)
   "(vector-map fn vector1 vector2 ...)
 
-   Function that returns new vector from applying function fn to each element
+   Returns new vector from applying function fn to each element
    of the vectors, similar to map for lists."
   (if (or (= (length rest) 0) (not (every vector? rest)))
       (error "vector-map: function require at least 1 vector")
@@ -311,7 +311,7 @@
 (define (string-map fn . rest)
   "(string-map fn string1 stringr2 ...)
 
-   Function that returns new string from applying function fn to each element
+   Returns new string from applying function fn to each element
    of the strings, similar to map for lists."
   (if (or (= (length rest) 0) (not (every string? rest)))
       (error "string-map: function require at least 1 string")
@@ -390,7 +390,7 @@
 (define-macro (include . files)
   "(include file ...)
 
-   Macro that load at least one file content and insert them into one,
+   Load at least one file content and insert them into one,
    body expression."
   (if (null? files)
       (throw (new Error "include: at least one file path required"))
@@ -695,7 +695,7 @@
 (define (open-binary-input-file filename)
   "(open-binary-input-file filename)
 
-  Function that returns new Input Binary Port with given filename. In Browser
+  Returns new Input Binary Port with given filename. In Browser
   user need to provide global fs variable that is instance of FS interface."
   (let ((u8vector (buffer->u8vector (%read-binary-file filename))))
     (new lips.InputBinaryFilePort u8vector filename)))
@@ -1267,7 +1267,7 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Function that returnss all variables as alist. This funtion throws exception
+   Returnss all variables as alist. This funtion throws exception
    when called in browser."
   (if (eq? self window)
       (throw "get-environment-variables: Node.js only funtion")
@@ -1277,7 +1277,7 @@
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Function that returns given environment variable. This funtion throws exception
+   Returns given environment variable. This funtion throws exception
    when called in browser."
   (. process.env name))
 

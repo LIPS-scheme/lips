@@ -25,6 +25,6 @@
      (syntax-error "ill-formed and-let* form")))
   "(and-let* ((name expression) expression ...) body)
 
-   Macro that combine let and and. First expression need to be in form of let.
+   Combine let and and. First expression need to be in form of let.
    Symbol expression the rest can be boolean expression or name expreession.
    This is implementation of SRFI-2.")
