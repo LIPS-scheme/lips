@@ -1,3 +1,5 @@
+SHELL=/bin/bash
+
 .PHONY: publish test coveralls lint zero coverage
 
 VERSION=1.0.0-beta.16

@@ -7,3 +7,4 @@ assets/*.png binary
 tests/snapshots/* binary
 *.xcm binary
 *.xcb binary
+dist/** linguist-generated
