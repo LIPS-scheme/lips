@@ -434,7 +434,7 @@
 (define (tree-map f tree)
   "(tree-map fn tree)
 
-   Tree version of map. Function is invoked on every leaf."
+   Tree version of map. fn is invoked on every leaf."
   (if (pair? tree)
       (cons (tree-map f (car tree)) (tree-map f (cdr tree)))
       (f tree)))
@@ -767,7 +767,7 @@
 (define-macro (timer time . body)
   "(timer time . body)
 
-   valuates body after delay, it returns the timer ID from setTimeout.
+   Evaluates body after delay, it returns the timer ID from setTimeout.
    To clear the timer you can use native JS clearTimeout function."
   `(setTimeout (lambda () (try (begin ,@body) (catch (e) (error (.. e.message))))) ,time))
 
@@ -782,7 +782,7 @@
 (define (await value)
   "(await value)
 
-   Function unquotes a quoted promise so it can be automagicaly evaluated (resolved
+   Unquotes a quoted promise so it can be automagicaly evaluated (resolved
    to its value)."
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)
@@ -1207,7 +1207,7 @@
 (define (native-symbol? x)
   "(native-symbol? object)
 
-   Function checks if value is JavaScript Symbol."
+   Checks if value is JavaScript Symbol."
   (and (string=? (type x) "symbol") (not (symbol? x))))
 
 ;; -----------------------------------------------------------------------------
@@ -1532,7 +1532,7 @@
 
    Returns a list from the given function and init value. The function should
    return a pair where first is the item added to the list and second is next value
-   passed to the funtion. If the Returnss false it ends the loop."
+   passed to the funtion. If the function returns false it ends the loop."
   (typecheck "unfold" fn "function")
   (let iter ((pair (fn init)) (result '()))
     (if (not pair)

@@ -267,7 +267,7 @@
          (begin result1 result2 ...))))
   "(when test body ...)
 
-   xecutes body when test expression is true.")
+   Executes body when test expression is true.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax unless
@@ -277,7 +277,7 @@
          (begin result1 result2 ...))))
   "(unless test body ...)
 
-   xecutes body when test expression is false.")
+   Executes body when test expression is false.")
 
 ;; -----------------------------------------------------------------------------
 (define inexact exact->inexact)
@@ -287,7 +287,7 @@
 (define (exact-integer? n)
   "(exact-integer? n)
 
-   Returnss #t if z is both exact and an integer; otherwise
+   Returns #t if z is both exact and an integer; otherwise
    returns #f."
   (and (integer? n) (exact? n)))
 
@@ -321,11 +321,12 @@
 (define (dynamic-wind before thunk after)
   "(dynamic-wind before thunk after)
 
-   Function accept 3 procedures/lambdas and execute thunk with before and always
-   after even if error accur"
+   Accepts 3 procedures/lambdas and executes before, then thunk, and 
+   always after even if an error occurs in thunk."
   (before)
   (let ((result (try (thunk)
                      (catch (e)
+                            (after)
                             (error e)))))
     (after)
     result))
@@ -383,7 +384,7 @@
          list))))
   "(define-values (a b ...) expr)
 
-   Function evaluate expression expr and if it evaluates to result of values
+   Evaluates expression expr and if it evaluates to result of values
    then it will defined each value as variable like with define.")
 
 ;; -----------------------------------------------------------------------------
@@ -562,7 +563,7 @@
    (bytevector-copy v start)
    (bytevector-copy v start end)
 
-   Function and return new vector from start to end. If no start and end is provided
+   Returns a new vector from start to end. If no start and end is provided
    whole vector is copied and returned."
   (if (null? rest)
       (new Uint8Array v)
@@ -606,7 +607,7 @@
        (string->utf8 string start)
        (string->utf8 string start end)
 
-      Function converts string into u8 bytevector using utf8 encoding.
+      Converts string into u8 bytevector using utf8 encoding.
       The start and end is the range of the input string for the conversion."
       (typecheck "string->utf8" string "string")
       (if (null? rest)
@@ -624,7 +625,7 @@
        (utf8->string u8vector start)
        (utf8->string u8vector start end)
 
-      Function converts u8 bytevector into string using utf8 encoding.
+      Converts u8 bytevector into string using utf8 encoding.
       The start and end is the range of the input byte vector for the conversion."
       (typecheck "utf8->string" v "uint8array")
       (if (null? rest)
@@ -638,7 +639,7 @@
 (define (open-input-string string)
   "(open-input-string string)
 
-   Function create new string port as input that can be used to
+   Creates new string port as input that can be used to
    read S-exressions from this port using `read` function."
   (typecheck "open-input-string" string "string")
   (new lips.InputStringPort string (interaction-environment)))
@@ -647,7 +648,7 @@
 (define (open-output-string)
   "(open-output-string)
 
-   Function create new output port that can used to write string into
+   Creates new output port that can used to write string into
    and after finish get the whole string using `get-output-string`."
   (new lips.OutputStringPort repr))
 
@@ -664,7 +665,7 @@
 (define (get-output-bytevector port)
   "(get-output-string port)
 
-   Function get full string from string port. If nothing was wrote
+   Gets full string from string port. If nothing was wrote
    to given port it will return empty string."
   (if (not (instanceof lips.OutputByteVectorPort port))
       (throw (new Error (string-append
@@ -676,7 +677,7 @@
 (define (get-output-string port)
   "(get-output-string port)
 
-   Function get full string from string port. If nothing was wrote
+   Gets full string from string port. If nothing was wrote
    to given port it will return empty string."
   (if (not (instanceof lips.OutputStringPort port))
       (throw (new Error (string-append "get-output-string: expecting output-string-port get "
@@ -824,7 +825,7 @@
     (lambda (filename)
       "(open-binary-output-file filename)
 
-       Function open file and return port that can be used for writing. If file
+       Opens file and return port that can be used for writing. If file
        exists it will throw an Error."
       (typecheck "open-output-file" filename "string")
       (if (not (procedure? open))
@@ -840,7 +841,7 @@
    (read-bytevector! bytevector port start)
    (read-bytevector! bytevector port start end)
 
-   Function read next bytes from binary input port and write them into byte vector.
+   Reads next bytes from binary input port and write them into byte vector.
    if not start is specified it start to write into 0 position of the vector until
    the end or end the vector if no end is specified."
   (typecheck "read-bytevector!" vector "uint8array")
@@ -864,7 +865,7 @@
     (lambda (filename)
       "(delete-file filename)
 
-       Function delete the file of given name."
+       Deletes the file of given name."
       (typecheck "delete-file" filename "string")
       (if (not (procedure? unlink))
           (set! unlink (%fs-promisify-proc 'unlink "delete-file")))
@@ -1209,12 +1210,12 @@
          (lambda ()
            "(current-directory)
 
-            Return corrent working directory, default it's corrent URL."
+            Return current working directory, default is the current URL."
            cwd)
          (lambda (value)
            "(set-current-directory! string)
 
-            Function change current working directory to provided string."
+            Changes the current working directory to provided string."
            (typecheck "set-current-directory!" value "string")
            (set! cwd value))))
       (let ((process (require "process")))
@@ -1222,13 +1223,13 @@
          (lambda ()
            "(current-directory)
 
-            Return corrent working directory, default it's path from where
+            Returns the current working directory, default is the path from where
             the script was executed."
           (string-append (process.cwd) "/"))
          (lambda (value)
            "(set-current-directory! string)
 
-            Function change current working directory to provided string."
+            Changes the current working directory to provided string."
            (typecheck "set-current-directory!" value "string")
            (process.chdir value))))))
 
@@ -1267,7 +1268,7 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Returnss all variables as alist. This funtion throws exception
+   Returns all process environment variables as an alist. This funtion throws exception
    when called in browser."
   (if (eq? self window)
       (throw "get-environment-variables: Node.js only funtion")
