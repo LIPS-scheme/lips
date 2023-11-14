@@ -2,9 +2,13 @@ name: Codespell
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - devel
   pull_request:
-    branches: [master]
+    branches:
+      - master
+      - devel
 
 permissions:
   contents: read
