@@ -8914,8 +8914,8 @@ var global_env = new Environment({
          (try expr (finally code))
 
          Macro that executes expr and catches any exceptions thrown. If catch is provided
-         it's executed when an error is thrown. If finally is provided it's always executed
-         at the end.`),
+         it's executed when an error is thrown. If finally is provided it's always
+         executed at the end.`),
     // ------------------------------------------------------------------
     'raise': doc('raise', function(obj) {
         throw obj;
