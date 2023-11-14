@@ -596,7 +596,7 @@
 (define (interaction-environment)
   "(interaction-environment)
 
-   Returns the interaction environement equal to lips.env. This can be overwritten
+   Returns the interaction environment equal to lips.env. This can be overwritten
    when creating new interpreter with lips.Interpreter."
   **interaction-environment**)
 
@@ -656,7 +656,7 @@
 (define (set-repr! type fn)
   "(add-repr! type fn)
 
-   Function that adds the string represention to the type, which should be a constructor function.
+   Function that adds the string representation to the type, which should be a constructor function.
 
    Function fn should have args (obj q) and it should return a string. obj is the value that
    need to be converted to a string. If the object is nested and you need to use `repr` recursively,
@@ -671,7 +671,7 @@
 (define (unset-repr! type)
   "(unset-repr! type)
 
-   Removes the string represention of the type, which should be constructor function,
+   Removes the string representation of the type, which should be constructor function,
    added by add-repr! function."
   (typecheck "unset-repr!" type "function")
   (ignore (--> lips.repr (delete type))))
@@ -696,7 +696,7 @@
 (define (bound? x . rest)
   "(bound? x [env])
 
-   Function that check if the variable is defined in the given environement, or interaction-environment
+   Function that check if the variable is defined in the given environment, or interaction-environment
    if not specified."
   (let ((env (if (null? rest) (interaction-environment) (car rest))))
     (try (begin
@@ -720,7 +720,7 @@
 (define (qsort e predicate)
   "(qsort list predicate)
 
-   Sorts the list using the quick sort alorithm according to predicate."
+   Sorts the list using the quick sort algorithm according to predicate."
   (if (or (null? e) (<= (length e) 1))
       e
       (let loop ((left nil) (right nil)
@@ -748,7 +748,7 @@
 
    Function that calls fn on each item of the list, if every value returns true
    it will return true otherwise it return false.
-   Analagous to Python all(map(fn, list))."
+   Analogous to Python all(map(fn, list))."
   (if (null? list)
       true
       (and (fn (car list)) (every fn (cdr list)))))
@@ -782,7 +782,7 @@
 (define (await value)
   "(await value)
 
-   Unquotes a quoted promise so it can be automagicaly evaluated (resolved
+   Unquotes a quoted promise so it can be automagically evaluated (resolved
    to its value)."
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)
@@ -1278,11 +1278,11 @@
 (define-macro (%not-implemented name)
   "(%not-implemented name)
 
-   Returns new function that throws an exception with a message that this function is not implmeneted."
+   Returns new function that throws an exception with a message that this function is not implemented."
   (let ((str-name (symbol->string name)))
     `(lambda ()
        ,(string-append "(" str-name ")\n\nThis function is not yet implemented.")
-       (throw (new Error ,(string-append str-name " has not beed implemented"))))))
+       (throw (new Error ,(string-append str-name " has not been implemented"))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (%make-env name . names)
@@ -1418,7 +1418,7 @@
    Reads all text from a Node.js HTTP response object. If binary argument
    is true it will return Buffer object that can be converted to u8vector.
 
-   ***Warrning:*** it may overflow the Javascript call stack when converting the
+   ***Warning:*** it may overflow the Javascript call stack when converting the
    whole buffer to u8vector, because LIPS doesn't have TCO."
   (let ((result (vector))
         (append (if binary
@@ -1482,7 +1482,7 @@
 (define (complement fn)
   "(complement fn)
 
-   Higer order function that returns the Boolean complement of the given function. If the function fn
+   Higher order function that returns the Boolean complement of the given function. If the function fn
    for a given arguments return true the result function will return false, if it would
    return false, the result function will return true."
   (typecheck "complement" fn "function")
@@ -1532,7 +1532,7 @@
 
    Returns a list from the given function and init value. The function should
    return a pair where first is the item added to the list and second is next value
-   passed to the funtion. If the function returns false it ends the loop."
+   passed to the function. If the function returns false it ends the loop."
   (typecheck "unfold" fn "function")
   (let iter ((pair (fn init)) (result '()))
     (if (not pair)

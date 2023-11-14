@@ -815,7 +815,7 @@
 (test "numbers: eq?"
       (lambda (t)
 
-        ;; eq? on numbers is unspecifed - in lisp if two numbers are the same
+        ;; eq? on numbers is unspecified - in lisp if two numbers are the same
         ;; but not the same object they are equal
 
         (t.is (eq? 10.0i 10i) #f)

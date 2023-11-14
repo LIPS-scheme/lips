@@ -22,9 +22,9 @@
         return this.get('list->array')(evaluate(wrap, args));
     }));
 
-    // new Alist ot object syntax you use is like this:
-    // {}((foo . 10)) it will also evalute all pairs expressions like:
-    // {}(((concat "foo" "-" "bar") . (+ 2 1))) it will create obect {"foo-bar": 3}
+    // new Alist of object syntax you use is like this:
+    // {}((foo . 10)) it will also evaluate all pairs expressions like:
+    // {}(((concat "foo" "-" "bar") . (+ 2 1))) it will create object {"foo-bar": 3}
     specials['{}'] = Symbol('make-object');
     env.set('make-object', new Macro('make-object', function(code, { dynamic_scope, error }) {
         const args = { env: this, error };

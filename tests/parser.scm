@@ -151,7 +151,7 @@
                                        1)"))
         (t.is (eval (. code 0)) "hello-world")))
 
-(test "parser: processig strings"
+(test "parser: processing strings"
       (lambda (t)
         (define list "\\" "\"" "\\\\" "\\\"")
         (t.is true true)))

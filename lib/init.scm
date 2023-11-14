@@ -12,7 +12,7 @@
                                         (resolve (BrowserFS.BFSRequire "fs"))
                                         (reject e)))))))
                  ((not (null? self.BrowserFS))
-                  (console.warn (string-append "BrowserFS is not initilalized and "
+                  (console.warn (string-append "BrowserFS is not initialized and "
                                                "IndexedDB is not available"))
                   nil)))
        (Buffer (cond ((eq? self global)

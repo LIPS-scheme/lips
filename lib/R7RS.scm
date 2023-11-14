@@ -32,7 +32,7 @@
 (define (symbol=? . args)
   "(symbol=? s1 s2 ...)
 
-   Checks if each value is symbol and it's the same acording to string=? predicate."
+   Checks if each value is symbol and it's the same according to string=? predicate."
   (list-match? (lambda (a b)
                  (and (symbol? a) (symbol? b) (equal? a b)))
                args))
@@ -352,7 +352,7 @@
          (lambda args #f))))
     ((define-values (var) expr)
      (define var expr))
-    ((define-values (var0 var1 ... varn) expr)
+    ((define-values (var0 var1 ... warn) expr)
      (begin
        (define var0
          (call-with-values (lambda () expr)
@@ -361,11 +361,11 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define varn
+           (define warn
              (let ((v (cadr var0)))
                (set! var0 (car var0))
                v))))
-    ((define-values (var0 var1 ... . varn) expr)
+    ((define-values (var0 var1 ... . warn) expr)
      (begin
        (define var0
          (call-with-values (lambda () expr)
@@ -374,7 +374,7 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define varn
+           (define warn
              (let ((v (cdr var0)))
                (set! var0 (car var0))
                v))))
@@ -915,7 +915,7 @@
 (define (flush-output-port port)
   "(flush-output-port port)
 
-   Functio do nothing, flush is not needed in LIPS in both NodeJS and Browser.
+   Function do nothing, flush is not needed in LIPS in both NodeJS and Browser.
    The function is added, so it don't throw exception when using R7RS code."
   (if #f #f))
 
@@ -1245,7 +1245,7 @@
 (define (error-object? obj)
   "(error-object? obj)
 
-   Checks if object is of Error object throwed by error function."
+   Checks if object is of Error object thrown by error function."
   (instanceof lips.Error obj))
 
 ;; -----------------------------------------------------------------------------
@@ -1268,17 +1268,17 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Returns all process environment variables as an alist. This funtion throws exception
+   Returns all process environment variables as an alist. This function throws exception
    when called in browser."
   (if (eq? self window)
-      (throw "get-environment-variables: Node.js only funtion")
+      (throw "get-environment-variables: Node.js only function")
       (object->alist process.env)))
 
 ;; -----------------------------------------------------------------------------
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Returns given environment variable. This funtion throws exception
+   Returns given environment variable. This function throws exception
    when called in browser."
   (. process.env name))
 
@@ -1300,7 +1300,7 @@
 (define (current-jiffy)
   "(current-jiffy)
 
-   Retturn corrent jiffy. In LIPS is jiffy since start of the process.
+   Return current jiffy. In LIPS is jiffy since start of the process.
    You can divide this value by (jiffies-per-second) to get seconds since
    start of the process. And you can add %%start-jiffy to get jiffy since
    January 1, 1970."

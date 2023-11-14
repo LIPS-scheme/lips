@@ -1,5 +1,5 @@
 /*
- * Boostrap tests written in Scheme using AVA testing framework
+ * Bootstrap tests written in Scheme using AVA testing framework
  *
  * This file is part of the LIPS - Scheme based Powerful lips in JavaScript
  *

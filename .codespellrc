@@ -1,0 +1,2 @@
+[codespell]
+skip = ./node_modules*,./dist/*,./package-lock.json,./lib/srfi/*,./assets/UnicodeData.txt,./scripts/numerals.scm

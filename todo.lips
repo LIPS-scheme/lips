@@ -45,7 +45,7 @@
 
 
 (define (uuid)
-  "Generatates unique ID (comments are because of scheme highligting in emacs (| |) is commnent)"
+  "Generatates unique ID (comments are because of scheme highlighting in emacs (| |) is comment)"
   (let ((i 0) (rnd) (uuid ""))
     (while (< i 32)
       (set! rnd (| (* (--> Math (random)) 16) 0))                       ;;|)
@@ -189,7 +189,7 @@
         (--> $el (data "abort" false))
         (render))
       (if (not val)
-        (detroy event)
+        (destroy event)
         (begin
           (on-todo (lambda (todo)
                      (set-cdr! (assoc 'title todo) val))

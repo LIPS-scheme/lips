@@ -57,7 +57,7 @@
 * property throw error when name is used without ellipsis
 * fix using dot notation inside syntax-rules macros
 * typecheck `string->symbol` and `symbol->string`
-* fix `parent.frame` inside `Intepreter`
+* fix `parent.frame` inside `Interpreter`
 * fix `eval` without env
 * fix quote as delimiter
 * fix comma dot as two tokens
@@ -362,7 +362,7 @@
 * `if` no longer require boolean as cond
 * change how arrays are presented, they are look like scheme vector `#(...)`
 * rename `string` to `repr`
-* new API `lips.Intepreter` - for using interpreter that have different stdout/stdin
+* new API `lips.Interpreter` - for using interpreter that have different stdout/stdin
 * balanced_parenthesis now throw exception on broken code
 * remove global env from public API (you can still access it using `env.parent`)
 * remove `->` function (it will collide with SRFI 197 that may be implemented in the future)
@@ -395,7 +395,7 @@
 * improve balancing parenthesis
 * expose balanced method in public API (preferred name)
 * optional brackets
-* `interator?` function and detection if iterators from `repr` and `type` [#51](https://github.com/jcubic/lips/issues/51)
+* `iterator?` function and detection if iterators from `repr` and `type` [#51](https://github.com/jcubic/lips/issues/51)
 * `add-repr!` function to add string representations to objects
 * new `string=?`, `sort`, `in`, `list-tail` and `bound?` functions
 * add new `exit` function into executable interpreter
@@ -689,7 +689,7 @@
 ### Features
 * new nth and reverse functions
 * new type checking functions null? regex? pair? string? number? symbol? array? object? boolean?
-* add lips source code that throwed exception in JavaScript error message
+* add lips source code that threw exception in JavaScript error message
 ### Bug fixes
 * fix lambda with rest parameter
 ### Breaking

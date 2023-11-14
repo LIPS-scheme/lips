@@ -596,7 +596,7 @@
 (define (interaction-environment)
   "(interaction-environment)
 
-   Returns the interaction environement equal to lips.env. This can be overwritten
+   Returns the interaction environment equal to lips.env. This can be overwritten
    when creating new interpreter with lips.Interpreter."
   **interaction-environment**)
 
@@ -656,7 +656,7 @@
 (define (set-repr! type fn)
   "(add-repr! type fn)
 
-   Function that adds the string represention to the type, which should be a constructor function.
+   Function that adds the string representation to the type, which should be a constructor function.
 
    Function fn should have args (obj q) and it should return a string. obj is the value that
    need to be converted to a string. If the object is nested and you need to use `repr` recursively,
@@ -671,7 +671,7 @@
 (define (unset-repr! type)
   "(unset-repr! type)
 
-   Removes the string represention of the type, which should be constructor function,
+   Removes the string representation of the type, which should be constructor function,
    added by add-repr! function."
   (typecheck "unset-repr!" type "function")
   (ignore (--> lips.repr (delete type))))
@@ -696,7 +696,7 @@
 (define (bound? x . rest)
   "(bound? x [env])
 
-   Function that check if the variable is defined in the given environement, or interaction-environment
+   Function that check if the variable is defined in the given environment, or interaction-environment
    if not specified."
   (let ((env (if (null? rest) (interaction-environment) (car rest))))
     (try (begin
@@ -720,7 +720,7 @@
 (define (qsort e predicate)
   "(qsort list predicate)
 
-   Sorts the list using the quick sort alorithm according to predicate."
+   Sorts the list using the quick sort algorithm according to predicate."
   (if (or (null? e) (<= (length e) 1))
       e
       (let loop ((left nil) (right nil)
@@ -748,7 +748,7 @@
 
    Function that calls fn on each item of the list, if every value returns true
    it will return true otherwise it return false.
-   Analagous to Python all(map(fn, list))."
+   Analogous to Python all(map(fn, list))."
   (if (null? list)
       true
       (and (fn (car list)) (every fn (cdr list)))))
@@ -782,7 +782,7 @@
 (define (await value)
   "(await value)
 
-   Unquotes a quoted promise so it can be automagicaly evaluated (resolved
+   Unquotes a quoted promise so it can be automagically evaluated (resolved
    to its value)."
   (if (instanceof lips.QuotedPromise value)
       (value.valueOf)
@@ -1278,11 +1278,11 @@
 (define-macro (%not-implemented name)
   "(%not-implemented name)
 
-   Returns new function that throws an exception with a message that this function is not implmeneted."
+   Returns new function that throws an exception with a message that this function is not implemented."
   (let ((str-name (symbol->string name)))
     `(lambda ()
        ,(string-append "(" str-name ")\n\nThis function is not yet implemented.")
-       (throw (new Error ,(string-append str-name " has not beed implemented"))))))
+       (throw (new Error ,(string-append str-name " has not been implemented"))))))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (%make-env name . names)
@@ -1418,7 +1418,7 @@
    Reads all text from a Node.js HTTP response object. If binary argument
    is true it will return Buffer object that can be converted to u8vector.
 
-   ***Warrning:*** it may overflow the Javascript call stack when converting the
+   ***Warning:*** it may overflow the Javascript call stack when converting the
    whole buffer to u8vector, because LIPS doesn't have TCO."
   (let ((result (vector))
         (append (if binary
@@ -1482,7 +1482,7 @@
 (define (complement fn)
   "(complement fn)
 
-   Higer order function that returns the Boolean complement of the given function. If the function fn
+   Higher order function that returns the Boolean complement of the given function. If the function fn
    for a given arguments return true the result function will return false, if it would
    return false, the result function will return true."
   (typecheck "complement" fn "function")
@@ -1532,7 +1532,7 @@
 
    Returns a list from the given function and init value. The function should
    return a pair where first is the item added to the list and second is next value
-   passed to the funtion. If the function returns false it ends the loop."
+   passed to the function. If the function returns false it ends the loop."
   (typecheck "unfold" fn "function")
   (let iter ((pair (fn init)) (result '()))
     (if (not pair)
@@ -1639,7 +1639,7 @@
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
            (lambda (arr q)
-             ;; Array.from is used to convert emtpy to undefined
+             ;; Array.from is used to convert empty to undefined
              ;; but we can't use the value because Array.from calls
              ;; valueOf on its arguments
              (let ((result (--> (Array.from arr)
@@ -2167,16 +2167,16 @@
   (lips.rationalize number tolerance))
 
 ;; -----------------------------------------------------------------------------
-(define (%mem/search acces op obj list)
+(define (%mem/search access op obj list)
   "(%member obj list function)
 
    Helper method to get first list where car equal to obj
-   using provied functions as comparator."
+   using provided function as comparator."
   (if (null? list)
       false
-      (if (op (acces list) obj)
+      (if (op (access list) obj)
           list
-          (%mem/search acces op obj (cdr list)))))
+          (%mem/search access op obj (cdr list)))))
 
 ;; -----------------------------------------------------------------------------
 (define (memq obj list)
@@ -2203,8 +2203,8 @@
   (%mem/search car equal? obj list))
 
 ;; -----------------------------------------------------------------------------
-(define (%assoc/acessor name)
-  "(%assoc/acessor name)
+(define (%assoc/accessor name)
+  "(%assoc/accessor name)
 
    Returns carr with typecheck using give name."
   (lambda (x)
@@ -2218,7 +2218,7 @@
    Generic function that used in assoc functions with defined comparator
    function."
   (typecheck "assoc" alist (vector "nil" "pair"))
-  (let ((ret (%mem/search (%assoc/acessor "assoc") op obj alist)))
+  (let ((ret (%mem/search (%assoc/accessor "assoc") op obj alist)))
     (if ret
         (car ret)
         ret)))
@@ -2483,7 +2483,7 @@
 (define (integer->char n)
   "(integer->char chr)
 
-   Function that converts number argument to chararacter."
+   Function that converts number argument to character."
   (typecheck "integer->char" n "number")
   (if (integer? n)
       (string-ref (String.fromCodePoint n) 0)
@@ -2491,7 +2491,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (%define-chr-re spec str re)
-  "(%define-chr-re (name chr) sring re)
+  "(%define-chr-re (name chr) string re)
 
    Macro defines the procedure that tests character against regular expression."
   `(define ,spec
@@ -2528,7 +2528,7 @@
   "(%char-cmp name a b)
 
    Function that compares two characters and return 0 if they are equal,
-   -1 second is smaller and 1 if is larget. The function compare
+   -1 second is smaller and 1 if is larger. The function compare
    the codepoints of the character."
   (typecheck name chr1 "character" 1)
   (typecheck name chr2 "character" 2)
@@ -2578,7 +2578,7 @@
   "(%char-cmp name a b)
 
    Function that compares two characters and return 0 if they are equal,
-   -1 second is smaller and 1 if is larget. The function compare
+   -1 second is smaller and 1 if is larger. The function compare
    the codepoints of the character."
   (typecheck name chr1 "character" 1)
   (typecheck name chr2 "character" 2)
@@ -2781,7 +2781,7 @@
         [else result3])
 
    Macro for switch case statement. It test if value is any of the item. If
-   item match the value it will return coresponding result expression value.
+   item match the value it will return corresponding result expression value.
    If no value match and there is else it will return that result.")
 
 ;; -----------------------------------------------------------------------------
@@ -2791,7 +2791,7 @@
 (define (numerator n)
   "(numerator n)
 
-   Return numberator of rational or same number if n is not rational."
+   Return numerator of rational or same number if n is not rational."
   (typecheck "numerator" n "number")
   (cond ((integer? n) n)
         ((rational? n) n.__num__)
@@ -3042,7 +3042,7 @@
   "(scheme-report-environment version)
 
    Returns new Environment object for given Scheme Spec version.
-   Only argument 5 is supported that create environemnt for R5RS."
+   Only argument 5 is supported that create environment for R5RS."
   (typecheck "scheme-report-environment" version "number")
   (case version
     ((5) (%make-env "R5RS" * + - / < <= = > >= abs acos and angle append apply asin assoc assq assv
@@ -3077,7 +3077,7 @@
 ;; Implementation of byte vector functions - SRFI-4 and SRFI-160
 ;;
 ;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
-;; latest verion is defined in
+;; latest version is defined in
 ;; https://srfi.schemers.org/srfi-160/srfi-160.html
 ;;
 ;; it uses JavaScript typed arrays
@@ -3162,7 +3162,7 @@
        (define (,vector-ref vector k)
          ,(format "(~a vector k)
 
-                  Returns value frome vector at index k. If index is out of range it throw exception."
+                  Returns value from vector at index k. If index is out of range it throw exception."
                   vector-ref
                   help)
          (typecheck ,(symbol->string vector-ref) vector ,l-type)
@@ -3247,7 +3247,7 @@
 (define (symbol=? . args)
   "(symbol=? s1 s2 ...)
 
-   Checks if each value is symbol and it's the same acording to string=? predicate."
+   Checks if each value is symbol and it's the same according to string=? predicate."
   (list-match? (lambda (a b)
                  (and (symbol? a) (symbol? b) (equal? a b)))
                args))
@@ -3567,7 +3567,7 @@
          (lambda args #f))))
     ((define-values (var) expr)
      (define var expr))
-    ((define-values (var0 var1 ... varn) expr)
+    ((define-values (var0 var1 ... warn) expr)
      (begin
        (define var0
          (call-with-values (lambda () expr)
@@ -3576,11 +3576,11 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define varn
+           (define warn
              (let ((v (cadr var0)))
                (set! var0 (car var0))
                v))))
-    ((define-values (var0 var1 ... . varn) expr)
+    ((define-values (var0 var1 ... . warn) expr)
      (begin
        (define var0
          (call-with-values (lambda () expr)
@@ -3589,7 +3589,7 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define varn
+           (define warn
              (let ((v (cdr var0)))
                (set! var0 (car var0))
                v))))
@@ -4130,7 +4130,7 @@
 (define (flush-output-port port)
   "(flush-output-port port)
 
-   Functio do nothing, flush is not needed in LIPS in both NodeJS and Browser.
+   Function do nothing, flush is not needed in LIPS in both NodeJS and Browser.
    The function is added, so it don't throw exception when using R7RS code."
   (if #f #f))
 
@@ -4460,7 +4460,7 @@
 (define (error-object? obj)
   "(error-object? obj)
 
-   Checks if object is of Error object throwed by error function."
+   Checks if object is of Error object thrown by error function."
   (instanceof lips.Error obj))
 
 ;; -----------------------------------------------------------------------------
@@ -4483,17 +4483,17 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Returns all process environment variables as an alist. This funtion throws exception
+   Returns all process environment variables as an alist. This function throws exception
    when called in browser."
   (if (eq? self window)
-      (throw "get-environment-variables: Node.js only funtion")
+      (throw "get-environment-variables: Node.js only function")
       (object->alist process.env)))
 
 ;; -----------------------------------------------------------------------------
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Returns given environment variable. This funtion throws exception
+   Returns given environment variable. This function throws exception
    when called in browser."
   (. process.env name))
 
@@ -4515,7 +4515,7 @@
 (define (current-jiffy)
   "(current-jiffy)
 
-   Retturn corrent jiffy. In LIPS is jiffy since start of the process.
+   Return current jiffy. In LIPS is jiffy since start of the process.
    You can divide this value by (jiffies-per-second) to get seconds since
    start of the process. And you can add %%start-jiffy to get jiffy since
    January 1, 1970."
@@ -4538,7 +4538,7 @@
                                         (resolve (BrowserFS.BFSRequire "fs"))
                                         (reject e)))))))
                  ((not (null? self.BrowserFS))
-                  (console.warn (string-append "BrowserFS is not initilalized and "
+                  (console.warn (string-append "BrowserFS is not initialized and "
                                                "IndexedDB is not available"))
                   nil)))
        (Buffer (cond ((eq? self global)
