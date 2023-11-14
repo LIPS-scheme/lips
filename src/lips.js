@@ -450,7 +450,7 @@ function parse_float(arg) {
         if (is_int(value) && parse.number.match(/e\+?[0-9]/i)) {
             return LNumber(value);
         }
-        // calculate big int and big fration by hand - it don't fit into JS float
+        // calculate big int and big fraction by hand - it don't fit into JS float
         var { mantisa, exponent } = parse_big_int(parse.number);
         if (mantisa !== undefined && exponent !== undefined) {
             var factor = LNumber(10).pow(LNumber(Math.abs(exponent)));
@@ -1121,7 +1121,7 @@ class Lexer {
     match_rule(rule, { prev_char, char, next_char } = {}) {
         var [ re, prev_re, next_re, state ] = rule;
         if (rule.length !== 5) {
-            throw new Error(`Lexer: Invald rule of length ${rule.length}`);
+            throw new Error(`Lexer: Invalid rule of length ${rule.length}`);
         }
         if (!char.match(re)) {
             return false;
@@ -1151,7 +1151,7 @@ class Lexer {
                 ++this._line;
                 const newline = this._newline;
                 if (this._state === null) {
-                    // keep beging of newline to calculate col
+                    // keep beginning of the newline to calculate col
                     // we don't want to check inside the token (e.g. strings)
                     this._newline = i + 1;
                 }
@@ -1271,7 +1271,7 @@ Lexer._rules = [
     [/\\/, null, null, Lexer.string, Lexer.string_escape],
     [/./, /\\/, null, Lexer.string_escape, Lexer.string],
 
-    // hash special symbols, lexer don't need to distingiush those
+    // hash special symbols, lexer don't need to distinguish those
     // we only care if it's not pick up by vectors literals
     [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol],
 
@@ -1532,7 +1532,7 @@ class Parser {
         }
         return object;
     }
-    ballanced() {
+    balanced() {
         return this._state.parentheses === 0;
     }
     ballancing_error(expr) {
@@ -1587,11 +1587,11 @@ class Parser {
             // MACRO: if macro is used, then it is evaluated in place and the
             // result is returned by parser and it is quoted.
             const special = specials.get(token);
-            const bultin = is_builtin(token);
+            const builtin = is_builtin(token);
             this.skip();
             let expr;
             const object = await this._read_object();
-            if (!bultin) {
+            if (!builtin) {
                 var extension = this.__env__.get(special.symbol);
                 if (typeof extension === 'function') {
                     if (is_literal(token)) {
@@ -1620,7 +1620,7 @@ class Parser {
                 );
             }
             // Built-in parser extensions just expand into lists like 'x ==> (quote x)
-            if (bultin) {
+            if (builtin) {
                 return expr;
             }
             // Evaluate parser extension at parse time
@@ -1634,7 +1634,7 @@ class Parser {
                 }
                 return result;
             } else {
-                throw new Error('Parse Error: invlid parser extension: ' +
+                throw new Error('Parse Error: invalid parser extension: ' +
                                 special.symbol);
             }
         }
@@ -1692,7 +1692,7 @@ async function* parse(arg, env) {
     const parser = new Parser(arg, { env });
     while (true) {
         const expr = await parser.read_object();
-        if (!parser.ballanced()) {
+        if (!parser.balanced()) {
             parser.ballancing_error(expr);
         }
         if (expr === eof) {
@@ -1791,7 +1791,7 @@ function matcher(name, arg) {
 }
 // ----------------------------------------------------------------------
 // :: Documentation decorator to LIPS functions if lines starts with :
-// :: they are ignored (not trimed) otherwise it trims so
+// :: they are ignored (not trimmed) otherwise it trims so
 // :: so you can have indent in source code
 // ----------------------------------------------------------------------
 function doc(name, fn, doc, dump) {
@@ -2026,9 +2026,9 @@ Formatter.prototype._options = function _options(options) {
     if (typeof options === 'undefined') {
         return Object.assign({}, defaults);
     }
-    var exeptions = options && options.exceptions || {};
-    var specials = exeptions.specials || [];
-    var shift = exeptions.shift || { 1: [] };
+    var exceptions = options && options.exceptions || {};
+    var specials = exceptions.specials || [];
+    var shift = exceptions.shift || { 1: [] };
     return {
         ...defaults,
         ...options,
@@ -2099,18 +2099,18 @@ Formatter.prototype._indent = function _indent(tokens, options) {
             return settings.offset + sexp[0].col + 1;
         } else {
             // search for token before S-Expression for case like #(10 or &(:x
-            var exeption = -1;
+            var exception = -1;
             if (before_sexpr) {
                 var shift = Formatter.exception_shift(before_sexpr.token, settings);
                 if (shift !== -1) {
-                    exeption = shift;
+                    exception = shift;
                 }
             }
-            if (exeption === -1) {
-                exeption = Formatter.exception_shift(sexp[1].token, settings);
+            if (exception === -1) {
+                exception = Formatter.exception_shift(sexp[1].token, settings);
             }
-            if (exeption !== -1) {
-                return settings.offset + sexp[0].col + exeption;
+            if (exception !== -1) {
+                return settings.offset + sexp[0].col + exception;
             } else if (sexp[0].line < sexp[1].line) {
                 return settings.offset + sexp[0].col + 1;
             } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
@@ -3502,7 +3502,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
     };
     const { expansion, define } = scope;
     // pattern_names parameter is used to distinguish
-    // multiple matches of ((x ...) ...) agains ((1 2 3) (1 2 3))
+    // multiple matches of ((x ...) ...) against ((1 2 3) (1 2 3))
     // in loop we add x to the list so we know that this is not
     // duplicated ellipsis symbol
     function log(x) {
@@ -3524,7 +3524,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         if (pattern instanceof LSymbol &&
             symbols.includes(pattern.literal())) { // TODO: literal() may be SLOW
             const ref = expansion.ref(code);
-            // shadowing the indentifier works only with lambda and let
+            // shadowing the identifier works only with lambda and let
             if (LSymbol.is(code, pattern)) {
                 if (typeof ref === 'undefined') {
                     return true;
@@ -3718,7 +3718,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 pattern: pattern.toString(),
                 code: code.toString()
             });
-            // case (x y) ===> (var0 var1 ... varn) where var1 match nil
+            // case (x y) ===> (var0 var1 ... warn) where var1 match nil
             if (pattern.cdr instanceof Pair &&
                 pattern.car instanceof LSymbol &&
                 pattern.cdr.cdr instanceof Pair &&
@@ -4313,7 +4313,7 @@ function unbind(obj) {
     return obj;
 }
 // ----------------------------------------------------------------------
-// :: Function binds with contex that can be optionally unbind
+// :: Function binds with context that can be optionally unbind
 // :: get original function with unbind
 // ----------------------------------------------------------------------
 function bind(fn, context) {
@@ -4630,7 +4630,7 @@ function fold(name, fold) {
 }
 // -------------------------------------------------------------------------
 function limit_math_op(n, fn) {
-    // + 1 so it inlcude function in guard_math_call
+    // + 1 so it include function in guard_math_call
     return limit(n + 1, curry(guard_math_call, fn));
 }
 // -------------------------------------------------------------------------
@@ -4692,7 +4692,7 @@ function LCharacter(char) {
             char = LCharacter.__names__[char];
         } else {
             // this should never happen
-            // parser don't alow not defined named characters
+            // parser don't allow not defined named characters
             throw new Error('Internal: Unknown named character');
         }
     } else {
@@ -4849,7 +4849,7 @@ function LNumber(n, force = false) {
     if (!LNumber.isNumber(n) && !parsable) {
         throw new Error(`You can't create LNumber from ${type(n)}`);
     }
-    // prevent infite loop https://github.com/indutny/bn.js/issues/186
+    // prevent infinite loop https://github.com/indutny/bn.js/issues/186
     if (n === null) {
         n = 0;
     }
@@ -5677,7 +5677,7 @@ LFloat.prototype._op = function(op, n) {
     return LFloat(fn(this.__value__, n), true);
 };
 // -------------------------------------------------------------------------
-// same aproximation as in guile scheme
+// same approximation as in guile scheme
 LFloat.prototype.toRational = function(n = null) {
     if (n === null) {
         return toRational(this.__value__.valueOf());
@@ -6028,7 +6028,7 @@ LBigInteger.prototype._op = function(op, n) {
         }
         return LRational({ num: this, denom: n });
     }
-    // use native calucaltion becuase it's real bigint value
+    // use native calculation because it's real bigint value
     return LBigInteger(ret, true);
 };
 // -------------------------------------------------------------------------
@@ -6048,7 +6048,7 @@ LBigInteger.prototype.sqrt = function() {
 // -------------------------------------------------------------------------
 LNumber.NaN = LNumber(NaN);
 // -------------------------------------------------------------------------
-// :: Port abstration - read should be a function that return next line
+// :: Port abstraction - read should be a function that return next line
 // -------------------------------------------------------------------------
 function InputPort(read) {
     if (typeof this !== 'undefined' && !(this instanceof InputPort) ||
@@ -6713,7 +6713,7 @@ Value.prototype.valueOf = function() {
     return this.value;
 };
 // -------------------------------------------------------------------------
-// :: Differnt object than value used as object for (values)
+// :: Different object than value used as object for (values)
 // -------------------------------------------------------------------------
 function Values(values) {
     if (values.length) {
@@ -6855,7 +6855,7 @@ Environment.prototype.parents = function() {
     return result;
 };
 // -------------------------------------------------------------------------
-// :: Quote funtion used to pause evaluation from Macro
+// :: Quote function used to pause evaluation from Macro
 // -------------------------------------------------------------------------
 function quote(value) {
     if (is_promise(value)) {
@@ -7094,7 +7094,7 @@ var global_env = new Environment({
         });
         m = str.match(/~([\S])/);
         if (m) {
-            throw new Error(`format: Unrecognized escape seqence ${m[1]}`);
+            throw new Error(`format: Unrecognized escape sequence ${m[1]}`);
         }
         return str;
     }, `(format string n1 n2 ...)
@@ -7228,9 +7228,9 @@ var global_env = new Environment({
         }
         if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
             var second = code.car.cdr.car;
-            var thrid = code.car.cdr.cdr.car;
+            var third = code.car.cdr.cdr.car;
             var object = evaluate(second, { env: this, dynamic_scope, error });
-            var key = evaluate(thrid, { env: this, dynamic_scope, error });
+            var key = evaluate(third, { env: this, dynamic_scope, error });
             return set(object, key, value);
         }
         if (!(code.car instanceof LSymbol)) {
@@ -7261,7 +7261,7 @@ var global_env = new Environment({
     }), `(set! name value)
 
          Macro that can be used to set the value of the variable or slot (mutate it).
-         set! searches the scope chain until it finds first non emtpy slot and sets it.`),
+         set! searches the scope chain until it finds first non empty slot and sets it.`),
     // ------------------------------------------------------------------
     'unset!': doc(new Macro('set!', function(code) {
         if (!(code.car instanceof LSymbol)) {
@@ -7510,7 +7510,7 @@ var global_env = new Environment({
 
          Macro that creates a new environment, then evaluates and assigns values to
          names and then evaluates the body in context of that environment.
-         Values are evaluated sequentialy and the next value can access the
+         Values are evaluated sequentially and the next value can access the
          previous values/names.`),
     // ---------------------------------------------------------------------
     'letrec*': doc(
@@ -7536,7 +7536,7 @@ var global_env = new Environment({
 
          Macro that creates a new environment, then evaluates and assigns values to names,
          and then evaluates the body in context of that environment.  Values are evaluated
-         sequentialy but you can't access previous values/names when the next are
+         sequentially but you can't access previous values/names when the next are
          evaluated. You can only get them in the body of the let expression.  (If you want
          to define multiple variables and use them in each other's definitions, use
          \`let*\`.)`),
@@ -7584,7 +7584,7 @@ var global_env = new Environment({
     }, `(ignore . body)
 
         Macro that will evaluate the expression and swallow any promises that may
-        be created. It wil discard any value that may be returned by the last body
+        be created. It will discard any value that may be returned by the last body
         expression. The code should have side effects and/or when it's promise
         it should resolve to undefined.`),
     // ------------------------------------------------------------------
@@ -7602,7 +7602,7 @@ var global_env = new Environment({
 
          Call-with-current-continuation.
 
-         NOT SUPPORED BY LIPS RIGHT NOW`),
+         NOT SUPPORTED BY LIPS RIGHT NOW`),
     // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function(code, eval_args) {
         var env = this;
@@ -7708,7 +7708,7 @@ var global_env = new Environment({
         return Values(args);
     }, `(values a1 a2 ...)
 
-        If called with more then one elment it will create a special
+        If called with more then one element it will create a special
         Values object that can be used in the call-with-values function.`),
     // ------------------------------------------------------------------
     'call-with-values': doc('call-with-values', function(producer, consumer) {
@@ -7733,7 +7733,7 @@ var global_env = new Environment({
         return this;
     }, `(current-environment)
 
-        Function that returns the current environement (they're first-class objects!)`),
+        Function that returns the current environment (they're first-class objects!)`),
     // ------------------------------------------------------------------
     'parent.frame': doc('parent.frame', function() {
         return user_env;
@@ -7761,7 +7761,7 @@ var global_env = new Environment({
     }, `(eval expr)
         (eval expr environment)
 
-        Function that evalutes LIPS Scheme code. If the second argument is provided
+        Function that evaluates LIPS Scheme code. If the second argument is provided
         it will be the environment that the code is evaluated in.`),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function(code, { dynamic_scope, error } = {}) {
@@ -8442,7 +8442,7 @@ var global_env = new Environment({
     }, `(append! arg1 ...)
 
         Destructive version of append, it can modify the lists in place. It returns
-        a new list where each argument is appened to the end. It may modify
+        a new list where each argument is appended to the end. It may modify
         lists added as arguments.`),
     // ------------------------------------------------------------------
     reverse: doc('reverse', function reverse(arg) {
@@ -8753,7 +8753,7 @@ var global_env = new Environment({
         return obj instanceof Array;
     }, `(array? expression)
 
-        Predicate that tests if value is an arrray.`),
+        Predicate that tests if value is an array.`),
     // ------------------------------------------------------------------
     'object?': doc('object?', function(obj) {
         return obj !== nil && obj !== null &&
@@ -8914,7 +8914,7 @@ var global_env = new Environment({
          (try expr (finally code))
 
          Macro that executes expr and catches any exceptions thrown. If catch is provided
-         it's executed when an error is thown. If finally is provided it's always executed
+         it's executed when an error is thrown. If finally is provided it's always executed
          at the end.`),
     // ------------------------------------------------------------------
     'raise': doc('raise', function(obj) {
@@ -8997,7 +8997,7 @@ var global_env = new Environment({
         value of the list. If you provide more then one list as argument
         it will take each value from each list and call \`fn\` function
         with that many argument as number of list arguments. The return
-        values of the fn calls are acumulated in a result list and
+        values of the fn calls are accumulated in a result list and
         returned by map.`),
     // ------------------------------------------------------------------
     'list?': doc('list?', function(obj) {
@@ -9034,7 +9034,7 @@ var global_env = new Environment({
         Higher-order function that calls fn on each element of the list.
         It stops and returns true when fn returns true for a value.
         If none of the values give true, some will return false.
-        Analagous to Python any(map(fn, list)).`),
+        Analogous to Python any(map(fn, list)).`),
     // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function(fold, fn, init, ...lists) {
         typecheck('fold', fn, 'function');
@@ -9144,7 +9144,7 @@ var global_env = new Environment({
         `(curry fn . args)
 
          Higher-order function that creates a curried version of the function.
-         The result function will have parially applied arguments and it
+         The result function will have partially applied arguments and it
          will keep returning one-argument functions until all arguments are provided,
          then it calls the original function with the accumulated arguments.
 
@@ -9417,7 +9417,7 @@ var global_env = new Environment({
         })();
     }), `(and . expressions)
 
-         Macro that evalutes each expression in sequence and if any value returns false
+         Macro that evaluates each expression in sequence and if any value returns false
          it will stop and return false. If each value returns true it will return the
          last value. If it's called without arguments it will return true.`),
     // bit operations
@@ -10028,7 +10028,7 @@ function evaluate(code, { env, dynamic_scope, error = noop } = {}) {
         var __promise__ = env.get(Symbol.for('__promise__'), { throwError: false });
         if (__promise__ === true && is_promise(result)) {
             // fix #139 evaluate the code inside the promise that is not data.
-            // When promise is not quoted it happen automatically, when returing
+            // When promise is not quoted it happen automatically, when returning
             // promise from evaluate.
             result = result.then(result => {
                 if (result instanceof Pair && !value[__data__]) {
@@ -10214,7 +10214,7 @@ function Worker(url) {
             }
             if (data.method === 'eval') {
                 if (!init) {
-                    send_error('Worker RPC: LIPS not initilized, call init first');
+                    send_error('Worker RPC: LIPS not initialized, call init first');
                     return;
                 }
                 init.then(function() {
@@ -10495,7 +10495,7 @@ function execError(e) {
 // -------------------------------------------------------------------------
 function init() {
     var lips_mimes = ['text/x-lips', 'text/x-scheme'];
-    var bootstraped;
+    var bootstrapped;
     function load(script) {
         return new Promise(function(resolve) {
             var src = script.getAttribute('src');
@@ -10525,7 +10525,7 @@ function init() {
                     var type = script.getAttribute('type');
                     if (lips_mimes.includes(type)) {
                         var bootstrap_attr = script.getAttribute('bootstrap');
-                        if (!bootstraped && typeof bootstrap_attr === 'string') {
+                        if (!bootstrapped && typeof bootstrap_attr === 'string') {
                             return bootstrap(bootstrap_attr).then(function() {
                                 return load(script, function(e) {
                                     console.error(e);
@@ -10552,7 +10552,7 @@ function init() {
         var bootstrap_attr = script.getAttribute('bootstrap');
         if (typeof bootstrap_attr === 'string') {
             return bootstrap(bootstrap_attr).then(function() {
-                bootstraped = true;
+                bootstrapped = true;
                 return loop();
             });
         }
@@ -10593,7 +10593,7 @@ LIPS Interpreter {{VER}} (${_build}) <https://lips.js.org>
 Copyright (c) 2018-${_year} Jakub T. Jankiewicz
 
 Type (env) to see environment with functions macros and variables. You can also
-use (help name) to display help for specic function or macro, (apropos name)
+use (help name) to display help for specific function or macro, (apropos name)
 to display list of matched names in environment and (dir object) to list
 properties of an object.
 `.replace(/^.*\n/, '');

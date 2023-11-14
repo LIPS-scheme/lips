@@ -75,7 +75,7 @@
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
            (lambda (arr q)
-             ;; Array.from is used to convert emtpy to undefined
+             ;; Array.from is used to convert empty to undefined
              ;; but we can't use the value because Array.from calls
              ;; valueOf on its arguments
              (let ((result (--> (Array.from arr)
@@ -603,16 +603,16 @@
   (lips.rationalize number tolerance))
 
 ;; -----------------------------------------------------------------------------
-(define (%mem/search acces op obj list)
+(define (%mem/search access op obj list)
   "(%member obj list function)
 
    Helper method to get first list where car equal to obj
-   using provied functions as comparator."
+   using provided function as comparator."
   (if (null? list)
       false
-      (if (op (acces list) obj)
+      (if (op (access list) obj)
           list
-          (%mem/search acces op obj (cdr list)))))
+          (%mem/search access op obj (cdr list)))))
 
 ;; -----------------------------------------------------------------------------
 (define (memq obj list)
@@ -639,8 +639,8 @@
   (%mem/search car equal? obj list))
 
 ;; -----------------------------------------------------------------------------
-(define (%assoc/acessor name)
-  "(%assoc/acessor name)
+(define (%assoc/accessor name)
+  "(%assoc/accessor name)
 
    Returns carr with typecheck using give name."
   (lambda (x)
@@ -654,7 +654,7 @@
    Generic function that used in assoc functions with defined comparator
    function."
   (typecheck "assoc" alist (vector "nil" "pair"))
-  (let ((ret (%mem/search (%assoc/acessor "assoc") op obj alist)))
+  (let ((ret (%mem/search (%assoc/accessor "assoc") op obj alist)))
     (if ret
         (car ret)
         ret)))
@@ -919,7 +919,7 @@
 (define (integer->char n)
   "(integer->char chr)
 
-   Function that converts number argument to chararacter."
+   Function that converts number argument to character."
   (typecheck "integer->char" n "number")
   (if (integer? n)
       (string-ref (String.fromCodePoint n) 0)
@@ -927,7 +927,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (%define-chr-re spec str re)
-  "(%define-chr-re (name chr) sring re)
+  "(%define-chr-re (name chr) string re)
 
    Macro defines the procedure that tests character against regular expression."
   `(define ,spec
@@ -964,7 +964,7 @@
   "(%char-cmp name a b)
 
    Function that compares two characters and return 0 if they are equal,
-   -1 second is smaller and 1 if is larget. The function compare
+   -1 second is smaller and 1 if is larger. The function compare
    the codepoints of the character."
   (typecheck name chr1 "character" 1)
   (typecheck name chr2 "character" 2)
@@ -1014,7 +1014,7 @@
   "(%char-cmp name a b)
 
    Function that compares two characters and return 0 if they are equal,
-   -1 second is smaller and 1 if is larget. The function compare
+   -1 second is smaller and 1 if is larger. The function compare
    the codepoints of the character."
   (typecheck name chr1 "character" 1)
   (typecheck name chr2 "character" 2)
@@ -1217,7 +1217,7 @@
         [else result3])
 
    Macro for switch case statement. It test if value is any of the item. If
-   item match the value it will return coresponding result expression value.
+   item match the value it will return corresponding result expression value.
    If no value match and there is else it will return that result.")
 
 ;; -----------------------------------------------------------------------------
@@ -1227,7 +1227,7 @@
 (define (numerator n)
   "(numerator n)
 
-   Return numberator of rational or same number if n is not rational."
+   Return numerator of rational or same number if n is not rational."
   (typecheck "numerator" n "number")
   (cond ((integer? n) n)
         ((rational? n) n.__num__)
@@ -1478,7 +1478,7 @@
   "(scheme-report-environment version)
 
    Returns new Environment object for given Scheme Spec version.
-   Only argument 5 is supported that create environemnt for R5RS."
+   Only argument 5 is supported that create environment for R5RS."
   (typecheck "scheme-report-environment" version "number")
   (case version
     ((5) (%make-env "R5RS" * + - / < <= = > >= abs acos and angle append apply asin assoc assq assv

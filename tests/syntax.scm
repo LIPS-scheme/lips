@@ -260,7 +260,7 @@
     (t.is (foo (1 2) (3 4)) '((1 . 2) (3 . 4)))
     (t.is (foo (1 2) (3 4) (5 6)) '((1 . 2) (3 . 4) (5 . 6)))))
 
-(test "syntax: zip trasformation"
+(test "syntax: zip transformation"
   (lambda (t)
 
     (define-syntax foo
@@ -907,7 +907,7 @@
         (t.is (foo (1 2 3) (4 5 6))
               '(((1 2 3) (1 2 3)) ((4 5 6) (4 5 6))))))
 
-(test "syntax: R7RS multiple elipsis extensions"
+(test "syntax: R7RS multiple ellipsis extensions"
       (lambda (t)
 
         ;; source https://practical-scheme.net/gauche/man/gauche-refe/Hygienic-macros.html

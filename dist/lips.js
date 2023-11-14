@@ -4,7 +4,7 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.16
+ *  \_\ /_/ \_\                     /_/ v. DEV
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 10 Nov 2023 18:56:54 +0000
+ * build: Tue, 14 Nov 2023 19:09:39 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5799,7 +5799,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Fri, 10 Nov 2023 18:56:54 +0000
+   * Build time: Tue, 14 Nov 2023 19:09:39 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -6311,7 +6311,7 @@
 
       if (is_int(value) && parse.number.match(/e\+?[0-9]/i)) {
         return LNumber(value);
-      } // calculate big int and big fration by hand - it don't fit into JS float
+      } // calculate big int and big fraction by hand - it don't fit into JS float
 
 
       var _parse_big_int = parse_big_int(parse.number),
@@ -7188,7 +7188,7 @@
             state = _rule[3];
 
         if (rule.length !== 5) {
-          throw new Error("Lexer: Invald rule of length ".concat(rule.length));
+          throw new Error("Lexer: Invalid rule of length ".concat(rule.length));
         }
 
         if (!_char4.match(re)) {
@@ -7228,7 +7228,7 @@
             var newline = this._newline;
 
             if (this._state === null) {
-              // keep beging of newline to calculate col
+              // keep beginning of the newline to calculate col
               // we don't want to check inside the token (e.g. strings)
               this._newline = i + 1;
             }
@@ -7375,7 +7375,7 @@
   Lexer._rules = [// char_re prev_re next_re from_state to_state
   // null as to_state mean that is single char token
   // string
-  [/"/, null, null, Lexer.string, null], [/"/, null, null, null, Lexer.string], [/"/, null, null, Lexer.string_escape, Lexer.string], [/\\/, null, null, Lexer.string, Lexer.string_escape], [/./, /\\/, null, Lexer.string_escape, Lexer.string], // hash special symbols, lexer don't need to distingiush those
+  [/"/, null, null, Lexer.string, null], [/"/, null, null, null, Lexer.string], [/"/, null, null, Lexer.string_escape, Lexer.string], [/\\/, null, null, Lexer.string, Lexer.string_escape], [/./, /\\/, null, Lexer.string_escape, Lexer.string], // hash special symbols, lexer don't need to distinguish those
   // we only care if it's not pick up by vectors literals
   [/#/, null, /[bdxoeitf]/i, null, Lexer.symbol], // characters
   [/#/, null, /\\/, null, Lexer.character], [/\\/, /#/, /\s/, Lexer.character, Lexer.character], [/\\/, /#/, /[()[\]]/, Lexer.character, Lexer.character], [/\s/, /\\/, null, Lexer.character, null], [/\S/, null, Lexer.boundary, Lexer.character, null], // regex
@@ -7840,8 +7840,8 @@
         return read_object;
       }()
     }, {
-      key: "ballanced",
-      value: function ballanced() {
+      key: "balanced",
+      value: function balanced() {
         return this._state.parentheses === 0;
       }
     }, {
@@ -7977,7 +7977,7 @@
       key: "_read_object",
       value: function () {
         var _read_object3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
-          var token, special, bultin, expr, object, extension, result, ref, ref_label;
+          var token, special, builtin, expr, object, extension, result, ref, ref_label;
           return _regeneratorRuntime.wrap(function _callee8$(_context8) {
             while (1) {
               switch (_context8.prev = _context8.next) {
@@ -8009,7 +8009,7 @@
                   // MACRO: if macro is used, then it is evaluated in place and the
                   // result is returned by parser and it is quoted.
                   special = specials.get(token);
-                  bultin = is_builtin(token);
+                  builtin = is_builtin(token);
                   this.skip();
                   _context8.next = 11;
                   return this._read_object();
@@ -8017,7 +8017,7 @@
                 case 11:
                   object = _context8.sent;
 
-                  if (bultin) {
+                  if (builtin) {
                     _context8.next = 26;
                     break;
                   }
@@ -8063,7 +8063,7 @@
                   } // Built-in parser extensions just expand into lists like 'x ==> (quote x)
 
 
-                  if (!bultin) {
+                  if (!builtin) {
                     _context8.next = 29;
                     break;
                   }
@@ -8093,7 +8093,7 @@
                   return _context8.abrupt("return", result);
 
                 case 38:
-                  throw new Error('Parse Error: invlid parser extension: ' + special.symbol);
+                  throw new Error('Parse Error: invalid parser extension: ' + special.symbol);
 
                 case 39:
                   ref = this.match_datum_ref(token);
@@ -8221,7 +8221,7 @@
             case 5:
               expr = _context9.sent;
 
-              if (!parser.ballanced()) {
+              if (!parser.balanced()) {
                 parser.ballancing_error(expr);
               }
 
@@ -8447,7 +8447,7 @@
     throw new Error('Invalid matcher');
   } // ----------------------------------------------------------------------
   // :: Documentation decorator to LIPS functions if lines starts with :
-  // :: they are ignored (not trimed) otherwise it trims so
+  // :: they are ignored (not trimmed) otherwise it trims so
   // :: so you can have indent in source code
   // ----------------------------------------------------------------------
 
@@ -8739,9 +8739,9 @@
       return Object.assign({}, defaults);
     }
 
-    var exeptions = options && options.exceptions || {};
-    var specials = exeptions.specials || [];
-    var shift = exeptions.shift || {
+    var exceptions = options && options.exceptions || {};
+    var specials = exceptions.specials || [];
+    var shift = exceptions.shift || {
       1: []
     };
     return _objectSpread(_objectSpread(_objectSpread({}, defaults), options), {}, {
@@ -8843,22 +8843,22 @@
         return settings.offset + sexp[0].col + 1;
       } else {
         // search for token before S-Expression for case like #(10 or &(:x
-        var exeption = -1;
+        var exception = -1;
 
         if (before_sexpr) {
           var shift = Formatter.exception_shift(before_sexpr.token, settings);
 
           if (shift !== -1) {
-            exeption = shift;
+            exception = shift;
           }
         }
 
-        if (exeption === -1) {
-          exeption = Formatter.exception_shift(sexp[1].token, settings);
+        if (exception === -1) {
+          exception = Formatter.exception_shift(sexp[1].token, settings);
         }
 
-        if (exeption !== -1) {
-          return settings.offset + sexp[0].col + exeption;
+        if (exception !== -1) {
+          return settings.offset + sexp[0].col + exception;
         } else if (sexp[0].line < sexp[1].line) {
           return settings.offset + sexp[0].col + 1;
         } else if (sexp.length > 3 && sexp[1].line === sexp[3].line) {
@@ -10671,7 +10671,7 @@
     };
     var expansion = scope.expansion,
         define = scope.define; // pattern_names parameter is used to distinguish
-    // multiple matches of ((x ...) ...) agains ((1 2 3) (1 2 3))
+    // multiple matches of ((x ...) ...) against ((1 2 3) (1 2 3))
     // in loop we add x to the list so we know that this is not
     // duplicated ellipsis symbol
 
@@ -10699,7 +10699,7 @@
 
       if (pattern instanceof LSymbol && symbols.includes(pattern.literal())) {
         // TODO: literal() may be SLOW
-        var ref = expansion.ref(code); // shadowing the indentifier works only with lambda and let
+        var ref = expansion.ref(code); // shadowing the identifier works only with lambda and let
 
         if (LSymbol.is(code, pattern)) {
           if (typeof ref === 'undefined') {
@@ -10931,7 +10931,7 @@
         log({
           pattern: pattern.toString(),
           code: code.toString()
-        }); // case (x y) ===> (var0 var1 ... varn) where var1 match nil
+        }); // case (x y) ===> (var0 var1 ... warn) where var1 match nil
 
         if (pattern.cdr instanceof Pair && pattern.car instanceof LSymbol && pattern.cdr.cdr instanceof Pair && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && pattern.cdr.cdr.cdr instanceof Pair && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
           var _name6 = pattern.cdr.car.__name__;
@@ -11678,7 +11678,7 @@
 
     return obj;
   } // ----------------------------------------------------------------------
-  // :: Function binds with contex that can be optionally unbind
+  // :: Function binds with context that can be optionally unbind
   // :: get original function with unbind
   // ----------------------------------------------------------------------
 
@@ -12119,7 +12119,7 @@
 
 
   function limit_math_op(n, fn) {
-    // + 1 so it inlcude function in guard_math_call
+    // + 1 so it include function in guard_math_call
     return limit(n + 1, curry(guard_math_call, fn));
   } // -------------------------------------------------------------------------
   // :: some functional magic
@@ -12209,7 +12209,7 @@
         _char7 = LCharacter.__names__[_char7];
       } else {
         // this should never happen
-        // parser don't alow not defined named characters
+        // parser don't allow not defined named characters
         throw new Error('Internal: Unknown named character');
       }
     } else {
@@ -12446,7 +12446,7 @@
 
     if (!LNumber.isNumber(n) && !parsable) {
       throw new Error("You can't create LNumber from ".concat(type(n)));
-    } // prevent infite loop https://github.com/indutny/bn.js/issues/186
+    } // prevent infinite loop https://github.com/indutny/bn.js/issues/186
 
 
     if (n === null) {
@@ -13560,7 +13560,7 @@
 
     return LFloat(fn(this.__value__, n));
   }; // -------------------------------------------------------------------------
-  // same aproximation as in guile scheme
+  // same approximation as in guile scheme
 
 
   LFloat.prototype.toRational = function () {
@@ -14056,7 +14056,7 @@
         num: this,
         denom: n
       });
-    } // use native calucaltion becuase it's real bigint value
+    } // use native calculation because it's real bigint value
 
 
     return LBigInteger(ret, true);
@@ -14085,7 +14085,7 @@
 
 
   LNumber.NaN = LNumber(NaN); // -------------------------------------------------------------------------
-  // :: Port abstration - read should be a function that return next line
+  // :: Port abstraction - read should be a function that return next line
   // -------------------------------------------------------------------------
 
   function InputPort(read) {
@@ -15023,7 +15023,7 @@
   Value.prototype.valueOf = function () {
     return this.value;
   }; // -------------------------------------------------------------------------
-  // :: Differnt object than value used as object for (values)
+  // :: Different object than value used as object for (values)
   // -------------------------------------------------------------------------
 
 
@@ -15212,7 +15212,7 @@
 
     return result;
   }; // -------------------------------------------------------------------------
-  // :: Quote funtion used to pause evaluation from Macro
+  // :: Quote function used to pause evaluation from Macro
   // -------------------------------------------------------------------------
 
 
@@ -15542,7 +15542,7 @@
       m = str.match(/~([\S])/);
 
       if (m) {
-        throw new Error("format: Unrecognized escape seqence ".concat(m[1]));
+        throw new Error("format: Unrecognized escape sequence ".concat(m[1]));
       }
 
       return str;
@@ -15696,7 +15696,7 @@
 
       if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
         var second = code.car.cdr.car;
-        var thrid = code.car.cdr.cdr.car;
+        var third = code.car.cdr.cdr.car;
 
         var object = _evaluate(second, {
           env: this,
@@ -15704,7 +15704,7 @@
           error: error
         });
 
-        var key = _evaluate(thrid, {
+        var key = _evaluate(third, {
           env: this,
           dynamic_scope: dynamic_scope,
           error: error
@@ -15745,7 +15745,7 @@
 
         ref.set(symbol, value);
       });
-    }), "(set! name value)\n\n         Macro that can be used to set the value of the variable or slot (mutate it).\n         set! searches the scope chain until it finds first non emtpy slot and sets it."),
+    }), "(set! name value)\n\n         Macro that can be used to set the value of the variable or slot (mutate it).\n         set! searches the scope chain until it finds first non empty slot and sets it."),
     // ------------------------------------------------------------------
     'unset!': doc(new Macro('set!', function (code) {
       if (!(code.car instanceof LSymbol)) {
@@ -16145,13 +16145,13 @@
       });
     }, "(let-env env . body)\n\n        Special macro that evaluates body in context of given environment\n        object."),
     // ------------------------------------------------------------------
-    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to\n         names and then evaluates the body in context of that environment.\n         Values are evaluated sequentialy and the next value can access the\n         previous values/names."),
+    'letrec': doc(let_macro(Symbol["for"]('letrec')), "(letrec ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to\n         names and then evaluates the body in context of that environment.\n         Values are evaluated sequentially and the next value can access the\n         previous values/names."),
     // ---------------------------------------------------------------------
     'letrec*': doc(let_macro(Symbol["for"]('letrec')), "(letrec* ((a value-a) (b value-b) ...) . body)\n\n         Same as letrec but the order of execution of the binding is guaranteed,\n         so you can use recursive code as well as referencing the previous binding.\n\n         In LIPS both letrec and letrec* behave the same."),
     // ---------------------------------------------------------------------
     'let*': doc(let_macro(Symbol["for"]('let*')), "(let* ((a value-a) (b value-b) ...) . body)\n\n         Macro similar to `let`, but the subsequent bindings after the first\n         are evaluated in the environment including the previous let variables,\n         so you can define one variable, and use it in the next's definition."),
     // ---------------------------------------------------------------------
-    'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to names,\n         and then evaluates the body in context of that environment.  Values are evaluated\n         sequentialy but you can't access previous values/names when the next are\n         evaluated. You can only get them in the body of the let expression.  (If you want\n         to define multiple variables and use them in each other's definitions, use\n         `let*`.)"),
+    'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to names,\n         and then evaluates the body in context of that environment.  Values are evaluated\n         sequentially but you can't access previous values/names when the next are\n         evaluated. You can only get them in the body of the let expression.  (If you want\n         to define multiple variables and use them in each other's definitions, use\n         `let*`.)"),
     // ------------------------------------------------------------------
     'begin*': doc(pararel('begin*', function (values) {
       return values.pop();
@@ -16196,7 +16196,7 @@
       }
 
       _evaluate(new Pair(new LSymbol('begin'), code), args);
-    }, "(ignore . body)\n\n        Macro that will evaluate the expression and swallow any promises that may\n        be created. It wil discard any value that may be returned by the last body\n        expression. The code should have side effects and/or when it's promise\n        it should resolve to undefined."),
+    }, "(ignore . body)\n\n        Macro that will evaluate the expression and swallow any promises that may\n        be created. It will discard any value that may be returned by the last body\n        expression. The code should have side effects and/or when it's promise\n        it should resolve to undefined."),
     // ------------------------------------------------------------------
     'call/cc': doc(Macro.defmacro('call/cc', function (code) {
       var eval_args = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -16210,7 +16210,7 @@
           return result(new Continuation(null));
         }
       });
-    }), "(call/cc proc)\n\n         Call-with-current-continuation.\n\n         NOT SUPPORED BY LIPS RIGHT NOW"),
+    }), "(call/cc proc)\n\n         Call-with-current-continuation.\n\n         NOT SUPPORTED BY LIPS RIGHT NOW"),
     // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function (code, eval_args) {
       var env = this;
@@ -16305,7 +16305,7 @@
       }
 
       return Values(args);
-    }, "(values a1 a2 ...)\n\n        If called with more then one elment it will create a special\n        Values object that can be used in the call-with-values function."),
+    }, "(values a1 a2 ...)\n\n        If called with more then one element it will create a special\n        Values object that can be used in the call-with-values function."),
     // ------------------------------------------------------------------
     'call-with-values': doc('call-with-values', function (producer, consumer) {
       typecheck('call-with-values', producer, 'function', 1);
@@ -16325,7 +16325,7 @@
       }
 
       return this;
-    }, "(current-environment)\n\n        Function that returns the current environement (they're first-class objects!)"),
+    }, "(current-environment)\n\n        Function that returns the current environment (they're first-class objects!)"),
     // ------------------------------------------------------------------
     'parent.frame': doc('parent.frame', function () {
       return user_env;
@@ -16350,7 +16350,7 @@
           }
         }
       });
-    }, "(eval expr)\n        (eval expr environment)\n\n        Function that evalutes LIPS Scheme code. If the second argument is provided\n        it will be the environment that the code is evaluated in."),
+    }, "(eval expr)\n        (eval expr environment)\n\n        Function that evaluates LIPS Scheme code. If the second argument is provided\n        it will be the environment that the code is evaluated in."),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
       var _ref34 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
@@ -17112,7 +17112,7 @@
 
         return acc.append(item);
       }, _nil);
-    }, "(append! arg1 ...)\n\n        Destructive version of append, it can modify the lists in place. It returns\n        a new list where each argument is appened to the end. It may modify\n        lists added as arguments."),
+    }, "(append! arg1 ...)\n\n        Destructive version of append, it can modify the lists in place. It returns\n        a new list where each argument is appended to the end. It may modify\n        lists added as arguments."),
     // ------------------------------------------------------------------
     reverse: doc('reverse', function reverse(arg) {
       typecheck('reverse', arg, ['array', 'pair', 'nil']);
@@ -17345,7 +17345,7 @@
     // ------------------------------------------------------------------
     'array?': doc('array?', function (obj) {
       return obj instanceof Array;
-    }, "(array? expression)\n\n        Predicate that tests if value is an arrray."),
+    }, "(array? expression)\n\n        Predicate that tests if value is an array."),
     // ------------------------------------------------------------------
     'object?': doc('object?', function (obj) {
       return obj !== _nil && obj !== null && !(obj instanceof LCharacter) && !(obj instanceof RegExp) && !(obj instanceof LString) && !(obj instanceof Pair) && !(obj instanceof LNumber) && _typeof(obj) === 'object' && !(obj instanceof Array);
@@ -17490,7 +17490,7 @@
           _next(result, resolve);
         }
       });
-    }), "(try expr (catch (e) code))\n         (try expr (catch (e) code) (finally code))\n         (try expr (finally code))\n\n         Macro that executes expr and catches any exceptions thrown. If catch is provided\n         it's executed when an error is thown. If finally is provided it's always executed\n         at the end."),
+    }), "(try expr (catch (e) code))\n         (try expr (catch (e) code) (finally code))\n         (try expr (finally code))\n\n         Macro that executes expr and catches any exceptions thrown. If catch is provided\n         it's executed when an error is thrown. If finally is provided it's always executed\n         at the end."),
     // ------------------------------------------------------------------
     'raise': doc('raise', function (obj) {
       throw obj;
@@ -17579,7 +17579,7 @@
           return new Pair(head, rest);
         });
       });
-    }, "(map fn . lists)\n\n        Higher-order function that calls function `fn` with each\n        value of the list. If you provide more then one list as argument\n        it will take each value from each list and call `fn` function\n        with that many argument as number of list arguments. The return\n        values of the fn calls are acumulated in a result list and\n        returned by map."),
+    }, "(map fn . lists)\n\n        Higher-order function that calls function `fn` with each\n        value of the list. If you provide more then one list as argument\n        it will take each value from each list and call `fn` function\n        with that many argument as number of list arguments. The return\n        values of the fn calls are accumulated in a result list and\n        returned by map."),
     // ------------------------------------------------------------------
     'list?': doc('list?', function (obj) {
       var node = obj;
@@ -17612,7 +17612,7 @@
           return value || some(fn, list.cdr);
         });
       }
-    }, "(some fn list)\n\n        Higher-order function that calls fn on each element of the list.\n        It stops and returns true when fn returns true for a value.\n        If none of the values give true, some will return false.\n        Analagous to Python any(map(fn, list))."),
+    }, "(some fn list)\n\n        Higher-order function that calls fn on each element of the list.\n        It stops and returns true when fn returns true for a value.\n        If none of the values give true, some will return false.\n        Analogous to Python any(map(fn, list))."),
     // ------------------------------------------------------------------
     fold: doc('fold', fold('fold', function (fold, fn, init) {
       for (var _len32 = arguments.length, lists = new Array(_len32 > 3 ? _len32 - 3 : 0), _key32 = 3; _key32 < _len32; _key32++) {
@@ -17721,7 +17721,7 @@
     // ------------------------------------------------------------------
     compose: doc(compose, "(compose . fns)\n\n         Higher-order function that creates a new function that applies all functions\n         from right to left and returns the last value. Reverse of pipe.\n         e.g.:\n         ((compose (curry + 2) (curry * 3)) 10) --> (+ 2 (* 3 10)) --> 32"),
     pipe: doc(pipe, "(pipe . fns)\n\n         Higher-order function that creates a new function that applies all functions\n         from left to right and returns the last value. Reverse of compose.\n         e.g.:\n         ((pipe (curry + 2) (curry * 3)) 10) --> (* 3 (+ 2 10)) --> 36"),
-    curry: doc(curry, "(curry fn . args)\n\n         Higher-order function that creates a curried version of the function.\n         The result function will have parially applied arguments and it\n         will keep returning one-argument functions until all arguments are provided,\n         then it calls the original function with the accumulated arguments.\n\n         e.g.:\n         (define (add a b c d) (+ a b c d))\n         (define add1 (curry add 1))\n         (define add12 (add 2))\n         (display (add12 3 4))"),
+    curry: doc(curry, "(curry fn . args)\n\n         Higher-order function that creates a curried version of the function.\n         The result function will have partially applied arguments and it\n         will keep returning one-argument functions until all arguments are provided,\n         then it calls the original function with the accumulated arguments.\n\n         e.g.:\n         (define (add a b c d) (+ a b c d))\n         (define add1 (curry add 1))\n         (define add12 (add 2))\n         (display (add12 3 4))"),
     // ------------------------------------------------------------------
     // Numbers
     // ------------------------------------------------------------------
@@ -18015,7 +18015,7 @@
           return unpromise(value, next);
         }
       }();
-    }), "(and . expressions)\n\n         Macro that evalutes each expression in sequence and if any value returns false\n         it will stop and return false. If each value returns true it will return the\n         last value. If it's called without arguments it will return true."),
+    }), "(and . expressions)\n\n         Macro that evaluates each expression in sequence and if any value returns false\n         it will stop and return false. If each value returns true it will return the\n         last value. If it's called without arguments it will return true."),
     // bit operations
     '|': doc('|', function (a, b) {
       return LNumber(a).or(b);
@@ -18827,7 +18827,7 @@
 
       if (__promise__ === true && is_promise(result)) {
         // fix #139 evaluate the code inside the promise that is not data.
-        // When promise is not quoted it happen automatically, when returing
+        // When promise is not quoted it happen automatically, when returning
         // promise from evaluate.
         result = result.then(function (result) {
           if (result instanceof Pair && !value[__data__]) {
@@ -19160,7 +19160,7 @@
 
         if (data.method === 'eval') {
           if (!init) {
-            send_error('Worker RPC: LIPS not initilized, call init first');
+            send_error('Worker RPC: LIPS not initialized, call init first');
             return;
           }
 
@@ -19502,7 +19502,7 @@
 
   function init() {
     var lips_mimes = ['text/x-lips', 'text/x-scheme'];
-    var bootstraped;
+    var bootstrapped;
 
     function load(script) {
       return new Promise(function (resolve) {
@@ -19538,7 +19538,7 @@
             if (lips_mimes.includes(type)) {
               var bootstrap_attr = script.getAttribute('bootstrap');
 
-              if (!bootstraped && typeof bootstrap_attr === 'string') {
+              if (!bootstrapped && typeof bootstrap_attr === 'string') {
                 return bootstrap(bootstrap_attr).then(function () {
                   return load(script);
                 }).then(loop);
@@ -19563,7 +19563,7 @@
 
       if (typeof bootstrap_attr === 'string') {
         return bootstrap(bootstrap_attr).then(function () {
-          bootstraped = true;
+          bootstrapped = true;
           return loop();
         });
       }
@@ -19582,10 +19582,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 10 Nov 2023 18:56:54 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 14 Nov 2023 19:09:39 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 10 Nov 2023 18:56:54 +0000').valueOf();
+    var date = LString('Tue, 14 Nov 2023 19:09:39 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -19597,7 +19597,7 @@
 
     var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
 
-    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.16 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specic function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
+    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter DEV (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specific function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
     return banner;
   }(); // -------------------------------------------------------------------------
   // to be used with string function when code is minified
@@ -19629,9 +19629,9 @@
   read_only(QuotedPromise, '__class__', 'promise'); // -------------------------------------------------------------------------
 
   var lips = {
-    version: '1.0.0-beta.16',
+    version: 'DEV',
     banner: banner,
-    date: 'Fri, 10 Nov 2023 18:56:54 +0000',
+    date: 'Tue, 14 Nov 2023 19:09:39 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
