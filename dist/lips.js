@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 14 Nov 2023 19:09:39 +0000
+ * build: Wed, 22 Nov 2023 13:53:23 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5799,7 +5799,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Tue, 14 Nov 2023 19:09:39 +0000
+   * Build time: Wed, 22 Nov 2023 13:53:23 +0000
    */
   var _excluded = ["token"],
       _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -15360,7 +15360,7 @@
 
       typecheck_text_port('read-line', port, 'input-port');
       return port.read_line();
-    }, "(read-char port)\n\n        This function reads and returns the next line from the input\n        port."),
+    }, "(read-line port)\n\n        This function reads and returns the next line from the input\n        port."),
     // ------------------------------------------------------------------
     'read-char': doc('read-char', function () {
       var port = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
@@ -17490,7 +17490,7 @@
           _next(result, resolve);
         }
       });
-    }), "(try expr (catch (e) code))\n         (try expr (catch (e) code) (finally code))\n         (try expr (finally code))\n\n         Macro that executes expr and catches any exceptions thrown. If catch is provided\n         it's executed when an error is thrown. If finally is provided it's always executed\n         at the end."),
+    }), "(try expr (catch (e) code))\n         (try expr (catch (e) code) (finally code))\n         (try expr (finally code))\n\n         Macro that executes expr and catches any exceptions thrown. If catch is provided\n         it's executed when an error is thrown. If finally is provided it's always\n         executed at the end."),
     // ------------------------------------------------------------------
     'raise': doc('raise', function (obj) {
       throw obj;
@@ -19582,10 +19582,10 @@
 
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Tue, 14 Nov 2023 19:09:39 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 22 Nov 2023 13:53:23 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Tue, 14 Nov 2023 19:09:39 +0000').valueOf();
+    var date = LString('Wed, 22 Nov 2023 13:53:23 +0000').valueOf();
 
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
 
@@ -19631,7 +19631,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Tue, 14 Nov 2023 19:09:39 +0000',
+    date: 'Wed, 22 Nov 2023 13:53:23 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

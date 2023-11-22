@@ -203,14 +203,15 @@ const moduleURL = new URL(import.meta.url);
 const __dirname = path.dirname(moduleURL.pathname);
 const __filename = path.basename(moduleURL.pathname);
 const command_line = [];
-var interp = Interpreter('repl', {
+let last_line = '';
+const interp = Interpreter('repl', {
     stdin: InputPort(function() {
         return new Promise(function(resolve) {
             rl = readline.createInterface({
                 input: process.stdin,
                 output: process.stdout
             });
-            rl.question('', function(data) {
+            rl.question(last_line, function(data) {
                 resolve(data);
                 rl.close();
             });
@@ -222,6 +223,7 @@ var interp = Interpreter('repl', {
             x = this.get('repr')(x);
         }
         newline = !x.match(/\n$/);
+        last_line = x.split('\n').pop();
         process.stdout.write(x);
     }),
     // -------------------------------------------------------------------------
