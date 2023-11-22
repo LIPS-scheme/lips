@@ -7000,7 +7000,7 @@ var global_env = new Environment({
         }
         typecheck_text_port('read-line', port, 'input-port');
         return port.read_line();
-    }, `(read-char port)
+    }, `(read-line port)
 
         This function reads and returns the next line from the input
         port.`),
