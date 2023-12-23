@@ -298,7 +298,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 * Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
 * The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley.
 * `ucs2decode` function taken from [punycode.js](https://github.com/bestiejs/punycode.js) by [Mathias Bynens](https://mathiasbynens.be/).
-* [Rosetta Code](https://rosettacode.org/) is used for:
+* [Rosetta Code](https://rosettacode.org/) was used for:
   * [gdc](https://rosettacode.org/wiki/Greatest_common_divisor#JavaScript),
   * [lcm](https://rosettacode.org/wiki/Least_common_multiple#JavaScript),
   * [LFloat::toRational](https://rosettacode.org/wiki/Convert_decimal_number_to_rational).
