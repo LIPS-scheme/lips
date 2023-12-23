@@ -28,7 +28,7 @@
 (define (define-reader-ctor symbol fn)
   "(define-reader-ctor symbol fn)
 
-   Define the value for #, syntax. SRFI-10
+   Define the value for SRFI-10 #, syntax.
    Example:
 
    (define-reader-ctor '+ +)
@@ -48,9 +48,8 @@
            ((cdr node) 'arg ...)
            (syntax-error (string-append "Invalid symbol " (symbol->string 'fn)
                                         " in expression " (repr '(fn arg ...))))))))
-  "(sharp-comma expr)
-   #,(ctor ...)
+  "(sharp-comma expr) or #,(expr ...)
 
    This is syntax extension for SRFI-10. To define the function to be used with
-   This syntax you need to call `define-reader-ctor` function and define
-   symbol function mapping.")
+   this syntax you need to call `define-reader-ctor` to and define a
+   symbol-to-function mapping.")

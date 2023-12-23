@@ -11,8 +11,8 @@
     <script src="../src/lips.js"></script>
     <script>
     // worker example - included code is little bit slower because LIPS url
-    // is sent to worker using RPC system, but vanila JavaScript example use url
-    // directly in function that is converted to Blob so it load faster
+    // is sent to worker using RPC system, but vanilla JavaScript example uses url
+    // directly in function that is converted to Blob so it loads faster
     var worker = new lips.Worker("http://localhost/projects/jcubic/lips");
     (async function() {
       const [ result ] = await worker.rpc('eval', [`(let* ((what "hello")
@@ -24,7 +24,7 @@
     })();
 
     (function manual_init() {
-      // below is the code that can be used to initalize LIPS in worker withtou extra code
+      // below is the code that can be used to initialize LIPS in worker without extra code
       // almost the same code is in the library
       function fworker(fn) {
           // ref: https://stackoverflow.com/a/10372280/387194

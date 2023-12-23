@@ -77,7 +77,7 @@
       (lambda (t)
         (t.is (to.throw (typecheck "test" 10 (list "string"))) true)
         (t.is (try (typecheck "test" 10 (list "string") 0) (catch (e) e.message))
-              "Expecting string, got number in expression `test` (argument 0)")
+              "Expecting a string, got number in expression `test` (argument 0)")
         (t.is (try (typecheck "test" 10 (list "string" "character") 0) (catch (e) e.message))
               "Expecting string or character, got number in expression `test` (argument 0)")))
 
@@ -223,3 +223,7 @@
              2))
         (t.is (atanh -2)
               -0.5493061443340548+1.5707963267948966i)))
+
+(test.failing "std: Petrofsky let"
+      (lambda (t)
+        (t.is (let - ((n (- 1))) n) -1)))

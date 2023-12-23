@@ -1,13 +1,13 @@
 
 <h1 align="center">
-  <img src="https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true"
+  <img src="https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true"
        alt="LIPS - Scheme Based Powerful Lisp Language" />
 </h1>
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.16-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch=master&aba7442b3be9483ca14039700e619680b8a73c37)](https://travis-ci.com/github/jcubic/lips)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&1abe29427d5cfaa14ca0afda5bb5d3b4)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&1eb2cfbcb9a646f24938a31ec46bbc33)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -79,7 +79,7 @@ https://github.com/jcubic/lips/blob/master/lib/js/bookmark.js
 ```
 
 Create any link in your bookmarks, edit it and copy paste the content of that file.
-Affter you click on the link it will create the REPL at the bottom of the page.
+After you click on the link it will create the REPL at the bottom of the page.
 (NOTE: It may not work on every page because of content security policy;
 e.g. google.com or gihub.com)
 
@@ -160,7 +160,7 @@ npm install -g @jcubic/lips@beta
 
 you can run the interpreter from the terminal:
 
-![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
 
 
 You can also run code in a string with:
@@ -199,14 +199,14 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 
 ## FOSDEM'23 Presentation [Video]
 
-[![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/master/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
+[![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/devel/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
 
 ## Limitations
 Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
-process long arrays and use callback function. If the array is quite large each pice of code
+process long arrays and use callback function. If the array is quite large each piece of code
 inside the callback may slow down the processing. For example see:
 
-script [reference.scm](https://github.com/jcubic/lips/blob/master/scripts/reference.scm)
+script [reference.scm](https://github.com/jcubic/lips/blob/devel/scripts/reference.scm)
 
 That generates reference documentation for all builtin functions and macros.
 The slow part is `(names.sort name-compare)` (`Array::sort`) that take quite time to calculate,
@@ -222,12 +222,12 @@ something like this:
    (arr.sort fn))
 ```
 
-Another example of slow performace is using LIPS with React, the more code you put into components
+Another example of slow performance is using LIPS with React, the more code you put into components
 the slower the app will become.
 
 Examples:
 * [Preact app that update SVG](https://codepen.io/jcubic/pen/PojYxBP) - it requires to use debounce.
-* [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnigs in dev tools.
+* [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnings in dev tools.
 
 The issue with performance is tracked in [#197](https://github.com/jcubic/lips/issues/197).
 

@@ -1,0 +1,35 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+      - master
+      - devel
+  pull_request:
+    branches:
+      - master
+      - devel
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update deps
+        run: sudo apt-get update
+      - name: Install ImageMagick
+        run: sudo apt-get -y install graphicsmagick
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - run: npm ci
+      - run: make
+      - run: make lint
+      - run: make test
+      - run: make coverage
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

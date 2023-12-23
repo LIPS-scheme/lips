@@ -260,7 +260,7 @@
     (t.is (foo (1 2) (3 4)) '((1 . 2) (3 . 4)))
     (t.is (foo (1 2) (3 4) (5 6)) '((1 . 2) (3 . 4) (5 . 6)))))
 
-(test "syntax: zip trasformation"
+(test "syntax: zip transformation"
   (lambda (t)
 
     (define-syntax foo
@@ -524,7 +524,7 @@
 
              (define-matcher-macro is-literal-foo? "foo")
 
-             (t.is (is-literal-foo? "foo") #t) ;; this fail
+             (t.is (is-literal-foo? "foo") #t)
              (t.is (is-literal-foo? "bar") #f)
              (let ((foo "foo"))
                 (t.is (is-literal-foo? foo) #f))))
@@ -907,7 +907,7 @@
         (t.is (foo (1 2 3) (4 5 6))
               '(((1 2 3) (1 2 3)) ((4 5 6) (4 5 6))))))
 
-(test "syntax: R7RS multiple elipsis extensions"
+(test "syntax: R7RS multiple ellipsis extensions"
       (lambda (t)
 
         ;; source https://practical-scheme.net/gauche/man/gauche-refe/Hygienic-macros.html

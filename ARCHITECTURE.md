@@ -7,7 +7,7 @@ Main interpreter data flow.
 Main public function is `exec` that accept string (code) and Environment instance. If environment is not specified it use main user environment (same as lips.env) which is child of global environment.
 
 `exec` use internal `parse` function that is JavaScript generator that parse single S-Expression and `exec` use `evaluate` to evaluate the expression.
-`evaluate` use multiple features like handling of Syntax, Macros and it auto resolve promises. `evaluate` may or may not return a promise. But `exec` always return a promise, so it's easier to use. You can never know which expression return a promise and which don't. `evaluate` also use `apply` function that was inspired by meta circual evaluator (but it was refactored into this state, it was not like this from beginning).
+`evaluate` use multiple features like handling of Syntax, Macros and it auto resolve promises. `evaluate` may or may not return a promise. But `exec` always return a promise, so it's easier to use. You can never know which expression return a promise and which don't. `evaluate` also use `apply` function that was inspired by meta circular evaluator (but it was refactored into this state, it was not like this from beginning).
 
 ## UML Diagram of all classes
 
@@ -16,7 +16,7 @@ Main public function is `exec` that accept string (code) and Environment instanc
 ## Lexer
 
 Lexer is created as simple state machine with `Lexer._rules` that specify
-all the states. The sate change is simple it can change from null to given
+all the states. The state change is simple it can change from null to given
 state for a given token (e.g. symbol), remain in same state and move from
 given state to null. The last change produce new token. Rules are dynamic
 the parser can be update by syntax extensions so `Lexer.rules` is a getter

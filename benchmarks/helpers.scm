@@ -7,7 +7,8 @@
                  (run &(:async true))
 
                  (on "cycle" (lambda (e)
-                               (print (string-append ">>> " (String target)))))
+                               (console.log e.target)
+                               (print (string-append ">>> " (e.target.toString)))))
 
                  (on "complete" (lambda (e)
                                   (try

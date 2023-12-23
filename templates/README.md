@@ -6,7 +6,7 @@
 
 [![npm](https://img.shields.io/badge/npm-{{VER_DASH}}-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![travis](https://travis-ci.com/jcubic/lips.svg?branch={{BRANCH}}&{{COMMIT}})](https://travis-ci.com/github/jcubic/lips)
+[![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch={{BRANCH}}&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch={{BRANCH}}&{{CHECKSUM}})](https://coveralls.io/github/jcubic/lips?branch={{BRANCH}})
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
@@ -79,7 +79,7 @@ https://github.com/jcubic/lips/blob/master/lib/js/bookmark.js
 ```
 
 Create any link in your bookmarks, edit it and copy paste the content of that file.
-Affter you click on the link it will create the REPL at the bottom of the page.
+After you click on the link it will create the REPL at the bottom of the page.
 (NOTE: It may not work on every page because of content security policy;
 e.g. google.com or gihub.com)
 
@@ -95,7 +95,7 @@ The simplest way is to include the lips code in the script tag:
 <script type="text/x-scheme" bootstrap>
 (let ((what "world")
       (greet "hello"))
-   (display (string-append "hello" " " what)))
+   (display (string-append greet " " what)))
 </script>
 ```
 
@@ -203,7 +203,7 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 
 ## Limitations
 Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
-process long arrays and use callback function. If the array is quite large each pice of code
+process long arrays and use callback function. If the array is quite large each piece of code
 inside the callback may slow down the processing. For example see:
 
 script [reference.scm](https://github.com/jcubic/lips/blob/{{BRANCH}}/scripts/reference.scm)
@@ -222,12 +222,12 @@ something like this:
    (arr.sort fn))
 ```
 
-Another example of slow performace is using LIPS with React, the more code you put into components
+Another example of slow performance is using LIPS with React, the more code you put into components
 the slower the app will become.
 
 Examples:
 * [Preact app that update SVG](https://codepen.io/jcubic/pen/PojYxBP) - it requires to use debounce.
-* [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnigs in dev tools.
+* [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnings in dev tools.
 
 The issue with performance is tracked in [#197](https://github.com/jcubic/lips/issues/197).
 

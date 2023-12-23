@@ -1,3 +1,26 @@
+## 1.0.0-beta.17
+### Breaking
+* chars are now not automatically unboxed to strings [#233](https://github.com/jcubic/lips/issues/233)
+### Features
+* make bookmark REPL dockable [#205](https://github.com/jcubic/lips/issues/205)
+* make Strings iterators that return characters
+* improve object literals [#237](https://github.com/jcubic/lips/issues/237)
+* better error message with exception on invalid string literal
+* add non-standard `with-input-from-string` function
+### Bugfix
+* fix using performance object for older version of Node
+* fixing escaped symbols in CodeMirror
+* fix parsing strings [#193](https://github.com/jcubic/lips/issues/193)
+* add proper error message to `-->` macro [#200](https://github.com/jcubic/lips/issues/200)
+* fix `performance.timeOrigin` on Node 12 [#207](https://github.com/jcubic/lips/issues/207)
+* fix string->list to handle longer code points
+* fix numerator and denominator [#213](https://github.com/jcubic/lips/issues/213)
+* fix Map object repr
+* fix parsing regular expressions [#238](https://github.com/jcubic/lips/issues/238)
+* fix exception when syntax-rule macro contain undefined
+* fix REPL clearing stdin when using read-line [#253](https://github.com/jcubic/lips/issues/253)
+* add proper handling of [Paste Brackets mode in REPL for NodeJS](https://github.com/nodejs/node/pull/47150)
+
 ## 1.0.0-beta.16
 ### Breaking
 * replace `get-script` with `get-resource` that work in Node and in browser and allows to load CSS
@@ -16,6 +39,7 @@
 * fix bug in `quasiquote` and `unquote-splicing` [#194](https://github.com/jcubic/lips/issues/194)
 * fix `inexact->exact` on integers [#199](https://github.com/jcubic/lips/issues/199)
 * throw error on missing parentheses [#198](https://github.com/jcubic/lips/issues/198)
+* fix empty syntax extensions as functions
 
 ## 1.0.0-beta.15
 ### Breaking
@@ -36,7 +60,7 @@
 * property throw error when name is used without ellipsis
 * fix using dot notation inside syntax-rules macros
 * typecheck `string->symbol` and `symbol->string`
-* fix `parent.frame` inside `Intepreter`
+* fix `parent.frame` inside `Interpreter`
 * fix `eval` without env
 * fix quote as delimiter
 * fix comma dot as two tokens
@@ -341,7 +365,7 @@
 * `if` no longer require boolean as cond
 * change how arrays are presented, they are look like scheme vector `#(...)`
 * rename `string` to `repr`
-* new API `lips.Intepreter` - for using interpreter that have different stdout/stdin
+* new API `lips.Interpreter` - for using interpreter that have different stdout/stdin
 * balanced_parenthesis now throw exception on broken code
 * remove global env from public API (you can still access it using `env.parent`)
 * remove `->` function (it will collide with SRFI 197 that may be implemented in the future)
@@ -374,7 +398,7 @@
 * improve balancing parenthesis
 * expose balanced method in public API (preferred name)
 * optional brackets
-* `interator?` function and detection if iterators from `repr` and `type` [#51](https://github.com/jcubic/lips/issues/51)
+* `iterator?` function and detection if iterators from `repr` and `type` [#51](https://github.com/jcubic/lips/issues/51)
 * `add-repr!` function to add string representations to objects
 * new `string=?`, `sort`, `in`, `list-tail` and `bound?` functions
 * add new `exit` function into executable interpreter
@@ -668,7 +692,7 @@
 ### Features
 * new nth and reverse functions
 * new type checking functions null? regex? pair? string? number? symbol? array? object? boolean?
-* add lips source code that throwed exception in JavaScript error message
+* add lips source code that threw exception in JavaScript error message
 ### Bug fixes
 * fix lambda with rest parameter
 ### Breaking

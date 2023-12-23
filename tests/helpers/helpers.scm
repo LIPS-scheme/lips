@@ -2,7 +2,7 @@
   "(t.is a b)
 
    Helper comparator for ava. It use equal? so it match two lists and strings.
-   It use undecumented API that allow to delete StackTrace when assersion fail."
+   It use undecumented API that allow to delete StackTrace when assertion fail."
   (let ((attempt (gensym))
         (a_name (gensym))
         (b_name (gensym)))
@@ -35,7 +35,7 @@
 (define (%test-specs t specs)
   "(%test-specs t list)
 
-   Funtion test list of specs (\"name\" function result . args)"
+   Function test list of specs (\"name\" function result . args)"
   (let iter ((specs specs))
     (if (not (null? specs))
         (let* ((spec (car specs))

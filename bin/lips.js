@@ -42,6 +42,7 @@ import readline from 'readline';
 import highlight from 'prism-cli';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-scheme.min.js';
+import { satisfies } from 'compare-versions';
 import '../lib/js/prism.js';
 
 import { createRequire } from 'module';
@@ -49,6 +50,8 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
 const kDebounceHistoryMS = 15;
+
+const supports_paste_brackets = satisfies(process.version, '>=v20.6.0');
 
 // -----------------------------------------------------------------------------
 process.on('uncaughtException', function (err) {
@@ -200,14 +203,15 @@ const moduleURL = new URL(import.meta.url);
 const __dirname = path.dirname(moduleURL.pathname);
 const __filename = path.basename(moduleURL.pathname);
 const command_line = [];
-var interp = Interpreter('repl', {
+let last_line = '';
+const interp = Interpreter('repl', {
     stdin: InputPort(function() {
         return new Promise(function(resolve) {
             rl = readline.createInterface({
                 input: process.stdin,
                 output: process.stdout
             });
-            rl.question('', function(data) {
+            rl.question(last_line, function(data) {
                 resolve(data);
                 rl.close();
             });
@@ -219,6 +223,7 @@ var interp = Interpreter('repl', {
             x = this.get('repr')(x);
         }
         newline = !x.match(/\n$/);
+        last_line = x.split('\n').pop();
         process.stdout.write(x);
     }),
     // -------------------------------------------------------------------------
@@ -427,9 +432,9 @@ function unify_prompt(a, b) {
 
 function run_repl(err, rl) {
     const dynamic = options.d || options.dynamic;
-    var code = '';
-    var multiline = false;
-    var resolve;
+    let cmd = '';
+    let multiline = false;
+    let resolve;
     // we use promise loop to fix issue when copy paste list of S-Expression
     let prev_eval = Promise.resolve();
     if (process.stdin.isTTY) {
@@ -437,25 +442,25 @@ function run_repl(err, rl) {
     }
     let prev_line;
     bootstrap(interp).then(function() {
+        if (supports_paste_brackets) {
+            process.stdin.on('keypress', (c, k) => {
+                if (k?.name?.match(/^paste-/)) {
+                    cmd += k.sequence;
+                }
+            });
+            process.stdout.write('\x1b[?2004h');
+        }
+        const re = /\x1b\[(200|201)~/g;
         rl.on('line', function(line) {
-            code += line;
+            cmd += line;
+            if (cmd.match(/\x1b\[201~$/)) {
+                cmd = cmd.replace(re, '');
+            }
+            const code = cmd.replace(re, '');
             const lines = code.split('\n');
-            const cols = process.stdout.columns;
-            // fix formatting for previous lines that was echo
-            // ReadLine will not handle those
             if (terminal && lines.length > 2) {
-                var count = 0;
-                // correction when line wrapps in original line
-                // that will be overwritten
-                lines.map(line => {
-                    if (line.length > cols) {
-                        count += Math.ceil(line.length / cols) - 1;
-                    }
-                });
-                var f = new Formatter(code);
-                code = f.format();
                 const stdout = scheme(code).split('\n').map((line, i) => {
-                    var prefix;
+                    let prefix;
                     if (i === 0) {
                         prefix = unify_prompt(prompt, continuePrompt);
                     } else {
@@ -463,11 +468,11 @@ function run_repl(err, rl) {
                     }
                     return '\x1b[K' + prefix + line;
                 }).join('\n');
-                let num = lines.length + count + 1;
+                let num = lines.length;
                 const format = `\x1b[${num}F${stdout}\n`;
                 process.stdout.write(format);
             }
-            code += '\n';
+            cmd += '\n';
             try {
                 if (balanced_parenthesis(code)) {
                     // we need to clear the prompt because resume
@@ -477,7 +482,7 @@ function run_repl(err, rl) {
                     rl.pause();
                     prev_eval = prev_eval.then(function() {
                         const result = run(code, interp, dynamic, null, options.t || options.trace);
-                        code = '';
+                        cmd = '';
                         return result;
                     }).then(function(result) {
                         if (process.stdin.isTTY) {
@@ -507,18 +512,26 @@ function run_repl(err, rl) {
                     });
                 } else {
                     multiline = true;
-                    const ind = indent(code, 2, prompt.length - continuePrompt.length);
-                    rl.setPrompt(continuePrompt);
-                    rl.prompt();
-                    const spaces = new Array(ind + 1).join(' ');
-                    if (terminal) {
-                        rl.write(spaces);
+                    if (cmd.match(/\x1b\[200~/) || !supports_paste_brackets) {
+                        rl.setPrompt(continuePrompt);
+                        rl.prompt();
+                        if (terminal) {
+                            rl.write(' '.repeat(prompt.length - continuePrompt.length));
+                        }
+                    } else {
+                        const ind = indent(code, 2, prompt.length - continuePrompt.length);
+                        const spaces = new Array(ind + 1).join(' ');
+                        rl.setPrompt(continuePrompt);
+                        rl.prompt();
+                        if (terminal) {
+                            rl.write(spaces);
+                        }
                     }
                 }
             } catch (e) {
                 console.error(e.message);
                 console.error(e.stack);
-                code = '';
+                cmd = '';
                 rl.setPrompt(prompt);
                 rl.prompt();
             }

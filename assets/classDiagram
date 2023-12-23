@@ -235,7 +235,7 @@ class Lexer {
 
 class Parser {
   Lexer __lexer__
-  Environent __env__
+  Environment __env__
   resolve()
   peek()
   skip()

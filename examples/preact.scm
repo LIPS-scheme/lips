@@ -5,7 +5,7 @@
 (define h (.. preact.h))
 
 
-(define (ls.get namspace)
+(define (ls.get namespace)
   (--> localStorage (getItem namespace)))
 
 (define (ls.set namespace data)
@@ -28,7 +28,7 @@
 
 
 (define-class Button Component
-    (constructor (lambda (self))) ;; constructor is required - TODO: alow to skip
+    (constructor (lambda (self))) ;; constructor is required - TODO: allow to skip
     (render (lambda (self props state)
               (with-tags (:button (:onclick (lambda (e)
                                               (alert "foo")))

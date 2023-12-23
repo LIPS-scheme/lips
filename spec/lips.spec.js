@@ -121,7 +121,7 @@ describe('scope', function() {
                 expect(result).toEqual([undefined, LNumber(30)]);
             });
         });
-        it('should evalute lambda', function() {
+        it('should evaluate lambda', function() {
             var code = `(define x 10)
                         ((let ((x 20)) (lambda () x)))`;
             return exec(code).then((result) => {
@@ -145,7 +145,7 @@ describe('scope', function() {
                 expect(result).toEqual([undefined, LNumber(200)]);
             });
         });
-        it('should evalute simple lambda', function() {
+        it('should evaluate simple lambda', function() {
             var code = `(define y 20)
                         (define (foo x) (* x y))
                         ((lambda (y) (foo 10)) 2)`;
@@ -153,7 +153,7 @@ describe('scope', function() {
                 expect(result).toEqual([undefined, undefined, LNumber(20)]);
             });
         });
-        it('should evalute let over lambda', function() {
+        it('should evaluate let over lambda', function() {
             var code = `(define y 10)
                         ((let ((y 2)) (lambda () y)))`;
             return exec(code, true).then(result => {

@@ -20,7 +20,7 @@
 (define (list-match? predicate list)
   "(list-match? predicate list)
 
-   Function check if consecutive elements of the list match the predicate function."
+   Checks if consecutive elements of the list match the predicate function."
   (typecheck "list-match?" predicate #("function" "macro"))
   (typecheck "list-match?" list "pair")
   (or (or (null? list)
@@ -32,7 +32,7 @@
 (define (symbol=? . args)
   "(symbol=? s1 s2 ...)
 
-   Function check if each value is symbol and it's the same acording to string=? predicate."
+   Checks if each value is symbol and it's the same according to string=? predicate."
   (list-match? (lambda (a b)
                  (and (symbol? a) (symbol? b) (equal? a b)))
                args))
@@ -43,7 +43,7 @@
 (define (values-ref values n)
   "(values-ref values n)
 
-   Function return n value of values object which is result of value function."
+   Returns n value of values object which is result of value function."
   (typecheck "values-ref" values "values" 1)
   (typecheck "values-ref" n "number" 1)
   (--> values (valueOf) n))
@@ -67,7 +67,7 @@
 (define (vector-append . args)
   "(vector-append v1 v2 ...)
 
-   Function return new vector by combining it's arguments that should be vectors."
+   Returns new vector by combining it's arguments that should be vectors."
   (if (null? args)
       (vector)
       (begin
@@ -78,7 +78,7 @@
 (define-macro (%range-function spec . body)
   "(%range-function spec . body)
 
-   Macro that creates R7RS vector functions that have range start end."
+   Creates R7RS vector functions that have range start end."
   (let* ((name (car spec))
          (name-str (symbol->string name))
          (args (append (cdr spec) 'rest)))
@@ -102,7 +102,7 @@
   (vector->list vector start)
   (vector->list vector start end)
 
-  Function copy given range of vector to list. If no start is specified it use
+  Function that copies given range of vector to list. If no start is specified it use
   start of the vector, if no end is specified it convert to the end of the vector."
  (typecheck "vector->list" vector "array")
  (array->list (vector.slice start end)))
@@ -114,7 +114,7 @@
   (string->list string start)
   (string->list string start end)
 
-  Function copy given range of string to list. If no start is specified it use
+  Function that copies given range of string to list. If no start is specified it use
   start of the string, if no end is specified it convert to the end of the string."
  (typecheck "string->vector" string "string")
  (--> (string.substring start end)
@@ -128,7 +128,7 @@
    (vector->string vector start)
    (vector->string vector start end)
 
-   Function return new string created from vector of characters in given range.
+   Returns new string created from vector of characters in given range.
    If no start is given it create string from 0, if no end is given it return
    string to the end."
   (typecheck "vector->string" vector "array")
@@ -237,7 +237,7 @@
 (define (boolean=? . args)
   "(boolean=? b1 b2 ...)
 
-   Function check if all arguments are boolean and if they are the same."
+   Checks if all arguments are boolean and if they are the same."
   (if (< (length args) 2)
       (error "boolean=?: too few arguments")
       (reduce (lambda (acc item)
@@ -249,7 +249,7 @@
 (define (port? x)
   "(port? x)
 
-   Function return true of argumet is nput or output port port object."
+   Returns true if the argument is an input or output port object."
   (or (output-port? x) (input-port? x)))
 
 ;; -----------------------------------------------------------------------------
@@ -267,7 +267,7 @@
          (begin result1 result2 ...))))
   "(when test body ...)
 
-   Macro execute body when test expression is true.")
+   Executes body when test expression is true.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax unless
@@ -277,7 +277,7 @@
          (begin result1 result2 ...))))
   "(unless test body ...)
 
-   Macro execute body when test expression is false.")
+   Executes body when test expression is false.")
 
 ;; -----------------------------------------------------------------------------
 (define inexact exact->inexact)
@@ -287,7 +287,7 @@
 (define (exact-integer? n)
   "(exact-integer? n)
 
-   Function returns #t if z is both exact and an integer; otherwise
+   Returns #t if z is both exact and an integer; otherwise
    returns #f."
   (and (integer? n) (exact? n)))
 
@@ -295,7 +295,7 @@
 (define (vector-map fn . rest)
   "(vector-map fn vector1 vector2 ...)
 
-   Function return new vector from applying function fn to each element
+   Returns new vector from applying function fn to each element
    of the vectors, similar to map for lists."
   (if (or (= (length rest) 0) (not (every vector? rest)))
       (error "vector-map: function require at least 1 vector")
@@ -311,7 +311,7 @@
 (define (string-map fn . rest)
   "(string-map fn string1 stringr2 ...)
 
-   Function return new string from applying function fn to each element
+   Returns new string from applying function fn to each element
    of the strings, similar to map for lists."
   (if (or (= (length rest) 0) (not (every string? rest)))
       (error "string-map: function require at least 1 string")
@@ -321,11 +321,12 @@
 (define (dynamic-wind before thunk after)
   "(dynamic-wind before thunk after)
 
-   Function accept 3 procedures/lambdas and execute thunk with before and always
-   after even if error accur"
+   Accepts 3 procedures/lambdas and executes before, then thunk, and 
+   always after even if an error occurs in thunk."
   (before)
   (let ((result (try (thunk)
                      (catch (e)
+                            (after)
                             (error e)))))
     (after)
     result))
@@ -351,7 +352,7 @@
          (lambda args #f))))
     ((define-values (var) expr)
      (define var expr))
-    ((define-values (var0 var1 ... varn) expr)
+    ((define-values (var0 var1 ... warn) expr)
      (begin
        (define var0
          (call-with-values (lambda () expr)
@@ -360,11 +361,11 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define varn
+           (define warn
              (let ((v (cadr var0)))
                (set! var0 (car var0))
                v))))
-    ((define-values (var0 var1 ... . varn) expr)
+    ((define-values (var0 var1 ... . warn) expr)
      (begin
        (define var0
          (call-with-values (lambda () expr)
@@ -373,7 +374,7 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define varn
+           (define warn
              (let ((v (cdr var0)))
                (set! var0 (car var0))
                v))))
@@ -383,14 +384,14 @@
          list))))
   "(define-values (a b ...) expr)
 
-   Function evaluate expression expr and if it evaluates to result of values
+   Evaluates expression expr and if it evaluates to result of values
    then it will defined each value as variable like with define.")
 
 ;; -----------------------------------------------------------------------------
 (define-macro (include . files)
   "(include file ...)
 
-   Macro that load at least one file content and insert them into one,
+   Load at least one file content and insert them into one,
    body expression."
   (if (null? files)
       (throw (new Error "include: at least one file path required"))
@@ -562,7 +563,7 @@
    (bytevector-copy v start)
    (bytevector-copy v start end)
 
-   Function and return new vector from start to end. If no start and end is provided
+   Returns a new vector from start to end. If no start and end is provided
    whole vector is copied and returned."
   (if (null? rest)
       (new Uint8Array v)
@@ -606,7 +607,7 @@
        (string->utf8 string start)
        (string->utf8 string start end)
 
-      Function converts string into u8 bytevector using utf8 encoding.
+      Converts string into u8 bytevector using utf8 encoding.
       The start and end is the range of the input string for the conversion."
       (typecheck "string->utf8" string "string")
       (if (null? rest)
@@ -624,7 +625,7 @@
        (utf8->string u8vector start)
        (utf8->string u8vector start end)
 
-      Function converts u8 bytevector into string using utf8 encoding.
+      Converts u8 bytevector into string using utf8 encoding.
       The start and end is the range of the input byte vector for the conversion."
       (typecheck "utf8->string" v "uint8array")
       (if (null? rest)
@@ -638,7 +639,7 @@
 (define (open-input-string string)
   "(open-input-string string)
 
-   Function create new string port as input that can be used to
+   Creates new string port as input that can be used to
    read S-exressions from this port using `read` function."
   (typecheck "open-input-string" string "string")
   (new lips.InputStringPort string (interaction-environment)))
@@ -647,7 +648,7 @@
 (define (open-output-string)
   "(open-output-string)
 
-   Function create new output port that can used to write string into
+   Creates new output port that can used to write string into
    and after finish get the whole string using `get-output-string`."
   (new lips.OutputStringPort repr))
 
@@ -664,7 +665,7 @@
 (define (get-output-bytevector port)
   "(get-output-string port)
 
-   Function get full string from string port. If nothing was wrote
+   Gets full string from string port. If nothing was wrote
    to given port it will return empty string."
   (if (not (instanceof lips.OutputByteVectorPort port))
       (throw (new Error (string-append
@@ -676,7 +677,7 @@
 (define (get-output-string port)
   "(get-output-string port)
 
-   Function get full string from string port. If nothing was wrote
+   Gets full string from string port. If nothing was wrote
    to given port it will return empty string."
   (if (not (instanceof lips.OutputStringPort port))
       (throw (new Error (string-append "get-output-string: expecting output-string-port get "
@@ -695,7 +696,7 @@
 (define (open-binary-input-file filename)
   "(open-binary-input-file filename)
 
-  Function return new Input Binary Port with given filename. In Browser
+  Returns new Input Binary Port with given filename. In Browser
   user need to provide global fs variable that is instance of FS interface."
   (let ((u8vector (buffer->u8vector (%read-binary-file filename))))
     (new lips.InputBinaryFilePort u8vector filename)))
@@ -704,14 +705,14 @@
 (define (binary-port? port)
   "(binary-port? port)
 
-   Function test if argument is binary port."
+   Function that tests if argument is binary port."
   (and (port? port) (eq? port.__type__ (Symbol.for "binary"))))
 
 ;; -----------------------------------------------------------------------------
 (define (textual-port? port)
   "(textual-port? port)
 
-   Function test if argument is string port."
+   Function that tests if argument is string port."
   (and (port? port) (eq? port.__type__ (Symbol.for "text"))))
 
 ;; -----------------------------------------------------------------------------
@@ -824,7 +825,7 @@
     (lambda (filename)
       "(open-binary-output-file filename)
 
-       Function open file and return port that can be used for writing. If file
+       Opens file and return port that can be used for writing. If file
        exists it will throw an Error."
       (typecheck "open-output-file" filename "string")
       (if (not (procedure? open))
@@ -840,7 +841,7 @@
    (read-bytevector! bytevector port start)
    (read-bytevector! bytevector port start end)
 
-   Function read next bytes from binary input port and write them into byte vector.
+   Reads next bytes from binary input port and write them into byte vector.
    if not start is specified it start to write into 0 position of the vector until
    the end or end the vector if no end is specified."
   (typecheck "read-bytevector!" vector "uint8array")
@@ -864,7 +865,7 @@
     (lambda (filename)
       "(delete-file filename)
 
-       Function delete the file of given name."
+       Deletes the file of given name."
       (typecheck "delete-file" filename "string")
       (if (not (procedure? unlink))
           (set! unlink (%fs-promisify-proc 'unlink "delete-file")))
@@ -900,21 +901,21 @@
 (define (output-port-open? port)
   "(output-port-open? port)
 
-   Function check if argument is output-port and if you can write to it."
+   Checks if argument is output-port and if you can write to it."
   (and (output-port? port) (port.is_open)))
 
 ;; -----------------------------------------------------------------------------
 (define (input-port-open? port)
   "(input-port-open? port)
 
-   Function check if argument is input-port and if you can read from it."
+   Checks if argument is input-port and if you can read from it."
   (and (input-port? port) (port.is_open)))
 
 ;; -----------------------------------------------------------------------------
 (define (flush-output-port port)
   "(flush-output-port port)
 
-   Functio do nothing, flush is not needed in LIPS in both NodeJS and Browser.
+   Function do nothing, flush is not needed in LIPS in both NodeJS and Browser.
    The function is added, so it don't throw exception when using R7RS code."
   (if #f #f))
 
@@ -1039,7 +1040,7 @@
 (define (nan? x)
   "(nan? x)
 
-  Function check if argument x is Not a Number (NaN) value."
+  Checks if argument x is Not a Number (NaN) value."
   (and (number? x)
        (or (x.isNaN)
            (and (%number-type "complex" x)
@@ -1050,7 +1051,7 @@
 (define (infinite? x)
   "(infinite? x)
 
-  Function check if value is infinite."
+  Checks if value is infinite."
   (or (eq? x Number.NEGATIVE_INFINITY)
       (eq? x Number.POSITIVE_INFINITY)
       (and (number? x)
@@ -1063,7 +1064,7 @@
 (define (finite? x)
   "(finite? x)
 
-  Function check if value is finite."
+  Checks if value is finite."
   (not (infinite? x)))
 
 ;; -----------------------------------------------------------------------------
@@ -1209,12 +1210,12 @@
          (lambda ()
            "(current-directory)
 
-            Return corrent working directory, default it's corrent URL."
+            Return current working directory, default is the current URL."
            cwd)
          (lambda (value)
            "(set-current-directory! string)
 
-            Function change current working directory to provided string."
+            Changes the current working directory to provided string."
            (typecheck "set-current-directory!" value "string")
            (set! cwd value))))
       (let ((process (require "process")))
@@ -1222,13 +1223,13 @@
          (lambda ()
            "(current-directory)
 
-            Return corrent working directory, default it's path from where
+            Returns the current working directory, default is the path from where
             the script was executed."
           (string-append (process.cwd) "/"))
          (lambda (value)
            "(set-current-directory! string)
 
-            Function change current working directory to provided string."
+            Changes the current working directory to provided string."
            (typecheck "set-current-directory!" value "string")
            (process.chdir value))))))
 
@@ -1244,7 +1245,7 @@
 (define (error-object? obj)
   "(error-object? obj)
 
-   Function check if object is of Error object throwed by error function."
+   Checks if object is of Error object thrown by error function."
   (instanceof lips.Error obj))
 
 ;; -----------------------------------------------------------------------------
@@ -1267,17 +1268,17 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Function returns all variables as alist. This funtion throws exception
+   Returns all process environment variables as an alist. This function throws exception
    when called in browser."
   (if (eq? self window)
-      (throw "get-environment-variables: Node.js only funtion")
+      (throw "get-environment-variables: Node.js only function")
       (object->alist process.env)))
 
 ;; -----------------------------------------------------------------------------
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Function return given environment variable. This funtion throws exception
+   Returns given environment variable. This function throws exception
    when called in browser."
   (. process.env name))
 
@@ -1299,7 +1300,7 @@
 (define (current-jiffy)
   "(current-jiffy)
 
-   Retturn corrent jiffy. In LIPS is jiffy since start of the process.
+   Return current jiffy. In LIPS is jiffy since start of the process.
    You can divide this value by (jiffies-per-second) to get seconds since
    start of the process. And you can add %%start-jiffy to get jiffy since
    January 1, 1970."

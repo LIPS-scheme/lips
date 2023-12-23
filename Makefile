@@ -1,4 +1,4 @@
-.PHONY: publish test coveralls lint zero
+.PHONY: publish test coveralls lint zero coverage
 
 VERSION=1.0.0-beta.16
 VERSION_DASH=`echo -n "1.0.0-beta.16" | sed "s/-/%E2%80%93/"`
@@ -65,10 +65,10 @@ assets/classDiagram.svg: assets/classDiagram
 
 README.md: templates/README.md dist/lips.js .$(VERSION)
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -e "s/{{VER}}/DEV/g" -e \
-	"s/{{VER_DASH}}/$(VERSION_DASH)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{CHECKSUM}}/$(TESTS_CHECKSUM)/g" \
+	"s/{{VER_DASH}}/$(VERSION_DASH)/g" -e "s#{{BRANCH}}#$(BRANCH)#g" -e "s/{{CHECKSUM}}/$(TESTS_CHECKSUM)/g" \
 	-e "s/{{YEAR}}/${YEAR}/g"  -e "s/{{DATE}}/${DATE_SHORT}/" -e "s/{{COMMIT}}/$(COMMIT)/g" \
 	< templates/README.md > README.md || \
-	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s/{{BRANCH}}/$(BRANCH)/g" -e "s/{{YEAR}}/${YEAR}/g" \
+	$(SED) -e "s/{{VER}}/$(VERSION)/g" -e "s#{{BRANCH}}#$(BRANCH)#g" -e "s/{{YEAR}}/${YEAR}/g" \
 	-e "s/{{CHECKSUM}}/$(TESTS_CHECKSUM)/g" -e "s/{{COMMIT}}/$(COMMIT)/g" -e "s/{{DATE}}/${DATE_SHORT}/" \
 	-e "s/{{VER_DASH}}/$(VERSION_DASH)/g" < templates/README.md > README.md
 
@@ -112,7 +112,7 @@ watch-lint:
 watch-make:
 	@inotifywait -m -e close_write src/lips.js | while read even; do $(MAKE) --no-print-directory; done
 
-coveralls:
+coverage:
 	$(NPM) run coverage
 
 lint:

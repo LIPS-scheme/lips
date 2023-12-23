@@ -45,7 +45,7 @@
         (t.is (number->string 10.0-nan.0i) "10.0+nan.0i")
         (t.is (number->string 1/2-nan.0i) "1/2+nan.0i")))
 
-(test "numbers: operators + with NaN"
+(test "numbers: operator + with NaN"
       (lambda (t)
         (t.is (+ +nan.0+nan.0i 10) +nan.0+nan.0i)
         (t.is (+ +nan.0+nan.0i 10.0) +nan.0+nan.0i)
@@ -101,7 +101,7 @@
         (t.is (+ 1/2 +nan.0) +nan.0)
         (t.is (+ 10+10i +nan.0) +nan.0+10i)))
 
-(test "numbers: operators + with +inf.0"
+(test "numbers: operator + with +inf.0"
       (lambda (t)
         (t.is (+ +inf.0+inf.0i 10) +inf.0+inf.0i)
         (t.is (+ +inf.0+inf.0i 10.0) +inf.0+inf.0i)
@@ -157,7 +157,7 @@
         (t.is (+ 1/2 +inf.0) +inf.0)
         (t.is (+ 10+10i +inf.0) +inf.0+10i)))
 
-(test "operators: / with NaN"
+(test "numbers: operator / with NaN"
       (lambda (t)
         (t.is (/ +nan.0+nan.0i 10) +nan.0+nan.0i)
         (t.is (/ +nan.0+nan.0i 10.0) +nan.0+nan.0i)
@@ -504,7 +504,7 @@
 
         (t.is (remainder -13 -4.0) -1.0)))
 
-(test "numbers: operators +"
+(test "numbers: operator +"
       (lambda (t)
         (t.is (+ 1 1.0 1/10) 2.1)
         (t.is (number->string (+ 1/2 1/2 1.0)) "2.0")
@@ -564,7 +564,7 @@
         (t.is (+ 1/2+0.1i 1/2) 1+0.1i)
         (t.is (+ 1/2+0.1i 0.1) 0.6+0.1i)))
 
-(test "numbers: operators -"
+(test "numbers: operator -"
       (lambda (t)
         (t.is (- 1 1.0 1/10) -0.1)
         (t.is (number->string (- 1/2 1/2 1.0)) "-1.0")
@@ -626,19 +626,37 @@
         (t.is (- 1/2+0.1i 1/2) 0.1i)
         (t.is (- 1/2+0.1i 0.1) 0.4+0.1i)))
 
-(test "numbers: operators /"
+(test "numbers: operator /"
       (lambda (t)
         ;; single arg
         (t.is (/ 10) 1/10)
         (t.is (/ 10.0) 0.1)
         (t.is (/ 1/10) 10)
+
         (t.is (/ 10+10i) 1/20-1/20i)
+        (t.is (/ 0.1+0.1i) 5.0-5.0i)
+        (t.is (/ 1/10+1/10i) 5-5i)
+
+        (t.is (/ 1/10+0.1i) 5-5.0i)
+        (t.is (/ 1/10+10i) 10/10001-1000/10001i)
+
+        (t.is (/ 0.1+1/10i) 4.999999999999999-4.999999999999999i)
+        (t.is (/ 0.1+10i) 0.000999900009999-0.0999900009999i)
+
+        (t.is (/ 10+1/10i) 1000/10001-10/10001i)
+        (t.is (/ 10+0.1i) 0.0999900009999-0.000999900009999i)
+
 
         (t.is (/ 10 10) 1)
         (t.is (/ 10 1/10) 100)
         (t.is (/ 10 2) 5)
         (t.is (/ 10 3) 10/3)
         (t.is (/ 10 2.0) 5.0)
+
+        (t.is (/ 10+10i 10+10i) 1)
+        (t.is (/ 0.1+0.1i 0.1+0.1i) 1.0)
+        (t.is (/ 1/10+1/10i 1/10+1/10i) 1)
+        (t.is (/ 3+6i 2+4i) 3/2)
 
         (t.is (/ 1 10+10i) 1/20-1/20i)
         (t.is (/ 1 10+10.0i) 0.05-0.05i)
@@ -672,6 +690,9 @@
         (t.is (/ 1.0 2) 0.5)
         (t.is (/ 1.0 1/10) 10.0)
 
+        (t.is (/ 2 1.0) 2.0)
+        (t.is (/ 1/10 1.0) 0.1)
+
         (t.is (/ 1.0 1+1i) 0.5-0.5i)
         (t.is (/ 1.0 1+1.0i) 0.5-0.5i)
         (t.is (/ 1.0 1+1/2i) 0.8-0.4i)
@@ -682,9 +703,21 @@
 
         (t.is (/ 1.0 1/2+1/2i) 1.0-1.0i)
         (t.is (/ 1.0 1/2+1.0i) 0.4-0.8i)
-        (t.is (/ 1.0 1/2+1i) 0.4-0.8i)))
+        (t.is (/ 1.0 1/2+1i) 0.4-0.8i)
 
-(test "numbers: operators *"
+        (t.is (/ 1+1i 1.0) 1.0+1.0i)
+        (t.is (/ 1+1.0i 1.0) 1.0+1.0i)
+        (t.is (/ 1+1/2i 1.0) 1.0+0.5i)
+
+        (t.is (/ 1.0+1.0i 1.0) 1.0+1.0i)
+        (t.is (/ 1.0+1i 1.0) 1.0+1.0i)
+        (t.is (/ 1.0+1/2i 1.0) 1.0+0.5i)
+
+        (t.is (/ 1/2+1/2i 1.0) 0.5+0.5i)
+        (t.is (/ 1/2+1.0i 1.0) 0.5+1.0i)
+        (t.is (/ 1/2+1i 1.0) 0.5+1.0i)))
+
+(test "numbers: operator *"
       (lambda (t)
         (t.is (* 10 10) 100)
         (t.is (* 10 1/10) 1)
@@ -765,10 +798,24 @@
 
         (t.is (sqrt -9) 3i)))
 
+(test.failing "numbers: expt"
+      (lambda (t)
+        (for-each (lambda (x)
+                    (let ((base (car x))
+                          (expontent (cadr x))
+                          (result (caddr x)))
+                      (t.is (= (expt base expontent) result) #t)))
+                  '((1/2 2 1/4)
+                    #;(10+10i 10 ...)
+                    (9 1/2 9.0)
+                    (2 1/2 1.4142135623730951)
+                    (3.0 10 59049.0)
+                    (10 3.0 1000.0)))))
+
 (test "numbers: eq?"
       (lambda (t)
 
-        ;; eq? on numbers is unspecifed - in lisp if two numbers are the same
+        ;; eq? on numbers is unspecified - in lisp if two numbers are the same
         ;; but not the same object they are equal
 
         (t.is (eq? 10.0i 10i) #f)
@@ -898,7 +945,7 @@
         (t.is (exact->inexact 1/2+10i) 0.5+10.0i)
         (t.is (exact->inexact 1/2+10.0i) 0.5+10.0i)))
 
-(test "operation: exp"
+(test "numbers: operation exp"
       (lambda (t)
         ;; big int
         (t.is (exp 2) 7.38905609893065)
@@ -914,3 +961,48 @@
         (t.is (exp -2-2i) -0.05631934999212789-0.12306002480577674i)
         (t.is (exp +2-2i) -3.074932320639359-6.71884969742825i)
         (t.is (exp -2+2i) -0.05631934999212789+0.12306002480577674i)))
+
+(test "numbers: sin"
+      (lambda (t)
+        (for-each (lambda (l)
+                    (let ((num (car l))
+                          (result (cadr l)))
+                      (t.is (= (sin num) result) #t)))
+                  '((10 -0.5440211108893698)
+                    (1/2 0.479425538604203)
+                    (-1/2 -0.479425538604203)
+                    (10+10i -5991.431207677988-9240.89014825243i)
+                    (1/2+1/2i 0.5406126857131534+0.4573041531842493i)
+                    (1/2i +0.5210953054937474i)
+                    (0.5+0.5i 0.5406126857131534+0.4573041531842493i)
+                    (0.5i +0.5210953054937474i)))))
+
+(test "numbers: cos"
+      (lambda (t)
+        (for-each (lambda (l)
+                    (let* ((num (car l))
+                           (result (cadr l)))
+                      (t.is (= (cos num) result) #t)))
+                  '((10 -0.8390715290764524)
+                    (1/2 0.8775825618903728)
+                    (-1/2 0.8775825618903728)
+                    (10+10i -9240.89018634622+5991.431182979468i)
+                    (1/2+1/2i 0.9895848833999199-0.24982639750046154i)
+                    (+1/2i 1.1276259652063807)
+                    (0.5+0.5i 0.9895848833999199-0.24982639750046154i)
+                    (+0.5i 1.1276259652063807)))))
+
+(test "numbers: tan"
+      (lambda (t)
+        (for-each (lambda (l)
+                    (let* ((num (car l))
+                           (result (cadr l)))
+                      (t.is (= (tan num) result) #t)))
+                  '((10 0.6483608274590866)
+                    (1/2 0.5463024898437905)
+                    (-1/2 -0.5463024898437905)
+                    (10.0+10.0i 3.763440814919645e-9+0.9999999983177603i)
+                    (0.5+0.5i 0.40389645531602575+0.5640831412674985i)
+                    (0.5i +0.46211715726000974i)
+                    (1/2+1/2i 0.40389645531602575+0.5640831412674985i)
+                    (+1/2i +0.46211715726000974i)))))

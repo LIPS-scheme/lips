@@ -9,7 +9,7 @@
 
            Iteration macro that evaluate the expression body in scope of the variables.
            On Eeach loop it increase the variables according to next expression and run
-           test to check if the loop should continue. If test is signle call the macro
+           test to check if the loop should continue. If test is single call the macro
            will not return anything. If the test is pair of expression and value the
            macro will return that value after finish."
           (let ((return? (eq? (length test) 2)) (loop (gensym)))
