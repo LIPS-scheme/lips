@@ -17,6 +17,9 @@
 * fix numerator and denominator [#213](https://github.com/jcubic/lips/issues/213)
 * fix Map object repr
 * fix parsing regular expressions [#238](https://github.com/jcubic/lips/issues/238)
+* fix exception when syntax-rule macro contain undefined
+* fix REPL clearing stdin when using read-line [#253](https://github.com/jcubic/lips/issues/253)
+* add proper handling of [Paste Brackets mode in REPL for NodeJS](https://github.com/nodejs/node/pull/47150)
 
 ## 1.0.0-beta.16
 ### Breaking
