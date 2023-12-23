@@ -2,7 +2,7 @@
  * This is an example of how you can extend LIPS parser using reader macros
  *
  * This is part of the LIPS JavaScript interpter
- * Copyright (C) Jakub T. Jankiewicz <https://jcubic.pl>
+ * Copyright (c) Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under MIT license
  */
 /* global lips */

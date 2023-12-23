@@ -10,7 +10,7 @@
 ;; This file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
@@ -1577,7 +1577,7 @@
 ;; https://schemers.org/Documents/Standards/R5RS/HTML/
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 ;; (+ 1 (call-with-current-continuation
@@ -3084,7 +3084,7 @@
 ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 
@@ -3228,7 +3228,7 @@
 ;; https://small.r7rs.org/attachment/r7rs.pdf
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------

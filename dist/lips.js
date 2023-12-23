@@ -4,11 +4,11 @@
  * | |   \ \     | |  | || . \/ __>  | |
  * | |    > \    | |_ | ||  _/\__ \  | |
  * | |   / ^ \   |___||_||_|  <___/  | |
- *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.17
+ *  \_\ /_/ \_\                     /_/ v. 1.0.0-beta.17.1
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
- * Copyright (c) 2018-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
+ * Copyright (c) 2018-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  * includes:
@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 23 Dec 2023 13:43:06 +0000
+ * build: Sat, 23 Dec 2023 13:55:55 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5777,7 +5777,7 @@
    *
    * LIPS is Pretty Simple - Scheme based powerful LISP in JavaScript
    *
-   * Copyright (c) 2018-2021 Jakub T. Jankiewicz <https://jcubic.pl/me>
+   * Copyright (c) 2018-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
    * Released under the MIT license
    *
    * Includes:
@@ -5799,7 +5799,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Sat, 23 Dec 2023 13:43:06 +0000
+   * Build time: Sat, 23 Dec 2023 13:55:55 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["stderr", "stdin", "stdout", "command_line"];
@@ -17240,17 +17240,17 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sat, 23 Dec 2023 13:43:06 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sat, 23 Dec 2023 13:55:55 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sat, 23 Dec 2023 13:43:06 +0000').valueOf();
+    var date = LString('Sat, 23 Dec 2023 13:55:55 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
     };
     var _year = _date.getFullYear();
     var _build = [_year, _format(_date.getMonth() + 1), _format(_date.getDate())].join('-');
-    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.17 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specific function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
+    var banner = "\n  __ __                          __\n / / \\ \\       _    _  ___  ___  \\ \\\n| |   \\ \\     | |  | || . \\/ __>  | |\n| |    > \\    | |_ | ||  _/\\__ \\  | |\n| |   / ^ \\   |___||_||_|  <___/  | |\n \\_\\ /_/ \\_\\                     /_/\n\nLIPS Interpreter 1.0.0-beta.17.1 (".concat(_build, ") <https://lips.js.org>\nCopyright (c) 2018-").concat(_year, " Jakub T. Jankiewicz\n\nType (env) to see environment with functions macros and variables. You can also\nuse (help name) to display help for specific function or macro, (apropos name)\nto display list of matched names in environment and (dir object) to list\nproperties of an object.\n").replace(/^.*\n/, '');
     return banner;
   }();
   // -------------------------------------------------------------------------
@@ -17281,9 +17281,9 @@
   read_only(QuotedPromise, '__class__', 'promise');
   // -------------------------------------------------------------------------
   var lips = {
-    version: '1.0.0-beta.17',
+    version: '1.0.0-beta.17.1',
     banner: banner,
-    date: 'Sat, 23 Dec 2023 13:43:06 +0000',
+    date: 'Sat, 23 Dec 2023 13:55:55 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

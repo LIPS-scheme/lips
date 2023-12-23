@@ -13,7 +13,7 @@
 ;; https://schemers.org/Documents/Standards/R5RS/HTML/
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2021 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 ;; (+ 1 (call-with-current-continuation

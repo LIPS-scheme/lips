@@ -1,7 +1,7 @@
 ;; -*- scheme -*-
 ;; LIPS macro to create structures
 ;;
-;; Copyright (C) 2019 Jakub T. Jankiewicz <https://jcubic.pl>
+;; Copyright (c) 2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 ;; the macro defstruct generates a bunch of helper functions
