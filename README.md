@@ -20,8 +20,10 @@
 </a>
 
 [LIPS is a powerful Scheme-based, Lisp language written in JavaScript](https://lips.js.org).
-It is based on the Scheme dialect and the R5RS/R7RS specifications. It has extensions to make it easier
-to interact with JavaScript. It work both in the browser and with Node.js.
+It is based on the Scheme dialect of lisp and the R5RS/R7RS specifications. It has extensions to make it easier
+to interact with JavaScript and extend the language. It work both in the browser and with Node.js.
+
+The aim of the project is to support full R7RS specification and be compatible with [Scheme programming language](https://www.scheme.org/).
 
 The name is a recursive acronym which stands for LIPS Is Pretty Simple.
 
