@@ -205,13 +205,17 @@ button.addEventListener('click', () => {
 });
 let height;
 const body = document.body;
-myCodeMirror.on('change', function() {
+
+//myCodeMirror.on('change', adjust_height);
+myCodeMirror.on('update', adjust_height);
+
+function adjust_height() {
     var rect = dialog.getBoundingClientRect();
     if (height !== rect.height) {
         height = rect.height;
         body.style.setProperty('--height', rect.height + 300);
     }
-});
+}
 </script>
 {{FOOTER}}
 </body>
