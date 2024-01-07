@@ -10,6 +10,24 @@
         (cont 4)
         (t.is result 6)))
 
+(test.failing "continuations: double call/cc"
+              (lambda (t)
+                (define (repeat-string n item)
+                  (apply string-append
+                         (call/cc (lambda (return)
+                                    (let ((next #f)
+                                          (result '())
+                                          (counter n))
+                                      (call/cc (lambda (c)
+                                                 (set! next c)))
+                                      (set! counter (- counter 1))
+                                      (set! result (cons item result))
+                                      (if (zero? counter)
+                                          (return result)
+                                          (next)))))))
+                (t.is (string-repeat 5 "x") "xxxxx")
+                (t.is (string-repeat 2 "1") "11")))
+
 (test.failing "continuations: return"
       (lambda (t)
         (let ((called #f))
