@@ -1,3 +1,15 @@
+(test.failing "continuations: base"
+      (lambda (t)
+        (define cont 0)
+        (define result #f)
+
+        (set! result (+ 2 (call/cc (lambda (cc)
+                                     (set! cont cc)
+                                     3))))
+        (t.is result 5)
+        (cont 4)
+        (t.is result 6)))
+
 (test.failing "continuations: return"
       (lambda (t)
         (let ((called #f))
