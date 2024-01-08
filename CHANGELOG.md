@@ -1,3 +1,7 @@
+## 1.0.0-beta.18
+### Bugfix
+* remove evaluating of async list data as first argument
+
 ## 1.0.0-beta.17
 ### Breaking
 * chars are now not automatically unboxed to strings [#233](https://github.com/jcubic/lips/issues/233)

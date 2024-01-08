@@ -439,3 +439,11 @@
           (t.is (error-object? err) true)
           (t.is (error-object-message err) message)
           (t.is (error-object-irritants err) (list->vector args)))))
+
+(test "core: should evaluate promise of code"
+      (lambda (t)
+        (t.is ((Promise.resolve (lambda x x)) 1 2 3) '(1 2 3))))
+
+(test "core: should not evaluate promise of data"
+      (lambda (t)
+        (t.is (to.throw ((Promise.resolve 'list) 1 2 3)) true)))

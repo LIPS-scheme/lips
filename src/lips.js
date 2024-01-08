@@ -9994,6 +9994,12 @@ function evaluate(code, { env, dynamic_scope, error = noop } = {}) {
             value = resolve_promises(evaluate(first, eval_args));
             if (is_promise(value)) {
                 return value.then((value) => {
+                    if (!is_callable(value)) {
+                        throw new Error(
+                            type(value) + ' ' + env.get('repr')(value) +
+                                ' is not callable while evaluating ' + code.toString()
+                        );
+                    }
                     return evaluate(new Pair(value, code.cdr), eval_args);
                 });
                 // else is later in code
