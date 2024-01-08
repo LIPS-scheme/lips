@@ -1,5 +1,6 @@
 .lips.terminal {
-    --terminal: black;
+    --background: #000;
+    --color: #ccc;
 }
 .terminal .token.__doc__::before {
     color: var(--base-background, #000);
