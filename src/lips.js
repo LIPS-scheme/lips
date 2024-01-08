@@ -8687,6 +8687,13 @@ var global_env = new Environment({
 
         Predicate that tests if value is a macro.`),
     // ------------------------------------------------------------------
+    'continuation?': doc(
+        'continuation?',
+        is_continuation,
+        `(continuation? expression)
+
+         Predicate that tests if value is a callable continuation.`),
+    // ------------------------------------------------------------------
     'function?': doc(
         'function?',
         is_function,
@@ -10625,6 +10632,7 @@ read_only(LCharacter, '__class__', 'character');
 read_only(LSymbol, '__class__', 'symbol');
 read_only(LString, '__class__', 'string');
 read_only(QuotedPromise, '__class__', 'promise');
+read_only(Continuation, '__class__', 'continuation');
 // -------------------------------------------------------------------------
 const lips = {
     version: '{{VER}}',

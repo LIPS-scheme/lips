@@ -1,3 +1,7 @@
+(test "contanation: procedure"
+      (lambda (t)
+        (t.is (procedure? (call/cc identity)) #t)))
+
 (test.failing "continuations: base"
       (lambda (t)
         (define cont 0)
@@ -25,6 +29,7 @@
                                       (if (zero? counter)
                                           (return result)
                                           (next)))))))
+
                 (t.is (string-repeat 5 "x") "xxxxx")
                 (t.is (string-repeat 2 "1") "11")))
 

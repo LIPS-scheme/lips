@@ -26,11 +26,16 @@
 (define remainder %)
 (define -inf.0 Number.NEGATIVE_INFINITY)
 (define +inf.0 Number.POSITIVE_INFINITY)
-(define procedure? function?)
 (define expt **)
 (define list->vector list->array)
 (define vector->list array->list)
 (define call-with-current-continuation call/cc)
+;; -----------------------------------------------------------------------------
+(define (procedure? obj)
+  "(procedure? obj)
+
+   Checks if object is callable function or continuation."
+  (or (function? obj) (continuation? obj)))
 ;; -----------------------------------------------------------------------------
 (define-macro (define-symbol-macro type spec . rest)
   "(define-symbol-macro type (name . args) . body)
