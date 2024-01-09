@@ -227,3 +227,63 @@
 (test.failing "std: Petrofsky let"
       (lambda (t)
         (t.is (let - ((n (- 1))) n) -1)))
+
+(test "std: parameterize base"
+      (lambda (t)
+        (define radix
+          (make-parameter
+           10
+           (lambda (x)
+             (if (and (exact-integer? x) (<= 2 x 16))
+                 x
+                 (error (string-append "invalid radix " (repr x)))))))
+
+        (define (f n) (number->string n (radix)))
+
+        (t.is (f 12) "12")
+        (t.is (parameterize ((radix 2))
+                (f 12))
+              "1100")))
+
+;; parametrize tests taken on https://docs.racket-lang.org/guide/parameterize.html
+(test.failing "std: parameterize lexical"
+      (lambda (t)
+        (define location (make-parameter "here"))
+        (t.is (location) "here")
+        (t.is (parameterize ([location "there"]) (location))
+              "there")
+        (t.is (parameterize ([location "in a house"])
+                (list (location)
+                      (parameterize ([location "with a mouse"])
+                        (location))
+                      (location)))
+              '("in a house" "with a mouse" "in a house"))))
+
+(test.failing "std: parametrize closures"
+              (lambda (t)
+                (define location (make-parameter "here"))
+
+                (let ([get (parameterize ([location "with a fox"])
+                             (lambda () (location)))])
+                  (t.is (get) "here"))))
+
+(test "std: parametrize change value"
+      (lambda (t)
+        (define location (make-parameter "here"))
+        (t.is (list (location) (begin (location "there")
+                                      (location)))
+              '("here" "there"))))
+
+(test.failing "std: parametrize change value + lexical"
+              (lambda (t)
+                (define location (make-parameter "here"))
+
+                (define (try-again! where)
+                  (location where))
+
+                (t.is (parameterize ([location "on a train"])
+                        (list (location)
+                              (begin (try-again! "in a boat")
+                                     (location))))
+                      '("on a train" "in a boat"))))
+
