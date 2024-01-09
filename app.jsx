@@ -3,6 +3,7 @@ const { useRef, useState, useEffect, useMemo } = React;
 const fuse_options = {
     includeScore: true,
     threshold: 0.1,
+    ignoreLocation: true,
     keys: [
         'doc',
         {

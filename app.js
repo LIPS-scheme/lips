@@ -18,6 +18,7 @@ var _React = React,
 var fuse_options = {
   includeScore: true,
   threshold: 0.1,
+  ignoreLocation: true,
   keys: ['doc', {
     name: 'name',
     weight: 2
