@@ -61,7 +61,7 @@ const App = () => {
                 {result.map(({item}) => {
                     
                     return (
-                        <li>
+                        <li key={item.name}>
                             <h2>{ item.name }</h2>
                             <pre>{ item.doc }</pre>
                         </li>

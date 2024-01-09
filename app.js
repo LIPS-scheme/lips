@@ -83,7 +83,9 @@ var App = function App() {
     value: term
   })), /*#__PURE__*/React.createElement("ul", null, result.map(function (_ref2) {
     var item = _ref2.item;
-    return /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("h2", null, item.name), /*#__PURE__*/React.createElement("pre", null, item.doc));
+    return /*#__PURE__*/React.createElement("li", {
+      key: item.name
+    }, /*#__PURE__*/React.createElement("h2", null, item.name), /*#__PURE__*/React.createElement("pre", null, item.doc));
   })));
 };
 var root = ReactDOM.createRoot(document.getElementById('root'));
