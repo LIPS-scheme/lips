@@ -1,6 +1,7 @@
 ## 1.0.0-beta.18
 ### Features
 * add R7RS `guard` macro
+* add R7RS `parameterize` and `make-parameter`
 ### Bugfix
 * remove evaluating of async list data as first argument
 * fix `number->string` for binary numbers

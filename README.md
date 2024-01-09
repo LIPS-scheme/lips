@@ -1,13 +1,13 @@
 
 <h1 align="center">
-  <img src="https://github.com/jcubic/lips/blob/master/assets/lips.svg?raw=true"
+  <img src="https://github.com/jcubic/lips/blob/devel/assets/lips.svg?raw=true"
        alt="LIPS - Scheme Based Powerful Lisp Language" />
 </h1>
 
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.17-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
-[![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=master&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&1eb2cfbcb9a646f24938a31ec46bbc33)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&4c1e341a4d5b78e71694fc8bbd89da36)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -162,7 +162,7 @@ npm install -g @jcubic/lips@beta
 
 you can run the interpreter from the terminal:
 
-![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/master/assets/screencast.gif?raw=true)
+![LIPS: Scheme interactive terminal](https://github.com/jcubic/lips/blob/devel/assets/screencast.gif?raw=true)
 
 
 You can also run code in a string with:
@@ -201,14 +201,14 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 
 ## FOSDEM'23 Presentation [Video]
 
-[![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/master/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
+[![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/devel/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
 
 ## Limitations
 Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
 process long arrays and use callback function. If the array is quite large each piece of code
 inside the callback may slow down the processing. For example see:
 
-script [reference.scm](https://github.com/jcubic/lips/blob/master/scripts/reference.scm)
+script [reference.scm](https://github.com/jcubic/lips/blob/devel/scripts/reference.scm)
 
 That generates reference documentation for all builtin functions and macros.
 The slow part is `(names.sort name-compare)` (`Array::sort`) that take quite time to calculate,

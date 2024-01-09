@@ -4400,6 +4400,59 @@
        (--> ,parent (set ',name ,module-var)))))
 
 ;; -----------------------------------------------------------------------------
+(define-syntax guard
+  (syntax-rules (catch)
+    ((_ (var cond1 cond2 ...)
+        body ...)
+     (try
+       body ...
+       (catch (var)
+              (cond cond1
+                    cond2 ...)))))
+  "(guard (variable (cond result)
+                    (cond2 result))
+          body)
+
+   Macro that executes the body and when there is exception, triggered by
+   raise it's saved in variable that can be tested by conditions.")
+
+;; -----------------------------------------------------------------------------
+(define-syntax parameterize
+  (syntax-rules ()
+    ((_ ((name value) ...) body ...)
+     (let ((name value) ...)
+       body ...)))
+  "(parameterize ((name value) ...)
+
+   Macro that change the dynamic variable created by make-parameter.")
+
+;; -----------------------------------------------------------------------------
+(define (make-parameter init . rest)
+  "(make-parameter init converter)
+
+   Function creates new dynamic variable that can be custimized with parameterize
+   macro. The value should be assigned to a variable e.g.:
+
+   (define radix (make-parameter 10))
+
+   The result value is a prodecure that return the value of dynamic variable."
+  (lambda ()
+    (let* ((self arguments.callee)
+           (name self.__name__)
+           (fn (if (null? rest) (lambda () init) (car rest))))
+      (let iter ((frames (cdr (parent.frames))))
+        (if (null? frames)
+            (fn init)
+            (let* ((frame (car frames))
+                   (ref (frame.ref name)))
+              (if (null? ref)
+                  (iter (cdr frames))
+                  (let ((value (ref.get name)))
+                    (if (eq? value self)
+                        (fn init)
+                        (fn value))))))))))
+
+;; -----------------------------------------------------------------------------
 (define-syntax define-library/export
   (syntax-rules (rename :c)
     ((_ :c (rename to from))
@@ -4524,6 +4577,7 @@
 ;; -----------------------------------------------------------------------------
 (define (jiffies-per-second)
   1000000)
+
 ;; -----------------------------------------------------------------------------
 ;; init internal fs for LIPS Scheme Input/Output functions
 ;; -----------------------------------------------------------------------------

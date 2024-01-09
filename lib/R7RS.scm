@@ -1202,6 +1202,42 @@
    raise it's saved in variable that can be tested by conditions.")
 
 ;; -----------------------------------------------------------------------------
+(define-syntax parameterize
+  (syntax-rules ()
+    ((_ ((name value) ...) body ...)
+     (let ((name value) ...)
+       body ...)))
+  "(parameterize ((name value) ...)
+
+   Macro that change the dynamic variable created by make-parameter.")
+
+;; -----------------------------------------------------------------------------
+(define (make-parameter init . rest)
+  "(make-parameter init converter)
+
+   Function creates new dynamic variable that can be custimized with parameterize
+   macro. The value should be assigned to a variable e.g.:
+
+   (define radix (make-parameter 10))
+
+   The result value is a prodecure that return the value of dynamic variable."
+  (lambda ()
+    (let* ((self arguments.callee)
+           (name self.__name__)
+           (fn (if (null? rest) (lambda () init) (car rest))))
+      (let iter ((frames (cdr (parent.frames))))
+        (if (null? frames)
+            (fn init)
+            (let* ((frame (car frames))
+                   (ref (frame.ref name)))
+              (if (null? ref)
+                  (iter (cdr frames))
+                  (let ((value (ref.get name)))
+                    (if (eq? value self)
+                        (fn init)
+                        (fn value))))))))))
+
+;; -----------------------------------------------------------------------------
 (define-syntax define-library/export
   (syntax-rules (rename :c)
     ((_ :c (rename to from))
