@@ -1220,7 +1220,7 @@
 
    (define radix (make-parameter 10))
 
-   The result value is a prodecure that return the value of dynamic variable."
+   The result value is a procedure that return the value of dynamic variable."
   (lambda ()
     (let* ((self arguments.callee)
            (name self.__name__)
