@@ -1185,6 +1185,23 @@
        (--> ,parent (set ',name ,module-var)))))
 
 ;; -----------------------------------------------------------------------------
+(define-syntax guard
+  (syntax-rules (catch)
+    ((_ (var cond1 cond2 ...)
+        body ...)
+     (try
+       body ...
+       (catch (var)
+              (cond cond1
+                    cond2 ...)))))
+  "(guard (variable (cond result)
+                    (cond2 result))
+          body)
+
+   Macro that executes the body and when there is exception, triggered by
+   raise it's saved in variable that can be tested by conditions.")
+
+;; -----------------------------------------------------------------------------
 (define-syntax define-library/export
   (syntax-rules (rename :c)
     ((_ :c (rename to from))
