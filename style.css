@@ -73,7 +73,8 @@ nav {
 section header h2 {
   border-bottom: 5px solid #358ccb;
   padding-bottom: 5px;
-  width: 300px;
+  min-width: 300px;
+  display: inline-block;
   text-transform: uppercase;
 }
 section img {

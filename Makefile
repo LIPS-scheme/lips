@@ -22,7 +22,10 @@ UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 
 
-ALL: Makefile .$(VERSION) dist/lips.js dist/lips.min.js README.md package.json
+ALL: app.js Makefile .$(VERSION) dist/lips.js dist/lips.min.js README.md package.json
+
+app.js: app.jsx
+	npx babel app.jsx --presets=@babel/preset-env,@babel/preset-react > app.js
 
 dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
