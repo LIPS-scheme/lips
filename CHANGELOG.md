@@ -3,6 +3,7 @@
 * add R7RS `guard` macro
 ### Bugfix
 * remove evaluating of async list data as first argument
+* fix `number->string` for binary numbers
 
 ## 1.0.0-beta.17
 ### Breaking

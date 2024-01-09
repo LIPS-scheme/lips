@@ -5051,7 +5051,7 @@ LNumber.prototype.toString = function(radix) {
     if (Number.isNaN(this.__value__)) {
         return '+nan.0';
     }
-    if (radix > 2 && radix < 36) {
+    if (radix >= 2 && radix < 36) {
         return this.__value__.toString(radix);
     }
     return this.__value__.toString();
