@@ -2,9 +2,12 @@
 (test "parameterize: lexical"
       (lambda (t)
         (define location (make-parameter "here"))
+
         (t.is (location) "here")
+
         (t.is (parameterize ([location "there"]) (location))
               "there")
+
         (t.is (parameterize ([location "in a house"])
                 (list (location)
                       (parameterize ([location "with a mouse"])
@@ -23,6 +26,7 @@
 (test "parametrize: change value"
       (lambda (t)
         (define location (make-parameter "here"))
+
         (t.is (list (location) (begin (location "there")
                                       (location)))
               '("here" "there"))))
