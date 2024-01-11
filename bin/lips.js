@@ -2,7 +2,9 @@
 
 import lily from '@jcubic/lily';
 
-const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b', 'cbor'];
+const boolean = [
+    'd', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b', 'cbor', 'x'
+];
 const options = lily(process.argv.slice(2), { boolean });
 
 const quiet = options.q || options.quiet;
@@ -370,7 +372,7 @@ if (options.version || options.V) {
     command_line.push(...get_command_line_args());
     try {
         const code = readCode(filename);
-        bootstrap(interp).then(() => {
+        (options.x ? Promise.resolve() : bootstrap(interp)).then(() => {
             const dynamic = options.d || options.dynamic;
             return run(code, interp, dynamic, null, options.t || options.trace);
         });

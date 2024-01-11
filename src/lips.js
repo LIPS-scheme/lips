@@ -1594,12 +1594,16 @@ class Parser {
             if (!builtin) {
                 var extension = this.__env__.get(special.symbol);
                 if (typeof extension === 'function') {
+                    let args;
                     if (is_literal(token)) {
-                        return extension.call(this.__env__, object);
+                        args = [object];
                     } else if (object === nil) {
-                        return extension.apply(this.__env__);
+                        args = [];
                     } else if (object instanceof Pair) {
-                        return extension.apply(this.__env__, object.to_array(false));
+                        args = object.to_array(false);
+                    }
+                    if (args) {
+                        return call_function(extension, args, { env: this.__env__ });
                     }
                     throw new Error('Parse Error: Invalid parser extension ' +
                                     `invocation ${special.symbol}`);
@@ -1690,6 +1694,7 @@ async function* parse(arg, env) {
         }
     }
     const parser = new Parser(arg, { env });
+    let i = 100000;
     while (true) {
         const expr = await parser.read_object();
         if (!parser.balanced()) {
@@ -3291,10 +3296,9 @@ Macro.defmacro = function(name, fn, doc, dump) {
     return macro;
 };
 // ----------------------------------------------------------------------
-Macro.prototype.invoke = function(code, { env, dynamic_scope, error }, macro_expand) {
+Macro.prototype.invoke = function(code, { env, ...rest }, macro_expand) {
     var args = {
-        dynamic_scope,
-        error,
+        ...rest,
         macro_expand
     };
     var result = this.__fn__.call(env, code, args, this.__name__);
@@ -3464,11 +3468,12 @@ function Syntax(fn, env) {
 Syntax.__merge_env__ = Symbol.for('merge');
 // ----------------------------------------------------------------------
 Syntax.prototype = Object.create(Macro.prototype);
-Syntax.prototype.invoke = function(code, { error, env }, macro_expand) {
+Syntax.prototype.invoke = function(code, { error, env, use_dynamic }, macro_expand) {
     var args = {
         error,
         env,
-        dynamic_scope: this.__env__,
+        use_dynamic,
+        dynamic_env: this.__env__,
         macro_expand
     };
     return this.__fn__.call(env, code, args, this.__name__ || 'syntax');
@@ -3484,9 +3489,9 @@ Syntax.className = 'syntax';
 // ----------------------------------------------------------------------
 // :: TODO: SRFI-139
 // ----------------------------------------------------------------------
-class Parameter extends Syntax {
+class SyntaxParameter extends Syntax {
 }
-Syntax.Parameter = Parameter;
+Syntax.Parameter = SyntaxParameter;
 // ----------------------------------------------------------------------
 // :: for usage in syntax-rule when pattern match it will return
 // :: list of bindings from code that match the pattern
@@ -4218,8 +4223,20 @@ function is_continuation(o) {
     return o instanceof Continuation;
 }
 // ----------------------------------------------------------------------
+function is_parameter(o) {
+    return o instanceof Parameter;
+}
+// ----------------------------------------------------------------------
+function is_pair(o) {
+    return o instanceof Pair;
+}
+// ----------------------------------------------------------------------
+function is_env(o) {
+    return o instanceof Environment;
+}
+// ----------------------------------------------------------------------
 function is_callable(o) {
-    return is_function(o) || is_continuation(o);
+    return is_function(o) || is_continuation(o) || is_parameter(o);
 }
 // ----------------------------------------------------------------------
 function is_promise(o) {
@@ -4470,7 +4487,8 @@ function let_macro(symbol) {
             throw new Error('Invalid let_macro value');
     }
     return Macro.defmacro(name, function(code, options) {
-        var { dynamic_scope, error, macro_expand } = options;
+        let { dynamic_env } = options;
+        const { error, macro_expand, use_dynamic } = options
         var args;
         // named let:
         // (let iter ((x 10)) (iter (- x 1))) -> (let* ((iter (lambda (x) ...
@@ -4513,15 +4531,14 @@ function let_macro(symbol) {
             var output = new Pair(new LSymbol('begin'), code.cdr);
             return evaluate(output, {
                 env,
-                dynamic_scope,
+                dynamic_env: env,
+                use_dynamic,
                 error
             });
         }
         return (function loop() {
             var pair = args[i++];
-            if (dynamic_scope) {
-                dynamic_scope = name === 'let*' ? env : self;
-            }
+            dynamic_env = name === 'let*' ? env : self;
             if (!pair) {
                 // resolve all promises
                 if (values && values.length) {
@@ -4548,7 +4565,8 @@ function let_macro(symbol) {
                 }
                 var value = evaluate(pair.cdr.car, {
                     env: var_body_env,
-                    dynamic_scope,
+                    dynamic_env,
+                    use_dynamic,
                     error
                 });
                 if (name === 'let*') {
@@ -4569,15 +4587,13 @@ function let_macro(symbol) {
 }
 // -------------------------------------------------------------------------
 function pararel(name, fn) {
-    return new Macro(name, function(code, { dynamic_scope, error } = {}) {
+    return new Macro(name, function(code, { dynamic_env, use_dynamic, error } = {}) {
         var env = this;
-        if (dynamic_scope) {
-            dynamic_scope = this;
-        }
+        dynamic_env = this;
         var node = code;
         var results = [];
         while (node instanceof Pair) {
-            results.push(evaluate(node.car, { env, dynamic_scope, error }));
+            results.push(evaluate(node.car, { env, dynamic_env, use_dynamic, error }));
             node = node.cdr;
         }
         var havePromises = results.filter(is_promise).length;
@@ -6537,7 +6553,7 @@ Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
     if (env === null) {
         env = this.__env__;
     }
-    return exec(code, env, dynamic ? env : false);
+    return exec(code, env, env, dynamic);
 };
 // -------------------------------------------------------------------------
 Interpreter.prototype.get = function(value) {
@@ -6642,12 +6658,12 @@ Environment.prototype.doc = function(name, value = null, dump = false) {
 // :: frames are used to it's easier to find environments of the functions
 // :: in scope chain, they are dummy environments just for lookup
 // -------------------------------------------------------------------------
-Environment.prototype.newFrame = function(fn, args) {
+Environment.prototype.new_frame = function(fn, args) {
     var frame = this.inherit('__frame__');
     frame.set('parent.frame', doc('parent.frame', function(n = 1) {
         n = n.valueOf();
         var scope = frame.__parent__;
-        if (!(scope instanceof Environment)) {
+        if (!is_env(scope)) {
             return nil;
         }
         if (n <= 0) {
@@ -7017,19 +7033,20 @@ var global_env = new Environment({
         input port.`),
     // ------------------------------------------------------------------
     read: doc('read', async function read(arg = null) {
+        const { env } = this;
         if (LString.isString(arg)) {
-            for await (let value of parse(arg, this)) {
+            for await (let value of parse(arg, env)) {
                 return value;
             }
         }
         var port;
         if (arg === null) {
-            port = internal(this, 'stdin');
+            port = internal(env, 'stdin');
         } else {
             port = arg;
         }
         typecheck_text_port('read', port, 'input-port');
-        return port.read.call(this);
+        return port.read.call(env);
     }, `(read [string])
 
         This function, if used with a string, will parse it and
@@ -7057,9 +7074,12 @@ var global_env = new Environment({
     print: doc('print', function print(...args) {
         const display = global_env.get('display');
         const newline = global_env.get('newline');
+        const { use_dynamic } = this;
+        const env = global_env;
+        const dynamic_env = global_env;
         args.forEach(arg => {
-            display.call(global_env, arg);
-            newline.call(global_env);
+            call_function(display, [arg], { env, dynamic_env, use_dynamic });
+            call_function(newline, [], { env, dynamic_env, use_dynamic });
         });
     }, `(print . args)
 
@@ -7146,7 +7166,7 @@ var global_env = new Environment({
         A helper function that checks if the two input functions are
         the same.`),
     // ------------------------------------------------------------------
-    help: doc(new Macro('help', function(code, { dynamic_scope, error }) {
+    help: doc(new Macro('help', function(code, { dynamic_env, use_dynamic, error }) {
         var symbol;
         if (code.car instanceof LSymbol) {
             symbol = code.car;
@@ -7154,10 +7174,8 @@ var global_env = new Environment({
             symbol = code.car.car;
         } else {
             var env = this;
-            if (dynamic_scope) {
-                dynamic_scope = this;
-            }
-            var ret = evaluate(code.car, { env, error, dynamic_scope });
+            dynamic_env = this;
+            var ret = evaluate(code.car, { env, error, dynamic_env, use_dynamic });
             if (ret && ret.__doc__) {
                 return ret.__doc__;
             }
@@ -7205,13 +7223,12 @@ var global_env = new Environment({
 
         This function returns the cdr (all but first) of the list.`),
     // ------------------------------------------------------------------
-    'set!': doc(new Macro('set!', function(code, { dynamic_scope, error } = {}) {
-        if (dynamic_scope) {
-            dynamic_scope = this;
-        }
-        var env = this;
-        var ref;
-        var value = evaluate(code.cdr.car, { env: this, dynamic_scope, error });
+    'set!': doc(new Macro('set!', function(code, { use_dynamic, ...rest } = {}) {
+        const dynamic_env = this;
+        const env = this;
+        let ref;
+        const eval_args = { ...rest, env: this, dynamic_env, use_dynamic };
+        let value = evaluate(code.cdr.car, eval_args);
         value = resolve_promises(value);
         function set(object, key, value) {
             if (is_promise(object)) {
@@ -7229,8 +7246,8 @@ var global_env = new Environment({
         if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
             var second = code.car.cdr.car;
             var third = code.car.cdr.cdr.car;
-            var object = evaluate(second, { env: this, dynamic_scope, error });
-            var key = evaluate(third, { env: this, dynamic_scope, error });
+            var object = evaluate(second, { env: this, dynamic_env, use_dynamic, error });
+            var key = evaluate(third, { env: this, dynamic_env, use_dynamic, error });
             return set(object, key, value);
         }
         if (!(code.car instanceof LSymbol)) {
@@ -7408,26 +7425,24 @@ var global_env = new Environment({
         If the second argument is provided and it's an environment the evaluation
         will happen in that environment.`),
     // ------------------------------------------------------------------
-    'do': doc(new Macro('do', async function(code, { dynamic_scope, error }) {
-        var self = this;
-        if (dynamic_scope) {
-            dynamic_scope = self;
-        }
-        var scope = self.inherit('do');
-        var vars = code.car;
-        var test = code.cdr.car;
-        var body = code.cdr.cdr;
+    'do': doc(new Macro('do', async function(code, { use_dynamic, error }) {
+        const self = this;
+        const dynamic_env = self;
+        const scope = self.inherit('do');
+        const vars = code.car;
+        const test = code.cdr.car;
+        let body = code.cdr.cdr;
         if (body !== nil) {
             body = new Pair(LSymbol('begin'), body);
         }
-        let eval_args = { env: self, dynamic_scope, error };
+        let eval_args = { env: self, dynamic_env, use_dynamic, error };
         let node = vars;
         while (node !== nil) {
             const item = node.car;
             scope.set(item.car, await evaluate(item.cdr.car, eval_args));
             node = node.cdr;
         }
-        eval_args = { env: scope, dynamic_scope, error };
+        eval_args = { env: scope, dynamic_env, error };
         while ((await evaluate(test.car, eval_args)) === false) {
             if (body !== nil) {
                 await lips.evaluate(body, eval_args);
@@ -7458,30 +7473,21 @@ var global_env = new Environment({
          will return undefined. If the test is a pair of expressions the macro will
          evaluate and return the second expression after the loop exits.`),
     // ------------------------------------------------------------------
-    'if': doc(new Macro('if', function(code, { dynamic_scope, error }) {
-        if (dynamic_scope) {
-            dynamic_scope = this;
-        }
-        var env = this;
-        var resolve = (cond) => {
+    'if': doc(new Macro('if', function(code, { error, use_dynamic }) {
+        const dynamic_env = this;
+        const env = this;
+        const eval_args = { env, dynamic_env, use_dynamic, error };
+        const resolve = (cond) => {
             if (cond === false) {
-                return evaluate(code.cdr.cdr.car, {
-                    env,
-                    dynamic_scope,
-                    error
-                });
+                return evaluate(code.cdr.cdr.car, eval_args);
             } else {
-                return evaluate(code.cdr.car, {
-                    env,
-                    dynamic_scope,
-                    error
-                });
+                return evaluate(code.cdr.car, eval_args);
             }
         };
         if (code === nil) {
             throw new Error('too few expressions for `if`');
         }
-        var cond = evaluate(code.car, { env, dynamic_scope, error });
+        const cond = evaluate(code.car, eval_args);
         return unpromise(cond, resolve);
     }), `(if cond true-expr false-expr)
 
@@ -7490,13 +7496,13 @@ var global_env = new Environment({
          false-expression.`),
     // ------------------------------------------------------------------
     'let-env': new Macro('let-env', function(code, options = {}) {
-        const { dynamic_scope, error } = options;
+        const { dynamic_env, use_dynamic, error } = options;
         typecheck('let-env', code, 'pair');
-        var ret = evaluate(code.car, { env: this, dynamic_scope, error });
+        const ret = evaluate(code.car, { env: this, dynamic_env, error, use_dynamic });
         return unpromise(ret, function(value) {
             typecheck('let-env', value, 'environment');
             return evaluate(Pair(LSymbol('begin'), code.cdr), {
-                env: value, dynamic_scope, error
+                env: value, dynamic_env, error
             });
         });
     }, `(let-env env . body)
@@ -7549,18 +7555,14 @@ var global_env = new Environment({
          in the body and if it's a promise it will await it in parallel and return
          the value of the last expression (i.e. it uses Promise.all()).`),
     // ------------------------------------------------------------------
-    'begin': doc(new Macro('begin', function(code, options) {
-        var args = Object.assign({ }, options);
-        var arr = global_env.get('list->array')(code);
-        if (args.dynamic_scope) {
-            args.dynamic_scope = this;
-        }
-        args.env = this;
-        var result;
+    begin: doc(new Macro('begin', function(code, options) {
+        const eval_args = {...options, env: this };
+        const arr = global_env.get('list->array')(code);
+        let result;
         return (function loop() {
             if (arr.length) {
-                var code = arr.shift();
-                var ret = evaluate(code, args);
+                const code = arr.shift();
+                const ret = evaluate(code, eval_args);
                 return unpromise(ret, value => {
                     result = value;
                     return loop();
@@ -7575,12 +7577,9 @@ var global_env = new Environment({
          of the last one. It can be used in places where you can only have a
          single expression, like (if).`),
     // ------------------------------------------------------------------
-    'ignore': new Macro('ignore', function(code, { dynamic_scope, error }) {
-        var args = { env: this, error };
-        if (dynamic_scope) {
-            args.dynamic_scope = this;
-        }
-        evaluate(new Pair(new LSymbol('begin'), code), args);
+    'ignore': new Macro('ignore', function(code, options) {
+        const eval_args = { ...options, env: this, dynamic_env: this };
+        evaluate(new Pair(new LSymbol('begin'), code), eval_args);
     }, `(ignore . body)
 
         Macro that will evaluate the expression and swallow any promises that may
@@ -7603,6 +7602,57 @@ var global_env = new Environment({
          Call-with-current-continuation.
 
          NOT SUPPORTED BY LIPS RIGHT NOW`),
+    // ------------------------------------------------------------------
+    parameterize: doc(new Macro('parameterize', function(code, options) {
+        const { dynamic_env } = options;
+        const env = dynamic_env.inherit('parameterize').new_frame(null, {});
+        const eval_args = { ...options, env: this };
+        let params = code.car;
+        if (!is_pair(params)) {
+            const t = type(params);
+            throw new Error(`Invalid syntax for parameterize expecting pair got ${t}`);
+        }
+        function next() {
+            const body = new Pair(new LSymbol('begin',), code.cdr);
+            return evaluate(body, { ...eval_args, dynamic_env: env });
+        }
+        return (function loop() {
+            const pair = params.car;
+            const name = pair.car.valueOf();
+            return unpromise(evaluate(pair.cdr.car, eval_args), function(value) {
+                const param = dynamic_env.get(name, { throwError: false });
+                if (!is_parameter(param)) {
+                    throw new Error(`Unknown parameter ${name}`);
+                }
+                env.set(name, param.inherit(value));
+                if (!is_null(params.cdr)) {
+                    params = params.cdr;
+                    return loop();
+                } else {
+                    return next();
+                }
+            });
+        })();
+    }), `(parameterize ((name value) ...)
+
+         Macro that change the dynamic variable created by make-parameter.`),
+    // ------------------------------------------------------------------
+    'make-parameter': doc(new Macro('make-parameter', function(code, eval_args) {
+        const dynamic_env = eval_args.dynamic_env;
+        const init = evaluate(code.car, eval_args);
+        let fn;
+        if (code.cdr.car instanceof Pair) {
+            fn = evaluate(code.cdr.car, eval_args);
+        }
+        return new Parameter(init, fn);
+    }), `(make-parameter init converter)
+
+    Function creates new dynamic variable that can be custimized with parameterize
+    macro. The value should be assigned to a variable e.g.:
+
+    (define radix (make-parameter 10))
+
+    The result value is a procedure that return the value of dynamic variable.`),
     // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function(code, eval_args) {
         var env = this;
@@ -7628,9 +7678,7 @@ var global_env = new Environment({
             // prevent evaluation in macroexpand
             return;
         }
-        if (eval_args.dynamic_scope) {
-            eval_args.dynamic_scope = this;
-        }
+        eval_args.dynamic_env = this;
         eval_args.env = env;
         var value = code.cdr.car;
         let new_expr;
@@ -7647,7 +7695,7 @@ var global_env = new Environment({
             }
             if (new_expr &&
                 ((is_function(value) && is_lambda(value)) ||
-                 (value instanceof Syntax))) {
+                 (value instanceof Syntax) || is_parameter(value))) {
                 value.__name__ = code.car.valueOf();
                 if (value.__name__ instanceof LString) {
                     value.__name__ = value.__name__.valueOf();
@@ -7714,11 +7762,11 @@ var global_env = new Environment({
     'call-with-values': doc('call-with-values', function(producer, consumer) {
         typecheck('call-with-values', producer, 'function', 1);
         typecheck('call-with-values', consumer, 'function', 2);
-        var maybe = producer();
+        var maybe = producer.apply(this);
         if (maybe instanceof Values) {
-            return consumer(...maybe.valueOf());
+            return consumer.apply(this, maybe.valueOf());
         }
-        return consumer(maybe);
+        return consumer.call(this, maybe);
     }, `(call-with-values producer consumer)
 
         Calls the producer procedure with no arguments, then calls the
@@ -7746,7 +7794,7 @@ var global_env = new Environment({
         env = env || this.get('current-environment').call(this);
         return evaluate(code, {
             env,
-            //dynamic_scope: this,
+            dynamic_env: env,
             error: e => {
                 var error = global_env.get('display-error');
                 error.call(this, e.message);
@@ -7764,7 +7812,7 @@ var global_env = new Environment({
         Function that evaluates LIPS Scheme code. If the second argument is provided
         it will be the environment that the code is evaluated in.`),
     // ------------------------------------------------------------------
-    lambda: new Macro('lambda', function(code, { dynamic_scope, error } = {}) {
+    lambda: new Macro('lambda', function(code, { use_dynamic, error } = {}) {
         var self = this;
         var __doc__;
         if (code.cdr instanceof Pair &&
@@ -7773,15 +7821,10 @@ var global_env = new Environment({
             __doc__ = code.cdr.car.valueOf();
         }
         function lambda(...args) {
-            var env;
-            // this is function calling env
-            // self is lexical scope when function was defined
-            if (dynamic_scope) {
-                if (!(this instanceof Environment)) {
-                    env = self;
-                } else {
-                    env = this;
-                }
+            // lambda got scopes as context in apply
+            let { env, dynamic_env, use_dynamic } = this ?? { dynamic_env: self };
+            if (use_dynamic) {
+                env = dynamic_env;
             } else {
                 env = self;
             }
@@ -7789,7 +7832,7 @@ var global_env = new Environment({
             var name = code.car;
             var i = 0;
             var value;
-            if (typeof this !== 'undefined' && !(this instanceof Environment)) {
+            if (this && !(this instanceof LambdaContext)) {
                 if (this && !this.__instance__) {
                     Object.defineProperty(this, '__instance__', {
                         enumerable: false,
@@ -7801,10 +7844,10 @@ var global_env = new Environment({
                 env.set('this', this);
             }
             // arguments and arguments.callee inside lambda function
-            if (this instanceof Environment) {
-                var options = { throwError: false };
-                env.set('arguments', this.get('arguments', options));
-                env.set('parent.frame', this.get('parent.frame', options));
+            if (this instanceof LambdaContext) {
+                const options = { throwError: false };
+                env.set('arguments', this.env.get('arguments', options));
+                env.set('parent.frame', this.env.get('parent.frame', options));
             } else {
                 // this case is for lambda as callback function in JS; e.g. setTimeout
                 var _args = args.slice();
@@ -7832,12 +7875,9 @@ var global_env = new Environment({
                     name = name.cdr;
                 }
             }
-            if (dynamic_scope) {
-                dynamic_scope = env;
-            }
             var rest = __doc__ ? code.cdr.cdr : code.cdr;
             var output = new Pair(new LSymbol('begin'), rest);
-            return evaluate(output, { env, dynamic_scope, error });
+            return evaluate(output, { env, dynamic_env, use_dynamic, error });
         }
         var length = code.car instanceof Pair ? code.car.length() : null;
         lambda.__code__ = new Pair(new LSymbol('lambda'), code);
@@ -7857,7 +7897,7 @@ var global_env = new Environment({
     'macroexpand': new Macro('macroexpand', macro_expand()),
     'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
     // ------------------------------------------------------------------
-    'define-macro': doc(new Macro(macro, function(macro, { dynamic_scope, error }) {
+    'define-macro': doc(new Macro(macro, function(macro, { use_dynamic, error }) {
         if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
             var name = macro.car.car.__name__;
             var __doc__;
@@ -7893,12 +7933,10 @@ var global_env = new Environment({
                     }
                     name = name.cdr;
                 }
-                if (dynamic_scope) {
-                    dynamic_scope = env;
-                }
                 var eval_args = {
                     env,
-                    dynamic_scope,
+                    dynamic_env: env,
+                    use_dynamic,
                     error
                 };
                 // evaluate macro
@@ -7930,7 +7968,7 @@ var global_env = new Environment({
          (arguments) as lists.`),
     // ------------------------------------------------------------------
     'syntax-rules': new Macro('syntax-rules', function(macro, options) {
-        var { dynamic_scope, error } = options;
+        var { use_dynamic, error } = options;
         var env = this;
         function get_identifiers(node) {
             let symbols = [];
@@ -7956,11 +7994,9 @@ var global_env = new Environment({
             validate_identifiers(macro.car);
         }
         const syntax = new Syntax(function(code, { macro_expand }) {
-            var scope = env.inherit('syntax');
-            if (dynamic_scope) {
-                dynamic_scope = scope;
-            }
-            var var_scope = this;
+            const scope = env.inherit('syntax');
+            const dynamic_env = scope;
+            let var_scope = this;
             // for macros that define variables used in macro (2 levels nestting)
             if (var_scope.__name__ === Syntax.__merge_env__) {
                 // copy refs for defined gynsyms
@@ -7970,7 +8006,7 @@ var global_env = new Environment({
                 });
                 var_scope = var_scope.__parent__;
             }
-            var eval_args = { env: scope, dynamic_scope, error };
+            var eval_args = { env: scope, dynamic_env, use_dynamic, error };
             let ellipsis, rules, symbols;
             if (macro.car instanceof LSymbol) {
                 ellipsis = macro.car;
@@ -8060,12 +8096,10 @@ var global_env = new Environment({
         substitutes the value into quasiquote's result.`),
     // ------------------------------------------------------------------
     quasiquote: Macro.defmacro('quasiquote', function(arg, env) {
-        var { dynamic_scope, error } = env;
-        var self = this;
+        const { use_dynamic, error } = env;
+        const self = this;
         //var max_unquote = 1;
-        if (dynamic_scope) {
-            dynamic_scope = self;
-        }
+        const dynamic_env = self;
         // -----------------------------------------------------------------
         function is_struct(value) {
             return value instanceof Pair ||
@@ -8131,7 +8165,8 @@ var global_env = new Environment({
                     } else {
                         result = evaluate(x.cdr.car, {
                             env: self,
-                            dynamic_scope,
+                            use_dynamic,
+                            dynamic_env,
                             error
                         });
                     }
@@ -8161,7 +8196,8 @@ var global_env = new Environment({
                     } else {
                         output = evaluate(value.cdr.car, {
                             env: self,
-                            dynamic_scope,
+                            dynamic_env,
+                            use_dynamic,
                             error
                         });
                     }
@@ -8190,7 +8226,8 @@ var global_env = new Environment({
             return (function next(node) {
                 var value = evaluate(node.car, {
                     env: self,
-                    dynamic_scope,
+                    dynamic_env,
+                    use_dynamic,
                     error
                 });
                 lists.push(value);
@@ -8278,7 +8315,8 @@ var global_env = new Environment({
                                     }
                                     return unpromise(evaluate(node.car, {
                                         env: self,
-                                        dynamic_scope,
+                                        dynamic_env,
+                                        use_dynamic,
                                         error
                                     }), function(next) {
                                         result.push(next);
@@ -8331,7 +8369,8 @@ var global_env = new Environment({
                                     }
                                     return unpromise(evaluate(node.car, {
                                         env: self,
-                                        dynamic_scope,
+                                        dynamic_env,
+                                        use_dynamic,
                                         error
                                     }), function(next) {
                                         result.push(next);
@@ -8344,7 +8383,7 @@ var global_env = new Environment({
                         } else {
                             return evaluate(pair.cdr.car, {
                                 env: self,
-                                dynamic_scope,
+                                dynamic_env,
                                 error
                             });
                         }
@@ -8845,7 +8884,7 @@ var global_env = new Environment({
 
         Function that parses a string into a number.`),
     // ------------------------------------------------------------------
-    'try': doc(new Macro('try', function(code, { dynamic_scope, error }) {
+    'try': doc(new Macro('try', function(code, { use_dynamic, error }) {
         return new Promise((resolve, reject) => {
             var catch_clause, finally_clause;
             if (LSymbol.is(code.cdr.car.car, 'catch')) {
@@ -8860,7 +8899,7 @@ var global_env = new Environment({
             if (!(finally_clause || catch_clause)) {
                 throw new Error('try: invalid syntax');
             }
-            var next = resolve;
+            let next = resolve;
             if (finally_clause) {
                 next = function(result, cont) {
                     // prevent infinite loop when finally throw exception
@@ -8873,8 +8912,10 @@ var global_env = new Environment({
                     });
                 };
             }
-            var args = {
+            const args = {
                 env: this,
+                use_dynamic,
+                dynamic_env: this,
                 error: (e) => {
                     var env = this.inherit('try');
                     if (catch_clause) {
@@ -8883,9 +8924,7 @@ var global_env = new Environment({
                             env,
                             error
                         };
-                        if (dynamic_scope) {
-                            args.dynamic_scope = this;
-                        }
+                        args.dynamic_env = this;
                         unpromise(evaluate(new Pair(
                             new LSymbol('begin'),
                             catch_clause.cdr.cdr
@@ -8897,10 +8936,7 @@ var global_env = new Environment({
                     }
                 }
             };
-            if (dynamic_scope) {
-                args.dynamic_scope = this;
-            }
-            var result = evaluate(code.car, args);
+            let result = evaluate(code.car, args);
             if (is_promise(result)) {
                 result.then(result => {
                     next(result, resolve);
@@ -8983,10 +9019,9 @@ var global_env = new Environment({
             return nil;
         }
         var args = lists.map(l => l.car);
-        var parent_frame = this.get('parent.frame');
-        var env = this.newFrame(fn, args);
-        env.set('parent.frame', parent_frame);
-        return unpromise(fn.call(env, ...args), (head) => {
+        const { env, dynamic_env, use_dynamic } = this;
+        const result = call_function(fn, args, { env, dynamic_env, use_dynamic });
+        return unpromise(result, (head) => {
             return unpromise(map.call(this, fn, ...lists.map(l => l.cdr)), (rest) => {
                 return new Pair(head, rest);
             });
@@ -9347,12 +9382,10 @@ var global_env = new Environment({
 
          Function that compares two values if they are identical.`),
     // ------------------------------------------------------------------
-    or: doc(new Macro('or', function(code, { dynamic_scope, error }) {
+    or: doc(new Macro('or', function(code, { use_dynamic, error }) {
         var args = global_env.get('list->array')(code);
         var self = this;
-        if (dynamic_scope) {
-            dynamic_scope = self;
-        }
+        const dynamic_env = self;
         if (!args.length) {
             return false;
         }
@@ -9374,7 +9407,7 @@ var global_env = new Environment({
                 }
             } else {
                 var arg = args.shift();
-                var value = evaluate(arg, { env: self, dynamic_scope, error });
+                var value = evaluate(arg, { env: self, dynamic_env, use_dynamic, error });
                 return unpromise(value, next);
             }
         })();
@@ -9384,16 +9417,15 @@ var global_env = new Environment({
          a truthy value. If there are no expressions that evaluate to true it
          returns false.`),
     // ------------------------------------------------------------------
-    and: doc(new Macro('and', function(code, { dynamic_scope, error } = {}) {
-        var args = global_env.get('list->array')(code);
-        var self = this;
-        if (dynamic_scope) {
-            dynamic_scope = self;
-        }
+    and: doc(new Macro('and', function(code, { use_dynamic, error } = {}) {
+        const args = global_env.get('list->array')(code);
+        const self = this;
+        const dynamic_env = self;
         if (!args.length) {
             return true;
         }
-        var result;
+        let result;
+        const eval_args = { env: self, dynamic_env, use_dynamic, error };
         return (function loop() {
             function next(value) {
                 result = value;
@@ -9410,9 +9442,8 @@ var global_env = new Environment({
                     return false;
                 }
             } else {
-                var arg = args.shift();
-                var value = evaluate(arg, { env: self, dynamic_scope, error });
-                return unpromise(value, next);
+                const arg = args.shift();
+                return unpromise(evaluate(arg, eval_args), next);
             }
         })();
     }), `(and . expressions)
@@ -9761,6 +9792,9 @@ function type(obj) {
                 if (is_function(obj.toType)) {
                     return obj.toType();
                 }
+                if (is_debug()) {
+                    obj.__instance__
+                }
                 return 'instance';
             }
         }
@@ -9830,7 +9864,7 @@ function resolve_promises(arg) {
     }
 }
 // -------------------------------------------------------------------------
-function evaluate_args(rest, { env, dynamic_scope, error }) {
+function evaluate_args(rest, { use_dynamic, ...options }) {
     var args = [];
     var node = rest;
     markCycles(node);
@@ -9839,11 +9873,11 @@ function evaluate_args(rest, { env, dynamic_scope, error }) {
     }
     return (function loop() {
         if (node instanceof Pair) {
-            var arg = evaluate(node.car, { env, dynamic_scope, error });
-            if (dynamic_scope) {
+            let arg = evaluate(node.car, { use_dynamic, ...options });
+            if (use_dynamic) {
                 arg = unpromise(arg, arg => {
                     if (is_native_function(arg)) {
-                        return arg.bind(dynamic_scope);
+                        return arg.bind(dynamic_env);
                     }
                     return arg;
                 });
@@ -9927,9 +9961,20 @@ function prepare_fn_args(fn, args) {
     }
     return args;
 }
+function call_function(fn, args, { env, dynamic_env, use_dynamic } = {}) {
+    const scope = env?.new_frame(fn, args);
+    const dynamic_scope = dynamic_env?.new_frame(fn, args);
+    const context = new LambdaContext({
+        env: scope,
+        use_dynamic,
+        dynamic_env: dynamic_scope
+    });
+    return resolve_promises(fn.apply(context, args));
+}
+
 // -------------------------------------------------------------------------
-function apply(fn, args, { env, dynamic_scope, error = () => {} } = {}) {
-    args = evaluate_args(args, { env, dynamic_scope, error });
+function apply(fn, args, { env, dynamic_env, use_dynamic, error = () => {} } = {}) {
+    args = evaluate_args(args, { env, dynamic_env, error, use_dynamic });
     return unpromise(args, function(args) {
         if (is_raw_lambda(fn)) {
             // lambda need environment as context
@@ -9937,9 +9982,8 @@ function apply(fn, args, { env, dynamic_scope, error = () => {} } = {}) {
             fn = unbind(fn);
         }
         args = prepare_fn_args(fn, args);
-        var _args = args.slice();
-        var scope = (dynamic_scope || env).newFrame(fn, _args);
-        var result = resolve_promises(fn.apply(scope, args));
+        const _args = args.slice();
+        const result = call_function(fn, _args, { env, dynamic_env, use_dynamic });
         return unpromise(result, (result) => {
             if (result instanceof Pair) {
                 result.markCycles();
@@ -9950,9 +9994,94 @@ function apply(fn, args, { env, dynamic_scope, error = () => {} } = {}) {
     });
 }
 // -------------------------------------------------------------------------
+// :: Parameters for make-parameter and parametrize
+// -------------------------------------------------------------------------
+class Parameter {
+    __value__;
+    __fn__;
+    #__p_name__;
+    constructor(init, fn = null, name = null) {
+        this.__value__ = init;
+        if (fn) {
+            if (!is_function(fn)) {
+                throw new Error('Section argument to Parameter need to be function ' +
+                                `${type(fn)} given`);
+            }
+            this.__fn__ = fn;
+        }
+        if (name) {
+            this.#__p_name__ = name;
+        }
+    }
+    get __name__() {
+        return this.#__p_name__;
+    }
+    set __name__(name) {
+        this.#__p_name__ = name;
+        if (this.__fn__) {
+            this.__fn__.__name__ = `fn-${name}`;
+        }
+    }
+    invoke() {
+        if (is_function(this.__fn__)) {
+            return this.__fn__(this.__value__);
+        }
+        return this.__value__;
+    }
+    inherit(value) {
+        return new Parameter(value, this.__fn__, this.__name__);
+    }
+}
+// -------------------------------------------------------------------------
+class LambdaContext {
+    env;
+    dynamic_env;
+    use_dynamic;
+    constructor(payload) {
+        Object.assign(this, payload);
+    }
+    get __name__() {
+        return this.env.__name__;
+    }
+    get __parent__() {
+        return this.env.__parent__;
+    }
+    get(...args) {
+        return this.env.get(...args);
+    }
+}
+// -------------------------------------------------------------------------
+function search_param(env, param) {
+    let candidate = env.get(param.__name__, { throwError: false });
+    if (is_parameter(candidate) && candidate !== param) {
+        return candidate;
+    }
+    let i = 10;
+    let is_first_env = true;
+    const top_env = user_env.get('**interaction-environment**');
+    while (true) {
+        const parent = env.get('parent.frame', { throwError: false });
+        env = parent(0);
+        if (env === top_env) {
+            break;
+        }
+        is_first_env = false;
+        if (!--i) {
+            break;
+        }
+        candidate = env.get(param.__name__, { throwError: false });
+        if (is_parameter(candidate) && candidate !== param) {
+            return candidate;
+        }
+    }
+    return param;
+}
+
+// -------------------------------------------------------------------------
 // :: Continuations object from call/cc
 // -------------------------------------------------------------------------
 class Continuation {
+    __value__;
     constructor(k) {
         this.__value__ = k;
     }
@@ -9961,23 +10090,23 @@ class Continuation {
             throw new Error('Continuations are not implemented yet');
         }
     }
-    toString() {
-        return '#<Continuation>';
-    }
 }
 // -------------------------------------------------------------------------
 const noop = () => {};
 // -------------------------------------------------------------------------
-function evaluate(code, { env, dynamic_scope, error = noop } = {}) {
+function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest } = {}) {
     try {
-        if (dynamic_scope === true) {
-            env = dynamic_scope = env || global_env;
+        if (!is_env(dynamic_env)) {
+            dynamic_env = env === true ? global_env : (env || global_env);
+        }
+        if (use_dynamic) {
+            env = dynamic_env;
         } else if (env === true) {
-            env = dynamic_scope = global_env;
+            env = global_env;
         } else {
             env = env || global_env;
         }
-        var eval_args = { env, dynamic_scope, error };
+        var eval_args = { env, dynamic_env, use_dynamic, error };
         var value;
         if (is_null(code)) {
             return code;
@@ -10015,13 +10144,22 @@ function evaluate(code, { env, dynamic_scope, error = noop } = {}) {
         } else if (is_function(first)) {
             value = first;
         }
-        var result;
+        let result;
         if (value instanceof Syntax) {
             result = evaluate_syntax(value, code, eval_args);
         } else if (value instanceof Macro) {
             result = evaluate_macro(value, rest, eval_args);
         } else if (is_function(value)) {
             result = apply(value, rest, eval_args);
+        } else if (is_parameter(value)) {
+            const param = search_param(dynamic_env, value);
+            if (is_null(code.cdr)) {
+                result = param.invoke();
+            } else {
+                return unpromise(evaluate(code.cdr.car, eval_args), function(value) {
+                    param.__value__ = value;
+                });
+            }
         } else if (is_continuation(value)) {
             result = value.invoke();
         } else if (code instanceof Pair) {
@@ -10059,11 +10197,12 @@ const exec = exec_collect(function(code, value) {
 });
 // -------------------------------------------------------------------------
 function exec_collect(collect_callback) {
-    return async function exec_lambda(arg, env, dynamic_scope) {
-        if (dynamic_scope === true) {
-            env = dynamic_scope = env || user_env;
-        } else if (env === true) {
-            env = dynamic_scope = user_env;
+    return async function exec_lambda(arg, env, dynamic_env, use_dynamic) {
+        if (!is_env(dynamic_env)) {
+            dynamic_env = env === true ? user_env : env || user_env;
+        }
+        if (env === true) {
+            env = user_env;
         } else {
             env = env || user_env;
         }
@@ -10072,7 +10211,8 @@ function exec_collect(collect_callback) {
         for await (let code of input) {
             const value = evaluate(code, {
                 env,
-                dynamic_scope,
+                dynamic_env,
+                use_dynamic,
                 error: (e, code) => {
                     if (e && e.message) {
                         if (e.message.match(/^Error:/)) {
@@ -10091,11 +10231,7 @@ function exec_collect(collect_callback) {
                     throw e;
                 }
             });
-            if (!is_promise(value)) {
-                results.push(collect_callback(code, value));
-            } else {
-                results.push(collect_callback(code, await value));
-            }
+            results.push(collect_callback(code, await value));
         }
         return results;
     };
@@ -10631,6 +10767,7 @@ read_only(LCharacter, '__class__', 'character');
 read_only(LSymbol, '__class__', 'symbol');
 read_only(LString, '__class__', 'string');
 read_only(QuotedPromise, '__class__', 'promise');
+read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 const lips = {
     version: '{{VER}}',
@@ -10698,6 +10835,7 @@ const lips = {
     LBigInteger,
     LCharacter,
     LString,
+    Parameter,
     rationalize
 };
 // so it work when used with webpack where it will be not global
