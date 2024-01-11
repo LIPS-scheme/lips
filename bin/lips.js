@@ -69,9 +69,9 @@ function debug(message) {
     console.log(message);
 }
 // -----------------------------------------------------------------------------
-async function run(code, interpreter, dynamic = false, env = null, stack = false) {
+async function run(code, interpreter, use_dynamic = false, env = null, stack = false) {
     try {
-        return await interpreter.exec(code, dynamic, env)
+        return await interpreter.exec(code, { use_dynamic, env });
     } catch (e) {
         print_error(e, stack);
     }

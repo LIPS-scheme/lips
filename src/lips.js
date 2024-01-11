@@ -4587,11 +4587,11 @@ function let_macro(symbol) {
 }
 // -------------------------------------------------------------------------
 function pararel(name, fn) {
-    return new Macro(name, function(code, { dynamic_env, use_dynamic, error } = {}) {
-        var env = this;
-        dynamic_env = this;
-        var node = code;
-        var results = [];
+    return new Macro(name, function(code, { use_dynamic, error } = {}) {
+        const env = this;
+        const dynamic_env = this;
+        const results = [];
+        let node = code;
         while (node instanceof Pair) {
             results.push(evaluate(node.car, { env, dynamic_env, use_dynamic, error }));
             node = node.cdr;
@@ -6544,16 +6544,24 @@ function Interpreter(name, { stderr, stdin, stdout, command_line = null, ...obj 
     set_interaction_env(this.__env__, inter);
 }
 // -------------------------------------------------------------------------
-Interpreter.prototype.exec = function(code, dynamic = false, env = null) {
+Interpreter.prototype.exec = function(code, options = {}) {
+    let {
+        use_dynamic = false,
+        dynamic_env,
+        env
+    } = options;
     typecheck('Interpreter::exec', code, ['string', 'array'], 1);
-    typecheck('Interpreter::exec', dynamic, 'boolean', 2);
+    typecheck('Interpreter::exec', use_dynamic, 'boolean', 2);
     // simple solution to overwrite this variable in each interpreter
     // before evaluation of user code
-    global_env.set('**interaction-environment**', this.__env__);
-    if (env === null) {
+    if (!env) {
         env = this.__env__;
     }
-    return exec(code, env, env, dynamic);
+    if (!dynamic_env) {
+        dynamic_env = env;
+    }
+    global_env.set('**interaction-environment**', this.__env__);
+    return exec(code, { env, dynamic_env, use_dynamic });
 };
 // -------------------------------------------------------------------------
 Interpreter.prototype.get = function(value) {
@@ -7360,7 +7368,7 @@ var global_env = new Environment({
                     code = unserialize(code);
                 }
             }
-            return exec(code, env);
+            return exec(code, { env });
         }
         function fetch(file) {
             return root.fetch(file)
@@ -10197,7 +10205,7 @@ const exec = exec_collect(function(code, value) {
 });
 // -------------------------------------------------------------------------
 function exec_collect(collect_callback) {
-    return async function exec_lambda(arg, env, dynamic_env, use_dynamic) {
+    return async function exec_lambda(arg, { env, dynamic_env, use_dynamic } = {}) {
         if (!is_env(dynamic_env)) {
             dynamic_env = env === true ? user_env : env || user_env;
         }
@@ -10362,8 +10370,8 @@ function Worker(url) {
                 init.then(function() {
                     // we can use ES6 inside function that's converted to blob
                     var code = data.params[0];
-                    var dynamic = data.params[1];
-                    interpreter.exec(code, dynamic).then(function(result) {
+                    var use_dynamic = data.params[1];
+                    interpreter.exec(code, { use_dynamic }).then(function(result) {
                         result = result.map(function(value) {
                             return value && value.valueOf();
                         });
@@ -10415,8 +10423,8 @@ function Worker(url) {
     this.rpc('init', [url]).catch((error) => {
         console.error(error);
     });
-    this.exec = function(code, dynamic = false) {
-        return this.rpc('eval', [code, dynamic]);
+    this.exec = function(code, { use_dynamic = false }) {
+        return this.rpc('eval', [code, use_dynamic]);
     };
 }
 

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 11 Jan 2024 18:09:05 +0000
+ * build: Thu, 11 Jan 2024 22:03:19 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5838,7 +5838,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Thu, 11 Jan 2024 18:09:05 +0000
+   * Build time: Thu, 11 Jan 2024 22:03:19 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -10967,13 +10967,12 @@
   function pararel(name, fn) {
     return new Macro(name, function (code) {
       var _ref23 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        dynamic_env = _ref23.dynamic_env,
         use_dynamic = _ref23.use_dynamic,
         error = _ref23.error;
       var env = this;
-      dynamic_env = this;
-      var node = code;
+      var dynamic_env = this;
       var results = [];
+      var node = code;
       while (node instanceof Pair) {
         results.push(_evaluate(node.car, {
           env: env,
@@ -13240,17 +13239,27 @@
   }
   // -------------------------------------------------------------------------
   Interpreter.prototype.exec = function (code) {
-    var dynamic = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-    var env = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var _options$use_dynamic = options.use_dynamic,
+      use_dynamic = _options$use_dynamic === void 0 ? false : _options$use_dynamic,
+      dynamic_env = options.dynamic_env,
+      env = options.env;
     typecheck('Interpreter::exec', code, ['string', 'array'], 1);
-    typecheck('Interpreter::exec', dynamic, 'boolean', 2);
+    typecheck('Interpreter::exec', use_dynamic, 'boolean', 2);
     // simple solution to overwrite this variable in each interpreter
     // before evaluation of user code
-    global_env.set('**interaction-environment**', this.__env__);
-    if (env === null) {
+    if (!env) {
       env = this.__env__;
     }
-    return exec(code, env, env, dynamic);
+    if (!dynamic_env) {
+      dynamic_env = env;
+    }
+    global_env.set('**interaction-environment**', this.__env__);
+    return exec(code, {
+      env: env,
+      dynamic_env: dynamic_env,
+      use_dynamic: use_dynamic
+    });
   };
   // -------------------------------------------------------------------------
   Interpreter.prototype.get = function (value) {
@@ -14100,7 +14109,9 @@
             code = unserialize(code);
           }
         }
-        return exec(code, env);
+        return exec(code, {
+          env: env
+        });
       }
       function fetch(file) {
         return root.fetch(file).then(function (res) {
@@ -16863,12 +16874,26 @@
   // -------------------------------------------------------------------------
   function exec_collect(collect_callback) {
     return /*#__PURE__*/function () {
-      var _exec_lambda = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(arg, env, dynamic_env, use_dynamic) {
-        var results, input, _iteratorAbruptCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, code, value;
+      var _exec_lambda = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(arg) {
+        var _ref46,
+          env,
+          dynamic_env,
+          use_dynamic,
+          results,
+          input,
+          _iteratorAbruptCompletion3,
+          _didIteratorError3,
+          _iteratorError3,
+          _iterator3,
+          _step3,
+          code,
+          value,
+          _args24 = arguments;
         return _regeneratorRuntime.wrap(function _callee21$(_context21) {
           while (1) {
             switch (_context21.prev = _context21.next) {
               case 0:
+                _ref46 = _args24.length > 1 && _args24[1] !== undefined ? _args24[1] : {}, env = _ref46.env, dynamic_env = _ref46.dynamic_env, use_dynamic = _ref46.use_dynamic;
                 if (!is_env(dynamic_env)) {
                   dynamic_env = env === true ? user_env : env || user_env;
                 }
@@ -16881,14 +16906,14 @@
                 input = Array.isArray(arg) ? arg : parse(arg);
                 _iteratorAbruptCompletion3 = false;
                 _didIteratorError3 = false;
-                _context21.prev = 6;
+                _context21.prev = 7;
                 _iterator3 = _asyncIterator(input);
-              case 8:
-                _context21.next = 10;
+              case 9:
+                _context21.next = 11;
                 return _iterator3.next();
-              case 10:
+              case 11:
                 if (!(_iteratorAbruptCompletion3 = !(_step3 = _context21.sent).done)) {
-                  _context21.next = 24;
+                  _context21.next = 25;
                   break;
                 }
                 code = _step3.value;
@@ -16917,54 +16942,54 @@
                 _context21.t0 = results;
                 _context21.t1 = collect_callback;
                 _context21.t2 = code;
-                _context21.next = 18;
+                _context21.next = 19;
                 return value;
-              case 18:
+              case 19:
                 _context21.t3 = _context21.sent;
                 _context21.t4 = (0, _context21.t1)(_context21.t2, _context21.t3);
                 _context21.t0.push.call(_context21.t0, _context21.t4);
-              case 21:
+              case 22:
                 _iteratorAbruptCompletion3 = false;
-                _context21.next = 8;
+                _context21.next = 9;
                 break;
-              case 24:
-                _context21.next = 30;
+              case 25:
+                _context21.next = 31;
                 break;
-              case 26:
-                _context21.prev = 26;
-                _context21.t5 = _context21["catch"](6);
+              case 27:
+                _context21.prev = 27;
+                _context21.t5 = _context21["catch"](7);
                 _didIteratorError3 = true;
                 _iteratorError3 = _context21.t5;
-              case 30:
-                _context21.prev = 30;
+              case 31:
                 _context21.prev = 31;
+                _context21.prev = 32;
                 if (!(_iteratorAbruptCompletion3 && _iterator3["return"] != null)) {
-                  _context21.next = 35;
+                  _context21.next = 36;
                   break;
                 }
-                _context21.next = 35;
+                _context21.next = 36;
                 return _iterator3["return"]();
-              case 35:
-                _context21.prev = 35;
+              case 36:
+                _context21.prev = 36;
                 if (!_didIteratorError3) {
-                  _context21.next = 38;
+                  _context21.next = 39;
                   break;
                 }
                 throw _iteratorError3;
-              case 38:
-                return _context21.finish(35);
               case 39:
-                return _context21.finish(30);
+                return _context21.finish(36);
               case 40:
-                return _context21.abrupt("return", results);
+                return _context21.finish(31);
               case 41:
+                return _context21.abrupt("return", results);
+              case 42:
               case "end":
                 return _context21.stop();
             }
           }
-        }, _callee21, null, [[6, 26, 30, 40], [31,, 35, 39]]);
+        }, _callee21, null, [[7, 27, 31, 41], [32,, 36, 40]]);
       }));
-      function exec_lambda(_x19, _x20, _x21, _x22) {
+      function exec_lambda(_x19) {
         return _exec_lambda.apply(this, arguments);
       }
       return exec_lambda;
@@ -17118,8 +17143,10 @@
           init.then(function () {
             // we can use ES6 inside function that's converted to blob
             var code = data.params[0];
-            var dynamic = data.params[1];
-            interpreter.exec(code, dynamic).then(function (result) {
+            var use_dynamic = data.params[1];
+            interpreter.exec(code, {
+              use_dynamic: use_dynamic
+            }).then(function (result) {
               result = result.map(function (value) {
                 return value && value.valueOf();
               });
@@ -17171,9 +17198,10 @@
     this.rpc('init', [url])["catch"](function (error) {
       console.error(error);
     });
-    this.exec = function (code) {
-      var dynamic = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      return this.rpc('eval', [code, dynamic]);
+    this.exec = function (code, _ref47) {
+      var _ref47$use_dynamic = _ref47.use_dynamic,
+        use_dynamic = _ref47$use_dynamic === void 0 ? false : _ref47$use_dynamic;
+      return this.rpc('eval', [code, use_dynamic]);
     };
   }
 
@@ -17181,10 +17209,10 @@
   // :: Serialization
   // -------------------------------------------------------------------------
   var serialization_map = {
-    'pair': function pair(_ref46) {
-      var _ref47 = _slicedToArray(_ref46, 2),
-        car = _ref47[0],
-        cdr = _ref47[1];
+    'pair': function pair(_ref48) {
+      var _ref49 = _slicedToArray(_ref48, 2),
+        car = _ref49[0],
+        cdr = _ref49[1];
       return Pair(car, cdr);
     },
     'number': function number(value) {
@@ -17193,10 +17221,10 @@
       }
       return LNumber(value);
     },
-    'regex': function regex(_ref48) {
-      var _ref49 = _slicedToArray(_ref48, 2),
-        pattern = _ref49[0],
-        flag = _ref49[1];
+    'regex': function regex(_ref50) {
+      var _ref51 = _slicedToArray(_ref50, 2),
+        pattern = _ref51[0],
+        flag = _ref51[1];
       return new RegExp(pattern, flag);
     },
     'nil': function nil() {
@@ -17486,10 +17514,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 11 Jan 2024 18:09:05 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 11 Jan 2024 22:03:19 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 11 Jan 2024 18:09:05 +0000').valueOf();
+    var date = LString('Thu, 11 Jan 2024 22:03:19 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17530,7 +17558,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Thu, 11 Jan 2024 18:09:05 +0000',
+    date: 'Thu, 11 Jan 2024 22:03:19 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
