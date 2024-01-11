@@ -1,4 +1,6 @@
 {
   "presets": [ "@babel/preset-env" ],
-  "plugins": [ "@babel/plugin-proposal-unicode-property-regex", { "useUnicodeFlag": false } ]
+  "plugins": [
+    ["@babel/plugin-proposal-unicode-property-regex", { "useUnicodeFlag": true } ]
+  ]
 }

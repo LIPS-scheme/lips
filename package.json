@@ -213,6 +213,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.17.2",
+    "@babel/eslint-parser": "^7.23.3",
     "@babel/plugin-external-helpers": "^7.16.7",
     "@babel/plugin-proposal-unicode-property-regex": "^7.16.7",
     "@babel/plugin-transform-async-to-generator": "^7.16.8",
@@ -234,7 +235,7 @@
     "c8": "^7.11.0",
     "compare-versions": "^6.1.0",
     "coveralls": "^3.1.1",
-    "eslint": "^8.8.0",
+    "eslint": "^8.56.0",
     "microtime": "^3.0.0",
     "nyc": "^15.1.0",
     "preact": "^10.6.5",
