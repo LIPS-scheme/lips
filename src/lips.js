@@ -46,6 +46,7 @@ import { addExtension, Encoder } from 'cbor-x';
 import { pack, unpack } from 'lzjb-pack';
 import unfetch from 'unfetch';
 
+/* c8 ignore next */
 if (!root.fetch) {
     root.fetch = unfetch;
 }
@@ -8507,10 +8508,10 @@ var global_env = new Environment({
         if (arg instanceof Pair) {
             var arr = global_env.get('list->array')(arg).reverse();
             return global_env.get('array->list')(arr);
-        } else if (!(arg instanceof Array)) {
-            throw new Error(typeErrorMessage('reverse', type(arg), 'array or pair'));
-        } else {
+        } else if (Array.isArray(arg)) {
             return arg.reverse();
+        } else {
+            throw new Error(typeErrorMessage('reverse', type(arg), 'array or pair'));
         }
     }, `(reverse list)
 
@@ -8626,17 +8627,16 @@ var global_env = new Environment({
         to match a literal string.`),
     // ------------------------------------------------------------------
     env: doc('env', function env(env) {
-        env = env || this;
-        var names = Object.keys(env.__env__).map(LSymbol);
-        // TODO: get symbols
-        var result;
+        env = env || this.env;
+        const names = Object.keys(env.__env__).map(LSymbol);
+        let result;
         if (names.length) {
             result = Pair.fromArray(names);
         } else {
             result = nil;
         }
         if (env.__parent__ instanceof Environment) {
-            return global_env.get('env')(env.__parent__).append(result);
+            return global_env.get('env').call(this, env.__parent__).append(result);
         }
         return result;
     }, `(env)
@@ -9665,6 +9665,7 @@ async function node_specific() {
         Function used inside Node.js to import a module.`));
 }
 // -------------------------------------------------------------------------
+/* c8 ignore next 11 */
 if (is_node()) {
     node_specific();
 } else if (typeof window !== 'undefined' && window === root) {

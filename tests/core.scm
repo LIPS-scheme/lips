@@ -447,3 +447,62 @@
 (test "core: should not evaluate promise of data"
       (lambda (t)
         (t.is (to.throw ((Promise.resolve 'list) 1 2 3)) true)))
+
+(test "core: should clone list"
+      (lambda (t)
+        (let* ((a '(1 2 3)) (b (clone a)))
+        (t.is (not (eq? a b)) #t)
+        (t.is a b))))
+
+(test "core: should return nth element"
+      (lambda (t)
+        (let ((a '(1 2 3 4)))
+          (t.is (nth 0 a) 1)
+          (t.is (nth 1 a) 2)
+          (t.is (nth 2 a) 3)
+          (t.is (nth 3 a) 4))))
+
+(test "core: escape-regex"
+      (lambda (t)
+        (t.is (escape-regex ".{}[]")
+              "\\.\\{\\}\\[\\]")))
+
+(test "core: env"
+      (lambda (t)
+        (let* ((l (env))
+               (size (length l)))
+          (t.is (pair? l) #t)
+          (t.is (> size 100) #t)
+          (let ((x 10))
+            (let* ((l1 (env))
+                   (l2 (env)))
+              (t.is (+ (length l1) 1) (length l2)))))))
+
+(test "core: match"
+      (lambda (t)
+        (t.is (match (new RegExp "(foo|bar)" "g") "foo bar")
+              '("foo" "bar"))))
+
+(test "core: search"
+      (lambda (t)
+        (for-each (lambda (regex)
+                    (t.is (search regex "foo") 0))
+                  '(#/./ #/^f/ #/foo$/))
+        (t.is (search #/bar/ "foo") -1)))
+
+(test "core: join"
+      (lambda (t)
+        (t.is (join ":" '("foo" "bar" "baz"))
+              "foo:bar:baz")))
+
+(test "core: replace"
+      (lambda (t)
+        (t.is (replace "foo" "var" "foo bar") "var bar")
+        (t.is (replace (new RegExp "foo|bar" "g") "x" "foo bar") "x x")))
+
+(test "core: split"
+      (lambda (t)
+        (t.is (split ":" "foo:bar:baz")
+              '("foo" "bar" "baz"))
+        (t.is (split #/(:)/ "foo:bar:baz")
+              '("foo" ":" "bar" ":" "baz"))))

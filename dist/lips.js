@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 12 Jan 2024 12:45:31 +0000
+ * build: Fri, 12 Jan 2024 14:29:44 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5838,7 +5838,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Fri, 12 Jan 2024 12:45:31 +0000
+   * Build time: Fri, 12 Jan 2024 14:29:44 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -5858,6 +5858,8 @@
   function _asyncIterator(iterable) { var method, async, sync, retry = 2; for ("undefined" != typeof Symbol && (async = Symbol.asyncIterator, sync = Symbol.iterator); retry--;) { if (async && null != (method = iterable[async])) return method.call(iterable); if (sync && null != (method = iterable[sync])) return new AsyncFromSyncIterator(method.call(iterable)); async = "@@asyncIterator", sync = "@@iterator"; } throw new TypeError("Object is not async iterable"); }
   function AsyncFromSyncIterator(s) { function AsyncFromSyncIteratorContinuation(r) { if (Object(r) !== r) return Promise.reject(new TypeError(r + " is not an object.")); var done = r.done; return Promise.resolve(r.value).then(function (value) { return { value: value, done: done }; }); } return AsyncFromSyncIterator = function AsyncFromSyncIterator(s) { this.s = s, this.n = s.next; }, AsyncFromSyncIterator.prototype = { s: null, n: null, next: function next() { return AsyncFromSyncIteratorContinuation(this.n.apply(this.s, arguments)); }, "return": function _return(value) { var ret = this.s["return"]; return void 0 === ret ? Promise.resolve({ value: value, done: !0 }) : AsyncFromSyncIteratorContinuation(ret.apply(this.s, arguments)); }, "throw": function _throw(value) { var thr = this.s["return"]; return void 0 === thr ? Promise.reject(value) : AsyncFromSyncIteratorContinuation(thr.apply(this.s, arguments)); } }, new AsyncFromSyncIterator(s); }
   var root = typeof global !== 'undefined' ? global : self;
+
+  /* c8 ignore next */
   if (!root.fetch) {
     root.fetch = unfetch;
   }
@@ -15235,10 +15237,10 @@
       if (arg instanceof Pair) {
         var arr = global_env.get('list->array')(arg).reverse();
         return global_env.get('array->list')(arr);
-      } else if (!(arg instanceof Array)) {
-        throw new Error(typeErrorMessage('reverse', type(arg), 'array or pair'));
-      } else {
+      } else if (Array.isArray(arg)) {
         return arg.reverse();
+      } else {
+        throw new Error(typeErrorMessage('reverse', type(arg), 'array or pair'));
       }
     }, "(reverse list)\n\n        Function that reverses the list or array. If value is not a list\n        or array it will error."),
     // ------------------------------------------------------------------
@@ -15331,9 +15333,8 @@
     }, "(escape-regex string)\n\n        Function that returns a new string where all special operators used in regex,\n        are escaped with backslashes so they can be used in the RegExp constructor\n        to match a literal string."),
     // ------------------------------------------------------------------
     env: doc('env', function env(env) {
-      env = env || this;
+      env = env || this.env;
       var names = Object.keys(env.__env__).map(LSymbol);
-      // TODO: get symbols
       var result;
       if (names.length) {
         result = Pair.fromArray(names);
@@ -15341,7 +15342,7 @@
         result = _nil;
       }
       if (env.__parent__ instanceof Environment) {
-        return global_env.get('env')(env.__parent__).append(result);
+        return global_env.get('env').call(this, env.__parent__).append(result);
       }
       return result;
     }, "(env)\n        (env obj)\n\n        Function that returns a list of names (functions, macros and variables)\n        that are bound in the current environment or one of its parents."),
@@ -16158,6 +16159,7 @@
   function node_specific() {
     return _node_specific.apply(this, arguments);
   } // -------------------------------------------------------------------------
+  /* c8 ignore next 11 */
   function _node_specific() {
     _node_specific = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23() {
       var _yield$import, createRequire, moduleURL, __dirname, __filename;
@@ -17517,10 +17519,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 12 Jan 2024 12:45:31 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 12 Jan 2024 14:29:44 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 12 Jan 2024 12:45:31 +0000').valueOf();
+    var date = LString('Fri, 12 Jan 2024 14:29:44 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17561,7 +17563,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Fri, 12 Jan 2024 12:45:31 +0000',
+    date: 'Fri, 12 Jan 2024 14:29:44 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
