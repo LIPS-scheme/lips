@@ -798,7 +798,10 @@
   `(let ((env))
       (set! env (current-environment))
       (env.set (Symbol.for "__promise__") true)
-      ,expr))
+      (let ((env))
+        (set! env (current-environment))
+        (env.set (Symbol.for "__promise__") false)
+        ,expr)))
 
 ;; -----------------------------------------------------------------------------
 (define (defmacro? obj)

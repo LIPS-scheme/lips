@@ -9,6 +9,7 @@
 * fix `number->string` for binary numbers
 * fix macro expand on let with more than one binding
 * fix shallow `list->array`
+* fix resolving promises inside quoted promise realm
 
 ## 1.0.0-beta.17
 ### Breaking
