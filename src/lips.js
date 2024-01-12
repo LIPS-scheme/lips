@@ -2507,7 +2507,7 @@ Pair.prototype.to_array = function(deep = true) {
         result.push(this.car.valueOf());
     }
     if (this.cdr instanceof Pair) {
-        result = result.concat(this.cdr.to_array());
+        result = result.concat(this.cdr.to_array(deep));
     }
     return result;
 };
