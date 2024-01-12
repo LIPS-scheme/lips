@@ -1603,7 +1603,11 @@ class Parser {
                         args = object.to_array(false);
                     }
                     if (args) {
-                        return call_function(extension, args, { env: this.__env__ });
+                        return call_function(extension, args, {
+                            env: this.__env__,
+                            dynamic_env: this.__env__,
+                            use_dynamic: false
+                        });
                     }
                     throw new Error('Parse Error: Invalid parser extension ' +
                                     `invocation ${special.symbol}`);
@@ -4221,6 +4225,10 @@ function is_function(o) {
 // ----------------------------------------------------------------------
 function is_continuation(o) {
     return o instanceof Continuation;
+}
+// ----------------------------------------------------------------------
+function is_context(o) {
+    return o instanceof LambdaContext;
 }
 // ----------------------------------------------------------------------
 function is_parameter(o) {
@@ -7830,17 +7838,10 @@ var global_env = new Environment({
         }
         function lambda(...args) {
             // lambda got scopes as context in apply
-            let { env, dynamic_env, use_dynamic } = this ?? { dynamic_env: self };
-            if (use_dynamic) {
-                env = dynamic_env;
-            } else {
-                env = self;
-            }
-            env = env.inherit('lambda');
-            var name = code.car;
-            var i = 0;
-            var value;
-            if (this && !(this instanceof LambdaContext)) {
+            let { dynamic_env } = is_context(this) ? this : { dynamic_env: self };
+            const env = self.inherit('lambda');
+            dynamic_env = dynamic_env.inherit('lambda');
+            if (this && !is_context(this)) {
                 if (this && !this.__instance__) {
                     Object.defineProperty(this, '__instance__', {
                         enumerable: false,
@@ -7863,17 +7864,23 @@ var global_env = new Environment({
                 _args.env = env;
                 env.set('arguments', _args);
             }
+            function set(name, value) {
+                env.__env__[name.__name__] = value;
+                dynamic_env.__env__[name.__name__] = value;
+            }
+            let name = code.car;
+            let i = 0;
             if (name instanceof LSymbol || name !== nil) {
                 while (true) {
                     if (name.car !== nil) {
                         if (name instanceof LSymbol) {
                             // rest argument,  can also be first argument
-                            value = quote(Pair.fromArray(args.slice(i), false));
-                            env.__env__[name.__name__] = value;
+                            const value = quote(Pair.fromArray(args.slice(i), false));
+                            set(name, value);
                             break;
-                        } else {
-                            value = args[i];
-                            env.__env__[name.car.__name__] = value;
+                        } else if (is_pair(name)) {
+                            const value = args[i];
+                            set(name.car, value);
                         }
                     }
                     if (name.cdr === nil) {

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 11 Jan 2024 22:03:19 +0000
+ * build: Fri, 12 Jan 2024 12:45:31 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5838,7 +5838,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Thu, 11 Jan 2024 22:03:19 +0000
+   * Build time: Fri, 12 Jan 2024 12:45:31 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -7726,7 +7726,9 @@
                     break;
                   }
                   return _context8.abrupt("return", call_function(extension, args, {
-                    env: this.__env__
+                    env: this.__env__,
+                    dynamic_env: this.__env__,
+                    use_dynamic: false
                   }));
                 case 18:
                   throw new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
@@ -10576,6 +10578,10 @@
   // ----------------------------------------------------------------------
   function is_continuation(o) {
     return o instanceof Continuation;
+  }
+  // ----------------------------------------------------------------------
+  function is_context(o) {
+    return o instanceof LambdaContext;
   }
   // ----------------------------------------------------------------------
   function is_parameter(o) {
@@ -14589,9 +14595,9 @@
     }, "(eval expr)\n        (eval expr environment)\n\n        Function that evaluates LIPS Scheme code. If the second argument is provided\n        it will be the environment that the code is evaluated in."),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
-      var _ref33 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        _ref33.use_dynamic;
-        var error = _ref33.error;
+      var _ref33 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        use_dynamic = _ref33.use_dynamic,
+        error = _ref33.error;
       var self = this;
       var __doc__;
       if (code.cdr instanceof Pair && LString.isString(code.cdr.car) && code.cdr.cdr !== _nil) {
@@ -14599,22 +14605,13 @@
       }
       function lambda() {
         // lambda got scopes as context in apply
-        var _ref34 = this !== null && this !== void 0 ? this : {
+        var _ref34 = is_context(this) ? this : {
             dynamic_env: self
           },
-          env = _ref34.env,
-          dynamic_env = _ref34.dynamic_env,
-          use_dynamic = _ref34.use_dynamic;
-        if (use_dynamic) {
-          env = dynamic_env;
-        } else {
-          env = self;
-        }
-        env = env.inherit('lambda');
-        var name = code.car;
-        var i = 0;
-        var value;
-        if (this && !(this instanceof LambdaContext)) {
+          dynamic_env = _ref34.dynamic_env;
+        var env = self.inherit('lambda');
+        dynamic_env = dynamic_env.inherit('lambda');
+        if (this && !is_context(this)) {
           if (this && !this.__instance__) {
             Object.defineProperty(this, '__instance__', {
               enumerable: false,
@@ -14644,17 +14641,23 @@
           _args.env = env;
           env.set('arguments', _args);
         }
+        function set(name, value) {
+          env.__env__[name.__name__] = value;
+          dynamic_env.__env__[name.__name__] = value;
+        }
+        var name = code.car;
+        var i = 0;
         if (name instanceof LSymbol || name !== _nil) {
           while (true) {
             if (name.car !== _nil) {
               if (name instanceof LSymbol) {
                 // rest argument,  can also be first argument
-                value = quote(Pair.fromArray(args.slice(i), false));
-                env.__env__[name.__name__] = value;
+                var value = quote(Pair.fromArray(args.slice(i), false));
+                set(name, value);
                 break;
-              } else {
-                value = args[i];
-                env.__env__[name.car.__name__] = value;
+              } else if (is_pair(name)) {
+                var _value5 = args[i];
+                set(name.car, _value5);
               }
             }
             if (name.cdr === _nil) {
@@ -17514,10 +17517,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 11 Jan 2024 22:03:19 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 12 Jan 2024 12:45:31 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 11 Jan 2024 22:03:19 +0000').valueOf();
+    var date = LString('Fri, 12 Jan 2024 12:45:31 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17558,7 +17561,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Thu, 11 Jan 2024 22:03:19 +0000',
+    date: 'Fri, 12 Jan 2024 12:45:31 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

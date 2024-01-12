@@ -8,7 +8,7 @@
   "scripts": {
     "test": "c8 ava --timeout 10m --verbose tests/test.js",
     "test-update": "c8 ava --update-snapshots --timeout 10m --verbose tests/test.js",
-    "coverage": "c8 report --reporter=lcov --reporter=text"
+    "coverage": "c8 report --reporter=lcov --reporter=json --reporter=text"
   },
   "repository": {
     "type": "git",
