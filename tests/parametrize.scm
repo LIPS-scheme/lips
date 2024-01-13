@@ -43,3 +43,9 @@
                               (begin (try-again! "in a boat")
                                      (location))))
                       '("on a train" "in a boat"))))
+
+
+;; TODO
+;; throw error when parameterize got no pair
+;; get more than one parameter
+;; use parameterze with invalid parameter

@@ -506,3 +506,12 @@
               '("foo" "bar" "baz"))
         (t.is (split #/(:)/ "foo:bar:baz")
               '("foo" ":" "bar" ":" "baz"))))
+
+;; TODO
+;; begin*
+;; set-obj! throws with null or boolean
+;; set-obj! to delete the value (2 arguments)
+;; null-environment
+;; current-environment inside let
+;; eval that throw error
+;; syntax-rules throws identifier non symbol
