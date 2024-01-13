@@ -118,7 +118,7 @@ function contentLoaded(win, fn) {
 }
 // -------------------------------------------------------------------------
 /* eslint-disable */
-/* c8 ignore next */
+/* c8 ignore next 21 */
 function log(x, regex = null) {
     var literal = arguments[1] === true;
     function msg(x) {
@@ -10113,12 +10113,12 @@ const noop = () => {};
 function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest } = {}) {
     try {
         if (!is_env(dynamic_env)) {
-            dynamic_env = env === true ? global_env : (env || global_env);
+            dynamic_env = env === true ? user_env : (env || user_env);
         }
         if (use_dynamic) {
             env = dynamic_env;
         } else if (env === true) {
-            env = global_env;
+            env = user_env;
         } else {
             env = env || global_env;
         }
