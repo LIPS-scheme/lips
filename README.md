@@ -267,6 +267,22 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 * [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
 * [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
+* [Twitter/X](https://twitter.com/lips_lang)
+
+### SEO
+Links which point to the LIPS website for SEO purpose
+* [freshcode](https://freshcode.club/projects/lips)
+* [freshfoss](https://freshfoss.com/projects/lips)
+* [Scheme Wiki](http://community.schemewiki.org/?LIPS)
+* [Open Hub](https://openhub.net/p/lips-scheme)
+
+### Articles
+* [How to start learning LISP](https://jcubic.pl/2019/05/jak-zaczac-nauke-lispa.html) (PL with translator widget)
+
+### Press
+* [JavaScript Weekly](https://javascriptweekly.com/issues/669)
+* [Hacker News](https://news.ycombinator.com/item?id=38819212)
+* [Brian Lovin](https://brianlovin.com/hn/38819212) (HN clone)
 
 ## Roadmap
 ### 1.0
@@ -310,7 +326,6 @@ They should be loaded as R7RS libraries in final 1.0.0 version
   * [allPossibleCases](https://stackoverflow.com/a/4331218/387194).
 * Code formatter is roughly based on [scheme-style](http://community.schemewiki.org/?scheme-style) and GNU Emacs scheme mode.
 * Some helpers in standard library are inspired by same functions from [RamdaJS library](https://ramdajs.com/).
-
 
 ## License
 
