@@ -1186,15 +1186,32 @@
 
 ;; -----------------------------------------------------------------------------
 (define-syntax guard
-  (syntax-rules (catch)
+  (syntax-rules (catch aux =>)
+    ((_ aux (cond result) rest ...)
+     (let ((it cond))
+       (if it
+           result
+           (guard aux rest ...))))
+    ((_ aux (cond => fn) rest ...)
+     (let ((it cond))
+       (if it
+           (fn it)
+           (guard aux rest ...))))
+    ((_ aux (cond) rest ...)
+     (let ((it cond))
+       (if it
+           it
+           (guard aux rest ...))))
     ((_ (var cond1 cond2 ...)
         body ...)
      (try
        body ...
        (catch (var)
-              (cond cond1
-                    cond2 ...)))))
-  "(guard (variable (cond result)
+              (guard aux
+                     cond1
+                     cond2 ...)))))
+  "(guard (variable (cond)
+                    (cond => fn)
                     (cond2 result))
           body)
 

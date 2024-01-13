@@ -243,3 +243,27 @@
         (t.is (parameterize ((radix 2))
                 (f 12))
               "1100")))
+
+(test "std: guard function with =>"
+      (lambda (t)
+        (t.is (guard (condition
+                      ((assq 'a condition) => cdr)
+                      ((assq 'b condition) => car))
+                     (raise (list (cons 'b 23))))
+              'b)))
+
+(test "std: guard list"
+      (lambda (t)
+        (t.is (guard (condition
+                      ((assq 'a condition) => cdr)
+                      ((assq 'b condition) "error"))
+                     (raise (list (cons 'b 23))))
+              "error")))
+
+(test "std: guard identity"
+      (lambda (t)
+        (t.is (guard (condition
+                      ((assq 'a condition) => cdr)
+                      ((assq 'b condition)))
+                     (raise (list (cons 'b 23))))
+              '(b . 23))))
