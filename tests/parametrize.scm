@@ -49,3 +49,4 @@
 ;; throw error when parameterize got no pair
 ;; get more than one parameter
 ;; use parameterze with invalid parameter
+;; make-parameter throws with non function
