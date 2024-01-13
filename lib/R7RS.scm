@@ -1187,6 +1187,8 @@
 ;; -----------------------------------------------------------------------------
 (define-syntax guard
   (syntax-rules (catch aux =>)
+    ((_ aux)
+     '())
     ((_ aux (cond result) rest ...)
      (let ((it cond))
        (if it
