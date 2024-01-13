@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 12 Jan 2024 14:29:44 +0000
+ * build: Sat, 13 Jan 2024 23:08:08 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5838,7 +5838,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Fri, 12 Jan 2024 14:29:44 +0000
+   * Build time: Sat, 13 Jan 2024 23:08:08 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -5859,7 +5859,7 @@
   function AsyncFromSyncIterator(s) { function AsyncFromSyncIteratorContinuation(r) { if (Object(r) !== r) return Promise.reject(new TypeError(r + " is not an object.")); var done = r.done; return Promise.resolve(r.value).then(function (value) { return { value: value, done: done }; }); } return AsyncFromSyncIterator = function AsyncFromSyncIterator(s) { this.s = s, this.n = s.next; }, AsyncFromSyncIterator.prototype = { s: null, n: null, next: function next() { return AsyncFromSyncIteratorContinuation(this.n.apply(this.s, arguments)); }, "return": function _return(value) { var ret = this.s["return"]; return void 0 === ret ? Promise.resolve({ value: value, done: !0 }) : AsyncFromSyncIteratorContinuation(ret.apply(this.s, arguments)); }, "throw": function _throw(value) { var thr = this.s["return"]; return void 0 === thr ? Promise.reject(value) : AsyncFromSyncIteratorContinuation(thr.apply(this.s, arguments)); } }, new AsyncFromSyncIterator(s); }
   var root = typeof global !== 'undefined' ? global : self;
 
-  /* c8 ignore next */
+  /* c8 ignore next 3 */
   if (!root.fetch) {
     root.fetch = unfetch;
   }
@@ -5891,7 +5891,7 @@
   var BN = root.BN;
 
   /* eslint-disable */
-  /* istanbul ignore next */
+  /* c8 ignore next */
   function contentLoaded(win, fn) {
     var done = false,
       top = true,
@@ -5929,7 +5929,7 @@
   }
   // -------------------------------------------------------------------------
   /* eslint-disable */
-  /* istanbul ignore next */
+  /* c8 ignore next 21 */
   function log(x) {
     var regex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var literal = arguments[1] === true;
@@ -5953,7 +5953,7 @@
     return x;
   }
   // ----------------------------------------------------------------------
-  /* istanbul ignore next */
+  /* c8 ignore next */
   function is_debug() {
     return user_env && user_env.get('DEBUG', {
       throwError: false
@@ -6744,7 +6744,15 @@
       return Object.keys(this.__list__);
     },
     type: function type(name) {
-      return this.get(name).type;
+      try {
+        return this.get(name).type;
+      } catch (e) {
+        console.log({
+          name: name
+        });
+        console.log(e);
+        return null;
+      }
     },
     get: function get(name) {
       return this.__list__[name];
@@ -6788,16 +6796,16 @@
       }
     },
     remove: function remove(name) {
-      this.trigger('remove');
       delete this.__list__[name];
+      this.trigger('remove');
     },
     append: function append(name, value, type) {
-      this.trigger('append');
       this.__list__[name] = {
         seq: name,
         symbol: value,
         type: type
       };
+      this.trigger('append');
     },
     __events__: {},
     __list__: {}
@@ -6810,6 +6818,9 @@
   }
   function is_literal(special) {
     return specials.type(special) === specials.LITERAL;
+  }
+  function is_symbol_extension(special) {
+    return specials.type(special) === specials.SYMBOL;
   }
   // ----------------------------------------------------------------------
   var defined_specials = [["'", new LSymbol('quote'), specials.LITERAL], ['`', new LSymbol('quasiquote'), specials.LITERAL], [',@', new LSymbol('unquote-splicing'), specials.LITERAL], [',', new LSymbol('unquote'), specials.LITERAL], ["'>", new LSymbol('quote-promise'), specials.LITERAL]];
@@ -7097,11 +7108,6 @@
   }(); // ----------------------------------------------------------------------
   // TODO: cache the rules creation or whole list
   // ----------------------------------------------------------------------
-  Lexer.symbol_rule = function symbol_rule(string, symbol) {
-    var rules = Lexer.literal_rule(string, symbol, Lexer.boundary, /\S/);
-    return rules.concat([[/\S/, /\S/, Lexer.boundary, null, null], [/\S/, /\S/, null, null, Lexer.symbol], [/\S/, null, Lexer.boundary, Lexer.symbol, null]]);
-  };
-  // ----------------------------------------------------------------------
   // State rule for literal symbol
   // ----------------------------------------------------------------------
   Lexer.literal_rule = function literal_rule(string, symbol) {
@@ -7204,9 +7210,9 @@
         return b.length - a.length || a.localeCompare(b);
       });
       var special_rules = tokens.reduce(function (acc, token) {
-        var _specials$get = specials.get(token),
-          type = _specials$get.type,
-          special_symbol = _specials$get.symbol;
+        var _specials$get = specials.get(token);
+          _specials$get.type;
+          var special_symbol = _specials$get.symbol;
         var rules;
         var symbol;
         // we need distinct symbols_ for syntax extensions
@@ -7219,11 +7225,7 @@
         } else {
           symbol = special_symbol;
         }
-        if (type === specials.SYMBOL) {
-          rules = Lexer.symbol_rule(token, symbol);
-        } else {
-          rules = Lexer.literal_rule(token, symbol);
-        }
+        rules = Lexer.literal_rule(token, symbol);
         return acc.concat(rules);
       }, []);
       Lexer._cache.rules = Lexer._rules.concat(Lexer._brackets, special_rules, Lexer._symbol_rules);
@@ -7572,6 +7574,7 @@
         e.__code__ = [expr.toString().replace(re, '')];
         throw e;
       }
+      // Cover This function (array and object branch)
     }, {
       key: "_resolve_object",
       value: function () {
@@ -7674,7 +7677,7 @@
       key: "_read_object",
       value: function () {
         var _read_object3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8() {
-          var token, special, builtin, expr, object, extension, args, result, ref, ref_label;
+          var token, special, builtin, expr, is_symbol, object, extension, args, result, ref, ref_label;
           return _regeneratorRuntime.wrap(function _callee8$(_context8) {
             while (1) {
               switch (_context8.prev = _context8.next) {
@@ -7690,7 +7693,7 @@
                   return _context8.abrupt("return", token);
                 case 5:
                   if (!is_special(token)) {
-                    _context8.next = 32;
+                    _context8.next = 38;
                     break;
                   }
                   // Built-in parser extensions are mapping short symbols to longer symbols
@@ -7703,17 +7706,28 @@
                   special = specials.get(token);
                   builtin = is_builtin(token);
                   this.skip();
-                  _context8.next = 11;
+                  is_symbol = is_symbol_extension(token);
+                  if (!is_symbol) {
+                    _context8.next = 14;
+                    break;
+                  }
+                  _context8.t0 = undefined;
+                  _context8.next = 17;
+                  break;
+                case 14:
+                  _context8.next = 16;
                   return this._read_object();
-                case 11:
-                  object = _context8.sent;
+                case 16:
+                  _context8.t0 = _context8.sent;
+                case 17:
+                  object = _context8.t0;
                   if (builtin) {
-                    _context8.next = 19;
+                    _context8.next = 25;
                     break;
                   }
                   extension = this.__env__.get(special.symbol);
                   if (!(typeof extension === 'function')) {
-                    _context8.next = 19;
+                    _context8.next = 25;
                     break;
                   }
                   if (is_literal(token)) {
@@ -7723,18 +7737,18 @@
                   } else if (object instanceof Pair) {
                     args = object.to_array(false);
                   }
-                  if (!args) {
-                    _context8.next = 18;
+                  if (!(args || is_symbol)) {
+                    _context8.next = 24;
                     break;
                   }
-                  return _context8.abrupt("return", call_function(extension, args, {
+                  return _context8.abrupt("return", call_function(extension, is_symbol ? [] : args, {
                     env: this.__env__,
                     dynamic_env: this.__env__,
                     use_dynamic: false
                   }));
-                case 18:
+                case 24:
                   throw new Error('Parse Error: Invalid parser extension ' + "invocation ".concat(special.symbol));
-                case 19:
+                case 25:
                   if (is_literal(token)) {
                     expr = new Pair(special.symbol, new Pair(object, _nil));
                   } else {
@@ -7742,61 +7756,61 @@
                   }
                   // Built-in parser extensions just expand into lists like 'x ==> (quote x)
                   if (!builtin) {
-                    _context8.next = 22;
-                    break;
-                  }
-                  return _context8.abrupt("return", expr);
-                case 22:
-                  if (!(extension instanceof Macro)) {
-                    _context8.next = 31;
-                    break;
-                  }
-                  _context8.next = 25;
-                  return this.evaluate(expr);
-                case 25:
-                  result = _context8.sent;
-                  if (!(result instanceof Pair || result instanceof LSymbol)) {
                     _context8.next = 28;
                     break;
                   }
-                  return _context8.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
+                  return _context8.abrupt("return", expr);
                 case 28:
-                  return _context8.abrupt("return", result);
+                  if (!(extension instanceof Macro)) {
+                    _context8.next = 37;
+                    break;
+                  }
+                  _context8.next = 31;
+                  return this.evaluate(expr);
                 case 31:
+                  result = _context8.sent;
+                  if (!(result instanceof Pair || result instanceof LSymbol)) {
+                    _context8.next = 34;
+                    break;
+                  }
+                  return _context8.abrupt("return", Pair.fromArray([LSymbol('quote'), result]));
+                case 34:
+                  return _context8.abrupt("return", result);
+                case 37:
                   throw new Error('Parse Error: invalid parser extension: ' + special.symbol);
-                case 32:
+                case 38:
                   ref = this.match_datum_ref(token);
                   if (!(ref !== null)) {
-                    _context8.next = 38;
+                    _context8.next = 44;
                     break;
                   }
                   this.skip();
                   if (!this._refs[ref]) {
-                    _context8.next = 37;
+                    _context8.next = 43;
                     break;
                   }
                   return _context8.abrupt("return", new DatumReference(ref, this._refs[ref]));
-                case 37:
+                case 43:
                   throw new Error("Parse Error: invalid datum label #".concat(ref, "#"));
-                case 38:
+                case 44:
                   ref_label = this.match_datum_label(token);
                   if (!(ref_label !== null)) {
-                    _context8.next = 45;
+                    _context8.next = 51;
                     break;
                   }
                   this.skip();
                   this._refs[ref_label] = this._read_object();
                   return _context8.abrupt("return", this._refs[ref_label]);
-                case 45:
+                case 51:
                   if (!this.is_open(token)) {
-                    _context8.next = 50;
+                    _context8.next = 56;
                     break;
                   }
                   this.skip();
                   return _context8.abrupt("return", this.read_list());
-                case 50:
+                case 56:
                   return _context8.abrupt("return", this.read_value());
-                case 51:
+                case 57:
                 case "end":
                   return _context8.stop();
               }
@@ -8776,7 +8790,7 @@
       result.push(this.car.valueOf());
     }
     if (this.cdr instanceof Pair) {
-      result = result.concat(this.cdr.to_array());
+      result = result.concat(this.cdr.to_array(deep));
     }
     return result;
   };
@@ -8981,7 +8995,7 @@
   // :: Debug function that can be used with JSON.stringify
   // :: that will show symbols
   // ----------------------------------------------------------------------
-  /* istanbul ignore next */
+  /* c8 ignore next 22 */
   function symbolize(obj) {
     if (obj && _typeof(obj) === 'object') {
       var result = {};
@@ -9872,7 +9886,7 @@
     // in loop we add x to the list so we know that this is not
     // duplicated ellipsis symbol
     function log(x) {
-      /* istanbul ignore next */
+      /* c8 ignore next 3 */
       if (is_debug()) {
         console.log(x);
       }
@@ -10185,7 +10199,7 @@
       return rename(name);
     }
     function log(x) {
-      /* istanbul ignore next */
+      /* c8 ignore next 3 */
       if (is_debug()) {
         console.log(x);
       }
@@ -10972,7 +10986,7 @@
     });
   }
   // -------------------------------------------------------------------------
-  function pararel(name, fn) {
+  function parallel(name, fn) {
     return new Macro(name, function (code) {
       var _ref23 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
         use_dynamic = _ref23.use_dynamic,
@@ -14387,7 +14401,7 @@
     // ---------------------------------------------------------------------
     'let': doc(let_macro(Symbol["for"]('let')), "(let ((a value-a) (b value-b) ...) . body)\n\n         Macro that creates a new environment, then evaluates and assigns values to names,\n         and then evaluates the body in context of that environment.  Values are evaluated\n         sequentially but you can't access previous values/names when the next are\n         evaluated. You can only get them in the body of the let expression.  (If you want\n         to define multiple variables and use them in each other's definitions, use\n         `let*`.)"),
     // ------------------------------------------------------------------
-    'begin*': doc(pararel('begin*', function (values) {
+    'begin*': doc(parallel('begin*', function (values) {
       return values.pop();
     }), "(begin* . body)\n\n         This macro is a parallel version of begin. It evaluates each expression\n         in the body and if it's a promise it will await it in parallel and return\n         the value of the last expression (i.e. it uses Promise.all())."),
     // ------------------------------------------------------------------
@@ -14821,7 +14835,7 @@
               define: env
             });
             if (bindings) {
-              /* istanbul ignore next */
+              /* c8 ignore next 5 */
               if (is_debug()) {
                 console.log(JSON.stringify(symbolize(bindings), true, 2));
                 console.log('PATTERN: ' + rule.toString(true));
@@ -16494,6 +16508,7 @@
           use_dynamic: use_dynamic
         }, options));
         if (use_dynamic) {
+          // NOTE: why native function need bind to env?
           arg = unpromise(arg, function (arg) {
             if (is_native_function(arg)) {
               return arg.bind(dynamic_env);
@@ -16721,7 +16736,6 @@
     if (is_parameter(candidate) && candidate !== param) {
       return candidate;
     }
-    var i = 10;
     var top_env = user_env.get('**interaction-environment**');
     while (true) {
       var parent = env.get('parent.frame', {
@@ -16729,9 +16743,6 @@
       });
       env = parent(0);
       if (env === top_env) {
-        break;
-      }
-      if (! --i) {
         break;
       }
       candidate = env.get(param.__name__, {
@@ -16776,12 +16787,12 @@
     return function (rest) {
       try {
         if (!is_env(dynamic_env)) {
-          dynamic_env = env === true ? global_env : env || global_env;
+          dynamic_env = env === true ? user_env : env || user_env;
         }
         if (use_dynamic) {
           env = dynamic_env;
         } else if (env === true) {
-          env = global_env;
+          env = user_env;
         } else {
           env = env || global_env;
         }
@@ -17519,10 +17530,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 12 Jan 2024 14:29:44 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sat, 13 Jan 2024 23:08:08 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 12 Jan 2024 14:29:44 +0000').valueOf();
+    var date = LString('Sat, 13 Jan 2024 23:08:08 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17563,7 +17574,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Fri, 12 Jan 2024 14:29:44 +0000',
+    date: 'Sat, 13 Jan 2024 23:08:08 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

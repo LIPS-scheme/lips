@@ -915,7 +915,13 @@ var specials = {
         return Object.keys(this.__list__);
     },
     type: function(name) {
-        return this.get(name).type;
+        try {
+            return this.get(name).type;
+        } catch(e) {
+            console.log({name});
+            console.log(e);
+            return null;
+        }
     },
     get: function(name) {
         return this.__list__[name];
@@ -945,16 +951,16 @@ var specials = {
         }
     },
     remove: function(name) {
-        this.trigger('remove');
         delete this.__list__[name];
+        this.trigger('remove');
     },
     append: function(name, value, type) {
-        this.trigger('append');
         this.__list__[name] = {
             seq: name,
             symbol: value,
             type
         };
+        this.trigger('append');
     },
     __events__: {},
     __list__: {}
@@ -967,6 +973,9 @@ function is_builtin(token) {
 }
 function is_literal(special) {
     return specials.type(special) === specials.LITERAL;
+}
+function is_symbol_extension(special) {
+    return specials.type(special) === specials.SYMBOL;
 }
 // ----------------------------------------------------------------------
 const defined_specials = [
@@ -1205,16 +1214,6 @@ class Lexer {
 // ----------------------------------------------------------------------
 // TODO: cache the rules creation or whole list
 // ----------------------------------------------------------------------
-Lexer.symbol_rule = function symbol_rule(string, symbol) {
-    var rules = Lexer.literal_rule(string, symbol, Lexer.boundary, /\S/);
-
-    return rules.concat([
-        [/\S/, /\S/, Lexer.boundary, null, null],
-        [/\S/, /\S/, null, null, Lexer.symbol],
-        [/\S/, null, Lexer.boundary, Lexer.symbol, null]
-    ]);
-};
-// ----------------------------------------------------------------------
 // State rule for literal symbol
 // ----------------------------------------------------------------------
 Lexer.literal_rule = function literal_rule(string, symbol, p_re = null, n_re = null) {
@@ -1374,11 +1373,7 @@ Object.defineProperty(Lexer, 'rules', {
             } else {
                 symbol = special_symbol;
             }
-            if (type === specials.SYMBOL) {
-                rules = Lexer.symbol_rule(token, symbol);
-            } else {
-                rules = Lexer.literal_rule(token, symbol);
-            }
+            rules = Lexer.literal_rule(token, symbol);
             return acc.concat(rules);
         }, []);
 
@@ -1543,7 +1538,9 @@ class Parser {
         e.__code__ = [expr.toString().replace(re, '')];
         throw e;
     }
+    // Cover This function (array and object branch)
     async _resolve_object(object) {
+
         if (Array.isArray(object)) {
             return object.map(item => this._resolve_object(item));
         }
@@ -1591,7 +1588,8 @@ class Parser {
             const builtin = is_builtin(token);
             this.skip();
             let expr;
-            const object = await this._read_object();
+            const is_symbol = is_symbol_extension(token);
+            const object = is_symbol ? undefined : await this._read_object();
             if (!builtin) {
                 var extension = this.__env__.get(special.symbol);
                 if (typeof extension === 'function') {
@@ -1603,8 +1601,8 @@ class Parser {
                     } else if (object instanceof Pair) {
                         args = object.to_array(false);
                     }
-                    if (args) {
-                        return call_function(extension, args, {
+                    if (args || is_symbol) {
+                        return call_function(extension, is_symbol ? [] : args, {
                             env: this.__env__,
                             dynamic_env: this.__env__,
                             use_dynamic: false
@@ -2720,7 +2718,7 @@ var str_mapping = new Map();
 // :: Debug function that can be used with JSON.stringify
 // :: that will show symbols
 // ----------------------------------------------------------------------
-/* c8 ignore next */
+/* c8 ignore next 22 */
 function symbolize(obj) {
     if (obj && typeof obj === 'object') {
         var result = {};
@@ -9891,6 +9889,7 @@ function evaluate_args(rest, { use_dynamic, ...options }) {
         if (node instanceof Pair) {
             let arg = evaluate(node.car, { use_dynamic, ...options });
             if (use_dynamic) {
+                // NOTE: why native function need bind to env?
                 arg = unpromise(arg, arg => {
                     if (is_native_function(arg)) {
                         return arg.bind(dynamic_env);
@@ -10072,7 +10071,6 @@ function search_param(env, param) {
     if (is_parameter(candidate) && candidate !== param) {
         return candidate;
     }
-    let i = 10;
     let is_first_env = true;
     const top_env = user_env.get('**interaction-environment**');
     while (true) {
@@ -10082,9 +10080,6 @@ function search_param(env, param) {
             break;
         }
         is_first_env = false;
-        if (!--i) {
-            break;
-        }
         candidate = env.get(param.__name__, { throwError: false });
         if (is_parameter(candidate) && candidate !== param) {
             return candidate;

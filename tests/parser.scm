@@ -48,16 +48,23 @@
 
 (unset-special! "::")
 
+(set-special! "#nil" 'nil-fn lips.specials.SYMBOL)
+(define (nil-fn) nil)
+
+(define parser/t8 (list #nil #nil '#nil '#nil #nil))
+
+(unset-special! "#nil")
+
 (test "parser: syntax extension"
       (lambda (t)
-
         (t.is parser/t1 "<foo+bar/>")
         (t.is parser/t2 '(foo . bar))
         (t.is parser/t3 '(--))
         (t.is parser/t4 ':foo)
         (t.is parser/t5 ':foo)
         (t.is parser/t6 27)
-        (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))))
+        (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))
+        (t.is parser/t8 '(nil nil nil nil nil))))
 
 (test "parser: escape hex literals"
       (lambda (t)
