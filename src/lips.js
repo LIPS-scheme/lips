@@ -46,7 +46,7 @@ import { addExtension, Encoder } from 'cbor-x';
 import { pack, unpack } from 'lzjb-pack';
 import unfetch from 'unfetch';
 
-/* c8 ignore next */
+/* c8 ignore next 3 */
 if (!root.fetch) {
     root.fetch = unfetch;
 }
@@ -82,7 +82,7 @@ let fs, path, nodeRequire;
 const BN = root.BN;
 
 /* eslint-disable */
-/* istanbul ignore next */
+/* c8 ignore next */
 function contentLoaded(win, fn) {
     var done = false, top = true,
 
@@ -118,7 +118,7 @@ function contentLoaded(win, fn) {
 }
 // -------------------------------------------------------------------------
 /* eslint-disable */
-/* istanbul ignore next */
+/* c8 ignore next */
 function log(x, regex = null) {
     var literal = arguments[1] === true;
     function msg(x) {
@@ -141,7 +141,7 @@ function log(x, regex = null) {
     return x;
 }
 // ----------------------------------------------------------------------
-/* istanbul ignore next */
+/* c8 ignore next */
 function is_debug() {
     return user_env && user_env.get('DEBUG', { throwError: false });
 }
@@ -2720,7 +2720,7 @@ var str_mapping = new Map();
 // :: Debug function that can be used with JSON.stringify
 // :: that will show symbols
 // ----------------------------------------------------------------------
-/* istanbul ignore next */
+/* c8 ignore next */
 function symbolize(obj) {
     if (obj && typeof obj === 'object') {
         var result = {};
@@ -3009,7 +3009,7 @@ function markCycles(pair) {
 // Trampoline based recursive pair to string that don't overflow the stack
 // ----------------------------------------------------------------------
 /* eslint-disable no-unused-vars */
-/* istanbul ignore next */
+/* c8 ignore next */
 const pair_to_string = (function() {
     const prefix = (pair, nested) => {
         var result = [];
@@ -3516,7 +3516,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
     // in loop we add x to the list so we know that this is not
     // duplicated ellipsis symbol
     function log(x) {
-        /* istanbul ignore next */
+        /* c8 ignore next 3 */
         if (is_debug()) {
             console.log(x);
         }
@@ -3850,7 +3850,7 @@ function transform_syntax(options = {}) {
         return rename(name);
     }
     function log(x) {
-        /* istanbul ignore next */
+        /* c8 ignore next 3 */
         if (is_debug()) {
             console.log(x);
         }
@@ -4595,7 +4595,7 @@ function let_macro(symbol) {
     });
 }
 // -------------------------------------------------------------------------
-function pararel(name, fn) {
+function parallel(name, fn) {
     return new Macro(name, function(code, { use_dynamic, error } = {}) {
         const env = this;
         const dynamic_env = this;
@@ -7564,7 +7564,7 @@ var global_env = new Environment({
          to define multiple variables and use them in each other's definitions, use
          \`let*\`.)`),
     // ------------------------------------------------------------------
-    'begin*': doc(pararel('begin*', function(values) {
+    'begin*': doc(parallel('begin*', function(values) {
         return values.pop();
     }), `(begin* . body)
 
@@ -8042,7 +8042,7 @@ var global_env = new Environment({
                         expansion: this, define: env
                     });
                     if (bindings) {
-                        /* istanbul ignore next */
+                        /* c8 ignore next 5 */
                         if (is_debug()) {
                             console.log(JSON.stringify(symbolize(bindings), true, 2));
                             console.log('PATTERN: ' + rule.toString(true));
