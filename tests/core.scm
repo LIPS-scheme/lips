@@ -517,7 +517,7 @@
 ;; syntax-rules: throws identifier non symbol
 ;; evaluate: number, invoke string, env === true
 ;; map with native function (map parseInt '("10" "20" "30"))
-;; type on interator and async interator and (type (self.eval "new function() {}"))
+;; type on iterator and async iterator and (type (self.eval "new function() {}"))
 ;; toString/repr: jQuery, function, global, null, (Object.create null), LNumber
 ;;                define-class with toString method
 ;;                set-repr! with non function
@@ -530,3 +530,4 @@
 ;;                function with toString
 ;;                user repr
 ;; Pair::flatten
+;; Test Parser Errors "(foo" "(foo))" "(foo) ("
