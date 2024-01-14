@@ -2,8 +2,13 @@
   "name": "@jcubic/lips",
   "version": "1.0.0-beta.17.3",
   "description": "Simple Scheme Like Lisp in JavaScript",
-  "main": "src/lips.js",
   "type": "module",
+  "main": "dist/lips.min.js",
+  "module": "dist/lips.esm.min.js",
+  "exports": {
+    "import": "dist/lips.esm.min.js",
+    "require": "dist/lips.js"
+  },
   "unpkg": "dist/lips.min.js",
   "scripts": {
     "test": "c8 ava --timeout 10m --verbose tests/test.js",

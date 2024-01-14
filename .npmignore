@@ -13,6 +13,7 @@ rollup.config.js
 \#*#
 .*
 src/banner.js
+dist/version.js
 tests
 assets
 examples

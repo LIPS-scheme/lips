@@ -31,19 +31,22 @@ UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 LIPS=./bin/lips.js
 
-ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.min.scm dist/std.xcb
+ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/version.js dist/lips.js dist/lips.esm.js dist/lips.min.js dist/lips.esm.min.js README.md dist/std.min.scm dist/std.xcb
 
-dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
-	$(ROLLUP) -c
-	$(CAT) src/banner.js dist/lips.js > dist/tmp.js
-	$(CP) dist/tmp.js dist/lips.js
-	$(RM) dist/tmp.js
+dist/version.js: src/lips.js
+	$(CAT) src/banner.js src/lips.js > dist/version.js
 	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
-	dist/lips.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" -e "s/{{YEAR}}/${YEAR}/" \
-	dist/lips.js
+	dist/version.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" -e "s/{{YEAR}}/${YEAR}/" \
+	dist/version.js
+
+dist/lips.js dist/lips.esm.js: dist/version.js .$(VERSION) rollup.config.js
+	$(ROLLUP) -c
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
+
+dist/lips.esm.min.js: dist/lips.esm.js .$(VERSION)
+	$(UGLIFY) -o dist/lips.ems.min.js --comments --mangle -- dist/lips.esm.js
 
 dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm
 	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm > dist/std.scm
