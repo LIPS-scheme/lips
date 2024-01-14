@@ -10,6 +10,9 @@ const options = lily(process.argv.slice(2), { boolean });
 const quiet = options.q || options.quiet;
 
 import lips from '../src/lips.js';
+import lips_dist from '../dist/lips.esm.js';
+
+const { version, date } = lips_dist;
 
 const {
     exec,
@@ -28,8 +31,6 @@ const {
     LString,
     evaluate,
     nil,
-    version,
-    date,
     Pair,
     env,
     banner,
