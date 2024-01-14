@@ -5796,7 +5796,7 @@ function unfetch(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttp
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Jan 2024 14:43:31 +0000
+ * build: Sun, 14 Jan 2024 19:05:15 +0000
  */
 var _excluded = ["token"],
   _excluded2 = ["env"],
@@ -8617,14 +8617,14 @@ function flatten(array, mutable) {
 // :: Fisher-Yates (aka Knuth) Shuffle
 // :: ref: https://stackoverflow.com/a/2450976/387194
 // ----------------------------------------------------------------------
-function shuffle(array) {
+function shuffle(array, random) {
   var currentIndex = array.length,
     randomIndex;
 
   // While there remain elements to shuffle.
   while (currentIndex > 0) {
     // Pick a remaining element.
-    randomIndex = Math.floor(Math.random() * currentIndex);
+    randomIndex = Math.floor(random() * currentIndex);
     currentIndex--;
 
     // And swap it with the current element.
@@ -14406,14 +14406,15 @@ var global_env = new Environment({
   // ------------------------------------------------------------------
   shuffle: doc(function (arg) {
     typecheck('shuffle', arg, ['pair', 'nil', 'array']);
+    var random = global_env.get('random');
     if (arg === _nil) {
       return _nil;
     }
     if (Array.isArray(arg)) {
-      return shuffle(arg.slice());
+      return shuffle(arg.slice(), random);
     }
     var arr = global_env.get('list->array')(arg);
-    arr = shuffle(arr);
+    arr = shuffle(arr, random);
     return global_env.get('array->list')(arr);
   }, "(shuffle obj)\n\n        Order items in vector or list in random order."),
   // ------------------------------------------------------------------
@@ -17542,10 +17543,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 14 Jan 2024 14:43:31 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 14 Jan 2024 19:05:15 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 14 Jan 2024 14:43:31 +0000').valueOf();
+  var date = LString('Sun, 14 Jan 2024 19:05:15 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17586,7 +17587,7 @@ read_only(Parameter, '__class__', 'parameter');
 var lips = {
   version: 'DEV',
   banner: banner,
-  date: 'Sun, 14 Jan 2024 14:43:31 +0000',
+  date: 'Sun, 14 Jan 2024 19:05:15 +0000',
   exec: exec,
   // unwrap async generator into Promise<Array>
   parse: compose(uniterate_async, parse),

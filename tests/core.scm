@@ -520,9 +520,13 @@
 
 (test "core: shuffle"
       (lambda (t)
+        ;; test shuffle with fixed seed
+        (random 1000)
+        (t.is (shuffle '(1 2 3 4)) '(2 4 3 1))
         (t.is (list? (shuffle '(1 2 3))) #t)
         (t.is (shuffle nil) nil)
-        (t.is (vector? (shuffle #(1 2 3))) #t)))
+        (random 1000)
+        (t.is (shuffle #(1 2 3 4)) #(2 4 3 1))))
 
 ;; TODO
 ;; begin*

@@ -2369,14 +2369,14 @@ function flatten(array, mutable) {
 // :: Fisher-Yates (aka Knuth) Shuffle
 // :: ref: https://stackoverflow.com/a/2450976/387194
 // ----------------------------------------------------------------------
-function shuffle(array) {
+function shuffle(array, random) {
   let currentIndex = array.length,  randomIndex;
 
   // While there remain elements to shuffle.
   while (currentIndex > 0) {
 
     // Pick a remaining element.
-    randomIndex = Math.floor(Math.random() * currentIndex);
+    randomIndex = Math.floor(random() * currentIndex);
     currentIndex--;
 
     // And swap it with the current element.
@@ -7608,14 +7608,15 @@ var global_env = new Environment({
     // ------------------------------------------------------------------
     shuffle: doc(function(arg) {
         typecheck('shuffle', arg, ['pair', 'nil', 'array']);
+        const random = global_env.get('random')
         if (arg === nil) {
             return nil;
         }
         if (Array.isArray(arg)) {
-            return shuffle(arg.slice());
+            return shuffle(arg.slice(), random);
         }
         let arr = global_env.get('list->array')(arg);
-        arr = shuffle(arr);
+        arr = shuffle(arr, random);
 
         return global_env.get('array->list')(arr);
     }, `(shuffle obj)
