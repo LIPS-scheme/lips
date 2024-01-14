@@ -297,8 +297,9 @@
            ,@(let loop ((lst expr) (result nil))
                (if (null? lst)
                    (reverse result)
-                   (let ((first (car lst))
-                         (second (if (null? (cdr lst)) nil (cadr lst))))
+                   (let* ((first (car lst))
+                          (no-second (null? (cdr lst)))
+                          (second (if no-second nil (cadr lst))))
                      (if (not (key? first))
                          (let ((msg (string-append (type first)
                                                    " "
@@ -306,7 +307,7 @@
                                                    " is not a symbol!")))
                            (throw msg))
                          (let ((prop (key->string first)))
-                           (if (or (key? second) (null? second))
+                           (if (or (key? second) no-second)
                                (let ((code `(set-obj! ,name ,prop undefined)))
                                  (loop (cdr lst) (cons code result)))
                                (let ((code (if readonly

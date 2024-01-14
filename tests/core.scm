@@ -81,6 +81,17 @@
           (t.is (to.throw (set! x.foo "hey")) true)
           (t.is (to.throw (set! x.bar "hey")) true))))
 
+(test "core: it should create object literals without values"
+      (lambda (t)
+        (let ((x &(:foo :bar)))
+          (t.is x &(:foo undefined :bar undefined)))))
+
+(test "core: it should create object with null value (#264)"
+      (lambda (t)
+        (let ((x &(:foo null :bar null)))
+          (t.is (eq? x.foo null) #t)
+          (t.is (eq? x.bar null) #t))))
+
 (test "core: it should allow change shorthand object literals"
       (lambda (t)
         (let ((obj &(:x :y)))

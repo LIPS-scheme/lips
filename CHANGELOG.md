@@ -13,6 +13,7 @@
 * fix resolving promises inside quoted promise realm
 * fix undocumented symbol syntax extensions
 * fix odd? even? on non integers
+* fix object literals with null value [#264](https://github.com/jcubic/lips/issues/264)
 
 ## 1.0.0-beta.17
 ### Breaking
