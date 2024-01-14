@@ -11,6 +11,14 @@
                         (f))))
               20)))
 
+(test "dynamic: no closures"
+      (lambda (t)
+        (t.is (exec (begin
+                       (define f (let ((x 10))
+                                   (lambda () x)))
+                       (try (t) (catch (e) #t))))
+              #t)))
+
 (test "dynamic: function parameters"
       (lambda (t)
         (t.is (exec (begin
