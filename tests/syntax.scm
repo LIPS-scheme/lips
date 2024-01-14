@@ -1094,3 +1094,32 @@
                 (foo x y)
                 (list x y))
               '(1 2))))
+
+(test.failing "syntax: syntax-parameterize SRFI 139"
+      (lambda (t)
+
+         (define-syntax-parameter it
+           (syntax-rules ()
+             ((_ . _)
+              (syntax-error "it used outside of a aif"))))
+
+        (define-syntax aif
+          (syntax-rules (aux)
+            ((_ aux test x y ...)
+             (let ((value test))
+               (syntax-parameterize
+                ((it (syntax-rules ()
+                       ((it) value))))
+                (if value
+                    x
+                    y ...))))
+            ((_ test true)
+             (aif aux test true))
+            ((_ test true false)
+             (aif aux test true false))))
+
+        (let ((alist '((foo . 10) (bar . 20))))
+          (it.s (aif (assoc 'foo alist) (cdr (it)))
+                10)
+          (t.is (aif (assoc 'x alist) (cdr (it)))
+                (if #f #f)))))
