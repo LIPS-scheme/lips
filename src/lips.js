@@ -2355,6 +2355,27 @@ function flatten(array, mutable) {
     return result;
 }
 // ----------------------------------------------------------------------
+// :: Fisher-Yates (aka Knuth) Shuffle
+// :: ref: https://stackoverflow.com/a/2450976/387194
+// ----------------------------------------------------------------------
+function shuffle(array) {
+  let currentIndex = array.length,  randomIndex;
+
+  // While there remain elements to shuffle.
+  while (currentIndex > 0) {
+
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
+// ----------------------------------------------------------------------
 // :: Nil constructor with only once instance
 // ----------------------------------------------------------------------
 function Nil() {}
@@ -7573,6 +7594,22 @@ var global_env = new Environment({
          This macro is a parallel version of begin. It evaluates each expression
          in the body and if it's a promise it will await it in parallel and return
          the value of the last expression (i.e. it uses Promise.all()).`),
+    // ------------------------------------------------------------------
+    shuffle: doc(function(arg) {
+        typecheck('shuffle', arg, ['pair', 'nil', 'array']);
+        if (arg === nil) {
+            return nil;
+        }
+        if (Array.isArray(arg)) {
+            return shuffle(arg.slice());
+        }
+        let arr = global_env.get('list->array')(arg);
+        arr = shuffle(arr);
+
+        return global_env.get('array->list')(arr);
+    }, `(shuffle obj)
+
+        Order items in vector or list in random order.`),
     // ------------------------------------------------------------------
     begin: doc(new Macro('begin', function(code, options) {
         const eval_args = {...options, env: this };

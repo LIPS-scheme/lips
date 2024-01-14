@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Jan 2024 00:09:28 +0000
+ * build: Sun, 14 Jan 2024 12:42:38 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5838,7 +5838,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Sun, 14 Jan 2024 00:09:28 +0000
+   * Build time: Sun, 14 Jan 2024 12:42:38 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -8640,6 +8640,27 @@
     return result;
   }
   // ----------------------------------------------------------------------
+  // :: Fisher-Yates (aka Knuth) Shuffle
+  // :: ref: https://stackoverflow.com/a/2450976/387194
+  // ----------------------------------------------------------------------
+  function shuffle(array) {
+    var currentIndex = array.length,
+      randomIndex;
+
+    // While there remain elements to shuffle.
+    while (currentIndex > 0) {
+      // Pick a remaining element.
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+
+      // And swap it with the current element.
+      var _ref11 = [array[randomIndex], array[currentIndex]];
+      array[currentIndex] = _ref11[0];
+      array[randomIndex] = _ref11[1];
+    }
+    return array;
+  }
+  // ----------------------------------------------------------------------
   // :: Nil constructor with only once instance
   // ----------------------------------------------------------------------
   function Nil() {}
@@ -8985,10 +9006,10 @@
   }
   // ----------------------------------------------------------------------
   var str_mapping = new Map();
-  [[true, '#t'], [false, '#f'], [null, 'null'], [undefined, '#<undefined>']].forEach(function (_ref11) {
-    var _ref12 = _slicedToArray(_ref11, 2),
-      key = _ref12[0],
-      value = _ref12[1];
+  [[true, '#t'], [false, '#f'], [null, 'null'], [undefined, '#<undefined>']].forEach(function (_ref12) {
+    var _ref13 = _slicedToArray(_ref12, 2),
+      key = _ref13[0],
+      value = _ref13[1];
     str_mapping.set(key, value);
   });
   // ----------------------------------------------------------------------
@@ -9064,23 +9085,23 @@
   // ----------------------------------------------------------------------
   [[Error, function (e) {
     return e.message;
-  }], [Pair, function (pair, _ref13) {
-    var quote = _ref13.quote,
-      skip_cycles = _ref13.skip_cycles,
-      pair_args = _ref13.pair_args;
+  }], [Pair, function (pair, _ref14) {
+    var quote = _ref14.quote,
+      skip_cycles = _ref14.skip_cycles,
+      pair_args = _ref14.pair_args;
     // make sure that repr directly after update set the cycle ref
     if (!skip_cycles) {
       pair.markCycles();
     }
     return pair.toString.apply(pair, [quote].concat(_toConsumableArray(pair_args)));
-  }], [LCharacter, function (chr, _ref14) {
-    var quote = _ref14.quote;
+  }], [LCharacter, function (chr, _ref15) {
+    var quote = _ref15.quote;
     if (quote) {
       return chr.toString();
     }
     return chr.valueOf();
-  }], [LString, function (str, _ref15) {
-    var quote = _ref15.quote;
+  }], [LString, function (str, _ref16) {
+    var quote = _ref16.quote;
     str = str.toString();
     if (quote) {
       return JSON.stringify(str).replace(/\\n/g, '\n');
@@ -9088,10 +9109,10 @@
     return str;
   }], [RegExp, function (re) {
     return '#' + re.toString();
-  }]].forEach(function (_ref16) {
-    var _ref17 = _slicedToArray(_ref16, 2),
-      cls = _ref17[0],
-      fn = _ref17[1];
+  }]].forEach(function (_ref17) {
+    var _ref18 = _slicedToArray(_ref17, 2),
+      cls = _ref18[0],
+      fn = _ref18[1];
     instances.set(cls, fn);
   });
   // ----------------------------------------------------------------------
@@ -9287,9 +9308,9 @@
 
   // ----------------------------------------------------------------------
   Pair.prototype.toString = function (quote) {
-    var _ref18 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      _ref18$nested = _ref18.nested,
-      nested = _ref18$nested === void 0 ? false : _ref18$nested;
+    var _ref19 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      _ref19$nested = _ref19.nested,
+      nested = _ref19$nested === void 0 ? false : _ref19$nested;
     var arr = [];
     if (this[__ref__]) {
       arr.push(this[__ref__] + '(');
@@ -9523,9 +9544,9 @@
     return macro;
   };
   // ----------------------------------------------------------------------
-  Macro.prototype.invoke = function (code, _ref19, macro_expand) {
-    var env = _ref19.env,
-      rest = _objectWithoutProperties(_ref19, _excluded2);
+  Macro.prototype.invoke = function (code, _ref20, macro_expand) {
+    var env = _ref20.env,
+      rest = _objectWithoutProperties(_ref20, _excluded2);
     var args = _objectSpread(_objectSpread({}, rest), {}, {
       macro_expand: macro_expand
     });
@@ -9543,7 +9564,7 @@
   var recur_guard = -10000;
   function macro_expand(single) {
     return /*#__PURE__*/function () {
-      var _ref20 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(code, args) {
+      var _ref21 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(code, args) {
         var env, bindings, let_macros, lambda, define, is_let_macro, is_procedure, is_lambda, proc_bindings, let_binding, is_macro, expand_let_binding, _expand_let_binding, traverse, _traverse;
         return _regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
@@ -9814,7 +9835,7 @@
         }, _callee12, this);
       }));
       return function (_x6, _x7) {
-        return _ref20.apply(this, arguments);
+        return _ref21.apply(this, arguments);
       };
     }();
   }
@@ -9830,10 +9851,10 @@
   Syntax.__merge_env__ = Symbol["for"]('merge');
   // ----------------------------------------------------------------------
   Syntax.prototype = Object.create(Macro.prototype);
-  Syntax.prototype.invoke = function (code, _ref21, macro_expand) {
-    var error = _ref21.error,
-      env = _ref21.env,
-      use_dynamic = _ref21.use_dynamic;
+  Syntax.prototype.invoke = function (code, _ref22, macro_expand) {
+    var error = _ref22.error,
+      env = _ref22.env,
+      use_dynamic = _ref22.use_dynamic;
     var args = {
       error: error,
       env: env,
@@ -10362,8 +10383,8 @@
     }
     /* eslint-disable complexity */
     function traverse(expr) {
-      var _ref22 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        disabled = _ref22.disabled;
+      var _ref23 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        disabled = _ref23.disabled;
       log('traverse>> ' + toString(expr));
       if (expr instanceof Pair) {
         // escape ellispsis from R7RS e.g. (... ...)
@@ -10988,9 +11009,9 @@
   // -------------------------------------------------------------------------
   function parallel(name, fn) {
     return new Macro(name, function (code) {
-      var _ref23 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        use_dynamic = _ref23.use_dynamic,
-        error = _ref23.error;
+      var _ref24 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        use_dynamic = _ref24.use_dynamic,
+        error = _ref24.error;
       var env = this;
       var dynamic_env = this;
       var results = [];
@@ -13226,13 +13247,13 @@
   // -------------------------------------------------------------------------
   function Interpreter(name) {
     var _this19 = this;
-    var _ref26 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      stderr = _ref26.stderr,
-      stdin = _ref26.stdin,
-      stdout = _ref26.stdout,
-      _ref26$command_line = _ref26.command_line,
-      command_line = _ref26$command_line === void 0 ? null : _ref26$command_line,
-      obj = _objectWithoutProperties(_ref26, _excluded3);
+    var _ref27 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      stderr = _ref27.stderr,
+      stdin = _ref27.stdin,
+      stdout = _ref27.stdout,
+      _ref27$command_line = _ref27.command_line,
+      command_line = _ref27$command_line === void 0 ? null : _ref27$command_line,
+      obj = _objectWithoutProperties(_ref27, _excluded3);
     if (typeof this !== 'undefined' && !(this instanceof Interpreter) || typeof this === 'undefined') {
       return new Interpreter(name, _objectSpread({
         stdin: stdin,
@@ -13940,10 +13961,10 @@
       return unbind(a) === unbind(b);
     }, "(%same-functions a b)\n\n        A helper function that checks if the two input functions are\n        the same."),
     // ------------------------------------------------------------------
-    help: doc(new Macro('help', function (code, _ref27) {
-      var dynamic_env = _ref27.dynamic_env,
-        use_dynamic = _ref27.use_dynamic,
-        error = _ref27.error;
+    help: doc(new Macro('help', function (code, _ref28) {
+      var dynamic_env = _ref28.dynamic_env,
+        use_dynamic = _ref28.use_dynamic,
+        error = _ref28.error;
       var symbol;
       if (code.car instanceof LSymbol) {
         symbol = code.car;
@@ -13994,9 +14015,9 @@
     // ------------------------------------------------------------------
     'set!': doc(new Macro('set!', function (code) {
       var _this22 = this;
-      var _ref28 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        use_dynamic = _ref28.use_dynamic,
-        rest = _objectWithoutProperties(_ref28, _excluded4);
+      var _ref29 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        use_dynamic = _ref29.use_dynamic,
+        rest = _objectWithoutProperties(_ref29, _excluded4);
       var dynamic_env = this;
       var env = this;
       var ref;
@@ -14151,7 +14172,7 @@
       }
       if (is_node()) {
         return new Promise( /*#__PURE__*/function () {
-          var _ref29 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(resolve, reject) {
+          var _ref30 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(resolve, reject) {
             var path, cmd, _args19;
             return _regeneratorRuntime.wrap(function _callee17$(_context17) {
               while (1) {
@@ -14208,7 +14229,7 @@
             }, _callee17);
           }));
           return function (_x13, _x14) {
-            return _ref29.apply(this, arguments);
+            return _ref30.apply(this, arguments);
           };
         }());
       }
@@ -14225,13 +14246,13 @@
     }, "(load filename)\n        (load filename environment)\n\n        Fetches the file (from disk or network) and evaluates its content as LIPS code.\n        If the second argument is provided and it's an environment the evaluation\n        will happen in that environment."),
     // ------------------------------------------------------------------
     'do': doc(new Macro('do', /*#__PURE__*/function () {
-      var _ref30 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(code, _ref31) {
+      var _ref31 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(code, _ref32) {
         var use_dynamic, error, self, dynamic_env, scope, vars, test, body, eval_args, node, item, _loop3;
         return _regeneratorRuntime.wrap(function _callee19$(_context19) {
           while (1) {
             switch (_context19.prev = _context19.next) {
               case 0:
-                use_dynamic = _ref31.use_dynamic, error = _ref31.error;
+                use_dynamic = _ref32.use_dynamic, error = _ref32.error;
                 self = this;
                 dynamic_env = self;
                 scope = self.inherit('do');
@@ -14346,13 +14367,13 @@
         }, _callee19, this);
       }));
       return function (_x15, _x16) {
-        return _ref30.apply(this, arguments);
+        return _ref31.apply(this, arguments);
       };
     }()), "(do ((<var> <init> <next>)) (test return) . body)\n\n         Iteration macro that evaluates the expression body in scope of the variables.\n         On each loop it changes the variables according to the <next> expression and runs\n         test to check if the loop should continue. If test is a single value, the macro\n         will return undefined. If the test is a pair of expressions the macro will\n         evaluate and return the second expression after the loop exits."),
     // ------------------------------------------------------------------
-    'if': doc(new Macro('if', function (code, _ref32) {
-      var error = _ref32.error,
-        use_dynamic = _ref32.use_dynamic;
+    'if': doc(new Macro('if', function (code, _ref33) {
+      var error = _ref33.error,
+        use_dynamic = _ref33.use_dynamic;
       var dynamic_env = this;
       var env = this;
       var eval_args = {
@@ -14408,6 +14429,19 @@
     'begin*': doc(parallel('begin*', function (values) {
       return values.pop();
     }), "(begin* . body)\n\n         This macro is a parallel version of begin. It evaluates each expression\n         in the body and if it's a promise it will await it in parallel and return\n         the value of the last expression (i.e. it uses Promise.all())."),
+    // ------------------------------------------------------------------
+    shuffle: doc(function (arg) {
+      typecheck('shuffle', arg, ['pair', 'nil', 'array']);
+      if (arg === _nil) {
+        return _nil;
+      }
+      if (Array.isArray(arg)) {
+        return shuffle(arg.slice());
+      }
+      var arr = global_env.get('list->array')(arg);
+      arr = shuffle(arr);
+      return global_env.get('array->list')(arr);
+    }, "(shuffle obj)\n\n        Order items in vector or list in random order."),
     // ------------------------------------------------------------------
     begin: doc(new Macro('begin', function (code, options) {
       var eval_args = _objectSpread(_objectSpread({}, options), {}, {
@@ -14615,9 +14649,9 @@
     }, "(eval expr)\n        (eval expr environment)\n\n        Function that evaluates LIPS Scheme code. If the second argument is provided\n        it will be the environment that the code is evaluated in."),
     // ------------------------------------------------------------------
     lambda: new Macro('lambda', function (code) {
-      var _ref33 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        use_dynamic = _ref33.use_dynamic,
-        error = _ref33.error;
+      var _ref34 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        use_dynamic = _ref34.use_dynamic,
+        error = _ref34.error;
       var self = this;
       var __doc__;
       if (code.cdr instanceof Pair && LString.isString(code.cdr.car) && code.cdr.cdr !== _nil) {
@@ -14625,10 +14659,10 @@
       }
       function lambda() {
         // lambda got scopes as context in apply
-        var _ref34 = is_context(this) ? this : {
+        var _ref35 = is_context(this) ? this : {
             dynamic_env: self
           },
-          dynamic_env = _ref34.dynamic_env;
+          dynamic_env = _ref35.dynamic_env;
         var env = self.inherit('lambda');
         dynamic_env = dynamic_env.inherit('lambda');
         if (this && !is_context(this)) {
@@ -14708,9 +14742,9 @@
     'macroexpand': new Macro('macroexpand', macro_expand()),
     'macroexpand-1': new Macro('macroexpand-1', macro_expand(true)),
     // ------------------------------------------------------------------
-    'define-macro': doc(new Macro(macro, function (macro, _ref35) {
-      var use_dynamic = _ref35.use_dynamic,
-        error = _ref35.error;
+    'define-macro': doc(new Macro(macro, function (macro, _ref36) {
+      var use_dynamic = _ref36.use_dynamic,
+        error = _ref36.error;
       if (macro.car instanceof Pair && macro.car.car instanceof LSymbol) {
         var name = macro.car.car.__name__;
         var __doc__;
@@ -14799,8 +14833,8 @@
       } else {
         validate_identifiers(macro.car);
       }
-      var syntax = new Syntax(function (code, _ref36) {
-        var macro_expand = _ref36.macro_expand;
+      var syntax = new Syntax(function (code, _ref37) {
+        var macro_expand = _ref37.macro_expand;
         var scope = env.inherit('syntax');
         var dynamic_env = scope;
         var var_scope = this;
@@ -14921,10 +14955,10 @@
             cdr = fn(cdr);
           }
           if (is_promise(car) || is_promise(cdr)) {
-            return promise_all([car, cdr]).then(function (_ref37) {
-              var _ref38 = _slicedToArray(_ref37, 2),
-                car = _ref38[0],
-                cdr = _ref38[1];
+            return promise_all([car, cdr]).then(function (_ref38) {
+              var _ref39 = _slicedToArray(_ref38, 2),
+                car = _ref39[0],
+                cdr = _ref39[1];
               return new Pair(car, cdr);
             });
           } else {
@@ -15526,10 +15560,10 @@
       return false;
     }, "(string->number number [radix])\n\n        Function that parses a string into a number."),
     // ------------------------------------------------------------------
-    'try': doc(new Macro('try', function (code, _ref39) {
+    'try': doc(new Macro('try', function (code, _ref40) {
       var _this24 = this;
-      var use_dynamic = _ref39.use_dynamic,
-        error = _ref39.error;
+      var use_dynamic = _ref40.use_dynamic,
+        error = _ref40.error;
       return new Promise(function (resolve, reject) {
         var catch_clause, finally_clause;
         if (LSymbol.is(code.cdr.car.car, 'catch')) {
@@ -15974,9 +16008,9 @@
     // ------------------------------------------------------------------
     'eq?': doc('eq?', equal, "(eq? a b)\n\n         Function that compares two values if they are identical."),
     // ------------------------------------------------------------------
-    or: doc(new Macro('or', function (code, _ref40) {
-      var use_dynamic = _ref40.use_dynamic,
-        error = _ref40.error;
+    or: doc(new Macro('or', function (code, _ref41) {
+      var use_dynamic = _ref41.use_dynamic,
+        error = _ref41.error;
       var args = global_env.get('list->array')(code);
       var self = this;
       var dynamic_env = self;
@@ -16013,9 +16047,9 @@
     }), "(or . expressions)\n\n         Macro that executes the values one by one and returns the first that is\n         a truthy value. If there are no expressions that evaluate to true it\n         returns false."),
     // ------------------------------------------------------------------
     and: doc(new Macro('and', function (code) {
-      var _ref41 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        use_dynamic = _ref41.use_dynamic,
-        error = _ref41.error;
+      var _ref42 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        use_dynamic = _ref42.use_dynamic,
+        error = _ref42.error;
       var args = global_env.get('list->array')(code);
       var self = this;
       var dynamic_env = self;
@@ -16497,9 +16531,9 @@
     }
   }
   // -------------------------------------------------------------------------
-  function evaluate_args(rest, _ref42) {
-    var use_dynamic = _ref42.use_dynamic,
-      options = _objectWithoutProperties(_ref42, _excluded5);
+  function evaluate_args(rest, _ref43) {
+    var use_dynamic = _ref43.use_dynamic,
+      options = _objectWithoutProperties(_ref43, _excluded5);
     var args = [];
     var node = rest;
     markCycles(node);
@@ -16603,10 +16637,10 @@
     return args;
   }
   function call_function(fn, args) {
-    var _ref43 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-      env = _ref43.env,
-      dynamic_env = _ref43.dynamic_env,
-      use_dynamic = _ref43.use_dynamic;
+    var _ref44 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+      env = _ref44.env,
+      dynamic_env = _ref44.dynamic_env,
+      use_dynamic = _ref44.use_dynamic;
     var scope = env === null || env === void 0 ? void 0 : env.new_frame(fn, args);
     var dynamic_scope = dynamic_env === null || dynamic_env === void 0 ? void 0 : dynamic_env.new_frame(fn, args);
     var context = new LambdaContext({
@@ -16619,12 +16653,12 @@
 
   // -------------------------------------------------------------------------
   function apply(fn, args) {
-    var _ref44 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-      env = _ref44.env,
-      dynamic_env = _ref44.dynamic_env,
-      use_dynamic = _ref44.use_dynamic,
-      _ref44$error = _ref44.error,
-      error = _ref44$error === void 0 ? function () {} : _ref44$error;
+    var _ref45 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+      env = _ref45.env,
+      dynamic_env = _ref45.dynamic_env,
+      use_dynamic = _ref45.use_dynamic,
+      _ref45$error = _ref45.error,
+      error = _ref45$error === void 0 ? function () {} : _ref45$error;
     args = evaluate_args(args, {
       env: env,
       dynamic_env: dynamic_env,
@@ -16781,13 +16815,13 @@
   var noop = function noop() {};
   // -------------------------------------------------------------------------
   function _evaluate(code) {
-    var _ref45 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      env = _ref45.env,
-      dynamic_env = _ref45.dynamic_env,
-      use_dynamic = _ref45.use_dynamic,
-      _ref45$error = _ref45.error,
-      error = _ref45$error === void 0 ? noop : _ref45$error,
-      rest = _objectWithoutProperties(_ref45, _excluded6);
+    var _ref46 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      env = _ref46.env,
+      dynamic_env = _ref46.dynamic_env,
+      use_dynamic = _ref46.use_dynamic,
+      _ref46$error = _ref46.error,
+      error = _ref46$error === void 0 ? noop : _ref46$error,
+      rest = _objectWithoutProperties(_ref46, _excluded6);
     return function (rest) {
       try {
         if (!is_env(dynamic_env)) {
@@ -16895,7 +16929,7 @@
   function exec_collect(collect_callback) {
     return /*#__PURE__*/function () {
       var _exec_lambda = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(arg) {
-        var _ref46,
+        var _ref47,
           env,
           dynamic_env,
           use_dynamic,
@@ -16913,7 +16947,7 @@
           while (1) {
             switch (_context21.prev = _context21.next) {
               case 0:
-                _ref46 = _args24.length > 1 && _args24[1] !== undefined ? _args24[1] : {}, env = _ref46.env, dynamic_env = _ref46.dynamic_env, use_dynamic = _ref46.use_dynamic;
+                _ref47 = _args24.length > 1 && _args24[1] !== undefined ? _args24[1] : {}, env = _ref47.env, dynamic_env = _ref47.dynamic_env, use_dynamic = _ref47.use_dynamic;
                 if (!is_env(dynamic_env)) {
                   dynamic_env = env === true ? user_env : env || user_env;
                 }
@@ -17218,9 +17252,9 @@
     this.rpc('init', [url])["catch"](function (error) {
       console.error(error);
     });
-    this.exec = function (code, _ref47) {
-      var _ref47$use_dynamic = _ref47.use_dynamic,
-        use_dynamic = _ref47$use_dynamic === void 0 ? false : _ref47$use_dynamic;
+    this.exec = function (code, _ref48) {
+      var _ref48$use_dynamic = _ref48.use_dynamic,
+        use_dynamic = _ref48$use_dynamic === void 0 ? false : _ref48$use_dynamic;
       return this.rpc('eval', [code, use_dynamic]);
     };
   }
@@ -17229,10 +17263,10 @@
   // :: Serialization
   // -------------------------------------------------------------------------
   var serialization_map = {
-    'pair': function pair(_ref48) {
-      var _ref49 = _slicedToArray(_ref48, 2),
-        car = _ref49[0],
-        cdr = _ref49[1];
+    'pair': function pair(_ref49) {
+      var _ref50 = _slicedToArray(_ref49, 2),
+        car = _ref50[0],
+        cdr = _ref50[1];
       return Pair(car, cdr);
     },
     'number': function number(value) {
@@ -17241,10 +17275,10 @@
       }
       return LNumber(value);
     },
-    'regex': function regex(_ref50) {
-      var _ref51 = _slicedToArray(_ref50, 2),
-        pattern = _ref51[0],
-        flag = _ref51[1];
+    'regex': function regex(_ref51) {
+      var _ref52 = _slicedToArray(_ref51, 2),
+        pattern = _ref52[0],
+        flag = _ref52[1];
       return new RegExp(pattern, flag);
     },
     'nil': function nil() {
@@ -17534,10 +17568,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 14 Jan 2024 00:09:28 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sun, 14 Jan 2024 12:42:38 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 14 Jan 2024 00:09:28 +0000').valueOf();
+    var date = LString('Sun, 14 Jan 2024 12:42:38 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17578,7 +17612,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Sun, 14 Jan 2024 00:09:28 +0000',
+    date: 'Sun, 14 Jan 2024 12:42:38 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

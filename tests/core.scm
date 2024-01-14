@@ -507,6 +507,12 @@
         (t.is (split #/(:)/ "foo:bar:baz")
               '("foo" ":" "bar" ":" "baz"))))
 
+(test "core: shuffle"
+      (lambda (t)
+        (t.is (list? (shuffle '(1 2 3))) #t)
+        (t.is (shuffle nil) nil)
+        (t.is (vector? (shuffle #(1 2 3))) #t)))
+
 ;; TODO
 ;; begin*
 ;; set-obj! throws with null or boolean
