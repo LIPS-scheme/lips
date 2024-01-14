@@ -1006,3 +1006,19 @@
                     (0.5i +0.46211715726000974i)
                     (1/2+1/2i 0.40389645531602575+0.5640831412674985i)
                     (+1/2i +0.46211715726000974i)))))
+
+(test "numbers: should calculate odd? / even?"
+      (lambda (t)
+        (t.is (odd? 1) #t)
+        (t.is (odd? 2) #f)
+        (t.is (even? 10) #t)
+        (t.is (even? 21) #f)))
+
+(test "numbers: should throw exception odd? / event?"
+      (lambda (t)
+        (for-each (lambda (op?)
+                    (t.is (to.throw (op? 10+10i)) #t)
+                    (t.is (to.throw (op? 1/2)) #t)
+                    (t.is (to.throw (op? 1.2)) #t)
+                    (t.is (to.throw (op? 1.2)) #t))
+                  '(even? odd?))))

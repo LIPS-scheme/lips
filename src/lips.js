@@ -5362,10 +5362,14 @@ LNumber.prototype.isOdd = function() {
         if (this.isBigNumber()) {
             return this.__value__ % BigInt(2) === BigInt(1);
         }
+        if (this.__type__ === 'float') {
+            throw new Error('Invalid number float');
+        }
         return this.__value__ % 2 === 1;
     } else if (LNumber.isBN(this.__value__)) {
         return this.__value__.isOdd();
     }
+    throw new Error(`Invalid number ${this.__type__}`);
 };
 // -------------------------------------------------------------------------
 LNumber.prototype.isEven = function() {

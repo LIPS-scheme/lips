@@ -10,6 +10,8 @@
 * fix macro expand on let with more than one binding
 * fix shallow `list->array`
 * fix resolving promises inside quoted promise realm
+* fix undocumented symbol syntax extensions
+* fix odd? even? on non integers
 
 ## 1.0.0-beta.17
 ### Breaking

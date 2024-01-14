@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 13 Jan 2024 23:08:08 +0000
+ * build: Sun, 14 Jan 2024 00:09:28 +0000
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -5838,7 +5838,7 @@
    * The rationalize algorithm is by Per M.A. Bothner, Alan Bawden and Marc Feeley.
    * source: Kawa, C-Gambit
    *
-   * Build time: Sat, 13 Jan 2024 23:08:08 +0000
+   * Build time: Sun, 14 Jan 2024 00:09:28 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -11896,10 +11896,14 @@
       if (this.isBigNumber()) {
         return this.__value__ % BigInt(2) === BigInt(1);
       }
+      if (this.__type__ === 'float') {
+        throw new Error('Invalid number float');
+      }
       return this.__value__ % 2 === 1;
     } else if (LNumber.isBN(this.__value__)) {
       return this.__value__.isOdd();
     }
+    throw new Error("Invalid number ".concat(this.__type__));
   };
   // -------------------------------------------------------------------------
   LNumber.prototype.isEven = function () {
@@ -17530,10 +17534,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sat, 13 Jan 2024 23:08:08 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sun, 14 Jan 2024 00:09:28 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sat, 13 Jan 2024 23:08:08 +0000').valueOf();
+    var date = LString('Sun, 14 Jan 2024 00:09:28 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17574,7 +17578,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Sat, 13 Jan 2024 23:08:08 +0000',
+    date: 'Sun, 14 Jan 2024 00:09:28 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),
