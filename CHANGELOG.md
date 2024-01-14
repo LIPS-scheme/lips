@@ -5,6 +5,7 @@
 * add R7RS `guard` macro
 * add R7RS `parameterize` and `make-parameter`
 * add `shuffle` function
+* add support to ES Modules [#254](https://github.com/jcubic/lips/issues/254)
 ### Bugfix
 * remove evaluating of async list data as first argument
 * fix `number->string` for binary numbers
@@ -14,6 +15,7 @@
 * fix undocumented symbol syntax extensions
 * fix odd? even? on non integers
 * fix object literals with null value [#264](https://github.com/jcubic/lips/issues/264)
+* fix version and date in executable [#261](https://github.com/jcubic/lips/issues/261)
 
 ## 1.0.0-beta.17
 ### Breaking
