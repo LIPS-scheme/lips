@@ -181,6 +181,14 @@
         (let ((x '#3=(1 2 . #3#)))
           (t.is (eq? x (cddr x)) true))))
 
+(test "parser: should throw an error on extra close paren"
+      (lambda (t)
+        (t.is (try
+               (lips.exec "(define x 10))")
+               (catch (e)
+                      e.message))
+              "Parser: unexpected parenthesis")))
+
 (test "tokenizer: should create tokens for simple list"
       (lambda (t)
         (t.is (lips.tokenize "(foo bar baz)")

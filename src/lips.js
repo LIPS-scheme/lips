@@ -1531,11 +1531,17 @@ class Parser {
     balanced() {
         return this._state.parentheses === 0;
     }
-    ballancing_error(expr) {
+    ballancing_error(expr, prev) {
         const count = this._state.parentheses;
-        const e = new Error('Parser: expected parenthesis but eof found');
-        const re = new RegExp(`\\){${count}}$`);
-        e.__code__ = [expr.toString().replace(re, '')];
+        let e;
+        if (count < 0) {
+            e = new Error('Parser: unexpected parenthesis');
+            e.__code__ = [prev.toString() + ')'];
+        } else {
+            e = new Error('Parser: expected parenthesis but eof found');
+            const re = new RegExp(`\\){${count}}$`);
+            e.__code__ = [expr.toString().replace(re, '')];
+        }
         throw e;
     }
     // Cover This function (array and object branch)
@@ -1658,6 +1664,9 @@ class Parser {
             this.skip();
             this._refs[ref_label] = this._read_object();
             return this._refs[ref_label];
+        } else if (this.is_close(token)) {
+            this.skip();
+            // invalid state, we don't need to return anything
         } else if (this.is_open(token)) {
             this.skip();
             return this.read_list();
@@ -1698,14 +1707,16 @@ async function* parse(arg, env) {
     }
     const parser = new Parser(arg, { env });
     let i = 100000;
+    let prev;
     while (true) {
         const expr = await parser.read_object();
         if (!parser.balanced()) {
-            parser.ballancing_error(expr);
+            parser.ballancing_error(expr, prev);
         }
         if (expr === eof) {
             break;
         }
+        prev = expr;
         yield expr;
     }
 }

@@ -5796,7 +5796,7 @@ function unfetch(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttp
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Jan 2024 14:11:55 +0000
+ * build: Sun, 14 Jan 2024 14:43:31 +0000
  */
 var _excluded = ["token"],
   _excluded2 = ["env"],
@@ -7525,11 +7525,17 @@ var Parser = /*#__PURE__*/function () {
     }
   }, {
     key: "ballancing_error",
-    value: function ballancing_error(expr) {
+    value: function ballancing_error(expr, prev) {
       var count = this._state.parentheses;
-      var e = new Error('Parser: expected parenthesis but eof found');
-      var re = new RegExp("\\){".concat(count, "}$"));
-      e.__code__ = [expr.toString().replace(re, '')];
+      var e;
+      if (count < 0) {
+        e = new Error('Parser: unexpected parenthesis');
+        e.__code__ = [prev.toString() + ')'];
+      } else {
+        e = new Error('Parser: expected parenthesis but eof found');
+        var re = new RegExp("\\){".concat(count, "}$"));
+        e.__code__ = [expr.toString().replace(re, '')];
+      }
       throw e;
     }
     // Cover This function (array and object branch)
@@ -7760,15 +7766,24 @@ var Parser = /*#__PURE__*/function () {
                 this._refs[ref_label] = this._read_object();
                 return _context8.abrupt("return", this._refs[ref_label]);
               case 51:
+                if (!this.is_close(token)) {
+                  _context8.next = 55;
+                  break;
+                }
+                this.skip();
+                // invalid state, we don't need to return anything
+                _context8.next = 61;
+                break;
+              case 55:
                 if (!this.is_open(token)) {
-                  _context8.next = 56;
+                  _context8.next = 60;
                   break;
                 }
                 this.skip();
                 return _context8.abrupt("return", this.read_list());
-              case 56:
+              case 60:
                 return _context8.abrupt("return", this.read_value());
-              case 57:
+              case 61:
               case "end":
                 return _context8.stop();
             }
@@ -7811,7 +7826,7 @@ function parse(_x, _x2) {
 } // ----------------------------------------------------------------------
 function _parse() {
   _parse = _wrapAsyncGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(arg, env) {
-    var parser, expr;
+    var parser, prev, expr;
     return _regeneratorRuntime.wrap(function _callee9$(_context9) {
       while (1) {
         switch (_context9.prev = _context9.next) {
@@ -7834,20 +7849,21 @@ function _parse() {
           case 6:
             expr = _context9.sent;
             if (!parser.balanced()) {
-              parser.ballancing_error(expr);
+              parser.ballancing_error(expr, prev);
             }
             if (!(expr === eof)) {
               _context9.next = 10;
               break;
             }
-            return _context9.abrupt("break", 14);
+            return _context9.abrupt("break", 15);
           case 10:
-            _context9.next = 12;
+            prev = expr;
+            _context9.next = 13;
             return expr;
-          case 12:
+          case 13:
             _context9.next = 3;
             break;
-          case 14:
+          case 15:
           case "end":
             return _context9.stop();
         }
@@ -17526,10 +17542,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 14 Jan 2024 14:11:55 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 14 Jan 2024 14:43:31 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 14 Jan 2024 14:11:55 +0000').valueOf();
+  var date = LString('Sun, 14 Jan 2024 14:43:31 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17570,7 +17586,7 @@ read_only(Parameter, '__class__', 'parameter');
 var lips = {
   version: 'DEV',
   banner: banner,
-  date: 'Sun, 14 Jan 2024 14:11:55 +0000',
+  date: 'Sun, 14 Jan 2024 14:43:31 +0000',
   exec: exec,
   // unwrap async generator into Promise<Array>
   parse: compose(uniterate_async, parse),
