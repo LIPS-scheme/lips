@@ -58,7 +58,8 @@ const supports_paste_brackets = satisfies(process.version, '>=v20.6.0');
 
 // -----------------------------------------------------------------------------
 process.on('uncaughtException', function (err) {
-  log_error(err.message);
+    log_error(err.message);
+    log_error(err.stack);
 });
 
 // -----------------------------------------------------------------------------
