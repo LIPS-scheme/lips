@@ -5802,7 +5802,7 @@
    * Copyright (c) 2014-present, Facebook, Inc.
    * released under MIT license
    *
-   * build: Mon, 15 Jan 2024 14:57:03 +0000
+   * build: Mon, 15 Jan 2024 15:20:04 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -12176,24 +12176,7 @@
   };
   // -------------------------------------------------------------------------
   LComplex.prototype.cmp = function (n) {
-    var _this$coerce11 = this.coerce(n),
-      _this$coerce12 = _slicedToArray(_this$coerce11, 2),
-      a = _this$coerce12[0],
-      b = _this$coerce12[1];
-    var _a$__re__$coerce = a.__re__.coerce(b.__re__),
-      _a$__re__$coerce2 = _slicedToArray(_a$__re__$coerce, 2),
-      re_a = _a$__re__$coerce2[0],
-      re_b = _a$__re__$coerce2[1];
-    var re_cmp = re_a.cmp(re_b);
-    if (re_cmp !== 0) {
-      return re_cmp;
-    } else {
-      var _a$__im__$coerce = a.__im__.coerce(b.__im__),
-        _a$__im__$coerce2 = _slicedToArray(_a$__im__$coerce, 2),
-        im_a = _a$__im__$coerce2[0],
-        im_b = _a$__im__$coerce2[1];
-      return im_a.cmp(im_b);
-    }
+    throw new Error("Can't compare compex numbers");
   };
   // -------------------------------------------------------------------------
   LComplex.prototype.valueOf = function () {
@@ -15955,7 +15938,7 @@
       for (var _len40 = arguments.length, args = new Array(_len40), _key41 = 0; _key41 < _len40; _key41++) {
         args[_key41] = arguments[_key41];
       }
-      typecheck_args('>', args, 'number');
+      typecheck_numbers('>', args, ['bigint', 'float', 'rational']);
       return seq_compare(function (a, b) {
         return LNumber(a).cmp(b) === 1;
       }, args);
@@ -15965,7 +15948,7 @@
       for (var _len41 = arguments.length, args = new Array(_len41), _key42 = 0; _key42 < _len41; _key42++) {
         args[_key42] = arguments[_key42];
       }
-      typecheck_args('<', args, 'number');
+      typecheck_numbers('<', args, ['bigint', 'float', 'rational']);
       return seq_compare(function (a, b) {
         return LNumber(a).cmp(b) === -1;
       }, args);
@@ -15975,7 +15958,7 @@
       for (var _len42 = arguments.length, args = new Array(_len42), _key43 = 0; _key43 < _len42; _key43++) {
         args[_key43] = arguments[_key43];
       }
-      typecheck_args('<=', args, 'number');
+      typecheck_numbers('<=', args, ['bigint', 'float', 'rational']);
       return seq_compare(function (a, b) {
         return [0, -1].includes(LNumber(a).cmp(b));
       }, args);
@@ -15985,7 +15968,7 @@
       for (var _len43 = arguments.length, args = new Array(_len43), _key44 = 0; _key44 < _len43; _key44++) {
         args[_key44] = arguments[_key44];
       }
-      typecheck_args('>=', args, 'number');
+      typecheck_numbers('>=', args, ['bigint', 'float', 'rational']);
       return seq_compare(function (a, b) {
         return [0, 1].includes(LNumber(a).cmp(b));
       }, args);
@@ -16290,11 +16273,22 @@
         expected = 'a' + ('aeiou'.includes(first) ? 'n ' : ' ') + expected[0];
       } else {
         var last = expected[expected.length - 1];
-        expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+        expected = expected.slice(0, -1).join(', ') + ', or ' + last;
       }
     }
-    return "Expecting ".concat(expected, ", got ").concat(got).concat(postfix);
+    return "Expecting ".concat(expected, " got ").concat(got).concat(postfix);
   }
+
+  // -------------------------------------------------------------------------
+  function typecheck_numbers(fn, args, expected) {
+    args.forEach(function (arg, i) {
+      typecheck(fn, arg, 'number', i + 1);
+      if (!expected.includes(arg.__type__)) {
+        throw new Error(typeErrorMessage(fn, arg.__type__, expected, i));
+      }
+    });
+  }
+
   // -------------------------------------------------------------------------
   function typecheck_args(fn, args, expected) {
     args.forEach(function (arg, i) {
@@ -17555,10 +17549,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 15 Jan 2024 14:57:03 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 15 Jan 2024 15:20:04 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 15 Jan 2024 14:57:03 +0000').valueOf();
+    var date = LString('Mon, 15 Jan 2024 15:20:04 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17597,7 +17591,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 15 Jan 2024 14:57:03 +0000';
+  var date = 'Mon, 15 Jan 2024 15:20:04 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

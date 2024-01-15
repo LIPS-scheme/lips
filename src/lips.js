@@ -5642,15 +5642,7 @@ LComplex.prototype._op = function(op, n) {
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.cmp = function(n) {
-    const [a, b] = this.coerce(n);
-    const [re_a, re_b] = a.__re__.coerce(b.__re__);
-    const re_cmp = re_a.cmp(re_b);
-    if (re_cmp !== 0) {
-        return re_cmp;
-    } else {
-        const [im_a, im_b] = a.__im__.coerce(b.__im__);
-        return im_a.cmp(im_b);
-    }
+    throw new Error(`Can't compare compex numbers`);
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.valueOf = function() {
@@ -9414,7 +9406,7 @@ var global_env = new Environment({
         all equal.`),
     // ------------------------------------------------------------------
     '>': doc('>', function(...args) {
-        typecheck_args('>', args, 'number');
+        typecheck_numbers('>', args, ['bigint', 'float', 'rational']);
         return seq_compare((a, b) => LNumber(a).cmp(b) === 1, args);
     }, `(> x1 x2 x3 ...)
 
@@ -9422,7 +9414,7 @@ var global_env = new Environment({
         monotonically decreasing, i.e. x1 > x2 and x2 > x3 and so on.`),
     // ------------------------------------------------------------------
     '<': doc('<', function(...args) {
-        typecheck_args('<', args, 'number');
+        typecheck_numbers('<', args, ['bigint', 'float', 'rational']);
         return seq_compare((a, b) => LNumber(a).cmp(b) === -1, args);
     }, `(< x1 x2 ...)
 
@@ -9430,7 +9422,7 @@ var global_env = new Environment({
         monotonically increasing, i.e. x1 < x2 and x2 < x3 and so on.`),
     // ------------------------------------------------------------------
     '<=': doc('<=', function(...args) {
-        typecheck_args('<=', args, 'number');
+        typecheck_numbers('<=', args, ['bigint', 'float', 'rational']);
         return seq_compare((a, b) => [0, -1].includes(LNumber(a).cmp(b)), args);
     }, `(<= x1 x2 ...)
 
@@ -9438,7 +9430,7 @@ var global_env = new Environment({
         monotonically nondecreasing, i.e. x1 <= x2 and x2 <= x3 and so on.`),
     // ------------------------------------------------------------------
     '>=': doc('>=', function(...args) {
-        typecheck_args('>=', args, 'number');
+        typecheck_numbers('>=', args, ['bigint', 'float', 'rational']);
         return seq_compare((a, b) => [0, 1].includes(LNumber(a).cmp(b)), args);
     }, `(>= x1 x2 ...)
 
@@ -9747,11 +9739,22 @@ function typeErrorMessage(fn, got, expected, position = null) {
             expected = 'a' + ('aeiou'.includes(first) ? 'n ' : ' ') + expected[0];
         } else {
             const last = expected[expected.length - 1];
-            expected = expected.slice(0, -1).join(', ') + ' or ' + last;
+            expected = expected.slice(0, -1).join(', ') + ', or ' + last;
         }
     }
-    return `Expecting ${expected}, got ${got}${postfix}`;
+    return `Expecting ${expected} got ${got}${postfix}`;
 }
+
+// -------------------------------------------------------------------------
+function typecheck_numbers(fn, args, expected) {
+    args.forEach((arg, i) => {
+        typecheck(fn, arg, 'number', i + 1);
+        if (!expected.includes(arg.__type__)) {
+            throw new Error(typeErrorMessage(fn, arg.__type__, expected, i));
+        }
+    });
+}
+
 // -------------------------------------------------------------------------
 function typecheck_args(fn, args, expected) {
     args.forEach((arg, i) => {

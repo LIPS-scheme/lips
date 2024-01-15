@@ -3,7 +3,6 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import babel from "@rollup/plugin-babel";
 import nodePolyfills from 'rollup-plugin-node-polyfills';
 
-
 function base() {
     return {
         input: "dist/version.js",
@@ -39,6 +38,7 @@ function base() {
         ]
     };
 }
+
 export default [
     {
         output: {

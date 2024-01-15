@@ -22,6 +22,7 @@
 * fix `scheme-report-environment` [#268](https://github.com/jcubic/lips/issues/268)
 * fix writing to binary ports
 * fix unboxing object literals
+* throw error on comparing complex numbers [#248](https://github.com/jcubic/lips/issues/248)
 
 ## 1.0.0-beta.17
 ### Breaking
