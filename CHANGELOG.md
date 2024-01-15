@@ -21,6 +21,7 @@
 * fix error on extra close parenthesis [#263](https://github.com/jcubic/lips/issues/263)
 * fix `scheme-report-environment` [#268](https://github.com/jcubic/lips/issues/268)
 * fix writing to binary ports
+* fix unboxing object literals
 
 ## 1.0.0-beta.17
 ### Breaking

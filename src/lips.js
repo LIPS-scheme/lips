@@ -4320,16 +4320,12 @@ function box(object) {
 function map_object(object, fn) {
     const props = Object.getOwnPropertyNames(object);
     const symbols = Object.getOwnPropertySymbols(object);
+    const result = {};
     props.concat(symbols).forEach(key => {
         const value = fn(object[key]);
-        // check if property is read only, happen with webpack
-        // and __esModule, it can happen for other properties as well
-        const descriptor = Object.getOwnPropertyDescriptor(object, key);
-        if (!descriptor || descriptor.writable && object[key] !== value) {
-            object[key] = value;
-        }
+        result[key] = value;
     });
-    return object;
+    return result;
 }
 // ----------------------------------------------------------------------
 function unbox(object) {

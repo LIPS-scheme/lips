@@ -5796,7 +5796,7 @@ function unfetch(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttp
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 15 Jan 2024 14:02:37 +0000
+ * build: Mon, 15 Jan 2024 14:57:03 +0000
  */
 var _excluded = ["token"],
   _excluded2 = ["env"],
@@ -5913,9 +5913,14 @@ function log(x) {
 // ----------------------------------------------------------------------
 /* c8 ignore next */
 function is_debug() {
-  return user_env && user_env.get('DEBUG', {
+  var n = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+  var debug = user_env && user_env.get('DEBUG', {
     throwError: false
   });
+  if (n === null) {
+    return debug === true;
+  }
+  return (debug === null || debug === void 0 ? void 0 : debug.valueOf()) === n.valueOf();
 }
 /* eslint-enable */
 /* eslint-disable max-len */
@@ -10648,16 +10653,12 @@ function box(object) {
 function map_object(object, fn) {
   var props = Object.getOwnPropertyNames(object);
   var symbols = Object.getOwnPropertySymbols(object);
+  var result = {};
   props.concat(symbols).forEach(function (key) {
     var value = fn(object[key]);
-    // check if property is read only, happen with webpack
-    // and __esModule, it can happen for other properties as well
-    var descriptor = Object.getOwnPropertyDescriptor(object, key);
-    if (!descriptor || descriptor.writable && object[key] !== value) {
-      object[key] = value;
-    }
+    result[key] = value;
   });
-  return object;
+  return result;
 }
 // ----------------------------------------------------------------------
 function unbox(object) {
@@ -16614,6 +16615,8 @@ function prepare_fn_args(fn, args) {
   }
   return args;
 }
+
+// -------------------------------------------------------------------------
 function call_function(fn, args) {
   var _ref44 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
     env = _ref44.env,
@@ -17546,10 +17549,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 15 Jan 2024 14:02:37 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 15 Jan 2024 14:57:03 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 15 Jan 2024 14:02:37 +0000').valueOf();
+  var date = LString('Mon, 15 Jan 2024 14:57:03 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17588,7 +17591,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Mon, 15 Jan 2024 14:02:37 +0000';
+var date = 'Mon, 15 Jan 2024 14:57:03 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
