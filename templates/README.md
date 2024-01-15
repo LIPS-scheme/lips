@@ -263,6 +263,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
+| Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
 
 ## Links
 * [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
