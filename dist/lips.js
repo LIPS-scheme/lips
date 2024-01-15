@@ -5802,7 +5802,7 @@
    * Copyright (c) 2014-present, Facebook, Inc.
    * released under MIT license
    *
-   * build: Mon, 15 Jan 2024 12:05:39 +0000
+   * build: Mon, 15 Jan 2024 12:39:38 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -13168,6 +13168,7 @@
   };
   // -------------------------------------------------------------------------
   function OutputBinaryFilePort(filename, fd) {
+    var _this18 = this;
     if (typeof this !== 'undefined' && !(this instanceof OutputBinaryFilePort) || typeof this === 'undefined') {
       return new OutputBinaryFilePort(filename, fd);
     }
@@ -13179,14 +13180,13 @@
     read_only(this, '__type__', binary_port);
     var fs, Buffer;
     this.write = function (x) {
-      var _this18 = this;
       typecheck('write', x, ['number', 'uint8array']);
       var buffer;
       if (!fs) {
-        fs = this.internal('fs');
+        fs = _this18.internal('fs');
       }
       if (!Buffer) {
-        Buffer = this.internal('Buffer');
+        Buffer = _this18.internal('Buffer');
       }
       if (LNumber.isNumber(x)) {
         buffer = Buffer.from([x.valueOf()]);
@@ -13916,7 +13916,10 @@
       } else {
         typecheck('display', port, 'output-port');
       }
-      var value = global_env.get('repr')(arg);
+      var value = arg;
+      if (!(port instanceof OutputBinaryFilePort)) {
+        value = global_env.get('repr')(arg);
+      }
       port.write.call(global_env, value);
     }, "(display string [port])\n\n        This function outputs the string to the standard output or\n        the port if given. No newline."),
     // ------------------------------------------------------------------
@@ -17549,10 +17552,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 15 Jan 2024 12:05:39 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 15 Jan 2024 12:39:38 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 15 Jan 2024 12:05:39 +0000').valueOf();
+    var date = LString('Mon, 15 Jan 2024 12:39:38 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17593,7 +17596,7 @@
   var lips = {
     version: 'DEV',
     banner: banner,
-    date: 'Mon, 15 Jan 2024 12:05:39 +0000',
+    date: 'Mon, 15 Jan 2024 12:39:38 +0000',
     exec: exec,
     // unwrap async generator into Promise<Array>
     parse: compose(uniterate_async, parse),

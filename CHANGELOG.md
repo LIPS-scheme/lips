@@ -18,6 +18,8 @@
 * fix object literals with null value [#264](https://github.com/jcubic/lips/issues/264)
 * fix version and date in executable [#261](https://github.com/jcubic/lips/issues/261)
 * fix error on extra close parenthesis [#263](https://github.com/jcubic/lips/issues/263)
+* fix `scheme-report-environment` [#268](https://github.com/jcubic/lips/issues/268)
+* fix writing to binary ports
 
 ## 1.0.0-beta.17
 ### Breaking

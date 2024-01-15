@@ -6514,7 +6514,7 @@ function OutputBinaryFilePort(filename, fd) {
     read_only(this, '_fd', fd.valueOf(), { hidden: true });
     read_only(this, '__type__', binary_port);
     var fs, Buffer;
-    this.write = function(x) {
+    this.write = (x) => {
         typecheck('write', x, ['number', 'uint8array']);
         var buffer;
         if (!fs) {
@@ -7188,7 +7188,10 @@ var global_env = new Environment({
         } else {
             typecheck('display', port, 'output-port');
         }
-        const value = global_env.get('repr')(arg);
+        let value = arg;
+        if (!(port instanceof OutputBinaryFilePort)) {
+            value = global_env.get('repr')(arg);
+        }
         port.write.call(global_env, value);
     }, `(display string [port])
 
