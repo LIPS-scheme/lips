@@ -7,7 +7,7 @@
   "module": "dist/lips.esm.min.js",
   "exports": {
     "import": "dist/lips.esm.min.js",
-    "require": "dist/lips.js"
+    "require": "dist/lips.cjs"
   },
   "unpkg": "dist/lips.min.js",
   "scripts": {

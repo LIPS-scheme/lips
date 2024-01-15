@@ -14,7 +14,7 @@ import { promisify } from 'util';
 import fs from 'fs';
 import util from 'util';
 
-import lips from '../src/lips.js';
+import { exec } from '../src/lips.js';
 
 const readDir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
@@ -35,13 +35,13 @@ get_files().then(filenames => {
     return Promise.all(filenames.map(function(file) {
         return readFile(`tests/${file}`, 'utf8');
     })).then(async function (files) {
-      await lips.exec(`
+      await exec(`
         (let-env lips.env.__parent__
           (load "./dist/std.xcb")
           (load "./tests/helpers/helpers.scm"))
         (define test (require "ava"))
       `);
-      return lips.exec(files.join('\n\n'));
+      return exec(files.join('\n\n'));
   }).catch(e => {
       console.error(e.message);
       console.error(e.stack);

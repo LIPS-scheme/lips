@@ -1696,7 +1696,7 @@ class DatumReference {
 // :: or macro assigned to symbol, this function is async because
 // :: it evaluates the code, from parser extensions, that may return a promise.
 // ----------------------------------------------------------------------
-async function* parse(arg, env) {
+async function* _parse(arg, env) {
     if (!env) {
         if (global_env) {
             env = global_env.get('**interaction-environment**', {
@@ -6946,7 +6946,7 @@ Unquote.prototype.toString = function() {
     return '#<unquote[' + this.count + '] ' + this.value + '>';
 };
 // -------------------------------------------------------------------------------
-var native_lambda = parse(tokenize(`(lambda ()
+var native_lambda = _parse(tokenize(`(lambda ()
                                       "[native code]"
                                       (throw "Invalid Invocation"))`))[0];
 // -------------------------------------------------------------------------------
@@ -7087,7 +7087,7 @@ var global_env = new Environment({
     read: doc('read', async function read(arg = null) {
         const { env } = this;
         if (LString.isString(arg)) {
-            for await (let value of parse(arg, env)) {
+            for await (let value of _parse(arg, env)) {
                 return value;
             }
         }
@@ -9672,7 +9672,7 @@ function is_node() {
 
 // -------------------------------------------------------------------------
 async function node_specific() {
-    const { createRequire } = await import('module');
+    const { createRequire } = await import('mod' + 'ule');
     nodeRequire = createRequire(import.meta.url);
     fs = await import('fs');
     path = await import('path');
@@ -10275,7 +10275,7 @@ function exec_collect(collect_callback) {
             env = env || user_env;
         }
         var results = [];
-        var input = Array.isArray(arg) ? arg : parse(arg);
+        var input = Array.isArray(arg) ? arg : _parse(arg);
         for await (let code of input) {
             const value = evaluate(code, {
                 env,
@@ -10837,13 +10837,86 @@ read_only(LString, '__class__', 'string');
 read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
-const lips = {
-    version: '{{VER}}',
+const version = '{{VER}}';
+const date = '{{DATE}}';
+
+// unwrap async generator into Promise<Array>
+const parse = compose(uniterate_async, _parse);
+
+export {
+    version,
     banner,
-    date: '{{DATE}}',
+    date,
     exec,
-    // unwrap async generator into Promise<Array>
-    parse: compose(uniterate_async, parse),
+    parse,
+    tokenize,
+    evaluate,
+    compile,
+
+    serialize,
+    unserialize,
+
+    serialize_bin,
+    unserialize_bin,
+
+    bootstrap,
+
+    Environment,
+    user_env as env,
+
+    Worker,
+
+    Interpreter,
+    balanced as balanced_parenthesis,
+    balanced as balancedParenthesis,
+    balanced,
+
+    Macro,
+    Syntax,
+    Pair,
+    Values,
+    QuotedPromise,
+    LipsError as Error,
+
+    quote,
+
+    InputPort,
+    OutputPort,
+    BufferedOutputPort,
+    InputFilePort,
+    OutputFilePort,
+    InputStringPort,
+    OutputStringPort,
+    InputByteVectorPort,
+    OutputByteVectorPort,
+    InputBinaryFilePort,
+    OutputBinaryFilePort,
+
+    Formatter,
+    Parser,
+    Lexer,
+    specials,
+    repr,
+    nil,
+    eof,
+
+    LSymbol,
+    LNumber,
+    LFloat,
+    LComplex,
+    LRational,
+    LBigInteger,
+    LCharacter,
+    LString,
+    Parameter,
+    rationalize
+};
+const lips = {
+    version,
+    banner,
+    date,
+    exec,
+    parse,
     tokenize,
     evaluate,
     compile,
@@ -10906,6 +10979,4 @@ const lips = {
     Parameter,
     rationalize
 };
-// so it work when used with webpack where it will be not global
-export default lips;
 global_env.set('lips', lips);

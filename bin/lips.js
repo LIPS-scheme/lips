@@ -9,12 +9,7 @@ const options = lily(process.argv.slice(2), { boolean });
 
 const quiet = options.q || options.quiet;
 
-import lips from '../src/lips.js';
-import lips_dist from '../dist/lips.esm.js';
-
-const { version, date } = lips_dist;
-
-const {
+import {
     exec,
     compile,
     parse,
@@ -35,7 +30,9 @@ const {
     env,
     banner,
     InputPort,
-    OutputPort } = lips;
+    OutputPort
+} from '../src/lips.js';
+import { version, date } from '../dist/lips.esm.js';
 
 import fs from 'fs';
 import os from 'os';

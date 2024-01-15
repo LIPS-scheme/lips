@@ -16,14 +16,12 @@ function base() {
         },
         plugins: [
             babel({
-                "babelrc": false,
+                babelrc: false,
                 babelHelpers: 'runtime',
                 "plugins": [
                     "@babel/plugin-transform-async-to-generator",
-                    "@babel/plugin-transform-regenerator",
                     ["@babel/plugin-transform-runtime", {
-                        "helpers": true,
-                        "regenerator": true
+                        "helpers": true
                     }]
                 ],
                 "presets": [
@@ -47,9 +45,15 @@ export default [
             name: "lips",
             file: "dist/lips.js",
             format: "umd",
-            globals: {
-                "@babel/runtime/regenerator": "regeneratorRuntime"
-            },
+            manualChunks: () => 'everything.js'
+        },
+        ...base()
+    },
+    {
+        output: {
+            name: "lips",
+            file: "dist/lips.cjs",
+            format: "cjs",
             manualChunks: () => 'everything.js'
         },
         ...base()
@@ -59,9 +63,6 @@ export default [
             name: "lips",
             file: "dist/lips.esm.js",
             format: "esm",
-            globals: {
-                "@babel/runtime/regenerator": "regeneratorRuntime"
-            },
             manualChunks: () => 'everything.js'
         },
         ...base()

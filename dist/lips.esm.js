@@ -5796,7 +5796,7 @@ function unfetch(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttp
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 15 Jan 2024 12:39:38 +0000
+ * build: Mon, 15 Jan 2024 14:02:37 +0000
  */
 var _excluded = ["token"],
   _excluded2 = ["env"],
@@ -7821,11 +7821,11 @@ var DatumReference = /*#__PURE__*/function () {
 // :: or macro assigned to symbol, this function is async because
 // :: it evaluates the code, from parser extensions, that may return a promise.
 // ----------------------------------------------------------------------
-function parse(_x, _x2) {
-  return _parse.apply(this, arguments);
+function _parse(_x, _x2) {
+  return _parse2.apply(this, arguments);
 } // ----------------------------------------------------------------------
-function _parse() {
-  _parse = _wrapAsyncGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(arg, env) {
+function _parse2() {
+  _parse2 = _wrapAsyncGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(arg, env) {
     var parser, prev, expr;
     return _regeneratorRuntime.wrap(function _callee9$(_context9) {
       while (1) {
@@ -7870,7 +7870,7 @@ function _parse() {
       }
     }, _callee9);
   }));
-  return _parse.apply(this, arguments);
+  return _parse2.apply(this, arguments);
 }
 function unpromise(value) {
   var fn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function (x) {
@@ -7954,9 +7954,9 @@ function uniterate_async(_x5) {
 // :: Function that return matcher function that match string against string
 // ----------------------------------------------------------------------
 function _uniterate_async() {
-  _uniterate_async = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(object) {
+  _uniterate_async = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(object) {
     var result, _iteratorAbruptCompletion, _didIteratorError, _iteratorError, _iterator, _step, item;
-    return _regeneratorRuntime.wrap(function _callee22$(_context22) {
+    return _regeneratorRuntime.wrap(function _callee21$(_context22) {
       while (1) {
         switch (_context22.prev = _context22.next) {
           case 0:
@@ -8014,7 +8014,7 @@ function _uniterate_async() {
             return _context22.stop();
         }
       }
-    }, _callee22, null, [[3, 15, 19, 29], [20,, 24, 28]]);
+    }, _callee21, null, [[3, 15, 19, 29], [20,, 24, 28]]);
   }));
   return _uniterate_async.apply(this, arguments);
 }
@@ -13623,7 +13623,7 @@ function quote(value) {
   return value;
 }
 // -------------------------------------------------------------------------------
-var native_lambda = parse(tokenize("(lambda ()\n                                      \"[native code]\"\n                                      (throw \"Invalid Invocation\"))"))[0];
+var native_lambda = _parse(tokenize("(lambda ()\n                                      \"[native code]\"\n                                      (throw \"Invalid Invocation\"))"))[0];
 // -------------------------------------------------------------------------------
 var get = doc('get', function get(object) {
   var value;
@@ -13772,7 +13772,7 @@ var global_env = new Environment({
               _iteratorAbruptCompletion2 = false;
               _didIteratorError2 = false;
               _context16.prev = 5;
-              _iterator2 = _asyncIterator(parse(arg, env));
+              _iterator2 = _asyncIterator(_parse(arg, env));
             case 7:
               _context16.next = 9;
               return _iterator2.next();
@@ -14223,9 +14223,9 @@ var global_env = new Environment({
   }, "(load filename)\n        (load filename environment)\n\n        Fetches the file (from disk or network) and evaluates its content as LIPS code.\n        If the second argument is provided and it's an environment the evaluation\n        will happen in that environment."),
   // ------------------------------------------------------------------
   'do': doc(new Macro('do', /*#__PURE__*/function () {
-    var _ref31 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(code, _ref32) {
+    var _ref31 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(code, _ref32) {
       var use_dynamic, error, self, dynamic_env, scope, vars, test, body, eval_args, node, item, _loop3;
-      return _regeneratorRuntime.wrap(function _callee19$(_context19) {
+      return _regeneratorRuntime.wrap(function _callee18$(_context19) {
         while (1) {
           switch (_context19.prev = _context19.next) {
             case 0:
@@ -14268,9 +14268,9 @@ var global_env = new Environment({
                 dynamic_env: dynamic_env,
                 error: error
               };
-              _loop3 = /*#__PURE__*/_regeneratorRuntime.mark(function _callee18() {
+              _loop3 = /*#__PURE__*/_regeneratorRuntime.mark(function _loop3() {
                 var node, next, _item, value, symbols;
-                return _regeneratorRuntime.wrap(function _callee18$(_context18) {
+                return _regeneratorRuntime.wrap(function _loop3$(_context18) {
                   while (1) {
                     switch (_context18.prev = _context18.next) {
                       case 0:
@@ -14312,7 +14312,7 @@ var global_env = new Environment({
                         return _context18.stop();
                     }
                   }
-                }, _callee18);
+                }, _loop3);
               });
             case 23:
               _context19.next = 25;
@@ -14341,7 +14341,7 @@ var global_env = new Environment({
               return _context19.stop();
           }
         }
-      }, _callee19, this);
+      }, _callee18, this);
     }));
     return function (_x15, _x16) {
       return _ref31.apply(this, arguments);
@@ -16191,14 +16191,14 @@ function node_specific() {
 } // -------------------------------------------------------------------------
 /* c8 ignore next 11 */
 function _node_specific() {
-  _node_specific = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23() {
+  _node_specific = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22() {
     var _yield$import, createRequire, moduleURL, __dirname, __filename;
-    return _regeneratorRuntime.wrap(function _callee23$(_context23) {
+    return _regeneratorRuntime.wrap(function _callee22$(_context23) {
       while (1) {
         switch (_context23.prev = _context23.next) {
           case 0:
             _context23.next = 2;
-            return Promise.resolve().then(function () { return empty$1; });
+            return import('mod' + 'ule');
           case 2:
             _yield$import = _context23.sent;
             createRequire = _yield$import.createRequire;
@@ -16252,7 +16252,7 @@ function _node_specific() {
             return _context23.stop();
         }
       }
-    }, _callee23);
+    }, _callee22);
   }));
   return _node_specific.apply(this, arguments);
 }
@@ -16449,9 +16449,9 @@ function resolve_promises(arg) {
     return _promise.apply(this, arguments);
   }
   function _promise() {
-    _promise = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(node) {
+    _promise = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(node) {
       var pair;
-      return _regeneratorRuntime.wrap(function _callee20$(_context20) {
+      return _regeneratorRuntime.wrap(function _callee19$(_context20) {
         while (1) {
           switch (_context20.prev = _context20.next) {
             case 0:
@@ -16494,7 +16494,7 @@ function resolve_promises(arg) {
               return _context20.stop();
           }
         }
-      }, _callee20);
+      }, _callee19);
     }));
     return _promise.apply(this, arguments);
   }
@@ -16906,7 +16906,7 @@ var exec = exec_collect(function (code, value) {
 // -------------------------------------------------------------------------
 function exec_collect(collect_callback) {
   return /*#__PURE__*/function () {
-    var _exec_lambda = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(arg) {
+    var _exec_lambda = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(arg) {
       var _ref47,
         env,
         dynamic_env,
@@ -16921,7 +16921,7 @@ function exec_collect(collect_callback) {
         code,
         value,
         _args24 = arguments;
-      return _regeneratorRuntime.wrap(function _callee21$(_context21) {
+      return _regeneratorRuntime.wrap(function _callee20$(_context21) {
         while (1) {
           switch (_context21.prev = _context21.next) {
             case 0:
@@ -16935,7 +16935,7 @@ function exec_collect(collect_callback) {
                 env = env || user_env;
               }
               results = [];
-              input = Array.isArray(arg) ? arg : parse(arg);
+              input = Array.isArray(arg) ? arg : _parse(arg);
               _iteratorAbruptCompletion3 = false;
               _didIteratorError3 = false;
               _context21.prev = 7;
@@ -17019,7 +17019,7 @@ function exec_collect(collect_callback) {
               return _context21.stop();
           }
         }
-      }, _callee21, null, [[7, 27, 31, 41], [32,, 36, 40]]);
+      }, _callee20, null, [[7, 27, 31, 41], [32,, 36, 40]]);
     }));
     function exec_lambda(_x19) {
       return _exec_lambda.apply(this, arguments);
@@ -17546,10 +17546,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 15 Jan 2024 12:39:38 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 15 Jan 2024 14:02:37 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 15 Jan 2024 12:39:38 +0000').valueOf();
+  var date = LString('Mon, 15 Jan 2024 14:02:37 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17587,13 +17587,17 @@ read_only(LString, '__class__', 'string');
 read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
+var version = 'DEV';
+var date = 'Mon, 15 Jan 2024 14:02:37 +0000';
+
+// unwrap async generator into Promise<Array>
+var parse = compose(uniterate_async, _parse);
 var lips = {
-  version: 'DEV',
+  version: version,
   banner: banner,
-  date: 'Mon, 15 Jan 2024 12:39:38 +0000',
+  date: date,
   exec: exec,
-  // unwrap async generator into Promise<Array>
-  parse: compose(uniterate_async, parse),
+  parse: parse,
   tokenize: tokenize,
   evaluate: _evaluate,
   compile: compile,
@@ -17902,4 +17906,4 @@ var path$1 = /*#__PURE__*/Object.freeze({
   'default': path
 });
 
-export { lips as default };
+export { BufferedOutputPort, Environment, LipsError as Error, Formatter, InputBinaryFilePort, InputByteVectorPort, InputFilePort, InputPort, InputStringPort, Interpreter, LBigInteger, LCharacter, LComplex, LFloat, LNumber, LRational, LString, LSymbol, Lexer, Macro, OutputBinaryFilePort, OutputByteVectorPort, OutputFilePort, OutputPort, OutputStringPort, Pair, Parameter, Parser, QuotedPromise, Syntax, Values, Worker, balanced, balanced as balancedParenthesis, balanced as balanced_parenthesis, banner, bootstrap, compile, date, user_env as env, eof, _evaluate as evaluate, exec, _nil as nil, parse, quote, rationalize, repr, serialize, serialize_bin, specials, tokenize, unserialize, unserialize_bin, version };

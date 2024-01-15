@@ -1,6 +1,7 @@
 ## 1.0.0-beta.18
 ### Breaking
 * change undocumented arguments to `lips.exec` into an object
+* change default export into named exports in ES Module
 ### Features
 * add R7RS `guard` macro
 * add R7RS `parameterize` and `make-parameter`
