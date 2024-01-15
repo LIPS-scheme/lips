@@ -189,7 +189,7 @@
                       e.message))
               "Parser: unexpected parenthesis")))
 
-(test "parser: should process line after comment without text"
+(test "parser: should process line after comment without text #260"
       (lambda (t)
         (t.plan 2);
         (t.is #t #t)
