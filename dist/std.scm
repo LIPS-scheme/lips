@@ -1301,7 +1301,10 @@
                                                                            `(%not-implemented ,name)
                                                                            `(lips.env.get ',name)))))
                                                      names)))
-        null
+        (new lips.Environment (object
+                               :interaction-environment interaction-environment
+                               :**interaction-environment** **interaction-environment**)
+             null "root")
         ,name))
 
 ;; -----------------------------------------------------------------------------
