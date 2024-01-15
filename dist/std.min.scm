@@ -232,7 +232,7 @@
 (define (char-upper-case? char) "(char-upper-case? char)\u000A\u000AChecks if character is upper case." (typecheck "char-upper-case?" char "character") (and (char-alphabetic? char) (char=? (char-upcase char) char)))
 (define (char-lower-case? char) "(char-upper-case? char)\u000A\u000AChecks if character is lower case." (typecheck "char-lower-case?" char "character") (and (char-alphabetic? char) (char=? (char-downcase char) char)))
 (define (newline . rest) "(newline [port])\u000A\u000AWrite newline character to standard output or given port" (let ((port (if (null? rest) (current-output-port) (car rest)))) (display "\u000A" port)))
-(define (write obj . rest) "(write obj [port])\u000A\u000AWrite object to standard output or give port. For strings it will include\u000Awrap in quotes." (let ((port (if (null? rest) (current-output-port) (car rest)))) (display (repr obj #t) port)))
+(define (write obj . rest) "(write obj [port])\u000A\u000AWrite object to standard output or give port. For strings it will include\u000Awrap in quotes." (let ((port (if (null? rest) (current-output-port) (car rest)))) (if (binary-port? port) (display obj port) (display (repr obj #t) port))))
 (define (write-char char . rest) "(write-char char [port])\u000A\u000AWrite single character to given port using write function." (typecheck "write-char" char "character") (if (not (null? rest)) (typecheck "write-char" (car rest) "output-port")) (apply display (cons (char.valueOf) rest)))
 (define fold-right reduce)
 (define fold-left fold)

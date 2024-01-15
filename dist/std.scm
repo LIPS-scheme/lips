@@ -2675,7 +2675,9 @@
    Write object to standard output or give port. For strings it will include
    wrap in quotes."
   (let ((port (if (null? rest) (current-output-port) (car rest))))
-    (display (repr obj true) port)))
+    (if (binary-port? port)
+        (display obj port)
+        (display (repr obj true) port))))
 
 ;; -----------------------------------------------------------------------------
 (define (write-char char . rest)
