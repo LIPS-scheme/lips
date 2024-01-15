@@ -2966,6 +2966,7 @@
          (finally
           (close-output-port p)))))
 
+;; -----------------------------------------------------------------------------
 (define (with-input-from-port port thunk)
   "(with-input-from-port port thunk)
 
@@ -3074,10 +3075,48 @@
                     string>=? string>? string? substring symbol->string symbol? tan truncate values
                     vector vector->list vector-fill! vector-length vector-ref vector-set! vector?
                     with-input-from-file with-output-to-file write write-char zero?))
-     ((7) (throw (new Error "not yet implemented")) #;(%make-env "R7RS"))
-      (else (throw (new Error (string-append "scheme-report-environment: version "
-                                             (number->string version)
-                                             " not supported"))))))
+    ((7) (%make-env "R7RS" - * / _ + < <= = => > >= abs acos and angle append apply asin assoc assq
+                    assv atan begin binary-port? boolean? boolean=? bytevector bytevector?  bytevector-append
+                    bytevector-copy bytevector-copy!  bytevector-length bytevector-u8-ref bytevector-u8-set!  caaaar
+                    caaadr caaar caadar caaddr caadr caar cadaar cadadr cadar caddar cadddr caddr cadr call/cc
+                    call-with-current-continuation call-with-input-file call-with-output-file call-with-port
+                    call-with-values car case case-lambda cdaaar cdaadr cdaar cdadar cdaddr cdadr cdar cddaar cddadr
+                    cddar cdddar cddddr cdddr cddr cdr ceiling char? char<? char<=? char=? char>? char>=?
+                    char->integer char-alphabetic? char-ci<? char-ci<=? char-ci=? char-ci>? char-ci>=?
+                    char-downcase char-foldcase char-lower-case? char-numeric? char-ready? char-upcase
+                    char-upper-case? char-whitespace? close-input-port close-output-port close-port command-line
+                    complex? cond cond-expand cons cos current-error-port current-input-port current-jiffy
+                    current-output-port current-second define define-record-type define-syntax define-values delay
+                    delay-force delete-file denominator digit-value display do dynamic-wind else emergency-exit
+                    environment eof-object eof-object? eq? equal? eqv? error error-object? error-object-irritants
+                    error-object-message eval even? exact exact? exact-integer? exact-integer-sqrt exit exp expt
+                    features file-exists? finite? floor floor/ floor-quotient floor-remainder flush-output-port force
+                    for-each gcd get-environment-variable get-environment-variables get-output-bytevector
+                    get-output-string guard if imag-part import include include-ci inexact inexact? infinite?
+                    input-port? input-port-open? integer? integer->char interaction-environment
+                    interaction-environment jiffies-per-second lambda lcm length let let* let*-values letrec letrec*
+                    letrec-syntax let-syntax let-values list list? list->string list->vector list-copy list-ref
+                    list-set! list-tail load log magnitude make-bytevector make-list make-parameter make-polar
+                    make-promise make-rectangular make-string make-vector map max member memq memv min modulo nan?
+                    negative? newline not null? number? number->string numerator odd? open-binary-input-file
+                    open-binary-output-file open-input-bytevector open-input-file open-input-string
+                    open-output-bytevector open-output-file open-output-string or output-port? output-port-open? pair?
+                    parameterize peek-char peek-u8 port? positive? procedure? quasiquote quote quotient raise
+                    raise-continuable rational? rationalize read read-bytevector read-bytevector! read-char read-line
+                    read-string read-u8 real? real-part remainder reverse round scheme-report-environment set!
+                    set-car! set-cdr! sin sqrt square string string? string<? string<=? string=? string>?
+                    string>=? string->list string->number string->symbol string->utf8 string->vector string-append
+                    string-ci<? string-ci<=? string-ci=? string-ci>? string-ci>=? string-copy string-copy!
+                    string-downcase string-fill! string-foldcase string-for-each string-length string-map string-ref
+                    string-set! string-upcase substring symbol? symbol=? symbol->string syntax-error syntax-rules tan
+                    textual-port? truncate truncate/ truncate-quotient truncate-remainder u8-ready? unless unquote
+                    unquote-splicing utf8->string values vector vector? vector->list vector->string vector-append
+                    vector-copy vector-copy! vector-fill! vector-for-each vector-length vector-map vector-ref
+                    vector-set! when with-exception-handler with-input-from-file with-output-to-file write
+                    write-bytevector write-char write-shared write-simple write-string write-u8 zero?))
+    (else (throw (new Error (string-append "scheme-report-environment: version "
+                                           (number->string version)
+                                           " not supported"))))))
 ;; Implementation of byte vector functions - SRFI-4 and SRFI-160
 ;;
 ;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/

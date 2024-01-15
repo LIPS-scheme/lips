@@ -6,6 +6,7 @@
 * add R7RS `parameterize` and `make-parameter`
 * add `shuffle` function
 * add support to ES Modules [#254](https://github.com/jcubic/lips/issues/254)
+* add support for `(scheme-report-environment 7)`
 ### Bugfix
 * remove evaluating of async list data as first argument
 * fix `number->string` for binary numbers
