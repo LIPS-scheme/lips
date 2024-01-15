@@ -46,7 +46,7 @@ dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
 
 dist/lips.esm.min.js: dist/lips.esm.js .$(VERSION)
-	$(UGLIFY) -o dist/lips.ems.min.js --comments --mangle -- dist/lips.esm.js
+	$(UGLIFY) -o dist/lips.esm.min.js --comments --mangle -- dist/lips.esm.js
 
 dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm
 	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm > dist/std.scm
