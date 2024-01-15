@@ -5642,7 +5642,15 @@ LComplex.prototype._op = function(op, n) {
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.cmp = function(n) {
-    throw new Error(`Can't compare compex numbers`);
+    const [a, b] = this.coerce(n);
+    const [re_a, re_b] = a.__re__.coerce(b.__re__);
+    const re_cmp = re_a.cmp(re_b);
+    if (re_cmp !== 0) {
+        return re_cmp;
+    } else {
+        const [im_a, im_b] = a.__im__.coerce(b.__im__);
+        return im_a.cmp(im_b);
+    }
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.valueOf = function() {
@@ -9738,8 +9746,9 @@ function typeErrorMessage(fn, got, expected, position = null) {
             const first = expected[0].toLowerCase();
             expected = 'a' + ('aeiou'.includes(first) ? 'n ' : ' ') + expected[0];
         } else {
-            const last = expected[expected.length - 1];
-            expected = expected.slice(0, -1).join(', ') + ', or ' + last;
+            expected = new Intl.ListFormat('en', {
+                style: 'long', type: 'disjunction'
+            }).format(expected);
         }
     }
     return `Expecting ${expected} got ${got}${postfix}`;

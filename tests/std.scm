@@ -77,9 +77,9 @@
       (lambda (t)
         (t.is (to.throw (typecheck "test" 10 (list "string"))) true)
         (t.is (try (typecheck "test" 10 (list "string") 0) (catch (e) e.message))
-              "Expecting a string, got number in expression `test` (argument 0)")
+              "Expecting a string got number in expression `test` (argument 0)")
         (t.is (try (typecheck "test" 10 (list "string" "character") 0) (catch (e) e.message))
-              "Expecting string or character, got number in expression `test` (argument 0)")))
+              "Expecting string or character got number in expression `test` (argument 0)")))
 
 (test "std: let-values and let*-values"
       (lambda (t)

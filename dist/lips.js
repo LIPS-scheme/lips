@@ -5802,7 +5802,7 @@
    * Copyright (c) 2014-present, Facebook, Inc.
    * released under MIT license
    *
-   * build: Mon, 15 Jan 2024 15:20:04 +0000
+   * build: Mon, 15 Jan 2024 16:57:39 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -12176,7 +12176,24 @@
   };
   // -------------------------------------------------------------------------
   LComplex.prototype.cmp = function (n) {
-    throw new Error("Can't compare compex numbers");
+    var _this$coerce11 = this.coerce(n),
+      _this$coerce12 = _slicedToArray(_this$coerce11, 2),
+      a = _this$coerce12[0],
+      b = _this$coerce12[1];
+    var _a$__re__$coerce = a.__re__.coerce(b.__re__),
+      _a$__re__$coerce2 = _slicedToArray(_a$__re__$coerce, 2),
+      re_a = _a$__re__$coerce2[0],
+      re_b = _a$__re__$coerce2[1];
+    var re_cmp = re_a.cmp(re_b);
+    if (re_cmp !== 0) {
+      return re_cmp;
+    } else {
+      var _a$__im__$coerce = a.__im__.coerce(b.__im__),
+        _a$__im__$coerce2 = _slicedToArray(_a$__im__$coerce, 2),
+        im_a = _a$__im__$coerce2[0],
+        im_b = _a$__im__$coerce2[1];
+      return im_a.cmp(im_b);
+    }
   };
   // -------------------------------------------------------------------------
   LComplex.prototype.valueOf = function () {
@@ -16272,8 +16289,10 @@
         var first = expected[0].toLowerCase();
         expected = 'a' + ('aeiou'.includes(first) ? 'n ' : ' ') + expected[0];
       } else {
-        var last = expected[expected.length - 1];
-        expected = expected.slice(0, -1).join(', ') + ', or ' + last;
+        expected = new Intl.ListFormat('en', {
+          style: 'long',
+          type: 'disjunction'
+        }).format(expected);
       }
     }
     return "Expecting ".concat(expected, " got ").concat(got).concat(postfix);
@@ -17549,10 +17568,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 15 Jan 2024 15:20:04 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 15 Jan 2024 16:57:39 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 15 Jan 2024 15:20:04 +0000').valueOf();
+    var date = LString('Mon, 15 Jan 2024 16:57:39 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17591,7 +17610,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 15 Jan 2024 15:20:04 +0000';
+  var date = 'Mon, 15 Jan 2024 16:57:39 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
