@@ -1297,6 +1297,7 @@ Lexer._rules = [
 
     // comment
     [/;/, /^$|[^#]/, null, null, Lexer.comment],
+    [/\n/, ';', null, Lexer.comment, null],
     [/[\s\S]/, null, /\n/, Lexer.comment, null],
     [/\s/, null, null, Lexer.comment, Lexer.comment],
 

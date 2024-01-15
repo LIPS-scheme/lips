@@ -5796,7 +5796,7 @@ function unfetch(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttp
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 14 Jan 2024 19:05:15 +0000
+ * build: Mon, 15 Jan 2024 12:05:39 +0000
  */
 var _excluded = ["token"],
   _excluded2 = ["env"],
@@ -7128,7 +7128,7 @@ Lexer._rules = [
 // regex
 [/#/, Lexer.boundary, /\//, null, Lexer.regex_init], [/./, /\//, null, Lexer.regex_init, Lexer.regex], [/[ \t]/, null, null, Lexer.regex, Lexer.regex], [/\[/, null, null, Lexer.regex, Lexer.regex_class], [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex], [/[()[\]]/, null, null, Lexer.regex, Lexer.regex], [/\//, /\\/, null, Lexer.regex, Lexer.regex], [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null], [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex], [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null],
 // comment
-[/;/, /^$|[^#]/, null, null, Lexer.comment], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment],
+[/;/, /^$|[^#]/, null, null, Lexer.comment], [/\n/, ';', null, Lexer.comment, null], [/[\s\S]/, null, /\n/, Lexer.comment, null], [/\s/, null, null, Lexer.comment, Lexer.comment],
 // block comment
 [/#/, null, /\|/, null, Lexer.b_comment], [/\s/, null, null, Lexer.b_comment, Lexer.b_comment], [/#/, /\|/, null, Lexer.b_comment, null],
 // inline commentss
@@ -17543,10 +17543,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 14 Jan 2024 19:05:15 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 15 Jan 2024 12:05:39 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 14 Jan 2024 19:05:15 +0000').valueOf();
+  var date = LString('Mon, 15 Jan 2024 12:05:39 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17587,7 +17587,7 @@ read_only(Parameter, '__class__', 'parameter');
 var lips = {
   version: 'DEV',
   banner: banner,
-  date: 'Sun, 14 Jan 2024 19:05:15 +0000',
+  date: 'Mon, 15 Jan 2024 12:05:39 +0000',
   exec: exec,
   // unwrap async generator into Promise<Array>
   parse: compose(uniterate_async, parse),

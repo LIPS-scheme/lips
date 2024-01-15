@@ -163,7 +163,7 @@
         (define list "\\" "\"" "\\\\" "\\\"")
         (t.is true true)))
 
-(test "parse: datum labels"
+(test "parser: datum labels"
       (lambda (t)
         (let ((x (list #0=(cons 1 2) #0#)))
           (set-car! (car x) 2)
@@ -188,6 +188,12 @@
                (catch (e)
                       e.message))
               "Parser: unexpected parenthesis")))
+
+(test "parser: should process line after comment without text"
+      (lambda (t)
+        (t.plan 2);
+        (t.is #t #t)
+        (t.is #t #t)))
 
 (test "tokenizer: should create tokens for simple list"
       (lambda (t)
