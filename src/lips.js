@@ -142,8 +142,12 @@ function log(x, regex = null) {
 }
 // ----------------------------------------------------------------------
 /* c8 ignore next */
-function is_debug() {
-    return user_env && user_env.get('DEBUG', { throwError: false });
+function is_debug(n = null) {
+    const debug = user_env && user_env.get('DEBUG', { throwError: false });
+    if (n === null) {
+        return debug === true;
+    }
+    return debug?.valueOf() === n.valueOf();
 }
 /* eslint-enable */
 /* eslint-disable max-len */
@@ -10033,6 +10037,8 @@ function prepare_fn_args(fn, args) {
     }
     return args;
 }
+
+// -------------------------------------------------------------------------
 function call_function(fn, args, { env, dynamic_env, use_dynamic } = {}) {
     const scope = env?.new_frame(fn, args);
     const dynamic_scope = dynamic_env?.new_frame(fn, args);
