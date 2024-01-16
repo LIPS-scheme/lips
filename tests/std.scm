@@ -267,3 +267,13 @@
                       ((assq 'b condition)))
                      (raise (list (cons 'b 23))))
               '(b . 23))))
+
+(test "std: typeOf"
+      (lambda (t)
+        (define-record-type <pare>
+          (kons x y)
+          pare?
+          (x kar set-kar!)
+          (y kdr set-kdr!))
+
+        (t.is (type (kons 1 2)) "record")))

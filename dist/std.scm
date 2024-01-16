@@ -4270,7 +4270,7 @@
                                                                                 name)))
                                                       `(set! ,(string->symbol prop) ,field)))
                                                   (cdr constructor))))
-                            (toType (lambda (self)
+                            (typeOf (lambda (self)
                                       "record"))
                             (toString (lambda (self)
                                         (string-append "#<" ,(symbol->string name) ">")))))

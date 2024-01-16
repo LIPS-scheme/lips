@@ -9872,8 +9872,8 @@ function type(obj) {
         if (obj.__instance__) {
             obj.__instance__ = false;
             if (obj.__instance__) {
-                if (is_function(obj.toType)) {
-                    return obj.toType();
+                if (is_function(obj.typeOf)) {
+                    return obj.typeOf();
                 }
                 if (is_debug()) {
                     obj.__instance__
