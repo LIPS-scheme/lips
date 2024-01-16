@@ -5796,7 +5796,7 @@ function unfetch(e,n){return n=n||{},new Promise(function(t,r){var s=new XMLHttp
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Tue, 16 Jan 2024 15:30:10 +0000
+ * build: Tue, 16 Jan 2024 15:45:49 +0000
  */
 var _excluded = ["token"],
   _excluded2 = ["env"],
@@ -13079,10 +13079,11 @@ InputByteVectorPort.prototype.toString = function () {
 InputByteVectorPort.prototype.close = function () {
   var _this17 = this;
   read_only(this, '__vector__', _nil);
+  var err = function err() {
+    throw new Error('Input-binary-port: port is closed');
+  };
   ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(function (name) {
-    _this17[name] = function () {
-      throw new Error('Input-binary-port: port is closed');
-    };
+    _this17[name] = err;
   });
   this.u8_ready = this.char_ready = function () {
     return false;
@@ -17575,10 +17576,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Tue, 16 Jan 2024 15:30:10 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Tue, 16 Jan 2024 15:45:49 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Tue, 16 Jan 2024 15:30:10 +0000').valueOf();
+  var date = LString('Tue, 16 Jan 2024 15:45:49 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17617,7 +17618,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Tue, 16 Jan 2024 15:30:10 +0000';
+var date = 'Tue, 16 Jan 2024 15:45:49 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

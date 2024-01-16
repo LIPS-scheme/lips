@@ -6432,10 +6432,11 @@ InputByteVectorPort.prototype.toString = function() {
 };
 InputByteVectorPort.prototype.close = function() {
     read_only(this, '__vector__', nil);
+    const err = function() {
+        throw new Error('Input-binary-port: port is closed');
+    };
     ['read_u8', 'close', 'peek_u8', 'read_u8_vector'].forEach(name => {
-        this[name] = function() {
-            throw new Error('Input-binary-port: port is closed');
-        };
+        this[name] = err;
     });
     this.u8_ready = this.char_ready = function() {
         return false;
