@@ -441,6 +441,16 @@
 
         (t.is (repr (kons 1 2)) "(1 . 2)")))
 
+(test "core: instance? on records"
+      (lambda (t)
+        (define-record-type <pare>
+          (kons x y)
+          pare?
+          (x kar set-kar!)
+          (y kdr set-kdr!))
+
+        (t.is (instance? (kons 1 2)) #t)))
+
 (test "core: errors and try..catch"
       (lambda (t)
         (let* ((message "Some Error")

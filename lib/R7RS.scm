@@ -991,10 +991,10 @@
 
    (define p (kons 1 2))
    (print (kar p))
-   ;; 1
+   ;; ==> 1
    (set-kdr! p 3)
    (print (kdr p))
-   ;; 3"
+   ;; ==> 3"
   (let ((obj-name (gensym 'obj-name))
         (value-name (gensym 'value-name)))
     `(begin

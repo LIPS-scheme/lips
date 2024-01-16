@@ -168,6 +168,11 @@
                      (equal? keys_a keys_b)
                      (equal? (--> keys_a (map (lambda (key) (. a key))))
                              (--> keys_b (map (lambda (key) (. b key)))))))))
+        ((instance? a)
+         (and (instance? b)
+              (%same-functions b.constructor a.constructor)
+              (function? a.equal)
+              (a.equal b)))
         (else (eqv? a b))))
 
 ;; -----------------------------------------------------------------------------

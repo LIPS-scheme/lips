@@ -4296,6 +4296,52 @@ function is_promise(o) {
 function is_undef(value) {
     return typeof value === 'undefined';
 }
+// -------------------------------------------------------------------------
+function is_iterator(obj, symbol) {
+    if (has_own_symbol(obj, symbol) || has_own_symbol(obj.__proto__, symbol)) {
+        return is_function(obj[symbol]);
+    }
+}
+// -------------------------------------------------------------------------
+function is_instance(obj) {
+    if (!obj) {
+        return false;
+    }
+    if (typeof obj !== 'object') {
+        return false;
+    }
+    // __instance__ is read only for instances
+    if (obj.__instance__) {
+        obj.__instance__ = false;
+        return obj.__instance__;
+    }
+    return false;
+}
+// -------------------------------------------------------------------------
+function self_evaluated(obj) {
+    var type = typeof obj;
+    return ['string', 'function'].includes(type) ||
+        typeof obj === 'symbol' ||
+        obj instanceof QuotedPromise ||
+        obj instanceof LSymbol ||
+        obj instanceof LNumber ||
+        obj instanceof LString ||
+        obj instanceof RegExp;
+}
+// -------------------------------------------------------------------------
+function is_native(obj) {
+    return obj instanceof LNumber ||
+        obj instanceof LString ||
+        obj instanceof LCharacter;
+}
+// -------------------------------------------------------------------------
+function has_own_symbol(obj, symbol) {
+    if (obj === null) {
+        return false;
+    }
+    return typeof obj === 'object' &&
+        symbol in Object.getOwnPropertySymbols(obj);
+}
 // ----------------------------------------------------------------------
 // :: Function utilities
 // ----------------------------------------------------------------------
@@ -7610,7 +7656,7 @@ var global_env = new Environment({
          in the body and if it's a promise it will await it in parallel and return
          the value of the last expression (i.e. it uses Promise.all()).`),
     // ------------------------------------------------------------------
-    shuffle: doc(function(arg) {
+    shuffle: doc('shuffle', function(arg) {
         typecheck('shuffle', arg, ['pair', 'nil', 'array']);
         const random = global_env.get('random')
         if (arg === nil) {
@@ -8776,6 +8822,12 @@ var global_env = new Environment({
         Function that uses the Javascript "in" operator to check if key is
         a valid property in the value.`),
     // ------------------------------------------------------------------
+    'instance?': doc('instance?', function(obj) {
+        return is_instance(obj);
+    }, `(instance? obj)
+
+        Checks if object is an instance, created with a new operator`),
+    // ------------------------------------------------------------------
     'instanceof': doc('instanceof', function(type, obj) {
         return obj instanceof unbind(type);
     }, `(instanceof type obj)
@@ -9810,37 +9862,6 @@ function typecheck(fn, arg, expected, position = null) {
         throw new Error(typeErrorMessage(fn, arg_type, expected, position));
     }
 }
-// -------------------------------------------------------------------------
-function self_evaluated(obj) {
-    var type = typeof obj;
-    return ['string', 'function'].includes(type) ||
-        typeof obj === 'symbol' ||
-        obj instanceof QuotedPromise ||
-        obj instanceof LSymbol ||
-        obj instanceof LNumber ||
-        obj instanceof LString ||
-        obj instanceof RegExp;
-}
-// -------------------------------------------------------------------------
-function is_native(obj) {
-    return obj instanceof LNumber ||
-        obj instanceof LString ||
-        obj instanceof LCharacter;
-}
-// -------------------------------------------------------------------------
-function has_own_symbol(obj, symbol) {
-    if (obj === null) {
-        return false;
-    }
-    return typeof obj === 'object' &&
-        symbol in Object.getOwnPropertySymbols(obj);
-}
-// -------------------------------------------------------------------------
-function is_iterator(obj, symbol) {
-    if (has_own_symbol(obj, symbol) || has_own_symbol(obj.__proto__, symbol)) {
-        return is_function(obj[symbol]);
-    }
-}
 
 // -------------------------------------------------------------------------
 function memoize(fn) {
@@ -9869,17 +9890,11 @@ function type(obj) {
                 return key;
             }
         }
-        if (obj.__instance__) {
-            obj.__instance__ = false;
-            if (obj.__instance__) {
-                if (is_function(obj.typeOf)) {
-                    return obj.typeOf();
-                }
-                if (is_debug()) {
-                    obj.__instance__
-                }
-                return 'instance';
+        if (is_instance(obj)) {
+            if (is_function(obj.typeOf)) {
+                return obj.typeOf();
             }
+            return 'instance';
         }
         if (obj.constructor) {
             if (obj.constructor.__class__) {

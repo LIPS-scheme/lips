@@ -1739,6 +1739,11 @@
                      (equal? keys_a keys_b)
                      (equal? (--> keys_a (map (lambda (key) (. a key))))
                              (--> keys_b (map (lambda (key) (. b key)))))))))
+        ((instance? a)
+         (and (instance? b)
+              (%same-functions b.constructor a.constructor)
+              (function? a.equal)
+              (a.equal b)))
         (else (eqv? a b))))
 
 ;; -----------------------------------------------------------------------------
@@ -4255,10 +4260,10 @@
 
    (define p (kons 1 2))
    (print (kar p))
-   ;; 1
+   ;; ==> 1
    (set-kdr! p 3)
    (print (kdr p))
-   ;; 3"
+   ;; ==> 3"
   (let ((obj-name (gensym 'obj-name))
         (value-name (gensym 'value-name)))
     `(begin
