@@ -6437,7 +6437,7 @@ InputByteVectorPort.prototype.close = function() {
             throw new Error('Input-binary-port: port is closed');
         };
     });
-    this.char_ready = function() {
+    this.u8_ready = this.char_ready = function() {
         return false;
     };
 };
