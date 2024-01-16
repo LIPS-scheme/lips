@@ -1006,6 +1006,17 @@
                                                                                 name)))
                                                       `(set! ,(string->symbol prop) ,field)))
                                                   (cdr constructor))))
+                            (equal (lambda (self other)
+                                     (if (instanceof ,name other)
+                                         (and ,@(map (lambda (field)
+                                                       (let* ((name (symbol->string field))
+                                                              (self-prop (string-append "self."
+                                                                                        name))
+                                                              (other-prop (string-append "other."
+                                                                                         name)))
+                                                         `(equal? ,(string->symbol self-prop)
+                                                                  ,(string->symbol other-prop))))))
+                                         #f)))
                             (typeOf (lambda (self)
                                       "record"))
                             (toString (lambda (self)

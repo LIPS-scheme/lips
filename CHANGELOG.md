@@ -9,6 +9,7 @@
 * add support to ES Modules [#254](https://github.com/jcubic/lips/issues/254)
 * add support for `(scheme-report-environment 7)`
 * add a way to compare custom instances with `equal?` [#270](https://github.com/jcubic/lips/issues/270)
+* add support for `equal?` on records [#273](https://github.com/jcubic/lips/issues/273)
 ### Bugfix
 * remove evaluating of async list data as first argument
 * fix `number->string` for binary numbers

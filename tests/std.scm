@@ -277,3 +277,13 @@
           (y kdr set-kdr!))
 
         (t.is (type (kons 1 2)) "record")))
+
+(test "std: equal? on records"
+      (lambda (t)
+        (define-record-type <pare>
+          (kons x y)
+          pare?
+          (x kar set-kar!)
+          (y kdr set-kdr!))
+
+        (t.is (kons 1 2) (kons 1 2))))
