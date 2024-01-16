@@ -1900,6 +1900,7 @@
        (not (eq? x Number.NEGATIVE_INFINITY))
        (not (eq? x Number.POSITIVE_INFINITY))
        (or (%number-type "bigint" x)
+           (%number-type "integer" x)
            (and (%number-type "float" x)
                 (= (modulo x 2) 1)))))
 
