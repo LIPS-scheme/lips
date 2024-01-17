@@ -269,15 +269,8 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 * [Official Website](https://lips.js.org/)
 * [Twitter/X](https://twitter.com/lips_lang)
 
-### SEO
-Links which point to the LIPS website for SEO purpose
-* [freshcode](https://freshcode.club/projects/lips)
-* [freshfoss](https://freshfoss.com/projects/lips)
-* [Scheme Wiki](http://community.schemewiki.org/?LIPS)
-* [Open Hub](https://openhub.net/p/lips-scheme)
-
 ### Articles
-* [How to start learning LISP](https://jcubic.pl/2019/05/jak-zaczac-nauke-lispa.html) (PL with translator widget)
+* [How to start learning Lisp](https://jcubic.pl/2019/05/jak-zaczac-nauke-lispa.html) (PL with translator widget)
 
 ### Press
 * [JavaScript Weekly](https://javascriptweekly.com/issues/669)
@@ -309,9 +302,25 @@ Links which point to the LIPS website for SEO purpose
 - [ ] [KISS](https://github.com/jcubic/kiss) (chrome extension REPL).
 - [ ] [SMILE](https://github.com/jcubic/smile) (Web IDE), need to start over.
 
+## How you can help
+
+I'm working on version 1.0. If you find any bugs you can help by reporting them.
+If you have some Scheme code that doesn't work (note about the limitations)
+don't hesitate to [report an issue](https://github.com/jcubic/lips/issues/new).
+
+You can also propose a feature or improvement to the library, it doesn't always have to be defects.
+
+If you enjoy the library you can write about it in a blog post and share information about it or write on Social Media.
+Don't forget to link to the project website (it's
+[good for SEO](https://itnext.io/seo-for-open-source-projects-1a6b17ffeb8b)).
+
+Of course, if you want you can also contribute with code, but there are way easier ways to help.
+
+I would also love to see if you use the library, I may even share the links of projects that use it.
+
 ## Acknowledgments
 * Font used in logo is [Telegrafico](https://www.dafont.com/telegrafico.font) by [ficod](https://www.deviantart.com/ficod).
-* Current parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
+* Current Parser is inspired by implementation in [BiwaScheme](https://www.biwascheme.org/) by Yutaka HARA (yhara).
 * `fetch` polyfill use [unfetch](https://github.com/developit/unfetch) by Jason Miller.
 * Browser `init` function use [ContentLoaded](http://javascript.nwbox.com/ContentLoaded/).
 * The rationalize algorithm is based on [Kawa Scheme](https://www.gnu.org/software/kawa/index.html) by Per M.A. Bothner, Alan Bawden and Marc Feeley.
