@@ -6560,20 +6560,17 @@ function OutputBinaryFilePort(filename, fd) {
     read_only(this, '__filename__', filename);
     read_only(this, '_fd', fd.valueOf(), { hidden: true });
     read_only(this, '__type__', binary_port);
-    var fs, Buffer;
+    let fs;
     this.write = (x) => {
         typecheck('write', x, ['number', 'uint8array']);
-        var buffer;
+        let buffer;
         if (!fs) {
             fs = this.internal('fs');
         }
-        if (!Buffer) {
-            Buffer = this.internal('Buffer');
-        }
         if (LNumber.isNumber(x)) {
-            buffer = Buffer.from([x.valueOf()]);
+            buffer = new Uint8Array([x.valueOf()]);
         } else {
-            buffer = Buffer.from(Array.from(x));
+            buffer = new Uint8Array(Array.from(x));
         }
         return new Promise((resolve, reject) => {
             fs.write(this._fd, buffer, function(err) {
