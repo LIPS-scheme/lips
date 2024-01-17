@@ -1376,8 +1376,7 @@
           (let ((fs (--> (interaction-environment)
                          (get '**internal-env**)
                          (get 'fs &(:throwError false)))))
-            (if (null? fs)
-                (throw (new Error "open-input-file: fs not defined"))
+            (if (not (null? fs))
                 (let ((*read-file* (promisify fs.readFile)))
                   (set! read-file (lambda (path binary)
                                    (let ((buff (*read-file* path)))
@@ -1394,16 +1393,13 @@
                                       (res.arrayBuffer)
                                       (res.text)))
                                 (http-get url binary)))))
-      (cond ((char=? (string-ref path 0) #\/)
-             (if (not (file-exists? path))
-                 (throw (new Error (string-append "file "
-                                                  path
-                                                  " don't exists")))
-                 (read-file path binary)))
-            ((--> #/^https?:\/\// (test path))
-             (fetch-url path binary))
-            (else
-             (%read-file binary (string-append (current-directory) path)))))))
+      (if (not read-file)
+          (fetch-url path binary)
+          (if (not (file-exists? path))
+              (throw (new Error (string-append "file "
+                                               path
+                                               " don't exists")))
+              (read-file path binary))))))
 
 ;; -----------------------------------------------------------------------------
 (define %read-binary-file (curry %read-file true))
