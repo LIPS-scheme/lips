@@ -9631,6 +9631,10 @@ global_env.doc(
     It's used so the read and write functions can locate **internal-env**
     that contains the references to stdin, stdout and stderr.`
 );
+function set_fs(fs) {
+    user_env.get('**internal-env**').set('fs', fs);
+}
+
 // -------------------------------------------------------------------------
 (function() {
     var map = { ceil: 'ceiling' };
@@ -10724,7 +10728,7 @@ function unserialize_bin(data) {
 // -------------------------------------------------------------------------
 function execError(e) {
     console.error(e.message || e);
-    if (e.code) {
+    if (Array.isArray(e.code)) {
         console.error(e.code.map((line, i) => `[${i + 1}]: ${line}`));
     }
 }
@@ -10918,6 +10922,7 @@ export {
     OutputByteVectorPort,
     InputBinaryFilePort,
     OutputBinaryFilePort,
+    set_fs,
 
     Formatter,
     Parser,
@@ -10986,6 +10991,7 @@ const lips = {
     OutputByteVectorPort,
     InputBinaryFilePort,
     OutputBinaryFilePort,
+    set_fs,
 
     Formatter,
     Parser,

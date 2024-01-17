@@ -5802,7 +5802,7 @@
    * Copyright (c) 2014-present, Facebook, Inc.
    * released under MIT license
    *
-   * build: Wed, 17 Jan 2024 11:07:15 +0000
+   * build: Wed, 17 Jan 2024 13:00:23 +0000
    */
   var _excluded = ["token"],
     _excluded2 = ["env"],
@@ -16141,6 +16141,10 @@
   // -------------------------------------------------------------------------
   set_interaction_env(user_env, internal_env);
   global_env.doc('**interaction-environment**', "**interaction-environment**\n\n    Internal dynamic, global variable used to find interpreter environment.\n    It's used so the read and write functions can locate **internal-env**\n    that contains the references to stdin, stdout and stderr.");
+  function set_fs(fs) {
+    user_env.get('**internal-env**').set('fs', fs);
+  }
+
   // -------------------------------------------------------------------------
   (function () {
     var map = {
@@ -17501,7 +17505,7 @@
   // -------------------------------------------------------------------------
   function execError(e) {
     console.error(e.message || e);
-    if (e.code) {
+    if (Array.isArray(e.code)) {
       console.error(e.code.map(function (line, i) {
         return "[".concat(i + 1, "]: ").concat(line);
       }));
@@ -17579,10 +17583,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 17 Jan 2024 11:07:15 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 17 Jan 2024 13:00:23 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 17 Jan 2024 11:07:15 +0000').valueOf();
+    var date = LString('Wed, 17 Jan 2024 13:00:23 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17621,7 +17625,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Wed, 17 Jan 2024 11:07:15 +0000';
+  var date = 'Wed, 17 Jan 2024 13:00:23 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
@@ -17664,6 +17668,7 @@
     OutputByteVectorPort: OutputByteVectorPort,
     InputBinaryFilePort: InputBinaryFilePort,
     OutputBinaryFilePort: OutputBinaryFilePort,
+    set_fs: set_fs,
     Formatter: Formatter,
     Parser: Parser,
     Lexer: Lexer,
@@ -17989,6 +17994,7 @@
   exports.repr = repr;
   exports.serialize = serialize;
   exports.serialize_bin = serialize_bin;
+  exports.set_fs = set_fs;
   exports.specials = specials;
   exports.tokenize = tokenize;
   exports.unserialize = unserialize;

@@ -1259,6 +1259,7 @@
 
    Simple function for adding promises to NodeJS two-callback based functions.
    Function tested only with fs module."
+  (typecheck "promisify" fn "function")
   (lambda args
     (new Promise (lambda (resolve reject)
                    (apply fn (append args (list (lambda (err data)
@@ -1373,7 +1374,8 @@
        if the result is ArrayBuffer or Node.js/BrowserFS Buffer object."
       (if (not read-file)
           (let ((fs (--> (interaction-environment)
-                         (get '**internal-env**) (get 'fs &(:throwError false)))))
+                         (get '**internal-env**)
+                         (get 'fs &(:throwError false)))))
             (if (null? fs)
                 (throw (new Error "open-input-file: fs not defined"))
                 (let ((*read-file* (promisify fs.readFile)))
@@ -1413,7 +1415,7 @@
 
    Returns a promisified version of a fs function or throws an exception
    if fs is not available."
-  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs &(:throwError false)))))
     (if (null? fs)
         (throw (new Error (string-append message ": fs not defined")))
         (promisify (. fs fn)))))
