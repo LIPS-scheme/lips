@@ -195,11 +195,22 @@
         (t.is #t #t)
         (t.is #t #t)))
 
-(test "parser: character emoji"
+(test "parser: emoji character"
       (lambda (t)
         (let ((x #\💩))
           (t.is (--> x (valueOf) 'length) 2)
           (t.is (length (Array.from (x.valueOf))) 1))))
+
+(test "parser: space character"
+      (lambda (t)
+        (let ((x #\ ))
+          (t.is (x.valueOf) " "))))
+
+(test "parser: newline character"
+      (lambda (t)
+        (let ((x #\
+                 ))
+          (t.is (x.valueOf) "\n"))))
 
 (test "tokenizer: should create tokens for simple list"
       (lambda (t)

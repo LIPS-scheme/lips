@@ -26,6 +26,7 @@
 * fix unboxing object literals
 * throw error on comparing complex numbers [#248](https://github.com/jcubic/lips/issues/248)
 * make `integer?` works for normal native numbers
+* fix parsing newline character literal
 
 ## 1.0.0-beta.17
 ### Breaking

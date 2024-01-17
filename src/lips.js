@@ -352,7 +352,7 @@ function parse_character(arg) {
         var ord = parseInt(m[1], 16);
         char = String.fromCodePoint(ord);
     } else {
-        m = arg.match(/#\\(.+)$/);
+        m = arg.match(/#\\([\s\S]+)$/);
         if (m) {
             char = m[1];
         }
@@ -650,7 +650,7 @@ function tokenize(str, meta = false) {
     } else {
         var result = tokens(str).map(function(token) {
             // we don't want literal space character to be trimmed
-            if (token.token === '#\\ ') {
+            if (token.token === '#\\ ' || token.token == '#\\\n') {
                 return token.token;
             }
             return token.token.trim();
