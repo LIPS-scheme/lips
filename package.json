@@ -260,6 +260,7 @@
     "cbor-x": "^1.5.4",
     "coveralls-next": "^4.2.0",
     "lzjb-pack": "^0.2.0",
+    "mermaid": "^10.7.0",
     "prism-cli": "^0.5.3",
     "prismjs": "^1.27.0",
     "unfetch": "^4.2.0"
