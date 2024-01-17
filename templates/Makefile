@@ -31,18 +31,22 @@ UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 LIPS=./bin/lips.js
 
+define ver_date
+	$(GIT) branch | grep '* master' > /dev/null && $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" \
+	-e "s/{{YEAR}}/${YEAR}/" $(1) || $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" $(1)
+endef
+
 ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/base.js dist/lips.js dist/lips.esm.js dist/lips.min.js dist/lips.esm.min.js README.md dist/std.min.scm dist/std.xcb
 
 dist/banner.js: src/banner.js src/lips.js .$(VERSION)
 	$(CP) src/banner.js dist/banner.js
-	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
-	dist/banner.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" -e "s/{{YEAR}}/${YEAR}/" \
-	dist/banner.js
+	$(call ver_date,dist/banner.js)
 
-dist/base.js: src/lips.js
+dist/base.js: src/lips.js .$(VERSION)
 	$(SED) '/\/\*\*@license/,/\*\//d' < src/lips.js > dist/base.js
+	$(call ver_date,dist/base.js)
 
-dist/lips.js dist/lips.esm.js dist/lips.cjs: dist/base.js dist/banner.js .$(VERSION) rollup.config.js
+dist/lips.js dist/lips.esm.js dist/lips.cjs: dist/banner.js dist/base.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
