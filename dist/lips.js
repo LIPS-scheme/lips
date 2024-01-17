@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 17 Jan 2024 15:37:32 +0000
+ * build: Wed, 17 Jan 2024 17:49:58 +0000
  */
 
 (function (global, factory) {
@@ -13332,7 +13332,10 @@
   Interpreter.prototype.get = function (value) {
     var result = this.__env__.get(value);
     if (is_function(result)) {
-      return result.bind(this.__env__);
+      var context = new LambdaContext({
+        env: this.__env__
+      });
+      return result.bind(context);
     }
     return result;
   };
@@ -17587,10 +17590,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 17 Jan 2024 15:37:32 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 17 Jan 2024 17:49:58 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 17 Jan 2024 15:37:32 +0000').valueOf();
+    var date = LString('Wed, 17 Jan 2024 17:49:58 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17629,7 +17632,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Wed, 17 Jan 2024 15:37:32 +0000';
+  var date = 'Wed, 17 Jan 2024 17:49:58 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

@@ -6655,7 +6655,10 @@ Interpreter.prototype.exec = function(code, options = {}) {
 Interpreter.prototype.get = function(value) {
     const result = this.__env__.get(value);
     if (is_function(result)) {
-        return result.bind(this.__env__);
+        const context = new LambdaContext({
+            env: this.__env__
+        });
+        return result.bind(context);
     }
     return result;
 };
