@@ -82,7 +82,7 @@ let fs, path, nodeRequire;
 const BN = root.BN;
 
 /* eslint-disable */
-/* c8 ignore next */
+/* c8 ignore next 32 */
 function contentLoaded(win, fn) {
     var done = false, top = true,
 
