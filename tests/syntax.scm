@@ -1124,7 +1124,7 @@
           (t.is (aif (assoc 'x alist) (cdr (it)))
                 (if #f #f)))))
 
-(test "syntax: should throw a proper error on not mached syntax"
+(test "syntax: should throw a proper error on not matched syntax"
       (lambda (t)
         (define-syntax foo
           (syntax-rules ()
