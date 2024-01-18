@@ -573,7 +573,7 @@
                 '(1 2 3 4 5 6 7 8 9 10))))
 
 
-(test "syntax: it should define nested syntax-rules"
+(test "syntax: should define nested syntax-rules"
       (lambda (t)
         ;; be-like-begin from R7RS spec file
         (define-syntax be-like-begin
@@ -624,7 +624,7 @@
          (t.is (test) '((1 . ...) (2 . ...)))))
 
 
-(test "syntax: it should handle identifiers"
+(test "syntax: should handle identifiers"
        (lambda (t)
 
          (define-syntax for
@@ -649,7 +649,7 @@
                '(4 3 2 1 0))))
 
 
-(test "syntax: it should define let*"
+(test "syntax: should define let*"
       (lambda (t)
         ;; source https://www.scheme.com/tspl2d/syntax.html#g2252
         (t.is (type let*) "macro")
@@ -753,7 +753,7 @@
         (def hello 10)
         (t.is hello 10)))
 
-(test "syntax: it should pass body from macro to function"
+(test "syntax: should pass body from macro to function"
       (lambda (t)
 
         (define-syntax foo
@@ -764,7 +764,7 @@
 
         (t.is (foo 1 2 3) '(1 2 3))))
 
-(test "syntax: it should find last item in list"
+(test "syntax: should find last item in list"
       (lambda (t)
 
         (define-syntax last
@@ -778,7 +778,7 @@
         (t.is (last ()) ())
         (t.is (to.throw (last)) true)))
 
-(test "syntax: it should find last item in argument list"
+(test "syntax: should find last item in argument list"
       (lambda (t)
 
         (define-syntax last-arg
@@ -793,7 +793,7 @@
         (t.is (to.throw (last)) true)))
 
 
-(test "syntax: it should skip cons with identifier"
+(test "syntax: should skip cons with identifier"
       (lambda (t)
         (define-syntax foo
           (syntax-rules (<>)
@@ -803,7 +803,7 @@
         (t.is (foo 1) '(1))
         (t.is (foo 1 . 2) '(1 . 2))))
 
-(test "syntax: it should define nested syntax with variable from outside as identifier"
+(test "syntax: should define nested syntax with variable from outside as identifier"
       (lambda (t)
 
         (define-syntax foo (syntax-rules ()
@@ -816,7 +816,7 @@
 
         (t.is (foo 10) nil)))
 
-(test "syntax: it should expand in nested syntax into variable from parent syntax"
+(test "syntax: should expand in nested syntax into variable from parent syntax"
       (lambda (t)
         (define-syntax foo (syntax-rules ()
                      ((_ bar quux)
@@ -828,7 +828,7 @@
 
         (t.is (foo 1 "hello") '("hello"))))
 
-(test "syntax: it should expand nested macro with ellipsis as identifier from parent"
+(test "syntax: should expand nested macro with ellipsis as identifier from parent"
       (lambda (t)
 
         (define-syntax foo (syntax-rules (ellipsis)
@@ -854,7 +854,7 @@
 
         (t.is (foo) '((1) (2) (3)))))
 
-(test "syntax: it should ignore ellipsis in middle for 2 elements"
+(test "syntax: should ignore ellipsis in middle for 2 elements"
       (lambda (t)
         ;; code for define-values from R7RS spec
         ;; macro defined in lib/R7RS.scm
@@ -1001,7 +1001,7 @@
 
         (t.is (foo 10) '("foo" 10))))
 
-(test "syntax: it should throw error on missing ellipsis symbol"
+(test "syntax: should throw error on missing ellipsis symbol"
       (lambda (t)
         (t.is
          (to.throw
@@ -1020,7 +1020,7 @@
           (foo 1 2 3))
          true)))
 
-(test "syntax: it should create macro with dot notation as pattern variable"
+(test "syntax: should create macro with dot notation as pattern variable"
       (lambda (t)
         (let* ((input #(1 0.1 2 3 10e-1))
                (fn (lambda (x) (+ x 1)))
@@ -1030,7 +1030,7 @@
                                (x.map fn)))))
             (t.is (foo input) expect)))))
 
-(test "syntax: it should work with dot notation in lambda inside syntax-rules"
+(test "syntax: should work with dot notation in lambda inside syntax-rules"
       (lambda (t)
         (let* ((input '(1 0.1 2 3 10e-1))
                (expect (map (lambda (x) (x.isFloat)) input)))
@@ -1123,3 +1123,17 @@
                 10)
           (t.is (aif (assoc 'x alist) (cdr (it)))
                 (if #f #f)))))
+
+(test "syntax: should throw a proper error on not mached syntax"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ var1 ... var2)
+             (begin
+               (print var1)
+               ...
+               (print var2)))))
+
+        (t.is (Boolean (--> (try (foo) (catch (e) e.message))
+                            (match #/^syntax-rules: no matching syntax in macro/)))
+              #t)))

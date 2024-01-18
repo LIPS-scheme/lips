@@ -3618,6 +3618,9 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 if (pattern.cdr.cdr instanceof Pair) {
                     // if we have (x ... a b) we need to remove two from the end
                     const list_len = pattern.cdr.cdr.length();
+                    if (!is_pair(code)) {
+                        throw new Error('syntax-rules: no matching syntax');
+                    }
                     let code_len = code.length();
                     let list = code;
                     while (code_len - 1 > list_len) {

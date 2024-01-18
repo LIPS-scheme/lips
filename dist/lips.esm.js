@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 18 Jan 2024 14:40:37 +0000
+ * build: Thu, 18 Jan 2024 15:21:44 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -9958,6 +9958,9 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         if (pattern.cdr.cdr instanceof Pair) {
           // if we have (x ... a b) we need to remove two from the end
           var list_len = pattern.cdr.cdr.length();
+          if (!is_pair(code)) {
+            throw new Error('syntax-rules: no matching syntax');
+          }
           var code_len = code.length();
           var list = code;
           while (code_len - 1 > list_len) {
@@ -17591,10 +17594,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Thu, 18 Jan 2024 14:40:37 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Thu, 18 Jan 2024 15:21:44 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Thu, 18 Jan 2024 14:40:37 +0000').valueOf();
+  var date = LString('Thu, 18 Jan 2024 15:21:44 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17633,7 +17636,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Thu, 18 Jan 2024 14:40:37 +0000';
+var date = 'Thu, 18 Jan 2024 15:21:44 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
