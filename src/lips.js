@@ -1481,7 +1481,7 @@ class Parser {
         return result;
     }
     async read_list() {
-        let head = nil, prev = head;
+        let head = nil, prev = head, dot;
         while (true) {
             const token = await this.peek();
             if (token === eof) {
@@ -1494,6 +1494,9 @@ class Parser {
             if (token === '.' && head !== nil) {
                 this.skip();
                 prev.cdr = await this._read_object();
+                dot = true;
+            } else if (dot) {
+                throw new Error('Parser: syntax error more than one element after dot');
             } else {
                 const cur = new Pair(await this._read_object(), nil);
                 if (head === nil) {

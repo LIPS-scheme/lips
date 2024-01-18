@@ -212,6 +212,12 @@
                  ))
           (t.is (x.valueOf) "\n"))))
 
+
+
+(test "parser: should throw an error on invalid dot sequennce #245"
+      (lambda (t)
+        (t.is (to.throw (lips.parse "(1 . 2 3)")) #t)))
+
 (test "tokenizer: should create tokens for simple list"
       (lambda (t)
         (t.is (lips.tokenize "(foo bar baz)")

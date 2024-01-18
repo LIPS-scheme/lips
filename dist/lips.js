@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 17 Jan 2024 17:49:58 +0000
+ * build: Thu, 18 Jan 2024 14:40:37 +0000
  */
 
 (function (global, factory) {
@@ -7383,7 +7383,7 @@
       key: "read_list",
       value: function () {
         var _read_list = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3() {
-          var head, prev, token, cur;
+          var head, prev, dot, token, cur;
           return _regeneratorRuntime.wrap(function _callee3$(_context3) {
             while (1) {
               switch (_context3.prev = _context3.next) {
@@ -7398,17 +7398,17 @@
                     _context3.next = 7;
                     break;
                   }
-                  return _context3.abrupt("break", 27);
+                  return _context3.abrupt("break", 32);
                 case 7:
                   if (!this.is_close(token)) {
                     _context3.next = 10;
                     break;
                   }
                   this.skip();
-                  return _context3.abrupt("break", 27);
+                  return _context3.abrupt("break", 32);
                 case 10:
                   if (!(token === '.' && head !== _nil)) {
-                    _context3.next = 17;
+                    _context3.next = 18;
                     break;
                   }
                   this.skip();
@@ -7416,13 +7416,20 @@
                   return this._read_object();
                 case 14:
                   prev.cdr = _context3.sent;
-                  _context3.next = 25;
+                  dot = true;
+                  _context3.next = 30;
                   break;
-                case 17:
+                case 18:
+                  if (!dot) {
+                    _context3.next = 22;
+                    break;
+                  }
+                  throw new Error('Parser: syntax error more than one element after dot');
+                case 22:
                   _context3.t0 = Pair;
-                  _context3.next = 20;
+                  _context3.next = 25;
                   return this._read_object();
-                case 20:
+                case 25:
                   _context3.t1 = _context3.sent;
                   _context3.t2 = _nil;
                   cur = new _context3.t0(_context3.t1, _context3.t2);
@@ -7432,12 +7439,12 @@
                     prev.cdr = cur;
                   }
                   prev = cur;
-                case 25:
+                case 30:
                   _context3.next = 1;
                   break;
-                case 27:
+                case 32:
                   return _context3.abrupt("return", head);
-                case 28:
+                case 33:
                 case "end":
                   return _context3.stop();
               }
@@ -17590,10 +17597,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 17 Jan 2024 17:49:58 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 18 Jan 2024 14:40:37 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 17 Jan 2024 17:49:58 +0000').valueOf();
+    var date = LString('Thu, 18 Jan 2024 14:40:37 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17632,7 +17639,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Wed, 17 Jan 2024 17:49:58 +0000';
+  var date = 'Thu, 18 Jan 2024 14:40:37 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
