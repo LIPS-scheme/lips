@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 19 Jan 2024 15:16:03 +0000
+ * build: Fri, 19 Jan 2024 19:01:09 +0000
  */
 
 (function (global, factory) {
@@ -77,11 +77,11 @@
     return value;
   }
 
-  function _assertThisInitialized(self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
   }
 
   function _setPrototypeOf(o, p) {
@@ -90,6 +90,14 @@
       return o;
     };
     return _setPrototypeOf(o, p);
+  }
+
+  function _isNativeFunction(fn) {
+    try {
+      return Function.toString.call(fn).indexOf("[native code]") !== -1;
+    } catch (e) {
+      return typeof fn === "function";
+    }
   }
 
   function _isNativeReflectConstruct$1() {
@@ -109,6 +117,40 @@
     return r && _setPrototypeOf(p, r.prototype), p;
   }
 
+  function _wrapNativeSuper(Class) {
+    var _cache = typeof Map === "function" ? new Map() : undefined;
+    _wrapNativeSuper = function _wrapNativeSuper(Class) {
+      if (Class === null || !_isNativeFunction(Class)) return Class;
+      if (typeof Class !== "function") {
+        throw new TypeError("Super expression must either be null or a function");
+      }
+      if (typeof _cache !== "undefined") {
+        if (_cache.has(Class)) return _cache.get(Class);
+        _cache.set(Class, Wrapper);
+      }
+      function Wrapper() {
+        return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+      }
+      Wrapper.prototype = Object.create(Class.prototype, {
+        constructor: {
+          value: Wrapper,
+          enumerable: false,
+          writable: true,
+          configurable: true
+        }
+      });
+      return _setPrototypeOf(Wrapper, Class);
+    };
+    return _wrapNativeSuper(Class);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+    return self;
+  }
+
   function _typeof$1(o) {
     "@babel/helpers - typeof";
 
@@ -126,13 +168,6 @@
       throw new TypeError("Derived constructors may only return object or undefined");
     }
     return _assertThisInitialized(self);
-  }
-
-  function _getPrototypeOf(o) {
-    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
-      return o.__proto__ || Object.getPrototypeOf(o);
-    };
-    return _getPrototypeOf(o);
   }
 
   function _inherits(subClass, superClass) {
@@ -9288,7 +9323,9 @@
                   if (node instanceof Pair) {
                     return node.car.valueOf();
                   }
-                  throw new Error('macroexpand: Invalid let binding');
+                  var t = type(node);
+                  var msg = "macroexpand: Invalid let binding expectig pair got ".concat(t);
+                  throw new Error(msg);
                 })));
               };
               proc_bindings = function _proc_bindings(node) {
@@ -10166,7 +10203,7 @@
     if (o instanceof Promise) {
       return true;
     }
-    return o && is_function(o.then);
+    return !!o && is_function(o.then);
   }
   // ----------------------------------------------------------------------
   function is_undef(value) {
@@ -12885,6 +12922,17 @@
   LipsError.prototype = new Error();
   LipsError.prototype.constructor = LipsError;
   // -------------------------------------------------------------------------
+  // :: Fake exception to handle try catch to break the execution
+  // :: of body expression #163
+  // -------------------------------------------------------------------------
+  var IgnoreException = /*#__PURE__*/function (_Error) {
+    _inherits(IgnoreException, _Error);
+    function IgnoreException() {
+      _classCallCheck(this, IgnoreException);
+      return _callSuper(this, IgnoreException, arguments);
+    }
+    return _createClass(IgnoreException);
+  }( /*#__PURE__*/_wrapNativeSuper(Error)); // -------------------------------------------------------------------------
   // :: Environment constructor (parent and name arguments are optional)
   // -------------------------------------------------------------------------
   function Environment(obj, parent, name) {
@@ -15109,8 +15157,8 @@
     // ------------------------------------------------------------------
     'try': doc(new Macro('try', function (code, _ref40) {
       var _this26 = this;
-      var use_dynamic = _ref40.use_dynamic,
-        error = _ref40.error;
+      var use_dynamic = _ref40.use_dynamic;
+        _ref40.error;
       return new Promise(function (resolve, reject) {
         var catch_clause, finally_clause;
         if (LSymbol.is(code.cdr.car.car, 'catch')) {
@@ -15124,11 +15172,20 @@
         if (!(finally_clause || catch_clause)) {
           throw new Error('try: invalid syntax');
         }
-        var _next = resolve;
+        function finalize(result) {
+          resolve(result);
+          throw new IgnoreException('[CATCH]');
+        }
+        var _next2 = function next(result, _next) {
+          _next(result);
+        };
         if (finally_clause) {
-          _next = function next(result, cont) {
+          _next2 = function next(result, cont) {
             // prevent infinite loop when finally throw exception
-            _next = reject;
+            _next2 = reject;
+            args.error = function (e) {
+              throw e;
+            };
             unpromise(_evaluate(new Pair(new LSymbol('begin'), finally_clause.cdr), args), function () {
               cont(result);
             });
@@ -15138,39 +15195,42 @@
           env: _this26,
           use_dynamic: use_dynamic,
           dynamic_env: _this26,
-          error: function (_error) {
-            function error(_x17) {
-              return _error.apply(this, arguments);
-            }
-            error.toString = function () {
-              return _error.toString();
-            };
-            return error;
-          }(function (e) {
+          error: function error(e) {
             var env = _this26.inherit('try');
             if (catch_clause) {
-              env.set(catch_clause.cdr.car.car, e);
+              var name = catch_clause.cdr.car.car;
+              if (!(name instanceof LSymbol)) {
+                throw new Error('try: invalid syntax: catch require variable name');
+              }
+              env.set(name, e);
+              var catch_error;
               var args = {
                 env: env,
-                error: error
+                use_dynamic: use_dynamic,
+                dynamic_env: _this26,
+                error: function error(e) {
+                  catch_error = true;
+                  reject(e);
+                  throw new IgnoreException('[CATCH]');
+                }
               };
-              args.dynamic_env = _this26;
-              unpromise(_evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args), function (result) {
-                _next(result, resolve);
+              var _value6 = _evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args);
+              unpromise(_value6, function handler(result) {
+                if (!catch_error) {
+                  _next2(result, finalize);
+                }
               });
             } else {
-              _next(e, error);
+              _next2(undefined, function () {
+                throw e;
+              });
             }
-          })
+          }
         };
-        var result = _evaluate(code.car, args);
-        if (is_promise(result)) {
-          result.then(function (result) {
-            _next(result, resolve);
-          })["catch"](args.error);
-        } else {
-          _next(result, resolve);
-        }
+        var value = _evaluate(code.car, args);
+        unpromise(value, function (result) {
+          _next2(result, resolve);
+        }, args.error);
       });
     }), "(try expr (catch (e) code))\n         (try expr (catch (e) code) (finally code))\n         (try expr (finally code))\n\n         Macro that executes expr and catches any exceptions thrown. If catch is provided\n         it's executed when an error is thrown. If finally is provided it's always\n         executed at the end."),
     // ------------------------------------------------------------------
@@ -15757,7 +15817,8 @@
   function is_node() {
     return typeof global !== 'undefined' && global.global === global;
   }
-
+  // -------------------------------------------------------------------------
+  var noop = function noop() {};
   // -------------------------------------------------------------------------
   function node_specific() {
     return _node_specific.apply(this, arguments);
@@ -15819,7 +15880,16 @@
               }
               return patch_value(value, global);
             }, "(require module)\n\n        Function used inside Node.js to import a module."));
-          case 21:
+
+            // ignore exceptions that are catched elsewhere. This is needed to fix AVA
+            // reporting unhandled rejections for try..catch
+            // see: https://github.com/avajs/ava/discussions/3289
+            process.on('unhandledRejection', function (reason, promise) {
+              if (reason instanceof IgnoreException) {
+                promise["catch"](noop);
+              }
+            });
+          case 22:
           case "end":
             return _context23.stop();
         }
@@ -16001,7 +16071,7 @@
         node.forEach(traverse);
       }
     }
-    function promise(_x18) {
+    function promise(_x17) {
       return _promise.apply(this, arguments);
     }
     function _promise() {
@@ -16120,15 +16190,26 @@
       }
       return quote(result);
     }
-    var value = macro.invoke(code, eval_args);
-    return unpromise(resolve_promises(value), function ret(value) {
-      if (!value || value && value[__data__] || self_evaluated(value)) {
-        return value;
-      } else {
-        return unpromise(_evaluate(value, eval_args), finalize);
+    try {
+      var value = macro.invoke(code, eval_args);
+      return unpromise(resolve_promises(value), function ret(value) {
+        if (!value || value && value[__data__] || self_evaluated(value)) {
+          return value;
+        } else {
+          return unpromise(_evaluate(value, eval_args), finalize);
+        }
+      }, function (error) {
+        if (!(error instanceof IgnoreException)) {
+          throw error;
+        }
+      });
+    } catch (error) {
+      if (!(error instanceof IgnoreException)) {
+        throw error;
       }
-    });
+    }
   }
+
   // -------------------------------------------------------------------------
   function prepare_fn_args(fn, args) {
     if (is_bound(fn) && !is_object_bound(fn) && (!lips_context(fn) || is_port_method(fn))) {
@@ -16346,8 +16427,6 @@
     }]);
     return Continuation;
   }(); // -------------------------------------------------------------------------
-  var noop = function noop() {};
-  // -------------------------------------------------------------------------
   function _evaluate(code) {
     var _ref46 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
       env = _ref46.env,
@@ -16514,7 +16593,9 @@
                         e.__code__.push(code.toString(true));
                       }
                     }
-                    throw e;
+                    if (!(e instanceof IgnoreException)) {
+                      throw e;
+                    }
                   }
                 });
                 _context21.t0 = results;
@@ -16567,7 +16648,7 @@
           }, _callee20, null, [[6, 26, 30, 40], [31,, 35, 39]]);
         })();
       });
-      function exec_lambda(_x19) {
+      function exec_lambda(_x18) {
         return _exec_lambda.apply(this, arguments);
       }
       return exec_lambda;
@@ -17092,10 +17173,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 19 Jan 2024 15:16:03 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 19 Jan 2024 19:01:09 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 19 Jan 2024 15:16:03 +0000').valueOf();
+    var date = LString('Fri, 19 Jan 2024 19:01:09 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17134,7 +17215,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Fri, 19 Jan 2024 15:16:03 +0000';
+  var date = 'Fri, 19 Jan 2024 19:01:09 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

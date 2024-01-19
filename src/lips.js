@@ -9810,7 +9810,7 @@ async function node_specific() {
 
         Function used inside Node.js to import a module.`));
 
-    // ignore exceptions that are catched elsewhere. This is needed to fix AVA
+    // ignore exceptions that are caught elsewhere. This is needed to fix AVA
     // reporting unhandled rejections for try..catch
     // see: https://github.com/avajs/ava/discussions/3289
     process.on('unhandledRejection', (reason, promise) => {
