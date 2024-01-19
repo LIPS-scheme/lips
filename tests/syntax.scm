@@ -1137,3 +1137,18 @@
         (t.is (Boolean (--> (try (foo) (catch (e) e.message))
                             (match #/^syntax-rules: no matching syntax in macro/)))
               #t)))
+
+(test "syntax: should match pattern (_ () var1 ... var2) #244"
+      (lambda (t)
+        (t.plan 1)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ () var1 ... var2)
+             (begin
+               (string-append var1 " ")
+               ...
+               var2))))
+
+        (foo () "a" "b")
+        (foo () "x")
+        (t.is #t #t)))

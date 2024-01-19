@@ -3771,7 +3771,6 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             });
             // case (x y) ===> (var0 var1 ... warn) where var1 match nil
             if (pattern.cdr instanceof Pair &&
-                pattern.car instanceof LSymbol &&
                 pattern.cdr.cdr instanceof Pair &&
                 pattern.cdr.car instanceof LSymbol &&
                 LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) &&
