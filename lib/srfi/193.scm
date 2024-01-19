@@ -10,7 +10,7 @@
 ;; implementation of SRFI-193 https://srfi.schemers.org/srfi-193/srfi-193.html
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 

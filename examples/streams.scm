@@ -4,7 +4,7 @@
 ;; http://people.cs.aau.dk/~normark/prog3-03/html/notes/eval-order_themes-delay-stream-section.html
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 

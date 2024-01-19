@@ -317,6 +317,6 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
-Copyright (c) 2018-2023 [Jakub T. Jankiewicz](https://jcubic.pl/me)
+Copyright (c) 2018-2024 [Jakub T. Jankiewicz](https://jcubic.pl/me)
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjcubic%2Flips.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjcubic%2Flips?ref=badge_large)

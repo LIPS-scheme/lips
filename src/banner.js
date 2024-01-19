@@ -8,7 +8,7 @@
  *
  * LIPS is Pretty Simple - Scheme based Powerful LISP in JavaScript
  *
- * Copyright (c) 2018-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+ * Copyright (c) 2018-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  *
  * includes:
