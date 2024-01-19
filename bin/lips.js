@@ -122,6 +122,9 @@ function print(result) {
 
 // -----------------------------------------------------------------------------
 function bootstrap(interpreter) {
+    if (options.bootstrap === 'none') {
+        return Promise.resolve();
+    }
     const file = options.bootstrap ? options.bootstrap : './dist/std.xcb';
     function read(name) {
         var path;
