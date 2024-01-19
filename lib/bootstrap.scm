@@ -1403,11 +1403,9 @@
                                 (http-get url binary)))))
       (if (not read-file)
           (fetch-url path binary)
-          (if (not (file-exists? path))
-              (throw (new Error (string-append "file "
-                                               path
-                                               " don't exists")))
-              (read-file path binary))))))
+          (if (file-exists? path)
+              (read-file path binary)
+              (fetch-url path binary))))))
 
 ;; -----------------------------------------------------------------------------
 (define %read-binary-file (curry %read-file true))
