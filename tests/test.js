@@ -41,10 +41,10 @@ get_files().then(filenames => {
           (load "./tests/helpers/helpers.scm"))
         (define test (require "ava"))
       `);
-      return lips.exec(files.join('\n\n'));
-  }).catch(e => {
-      console.error(e.message);
-      console.error(e.stack);
-  });
+      return await lips.exec(files.join('\n\n'));
+  })
+}).catch(e => {
+    console.error(e.message);
+    console.error(e.stack);
 });
 
