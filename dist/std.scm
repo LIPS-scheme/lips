@@ -863,6 +863,14 @@
       (list 'quote expr)))
 
 ;; -----------------------------------------------------------------------------
+(define (constructor)
+  "(constructor)
+
+   Function that is present in JavaScript environment. We define it in Scheme
+   to fix an issue with define-class. This function throw an error."
+  (throw (new Error "Invalid call to constructor function")))
+
+;; -----------------------------------------------------------------------------
 (define-macro (define-class name parent . body)
   "(define-class name parent . body)
 
