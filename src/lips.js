@@ -3394,7 +3394,9 @@ function macro_expand(single) {
                 if (node instanceof Pair) {
                     return node.car.valueOf();
                 }
-                throw new Error('macroexpand: Invalid let binding');
+                const t = type(node);
+                const msg = `macroexpand: Invalid let binding expectig pair got ${t}`;
+                throw new Error(msg);
             })];
         }
         function is_macro(name, value) {
@@ -4295,7 +4297,7 @@ function is_promise(o) {
     if (o instanceof Promise) {
         return true;
     }
-    return o && is_function(o.then);
+    return !!o && is_function(o.then);
 }
 // ----------------------------------------------------------------------
 function is_undef(value) {
@@ -6687,6 +6689,11 @@ function LipsError(message, args) {
 LipsError.prototype = new Error();
 LipsError.prototype.constructor = LipsError;
 // -------------------------------------------------------------------------
+// :: Fake exception to handle try catch to break the execution
+// :: of body expression #163
+// -------------------------------------------------------------------------
+class IgnoreException extends Error { }
+// -------------------------------------------------------------------------
 // :: Environment constructor (parent and name arguments are optional)
 // -------------------------------------------------------------------------
 function Environment(obj, parent, name) {
@@ -9014,7 +9021,7 @@ var global_env = new Environment({
     // ------------------------------------------------------------------
     'try': doc(new Macro('try', function(code, { use_dynamic, error }) {
         return new Promise((resolve, reject) => {
-            var catch_clause, finally_clause;
+            let catch_clause, finally_clause, body_error;
             if (LSymbol.is(code.cdr.car.car, 'catch')) {
                 catch_clause = code.cdr.car;
                 if (code.cdr.cdr instanceof Pair &&
@@ -9027,11 +9034,20 @@ var global_env = new Environment({
             if (!(finally_clause || catch_clause)) {
                 throw new Error('try: invalid syntax');
             }
-            let next = resolve;
+            function finalize(result) {
+                resolve(result);
+                throw new IgnoreException('[CATCH]');
+            }
+            let next = (result, next) => {
+                next(result);
+            }
             if (finally_clause) {
                 next = function(result, cont) {
                     // prevent infinite loop when finally throw exception
                     next = reject;
+                    args.error = (e) => {
+                        throw e;
+                    };
                     unpromise(evaluate(new Pair(
                         new LSymbol('begin'),
                         finally_clause.cdr
@@ -9045,33 +9061,45 @@ var global_env = new Environment({
                 use_dynamic,
                 dynamic_env: this,
                 error: (e) => {
+                    body_error = true;
                     var env = this.inherit('try');
                     if (catch_clause) {
-                        env.set(catch_clause.cdr.car.car, e);
+                        const name = catch_clause.cdr.car.car;
+                        if (!(name instanceof LSymbol)) {
+                            throw new Error('try: invalid syntax: catch require variable name');
+                        }
+                        env.set(name, e);
+                        let catch_error;
                         var args = {
                             env,
-                            error
+                            use_dynamic,
+                            dynamic_env: this,
+                            error: (e) => {
+                                catch_error = true;
+                                reject(e);
+                                throw new IgnoreException('[CATCH]');
+                            }
                         };
-                        args.dynamic_env = this;
-                        unpromise(evaluate(new Pair(
+                        const value = evaluate(new Pair(
                             new LSymbol('begin'),
                             catch_clause.cdr.cdr
-                        ), args), function(result) {
-                            next(result, resolve);
+                        ), args);
+                        unpromise(value, function handler(result) {
+                            if (!catch_error) {
+                                next(result, finalize);
+                            }
                         });
                     } else {
-                        next(e, error);
+                        next(undefined, () => {
+                            throw e;
+                        });
                     }
                 }
             };
-            let result = evaluate(code.car, args);
-            if (is_promise(result)) {
-                result.then(result => {
-                    next(result, resolve);
-                }).catch(args.error);
-            } else {
+            const value = evaluate(code.car, args);
+            unpromise(value, function(result) {
                 next(result, resolve);
-            }
+            }, args.error);
         });
     }), `(try expr (catch (e) code))
          (try expr (catch (e) code) (finally code))
@@ -9731,7 +9759,8 @@ function nodeModuleFind(dir) {
 function is_node() {
     return typeof global !== 'undefined' && global.global === global;
 }
-
+// -------------------------------------------------------------------------
+const noop = () => {};
 // -------------------------------------------------------------------------
 async function node_specific() {
     const { createRequire } = await import('mod' + 'ule');
@@ -9780,6 +9809,15 @@ async function node_specific() {
     }, `(require module)
 
         Function used inside Node.js to import a module.`));
+
+    // ignore exceptions that are catched elsewhere. This is needed to fix AVA
+    // reporting unhandled rejections for try..catch
+    // see: https://github.com/avajs/ava/discussions/3289
+    process.on('unhandledRejection', (reason, promise) => {
+        if (reason instanceof IgnoreException) {
+            promise.catch(noop);
+        }
+    });
 }
 // -------------------------------------------------------------------------
 /* c8 ignore next 11 */
@@ -10025,15 +10063,26 @@ function evaluate_macro(macro, code, eval_args) {
         }
         return quote(result);
     }
-    var value = macro.invoke(code, eval_args);
-    return unpromise(resolve_promises(value), function ret(value) {
-        if (!value || value && value[__data__] || self_evaluated(value)) {
-            return value;
-        } else {
-            return unpromise(evaluate(value, eval_args), finalize);
+    try {
+        var value = macro.invoke(code, eval_args);
+        return unpromise(resolve_promises(value), function ret(value) {
+            if (!value || value && value[__data__] || self_evaluated(value)) {
+                return value;
+            } else {
+                return unpromise(evaluate(value, eval_args), finalize);
+            }
+        }, error => {
+            if (!(error instanceof IgnoreException)) {
+                throw error;
+            }
+        });
+    } catch (error) {
+        if (!(error instanceof IgnoreException)) {
+            throw error;
         }
-    });
+    }
 }
+
 // -------------------------------------------------------------------------
 function prepare_fn_args(fn, args) {
     if (is_bound(fn) && !is_object_bound(fn) &&
@@ -10198,8 +10247,7 @@ class Continuation {
         }
     }
 }
-// -------------------------------------------------------------------------
-const noop = () => {};
+
 // -------------------------------------------------------------------------
 function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest } = {}) {
     try {
@@ -10335,7 +10383,9 @@ function exec_collect(collect_callback) {
                             e.__code__.push(code.toString(true));
                         }
                     }
-                    throw e;
+                    if (!(e instanceof IgnoreException)) {
+                        throw e;
+                    }
                 }
             });
             results.push(collect_callback(code, await value));
