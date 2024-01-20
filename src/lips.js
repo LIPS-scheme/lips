@@ -8007,7 +8007,13 @@ var global_env = new Environment({
             }
             var rest = __doc__ ? code.cdr.cdr : code.cdr;
             var output = new Pair(new LSymbol('begin'), rest);
-            return evaluate(output, { env, dynamic_env, use_dynamic, error });
+            const eval_args = {
+                env,
+                dynamic_env,
+                use_dynamic,
+                error
+            }
+            return evaluate(output, eval_args);
         }
         var length = code.car instanceof Pair ? code.car.length() : null;
         lambda.__code__ = new Pair(new LSymbol('lambda'), code);
@@ -9061,6 +9067,9 @@ var global_env = new Environment({
                 use_dynamic,
                 dynamic_env: this,
                 error: (e) => {
+                    if (e instanceof IgnoreException) {
+                        throw e;
+                    }
                     body_error = true;
                     var env = this.inherit('try');
                     if (catch_clause) {
@@ -9070,7 +9079,7 @@ var global_env = new Environment({
                         }
                         env.set(name, e);
                         let catch_error;
-                        var args = {
+                        var catch_args = {
                             env,
                             use_dynamic,
                             dynamic_env: this,
@@ -9083,7 +9092,7 @@ var global_env = new Environment({
                         const value = evaluate(new Pair(
                             new LSymbol('begin'),
                             catch_clause.cdr.cdr
-                        ), args);
+                        ), catch_args);
                         unpromise(value, function handler(result) {
                             if (!catch_error) {
                                 next(result, finalize);
@@ -10063,24 +10072,16 @@ function evaluate_macro(macro, code, eval_args) {
         }
         return quote(result);
     }
-    try {
-        var value = macro.invoke(code, eval_args);
-        return unpromise(resolve_promises(value), function ret(value) {
-            if (!value || value && value[__data__] || self_evaluated(value)) {
-                return value;
-            } else {
-                return unpromise(evaluate(value, eval_args), finalize);
-            }
-        }, error => {
-            if (!(error instanceof IgnoreException)) {
-                throw error;
-            }
-        });
-    } catch (error) {
-        if (!(error instanceof IgnoreException)) {
-            throw error;
+    const value = macro.invoke(code, eval_args);
+    return unpromise(resolve_promises(value), function ret(value) {
+        if (!value || value && value[__data__] || self_evaluated(value)) {
+            return value;
+        } else {
+            return unpromise(evaluate(value, eval_args), finalize);
         }
-    }
+    }, error => {
+        throw error;
+    });
 }
 
 // -------------------------------------------------------------------------

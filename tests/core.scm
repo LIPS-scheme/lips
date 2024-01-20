@@ -394,7 +394,7 @@
            (t.is (to.throw (try (Promise.reject 10) (finally (set! x 10)))) true)
            (t.is x 10)))))
 
-(test.failing "core: try..catch should stop execution for-each #163"
+(test "core: try..catch should stop execution for-each #163"
       (lambda (t)
         (define (until-zero fn lst)
           (let ((result (vector)))
@@ -408,6 +408,29 @@
 
         (t.is (until-zero identity '(1 2 3 4 0 10 20 30)) #(1 2 3 4))
         (t.is (until-zero identity '(0 1 2 3 4)) #())))
+
+(test "core: try..catch should stop execution on nesting functions #163"
+      (lambda (t)
+        (t.plan 1)
+        (let ((result (vector)))
+          (define (foo fn lst)
+            (for-each (lambda (x)
+                        (if (zero? x)
+                            (throw 'ZONK)
+                            (fn x)))
+                      lst))
+
+          (define (bar)
+            (foo (lambda (item)
+                   (result.push item))
+                 '(-1 1 0 2 3 4)))
+
+          (t.is (try
+                 (bar)
+                 (catch (e)
+                        result))
+                #(-1 1)))))
+
 
 (test "core: try..catch should stop execution base #163"
       (lambda (t)

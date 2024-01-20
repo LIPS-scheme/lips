@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 19 Jan 2024 19:01:09 +0000
+ * build: Sat, 20 Jan 2024 14:35:59 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -14307,12 +14307,13 @@ var global_env = new Environment({
       }
       var rest = __doc__ ? code.cdr.cdr : code.cdr;
       var output = new Pair(new LSymbol('begin'), rest);
-      return _evaluate(output, {
+      var eval_args = {
         env: env,
         dynamic_env: dynamic_env,
         use_dynamic: use_dynamic,
         error: error
-      });
+      };
+      return _evaluate(output, eval_args);
     }
     var length = code.car instanceof Pair ? code.car.length() : null;
     lambda.__code__ = new Pair(new LSymbol('lambda'), code);
@@ -15189,6 +15190,9 @@ var global_env = new Environment({
         use_dynamic: use_dynamic,
         dynamic_env: _this26,
         error: function error(e) {
+          if (e instanceof IgnoreException) {
+            throw e;
+          }
           var env = _this26.inherit('try');
           if (catch_clause) {
             var name = catch_clause.cdr.car.car;
@@ -15197,7 +15201,7 @@ var global_env = new Environment({
             }
             env.set(name, e);
             var catch_error;
-            var args = {
+            var catch_args = {
               env: env,
               use_dynamic: use_dynamic,
               dynamic_env: _this26,
@@ -15207,7 +15211,7 @@ var global_env = new Environment({
                 throw new IgnoreException('[CATCH]');
               }
             };
-            var _value6 = _evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), args);
+            var _value6 = _evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), catch_args);
             unpromise(_value6, function handler(result) {
               if (!catch_error) {
                 _next2(result, finalize);
@@ -15874,7 +15878,7 @@ function _node_specific() {
             return patch_value(value, global);
           }, "(require module)\n\n        Function used inside Node.js to import a module."));
 
-          // ignore exceptions that are catched elsewhere. This is needed to fix AVA
+          // ignore exceptions that are caught elsewhere. This is needed to fix AVA
           // reporting unhandled rejections for try..catch
           // see: https://github.com/avajs/ava/discussions/3289
           process.on('unhandledRejection', function (reason, promise) {
@@ -16183,24 +16187,16 @@ function evaluate_macro(macro, code, eval_args) {
     }
     return quote(result);
   }
-  try {
-    var value = macro.invoke(code, eval_args);
-    return unpromise(resolve_promises(value), function ret(value) {
-      if (!value || value && value[__data__] || self_evaluated(value)) {
-        return value;
-      } else {
-        return unpromise(_evaluate(value, eval_args), finalize);
-      }
-    }, function (error) {
-      if (!(error instanceof IgnoreException)) {
-        throw error;
-      }
-    });
-  } catch (error) {
-    if (!(error instanceof IgnoreException)) {
-      throw error;
+  var value = macro.invoke(code, eval_args);
+  return unpromise(resolve_promises(value), function ret(value) {
+    if (!value || value && value[__data__] || self_evaluated(value)) {
+      return value;
+    } else {
+      return unpromise(_evaluate(value, eval_args), finalize);
     }
-  }
+  }, function (error) {
+    throw error;
+  });
 }
 
 // -------------------------------------------------------------------------
@@ -17166,10 +17162,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 19 Jan 2024 19:01:09 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sat, 20 Jan 2024 14:35:59 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 19 Jan 2024 19:01:09 +0000').valueOf();
+  var date = LString('Sat, 20 Jan 2024 14:35:59 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17208,7 +17204,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 19 Jan 2024 19:01:09 +0000';
+var date = 'Sat, 20 Jan 2024 14:35:59 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
