@@ -77,9 +77,9 @@
       (lambda (t)
         (t.is (to.throw (typecheck "test" 10 (list "string"))) true)
         (t.is (try (typecheck "test" 10 (list "string") 0) (catch (e) e.message))
-              "Expecting a string, got number in expression `test` (argument 0)")
+              "Expecting a string got number in expression `test` (argument 0)")
         (t.is (try (typecheck "test" 10 (list "string" "character") 0) (catch (e) e.message))
-              "Expecting string or character, got number in expression `test` (argument 0)")))
+              "Expecting string or character got number in expression `test` (argument 0)")))
 
 (test "std: let-values and let*-values"
       (lambda (t)
@@ -111,7 +111,6 @@
                                                 (id "foo"))
                                              (Button1 (@ (label "me")))
                                              (Button2 (@ (label "me")))))))))
-
 
 (test "std: fold/curry"
       (lambda (t)
@@ -227,3 +226,64 @@
 (test.failing "std: Petrofsky let"
       (lambda (t)
         (t.is (let - ((n (- 1))) n) -1)))
+
+(test "std: parameterize base"
+      (lambda (t)
+        (define radix
+          (make-parameter
+           10
+           (lambda (x)
+             (if (and (exact-integer? x) (<= 2 x 16))
+                 x
+                 (error (string-append "invalid radix " (repr x)))))))
+
+        (define (f n) (number->string n (radix)))
+
+        (t.is (f 12) "12")
+        (t.is (parameterize ((radix 2))
+                (f 12))
+              "1100")))
+
+(test "std: guard function with =>"
+      (lambda (t)
+        (t.is (guard (condition
+                      ((assq 'a condition) => cdr)
+                      ((assq 'b condition) => car))
+                     (raise (list (cons 'b 23))))
+              'b)))
+
+(test "std: guard list"
+      (lambda (t)
+        (t.is (guard (condition
+                      ((assq 'a condition) => cdr)
+                      ((assq 'b condition) "error"))
+                     (raise (list (cons 'b 23))))
+              "error")))
+
+(test "std: guard identity"
+      (lambda (t)
+        (t.is (guard (condition
+                      ((assq 'a condition) => cdr)
+                      ((assq 'b condition)))
+                     (raise (list (cons 'b 23))))
+              '(b . 23))))
+
+(test "std: typeOf"
+      (lambda (t)
+        (define-record-type <pare>
+          (kons x y)
+          pare?
+          (x kar set-kar!)
+          (y kdr set-kdr!))
+
+        (t.is (type (kons 1 2)) "record")))
+
+(test "std: equal? on records"
+      (lambda (t)
+        (define-record-type <pare>
+          (kons x y)
+          pare?
+          (x kar set-kar!)
+          (y kdr set-kdr!))
+
+        (t.is (kons 1 2) (kons 1 2))))

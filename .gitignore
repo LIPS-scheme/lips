@@ -12,3 +12,4 @@ www
 /_*
 */_*
 .nyc_output
+dist/version.js

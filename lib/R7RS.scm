@@ -13,7 +13,7 @@
 ;; https://small.r7rs.org/attachment/r7rs.pdf
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
@@ -991,10 +991,10 @@
 
    (define p (kons 1 2))
    (print (kar p))
-   ;; 1
+   ;; ==> 1
    (set-kdr! p 3)
    (print (kdr p))
-   ;; 3"
+   ;; ==> 3"
   (let ((obj-name (gensym 'obj-name))
         (value-name (gensym 'value-name)))
     `(begin
@@ -1006,7 +1006,18 @@
                                                                                 name)))
                                                       `(set! ,(string->symbol prop) ,field)))
                                                   (cdr constructor))))
-                            (toType (lambda (self)
+                            (equal (lambda (self other)
+                                     (if (instanceof ,name other)
+                                         (and ,@(map (lambda (field)
+                                                       (let* ((name (symbol->string field))
+                                                              (self-prop (string-append "self."
+                                                                                        name))
+                                                              (other-prop (string-append "other."
+                                                                                         name)))
+                                                         `(equal? ,(string->symbol self-prop)
+                                                                  ,(string->symbol other-prop))))))
+                                         #f)))
+                            (typeOf (lambda (self)
                                       "record"))
                             (toString (lambda (self)
                                         (string-append "#<" ,(symbol->string name) ">")))))
@@ -1183,6 +1194,42 @@
          (%export ,module-var ,namespace-var body))
        ,@body
        (--> ,parent (set ',name ,module-var)))))
+
+;; -----------------------------------------------------------------------------
+(define-syntax guard
+  (syntax-rules (catch aux =>)
+    ((_ aux)
+     '())
+    ((_ aux (cond result) rest ...)
+     (let ((it cond))
+       (if it
+           result
+           (guard aux rest ...))))
+    ((_ aux (cond => fn) rest ...)
+     (let ((it cond))
+       (if it
+           (fn it)
+           (guard aux rest ...))))
+    ((_ aux (cond) rest ...)
+     (let ((it cond))
+       (if it
+           it
+           (guard aux rest ...))))
+    ((_ (var cond1 cond2 ...)
+        body ...)
+     (try
+       body ...
+       (catch (var)
+              (guard aux
+                     cond1
+                     cond2 ...)))))
+  "(guard (variable (cond)
+                    (cond => fn)
+                    (cond2 result))
+          body)
+
+   Macro that executes the body and when there is exception, triggered by
+   raise it's saved in variable that can be tested by conditions.")
 
 ;; -----------------------------------------------------------------------------
 (define-syntax define-library/export

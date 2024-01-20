@@ -1,3 +1,39 @@
+## 1.0.0-beta.18
+### Breaking
+* change undocumented arguments to `lips.exec` into an object
+* change default export into named exports in ES Module
+### Features
+* add R7RS `guard` macro
+* add R7RS `parameterize` and `make-parameter`
+* add `shuffle` function
+* add support to ES Modules [#254](https://github.com/jcubic/lips/issues/254)
+* add support for `(scheme-report-environment 7)`
+* add a way to compare custom instances with `equal?` [#270](https://github.com/jcubic/lips/issues/270)
+* add support for `equal?` on records [#273](https://github.com/jcubic/lips/issues/273)
+* expose `lips.set_fs` function [#256](https://github.com/jcubic/lips/issues/256)
+### Bugfix
+* remove evaluating of async list data as first argument
+* fix `number->string` for binary numbers
+* fix macro expand on let with more than one binding
+* fix shallow `list->array`
+* fix resolving promises inside quoted promise realm
+* fix undocumented symbol syntax extensions
+* fix odd? even? on non integers
+* fix object literals with null value [#264](https://github.com/jcubic/lips/issues/264)
+* fix version and date in executable [#261](https://github.com/jcubic/lips/issues/261)
+* fix error on extra close parenthesis [#263](https://github.com/jcubic/lips/issues/263)
+* fix `scheme-report-environment` [#268](https://github.com/jcubic/lips/issues/268)
+* fix writing to binary ports
+* fix unboxing object literals
+* throw error on comparing complex numbers [#248](https://github.com/jcubic/lips/issues/248)
+* make `integer?` works for normal native numbers
+* fix parsing newline character literal
+* fix reading local files in browser [#276](https://github.com/jcubic/lips/issues/276)
+* fix parsing invalid expression `(1 . 2 3)` [#245](https://github.com/jcubic/lips/issues/245)
+* fix invalid error message for not matched `syntax-rules` [#243](https://github.com/jcubic/lips/issues/243)
+* fix silent error when class don't have parent [#272](https://github.com/jcubic/lips/issues/272)
+* fix `try..catch` [#163](https://github.com/jcubic/lips/issues/163)
+
 ## 1.0.0-beta.17
 ### Breaking
 * chars are now not automatically unboxed to strings [#233](https://github.com/jcubic/lips/issues/233)

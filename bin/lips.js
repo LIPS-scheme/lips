@@ -2,14 +2,14 @@
 
 import lily from '@jcubic/lily';
 
-const boolean = ['d', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b', 'cbor'];
+const boolean = [
+    'd', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b', 'cbor', 'x'
+];
 const options = lily(process.argv.slice(2), { boolean });
 
 const quiet = options.q || options.quiet;
 
-import lips from '../src/lips.js';
-
-const {
+import {
     exec,
     compile,
     parse,
@@ -26,13 +26,13 @@ const {
     LString,
     evaluate,
     nil,
-    version,
-    date,
     Pair,
     env,
     banner,
     InputPort,
-    OutputPort } = lips;
+    OutputPort
+} from '../src/lips.js';
+import { version, date } from '../dist/lips.esm.js';
 
 import fs from 'fs';
 import os from 'os';
@@ -55,7 +55,8 @@ const supports_paste_brackets = satisfies(process.version, '>=v20.6.0');
 
 // -----------------------------------------------------------------------------
 process.on('uncaughtException', function (err) {
-  log_error(err.message);
+    log_error(err.message);
+    log_error(err.stack);
 });
 
 // -----------------------------------------------------------------------------
@@ -67,9 +68,9 @@ function debug(message) {
     console.log(message);
 }
 // -----------------------------------------------------------------------------
-async function run(code, interpreter, dynamic = false, env = null, stack = false) {
+async function run(code, interpreter, use_dynamic = false, env = null, stack = false) {
     try {
-        return await interpreter.exec(code, dynamic, env)
+        return await interpreter.exec(code, { use_dynamic, env });
     } catch (e) {
         print_error(e, stack);
     }
@@ -121,6 +122,9 @@ function print(result) {
 
 // -----------------------------------------------------------------------------
 function bootstrap(interpreter) {
+    if (options.bootstrap === 'none') {
+        return Promise.resolve();
+    }
     const file = options.bootstrap ? options.bootstrap : './dist/std.xcb';
     function read(name) {
         var path;
@@ -370,7 +374,7 @@ if (options.version || options.V) {
     command_line.push(...get_command_line_args());
     try {
         const code = readCode(filename);
-        bootstrap(interp).then(() => {
+        (options.x ? Promise.resolve() : bootstrap(interp)).then(() => {
             const dynamic = options.d || options.dynamic;
             return run(code, interp, dynamic, null, options.t || options.trace);
         });

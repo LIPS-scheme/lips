@@ -31,28 +31,38 @@ UGLIFY=./node_modules/.bin/uglifyjs
 ROLLUP=./node_modules/.bin/rollup
 LIPS=./bin/lips.js
 
-ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/lips.js dist/lips.min.js README.md dist/std.min.scm dist/std.xcb
+define ver_date
+	$(GIT) branch | grep '* master' > /dev/null && $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" \
+	-e "s/{{YEAR}}/${YEAR}/" $(1) || $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" $(1)
+endef
 
-dist/lips.js: src/lips.js .$(VERSION) rollup.config.js
+ALL: Makefile  package.json .$(VERSION) assets/classDiagram.svg dist/base.js dist/lips.js dist/lips.esm.js dist/lips.min.js dist/lips.esm.min.js README.md dist/std.min.scm dist/std.xcb
+
+dist/banner.js: src/banner.js src/lips.js .$(VERSION)
+	$(CP) src/banner.js dist/banner.js
+	$(call ver_date,dist/banner.js)
+
+dist/base.js: src/lips.js .$(VERSION)
+	$(SED) '/\/\*\*@license/,/\*\//d' < src/lips.js > dist/base.js
+	$(call ver_date,dist/base.js)
+
+dist/lips.js dist/lips.esm.js dist/lips.cjs: dist/banner.js dist/base.js .$(VERSION) rollup.config.js
 	$(ROLLUP) -c
-	$(CAT) src/banner.js dist/lips.js > dist/tmp.js
-	$(CP) dist/tmp.js dist/lips.js
-	$(RM) dist/tmp.js
-	$(GIT) branch | grep '* devel' > /dev/null && $(SED) -i -e "s/{{VER}}/DEV/g" -e "s/{{DATE}}/$(DATE)/g" \
-	dist/lips.js || $(SED) -i -e "s/{{VER}}/$(VERSION)/g" -e "s/{{DATE}}/$(DATE)/g" -e "s/{{YEAR}}/${YEAR}/" \
-	dist/lips.js
 
 dist/lips.min.js: dist/lips.js .$(VERSION)
 	$(UGLIFY) -o dist/lips.min.js --comments --mangle -- dist/lips.js
+
+dist/lips.esm.min.js: dist/lips.esm.js .$(VERSION)
+	$(UGLIFY) -o dist/lips.esm.min.js --comments --mangle -- dist/lips.esm.js
 
 dist/std.scm: lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm
 	$(CAT) lib/bootstrap.scm lib/R5RS.scm lib/byte-vectors.scm lib/R7RS.scm lib/init.scm > dist/std.scm
 
 dist/std.xcb: dist/std.scm
-	$(LIPS) --bootstrap dist/std.scm -c -q dist/std.scm
+	$(LIPS) -t --bootstrap dist/std.scm -c -q dist/std.scm
 
 dist/std.min.scm: dist/std.scm
-	$(LIPS) --bootstrap dist/std.scm ./scripts/minify.scm ./dist/std.scm > dist/std.min.scm
+	$(LIPS) -t --bootstrap dist/std.scm ./scripts/minify.scm ./dist/std.scm > dist/std.min.scm
 
 Makefile: templates/Makefile
 	$(SED) -e "s/{{VER""SION}}/"$(VERSION)"/g" templates/Makefile > Makefile

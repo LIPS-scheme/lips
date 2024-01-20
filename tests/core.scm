@@ -81,6 +81,17 @@
           (t.is (to.throw (set! x.foo "hey")) true)
           (t.is (to.throw (set! x.bar "hey")) true))))
 
+(test "core: it should create object literals without values"
+      (lambda (t)
+        (let ((x &(:foo :bar)))
+          (t.is x &(:foo undefined :bar undefined)))))
+
+(test "core: it should create object with null value (#264)"
+      (lambda (t)
+        (let ((x &(:foo null :bar null)))
+          (t.is (eq? x.foo null) #t)
+          (t.is (eq? x.bar null) #t))))
+
 (test "core: it should allow change shorthand object literals"
       (lambda (t)
         (let ((obj &(:x :y)))
@@ -270,14 +281,17 @@
                          (t.is result 10))))
           (t.is (await p) 10))))
 
-(test "core: quoted promise repr"
+(test "core: quoted resolved promise repr"
       (lambda (t)
         (let ((resolve))
           (define promise '>(new Promise (lambda (r) (set! resolve r))))
           (t.is (repr promise) "#<js-promise (pending)>")
           (resolve "xx")
           (t.is (await promise) "xx")
-          (t.is (repr promise) "#<js-promise resolved (string)>"))
+          (t.is (repr promise) "#<js-promise resolved (string)>"))))
+
+(test "core: quoted rejected promise repr"
+      (lambda (t)
         (let ((reject))
           (define promise '>(new Promise (lambda (_ r) (set! reject r))))
           (t.is (repr promise) "#<js-promise (pending)>")
@@ -285,6 +299,30 @@
           (t.is (to.throw (await promise)) true)
           (t.is (repr promise) "#<js-promise (rejected)>")
           (t.is (not (null? (promise.__reason__.message.match #/ZONK/))) true))))
+
+(test "core: quoted promise + lexical scope"
+      (lambda (t)
+        (let ((x (await (let ((x 2))
+                (--> '>(Promise.resolve (let ((y 4))
+                                          (+ x y)))
+                     (then (lambda (x)
+                             (* x x))))))))
+          (t.is x 36))))
+
+(test "core: resolving promises in quoted promise realm"
+      (lambda (t)
+        (t.is (await (let ((x 2))
+                       (--> '>(let ((y (Promise.resolve 4)))
+                                (+ x y))
+                            (then (lambda (x)
+                                    (* x x))))))
+              36)))
+
+(test "core: promise + let"
+      (lambda (t)
+        (let ((x (Promise.resolve 2))
+              (y (Promise.resolve 4)))
+          (t.is (* x y) (Promise.resolve 8)))))
 
 (test "core: Promise.all on quoted promises"
       (lambda (t)
@@ -315,53 +353,96 @@
 
 (test "core: try..catch"
       (lambda (t)
-        (let ((x))
-          (t.is (try 10 (finally (set! x 10))) 10)
-          (t.is x 10))
+        (begin
+         (let ((x))
+           (t.is (try 10 (finally (set! x 10))) 10)
+           (t.is x 10))
 
-        (let ((x))
-          (t.is (try aa (catch (e) false) (finally (set! x 10))) false)
-          (t.is x 10))
+         (let ((x))
+           (t.is (try aa (catch (e) false) (finally (set! x 10))) false)
+           (t.is x 10))
 
-        (t.is (to.throw (try bb (catch (e) (throw e)))) true)
+         (let ((x 10))
+           (t.is (to.throw (try 10 (finally (throw "error") (set! x 20)))) true)
+           (t.is x 10))
 
-        (let ((x))
-          (t.is (to.throw (try cc (finally (set! x 10)))) true)
-          (t.is x 10))
+         (t.is (to.throw (try bb (catch (e) (throw e)))) true)
 
-        (let ((x))
-          (t.is (try (new Promise (lambda (r) (r 10))) (finally (set! x 10))) 10)
-          (t.is x 10))
+         (let ((x))
+           (t.is (to.throw (try cc (finally (set! x 10)))) true)
+           (t.is x 10))
 
-        (let ((x))
-          (t.is (to.throw (try (Promise.reject 10) (catch (e) (set! x 10) (throw e)))) true)
-          (t.is x 10))
+         (let ((x))
+           (t.is (try (new Promise (lambda (r) (r 10))) (finally (set! x 10))) 10)
+           (t.is x 10))
 
-        (t.is (try xx (catch (e) false)) false)
+         (let ((x))
+           (t.is (to.throw (try (Promise.reject 10) (catch (e) (set! x 10) (throw e)))) true)
+           (t.is x 10))
 
-        (let ((x))
-          (t.is (try (Promise.reject 10) (catch (e) e) (finally (set! x 10))) 10)
-          (t.is x 10))
+         (t.is (try xx (catch (e) false)) false)
 
-        (t.is (try (Promise.reject 10) (catch (e) e)) 10)
+         (let ((x))
+           (t.is (try (Promise.reject 10) (catch (e) e) (finally (set! x 10))) 10)
+           (t.is x 10))
 
-        (t.is (to.throw (try (Promise.reject 10) (catch (e) (throw e)))) true)
+         (t.is (try (Promise.reject 10) (catch (e) e)) 10)
 
-        (let ((x))
-          (t.is (to.throw (try (Promise.reject 10) (finally (set! x 10))))true)
-          (t.is x 10))))
+         (t.is (to.throw (try (Promise.reject 10) (catch (e) (throw e)))) true)
 
-(test.failing "core: try..catch should stop execution"
-           (lambda (t)
-             (let ((result #f))
-               (try
-                (begin
-                  (set! result 1)
-                  (throw 'ZONK)
-                  (set! result 2))
-                (catch (e)
-                       (set! result 3)))
-               (t.is result 3))))
+         (let ((x))
+           (t.is (to.throw (try (Promise.reject 10) (finally (set! x 10)))) true)
+           (t.is x 10)))))
+
+(test "core: try..catch should stop execution for-each #163"
+      (lambda (t)
+        (define (until-zero fn lst)
+          (let ((result (vector)))
+            (try (for-each (lambda (x)
+                             (if (zero? x)
+                                 (throw 'ZONK)
+                                 (result.push (fn x))))
+                           lst)
+                 (catch (e)
+                        result))))
+
+        (t.is (until-zero identity '(1 2 3 4 0 10 20 30)) #(1 2 3 4))
+        (t.is (until-zero identity '(0 1 2 3 4)) #())))
+
+(test "core: try..catch should stop execution on nesting functions #163"
+      (lambda (t)
+        (t.plan 1)
+        (let ((result (vector)))
+          (define (foo fn lst)
+            (for-each (lambda (x)
+                        (if (zero? x)
+                            (throw 'ZONK)
+                            (fn x)))
+                      lst))
+
+          (define (bar)
+            (foo (lambda (item)
+                   (result.push item))
+                 '(-1 1 0 2 3 4)))
+
+          (t.is (try
+                 (bar)
+                 (catch (e)
+                        result))
+                #(-1 1)))))
+
+
+(test "core: try..catch should stop execution base #163"
+      (lambda (t)
+        (let ((result #f))
+          (try
+           (begin
+             (set! result 1)
+             (throw 'ZONK)
+             (set! result 2))
+           (catch (e)
+                  (set! result 3)))
+          (t.is result 3))))
 
 (test "core: chain of promises"
       (lambda (t)
@@ -430,6 +511,16 @@
 
         (t.is (repr (kons 1 2)) "(1 . 2)")))
 
+(test "core: instance? on records"
+      (lambda (t)
+        (define-record-type <pare>
+          (kons x y)
+          pare?
+          (x kar set-kar!)
+          (y kdr set-kdr!))
+
+        (t.is (instance? (kons 1 2)) #t)))
+
 (test "core: errors and try..catch"
       (lambda (t)
         (let* ((message "Some Error")
@@ -439,3 +530,112 @@
           (t.is (error-object? err) true)
           (t.is (error-object-message err) message)
           (t.is (error-object-irritants err) (list->vector args)))))
+
+(test "core: should evaluate promise of code"
+      (lambda (t)
+        (t.is ((Promise.resolve (lambda x x)) 1 2 3) '(1 2 3))))
+
+(test "core: should not evaluate promise of data"
+      (lambda (t)
+        (t.is (to.throw ((Promise.resolve 'list) 1 2 3)) true)))
+
+(test "core: should catch quoted promise rejection"
+      (lambda (t)
+        (t.is (await (--> '>(Promise.reject 10)
+                          (catch (lambda (e)
+                                   #t))))
+              #t)))
+
+(test "core: should clone list"
+      (lambda (t)
+        (let* ((a '(1 2 3)) (b (clone a)))
+        (t.is (not (eq? a b)) #t)
+        (t.is a b))))
+
+(test "core: should return nth element"
+      (lambda (t)
+        (let ((a '(1 2 3 4)))
+          (t.is (nth 0 a) 1)
+          (t.is (nth 1 a) 2)
+          (t.is (nth 2 a) 3)
+          (t.is (nth 3 a) 4))))
+
+(test "core: escape-regex"
+      (lambda (t)
+        (t.is (escape-regex ".{}[]")
+              "\\.\\{\\}\\[\\]")))
+
+(test "core: env"
+      (lambda (t)
+        (let* ((l (env))
+               (size (length l)))
+          (t.is (pair? l) #t)
+          (t.is (> size 100) #t)
+          (let ((x 10))
+            (let* ((l1 (env))
+                   (l2 (env)))
+              (t.is (+ (length l1) 1) (length l2)))))))
+
+(test "core: match"
+      (lambda (t)
+        (t.is (match (new RegExp "(foo|bar)" "g") "foo bar")
+              '("foo" "bar"))))
+
+(test "core: search"
+      (lambda (t)
+        (for-each (lambda (regex)
+                    (t.is (search regex "foo") 0))
+                  '(#/./ #/^f/ #/foo$/))
+        (t.is (search #/bar/ "foo") -1)))
+
+(test "core: join"
+      (lambda (t)
+        (t.is (join ":" '("foo" "bar" "baz"))
+              "foo:bar:baz")))
+
+(test "core: replace"
+      (lambda (t)
+        (t.is (replace "foo" "var" "foo bar") "var bar")
+        (t.is (replace (new RegExp "foo|bar" "g") "x" "foo bar") "x x")))
+
+(test "core: split"
+      (lambda (t)
+        (t.is (split ":" "foo:bar:baz")
+              '("foo" "bar" "baz"))
+        (t.is (split #/(:)/ "foo:bar:baz")
+              '("foo" ":" "bar" ":" "baz"))))
+
+(test "core: shuffle"
+      (lambda (t)
+        ;; test shuffle with fixed seed
+        (random 1000)
+        (t.is (shuffle '(1 2 3 4)) '(2 4 3 1))
+        (t.is (list? (shuffle '(1 2 3))) #t)
+        (t.is (shuffle nil) nil)
+        (random 1000)
+        (t.is (shuffle #(1 2 3 4)) #(2 4 3 1))))
+
+;; TODO
+;; begin*
+;; set-obj! throws with null or boolean
+;; set-obj! to delete the value (2 arguments)
+;; null-environment
+;; current-environment inside let
+;; eval that throw error
+;; syntax-rules: throws identifier non symbol
+;; evaluate: number, invoke string, env === true
+;; map with native function (map parseInt '("10" "20" "30"))
+;; type on iterator and async iterator and (type (self.eval "new function() {}"))
+;; toString/repr: jQuery, function, global, null, (Object.create null), LNumber
+;;                define-class with toString method
+;;                set-repr! with non function
+;;                new: JavaScript class, lambda with name
+;;                iterator as object literal and class
+;;                async iterator as object literal and class
+;;                parseInt, define-class function with name and without
+;;                javascript, custom function with name and without
+;;                std function and anonymous lambda
+;;                function with toString
+;;                user repr
+;; Pair::flatten
+;; Test Parser Errors "(foo" "(foo))" "(foo) ("

@@ -10,7 +10,7 @@
 ;; This file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
@@ -297,8 +297,9 @@
            ,@(let loop ((lst expr) (result nil))
                (if (null? lst)
                    (reverse result)
-                   (let ((first (car lst))
-                         (second (if (null? (cdr lst)) nil (cadr lst))))
+                   (let* ((first (car lst))
+                          (no-second (null? (cdr lst)))
+                          (second (if no-second nil (cadr lst))))
                      (if (not (key? first))
                          (let ((msg (string-append (type first)
                                                    " "
@@ -306,7 +307,7 @@
                                                    " is not a symbol!")))
                            (throw msg))
                          (let ((prop (key->string first)))
-                           (if (or (key? second) (null? second))
+                           (if (or (key? second) no-second)
                                (let ((code `(set-obj! ,name ,prop undefined)))
                                  (loop (cdr lst) (cons code result)))
                                (let ((code (if readonly
@@ -798,7 +799,10 @@
   `(let ((env))
       (set! env (current-environment))
       (env.set (Symbol.for "__promise__") true)
-      ,expr))
+      (let ((env))
+        (set! env (current-environment))
+        (env.set (Symbol.for "__promise__") false)
+        ,expr)))
 
 ;; -----------------------------------------------------------------------------
 (define (defmacro? obj)
@@ -857,6 +861,14 @@
   (if (pair? expr)
       (car expr)
       (list 'quote expr)))
+
+;; -----------------------------------------------------------------------------
+(define (constructor)
+  "(constructor)
+
+   Function that is present in JavaScript environment. We define it in Scheme
+   to fix an issue with define-class. This function throw an error."
+  (throw (new Error "Invalid call to constructor function")))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (define-class name parent . body)
@@ -1255,6 +1267,7 @@
 
    Simple function for adding promises to NodeJS two-callback based functions.
    Function tested only with fs module."
+  (typecheck "promisify" fn "function")
   (lambda args
     (new Promise (lambda (resolve reject)
                    (apply fn (append args (list (lambda (err data)
@@ -1297,7 +1310,10 @@
                                                                            `(%not-implemented ,name)
                                                                            `(lips.env.get ',name)))))
                                                      names)))
-        null
+        (new lips.Environment (object
+                               :interaction-environment interaction-environment
+                               :**interaction-environment** **interaction-environment**)
+             null "root")
         ,name))
 
 ;; -----------------------------------------------------------------------------
@@ -1366,9 +1382,9 @@
        if the result is ArrayBuffer or Node.js/BrowserFS Buffer object."
       (if (not read-file)
           (let ((fs (--> (interaction-environment)
-                         (get '**internal-env**) (get 'fs &(:throwError false)))))
-            (if (null? fs)
-                (throw (new Error "open-input-file: fs not defined"))
+                         (get '**internal-env**)
+                         (get 'fs &(:throwError false)))))
+            (if (not (null? fs))
                 (let ((*read-file* (promisify fs.readFile)))
                   (set! read-file (lambda (path binary)
                                    (let ((buff (*read-file* path)))
@@ -1385,16 +1401,11 @@
                                       (res.arrayBuffer)
                                       (res.text)))
                                 (http-get url binary)))))
-      (cond ((char=? (string-ref path 0) #\/)
-             (if (not (file-exists? path))
-                 (throw (new Error (string-append "file "
-                                                  path
-                                                  " don't exists")))
-                 (read-file path binary)))
-            ((--> #/^https?:\/\// (test path))
-             (fetch-url path binary))
-            (else
-             (%read-file binary (string-append (current-directory) path)))))))
+      (if (not read-file)
+          (fetch-url path binary)
+          (if (file-exists? path)
+              (read-file path binary)
+              (fetch-url path binary))))))
 
 ;; -----------------------------------------------------------------------------
 (define %read-binary-file (curry %read-file true))
@@ -1406,7 +1417,7 @@
 
    Returns a promisified version of a fs function or throws an exception
    if fs is not available."
-  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs &(:throwError false)))))
     (if (null? fs)
         (throw (new Error (string-append message ": fs not defined")))
         (promisify (. fs fn)))))

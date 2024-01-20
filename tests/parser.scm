@@ -48,16 +48,23 @@
 
 (unset-special! "::")
 
+(set-special! "#nil" 'nil-fn lips.specials.SYMBOL)
+(define (nil-fn) nil)
+
+(define parser/t8 (list #nil #nil '#nil '#nil #nil))
+
+(unset-special! "#nil")
+
 (test "parser: syntax extension"
       (lambda (t)
-
         (t.is parser/t1 "<foo+bar/>")
         (t.is parser/t2 '(foo . bar))
         (t.is parser/t3 '(--))
         (t.is parser/t4 ':foo)
         (t.is parser/t5 ':foo)
         (t.is parser/t6 27)
-        (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))))
+        (t.is parser/t7 '(let ((x 3)) (let ((.x x)) (* .x .x .x))))
+        (t.is parser/t8 '(nil nil nil nil nil))))
 
 (test "parser: escape hex literals"
       (lambda (t)
@@ -156,7 +163,7 @@
         (define list "\\" "\"" "\\\\" "\\\"")
         (t.is true true)))
 
-(test "parse: datum labels"
+(test "parser: datum labels"
       (lambda (t)
         (let ((x (list #0=(cons 1 2) #0#)))
           (set-car! (car x) 2)
@@ -173,6 +180,43 @@
 
         (let ((x '#3=(1 2 . #3#)))
           (t.is (eq? x (cddr x)) true))))
+
+(test "parser: should throw an error on extra close paren"
+      (lambda (t)
+        (t.is (try
+               (lips.exec "(define x 10))")
+               (catch (e)
+                      e.message))
+              "Parser: unexpected parenthesis")))
+
+(test "parser: should process line after comment without text #260"
+      (lambda (t)
+        (t.plan 2);
+        (t.is #t #t)
+        (t.is #t #t)))
+
+(test "parser: emoji character"
+      (lambda (t)
+        (let ((x #\💩))
+          (t.is (--> x (valueOf) 'length) 2)
+          (t.is (length (Array.from (x.valueOf))) 1))))
+
+(test "parser: space character"
+      (lambda (t)
+        (let ((x #\ ))
+          (t.is (x.valueOf) " "))))
+
+(test "parser: newline character"
+      (lambda (t)
+        (let ((x #\
+                 ))
+          (t.is (x.valueOf) "\n"))))
+
+
+
+(test "parser: should throw an error on invalid dot sequennce #245"
+      (lambda (t)
+        (t.is (to.throw (lips.parse "(1 . 2 3)")) #t)))
 
 (test "tokenizer: should create tokens for simple list"
       (lambda (t)

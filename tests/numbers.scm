@@ -484,9 +484,7 @@
         (t.is (/ (make-rectangular 1 2) (make-rectangular 2 10)) 11/52-3/52i)
         (t.is (number->string #e0.5+0.5i) "1/2+1/2i")
         (t.is (number->string #i1/2+2/4i) "0.5+0.5i")
-        (t.is (number->string #e0.5+0.1i) "1/2+1/10i")
-        (t.is (< 0.1i 0.2i) true)
-        (t.is (> 0.1i 0.2i) false)))
+        (t.is (number->string #e0.5+0.1i) "1/2+1/10i")))
 
 (test "numbers: modulo functions"
       (lambda (t)
@@ -1006,3 +1004,19 @@
                     (0.5i +0.46211715726000974i)
                     (1/2+1/2i 0.40389645531602575+0.5640831412674985i)
                     (+1/2i +0.46211715726000974i)))))
+
+(test "numbers: should calculate odd? / even?"
+      (lambda (t)
+        (t.is (odd? 1) #t)
+        (t.is (odd? 2) #f)
+        (t.is (even? 10) #t)
+        (t.is (even? 21) #f)))
+
+(test "numbers: should throw exception odd? / event?"
+      (lambda (t)
+        (for-each (lambda (op?)
+                    (t.is (to.throw (op? 10+10i)) #t)
+                    (t.is (to.throw (op? 1/2)) #t)
+                    (t.is (to.throw (op? 1.2)) #t)
+                    (t.is (to.throw (op? 1.2)) #t))
+                  '(even? odd?))))

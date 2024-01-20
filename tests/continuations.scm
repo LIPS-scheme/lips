@@ -9,6 +9,25 @@
 
         (t.is (x 4) 6)))
 
+(test.failing "continuations: make-range"
+              (lambda (t)
+                (define (make-range from to)
+                  (call/cc
+                   (lambda (return)
+                     (let ((result '()))
+                       (let ((loop (call/cc (lambda (k) k))))
+                         (set! result (cons (call/cc
+                                             (lambda (append)
+                                               (if (< from to)
+                                                   (append from)
+                                                   (return (reverse result)))))
+                                            result))
+                         (set! from (+ from 1))
+                         (loop loop))))))
+
+                (t.is (make-range 0 10) '(0 1 2 3 4 5 6 7 8 9))
+                (t.is (make-range 10 20) '(10 11 12 13 14 15 16 17 18 19))))
+
 (test.failing "continuations: return"
       (lambda (t)
         (let ((called #f))

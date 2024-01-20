@@ -10,7 +10,7 @@
 ;; This file contain essential functions and macros for LIPS
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
@@ -297,8 +297,9 @@
            ,@(let loop ((lst expr) (result nil))
                (if (null? lst)
                    (reverse result)
-                   (let ((first (car lst))
-                         (second (if (null? (cdr lst)) nil (cadr lst))))
+                   (let* ((first (car lst))
+                          (no-second (null? (cdr lst)))
+                          (second (if no-second nil (cadr lst))))
                      (if (not (key? first))
                          (let ((msg (string-append (type first)
                                                    " "
@@ -306,7 +307,7 @@
                                                    " is not a symbol!")))
                            (throw msg))
                          (let ((prop (key->string first)))
-                           (if (or (key? second) (null? second))
+                           (if (or (key? second) no-second)
                                (let ((code `(set-obj! ,name ,prop undefined)))
                                  (loop (cdr lst) (cons code result)))
                                (let ((code (if readonly
@@ -798,7 +799,10 @@
   `(let ((env))
       (set! env (current-environment))
       (env.set (Symbol.for "__promise__") true)
-      ,expr))
+      (let ((env))
+        (set! env (current-environment))
+        (env.set (Symbol.for "__promise__") false)
+        ,expr)))
 
 ;; -----------------------------------------------------------------------------
 (define (defmacro? obj)
@@ -857,6 +861,14 @@
   (if (pair? expr)
       (car expr)
       (list 'quote expr)))
+
+;; -----------------------------------------------------------------------------
+(define (constructor)
+  "(constructor)
+
+   Function that is present in JavaScript environment. We define it in Scheme
+   to fix an issue with define-class. This function throw an error."
+  (throw (new Error "Invalid call to constructor function")))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (define-class name parent . body)
@@ -1255,6 +1267,7 @@
 
    Simple function for adding promises to NodeJS two-callback based functions.
    Function tested only with fs module."
+  (typecheck "promisify" fn "function")
   (lambda args
     (new Promise (lambda (resolve reject)
                    (apply fn (append args (list (lambda (err data)
@@ -1297,7 +1310,10 @@
                                                                            `(%not-implemented ,name)
                                                                            `(lips.env.get ',name)))))
                                                      names)))
-        null
+        (new lips.Environment (object
+                               :interaction-environment interaction-environment
+                               :**interaction-environment** **interaction-environment**)
+             null "root")
         ,name))
 
 ;; -----------------------------------------------------------------------------
@@ -1366,9 +1382,9 @@
        if the result is ArrayBuffer or Node.js/BrowserFS Buffer object."
       (if (not read-file)
           (let ((fs (--> (interaction-environment)
-                         (get '**internal-env**) (get 'fs &(:throwError false)))))
-            (if (null? fs)
-                (throw (new Error "open-input-file: fs not defined"))
+                         (get '**internal-env**)
+                         (get 'fs &(:throwError false)))))
+            (if (not (null? fs))
                 (let ((*read-file* (promisify fs.readFile)))
                   (set! read-file (lambda (path binary)
                                    (let ((buff (*read-file* path)))
@@ -1385,16 +1401,11 @@
                                       (res.arrayBuffer)
                                       (res.text)))
                                 (http-get url binary)))))
-      (cond ((char=? (string-ref path 0) #\/)
-             (if (not (file-exists? path))
-                 (throw (new Error (string-append "file "
-                                                  path
-                                                  " don't exists")))
-                 (read-file path binary)))
-            ((--> #/^https?:\/\// (test path))
-             (fetch-url path binary))
-            (else
-             (%read-file binary (string-append (current-directory) path)))))))
+      (if (not read-file)
+          (fetch-url path binary)
+          (if (file-exists? path)
+              (read-file path binary)
+              (fetch-url path binary))))))
 
 ;; -----------------------------------------------------------------------------
 (define %read-binary-file (curry %read-file true))
@@ -1406,7 +1417,7 @@
 
    Returns a promisified version of a fs function or throws an exception
    if fs is not available."
-  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs))))
+  (let ((fs (--> lips.env (get '**internal-env**) (get 'fs &(:throwError false)))))
     (if (null? fs)
         (throw (new Error (string-append message ": fs not defined")))
         (promisify (. fs fn)))))
@@ -1577,7 +1588,7 @@
 ;; https://schemers.org/Documents/Standards/R5RS/HTML/
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 ;; (+ 1 (call-with-current-continuation
@@ -1732,6 +1743,11 @@
                      (equal? keys_a keys_b)
                      (equal? (--> keys_a (map (lambda (key) (. a key))))
                              (--> keys_b (map (lambda (key) (. b key)))))))))
+        ((instance? a)
+         (and (instance? b)
+              (%same-functions b.constructor a.constructor)
+              (function? a.equal)
+              (a.equal b)))
         (else (eqv? a b))))
 
 ;; -----------------------------------------------------------------------------
@@ -1893,6 +1909,7 @@
        (not (eq? x Number.NEGATIVE_INFINITY))
        (not (eq? x Number.POSITIVE_INFINITY))
        (or (%number-type "bigint" x)
+           (%number-type "integer" x)
            (and (%number-type "float" x)
                 (= (modulo x 2) 1)))))
 
@@ -2668,7 +2685,9 @@
    Write object to standard output or give port. For strings it will include
    wrap in quotes."
   (let ((port (if (null? rest) (current-output-port) (car rest))))
-    (display (repr obj true) port)))
+    (if (binary-port? port)
+        (display obj port)
+        (display (repr obj true) port))))
 
 ;; -----------------------------------------------------------------------------
 (define (write-char char . rest)
@@ -2962,6 +2981,7 @@
          (finally
           (close-output-port p)))))
 
+;; -----------------------------------------------------------------------------
 (define (with-input-from-port port thunk)
   "(with-input-from-port port thunk)
 
@@ -3070,10 +3090,48 @@
                     string>=? string>? string? substring symbol->string symbol? tan truncate values
                     vector vector->list vector-fill! vector-length vector-ref vector-set! vector?
                     with-input-from-file with-output-to-file write write-char zero?))
-     ((7) (throw (new Error "not yet implemented")) #;(%make-env "R7RS"))
-      (else (throw (new Error (string-append "scheme-report-environment: version "
-                                             (number->string version)
-                                             " not supported"))))))
+    ((7) (%make-env "R7RS" - * / _ + < <= = => > >= abs acos and angle append apply asin assoc assq
+                    assv atan begin binary-port? boolean? boolean=? bytevector bytevector?  bytevector-append
+                    bytevector-copy bytevector-copy!  bytevector-length bytevector-u8-ref bytevector-u8-set!  caaaar
+                    caaadr caaar caadar caaddr caadr caar cadaar cadadr cadar caddar cadddr caddr cadr call/cc
+                    call-with-current-continuation call-with-input-file call-with-output-file call-with-port
+                    call-with-values car case case-lambda cdaaar cdaadr cdaar cdadar cdaddr cdadr cdar cddaar cddadr
+                    cddar cdddar cddddr cdddr cddr cdr ceiling char? char<? char<=? char=? char>? char>=?
+                    char->integer char-alphabetic? char-ci<? char-ci<=? char-ci=? char-ci>? char-ci>=?
+                    char-downcase char-foldcase char-lower-case? char-numeric? char-ready? char-upcase
+                    char-upper-case? char-whitespace? close-input-port close-output-port close-port command-line
+                    complex? cond cond-expand cons cos current-error-port current-input-port current-jiffy
+                    current-output-port current-second define define-record-type define-syntax define-values delay
+                    delay-force delete-file denominator digit-value display do dynamic-wind else emergency-exit
+                    environment eof-object eof-object? eq? equal? eqv? error error-object? error-object-irritants
+                    error-object-message eval even? exact exact? exact-integer? exact-integer-sqrt exit exp expt
+                    features file-exists? finite? floor floor/ floor-quotient floor-remainder flush-output-port force
+                    for-each gcd get-environment-variable get-environment-variables get-output-bytevector
+                    get-output-string guard if imag-part import include include-ci inexact inexact? infinite?
+                    input-port? input-port-open? integer? integer->char interaction-environment
+                    interaction-environment jiffies-per-second lambda lcm length let let* let*-values letrec letrec*
+                    letrec-syntax let-syntax let-values list list? list->string list->vector list-copy list-ref
+                    list-set! list-tail load log magnitude make-bytevector make-list make-parameter make-polar
+                    make-promise make-rectangular make-string make-vector map max member memq memv min modulo nan?
+                    negative? newline not null? number? number->string numerator odd? open-binary-input-file
+                    open-binary-output-file open-input-bytevector open-input-file open-input-string
+                    open-output-bytevector open-output-file open-output-string or output-port? output-port-open? pair?
+                    parameterize peek-char peek-u8 port? positive? procedure? quasiquote quote quotient raise
+                    raise-continuable rational? rationalize read read-bytevector read-bytevector! read-char read-line
+                    read-string read-u8 real? real-part remainder reverse round scheme-report-environment set!
+                    set-car! set-cdr! sin sqrt square string string? string<? string<=? string=? string>?
+                    string>=? string->list string->number string->symbol string->utf8 string->vector string-append
+                    string-ci<? string-ci<=? string-ci=? string-ci>? string-ci>=? string-copy string-copy!
+                    string-downcase string-fill! string-foldcase string-for-each string-length string-map string-ref
+                    string-set! string-upcase substring symbol? symbol=? symbol->string syntax-error syntax-rules tan
+                    textual-port? truncate truncate/ truncate-quotient truncate-remainder u8-ready? unless unquote
+                    unquote-splicing utf8->string values vector vector? vector->list vector->string vector-append
+                    vector-copy vector-copy! vector-fill! vector-for-each vector-length vector-map vector-ref
+                    vector-set! when with-exception-handler with-input-from-file with-output-to-file write
+                    write-bytevector write-char write-shared write-simple write-string write-u8 zero?))
+    (else (throw (new Error (string-append "scheme-report-environment: version "
+                                           (number->string version)
+                                           " not supported"))))))
 ;; Implementation of byte vector functions - SRFI-4 and SRFI-160
 ;;
 ;; original code was based on https://small.r7rs.org/wiki/NumericVectorsCowan/17/
@@ -3084,7 +3142,7 @@
 ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 ;;
 
@@ -3228,7 +3286,7 @@
 ;; https://small.r7rs.org/attachment/r7rs.pdf
 ;;
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
-;; Copyright (C) 2019-2023 Jakub T. Jankiewicz <https://jcubic.pl/me>
+;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
 
 ;; -----------------------------------------------------------------------------
@@ -4206,10 +4264,10 @@
 
    (define p (kons 1 2))
    (print (kar p))
-   ;; 1
+   ;; ==> 1
    (set-kdr! p 3)
    (print (kdr p))
-   ;; 3"
+   ;; ==> 3"
   (let ((obj-name (gensym 'obj-name))
         (value-name (gensym 'value-name)))
     `(begin
@@ -4221,7 +4279,18 @@
                                                                                 name)))
                                                       `(set! ,(string->symbol prop) ,field)))
                                                   (cdr constructor))))
-                            (toType (lambda (self)
+                            (equal (lambda (self other)
+                                     (if (instanceof ,name other)
+                                         (and ,@(map (lambda (field)
+                                                       (let* ((name (symbol->string field))
+                                                              (self-prop (string-append "self."
+                                                                                        name))
+                                                              (other-prop (string-append "other."
+                                                                                         name)))
+                                                         `(equal? ,(string->symbol self-prop)
+                                                                  ,(string->symbol other-prop))))))
+                                         #f)))
+                            (typeOf (lambda (self)
                                       "record"))
                             (toString (lambda (self)
                                         (string-append "#<" ,(symbol->string name) ">")))))
@@ -4400,6 +4469,42 @@
        (--> ,parent (set ',name ,module-var)))))
 
 ;; -----------------------------------------------------------------------------
+(define-syntax guard
+  (syntax-rules (catch aux =>)
+    ((_ aux)
+     '())
+    ((_ aux (cond result) rest ...)
+     (let ((it cond))
+       (if it
+           result
+           (guard aux rest ...))))
+    ((_ aux (cond => fn) rest ...)
+     (let ((it cond))
+       (if it
+           (fn it)
+           (guard aux rest ...))))
+    ((_ aux (cond) rest ...)
+     (let ((it cond))
+       (if it
+           it
+           (guard aux rest ...))))
+    ((_ (var cond1 cond2 ...)
+        body ...)
+     (try
+       body ...
+       (catch (var)
+              (guard aux
+                     cond1
+                     cond2 ...)))))
+  "(guard (variable (cond)
+                    (cond => fn)
+                    (cond2 result))
+          body)
+
+   Macro that executes the body and when there is exception, triggered by
+   raise it's saved in variable that can be tested by conditions.")
+
+;; -----------------------------------------------------------------------------
 (define-syntax define-library/export
   (syntax-rules (rename :c)
     ((_ :c (rename to from))
@@ -4537,16 +4642,10 @@
                                     (if (null? e)
                                         (resolve (BrowserFS.BFSRequire "fs"))
                                         (reject e)))))))
-                 ((not (null? self.BrowserFS))
-                  (console.warn (string-append "BrowserFS is not initialized and "
-                                               "IndexedDB is not available"))
-                  nil)))
-       (Buffer (cond ((eq? self global)
-                      self.Buffer)
-                     ((not (null? self.BrowserFS))
-                      (. (BrowserFS.BFSRequire "buffer") 'Buffer)))))
+                 ((not (indexed-db?))
+                  (console.warn (string-append "No FS found and IndexedDB "
+                                               "is not available"))
+                  nil))))
   (let ((internal (lips.env.get '**internal-env**)))
-    (if (not (null? Buffer))
-        (internal.set "Buffer" Buffer))
     (if (not (null? fs))
-        (internal.set "fs" fs))))
+        (lips.set_fs fs))))

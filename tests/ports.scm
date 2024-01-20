@@ -206,7 +206,28 @@
       (lambda (t)
         (let ((p (open-input-bytevector #u8(#x10 #x20 #xFF #xFF #xFF))))
           (t.is (binary-port? p) true)
-          (t.is (textual-port? p) false))))
+          (t.is (textual-port? p) false)
+          (close-input-port p))))
+
+(test "ports: should close input-bytevector"
+      (lambda (t)
+        (let ((p (open-input-bytevector #u8(#x10 #x20 #xFF #xFF #xFF))))
+          (close-input-port p)
+          (t.is (to.throw (read-u8 p)) #t)
+          (t.is (char-ready? p) #f)
+          (t.is (u8-ready? p) #f))))
+
+(test "ports: should return max elements from byte vector port"
+      (lambda (t)
+        (let ((port (open-input-bytevector #u8(#x10 #x20 #xFF #xFF #xFF))))
+          (t.is (read-u8 port) #x10)
+          (t.is (read-bytevector 100 port) #u8(#x20 #xFF #xFF #xFF))
+          (close-port port))))
+
+(test "ports: should read all elements from u8 byte vector port"
+      (lambda (t)
+        (let ((port (open-input-bytevector #u8(#x10 #x20 #xFF #xFF #xFF))))
+          (t.is (with-input-from-port port read-bytevector) #u8(#x10 #x20 #xFF #xFF #xFF)))))
 
 (test "ports: read from open-input-bytevector"
       (lambda (t)
@@ -220,7 +241,8 @@
             (while (not (eof-object? (peek-u8 p)))
               (result.push (read-u8 p)))
             (t.is result #(#x20 #xFF #xFF #xFF))
-            (t.is (eof-object? (peek-u8 p)) true)))))
+            (t.is (eof-object? (peek-u8 p)) true)
+            (t.is (eof-object? (read-u8 p)) true)))))
 
 (test "ports: textual-port?"
       (lambda (t)

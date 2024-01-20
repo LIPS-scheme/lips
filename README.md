@@ -4,10 +4,11 @@
        alt="LIPS - Scheme Based Powerful Lisp Language" />
 </h1>
 
+[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/lips_lang)](https://twitter.com/lips_lang)
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.17.3-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=master&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&1eb2cfbcb9a646f24938a31ec46bbc33)](https://coveralls.io/github/jcubic/lips?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=master&7951433cc9ff158c3701ffea07e0f004)](https://coveralls.io/github/jcubic/lips?branch=master)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -15,7 +16,7 @@
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjcubic%2Flips.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjcubic%2Flips?ref=badge_shield)
 
 [![GitHub stars](https://img.shields.io/github/stars/jcubic/lips.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/jcubic/lips/stargazers/)
-<a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20makes%20life%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JS%2C%20lisp%20and%20npm%20to%20create%20your%20applications%20via%20@lips_lang&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
+<a href="https://twitter.com/intent/tweet?text=Powerful%20Scheme%20based%20lisp%20language%20written%20in%20JavaScript.%20It%20makes%20life%20easier%20by%20better%20interaction%20with%20JS.%20Use%20full%20power%20of%20JS%2C%20lisp,%20and%20npm%20to%20create%20your%20applications%20via%20@lips_lang&url=https://github.com/jcubic/lips&hashtags=javascript,opensource,lisp,scheme,language,programming">
    <img src="https://github.com/jcubic/lips/blob/devel/assets/tweet-shield.svg?raw=true" alt="Tweet" height="20"/>
 </a>
 
@@ -262,6 +263,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
+| Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
 
 ## Links
 * [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
@@ -339,6 +341,6 @@ I would also love to see if you use the library, I may even share the links of p
 ## License
 
 Released under [MIT](http://opensource.org/licenses/MIT) license<br/>
-Copyright (c) 2018-2023 [Jakub T. Jankiewicz](https://jcubic.pl/me)
+Copyright (c) 2018-2024 [Jakub T. Jankiewicz](https://jcubic.pl/me)
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjcubic%2Flips.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjcubic%2Flips?ref=badge_large)
