@@ -122,13 +122,13 @@ chmod a+x foo.scm
     <header><h2>Direct API</h2></header>
     <p>You can also run execute LIPS programaticaly (in Node.js/Webpack).</p>
     <pre><code class="language-javascript">
-var lips = require('@jcubic/lips');
+var { exec } = require('@jcubic/lips');
 // or
-import lips from '@jcubic/lips';
+import { exec } from '@jcubic/lips';
     </code></pre>
     <p>Then use it like this:</p>
     <pre><code class="language-javascript">
-lips.exec('(let ((a 10) (b 20)) (* a b))').then(result => {
+exec('(let ((a 10) (b 20)) (* a b))').then(result => {
     results.forEach(function(result) {
         if (typeof result !== 'undefined') {
             console.log(result.toString());
