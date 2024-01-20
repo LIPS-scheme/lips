@@ -32,6 +32,7 @@
 * fix parsing invalid expression `(1 . 2 3)` [#245](https://github.com/jcubic/lips/issues/245)
 * fix invalid error message for not matched `syntax-rules` [#243](https://github.com/jcubic/lips/issues/243)
 * fix silent error when class don't have parent [#272](https://github.com/jcubic/lips/issues/272)
+* fix `try..catch` [#163](https://github.com/jcubic/lips/issues/163)
 
 ## 1.0.0-beta.17
 ### Breaking
