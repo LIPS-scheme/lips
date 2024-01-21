@@ -50,15 +50,28 @@
 
 ;; -----------------------------------------------------------------------------
 (define-syntax let-values
-  (syntax-rules ()
-    ((_ ()) nil)
-    ((_ () body ...) (begin body ...))
-    ((_ (((x ...) values) ...) body ...)
-     (apply (lambda (x ... ...)
-              body ...)
-            (vector->list (apply vector-append (map (lambda (arg) ((. arg "valueOf")))
-                                                     (list values ...)))))))
-  "(let-values binding body ...)
+  (syntax-rules (bind mktmp)
+    ((let-values (binding ...) body0 body1 ...)
+     (let-values bind
+       (binding ...) () (begin body0 body1 ...)))
+    ((let-values bind () tmps body)
+     (let tmps body))
+    ((let-values bind ((b0 e0) binding ...) tmps body)
+     (let-values mktmp b0 e0 () (binding ...) tmps body))
+    ((let-values mktmp () e0 args bindings tmps body)
+     (call-with-values
+         (lambda () e0)
+       (lambda args
+         (let-values bind
+           bindings tmps body))))
+    ((let-values mktmp (a . b) e0 (arg ...) bindings (tmp ...) body)
+     (let-values mktmp b e0 (arg ... x) bindings (tmp ... (a x)) body))
+    ((let-values mktmp a e0 (arg ...) bindings (tmp ...) body)
+     (call-with-values
+         (lambda () e0)
+       (lambda (arg ... . x)
+         (let-values bind bindings (tmp ... (a x)) body)))))
+  "(let-values (binding ...) body ...)
 
    The macro work similar to let but variable is list of values and value
    need to evaluate to result of calling values.")
