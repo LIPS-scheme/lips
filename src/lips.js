@@ -8780,6 +8780,13 @@ var global_env = new Environment({
          string or list of strings. The position optional argument is used to create a
          proper error message for the nth argument of function calls.`),
     // ------------------------------------------------------------------
+    'typecheck-number': doc(
+        typecheck_number,
+        `(typecheck-number label value type [position])
+
+         Function similar to typecheck but checks if the argument is a number
+         and specific type of number e.g. complex.`),
+    // ------------------------------------------------------------------
     'unset-special!': doc('unset-special!', function(symbol) {
         typecheck('remove-special!', symbol, 'string');
         delete specials.remove(symbol.valueOf());
@@ -9864,12 +9871,33 @@ function typeErrorMessage(fn, got, expected, position = null) {
 }
 
 // -------------------------------------------------------------------------
+function typecheck_number(fn, arg, expected, position = null) {
+    typecheck(fn, arg, 'number', position);
+    const arg_type = arg.__type__;
+    let match;
+    if (expected instanceof Pair) {
+        expected = expected.to_array();
+    }
+    if (expected instanceof Array) {
+        expected = expected.map(x => x.valueOf());
+    }
+    if (expected instanceof Array) {
+        expected = expected.map(x => x.valueOf().toLowerCase());
+        if (expected.includes(arg_type)) {
+            match = true;
+        }
+    } else {
+        expected = expected.valueOf().toLowerCase();
+    }
+    if (!match && arg_type !== expected) {
+        throw new Error(typeErrorMessage(fn, arg_type, expected, position));
+    }
+}
+
+// -------------------------------------------------------------------------
 function typecheck_numbers(fn, args, expected) {
     args.forEach((arg, i) => {
-        typecheck(fn, arg, 'number', i + 1);
-        if (!expected.includes(arg.__type__)) {
-            throw new Error(typeErrorMessage(fn, arg.__type__, expected, i));
-        }
+        typecheck_number(fn, arg, expected, i + 1);
     });
 }
 

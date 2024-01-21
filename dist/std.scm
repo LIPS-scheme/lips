@@ -3361,6 +3361,48 @@
         (--> (car args) (concat (apply vector-append (cdr args)))))))
 
 ;; -----------------------------------------------------------------------------
+(define (vector-copy vector . rest)
+  "(vector-copy vector)
+   (vector-copy vector start)
+   (vector-copy vector start end)
+
+   Returns a new vecotor that is a copy of given vector. If start
+   is not provided it starts at 0, if end it's not provided it copy
+   til the end of the given vector."
+  (typecheck "vector-copy" vector "array")
+  (let ((start (if (null? rest) 0 (car rest)))
+        (end (if (or (null? rest) (null? (cdr rest))) vector.length (cadr rest))))
+    (typecheck-number "vector-copy" start '("integer" "bigint"))
+    (typecheck-number "vector-copy" end '("integer" "bigint"))
+    (vector.slice start end)))
+
+;; -----------------------------------------------------------------------------
+(define (vector-copy! to at from . rest)
+  "(vector-copy to at from)
+   (vector-copy to at from start)
+   (vector-copy to at from start end)
+
+   Copies the elements of vector from between start and end into
+   vector to starting at `at`. If start is missing it start at 0 and if end
+   is missing it copy til the end of the vector from. It throws an error
+   if vector from don't fit into the destination `to`."
+  (typecheck "vector-copy!" to "array")
+  (typecheck "vector-copy!" from "array")
+  (typecheck-number "vector-copy!" at '("integer" "bigint"))
+  (let* ((start (if (null? rest) 0 (car rest)))
+         (end (if (or (null? rest)
+                      (null? (cdr rest)))
+                  from.length
+                  (cadr rest))))
+    (typecheck-number "vector-copy!" start '("integer" "bigint"))
+    (typecheck-number "vector-copy!" end '("integer" "bigint"))
+    (let ((len (- end start)))
+      (if (< (- to.length at) len)
+          (error "vector-copy!: Invalid index at"))
+      (let ((source (from.slice start end)))
+        (apply to.splice at len (vector->list source))))))
+
+;; -----------------------------------------------------------------------------
 (define-macro (%range-function spec . body)
   "(%range-function spec . body)
 

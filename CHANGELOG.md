@@ -1,7 +1,8 @@
 ## 1.0.0-beta.19
 ### Features
-* add `vector-for-each` function from R7RS
+* add `vector-for-each` and `vector-copy!` function from R7RS
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS
+* add `typecheck-number` function
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 

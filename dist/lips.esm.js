@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 21 Jan 2024 11:54:16 +0000
+ * build: Sun, 21 Jan 2024 16:41:46 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -14996,6 +14996,8 @@ var global_env = new Environment({
   // ------------------------------------------------------------------
   'typecheck': doc(typecheck, "(typecheck label value type [position])\n\n         Checks the type of value and errors if the type is not one allowed.  Type can be\n         string or list of strings. The position optional argument is used to create a\n         proper error message for the nth argument of function calls."),
   // ------------------------------------------------------------------
+  'typecheck-number': doc(typecheck_number, "(typecheck-number label value type [position])\n\n         Function similar to typecheck but checks if the argument is a number\n         and specific type of number e.g. complex."),
+  // ------------------------------------------------------------------
   'unset-special!': doc('unset-special!', function (symbol) {
     typecheck('remove-special!', symbol, 'string');
     delete specials.remove(symbol.valueOf());
@@ -15930,12 +15932,38 @@ function typeErrorMessage(fn, got, expected) {
 }
 
 // -------------------------------------------------------------------------
+function typecheck_number(fn, arg, expected) {
+  var position = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  typecheck(fn, arg, 'number', position);
+  var arg_type = arg.__type__;
+  var match;
+  if (expected instanceof Pair) {
+    expected = expected.to_array();
+  }
+  if (expected instanceof Array) {
+    expected = expected.map(function (x) {
+      return x.valueOf();
+    });
+  }
+  if (expected instanceof Array) {
+    expected = expected.map(function (x) {
+      return x.valueOf().toLowerCase();
+    });
+    if (expected.includes(arg_type)) {
+      match = true;
+    }
+  } else {
+    expected = expected.valueOf().toLowerCase();
+  }
+  if (!match && arg_type !== expected) {
+    throw new Error(typeErrorMessage(fn, arg_type, expected, position));
+  }
+}
+
+// -------------------------------------------------------------------------
 function typecheck_numbers(fn, args, expected) {
   args.forEach(function (arg, i) {
-    typecheck(fn, arg, 'number', i + 1);
-    if (!expected.includes(arg.__type__)) {
-      throw new Error(typeErrorMessage(fn, arg.__type__, expected, i));
-    }
+    typecheck_number(fn, arg, expected, i + 1);
   });
 }
 
@@ -17162,10 +17190,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 21 Jan 2024 11:54:16 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 21 Jan 2024 16:41:46 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 21 Jan 2024 11:54:16 +0000').valueOf();
+  var date = LString('Sun, 21 Jan 2024 16:41:46 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17204,7 +17232,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sun, 21 Jan 2024 11:54:16 +0000';
+var date = 'Sun, 21 Jan 2024 16:41:46 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
