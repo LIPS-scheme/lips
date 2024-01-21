@@ -320,6 +320,23 @@
                    (value (apply fn args)))
               (--> result (push value)))))))
 
+
+;; -----------------------------------------------------------------------------
+(define (vector-for-each fn . rest)
+  "(vector-for-each fn vector1 vector2 ...)
+
+   Invokes every Returns new vector from applying function fn to each element
+   of the vectors, similar to map for lists."
+  (typecheck "vector-for-each" fn "function" 1)
+  (if (or (= (length rest) 0) (not (every vector? rest)))
+      (error "vector-for-each: function require at least 1 vector")
+      (let ((len (apply min (map vector-length rest)))
+            (result (vector)))
+        (do ((i 0 (+ i 1)))
+            ((= i len) undefined)
+            (let* ((args (map (lambda (v) (vector-ref v i)) rest)))
+              (apply fn args))))))
+
 ;; -----------------------------------------------------------------------------
 (define (string-map fn . rest)
   "(string-map fn string1 stringr2 ...)
