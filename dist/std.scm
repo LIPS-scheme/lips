@@ -3616,15 +3616,27 @@
 
    Returns new string from applying function fn to each element
    of the strings, similar to map for lists."
+  (typecheck "string-map" fn "function" 1)
   (if (or (= (length rest) 0) (not (every string? rest)))
       (error "string-map: function require at least 1 string")
       (vector->string (apply vector-map fn (map string->vector rest)))))
 
 ;; -----------------------------------------------------------------------------
+(define (string-for-each fn . rest)
+  "(string-for-each fn string1 stringr2 ...)
+
+   apply a function fn to each element of the strings, similar string-map.
+   But the return value is undefined."
+  (typecheck "string-for-each" fn "function" 1)
+  (if (or (= (length rest) 0) (not (every string? rest)))
+      (error "string-for-each: function require at least 1 string")
+      (apply vector-for-each fn (map string->vector rest))))
+
+;; -----------------------------------------------------------------------------
 (define (dynamic-wind before thunk after)
   "(dynamic-wind before thunk after)
 
-   Accepts 3 procedures/lambdas and executes before, then thunk, and 
+   Accepts 3 procedures/lambdas and executes before, then thunk, and
    always after even if an error occurs in thunk."
   (before)
   (let ((result (try (thunk)

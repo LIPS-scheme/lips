@@ -4,7 +4,6 @@
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 
-
 ## 1.0.0-beta.18
 ### Breaking
 * change undocumented arguments to `lips.exec` into an object
