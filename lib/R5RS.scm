@@ -736,7 +736,7 @@
    Function that destructively fills the string with given character."
   (typecheck "string-fill!" string "string" 1)
   (typecheck "string-fill!" char "character" 2)
-  (--> string (fill char)))
+  (string.fill char))
 
 ;; -----------------------------------------------------------------------------
 (define (identity n)

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 21 Jan 2024 16:41:46 +0000
+ * build: Sun, 21 Jan 2024 17:04:02 +0000
  */
 
 (function (global, factory) {
@@ -8130,7 +8130,7 @@
   };
   // ----------------------------------------------------------------------
   Formatter.prototype._spaces = function (i) {
-    return new Array(i + 1).join(' ');
+    return ' '.repeat(i);
   };
   // ----------------------------------------------------------------------
   // :: Auto formatting of code, it requires to have newlines
@@ -8168,7 +8168,7 @@
     return tokens.map(function (token) {
       if (token.token.match(string_re)) {
         if (token.token.match(/\n/)) {
-          var spaces = new Array(token.col + 1).join(' ');
+          var spaces = ' '.repeat(token.col);
           var lines = token.token.split('\n');
           token.token = [lines[0]].concat(lines.slice(1).map(function (line) {
             return spaces + line;
@@ -10917,10 +10917,10 @@
   LString.prototype.fill = function (_char10) {
     typecheck('LString::fill', _char10, ['string', 'character']);
     if (_char10 instanceof LCharacter) {
-      _char10 = _char10.toString();
+      _char10 = _char10.valueOf();
     }
     var len = this.__string__.length;
-    this.__string__ = new Array(len + 1).join(_char10);
+    this.__string__ = _char10.repeat(len);
   };
   // -------------------------------------------------------------------------
   // :: Number wrapper that handle BigNumbers
@@ -17197,10 +17197,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Sun, 21 Jan 2024 16:41:46 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Sun, 21 Jan 2024 17:04:02 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Sun, 21 Jan 2024 16:41:46 +0000').valueOf();
+    var date = LString('Sun, 21 Jan 2024 17:04:02 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17239,7 +17239,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Sun, 21 Jan 2024 16:41:46 +0000';
+  var date = 'Sun, 21 Jan 2024 17:04:02 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

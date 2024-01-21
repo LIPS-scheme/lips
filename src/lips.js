@@ -2296,7 +2296,7 @@ Formatter.prototype.break = function() {
 };
 // ----------------------------------------------------------------------
 Formatter.prototype._spaces = function(i) {
-    return new Array(i + 1).join(' ');
+    return ' '.repeat(i);
 };
 // ----------------------------------------------------------------------
 // :: Auto formatting of code, it requires to have newlines
@@ -2334,7 +2334,7 @@ Formatter.prototype.format = function format(options) {
     return tokens.map(token => {
         if (token.token.match(string_re)) {
             if (token.token.match(/\n/)) {
-                var spaces = new Array(token.col + 1).join(' ');
+                var spaces = ' '.repeat(token.col);
                 var lines = token.token.split('\n');
                 token.token = [lines[0]].concat(lines.slice(1).map(line => {
                     return spaces + line;
@@ -4927,10 +4927,10 @@ LString.prototype.clone = function() {
 LString.prototype.fill = function(char) {
     typecheck('LString::fill', char, ['string', 'character']);
     if (char instanceof LCharacter) {
-        char = char.toString();
+        char = char.valueOf();
     }
     var len = this.__string__.length;
-    this.__string__ = new Array(len + 1).join(char);
+    this.__string__ = char.repeat(len);
 };
 // -------------------------------------------------------------------------
 // :: Number wrapper that handle BigNumbers
