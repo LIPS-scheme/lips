@@ -352,12 +352,28 @@
 (define (string-for-each fn . rest)
   "(string-for-each fn string1 stringr2 ...)
 
-   apply a function fn to each element of the strings, similar string-map.
+   Applies a function fn to each element of the strings, similar string-map.
    But the return value is undefined."
   (typecheck "string-for-each" fn "function" 1)
   (if (or (= (length rest) 0) (not (every string? rest)))
       (error "string-for-each: function require at least 1 string")
       (apply vector-for-each fn (map string->vector rest))))
+
+;; -----------------------------------------------------------------------------
+(define (string-downcase string)
+  "(string-downcase string)
+
+   Function convert a string passed as argument to lower case."
+  (typecheck "string-downcase" string "string")
+  (string.toLowerCase))
+
+;; -----------------------------------------------------------------------------
+(define (string-upcase string)
+  "(string-downcase string)
+
+   Function convert a string passed as argument to upper case."
+  (typecheck "string-downcase" string "string")
+  (string.toUpperCase))
 
 ;; -----------------------------------------------------------------------------
 (define (dynamic-wind before thunk after)
