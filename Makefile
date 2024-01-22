@@ -9,7 +9,8 @@ DATE_SHORT=`date +%Y-%m-%d`
 TESTS_CHECKSUM=`cat tests/test.js tests/*.scm | md5sum | cut -d' ' -f 1`
 COMMIT=`git rev-parse HEAD`
 URL=`git config --get remote.origin.url`
-UNICODE=https://unicode.org/Public/UNIDATA/UnicodeData.txt
+UNICODE_ALL=https://unicode.org/Public/UNIDATA/UnicodeData.txt
+UNICODE_FOLD=https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt
 
 MAKE=make
 GIT=git
@@ -108,7 +109,8 @@ test-update: dist/lips.js dist/std.scm
 	@$(NPM) run test-update
 
 zero:
-	@$(WGET) $(UNICODE) -O ./assets/UnicodeData.txt
+	@$(WGET) $(UNICODE_ALL) -O ./assets/UnicodeData.txt
+	@$(WGET) $(UNICODE_FOLD) -O ./assets/CaseFolding.txt
 
 unicode: assets/UnicodeData.txt
 	@$(NODE) ./scripts/numerals.js

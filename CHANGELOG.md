@@ -3,6 +3,7 @@
 * add `vector-for-each` and `vector-copy!` function from R7RS
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS
 * add `typecheck-number` function
+* add `char-foldcase` and `string-foldcase` functions
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
