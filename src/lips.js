@@ -1294,7 +1294,7 @@ Lexer._rules = [
     [/\]/, /[^\\]/, null, Lexer.regex_class, Lexer.regex],
     [/[()[\]]/, null, null, Lexer.regex, Lexer.regex],
     [/\//, /\\/, null, Lexer.regex, Lexer.regex],
-    [/\//, /[^#]/, Lexer.boundary, Lexer.regex, null],
+    [/\//, null, Lexer.boundary, Lexer.regex, null],
     [/[gimyus]/, /\//, Lexer.boundary, Lexer.regex, null],
     [/[gimyus]/, /\//, /[gimyus]/, Lexer.regex, Lexer.regex],
     [/[gimyus]/, /[gimyus]/, Lexer.boundary, Lexer.regex, null],

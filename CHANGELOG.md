@@ -7,6 +7,7 @@
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
 * fix `string-set!` to mutate the string and work on any expression
+* fix tokenizing regex that ends with hash
 
 ## 1.0.0-beta.18
 ### Breaking
