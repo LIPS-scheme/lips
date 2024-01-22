@@ -1,4 +1,6 @@
 ## 1.0.0-beta.19
+### Breaking
+* `get-environment-variables` and `get-environment-variable` returns nil and undefined in the browser
 ### Features
 * add `vector-for-each` and `vector-copy!` function from R7RS
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS

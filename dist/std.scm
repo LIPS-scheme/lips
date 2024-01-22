@@ -5058,19 +5058,20 @@
 (define (get-environment-variables)
   "(get-environment-variables)
 
-   Returns all process environment variables as an alist. This function throws exception
-   when called in browser."
+   Returns all process environment variables as an alist. This function returns
+   an empty list when called in the browser."
   (if (eq? self window)
-      (throw "get-environment-variables: Node.js only function")
+      nil
       (object->alist process.env)))
 
 ;; -----------------------------------------------------------------------------
 (define (get-environment-variable name)
   "(get-environment-variable name)
 
-   Returns given environment variable. This function throws exception
-   when called in browser."
-  (. process.env name))
+   Returns given environment variable. This function returns undefined
+   when called in the browser."
+  (if (not (eq? self window))
+      (. process.env name)))
 
 ;; -----------------------------------------------------------------------------
 (define (current-second)
