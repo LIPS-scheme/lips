@@ -615,6 +615,19 @@
         (random 1000)
         (t.is (shuffle #(1 2 3 4)) #(2 4 3 1))))
 
+(test.failing "core: immutable strings"
+      (lambda (t)
+        (t.is (to.throw
+               (let* ((x "hello")
+                      (f (lambda () x)))
+                 (string-set! (f) 0 #\x)))
+              true)
+        (t.is (to.throw
+               (let* ((x (string-symbol 'immutable))
+                      (f (lambda () x)))
+                 (string-set! (f) 0 #\x)))
+              true)))
+
 ;; TODO
 ;; begin*
 ;; set-obj! throws with null or boolean
