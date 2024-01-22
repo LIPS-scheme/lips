@@ -1,7 +1,7 @@
 .PHONY: publish test coveralls lint zero coverage
 
 VERSION=1.0.0-beta.18.1
-VERSION_DASH=`echo -n "1.0.0-beta.18" | sed "s/-/%E2%80%93/"`
+VERSION_DASH=`echo -n "1.0.0-beta.18.1" | sed "s/-/%E2%80%93/"`
 BRANCH=`git branch | grep '^*' | sed 's/* //'`
 DATE=`date -uR`
 YEAR=`date +%Y`
@@ -108,12 +108,11 @@ test-file: dist/lips.js dist/std.min.scm
 test-update: dist/lips.js dist/std.scm
 	@$(NPM) run test-update
 
-zero:
-	@$(WGET) $(UNICODE_ALL) -O ./assets/UnicodeData.txt
+fold:
 	@$(WGET) $(UNICODE_FOLD) -O ./assets/CaseFolding.txt
 
-unicode: assets/UnicodeData.txt
-	@$(NODE) ./scripts/numerals.js
+zero:
+	@$(WGET) $(UNICODE_ALL) -O ./assets/UnicodeData.txt
 
 watch-test:
 	@inotifywait -m -e close_write src/lips.js tests/*.scm | while read even; do $(MAKE) --no-print-directory test; done
