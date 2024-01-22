@@ -776,29 +776,24 @@
                            (lips.LCharacter x))))))
 
 ;; -----------------------------------------------------------------------------
-;; (let ((x "hello")) (string-set! x 0 #\H) x)
 (define-macro (string-set! object index char)
-  "(string-set! object index char)
+  "(string-set! string index char)
 
-   Replaces character in string in given index. It create new JavaScript
-   string and replaces the old value. Object needs to be symbol that points to the variable
-   that holds the string."
-  (typecheck "string-set!" object "symbol")
-  (let ((chars (gensym "chars")))
+   Replaces character in string at a given index."
+  (let ((input (gensym "input")))
     `(begin
-       (typecheck "string-set!" ,object "string")
-       (typecheck "string-set!" ,index "number")
-       (typecheck "string-set!" ,char "character")
-       (let ((,chars (list->vector (string->list ,object))))
-          (set-obj! ,chars ,index ,char)
-          (set! ,object (list->string (vector->list ,chars)))))))
+       (let ((,input ,object))
+         (typecheck "string-set!" ,input "string")
+         (typecheck "string-set!" ,index "number")
+         (typecheck "string-set!" ,char "character")
+         (--> ,input (set ,index  ,char))))))
 
 ;; -----------------------------------------------------------------------------
 (define (string-length string)
   "(string-length string)
 
    Returns the length of the string."
-  (typecheck "string-ref" string "string")
+  (typecheck "string-length" string "string")
   (. string 'length))
 
 ;; -----------------------------------------------------------------------------
@@ -808,7 +803,7 @@
    Returns character inside string at given zero-based index."
   (typecheck "string-ref" string "string" 1)
   (typecheck "string-ref" k "number" 2)
-  (lips.LCharacter (--> string (get k))))
+  (lips.LCharacter (string.get k)))
 
 (define (%string-cmp name string1 string2)
   "(%string-cmp name a b)

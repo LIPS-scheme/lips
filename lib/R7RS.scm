@@ -407,7 +407,7 @@
 
    Function convert a string passed as argument to lower case."
   (typecheck "string-downcase" string "string")
-  (string.toLowerCase))
+  (string.lower))
 
 ;; -----------------------------------------------------------------------------
 (define (string-upcase string)
@@ -415,7 +415,7 @@
 
    Function convert a string passed as argument to upper case."
   (typecheck "string-downcase" string "string")
-  (string.toUpperCase))
+  (string.upper))
 
 ;; -----------------------------------------------------------------------------
 (define (dynamic-wind before thunk after)
