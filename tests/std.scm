@@ -93,6 +93,15 @@
             (t.is (+ x y z) 60)
             (t.is (+ a b c) 6)))))
 
+(test "std: let-values as list"
+      (lambda (t)
+        (t.is (let-values ((x (values 3 4 5)) ((a b) (values 1 2)))
+                (cons a (cons b x)))
+              '(1 2 3 4 5))
+        (t.is (let-values (((x y z) (values 1 2 3)) (a (values 4 5)))
+                (cons x (cons y (cons z a))))
+              '(1 2 3 4 5))))
+
 (test "std: should render SXML string"
       (lambda (t)
         (define preact (require "preact"))
