@@ -73,3 +73,36 @@
                                      (k (string-append "Hello <" (number->string n) ">"))))))))
 
           (t.is result '("Hello <0>")))))
+
+(test.failing "continuations: coroutine generator"
+      (lambda (t)
+        (define (make-coroutine-generator proc)
+          (define return #f)
+          (define resume #f)
+          (define yield (lambda (v)
+                          (call/cc (lambda (r)
+                                     (set! resume r)
+                                     (return v)))))
+          (lambda ()
+            (call/cc (lambda (cc)
+                       (set! return cc)
+                       (if resume
+                           (resume (if #f #f))  ; void? or yield again?
+                           (begin (proc yield)
+                                  (set! resume (lambda (v)
+                                                 (return (eof-object))))
+                                  (return (eof-object))))))))
+
+
+        (define counter (make-coroutine-generator
+                         (lambda (yield)
+                           (do ((i 0 (+ i 1)))
+                             ((<= 3 i))
+                             (yield i)))))
+
+        (t.is (let iter ((i (counter))
+                          (result '()))
+                 (if (eof-object? i)
+                     (reverse result)
+                     (iter (counter) (cons i result))))
+              '(0 1 2))))
