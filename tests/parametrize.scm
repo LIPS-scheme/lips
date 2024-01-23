@@ -45,6 +45,16 @@
                       '("on a train" "in a boat"))))
 
 
+(test "parametrize: force/delay"
+      (lambda (t)
+        ;; example taked from SRFI-155
+        (t.is (let ()
+                (define x (make-parameter 1))
+                (define p (delay (x)))
+                (define (g p) (parameterize ((x 2)) (force p)))
+                (+ (force p) (g p)))
+              2)))
+
 ;; TODO
 ;; throw error when parameterize got no pair
 ;; get more than one parameter
