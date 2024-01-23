@@ -2,6 +2,9 @@
     --background: #000;
     --color: #ccc;
 }
+.terminal .token::before, .terminal .token::after {
+    display: none;
+}
 .terminal .token.__doc__::before {
     color: var(--base-background, #000);
 }
