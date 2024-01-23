@@ -1152,3 +1152,21 @@
         (foo () "a" "b")
         (foo () "x")
         (t.is #t #t)))
+
+(test.failing "syntax: recursive use of free variable hygiene #288"
+      (lambda (t)
+        (define-syntax call/mv
+          (syntax-rules ()
+            ((call/mv consumer producer1 ...)
+             (letrec-syntax
+                 ((aux (syntax-rules ::: ()
+                         ((aux %consumer () ((%producer1 args1) :::))
+                          (let-values (((proc) %consumer)
+                                       (args1 %producer1) :::)
+                            (apply proc (append args1 :::))))
+                         ((aux %consumer (%producer1 producer2 :::) (temp :::))
+                          (aux %consumer (producer2 :::) (temp ::: (%producer1 args1)))))))
+               (aux consumer (producer1 ...) ())))))
+
+
+        (t.is (call/mv string (values #\a #\b) (values #\c #\d)) (#\a #\b #\c #\d))))
