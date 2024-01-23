@@ -8,7 +8,7 @@
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.18.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&7951433cc9ff158c3701ffea07e0f004)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&4fdf5f77a5a79d8e12bad669d961d6ad)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -263,6 +263,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
+| Multiple-value boxes | [SRFI-195](https://srfi.schemers.org/srfi-195) |
 | Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
 
 ## Links
