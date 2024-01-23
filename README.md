@@ -8,7 +8,7 @@
 [![npm](https://img.shields.io/badge/npm-1.0.0%E2%80%93beta.18.1-blue.svg)](https://www.npmjs.com/package/@jcubic/lips)
 ![1.0.0 Complete](https://img.shields.io/github/milestones/progress-percent/jcubic/lips/1?label=1.0.0%20Complete)
 [![Build and test](https://github.com/jcubic/lips/actions/workflows/build.yaml/badge.svg?branch=devel&event=push)](https://github.com/jcubic/lips/actions/workflows/build.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&4fdf5f77a5a79d8e12bad669d961d6ad)](https://coveralls.io/github/jcubic/lips?branch=devel)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/lips/badge.svg?branch=devel&3df4b3c6d80e6b8ee8ccabd287057791)](https://coveralls.io/github/jcubic/lips?branch=devel)
 [![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jcubic/lips)
 ![NPM Download Count](https://img.shields.io/npm/dm/@jcubic/lips)
 ![JSDelivr Download count](https://img.shields.io/jsdelivr/npm/hm/@jcubic/lips)
@@ -246,6 +246,7 @@ The issue with performance is tracked in [#197](https://github.com/jcubic/lips/i
 | Running Scheme Scripts on Unix  | [SRFI-22](https://srfi.schemers.org/srfi-22/) |
 | Error reporting mechanism | [SRFI-23](https://srfi.schemers.org/srfi-23/) |
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
+| Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/)) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 
 ### require `(load "./lib/srfi/<number>.scm")`

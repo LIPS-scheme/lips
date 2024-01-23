@@ -246,6 +246,7 @@ The issue with performance is tracked in [#197](https://github.com/jcubic/lips/i
 | Running Scheme Scripts on Unix  | [SRFI-22](https://srfi.schemers.org/srfi-22/) |
 | Error reporting mechanism | [SRFI-23](https://srfi.schemers.org/srfi-23/) |
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
+| Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/)) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 
 ### require `(load "./lib/srfi/<number>.scm")`

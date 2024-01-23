@@ -428,7 +428,7 @@
         (t.is (join_2 (1 2 3) 4) '(1 2 3 4))
         (t.is (to.throw (join_2 (1 2 3) 4 5)) #t)))
 
-(test "syntax: double ellipsis"
+(test "syntax: double ellipsis (SRFI-149)"
       (lambda (t)
 
         (define result (let-syntax
@@ -439,7 +439,7 @@
 
         (t.is result '(1 2 3 4 5 6))))
 
-(test.failing "syntax: lifted ellipsis"
+(test.failing "syntax: lifted ellipsis (SRFI-149)"
       (lambda (t)
         (define result
           (let-syntax
@@ -1170,3 +1170,20 @@
 
 
         (t.is (call/mv string (values #\a #\b) (values #\c #\d)) (#\a #\b #\c #\d))))
+
+(test "syntax: SRFI-147"
+      (lambda (t)
+        (define-syntax syntax-rules*
+          (syntax-rules ()
+            ((syntax-rules* (literal ...) (pattern . templates) ...)
+             (syntax-rules (literal ...) (pattern (begin . templates)) ...))
+            ((syntax-rules* ellipsis (literal ...) (pattern . templates) ...)
+             (syntax-rules ellipsis (literal ...) (pattern (begin . templates)) ...))))
+
+        (let-syntax ((foo
+                      (syntax-rules* ()
+                        ((foo a b)
+                         (define a 1)
+                         (define b 2)))))
+          (foo x y)
+          (t.is (list x y) '(1 2)))))
