@@ -1188,7 +1188,7 @@
           (foo x y)
           (t.is (list x y) '(1 2)))))
 
-(test "syntax: elipsis + improper list"
+(test "syntax: ellipsis + improper list"
       (lambda (t)
         (define-syntax foo
           (syntax-rules ()

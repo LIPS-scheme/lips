@@ -3694,7 +3694,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     } else if (pattern.car instanceof LSymbol &&
                                pattern.cdr instanceof Pair &&
                                LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
-                        // empty elipsis with rest  (a b ... . d) #290
+                        // empty ellipsis with rest  (a b ... . d) #290
                         log('>> 8');
                         bindings['...'].symbols[name] = null;
                         return traverse(pattern.cdr.cdr, code);
