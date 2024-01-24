@@ -1196,3 +1196,17 @@
              '(foo baz))))
 
         (t.is (foo (a . b)) '(a b))))
+
+(test "syntax: recursive hygiene with same symbol"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules (aux)
+            ((_ (arg more ...))
+             (foo aux (arg more ...) ()))
+            ((_ aux () ((operand1 arg1) ...))
+             (let ((arg1 operand1) ...)
+               (list arg1 ...)))
+            ((_ aux (operand1 operand2 ...) (temp ...))
+             (foo aux (operand2 ...) (temp ... (operand1 arg1))))))
+
+        (t.is (foo (10 20)) '(10 20))))
