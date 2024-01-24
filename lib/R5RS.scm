@@ -63,14 +63,13 @@
         v)))
 
 ;; -----------------------------------------------------------------------------
-(define-syntax vector
-  (syntax-rules ()
-    ((_ arg ...) (list->array (list arg ...))))
+(define (vector . rest)
   "(vector 1 2 3 (+ 3 1)) or #(1 2 3 4)
 
    Macro for defining vectors (Javascript Arrays). Vector literals are
    automatically quoted, so you can't use expressions inside them, only other
-   literals, like other vectors or objects.")
+   literals, like other vectors or objects."
+  (list->array rest))
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Array
