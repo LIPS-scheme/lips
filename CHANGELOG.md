@@ -12,6 +12,7 @@
 * fix `string-set!` to mutate the string and work on any expression
 * fix tokenizing regex that ends with hash
 * fix bookmark on SRFI-210 document [#287](https://github.com/jcubic/lips/issues/287)
+* fix `syntax-rules` in macro `define-value` [#290](https://github.com/jcubic/lips/issues/290)
 
 ## 1.0.0-beta.18
 ### Breaking
