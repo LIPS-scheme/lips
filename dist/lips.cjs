@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 24 Jan 2024 16:40:09 +0000
+ * build: Wed, 24 Jan 2024 23:04:30 +0000
  */
 
 'use strict';
@@ -7790,7 +7790,10 @@ function transform_syntax() {
     if (symbols.includes(name)) {
       return LSymbol(name);
     }
-    return rename(name);
+    if (!(symbol instanceof LSymbol)) {
+      console.trace();
+    }
+    return rename(name, symbol);
   }
   function log(x) {
     /* c8 ignore next 3 */
@@ -7798,9 +7801,16 @@ function transform_syntax() {
       console.log(x);
     }
   }
-  function rename(name) {
+  function rename(name, symbol) {
     if (!gensyms[name]) {
+      // nested syntax-rules needs original symbol to get renamed again
       var ref = scope.ref(name);
+      if (_typeof$1(name) === 'symbol' && !ref) {
+        name = symbol.literal();
+      }
+      if (gensyms[name]) {
+        return gensyms[name];
+      }
       var gensym_name = gensym(name);
       if (ref) {
         var value = scope.get(name);
@@ -7840,10 +7850,10 @@ function transform_syntax() {
   function transform_ellipsis_expr(expr, bindings, state) {
     var next = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : function () {};
     var nested = state.nested;
-    log(' ==> ' + expr.toString(true));
     log(bindings);
     if (expr instanceof LSymbol) {
       var name = expr.valueOf();
+      if (is_gensym(expr) && !bindings[name]) ;
       log('[t 1');
       if (bindings[name]) {
         if (bindings[name] instanceof Pair) {
@@ -7867,7 +7877,7 @@ function transform_syntax() {
           return bindings[name][0];
         }
       }
-      return transform(name);
+      return transform(expr);
     }
     if (expr instanceof Pair) {
       if (expr.car instanceof LSymbol && expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
@@ -7902,7 +7912,7 @@ function transform_syntax() {
                 car: _car.toString()
               });
               return _car;
-            } else {
+            } else if (_car instanceof Pair) {
               if (_car.cdr !== _nil) {
                 log('|| next 2');
                 next(_name7, new Pair(_car.cdr, _cdr));
@@ -7911,6 +7921,10 @@ function transform_syntax() {
                 car: _car.car.toString()
               });
               return _car.car;
+            } else if (_cdr === _nil) {
+              return _car;
+            } else {
+              log('UNKOWN STATE');
             }
           } else if (item instanceof Array) {
             log('[t 2 Array ' + nested);
@@ -12413,6 +12427,7 @@ var global_env = new Environment({
   'syntax-rules': new Macro('syntax-rules', function (macro, options) {
     var use_dynamic = options.use_dynamic,
       error = options.error;
+    // TODO: find identifiers and freeze the scope when defined #172
     var env = this;
     function get_identifiers(node) {
       var symbols = [];
@@ -12441,6 +12456,7 @@ var global_env = new Environment({
       var macro_expand = _ref37.macro_expand;
       log('>> SYNTAX');
       log(code);
+      log(macro);
       var scope = env.inherit('syntax');
       var dynamic_env = scope;
       var var_scope = this;
@@ -15211,10 +15227,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Wed, 24 Jan 2024 16:40:09 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Wed, 24 Jan 2024 23:04:30 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Wed, 24 Jan 2024 16:40:09 +0000').valueOf();
+  var date = LString('Wed, 24 Jan 2024 23:04:30 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15253,7 +15269,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Wed, 24 Jan 2024 16:40:09 +0000';
+var date = 'Wed, 24 Jan 2024 23:04:30 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

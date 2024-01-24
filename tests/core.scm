@@ -628,6 +628,61 @@
                  (string-set! (f) 0 #\x)))
               true)))
 
+
+(test "core: means"
+      (lambda (t)
+        ;; By Jussi Piitulainen <jpiitula@ling.helsinki.fi>
+        ;; and John Cowan <cowan@mercury.ccil.org>:
+        ;; http://lists.scheme-reports.org/pipermail/scheme-reports/2013-December/003876.html
+        (define (means ton)
+          (letrec*
+              ((mean
+                (lambda (f g)
+                  (f (/ (sum g ton) n))))
+               (sum
+                (lambda (g ton)
+                  (if (null? ton)
+                      (+)
+                      (if (number? ton)
+                          (g ton)
+                          (+ (sum g (car ton))
+                             (sum g (cdr ton)))))))
+               (n (sum (lambda (x) 1) ton)))
+            (values (mean values values)
+                    (mean exp log)
+                    (mean / /))))
+
+        (let*-values (((a b c) (means '(8 5 99 1 22))))
+          (t.is 27 a)
+          (t.is 9.728000255822641 b)
+          (t.is 1800/497 c))))
+
+(test "core: map + case"
+      (lambda (t)
+        (t.is (map (lambda (x)
+                     (case x
+                       ((a e i o u) => (lambda (w) (cons 'vowel w)))
+                       ((w y) (cons 'semivowel x))
+                       (else => (lambda (w) (cons 'other w)))))
+                   '(z y x w u))
+              '((other . z) (semivowel . y) (other . x)
+                (semivowel . w) (vowel . u)))))
+
+(test "core: and"
+      (lambda (t)
+        (t.is #t (and (= 2 2) (> 2 1)))
+        (t.is #f (and (= 2 2) (< 2 1)))
+        (t.is '(f g) (and 1 2 'c '(f g)))
+        (t.is #t (and))))
+
+(test "core: or"
+      (lambda (t)
+        (t.is #t (or (= 2 2) (> 2 1)))
+        (t.is #t (or (= 2 2) (< 2 1)))
+        (t.is #f (or #f #f #f))
+        (t.is '(b c) (or (memq 'b '(a b c))
+                         (/ 3 0)))))
+
 ;; TODO
 ;; begin*
 ;; set-obj! throws with null or boolean

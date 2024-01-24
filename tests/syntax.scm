@@ -831,26 +831,30 @@
 (test "syntax: should expand nested macro with ellipsis as identifier from parent"
       (lambda (t)
 
-        (define-syntax foo (syntax-rules (ellipsis)
-                             ((_)
-                              (let ()
-                                (define-syntax foo
-                                  (syntax-rules ellipsis ()
-                                    ((_ x ellipsis) (list x ellipsis))))
-                                (foo 1 2 3)))))
+        (define-syntax foo
+          (syntax-rules (ellipsis)
+            ((_)
+             (let ()
+               (define-syntax foo
+                 (syntax-rules ellipsis ()
+                   ((_ x ellipsis)
+                    (list x ellipsis))))
+               (foo 1 2 3)))))
 
         (t.is (foo) '(1 2 3))
 
         ;; recursive case
-        (define-syntax foo (syntax-rules (ellipsis)
-                     ((_)
-                      (let ()
-                        (define-syntax foo
-                          (syntax-rules ellipsis ()
-                                        ((_) ())
-                                        ((_ x) (list x))
-                                        ((_ x ellipsis) (list (foo x) ellipsis))))
-                        (foo 1 2 3)))))
+        (define-syntax foo
+          (syntax-rules (ellipsis)
+            ((_)
+             (let ()
+               (define-syntax foo
+                 (syntax-rules ellipsis ()
+                   ((_) ())
+                   ((_ x) (list x))
+                   ((_ x ellipsis)
+                    (list (foo x) ellipsis))))
+               (foo 1 2 3)))))
 
         (t.is (foo) '((1) (2) (3)))))
 
@@ -1208,5 +1212,20 @@
                (list arg1 ...)))
             ((_ aux (operand1 operand2 ...) (temp ...))
              (foo aux (operand2 ...) (temp ... (operand1 arg1))))))
+
+        (t.is (foo (10 20)) '(10 20))))
+
+(test "syntax: recursive hygine wiht nested syntax-rules"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ (arg more ...))
+             (letrec-syntax ((aux (syntax-rules ::: ()
+                                    ((aux () ((operand1 arg1) :::))
+                                     (let ((arg1 operand1) :::)
+                                       (list arg1 :::)))
+                                    ((aux (operand1 operand2 :::) (temp :::))
+                                     (aux (operand2 :::) (temp ::: (operand1 arg1)))))))
+               (aux (arg more ...) ())))))
 
         (t.is (foo (10 20)) '(10 20))))

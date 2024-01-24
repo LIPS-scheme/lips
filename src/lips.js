@@ -777,7 +777,7 @@ function is_gensym(symbol) {
     return false;
 }
 // -------------------------------------------------------------------------
-var gensym = (function() {
+const gensym = (function() {
     var count = 0;
     function with_props(name, sym) {
         var symbol = new LSymbol(sym);
@@ -3887,7 +3887,10 @@ function transform_syntax(options = {}) {
         if (symbols.includes(name)) {
             return LSymbol(name);
         }
-        return rename(name);
+        if (!(symbol instanceof LSymbol)) {
+            console.trace();
+        }
+        return rename(name, symbol);
     }
     function log(x) {
         /* c8 ignore next 3 */
@@ -3895,9 +3898,16 @@ function transform_syntax(options = {}) {
             console.log(x);
         }
     }
-    function rename(name) {
+    function rename(name, symbol) {
         if (!gensyms[name]) {
-            var ref = scope.ref(name);
+            // nested syntax-rules needs original symbol to get renamed again
+            const ref = scope.ref(name);
+            if (typeof name === 'symbol' && !ref) {
+                name = symbol.literal();
+            }
+            if (gensyms[name]) {
+                return gensyms[name];
+            }
             const gensym_name = gensym(name);
             if (ref) {
                 const value = scope.get(name);
@@ -3930,10 +3940,12 @@ function transform_syntax(options = {}) {
     }
     function transform_ellipsis_expr(expr, bindings, state, next = () => {}) {
         const { nested } = state;
-        log(' ==> ' + expr.toString(true));
         log(bindings);
         if (expr instanceof LSymbol) {
-            const name = expr.valueOf();
+            let name = expr.valueOf();
+            if (is_gensym(expr) && !bindings[name]) {
+               // name = expr.literal();
+            }
             log('[t 1');
             if (bindings[name]) {
                 if (bindings[name] instanceof Pair) {
@@ -3954,7 +3966,7 @@ function transform_syntax(options = {}) {
                     return bindings[name][0];
                 }
             }
-            return transform(name);
+            return transform(expr);
         }
         if (expr instanceof Pair) {
             if (expr.car instanceof LSymbol &&
@@ -3979,13 +3991,17 @@ function transform_syntax(options = {}) {
                             }
                             log({ car: car.toString() });
                             return car;
-                        } else {
+                        } else if (car instanceof Pair) {
                             if (car.cdr !== nil) {
                                 log('|| next 2');
                                 next(name, new Pair(car.cdr, cdr));
                             }
                             log({ car: car.car.toString() });
                             return car.car;
+                        } else if (cdr === nil) {
+                            return car;
+                        } else {
+                            log('UNKOWN STATE');
                         }
                     } else if (item instanceof Array) {
                         log('[t 2 Array ' + nested);
@@ -8103,6 +8119,7 @@ var global_env = new Environment({
     // ------------------------------------------------------------------
     'syntax-rules': new Macro('syntax-rules', function(macro, options) {
         var { use_dynamic, error } = options;
+        // TODO: find identifiers and freeze the scope when defined #172
         var env = this;
         function get_identifiers(node) {
             let symbols = [];
@@ -8130,6 +8147,7 @@ var global_env = new Environment({
         const syntax = new Syntax(function(code, { macro_expand }) {
             log('>> SYNTAX');
             log(code);
+            log(macro);
             const scope = env.inherit('syntax');
             const dynamic_env = scope;
             let var_scope = this;
