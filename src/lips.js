@@ -3621,7 +3621,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     // if we have (x ... a b) we need to remove two from the end
                     const list_len = pattern.cdr.cdr.length();
                     if (!is_pair(code)) {
-                        throw new Error('syntax-rules: no matching syntax');
+                        return false;
                     }
                     let code_len = code.length();
                     let list = code;
@@ -3691,8 +3691,15 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                             );
                         }
                         log({ IIIIII: bindings['...'].symbols[name].toString() });
-                    } else {
+                    } else if (pattern.car instanceof LSymbol &&
+                               pattern.cdr instanceof Pair &&
+                               LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
+                        // empty elipsis with rest  (a b ... . d) #290
                         log('>> 8');
+                        bindings['...'].symbols[name] = null;
+                        return traverse(pattern.cdr.cdr, code);
+                    } else {
+                        log('>> 9');
                         return false;
                         //bindings['...'].symbols[name] = code;
                     }
@@ -3701,11 +3708,11 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             } else if (pattern.car instanceof Pair) {
                 var names = [...pattern_names];
                 if (code === nil) {
-                    log('>> 9');
+                    log('>> 10');
                     bindings['...'].lists.push(nil);
                     return true;
                 }
-                log('>> 10');
+                log('>> 11');
                 let node = code;
                 while (node instanceof Pair) {
                     if (!traverse(pattern.car, node.car, names, true)) {
@@ -3721,12 +3728,11 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             if (LSymbol.is(pattern, ellipsis_symbol)) {
                 throw new Error('syntax: invalid usage of ellipsis');
             }
-            log('>> 11');
+            log('>> 12');
             const name = pattern.__name__;
             if (symbols.includes(name)) {
                 return true;
             }
-            log({ name, ellipsis });
             if (ellipsis) {
                 bindings['...'].symbols[name] = bindings['...'].symbols[name] || [];
                 bindings['...'].symbols[name].push(code);
@@ -3737,7 +3743,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             return true;
         }
         if (pattern instanceof Pair && code instanceof Pair) {
-            log('>> 12');
+            log('>> 13');
             log({
                 a: 12,
                 code: code && code.toString(),
@@ -3755,7 +3761,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
                         return false;
                     }
-                    log('>> 12 | 1');
+                    log('>> 14');
                     let name = pattern.cdr.valueOf();
                     if (!(name in bindings.symbols)) {
                         bindings.symbols[name] = nil;
@@ -8161,6 +8167,7 @@ var global_env = new Environment({
                     var bindings = extract_patterns(rule, code, symbols, ellipsis, {
                         expansion: this, define: env
                     });
+                    log({bindings});
                     if (bindings) {
                         /* c8 ignore next 5 */
                         if (is_debug()) {

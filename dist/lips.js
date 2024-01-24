@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 22 Jan 2024 12:07:50 +0000
+ * build: Wed, 24 Jan 2024 12:31:18 +0000
  */
 
 (function (global, factory) {
@@ -9527,7 +9527,7 @@
             // if we have (x ... a b) we need to remove two from the end
             var list_len = pattern.cdr.cdr.length();
             if (!is_pair(code)) {
-              throw new Error('syntax-rules: no matching syntax');
+              return false;
             }
             var code_len = code.length();
             var list = code;
@@ -9589,8 +9589,13 @@
               log({
                 IIIIII: bindings['...'].symbols[_name3].toString()
               });
-            } else {
+            } else if (pattern.car instanceof LSymbol && pattern.cdr instanceof Pair && LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
+              // empty elipsis with rest  (a b ... . d) #290
               log('>> 8');
+              bindings['...'].symbols[_name3] = null;
+              return traverse(pattern.cdr.cdr, code);
+            } else {
+              log('>> 9');
               return false;
               //bindings['...'].symbols[name] = code;
             }
@@ -9599,11 +9604,11 @@
         } else if (pattern.car instanceof Pair) {
           var names = _toConsumableArray(pattern_names);
           if (code === _nil) {
-            log('>> 9');
+            log('>> 10');
             bindings['...'].lists.push(_nil);
             return true;
           }
-          log('>> 10');
+          log('>> 11');
           var _node2 = code;
           while (_node2 instanceof Pair) {
             if (!traverse(pattern.car, _node2.car, names, true)) {
@@ -9619,15 +9624,11 @@
         if (LSymbol.is(pattern, ellipsis_symbol)) {
           throw new Error('syntax: invalid usage of ellipsis');
         }
-        log('>> 11');
+        log('>> 12');
         var _name4 = pattern.__name__;
         if (symbols.includes(_name4)) {
           return true;
         }
-        log({
-          name: _name4,
-          ellipsis: ellipsis
-        });
         if (ellipsis) {
           bindings['...'].symbols[_name4] = bindings['...'].symbols[_name4] || [];
           bindings['...'].symbols[_name4].push(code);
@@ -9637,7 +9638,7 @@
         return true;
       }
       if (pattern instanceof Pair && code instanceof Pair) {
-        log('>> 12');
+        log('>> 13');
         log({
           a: 12,
           code: code && code.toString(),
@@ -9654,7 +9655,7 @@
             if (!traverse(pattern.car, code.car, pattern_names, ellipsis)) {
               return false;
             }
-            log('>> 12 | 1');
+            log('>> 14');
             var _name5 = pattern.cdr.valueOf();
             if (!(_name5 in bindings.symbols)) {
               bindings.symbols[_name5] = _nil;
@@ -14464,6 +14465,9 @@
               expansion: this,
               define: env
             });
+            log({
+              bindings: bindings
+            });
             if (bindings) {
               /* c8 ignore next 5 */
               if (is_debug()) {
@@ -17197,10 +17201,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 22 Jan 2024 12:07:50 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 24 Jan 2024 12:31:18 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 22 Jan 2024 12:07:50 +0000').valueOf();
+    var date = LString('Wed, 24 Jan 2024 12:31:18 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17239,7 +17243,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 22 Jan 2024 12:07:50 +0000';
+  var date = 'Wed, 24 Jan 2024 12:31:18 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

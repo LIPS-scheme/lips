@@ -296,3 +296,9 @@
           (y kdr set-kdr!))
 
         (t.is (kons 1 2) (kons 1 2))))
+
+(test "std: define-values with dot"
+      (lambda (t)
+        (define-values (a . b)
+          (values 1 2))
+        (t.is (cons a b) '(1 2))))

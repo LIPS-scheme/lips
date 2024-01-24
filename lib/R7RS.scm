@@ -474,10 +474,10 @@
          (let ((v (cadr var0)))
            (set-cdr! var0 (cddr var0))
            v)) ...
-           (define warn
-             (let ((v (cdr var0)))
-               (set! var0 (car var0))
-               v))))
+       (define warn
+         (let ((v (cdr var0)))
+           (set! var0 (car var0))
+           v))))
     ((define-values var expr)
      (define var
        (call-with-values (lambda () expr)
@@ -485,7 +485,7 @@
   "(define-values (a b ...) expr)
 
    Evaluates expression expr and if it evaluates to result of values
-   then it will defined each value as variable like with define.")
+   then it will define each value as a variable like with define.")
 
 ;; -----------------------------------------------------------------------------
 (define-macro (include . files)

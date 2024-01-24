@@ -1187,3 +1187,12 @@
                          (define b 2)))))
           (foo x y)
           (t.is (list x y) '(1 2)))))
+
+(test "syntax: elipsis + improper list"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ (foo bar ... . baz))
+             '(foo baz))))
+
+        (t.is (foo (a . b)) '(a b))))
