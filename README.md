@@ -294,11 +294,11 @@ They should be loaded as R7RS libraries in final 1.0.0 version
   - [ ] Objects.
   - [ ] Vectors.
 
-### 1.1
-- [ ] Picture language (possibly inspired by P5.js).
+### Future Plans
+- [ ] Picture language (possibly inspired by P5.js, see [SRFI-203](https://srfi.schemers.org/srfi-203/srfi-203.html)).
 - [ ] Stepper/Debugger.
 - [ ] Allow to use read/port in syntax extensions (similar to CL reader macros).
-- [ ] Proper expansion time for both macro system.
+- [ ] Proper expansion time for both macro systems.
 - [ ] Fully working and tested R7RS hygienic Macros (`syntax-rules`).
 - [ ] All recursive function in JS don't consume stack.
 
