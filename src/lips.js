@@ -3573,15 +3573,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         }
         if (pattern instanceof LSymbol &&
             symbols.includes(pattern.literal())) { // TODO: literal() may be SLOW
-            const ref = expansion.ref(code);
-            // shadowing the identifier works only with lambda and let
-            if (LSymbol.is(code, pattern)) {
-                if (typeof ref === 'undefined') {
-                    return true;
-                }
-                return ref === define || ref === global_env;
-            }
-            return false;
+            return LSymbol.is(code, pattern);
         }
         // pattern (a b (x ...)) and (x ...) match nil
         if (pattern instanceof Pair &&
@@ -3800,7 +3792,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             }
             log('recur');
             if (traverse(pattern.car, code.car, pattern_names, ellipsis) &&
-                traverse(pattern.cdr, code.cdr, pattern_names, ellipsis)) {
+               traverse(pattern.cdr, code.cdr, pattern_names, ellipsis)) {
                 return true;
             }
         } else if (pattern === nil && (code === nil || code === undefined)) {
@@ -8136,6 +8128,8 @@ var global_env = new Environment({
             validate_identifiers(macro.car);
         }
         const syntax = new Syntax(function(code, { macro_expand }) {
+            log('>> SYNTAX');
+            log(code);
             const scope = env.inherit('syntax');
             const dynamic_env = scope;
             let var_scope = this;
@@ -8167,7 +8161,6 @@ var global_env = new Environment({
                     var bindings = extract_patterns(rule, code, symbols, ellipsis, {
                         expansion: this, define: env
                     });
-                    log({bindings});
                     if (bindings) {
                         /* c8 ignore next 5 */
                         if (is_debug()) {

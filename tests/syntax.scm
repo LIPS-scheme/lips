@@ -696,16 +696,16 @@
 
         (t.is (test) (list 'b 1 1 2))
 
-        (t.is (foo 1 ++ 2) (list 1 1 1 2))
-        (t.is (to.throw (let ((++ 10))
-                          (foo 1 ++ 2)))
-              true)
-        (t.is (to.throw (let* ((++ 10))
-                          (foo 1 ++ 2)))
-              true)
-        (t.is (to.throw ((lambda (++)
-                           (foo 1 ++ 2)) 10))
-              true)))
+        (t.is (foo 1 ++ 2) '(1 1 1 2))
+        (t.is (let ((++ 10))
+                (foo 1 ++ 2))
+              '(1 1 1 2))
+        (t.is (let* ((++ 10))
+                (foo 1 ++ 2))
+              '(1 1 1 2))
+        (t.is ((lambda (++)
+                 (foo 1 ++ 2)) 10)
+              '(1 1 1 2))))
 
 (test "syntax: scope with rewriting"
       (lambda (t)
