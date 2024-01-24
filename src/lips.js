@@ -4000,8 +4000,6 @@ function transform_syntax(options = {}) {
                             return car.car;
                         } else if (cdr === nil) {
                             return car;
-                        } else {
-                            log('UNKOWN STATE');
                         }
                     } else if (item instanceof Array) {
                         log('[t 2 Array ' + nested);
