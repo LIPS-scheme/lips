@@ -8207,7 +8207,7 @@ var global_env = new Environment({
                 e.message += ` in macro: ${macro.toString(true)}`;
                 throw e;
             }
-            throw new Error(`Invalid Syntax ${code.toString(true)}`);
+            throw new Error(`syntax-rules: no matching syntax in macro ${code.toString(true)}`);
         }, env);
         syntax.__code__ = macro;
         return syntax;
