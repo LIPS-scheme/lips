@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Wed, 24 Jan 2024 12:38:22 +0000
+ * build: Wed, 24 Jan 2024 12:58:22 +0000
  */
 
 (function (global, factory) {
@@ -7845,7 +7845,7 @@
     indent: 2,
     exceptions: {
       specials: [/* eslint-disable max-len */
-      /^(?:#:)?(?:define(?:-values|-syntax|-macro|-class|-record-type)?|(?:call-with-(?:input-file|output-file|port))|lambda|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax|\*)?)$/
+      /^(?:#:)?(?:define(?:-values|-syntax|-macro|-class|-record-type)?|(?:call-with-(?:input-file|output-file|port))|lambda|let-env|try|catch|when|unless|while|syntax-rules|(let|letrec)(-syntax|\*?-values|\*)?)$/
       /* eslint-enable */],
       shift: {
         1: ['&', '#']
@@ -17201,10 +17201,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Wed, 24 Jan 2024 12:38:22 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Wed, 24 Jan 2024 12:58:22 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Wed, 24 Jan 2024 12:38:22 +0000').valueOf();
+    var date = LString('Wed, 24 Jan 2024 12:58:22 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17243,7 +17243,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Wed, 24 Jan 2024 12:38:22 +0000';
+  var date = 'Wed, 24 Jan 2024 12:58:22 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
