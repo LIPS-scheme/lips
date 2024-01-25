@@ -1157,7 +1157,7 @@
         (foo () "x")
         (t.is #t #t)))
 
-(test.failing "syntax: recursive use of free variable hygiene #288"
+(test "syntax: recursive use of free variable hygiene #288"
       (lambda (t)
         (define-syntax call/mv
           (syntax-rules ()
@@ -1173,7 +1173,7 @@
                (aux consumer (producer1 ...) ())))))
 
 
-        (t.is (call/mv string (values #\a #\b) (values #\c #\d)) (#\a #\b #\c #\d))))
+        (t.is (call/mv string (values #\a #\b) (values #\c #\d)) "abcd")))
 
 (test "syntax: SRFI-147"
       (lambda (t)
