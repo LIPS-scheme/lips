@@ -280,7 +280,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 * [Brian Lovin](https://brianlovin.com/hn/38819212) (HN clone)
 
 ## Projects that use LIPS
-* [Conzept](https://conze.pt) - Topic exploration system for the 21st century (see also their [Twitter account](https://twitter.com/conzept__))
+* [Conzept](https://conze.pt) - Topic exploration system for the 21st century (see also their [Twitter account](https://twitter.com/conzept__) and [Command API Documentation](https://conze.pt/guide/command_api))
 
 ## Roadmap
 ### 1.0
