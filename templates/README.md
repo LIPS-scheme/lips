@@ -267,7 +267,7 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 
 ## Links
 * [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
-* [LISP: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
+* [LIPS: Scheme in JavaScript Git Repository](https://github.com/jcubic/lips)
 * [Official Website](https://lips.js.org/)
 * [Twitter/X](https://twitter.com/lips_lang)
 
