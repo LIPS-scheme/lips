@@ -1229,3 +1229,12 @@
                (aux (arg more ...) ())))))
 
         (t.is (foo (10 20)) '(10 20))))
+
+(test "syntax: cons spread"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ (var1 ... . var*))
+             '(var1 ... var*))))
+
+        (t.is (foo (x . y)) '(x y))))

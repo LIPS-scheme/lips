@@ -3565,8 +3565,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
     /* eslint-disable complexity */
     function traverse(pattern, code, pattern_names = [], ellipsis = false) {
         log({
-            code: code && toString(code, true),
-            pattern: pattern && toString(pattern, true)
+            code,
+            pattern
         });
         if (is_atom(pattern) && !(pattern instanceof LSymbol)) {
             return same_atom(pattern, code);
@@ -3666,6 +3666,17 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 } else {
                     log('>> 6');
                     if (code instanceof Pair) {
+                        // cons (a . b) => (var ... . x)
+                        if (!(code.cdr instanceof Pair) &&
+                            code.cdr !== nil) {
+                            log('>> 7 (b)');
+                            if (pattern.cdr.cdr === nil) {
+                                return false;
+                            } else if (!bindings['...'].symbols[name]) {
+                                bindings['...'].symbols[name] = new Pair(code.car, nil);
+                                return traverse(pattern.cdr.cdr, code.cdr);
+                            }
+                        }
                         log('>> 7 ' + ellipsis);
                         pattern_names.push(name);
                         if (!bindings['...'].symbols[name]) {
@@ -3766,8 +3777,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 }
             }
             log({
-                pattern: pattern.toString(),
-                code: code.toString()
+                pattern,
+                code
             });
             // case (x y) ===> (var0 var1 ... warn) where var1 match nil
             if (pattern.cdr instanceof Pair &&
@@ -3780,8 +3791,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
                 const name = pattern.cdr.car.__name__;
                 log({
-                    pattern: pattern.car.toString(),
-                    code: code.car.toString(),
+                    pattern,
+                    code,
                     name
                 });
                 if (symbols.includes(name)) {
@@ -3892,10 +3903,18 @@ function transform_syntax(options = {}) {
         }
         return rename(name, symbol);
     }
-    function log(x) {
-        /* c8 ignore next 3 */
+    function log(x, ...args) {
+        /* c8 ignore next 11 */
         if (is_debug()) {
-            console.log(x);
+            if (is_plain_object(x)) {
+                console.log(map_object(x, function(value) {
+                    return toString(value, true);
+                }));
+            } else {
+                console.log(x, ...args.map(item => {
+                    return toString(item, true);
+                }));
+            }
         }
     }
     function rename(name, symbol) {
@@ -3975,28 +3994,24 @@ function transform_syntax(options = {}) {
                 log('[t 2');
                 const name = expr.car.valueOf();
                 const item = bindings[name];
-                log({ expr: expr.toString(true), name, bindings, item });
                 if (item === null) {
                     return;
                 } else if (item) {
                     log({ b: bindings[name].toString() });
                     if (item instanceof Pair) {
                         log('[t 2 Pair ' + nested);
-                        log({ ______: item.toString() });
                         const { car, cdr } = item;
                         if (nested) {
                             if (cdr !== nil) {
                                 log('|| next 1');
                                 next(name, cdr);
                             }
-                            log({ car: car.toString() });
                             return car;
                         } else if (car instanceof Pair) {
                             if (car.cdr !== nil) {
                                 log('|| next 2');
                                 next(name, new Pair(car.cdr, cdr));
                             }
-                            log({ car: car.car.toString() });
                             return car.car;
                         } else if (cdr === nil) {
                             return car;
@@ -4018,7 +4033,7 @@ function transform_syntax(options = {}) {
                     }
                 }
             }
-            log('[t 3 recur ' + expr.toString());
+            log('[t 3 recur ', expr);
             const head = transform_ellipsis_expr(expr.car, bindings, state, next);
             const rest = transform_ellipsis_expr(expr.cdr, bindings, state, next);
             return new Pair(
@@ -4162,6 +4177,7 @@ function transform_syntax(options = {}) {
                     // case: (x ...)
                     let name = expr.car.__name__;
                     let bind = { [name]: symbols[name] };
+                    log({bind});
                     const is_null = symbols[name] === null;
                     let result = nil;
                     while (true) {
@@ -8173,6 +8189,7 @@ var global_env = new Environment({
                 while (rules !== nil) {
                     var rule = rules.car.car;
                     var expr = rules.car.cdr.car;
+                    log('[[[ RULE');
                     log(rule);
                     var bindings = extract_patterns(rule, code, symbols, ellipsis, {
                         expansion: this, define: env
