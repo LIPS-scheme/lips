@@ -1215,7 +1215,7 @@
 
         (t.is (foo (10 20)) '(10 20))))
 
-(test "syntax: recursive hygine with nested syntax-rules"
+(test "syntax: recursive hygiene with nested syntax-rules"
       (lambda (t)
         (define-syntax foo
           (syntax-rules ()
