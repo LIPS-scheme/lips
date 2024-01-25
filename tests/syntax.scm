@@ -439,6 +439,24 @@
 
         (t.is result '(1 2 3 4 5 6))))
 
+(test "syntax: tripple elispsis (Gauche example)"
+      (lambda (t)
+        (define-syntax my-append
+          (syntax-rules ()
+            [(_ ((a ...) ...) ...)
+             '(a ... ... ...)]))
+
+        (t.is (my-append ((1 2) (3 4)) ((5) (6 7 8))) '(1 2 3 4 5 6 7 8))))
+
+(test "syntax: my-let"
+      (lambda (t)
+        (define-syntax my-let
+          (syntax-rules ()
+            [(_ ((var init) ...) body ...)
+             ((lambda (var ...) body ...) init ...)]))
+
+        (t.is (my-let ((x 10) (y 20)) (+ x y)) 30)))
+
 (test.failing "syntax: lifted ellipsis (SRFI-149)"
       (lambda (t)
         (define result
@@ -941,6 +959,32 @@
         (t.is (let*-values (((a b c) (values 1 2 3)))
                            (+ a b c))
               6)))
+
+
+;; ref: https://stackoverflow.com/a/64659565/387194
+(test "syntax: alist"
+      (lambda (t)
+        (define-syntax alist
+          (syntax-rules ()
+            ((_) ())
+            ((_ a b) (list (cons a b)))
+            ((_ x y z ...)
+             (cons (cons x y) (alist z ...)))))
+
+        (t.is (alist "foo" 1 "bar" 2 "baz" 3)
+              '(("foo" . 1) ("bar" . 2) ("baz" . 3)))))
+
+(test "syntax: alist + rest"
+      (lambda (t)
+        (define-syntax alist
+          (syntax-rules ()
+            ((_) ())
+            ((_ a b) (list (cons a b)))
+            ((_ x y . rest)
+             (cons (cons x y) (alist . rest)))))
+
+        (t.is (alist "foo" 1 "bar" 2 "baz" 3)
+              '(("foo" . 1) ("bar" . 2) ("baz" . 3)))))
 
 (test.failing "syntax: nested _"
        (lambda (t)
