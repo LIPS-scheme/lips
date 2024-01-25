@@ -1249,4 +1249,14 @@
                 (foo b ... args)))))
 
         (t.is (foo (print x) () () (display x))
-              '(let () ((print x) (display x)) (foo args)))))
+              '(let () ((print x) (display x)) (foo args)))
+
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ x () ((a b) ...) z)
+             '(let ()
+                (x (a b) ... z)
+                (foo (a ...) (b ...) args)))))
+
+        (t.is (foo (print x) () () (display x))
+              '(let () ((print x) (display x)) (foo () () args)))))

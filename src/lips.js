@@ -8203,7 +8203,7 @@ var global_env = new Environment({
                             ellipsis
                         });
                         log('OUPUT>>> ', new_expr);
-                        // TODO: if expression undefined throw an error
+                        // TODO: if expression is undefined throw an error
                         if (new_expr) {
                             expr = new_expr;
                         }
