@@ -6,6 +6,7 @@
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS
 * add `typecheck-number` function
 * add `char-foldcase` and `string-foldcase` functions
+* add `SRFI-210`
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
@@ -14,6 +15,7 @@
 * fix bookmark on SRFI-210 document [#287](https://github.com/jcubic/lips/issues/287)
 * fix `syntax-rules` in macro `define-value` [#290](https://github.com/jcubic/lips/issues/290)
 * fix indentation of `let-values`
+* various fixes to `syntax-rules`
 
 ## 1.0.0-beta.18
 ### Breaking
