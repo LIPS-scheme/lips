@@ -1238,3 +1238,15 @@
              '(var1 ... var*))))
 
         (t.is (foo (x . y)) '(x y))))
+
+(test "syntax: symbol after spread with nil"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ x () ((a b) ...) z)
+             '(let ()
+                (x (a b) ... z)
+                (foo b ... args)))))
+
+        (t.is (foo (print x) () () (display x))
+              '(let () ((print x) (display x)) (foo args)))))

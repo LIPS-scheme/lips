@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 25 Jan 2024 01:01:33 +0000
+ * build: Thu, 25 Jan 2024 12:18:53 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -211,18 +211,6 @@ function _toArray(arr) {
   return _arrayWithHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableRest();
 }
 
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) return _arrayLikeToArray$1(arr);
-}
-
-function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-}
-
-function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableSpread();
-}
-
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
     var info = gen[key](arg);
@@ -368,6 +356,18 @@ function _iterableToArrayLimit(r, l) {
 
 function _slicedToArray(arr, i) {
   return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$1(arr, i) || _nonIterableRest();
+}
+
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) return _arrayLikeToArray$1(arr);
+}
+
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableSpread();
 }
 
 function _OverloadYield(t, e) {
@@ -5477,28 +5477,23 @@ function contentLoaded(win, fn) {
 }
 // -------------------------------------------------------------------------
 /* eslint-disable */
-/* c8 ignore next 21 */
+/* c8 ignore next 13 */
 function log(x) {
-  var regex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-  var literal = arguments[1] === true;
-  function msg(x) {
-    if (!is_debug()) {
-      return;
-    }
-    var value = global_env.get('repr')(x);
-    if (regex === null || regex instanceof RegExp && regex.test(value)) {
-      console.log(global_env.get('type')(x) + ": " + value);
-    }
-    if (literal) {
-      console.log(x);
+  if (is_debug()) {
+    if (is_plain_object(x)) {
+      console.log(map_object(x, function (value) {
+        return toString(value, true);
+      }));
+    } else {
+      var _console;
+      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+      (_console = console).log.apply(_console, [toString(x, true)].concat(_toConsumableArray(args.map(function (item) {
+        return toString(item, true);
+      }))));
     }
   }
-  if (is_promise(x)) {
-    x.then(msg);
-  } else {
-    msg(x);
-  }
-  return x;
 }
 // ----------------------------------------------------------------------
 /* c8 ignore next */
@@ -5996,8 +5991,8 @@ Thunk.prototype.toString = function () {
 // ----------------------------------------------------------------------
 function trampoline(fn) {
   return function () {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
     }
     return unwind(fn.apply(this, args));
   };
@@ -6339,8 +6334,8 @@ var specials = {
     }
   },
   trigger: function trigger(name) {
-    for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      args[_key2 - 1] = arguments[_key2];
+    for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+      args[_key3 - 1] = arguments[_key3];
     }
     if (this.__events__[name]) {
       this.__events__[name].forEach(function (fn) {
@@ -7993,8 +7988,8 @@ Ahead.prototype.match = function (string) {
 // Pattern is in form of array with regular expressions
 // ----------------------------------------------------------------------
 function Pattern() {
-  for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-    args[_key3] = arguments[_key3];
+  for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+    args[_key4] = arguments[_key4];
   }
   var flag = args.pop();
   this.patterns = args;
@@ -8029,8 +8024,8 @@ var non_def = /^(?!.*\b(?:[()[\]]|define(?:-macro)?|let(?:\*|rec|-env|-syntax|)?
 var let_re = /^(?:#:)?(let(?:\*|rec|-env|-syntax)?)$/;
 // match keyword if it's normal token or gensym (prefixed with #:)
 function keywords_re() {
-  for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-    args[_key4] = arguments[_key4];
+  for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+    args[_key5] = arguments[_key5];
   }
   return new RegExp("^(?:#:)?(?:".concat(args.join('|'), ")$"));
 }
@@ -8687,8 +8682,8 @@ function toString(obj, quote, skip_cycles) {
   if (obj) {
     var cls = obj.constructor;
     if (instances.has(cls)) {
-      for (var _len5 = arguments.length, pair_args = new Array(_len5 > 3 ? _len5 - 3 : 0), _key5 = 3; _key5 < _len5; _key5++) {
-        pair_args[_key5 - 3] = arguments[_key5];
+      for (var _len6 = arguments.length, pair_args = new Array(_len6 > 3 ? _len6 - 3 : 0), _key6 = 3; _key6 < _len6; _key6++) {
+        pair_args[_key6 - 3] = arguments[_key6];
       }
       return instances.get(cls)(obj, {
         quote: quote,
@@ -9457,12 +9452,6 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
   // multiple matches of ((x ...) ...) against ((1 2 3) (1 2 3))
   // in loop we add x to the list so we know that this is not
   // duplicated ellipsis symbol
-  function log(x) {
-    /* c8 ignore next 3 */
-    if (is_debug()) {
-      console.log(x);
-    }
-  }
   log(symbols);
   /* eslint-disable complexity */
   function traverse(pattern, code) {
@@ -9635,7 +9624,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
     if (pattern instanceof Pair && code instanceof Pair) {
       log('>> 13');
       log({
-        a: 12,
+        a: 13,
         code: code,
         pattern: pattern
       });
@@ -9681,7 +9670,22 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
         return true;
       }
       log('recur');
-      if (traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr, code.cdr, pattern_names, ellipsis)) {
+      log({
+        pattern: pattern,
+        code: code
+      });
+      var car = traverse(pattern.car, code.car, pattern_names, ellipsis);
+      log({
+        car: car,
+        pattern: pattern.car,
+        code: code.car
+      });
+      var cdr = traverse(pattern.cdr, code.cdr, pattern_names, ellipsis);
+      log({
+        car: car,
+        cdr: cdr
+      });
+      if (car && cdr) {
         return true;
       }
     } else if (pattern === _nil && (code === _nil || code === undefined)) {
@@ -9778,24 +9782,6 @@ function transform_syntax() {
       console.trace();
     }
     return rename(name, symbol);
-  }
-  function log(x) {
-    /* c8 ignore next 11 */
-    if (is_debug()) {
-      if (is_plain_object(x)) {
-        console.log(map_object(x, function (value) {
-          return toString(value, true);
-        }));
-      } else {
-        var _console;
-        for (var _len6 = arguments.length, args = new Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
-          args[_key6 - 1] = arguments[_key6];
-        }
-        (_console = console).log.apply(_console, [x].concat(_toConsumableArray(args.map(function (item) {
-          return toString(item, true);
-        }))));
-      }
-    }
   }
   function rename(name, symbol) {
     if (!gensyms[name]) {
@@ -9968,6 +9954,7 @@ function transform_syntax() {
         if (values.length && values.every(function (x) {
           return x === null;
         })) {
+          log('>>> 1 (a)');
           return traverse(expr.cdr.cdr, {
             disabled: disabled
           });
@@ -9981,10 +9968,17 @@ function transform_syntax() {
         // in case of usage outside of ellipsis list e.g.: (x y)
         var is_spread = expr.car instanceof LSymbol && LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol);
         if (expr.car instanceof Pair || is_spread) {
+          log('>>> 1 (b)');
           // lists is free ellipsis on pairs ((???) ...)
           // TODO: will this work in every case? Do we need to handle
           // nesting here?
           if (bindings['...'].lists[0] === _nil) {
+            if (!is_spread) {
+              return traverse(expr.cdr.cdr, {
+                disabled: disabled
+              });
+            }
+            log(expr.cdr.cdr);
             return _nil;
           }
           var new_expr = expr.car;
@@ -10101,11 +10095,21 @@ function transform_syntax() {
               var node = traverse(expr.cdr.cdr, {
                 disabled: disabled
               });
+              log({
+                node: node
+              });
               if (_is_null) {
                 return node;
               }
-              log('<<<< 1');
-              _result2.append(node);
+              if (_result2 === _nil) {
+                _result2 = node;
+              } else {
+                _result2.append(node);
+              }
+              log({
+                result: _result2,
+                node: node
+              });
             }
           }
           log('<<<< 2');
@@ -14495,7 +14499,8 @@ var global_env = new Environment({
               names: names,
               ellipsis: ellipsis
             });
-            log('OUPUT>>> ' + new_expr.toString());
+            log('OUPUT>>> ', new_expr);
+            // TODO: if expression undefined throw an error
             if (new_expr) {
               expr = new_expr;
             }
@@ -17210,10 +17215,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Thu, 25 Jan 2024 01:01:33 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Thu, 25 Jan 2024 12:18:53 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Thu, 25 Jan 2024 01:01:33 +0000').valueOf();
+  var date = LString('Thu, 25 Jan 2024 12:18:53 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17252,7 +17257,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Thu, 25 Jan 2024 01:01:33 +0000';
+var date = 'Thu, 25 Jan 2024 12:18:53 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

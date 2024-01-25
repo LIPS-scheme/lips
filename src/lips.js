@@ -118,27 +118,19 @@ function contentLoaded(win, fn) {
 }
 // -------------------------------------------------------------------------
 /* eslint-disable */
-/* c8 ignore next 21 */
-function log(x, regex = null) {
-    var literal = arguments[1] === true;
-    function msg(x) {
-        if (!is_debug()) {
-            return;
-        }
-        var value = global_env.get('repr')(x);
-        if (regex === null || regex instanceof RegExp && regex.test(value)) {
-            console.log(global_env.get('type')(x) + ": " + value);
-        }
-        if (literal) {
-            console.log(x);
+/* c8 ignore next 13 */
+function log(x, ...args) {
+    if (is_debug()) {
+        if (is_plain_object(x)) {
+            console.log(map_object(x, function(value) {
+                return toString(value, true);
+            }));
+        } else {
+            console.log(toString(x, true), ...args.map(item => {
+                return toString(item, true);
+            }));
         }
     }
-    if (is_promise(x)) {
-        x.then(msg);
-    } else {
-        msg(x);
-    }
-    return x;
 }
 // ----------------------------------------------------------------------
 /* c8 ignore next */
@@ -3555,12 +3547,6 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
     // multiple matches of ((x ...) ...) against ((1 2 3) (1 2 3))
     // in loop we add x to the list so we know that this is not
     // duplicated ellipsis symbol
-    function log(x) {
-        /* c8 ignore next 3 */
-        if (is_debug()) {
-            console.log(x);
-        }
-    }
     log(symbols);
     /* eslint-disable complexity */
     function traverse(pattern, code, pattern_names = [], ellipsis = false) {
@@ -3748,7 +3734,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         if (pattern instanceof Pair && code instanceof Pair) {
             log('>> 13');
             log({
-                a: 12,
+                a: 13,
                 code,
                 pattern
             });
@@ -3802,8 +3788,15 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 return true;
             }
             log('recur');
-            if (traverse(pattern.car, code.car, pattern_names, ellipsis) &&
-               traverse(pattern.cdr, code.cdr, pattern_names, ellipsis)) {
+            log({
+                pattern,
+                code
+            });
+            const car = traverse(pattern.car, code.car, pattern_names, ellipsis);
+            log({car, pattern: pattern.car, code: code.car});
+            const cdr = traverse(pattern.cdr, code.cdr, pattern_names, ellipsis);
+            log({ car, cdr });
+            if (car && cdr) {
                 return true;
             }
         } else if (pattern === nil && (code === nil || code === undefined)) {
@@ -3902,20 +3895,6 @@ function transform_syntax(options = {}) {
             console.trace();
         }
         return rename(name, symbol);
-    }
-    function log(x, ...args) {
-        /* c8 ignore next 11 */
-        if (is_debug()) {
-            if (is_plain_object(x)) {
-                console.log(map_object(x, function(value) {
-                    return toString(value, true);
-                }));
-            } else {
-                console.log(x, ...args.map(item => {
-                    return toString(item, true);
-                }));
-            }
-        }
     }
     function rename(name, symbol) {
         if (!gensyms[name]) {
@@ -4077,6 +4056,7 @@ function transform_syntax(options = {}) {
                 // and code was (x z) so y == null
                 const values = Object.values(symbols);
                 if (values.length && values.every(x => x === null)) {
+                    log('>>> 1 (a)');
                     return traverse(expr.cdr.cdr, { disabled });
                 }
                 var keys = get_names(symbols);
@@ -4089,10 +4069,15 @@ function transform_syntax(options = {}) {
                 var is_spread = expr.car instanceof LSymbol &&
                     LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol);
                 if (expr.car instanceof Pair || is_spread) {
+                    log('>>> 1 (b)');
                     // lists is free ellipsis on pairs ((???) ...)
                     // TODO: will this work in every case? Do we need to handle
                     // nesting here?
                     if (bindings['...'].lists[0] === nil) {
+                        if (!is_spread) {
+                            return traverse(expr.cdr.cdr, { disabled });
+                        }
+                        log(expr.cdr.cdr);
                         return nil;
                     }
                     var new_expr = expr.car;
@@ -4214,11 +4199,16 @@ function transform_syntax(options = {}) {
                         if (expr.cdr.cdr instanceof Pair ||
                             expr.cdr.cdr instanceof LSymbol) {
                             const node = traverse(expr.cdr.cdr, { disabled });
+                            log({node});
                             if (is_null) {
                                 return node;
                             }
-                            log('<<<< 1');
-                            result.append(node);
+                            if (result === nil) {
+                                result = node;
+                            } else {
+                                result.append(node);
+                            }
+                            log({result, node});
                         }
                     }
                     log('<<<< 2');
@@ -8212,7 +8202,8 @@ var global_env = new Environment({
                             names,
                             ellipsis
                         });
-                        log('OUPUT>>> ' + new_expr.toString());
+                        log('OUPUT>>> ', new_expr);
+                        // TODO: if expression undefined throw an error
                         if (new_expr) {
                             expr = new_expr;
                         }
