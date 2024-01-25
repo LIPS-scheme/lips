@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 25 Jan 2024 00:51:33 +0000
+ * build: Thu, 25 Jan 2024 01:01:33 +0000
  */
 
 (function (global, factory) {
@@ -9491,7 +9491,7 @@
         log('>> 0');
         if (code === _nil) {
           log({
-            pattern: pattern.toString()
+            pattern: pattern
           });
           if (pattern.car.car instanceof LSymbol) {
             if (pattern.car.cdr instanceof Pair && LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
@@ -9589,7 +9589,7 @@
                 bindings['...'].symbols[_name3] = _node.append(new Pair(code, _nil));
               }
               log({
-                IIIIII: bindings['...'].symbols[_name3].toString()
+                IIIIII: bindings['...'].symbols[_name3]
               });
             } else if (pattern.car instanceof LSymbol && pattern.cdr instanceof Pair && LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
               // empty ellipsis with rest  (a b ... . d) #290
@@ -9643,8 +9643,8 @@
         log('>> 13');
         log({
           a: 12,
-          code: code && code.toString(),
-          pattern: pattern.toString()
+          code: code,
+          pattern: pattern
         });
         if (code.cdr === _nil) {
           // last item in in call using in recursive calls on
@@ -9891,7 +9891,7 @@
             return;
           } else if (item) {
             log({
-              b: bindings[_name7].toString()
+              b: bindings[_name7]
             });
             if (item instanceof Pair) {
               log('[t 2 Pair ' + nested);
@@ -10087,7 +10087,7 @@
                 nested: false
               }, next);
               log({
-                value: value.toString()
+                value: value
               });
               if (typeof value !== 'undefined') {
                 _result2 = new Pair(value, _result2);
@@ -10142,7 +10142,7 @@
               disabled: disabled
             }));
           }
-          log('REST >>>> ' + rest.toString());
+          log('REST >>>> ', rest);
         } else {
           rest = traverse(expr.cdr, {
             disabled: disabled
@@ -17217,10 +17217,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 25 Jan 2024 00:51:33 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Thu, 25 Jan 2024 01:01:33 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 25 Jan 2024 00:51:33 +0000').valueOf();
+    var date = LString('Thu, 25 Jan 2024 01:01:33 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17259,7 +17259,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Thu, 25 Jan 2024 00:51:33 +0000';
+  var date = 'Thu, 25 Jan 2024 01:01:33 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

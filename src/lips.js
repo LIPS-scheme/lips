@@ -3582,7 +3582,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
             log('>> 0');
             if (code === nil) {
-                log({ pattern: pattern.toString() });
+                log({ pattern });
                 if (pattern.car.car instanceof LSymbol) {
                     if (pattern.car.cdr instanceof Pair &&
                         LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
@@ -3693,7 +3693,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                                 )
                             );
                         }
-                        log({ IIIIII: bindings['...'].symbols[name].toString() });
+                        log({ IIIIII: bindings['...'].symbols[name] });
                     } else if (pattern.car instanceof LSymbol &&
                                pattern.cdr instanceof Pair &&
                                LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
@@ -3749,8 +3749,8 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             log('>> 13');
             log({
                 a: 12,
-                code: code && code.toString(),
-                pattern: pattern.toString()
+                code,
+                pattern
             });
             if (code.cdr === nil) {
                 // last item in in call using in recursive calls on
@@ -3997,7 +3997,7 @@ function transform_syntax(options = {}) {
                 if (item === null) {
                     return;
                 } else if (item) {
-                    log({ b: bindings[name].toString() });
+                    log({ b: bindings[name] });
                     if (item instanceof Pair) {
                         log('[t 2 Pair ' + nested);
                         const { car, cdr } = item;
@@ -4195,7 +4195,7 @@ function transform_syntax(options = {}) {
                             { nested: false },
                             next
                         );
-                        log({ value: value.toString() });
+                        log({ value });
                         if (typeof value !== 'undefined') {
                             result = new Pair(
                                 value,
@@ -4248,7 +4248,7 @@ function transform_syntax(options = {}) {
                         traverse(expr.cdr.cdr, { disabled })
                     );
                 }
-                log('REST >>>> ' + rest.toString());
+                log('REST >>>> ', rest);
             } else {
                 rest = traverse(expr.cdr, { disabled });
             }
