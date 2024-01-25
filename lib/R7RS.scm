@@ -286,7 +286,7 @@
        (sum 1 2)
        (sum 1 2 3)
 
-   More arguments will give error.")
+   More arguments will give an error.")
 
 ;; -----------------------------------------------------------------------------
 (define (boolean=? . args)
