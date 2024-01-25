@@ -2517,8 +2517,11 @@ Pair.prototype.clone = function(deep = true) {
 Pair.prototype.last_pair = function() {
     let node = this;
     while (true) {
-        if (node.cdr === nil) {
+        if (!is_pair(node.cdr)) {
             return node;
+        }
+        if (node.haveCycles('cdr')) {
+            break;
         }
         node = node.cdr;
     }
@@ -2542,6 +2545,8 @@ Pair.prototype.to_array = function(deep = true) {
     return result;
 };
 
+// ----------------------------------------------------------------------
+// :: TODO: change to Pair.from_array
 // ----------------------------------------------------------------------
 Pair.fromArray = function(array, deep = true, quote = false) {
     if (array instanceof Pair || quote && array instanceof Array && array[__data__]) {
@@ -3663,6 +3668,19 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                                 return traverse(pattern.cdr.cdr, code.cdr);
                             }
                         }
+                        const last_pair = code.last_pair();
+                        if (last_pair.cdr !== nil) {
+                            if (pattern.cdr.cdr === nil) {
+                                // case (a ...) for (a b . x)
+                                return false;
+                            } else {
+                                // case (a ... . b) for (a b . x)
+                                const copy = code.clone();
+                                copy.last_pair().cdr = nil;
+                                bindings['...'].symbols[name] = copy;
+                                return traverse(pattern.cdr.cdr, last_pair.cdr);
+                            }
+                        }
                         log('>> 7 ' + ellipsis);
                         pattern_names.push(name);
                         if (!bindings['...'].symbols[name]) {
@@ -3994,6 +4012,13 @@ function transform_syntax(options = {}) {
                             return car.car;
                         } else if (cdr === nil) {
                             return car;
+                        } else {
+                            const last_pair = expr.last_pair();
+                            if (last_pair.cdr instanceof LSymbol) {
+                                log('|| next 3');
+                                next(name, item.last_pair());
+                                return car;
+                            }
                         }
                     } else if (item instanceof Array) {
                         log('[t 2 Array ' + nested);

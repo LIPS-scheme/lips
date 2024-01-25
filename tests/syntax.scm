@@ -1260,3 +1260,17 @@
 
         (t.is (foo (print x) () () (display x))
               '(let () ((print x) (display x)) (foo () () args)))))
+
+(test "syntax: spread tail"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ ((p ...) . body))
+             '(apply (lambda (p ...) . body)
+                     args))
+            ((_ ((p ... . tail) . body))
+             '(apply (lambda (p ... . tail) . body)
+                     args))))
+
+        (t.is (foo ((lis transducer . transducers) (display x)))
+              '(apply (lambda (lis transducer . transducers) (display x)) args))))

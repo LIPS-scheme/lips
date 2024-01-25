@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 25 Jan 2024 12:18:53 +0000
+ * build: Thu, 25 Jan 2024 16:47:19 +0000
  */
 
 'use strict';
@@ -6367,8 +6367,11 @@ Pair.prototype.clone = function () {
 Pair.prototype.last_pair = function () {
   var node = this;
   while (true) {
-    if (node.cdr === _nil) {
+    if (!is_pair(node.cdr)) {
       return node;
+    }
+    if (node.haveCycles('cdr')) {
+      break;
     }
     node = node.cdr;
   }
@@ -6393,6 +6396,8 @@ Pair.prototype.to_array = function () {
   return result;
 };
 
+// ----------------------------------------------------------------------
+// :: TODO: change to Pair.from_array
 // ----------------------------------------------------------------------
 Pair.fromArray = function (array) {
   var deep = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
@@ -7588,6 +7593,19 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol) {
                 return traverse(pattern.cdr.cdr, code.cdr);
               }
             }
+            var last_pair = code.last_pair();
+            if (last_pair.cdr !== _nil) {
+              if (pattern.cdr.cdr === _nil) {
+                // case (a ...) for (a b . x)
+                return false;
+              } else {
+                // case (a ... . b) for (a b . x)
+                var copy = code.clone();
+                copy.last_pair().cdr = _nil;
+                bindings['...'].symbols[_name3] = copy;
+                return traverse(pattern.cdr.cdr, last_pair.cdr);
+              }
+            }
             log('>> 7 ' + ellipsis);
             pattern_names.push(_name3);
             if (!bindings['...'].symbols[_name3]) {
@@ -7916,6 +7934,13 @@ function transform_syntax() {
               return _car.car;
             } else if (_cdr === _nil) {
               return _car;
+            } else {
+              var last_pair = expr.last_pair();
+              if (last_pair.cdr instanceof LSymbol) {
+                log('|| next 3');
+                next(_name7, item.last_pair());
+                return _car;
+              }
             }
           } else if (item instanceof Array) {
             log('[t 2 Array ' + nested);
@@ -12526,7 +12551,7 @@ var global_env = new Environment({
               ellipsis: ellipsis
             });
             log('OUPUT>>> ', new_expr);
-            // TODO: if expression undefined throw an error
+            // TODO: if expression is undefined throw an error
             if (new_expr) {
               expr = new_expr;
             }
@@ -15241,10 +15266,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Thu, 25 Jan 2024 12:18:53 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Thu, 25 Jan 2024 16:47:19 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Thu, 25 Jan 2024 12:18:53 +0000').valueOf();
+  var date = LString('Thu, 25 Jan 2024 16:47:19 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15283,7 +15308,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Thu, 25 Jan 2024 12:18:53 +0000';
+var date = 'Thu, 25 Jan 2024 16:47:19 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
