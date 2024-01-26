@@ -3668,6 +3668,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                                 return traverse(pattern.cdr.cdr, code.cdr);
                             }
                         }
+                        // code as improper list
                         const last_pair = code.last_pair();
                         if (last_pair.cdr !== nil) {
                             if (pattern.cdr.cdr === nil) {

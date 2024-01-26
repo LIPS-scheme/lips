@@ -1318,3 +1318,54 @@
 
         (t.is (foo ((lis transducer . transducers) (display x)))
               '(apply (lambda (lis transducer . transducers) (display x)) args))))
+
+(test "syntax: multiple values after ellipsis"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ (a ... b c) d ...)
+             (list a ... b c d ...))))
+
+        (t.is (foo (1 2 3 'x 'y) "foo" "bar" "baz")
+              '(1 2 3 x y "foo" "bar" "baz"))))
+
+;; ref: https://stackoverflow.com/q/37644555/387194
+(test "syntax: identifer with variable"
+      (lambda (t)
+        (define-syntax hello
+          (syntax-rules (in)
+            ((_ name in world) (format "Hello ~a in ~a" name world))
+            ((_ in name) (format "Hello ~a in here" name))))
+
+        (define in "inside")
+        (t.is (hello "me" in in)
+              "Hello me in inside")))
+
+;; ref: https://practical-scheme.net/gauche/man/gauche-refe/Hygienic-macros.html#Syntax_002drules-macro-transformer
+(test.failing "syntax: let shadow identifer (1)"
+      (lambda (t)
+        (define-syntax if+
+          (syntax-rules (then else)
+            ((_ test then expr1 else expr2) (if test expr1 expr2))))
+
+        (define else #f)
+        (t.is (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))
+              5)
+
+        (t.is (to.throw (let ((else #f) (x 10))
+                          (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))))
+              #t)))
+
+(test.failing "syntax: let shadow identifer (2)"
+      (lambda (t)
+        (define else #f)
+        (define-syntax if+
+          (syntax-rules (then else)
+            ((_ test then expr1 else expr2) (if test expr1 expr2))))
+
+        (t.is (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))
+              5)
+
+        (t.is (to.throw (let ((else #f) (x 10))
+                          (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))))
+              #t)))
