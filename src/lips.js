@@ -7138,8 +7138,6 @@ var internal_env = new Environment({
 // -------------------------------------------------------------------------
 var nan = LNumber(NaN);
 var constants = {
-    '#true': true,
-    '#false': false,
     '#t': true,
     '#f': false,
     nil,
