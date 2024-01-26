@@ -3529,9 +3529,12 @@ Syntax.prototype.toString = function() {
 };
 Syntax.className = 'syntax';
 // ----------------------------------------------------------------------
-// :: TODO: SRFI-139
+// :: SRFI-139
 // ----------------------------------------------------------------------
-class SyntaxParameter extends Syntax {
+class SyntaxParameter {
+    constructor(syntax) {
+        read_only(this, '_syntax', syntax, { hidden: true });
+    }
 }
 Syntax.Parameter = SyntaxParameter;
 // ----------------------------------------------------------------------
@@ -7829,6 +7832,27 @@ var global_env = new Environment({
 
     The result value is a procedure that return the value of dynamic variable.`),
     // ------------------------------------------------------------------
+    'define-syntax-parameter': doc(new Macro('define-syntax-parameter', function(code, eval_args) {
+        const name = code.car;
+        const env = this;
+        if (!(name instanceof LSymbol)) {
+            throw new Error(`define-syntax-parameter: invalid syntax expecting symbol got ${type(name)}`);
+        }
+        const syntax = evaluate(code.cdr.car, { env, ...eval_args });
+        typecheck('define-syntax-parameter', syntax, 'syntax', 2);
+        let __doc__;
+        if (code.cdr.cdr instanceof Pair &&
+            LString.isString(code.cdr.cdr.car)) {
+            __doc__ = code.cdr.cdr.car.valueOf();
+        }
+        env.set(code.car, new SyntaxParameter(syntax), __doc__, true);
+    }), `(define-syntax-parameter name syntax [__doc__])
+
+         Binds <keyword> to the transformer obtained by evaluating <transformer spec>.
+         The transformer provides the default expansion for the syntax parameter,
+         and in the absence of syntax-parameterize, is functionally equivalent to
+         define-syntax.`),
+    // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function(code, eval_args) {
         var env = this;
         if (code.car instanceof Pair &&
@@ -10385,6 +10409,8 @@ function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest }
             result = evaluate_macro(value, rest, eval_args);
         } else if (is_function(value)) {
             result = apply(value, rest, eval_args);
+        } else if (value instanceof SyntaxParameter) {
+            result = evaluate_syntax(value._syntax, code, eval_args);
         } else if (is_parameter(value)) {
             const param = search_param(dynamic_env, value);
             if (is_null(code.cdr)) {
@@ -10987,6 +11013,7 @@ read_only(Pattern, '__class__', 'pattern');
 read_only(Formatter, '__class__', 'formatter');
 read_only(Macro, '__class__', 'macro');
 read_only(Syntax, '__class__', 'syntax');
+read_only(Syntax.Parameter, '__class__', 'syntax-parameter');
 read_only(Environment, '__class__', 'environment');
 read_only(InputPort, '__class__', 'input-port');
 read_only(OutputPort, '__class__', 'output-port');

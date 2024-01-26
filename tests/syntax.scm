@@ -1369,3 +1369,16 @@
         (t.is (to.throw (let ((else #f) (x 10))
                           (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))))
               #t)))
+
+(test "syntax: should define syntax-parameter"
+      (lambda (t)
+        (define-syntax-parameter return
+          (syntax-rules ()
+            ((_ . _)
+             (syntax-error "return used outside of a lambda^"))))
+
+        (t.is (null? (--> (try (return)
+                               (catch (e)
+                                      e.message))
+                          (match #/^return used outside of a lambda\^/)))
+              #f)))

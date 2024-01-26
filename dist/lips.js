@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 25 Jan 2024 16:47:19 +0000
+ * build: Fri, 26 Jan 2024 13:08:36 +0000
  */
 
 (function (global, factory) {
@@ -144,13 +144,6 @@
     return _wrapNativeSuper(Class);
   }
 
-  function _assertThisInitialized(self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-
   function _typeof$1(o) {
     "@babel/helpers - typeof";
 
@@ -159,6 +152,13 @@
     } : function (o) {
       return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
     }, _typeof$1(o);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+    return self;
   }
 
   function _possibleConstructorReturn(self, call) {
@@ -9432,16 +9432,14 @@
   };
   Syntax.className = 'syntax';
   // ----------------------------------------------------------------------
-  // :: TODO: SRFI-139
+  // :: SRFI-139
   // ----------------------------------------------------------------------
-  var SyntaxParameter = /*#__PURE__*/function (_Syntax) {
-    _inherits(SyntaxParameter, _Syntax);
-    function SyntaxParameter() {
-      _classCallCheck(this, SyntaxParameter);
-      return _callSuper(this, SyntaxParameter, arguments);
-    }
-    return _createClass(SyntaxParameter);
-  }(Syntax);
+  var SyntaxParameter = /*#__PURE__*/_createClass(function SyntaxParameter(syntax) {
+    _classCallCheck(this, SyntaxParameter);
+    read_only(this, '_syntax', syntax, {
+      hidden: true
+    });
+  });
   Syntax.Parameter = SyntaxParameter;
   // ----------------------------------------------------------------------
   // :: for usage in syntax-rule when pattern match it will return
@@ -9574,6 +9572,7 @@
                   return traverse(pattern.cdr.cdr, code.cdr);
                 }
               }
+              // code as improper list
               var last_pair = code.last_pair();
               if (last_pair.cdr !== _nil) {
                 if (pattern.cdr.cdr === _nil) {
@@ -14166,6 +14165,23 @@
       return new Parameter(init, fn);
     }), "(make-parameter init converter)\n\n    Function creates new dynamic variable that can be custimized with parameterize\n    macro. The value should be assigned to a variable e.g.:\n\n    (define radix (make-parameter 10))\n\n    The result value is a procedure that return the value of dynamic variable."),
     // ------------------------------------------------------------------
+    'define-syntax-parameter': doc(new Macro('define-syntax-parameter', function (code, eval_args) {
+      var name = code.car;
+      var env = this;
+      if (!(name instanceof LSymbol)) {
+        throw new Error("define-syntax-parameter: invalid syntax expecting symbol got ".concat(type(name)));
+      }
+      var syntax = _evaluate(code.cdr.car, _objectSpread({
+        env: env
+      }, eval_args));
+      typecheck('define-syntax-parameter', syntax, 'syntax', 2);
+      var __doc__;
+      if (code.cdr.cdr instanceof Pair && LString.isString(code.cdr.cdr.car)) {
+        __doc__ = code.cdr.cdr.car.valueOf();
+      }
+      env.set(code.car, new SyntaxParameter(syntax), __doc__, true);
+    }), "(define-syntax-parameter name syntax [__doc__])\n\n         Binds <keyword> to the transformer obtained by evaluating <transformer spec>.\n         The transformer provides the default expansion for the syntax parameter,\n         and in the absence of syntax-parameterize, is functionally equivalent to\n         define-syntax."),
+    // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function (code, eval_args) {
       var env = this;
       if (code.car instanceof Pair && code.car.car instanceof LSymbol) {
@@ -16565,6 +16581,8 @@
           result = evaluate_macro(value, rest, eval_args);
         } else if (is_function(value)) {
           result = apply(value, rest, eval_args);
+        } else if (value instanceof SyntaxParameter) {
+          result = evaluate_syntax(value._syntax, code, eval_args);
         } else if (is_parameter(value)) {
           var param = search_param(dynamic_env, value);
           if (is_null(code.cdr)) {
@@ -17247,10 +17265,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Thu, 25 Jan 2024 16:47:19 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 26 Jan 2024 13:08:36 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Thu, 25 Jan 2024 16:47:19 +0000').valueOf();
+    var date = LString('Fri, 26 Jan 2024 13:08:36 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17270,6 +17288,7 @@
   read_only(Formatter, '__class__', 'formatter');
   read_only(Macro, '__class__', 'macro');
   read_only(Syntax, '__class__', 'syntax');
+  read_only(Syntax.Parameter, '__class__', 'syntax-parameter');
   read_only(Environment, '__class__', 'environment');
   read_only(InputPort, '__class__', 'input-port');
   read_only(OutputPort, '__class__', 'output-port');
@@ -17289,7 +17308,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Thu, 25 Jan 2024 16:47:19 +0000';
+  var date = 'Fri, 26 Jan 2024 13:08:36 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
