@@ -72,7 +72,7 @@
                 (foo it))
               10)))
 
-(test.failing "syntax-parameters: user binding should shadow parameter"
+(test "syntax-parameters: user binding should shadow parameter"
       (lambda (t)
         (define-syntax foo
           (syntax-rules ()
@@ -84,7 +84,7 @@
                 body ...)))))
 
         (t.is (foo (let ((it 10))
-                     (print it)))
+                     it))
               10)
 
         (t.is (let ((it 10))

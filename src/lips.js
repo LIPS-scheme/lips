@@ -3912,7 +3912,10 @@ function transform_syntax(options = {}) {
                 }
             }
         }
-        if (symbols.includes(name) || syntax_parameters.includes(name)) {
+        if (symbols.includes(name)) {
+            return LSymbol(name);
+        }
+        if (syntax_parameters.includes(name)) {
             return LSymbol(name);
         }
         if (!(symbol instanceof LSymbol)) {
@@ -7867,8 +7870,13 @@ var global_env = new Environment({
                 throw new Error(`syntax-parameterize: ${msg}`);
             }
             const syntax = evaluate(pair.cdr.car, { ...eval_args, env: this });
+            const name = pair.car;
             typecheck('syntax-parameterize', syntax, 'syntax');
-            env.set(pair.car, new SyntaxParameter(syntax));
+            typecheck('syntax-parameterize', name, 'symbol');
+            // allow to shadow the parram #293
+            if (!this.ref(name)) {
+                env.set(pair.car, new SyntaxParameter(syntax));
+            }
         }
         const body = new Pair(new LSymbol('begin'), code.cdr);
         return evaluate(body, { ...eval_args, env });

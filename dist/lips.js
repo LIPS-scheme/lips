@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 26 Jan 2024 15:25:15 +0000
+ * build: Fri, 26 Jan 2024 21:46:57 +0000
  */
 
 (function (global, factory) {
@@ -9801,7 +9801,10 @@
           }
         }
       }
-      if (symbols.includes(name) || syntax_parameters.includes(name)) {
+      if (symbols.includes(name)) {
+        return LSymbol(name);
+      }
+      if (syntax_parameters.includes(name)) {
         return LSymbol(name);
       }
       if (!(symbol instanceof LSymbol)) {
@@ -14198,8 +14201,13 @@
         var syntax = _evaluate(pair.cdr.car, _objectSpread(_objectSpread({}, eval_args), {}, {
           env: this
         }));
+        var name = pair.car;
         typecheck('syntax-parameterize', syntax, 'syntax');
-        env.set(pair.car, new SyntaxParameter(syntax));
+        typecheck('syntax-parameterize', name, 'symbol');
+        // allow to shadow the parram #293
+        if (!this.ref(name)) {
+          env.set(pair.car, new SyntaxParameter(syntax));
+        }
       }
       var body = new Pair(new LSymbol('begin'), code.cdr);
       return _evaluate(body, _objectSpread(_objectSpread({}, eval_args), {}, {
@@ -17290,10 +17298,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 26 Jan 2024 15:25:15 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 26 Jan 2024 21:46:57 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 26 Jan 2024 15:25:15 +0000').valueOf();
+    var date = LString('Fri, 26 Jan 2024 21:46:57 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17333,7 +17341,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Fri, 26 Jan 2024 15:25:15 +0000';
+  var date = 'Fri, 26 Jan 2024 21:46:57 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);
