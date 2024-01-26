@@ -177,7 +177,7 @@
                  (closure (x.closure))
                  (v (closure)))
             (t.is v.x 10)
-            (t.is result #(true true 10))))))
+            (t.is result (vector true true 10))))))
 
 ;; bytevector tests from R7RS spec
 (test "std: bytevector-u8-ref"

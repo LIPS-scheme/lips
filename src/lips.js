@@ -546,7 +546,7 @@ function is_symbol_string(str) {
           str.match(/^"[\s\S]*"$/) || str.match(int_re) ||
           str.match(float_re) || str.match(complex_re) ||
           str.match(rational_re) || str.match(char_re) ||
-          ['#t', '#f', 'nil', 'true', 'false'].includes(str));
+          ['#t', '#f', 'nil'].includes(str));
 }
 // ----------------------------------------------------------------------
 var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
@@ -7138,16 +7138,13 @@ var internal_env = new Environment({
 // -------------------------------------------------------------------------
 var nan = LNumber(NaN);
 var constants = {
-    'true': true,
-    'false': false,
     '#true': true,
     '#false': false,
     '#t': true,
     '#f': false,
     nil,
-    'undefined': undefined,
     'null': null,
-    'NaN': nan,
+    'undefined': undefined,
     '+nan.0': nan,
     '-nan.0': nan
 };

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 26 Jan 2024 13:08:36 +0000
+ * build: Fri, 26 Jan 2024 14:06:38 +0000
  */
 
 'use strict';
@@ -3942,7 +3942,7 @@ function is_atom_string(str) {
 }
 // ----------------------------------------------------------------------
 function is_symbol_string(str) {
-  return is_atom_string(str) && !(str.match(re_re) || str.match(/^"[\s\S]*"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || str.match(char_re) || ['#t', '#f', 'nil', 'true', 'false'].includes(str));
+  return is_atom_string(str) && !(str.match(re_re) || str.match(/^"[\s\S]*"$/) || str.match(int_re) || str.match(float_re) || str.match(complex_re) || str.match(rational_re) || str.match(char_re) || ['#t', '#f', 'nil'].includes(str));
 }
 // ----------------------------------------------------------------------
 var string_re = /"(?:\\[\S\s]|[^"])*"?/g;
@@ -11386,16 +11386,13 @@ var internal_env = new Environment({
 // -------------------------------------------------------------------------
 var nan = LNumber(NaN);
 var constants = {
-  'true': true,
-  'false': false,
   '#true': true,
   '#false': false,
   '#t': true,
   '#f': false,
   nil: _nil,
-  'undefined': undefined,
   'null': null,
-  'NaN': nan,
+  'undefined': undefined,
   '+nan.0': nan,
   '-nan.0': nan
 };
@@ -15284,10 +15281,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 26 Jan 2024 13:08:36 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 26 Jan 2024 14:06:38 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 26 Jan 2024 13:08:36 +0000').valueOf();
+  var date = LString('Fri, 26 Jan 2024 14:06:38 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15327,7 +15324,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 26 Jan 2024 13:08:36 +0000';
+var date = 'Fri, 26 Jan 2024 14:06:38 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

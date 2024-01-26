@@ -12,6 +12,10 @@
 ;; This file is part of the LIPS - Scheme based Powerful lisp in JavaScript
 ;; Copyright (C) 2019-2024 Jakub T. Jankiewicz <https://jcubic.pl/me>
 ;; Released under MIT license
+;; -----------------------------------------------------------------------------
+(define true #t)
+(define false #f)
+(define NaN +nan.0)
 
 ;; -----------------------------------------------------------------------------
 (define (%doc string fn)
