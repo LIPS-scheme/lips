@@ -439,7 +439,7 @@
 
         (t.is result '(1 2 3 4 5 6))))
 
-(test "syntax: tripple elispsis (Gauche example)"
+(test "syntax: triple elispsis (Gauche example)"
       (lambda (t)
         (define-syntax my-append
           (syntax-rules ()
@@ -1330,7 +1330,7 @@
               '(1 2 3 x y "foo" "bar" "baz"))))
 
 ;; ref: https://stackoverflow.com/q/37644555/387194
-(test "syntax: identifer with variable"
+(test "syntax: identifier with variable"
       (lambda (t)
         (define-syntax hello
           (syntax-rules (in)
@@ -1342,7 +1342,7 @@
               "Hello me in inside")))
 
 ;; ref: https://practical-scheme.net/gauche/man/gauche-refe/Hygienic-macros.html#Syntax_002drules-macro-transformer
-(test.failing "syntax: let shadow identifer (1)"
+(test.failing "syntax: let shadow identifier (1)"
       (lambda (t)
         (define-syntax if+
           (syntax-rules (then else)
@@ -1356,7 +1356,7 @@
                           (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))))
               #t)))
 
-(test.failing "syntax: let shadow identifer (2)"
+(test.failing "syntax: let shadow identifier (2)"
       (lambda (t)
         (define else #f)
         (define-syntax if+
