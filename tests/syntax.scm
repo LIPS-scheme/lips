@@ -1382,3 +1382,13 @@
                                       e.message))
                           (match #/^return used outside of a lambda\^/)))
               #f)))
+
+(test "syntax: should create syntax-rules binding with syntax-parameterize"
+      (lambda (t)
+        (syntax-parameterize
+         ((it (syntax-rules ()
+                ((_) "hello")))
+          (is (syntax-rules ()
+                ((_) "world"))))
+         (t.is (string-append (it) " " (is))
+               "hello world"))))

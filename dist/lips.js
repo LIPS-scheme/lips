@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 26 Jan 2024 14:19:55 +0000
+ * build: Fri, 26 Jan 2024 14:44:30 +0000
  */
 
 (function (global, factory) {
@@ -14177,6 +14177,27 @@
       env.set(code.car, new SyntaxParameter(syntax), __doc__, true);
     }), "(define-syntax-parameter name syntax [__doc__])\n\n         Binds <keyword> to the transformer obtained by evaluating <transformer spec>.\n         The transformer provides the default expansion for the syntax parameter,\n         and in the absence of syntax-parameterize, is functionally equivalent to\n         define-syntax."),
     // ------------------------------------------------------------------
+    'syntax-parameterize': doc(new Macro('syntax-parameterize', function (code, eval_args) {
+      var args = global_env.get('list->array')(code.car);
+      var env = this.inherit('syntax-parameterize');
+      while (args.length) {
+        var pair = args.shift();
+        if (!(is_pair(pair) || pair.car instanceof LSymbol)) {
+          var msg = "invalid syntax for syntax-parameterize: ".concat(repr(code, true));
+          throw new Error("syntax-parameterize: ".concat(msg));
+        }
+        var syntax = _evaluate(pair.cdr.car, _objectSpread(_objectSpread({}, eval_args), {}, {
+          env: this
+        }));
+        typecheck('syntax-parameterize', syntax, 'syntax');
+        env.set(pair.car, new SyntaxParameter(syntax));
+      }
+      var body = new Pair(new LSymbol('begin'), code.cdr);
+      return _evaluate(body, _objectSpread(_objectSpread({}, eval_args), {}, {
+        env: env
+      }));
+    }), "(syntax-parameterize (bindings) body)\n\n         Macro work similar to let-syntax but the the bindnds will be exposed to the user.\n         With syntax-parameterize you can define anaphoric macros."),
+    // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function (code, eval_args) {
       var env = this;
       if (code.car instanceof Pair && code.car.car instanceof LSymbol) {
@@ -17260,10 +17281,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Fri, 26 Jan 2024 14:19:55 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Fri, 26 Jan 2024 14:44:30 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Fri, 26 Jan 2024 14:19:55 +0000').valueOf();
+    var date = LString('Fri, 26 Jan 2024 14:44:30 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17303,7 +17324,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Fri, 26 Jan 2024 14:19:55 +0000';
+  var date = 'Fri, 26 Jan 2024 14:44:30 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

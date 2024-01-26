@@ -7848,6 +7848,26 @@ var global_env = new Environment({
          and in the absence of syntax-parameterize, is functionally equivalent to
          define-syntax.`),
     // ------------------------------------------------------------------
+    'syntax-parameterize': doc(new Macro('syntax-parameterize', function(code, eval_args) {
+        const args = global_env.get('list->array')(code.car);
+        const env = this.inherit('syntax-parameterize');
+        while (args.length) {
+            const pair = args.shift();
+            if (!(is_pair(pair) || pair.car instanceof LSymbol)) {
+                const msg = `invalid syntax for syntax-parameterize: ${repr(code, true)}`;
+                throw new Error(`syntax-parameterize: ${msg}`);
+            }
+            const syntax = evaluate(pair.cdr.car, { ...eval_args, env: this });
+            typecheck('syntax-parameterize', syntax, 'syntax');
+            env.set(pair.car, new SyntaxParameter(syntax));
+        }
+        const body = new Pair(new LSymbol('begin'), code.cdr);
+        return evaluate(body, { ...eval_args, env });
+    }), `(syntax-parameterize (bindings) body)
+
+         Macro work similar to let-syntax but the the bindnds will be exposed to the user.
+         With syntax-parameterize you can define anaphoric macros.`),
+    // ------------------------------------------------------------------
     define: doc(Macro.defmacro('define', function(code, eval_args) {
         var env = this;
         if (code.car instanceof Pair &&
