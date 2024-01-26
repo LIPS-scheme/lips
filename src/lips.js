@@ -7873,7 +7873,7 @@ var global_env = new Environment({
             const name = pair.car;
             typecheck('syntax-parameterize', syntax, 'syntax');
             typecheck('syntax-parameterize', name, 'symbol');
-            // allow to shadow the parram #293
+            // allow to shadow the parameter #293
             if (!this.ref(name)) {
                 env.set(pair.car, new SyntaxParameter(syntax));
             }
