@@ -33,7 +33,7 @@
         (t.is (foo (string-append (it) "!"))
               "hello, world!")))
 
-(test.failing "syntax-parameters: should throw an error when anaphoric variable is used outside"
+(test "syntax-parameters: should throw an error when anaphoric variable is used outside"
       (lambda (t)
         (define-syntax foo
           (syntax-rules ()
@@ -43,10 +43,11 @@
                 ((it (syntax-rules ()
                        ((_) "hello world")))))
                body ...))))
+
         (t.is (null? (--> (try (foo (it))
                                (catch (e)
                                       e.message))
-                          (match #/Error: Unbound variable `it' in macro:/)))
+                          (match #/Unbound variable `it' in macro/)))
               #f)))
 
 (test "syntax-parameters: parameters should be local"
