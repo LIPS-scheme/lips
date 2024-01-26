@@ -628,7 +628,6 @@
                  (string-set! (f) 0 #\x)))
               true)))
 
-
 (test "core: means"
       (lambda (t)
         ;; By Jussi Piitulainen <jpiitula@ling.helsinki.fi>

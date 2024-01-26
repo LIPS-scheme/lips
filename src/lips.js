@@ -3877,7 +3877,9 @@ function transform_syntax(options = {}) {
         symbols,
         names,
         ellipsis: ellipsis_symbol } = options;
-    var gensyms = {};
+    const gensyms = {};
+    // for SRFI-139
+    const syntax_parameters = [];
     function valid_symbol(symbol) {
         if (symbol instanceof LSymbol) {
             return true;
@@ -3910,7 +3912,7 @@ function transform_syntax(options = {}) {
                 }
             }
         }
-        if (symbols.includes(name)) {
+        if (symbols.includes(name) || syntax_parameters.includes(name)) {
             return LSymbol(name);
         }
         if (!(symbol instanceof LSymbol)) {
@@ -4076,6 +4078,13 @@ function transform_syntax(options = {}) {
             if (!disabled && expr.car instanceof Pair &&
                 LSymbol.is(expr.car.car, ellipsis_symbol)) {
                 return traverse(expr.car.cdr, { disabled: true });
+            }
+            // SRFI-139 - this need to be hardcoded
+            if (LSymbol.is(expr.car, 'syntax-parameterize') &&
+                is_pair(expr.cdr) &&
+                is_pair(expr.cdr.car)) {
+                const names = expr.cdr.car.to_array(false).map(pair => pair.car.valueOf());
+                syntax_parameters.push(...names);
             }
             if (expr.cdr instanceof Pair &&
                 LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {

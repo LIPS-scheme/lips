@@ -1392,3 +1392,31 @@
                 ((_) "world"))))
          (t.is (string-append (it) " " (is))
                "hello world"))))
+(test "syntax: should create anaphofric macro with syntax-parameterize"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ body ...)
+             (syntax-parameterize
+              ((it (syntax-rules ()
+                     ((_) "hello, world"))))
+              body ...))))
+
+        (t.is (foo (string-append (it) "!"))
+              "hello, world!")))
+
+(test "syntax: should throw error when anaphoric variable is used outside"
+      (let (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ body ...)
+             (begin
+               (syntax-parameterize
+                ((it (syntax-rules ()
+                       ((_) "hello world")))))
+               body ...))))
+        (t.is (null? (--> (try (foo (it))
+                               (catch (e)
+                                      e.message))
+                          (match #/Error: Unbound variable `it' in macro:/)))
+              #f)))

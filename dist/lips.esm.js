@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 26 Jan 2024 14:44:30 +0000
+ * build: Fri, 26 Jan 2024 15:25:15 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -9761,6 +9761,8 @@ function transform_syntax() {
     names = options.names,
     ellipsis_symbol = options.ellipsis;
   var gensyms = {};
+  // for SRFI-139
+  var syntax_parameters = [];
   function valid_symbol(symbol) {
     if (symbol instanceof LSymbol) {
       return true;
@@ -9792,7 +9794,7 @@ function transform_syntax() {
         }
       }
     }
-    if (symbols.includes(name)) {
+    if (symbols.includes(name) || syntax_parameters.includes(name)) {
       return LSymbol(name);
     }
     if (!(symbol instanceof LSymbol)) {
@@ -9968,6 +9970,13 @@ function transform_syntax() {
         return traverse(expr.car.cdr, {
           disabled: true
         });
+      }
+      // SRFI-139 - this need to be hardcoded
+      if (LSymbol.is(expr.car, 'syntax-parameterize') && is_pair(expr.cdr) && is_pair(expr.cdr.car)) {
+        var _names = expr.cdr.car.to_array(false).map(function (pair) {
+          return pair.car.valueOf();
+        });
+        syntax_parameters.push.apply(syntax_parameters, _toConsumableArray(_names));
       }
       if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
         log('>> 1');
@@ -17274,10 +17283,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 26 Jan 2024 14:44:30 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 26 Jan 2024 15:25:15 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 26 Jan 2024 14:44:30 +0000').valueOf();
+  var date = LString('Fri, 26 Jan 2024 15:25:15 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17317,7 +17326,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 26 Jan 2024 14:44:30 +0000';
+var date = 'Fri, 26 Jan 2024 15:25:15 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

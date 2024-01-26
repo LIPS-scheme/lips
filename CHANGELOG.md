@@ -8,6 +8,7 @@
 * add `typecheck-number` function
 * add `char-foldcase` and `string-foldcase` functions
 * add `SRFI-210`
+* add `syntax-parameterize` from SRFI-139 to the core [#210](https://github.com/jcubic/lips/issues/210)
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
