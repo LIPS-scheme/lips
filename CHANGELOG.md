@@ -8,8 +8,7 @@
 * add `typecheck-number` function
 * add `char-foldcase` and `string-foldcase` functions
 * add `list-set!` and `nth-pair` functions
-* add `SRFI-210`
-* add `syntax-parameterize` from SRFI-139 to the core [#210](https://github.com/jcubic/lips/issues/210)
+* add `SRFI-210` and `SRFI-139`
 * add `continuations?` function
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
@@ -21,6 +20,7 @@
 * fix indentation of `let-values`
 * various fixes to `syntax-rules`
 * fix `procedure?` to return true for continuations
+* fix `lips --help` screen
 
 ## 1.0.0-beta.18
 ### Breaking
