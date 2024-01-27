@@ -10,6 +10,7 @@
 * add `list-set!` and `nth-pair` functions
 * add `SRFI-210`
 * add `syntax-parameterize` from SRFI-139 to the core [#210](https://github.com/jcubic/lips/issues/210)
+* add `continuations?` function
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
@@ -19,6 +20,7 @@
 * fix `syntax-rules` in macro `define-value` [#290](https://github.com/jcubic/lips/issues/290)
 * fix indentation of `let-values`
 * various fixes to `syntax-rules`
+* fix `procedure?` to return true for continuations
 
 ## 1.0.0-beta.18
 ### Breaking

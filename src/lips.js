@@ -8980,6 +8980,13 @@ var global_env = new Environment({
 
         Predicate that tests if value is a macro.`),
     // ------------------------------------------------------------------
+    'continuation?': doc(
+        'continuation?',
+        is_continuation,
+        `(continuation? expression)
+
+         Predicate that tests if value is a callable continuation.`),
+    // ------------------------------------------------------------------
     'function?': doc(
         'function?',
         is_function,

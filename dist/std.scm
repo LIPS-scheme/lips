@@ -1634,6 +1634,14 @@
 (define list->vector list->array)
 (define vector->list array->list)
 (define call-with-current-continuation call/cc)
+
+;; -----------------------------------------------------------------------------
+(define (procedure? obj)
+  "(procedure? expression)
+
+   Predicate that tests if value is a callable function or continuation."
+  (or (function? obj) (continuation? obj)))
+
 ;; -----------------------------------------------------------------------------
 (define-macro (define-symbol-macro type spec . rest)
   "(define-symbol-macro type (name . args) . body)

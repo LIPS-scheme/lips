@@ -135,6 +135,7 @@
 (define list->vector list->array)
 (define vector->list array->list)
 (define call-with-current-continuation call/cc)
+(define (procedure? obj) "(procedure? expression)\u000A\u000APredicate that tests if value is a callable function or continuation." (or (function? obj) (continuation? obj)))
 (define-macro (define-symbol-macro type spec . rest) "(define-symbol-macro type (name . args) . body)\u000A\u000ACreates special symbol macros for evaluator similar to built-in , or `.\u000AIt's like an alias for a real macro. Similar to CL reader macros but it receives already\u000Aparsed code like normal macros. Type can be SPLICE or LITERAL symbols (see set-special!).\u000AALL default symbol macros are literal." (let* ((name (car spec)) (symbol (cadr spec)) (args (cddr spec))) (quasiquote (begin (set-special! (unquote symbol) (quote (unquote name)) (unquote (string->symbol (concat "lips.specials." (symbol->string type))))) (define-macro ((unquote name) (unquote-splicing args)) (unquote-splicing rest))))))
 (set-special! "#" (quote vector-literal) lips.specials.SPLICE)
 (define-macro (vector-literal . args) (if (not (or (pair? args) (eq? args ()))) (throw (new Error (concat "Parse Error: vector require pair got " (type args) " in " (repr args)))) (let ((v (list->array args))) (Object.freeze v) v)))
