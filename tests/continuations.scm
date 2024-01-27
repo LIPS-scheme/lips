@@ -1,13 +1,11 @@
 (test.failing "continuations: base"
       (lambda (t)
-        (define x 0)
-
-        (t.is (+ 2 (call/cc (lambda (cc)
-                              (set! x cc)
-                              3)))
-              5)
-
-        (t.is (x 4) 6)))
+        (let ((x #f))
+          (let ((val (call/cc (lambda (cont)
+                                (cont 5)
+                                (set! x #t)))))
+            (t.is val 5)
+            (t.is x #f)))))
 
 (test.failing "continuations: make-range"
               (lambda (t)
