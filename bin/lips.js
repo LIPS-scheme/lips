@@ -3,7 +3,7 @@
 import lily from '@jcubic/lily';
 
 const boolean = [
-    'd', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile'
+    'd', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'c', 'compile'
 ];
 const options = lily(process.argv.slice(2), { boolean });
 
