@@ -1559,6 +1559,30 @@
 (define string-split split)
 
 ;; -----------------------------------------------------------------------------
+(define (%nth-pair msg l k)
+  "(%nth-pair msg list n)
+
+   Returns nth pair of a list with given message on error."
+  (typecheck msg l '("pair" "nil"))
+  (typecheck-number msg k '("integer" "bigint"))
+  (if (< k 0)
+      (throw (new Error (string-append msg ": index out of range")))
+      (let ((l l) (k k))
+        (while (> k 0)
+          (if (or (null? (cdr l)) (null? l))
+              (throw (new Error (string-append msg ": not enough elements in the list"))))
+          (set! l (cdr l))
+          (set! k (- k 1)))
+        l)))
+
+;; -----------------------------------------------------------------------------
+(define (nth-pair l k)
+  "(nth-pair list n)
+
+   Returns nth pair of a list."
+  (%nth-pair "nth-pair" l k))
+
+;; -----------------------------------------------------------------------------
 (define (symbol-append . rest)
    "(symbol-append s1 s2 ...)
 
@@ -2156,18 +2180,10 @@
   "(list-ref list n)
 
    Returns n-th element of a list."
-  (typecheck "list-ref" l '("pair" "nil"))
-  (if (< k 0)
-      (throw (new Error "list-ref: index out of range"))
-      (let ((l l) (k k))
-        (while (> k 0)
-          (if (or (null? (cdr l)) (null? l))
-              (throw (new Error "list-ref: not enough elements in the list")))
-          (set! l (cdr l))
-          (set! k (- k 1)))
-        (if (null? l)
-            l
-            (car l)))))
+  (let ((l (%nth-pair "list-ref" l k)))
+    (if (null? l)
+        l
+        (car l))))
 
 ;; -----------------------------------------------------------------------------
 (define (not x)
@@ -3492,6 +3508,7 @@
 
    The macro work similar to let* but variable is list of values and value
    need to evaluate to result of calling values.")
+
 ;; -----------------------------------------------------------------------------
 ;; R7RS division operators (Gauche Scheme) BSD license
 ;; Copyright (c) 2000-2020  Shiro Kawai  <shiro@acm.org>
@@ -4722,6 +4739,13 @@
   (if (null? obj)
       obj
       (obj.clone false)))
+
+;; -----------------------------------------------------------------------------
+(define (list-set! l k obj)
+  "(list-set! list n)
+
+   Returns n-th element of a list."
+  (set-car! (%nth-pair "list-set!" l k) obj))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (define-record-type name constructor pred . fields)

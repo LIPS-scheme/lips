@@ -221,6 +221,7 @@
 
    The macro work similar to let* but variable is list of values and value
    need to evaluate to result of calling values.")
+
 ;; -----------------------------------------------------------------------------
 ;; R7RS division operators (Gauche Scheme) BSD license
 ;; Copyright (c) 2000-2020  Shiro Kawai  <shiro@acm.org>
@@ -1451,6 +1452,13 @@
   (if (null? obj)
       obj
       (obj.clone false)))
+
+;; -----------------------------------------------------------------------------
+(define (list-set! l k obj)
+  "(list-set! list n)
+
+   Returns n-th element of a list."
+  (set-car! (%nth-pair "list-set!" l k) obj))
 
 ;; -----------------------------------------------------------------------------
 (define-macro (define-record-type name constructor pred . fields)

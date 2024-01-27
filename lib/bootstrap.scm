@@ -1559,6 +1559,30 @@
 (define string-split split)
 
 ;; -----------------------------------------------------------------------------
+(define (%nth-pair msg l k)
+  "(%nth-pair msg list n)
+
+   Returns nth pair of a list with given message on error."
+  (typecheck msg l '("pair" "nil"))
+  (typecheck-number msg k '("integer" "bigint"))
+  (if (< k 0)
+      (throw (new Error (string-append msg ": index out of range")))
+      (let ((l l) (k k))
+        (while (> k 0)
+          (if (or (null? (cdr l)) (null? l))
+              (throw (new Error (string-append msg ": not enough elements in the list"))))
+          (set! l (cdr l))
+          (set! k (- k 1)))
+        l)))
+
+;; -----------------------------------------------------------------------------
+(define (nth-pair l k)
+  "(nth-pair list n)
+
+   Returns nth pair of a list."
+  (%nth-pair "nth-pair" l k))
+
+;; -----------------------------------------------------------------------------
 (define (symbol-append . rest)
    "(symbol-append s1 s2 ...)
 

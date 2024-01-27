@@ -577,18 +577,10 @@
   "(list-ref list n)
 
    Returns n-th element of a list."
-  (typecheck "list-ref" l '("pair" "nil"))
-  (if (< k 0)
-      (throw (new Error "list-ref: index out of range"))
-      (let ((l l) (k k))
-        (while (> k 0)
-          (if (or (null? (cdr l)) (null? l))
-              (throw (new Error "list-ref: not enough elements in the list")))
-          (set! l (cdr l))
-          (set! k (- k 1)))
-        (if (null? l)
-            l
-            (car l)))))
+  (let ((l (%nth-pair "list-ref" l k)))
+    (if (null? l)
+        l
+        (car l))))
 
 ;; -----------------------------------------------------------------------------
 (define (not x)

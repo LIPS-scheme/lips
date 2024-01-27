@@ -7,6 +7,7 @@
 * add `string-for-each`, `string-downcase`, and `string-upcase` from R7RS
 * add `typecheck-number` function
 * add `char-foldcase` and `string-foldcase` functions
+* add `list-set!` and `nth-pair` functions
 * add `SRFI-210`
 * add `syntax-parameterize` from SRFI-139 to the core [#210](https://github.com/jcubic/lips/issues/210)
 ### Bugfix
