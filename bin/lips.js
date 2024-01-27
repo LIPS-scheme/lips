@@ -3,7 +3,7 @@
 import lily from '@jcubic/lily';
 
 const boolean = [
-    'd', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile', 'b', 'cbor', 'x'
+    'd', 'dynamic', 'q', 'quiet', 'V', 'version', 'trace', 't', 'debug', 'c', 'compile'
 ];
 const options = lily(process.argv.slice(2), { boolean });
 
@@ -122,10 +122,11 @@ function print(result) {
 
 // -----------------------------------------------------------------------------
 function bootstrap(interpreter) {
-    if (options.bootstrap === 'none') {
+    const bootstrap = options.b || options.bootstrap;
+    if (bootstrap === 'none') {
         return Promise.resolve();
     }
-    const file = options.bootstrap ? options.bootstrap : './dist/std.xcb';
+    const file = bootstrap ? bootstrap : './dist/std.xcb';
     function read(name) {
         var path;
         try {
@@ -315,11 +316,6 @@ if (options.version || options.V) {
         const dynamic = options.d || options.dynamic;
         return run(code, interp, dynamic, null, true).then(print);
     });
-} else if (options.b && options._.length === 1) {
-    const filename = options._[0];
-    for (expr of readCode(filename)) {
-        console.log(expr.toString(true));
-    }
 } else if ((options.c || options.compile) && options._.length === 1) {
     try {
         const filename = options._[0];
@@ -374,7 +370,7 @@ if (options.version || options.V) {
     command_line.push(...get_command_line_args());
     try {
         const code = readCode(filename);
-        (options.x ? Promise.resolve() : bootstrap(interp)).then(() => {
+        bootstrap(interp).then(() => {
             const dynamic = options.d || options.dynamic;
             return run(code, interp, dynamic, null, options.t || options.trace);
         });
@@ -386,14 +382,18 @@ if (options.version || options.V) {
     }
 } else if (options.h || options.help) {
     var name = process.argv[1];
-    var intro = banner.replace(/(me>\n)[\s\S]+$/, '$1');
-    console.log(format('%s\nusage:\n  %s -q | -h | -t | -e <code> | <filename> | -d\n\n  [-h --help]\t' +
-                       '\tthis help message\n  [-e --eval]\t\texecute code\n  [-V --version]\tdisplay ' +
-                       'version information according to srfi-176\n  [-q --quiet]\t\tdon\'t display ba' +
-                       'nner in REPL\n  [-d --dynamic]\trun interpreter with dynamic scope\n  [-t --tr' +
-                       'ace]\t\tprint JavaScript stack trace when extensions is thrown\n\nif called wi' +
-                       'thout arguments it will run REPL and if called with one argument\nit will trea' +
-                       't it as filename and execute it.', intro, path.basename(name)));
+    var intro = banner.replace(/(Jankiewicz\n)[\s\S]+$/, '$1').replace('{{VER}}', version);
+    console.log(format('%s\nusage:\n  %s -q | -c | -h | -t | -b <file> | -d | -e <code> | <filename>\n' +
+                       '\n  [-h --help]\t\tthis help message\n  [-e --eval]\t\texecute code\n  [-V --v' +
+                       'ersion]\tdisplay version information according to srfi-176\n  [-c --compile]\t' +
+                       'parse and compile the file into binary file format\n  [-b --boostrap]\tpoint t' +
+                       'o a file that should be used for boostraping standard library,\n\t\t\tdefault ' +
+                       'is ./dist/std.xcb. use none to disable boostraping\n  [-q --quiet]\t\tdon\'t d' +
+                       'isplay banner in REPL\n  [-d --dynamic]\trun interpreter with dynamic scope\n ' +
+                       ' [-t --trace]\t\tprint JavaScript and scheme stack traces when extensions is th' +
+                       'rown\n\nif called without arguments it will run the REPL and if called with on' +
+                       'e argument\nit will treat it as filename and execute it.',
+                       intro, path.basename(name)));
 } else {
     const dynamic = options.d || options.dynamic;
     const entry = '   ' + (dynamic ? 'dynamic' : 'lexical') + ' scope $1';
