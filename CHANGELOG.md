@@ -21,6 +21,7 @@
 * various fixes to `syntax-rules`
 * fix `procedure?` to return true for continuations
 * fix `lips --help` screen
+* fix `cond-expand` to skip not-matched symbols
 
 ## 1.0.0-beta.18
 ### Breaking

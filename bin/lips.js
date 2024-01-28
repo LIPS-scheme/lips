@@ -102,8 +102,8 @@ function print_error(e, stack) {
         console.error('Thrown exception is in global exception variable, use ' +
                       '(display exception.stack) to display JS stack trace');
     }
-    global.exception = e;}
-
+    global.exception = e;
+}
 
 // -----------------------------------------------------------------------------
 function print(result) {
