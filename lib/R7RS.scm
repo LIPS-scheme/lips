@@ -535,9 +535,10 @@
 ;; -----------------------------------------------------------------------------
 (define-syntax cond-expand
   (syntax-rules (and or not else r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10
-                     srfi-22 srfi-23 srfi-46 srfi-139 srfi-176 lips r7rs
-                     complex full-unicode ieee-float ratios exact-complex
-                     full-numeric-tower)
+                     srfi-22 srfi-23 srfi-28 srfi-46 srfi-69 srfi-98 srfi-111
+                     srfi-139 srfi-147 srfi-156 srfi-176 srfi-193 srfi-195 srfi-210
+                     srfi-236 lips r7rs complex full-unicode ieee-float ratios
+                     exact-complex full-numeric-tower)
     ((cond-expand) (syntax-error "Unfulfilled cond-expand"))
     ((cond-expand (else body ...))
      (begin body ...))
@@ -567,25 +568,45 @@
        (else body ...)))
     ((cond-expand (r7rs body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-0 body ...) more-clauses ...)
+    ((cond-expand (srfi-0  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-2 body ...) more-clauses ...)
+    ((cond-expand (srfi-2  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-4 body ...) more-clauses ...)
+    ((cond-expand (srfi-4  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-6 body ...) more-clauses ...)
+    ((cond-expand (srfi-6  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-10 body ...) more-clauses ...)
+    ((cond-expand (srfi-10  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-22 body ...) more-clauses ...)
+    ((cond-expand (srfi-22  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-23 body ...) more-clauses ...)
+    ((cond-expand (srfi-23  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-46 body ...) more-clauses ...)
+    ((cond-expand (srfi-28  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-139 body ...) more-clauses ...)
+    ((cond-expand (srfi-46  body ...) more-clauses ...)
        (begin body ...))
-    ((cond-expand (srfi-176 body ...) more-clauses ...)
+    ((cond-expand (srfi-69  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-98  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-111  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-139  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-147  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-156  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-176  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-193  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-195  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-210  body ...) more-clauses ...)
+       (begin body ...))
+    ((cond-expand (srfi-236  body ...) more-clauses ...)
        (begin body ...))
     ((cond-expand (lips body ...) more-clauses ...)
        (begin body ...))
@@ -612,8 +633,10 @@
   "(features)
 
    Function returns implemented features as a list."
-  '(r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-46 srfi-139 srfi-176 lips
-         complex full-unicode ieee-float ratios exact-complex full-numeric-tower))
+  '(r7rs srfi-0 srfi-2 srfi-4 srfi-6 srfi-10 srfi-22 srfi-23 srfi-28 srfi-46 srfi-69
+         srfi-98 srfi-111 srfi-139 srfi-147 srfi-156 srfi-176 srfi-193 srfi-195
+         srfi-210 srfi-236 lips complex full-unicode ieee-float ratios exact-complex
+         full-numeric-tower))
 
 ;; -----------------------------------------------------------------------------
 ;; the numerals can be generated using scripts/numerals.scm to get latest version
