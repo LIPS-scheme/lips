@@ -785,7 +785,10 @@
          (typecheck "string-set!" ,input "string")
          (typecheck "string-set!" ,index "number")
          (typecheck "string-set!" ,char "character")
-         (--> ,input (set ,index  ,char))))))
+         (try
+          (--> ,input (set ,index  ,char))
+          (catch (e)
+                 (error "string-set!: attempt to change an immutable string")))))))
 
 ;; -----------------------------------------------------------------------------
 (define (string-length string)

@@ -219,9 +219,11 @@
    Function that converts a LIPS symbol to a string."
   (typecheck "symbol->string" s "symbol")
   (let ((name s.__name__))
-    (if (string? name)
-        name
-        (name.toString))))
+    (let ((str (if (string? name)
+                   name
+                   (name.toString))))
+      (str.freeze)
+      str)))
 
 ;; -----------------------------------------------------------------------------
 (define (string->symbol string)
@@ -229,7 +231,8 @@
 
    Function that converts a string to a LIPS symbol."
   (typecheck "string->symbol" string "string")
-  (%as.data (new lips.LSymbol string)))
+  (let ((symbol (new lips.LSymbol string)))
+    (%as.data symbol)))
 
 ;; -----------------------------------------------------------------------------
 (define (alist->object alist)
@@ -1178,7 +1181,7 @@
 
 ;; -----------------------------------------------------------------------------
 (define-macro (do-iterator spec cond . body)
-  "(do-iterator (var expr) (test) body ...)
+  "(do-iterator (var expr) (test result) body ...)
 
    Iterates over iterators (e.g. creates with JavaScript generator function)
    that works with normal and async iterators. You can loop over infinite iterators
@@ -1192,6 +1195,7 @@
         (sync (gensym "sync"))
         (iterator (gensym "iterator"))
         (test (if (null? cond) #f (car cond)))
+        (result (if (null? cond) undefined (cadr cond)))
         (next (gensym "next"))
         (stop (gensym "stop"))
         (item (gensym "item")))
@@ -1213,7 +1217,8 @@
                          (begin
                            ,@body))
                       (set! ,item (,next))
-                      (set! ,name (. ,item "value")))))))))
+                      (set! ,name (. ,item "value"))))
+                   ,result)))))
 
 ;; -----------------------------------------------------------------------------
 (define (iterator->array object)
@@ -1223,9 +1228,8 @@
   (let ((result (vector)))
     (do-iterator
      (item object)
-     ()
-     (result.push item))
-    result))
+     (#f result)
+     (result.push item))))
 
 ;; -----------------------------------------------------------------------------
 (set-repr! Set (lambda () "#<Set>"))

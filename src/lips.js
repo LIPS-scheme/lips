@@ -475,7 +475,9 @@ function parse_string(string) {
         throw new Error(`Invalid string literal, unclosed ${m[2]}`);
     }
     try {
-        return LString(JSON.parse(string));
+        const str =  LString(JSON.parse(string));
+        str.freeze();
+        return str;
     } catch (e) {
         const msg = e.message.replace(/in JSON /, '').replace(/.*Error: /, '');
         throw new Error(`Invalid string literal: ${msg}`);
@@ -4920,6 +4922,11 @@ LString.prototype.serialize = function() {
 };
 LString.isString = function(x) {
     return x instanceof LString || typeof x === 'string';
+};
+LString.prototype.freeze = function() {
+    const string = this.__string__;
+    delete this.__string__;
+    read_only(this, '__string__', string);
 };
 LString.prototype.get = function(n) {
     typecheck('LString::get', n, 'number');

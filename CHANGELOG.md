@@ -11,6 +11,7 @@
 * add `SRFI-210` and `SRFI-139`
 * add `continuations?` function
 * add `iterator->array` function
+* add immutable strings as in R7RS spec [#285](https://github.com/jcubic/lips/issues/285)
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`

@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 29 Jan 2024 12:43:38 +0000
+ * build: Mon, 29 Jan 2024 14:32:01 +0000
  */
 
 (function (global, factory) {
@@ -5858,7 +5858,9 @@
       throw new Error("Invalid string literal, unclosed ".concat(m[2]));
     }
     try {
-      return LString(JSON.parse(string));
+      var str = LString(JSON.parse(string));
+      str.freeze();
+      return str;
     } catch (e) {
       var msg = e.message.replace(/in JSON /, '').replace(/.*Error: /, '');
       throw new Error("Invalid string literal: ".concat(msg));
@@ -10908,6 +10910,11 @@
   };
   LString.isString = function (x) {
     return x instanceof LString || typeof x === 'string';
+  };
+  LString.prototype.freeze = function () {
+    var string = this.__string__;
+    delete this.__string__;
+    read_only(this, '__string__', string);
   };
   LString.prototype.get = function (n) {
     typecheck('LString::get', n, 'number');
@@ -17304,10 +17311,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 29 Jan 2024 12:43:38 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 29 Jan 2024 14:32:01 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 29 Jan 2024 12:43:38 +0000').valueOf();
+    var date = LString('Mon, 29 Jan 2024 14:32:01 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17347,7 +17354,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 29 Jan 2024 12:43:38 +0000';
+  var date = 'Mon, 29 Jan 2024 14:32:01 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

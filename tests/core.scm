@@ -615,7 +615,7 @@
         (random 1000)
         (t.is (shuffle #(1 2 3 4)) #(2 4 3 1))))
 
-(test.failing "core: immutable strings"
+(test "core: immutable strings"
       (lambda (t)
         (t.is (to.throw
                (let* ((x "hello")
