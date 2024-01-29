@@ -8,7 +8,7 @@
 * add `typecheck-number` function
 * add `char-foldcase` and `string-foldcase` functions
 * add `list-set!` and `nth-pair` functions
-* add `SRFI-210` and `SRFI-139`
+* add `SRFI-61`, `SRFI-139`, and `SRFI-210`
 * add `continuations?` function
 * add `iterator->array` function
 * add immutable strings as in R7RS spec [#285](https://github.com/jcubic/lips/issues/285)
