@@ -10,6 +10,7 @@
 * add `list-set!` and `nth-pair` functions
 * add `SRFI-210` and `SRFI-139`
 * add `continuations?` function
+* add `iterator->array` function
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`

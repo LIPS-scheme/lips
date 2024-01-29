@@ -1216,6 +1216,18 @@
                       (set! ,name (. ,item "value")))))))))
 
 ;; -----------------------------------------------------------------------------
+(define (iterator->array object)
+  "(iterator->array object)
+
+   Return array from JavaScript iterator object."
+  (let ((result (vector)))
+    (do-iterator
+     (item object)
+     ()
+     (result.push item))
+    result))
+
+;; -----------------------------------------------------------------------------
 (set-repr! Set (lambda () "#<Set>"))
 (set-repr! Map (lambda () "#<Map>"))
 

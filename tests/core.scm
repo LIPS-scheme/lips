@@ -682,6 +682,12 @@
         (t.is '(b c) (or (memq 'b '(a b c))
                          (/ 3 0)))))
 
+(test "core: iterator->array"
+      (lambda (t)
+        (let ((async (self.eval "(async function*() { yield 1; yield 2; })")))
+          (t.is (iterator->array (async)) #(1 2)))
+        (t.is (iterator->array "hello") #(#\h #\e #\l #\l #\o))))
+
 ;; TODO
 ;; begin*
 ;; set-obj! throws with null or boolean
