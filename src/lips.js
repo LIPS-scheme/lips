@@ -3569,7 +3569,11 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
         }
         if (pattern instanceof LSymbol &&
             symbols.includes(pattern.literal())) { // TODO: literal() may be SLOW
-            return LSymbol.is(code, pattern);
+            if (!LSymbol.is(code, pattern)) {
+                return false;
+            }
+            const ref = expansion.ref(pattern);
+            return !ref || ref === define || ref === global_env;
         }
         // pattern (a b (x ...)) and (x ...) match nil
         if (pattern instanceof Pair &&
@@ -8242,7 +8246,6 @@ var global_env = new Environment({
             log(code);
             log(macro);
             const scope = env.inherit('syntax');
-
             const dynamic_env = scope;
             let var_scope = this;
             // for macros that define variables used in macro (2 levels nestting)

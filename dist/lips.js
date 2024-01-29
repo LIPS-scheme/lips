@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 29 Jan 2024 14:32:01 +0000
+ * build: Mon, 29 Jan 2024 15:42:06 +0000
  */
 
 (function (global, factory) {
@@ -9460,8 +9460,8 @@
       },
       symbols: {}
     };
-    scope.expansion;
-      scope.define;
+    var expansion = scope.expansion,
+      define = scope.define;
     // pattern_names parameter is used to distinguish
     // multiple matches of ((x ...) ...) against ((1 2 3) (1 2 3))
     // in loop we add x to the list so we know that this is not
@@ -9480,7 +9480,11 @@
       }
       if (pattern instanceof LSymbol && symbols.includes(pattern.literal())) {
         // TODO: literal() may be SLOW
-        return LSymbol.is(code, pattern);
+        if (!LSymbol.is(code, pattern)) {
+          return false;
+        }
+        var ref = expansion.ref(pattern);
+        return !ref || ref === define || ref === global_env;
       }
       // pattern (a b (x ...)) and (x ...) match nil
       if (pattern instanceof Pair && pattern.car instanceof Pair && pattern.car.cdr instanceof Pair && LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
@@ -17311,10 +17315,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 29 Jan 2024 14:32:01 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Mon, 29 Jan 2024 15:42:06 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 29 Jan 2024 14:32:01 +0000').valueOf();
+    var date = LString('Mon, 29 Jan 2024 15:42:06 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17354,7 +17358,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 29 Jan 2024 14:32:01 +0000';
+  var date = 'Mon, 29 Jan 2024 15:42:06 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

@@ -714,16 +714,7 @@
 
         (t.is (test) (list 'b 1 1 2))
 
-        (t.is (foo 1 ++ 2) '(1 1 1 2))
-        (t.is (let ((++ 10))
-                (foo 1 ++ 2))
-              '(1 1 1 2))
-        (t.is (let* ((++ 10))
-                (foo 1 ++ 2))
-              '(1 1 1 2))
-        (t.is ((lambda (++)
-                 (foo 1 ++ 2)) 10)
-              '(1 1 1 2))))
+        (t.is (foo 1 ++ 2) '(1 1 1 2))))
 
 (test "syntax: scope with rewriting"
       (lambda (t)
@@ -1342,29 +1333,31 @@
               "Hello me in inside")))
 
 ;; ref: https://practical-scheme.net/gauche/man/gauche-refe/Hygienic-macros.html#Syntax_002drules-macro-transformer
-(test.failing "syntax: let shadow identifier (1)"
+(test "syntax: let shadow identifier (1)"
       (lambda (t)
         (define-syntax if+
           (syntax-rules (then else)
             ((_ test then expr1 else expr2) (if test expr1 expr2))))
 
         (define else #f)
-        (t.is (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))
-              5)
+        (let ((x 10))
+          (t.is (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))
+                5))
 
         (t.is (to.throw (let ((else #f) (x 10))
                           (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))))
               #t)))
 
-(test.failing "syntax: let shadow identifier (2)"
+(test "syntax: let shadow identifier (2)"
       (lambda (t)
         (define else #f)
         (define-syntax if+
           (syntax-rules (then else)
             ((_ test then expr1 else expr2) (if test expr1 expr2))))
 
-        (t.is (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))
-              5)
+        (let ((x 10))
+          (t.is (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))
+                5))
 
         (t.is (to.throw (let ((else #f) (x 10))
                           (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))))
