@@ -35,7 +35,7 @@
         (t.is (foo (string-append (it) "!"))
               "hello, world!")))
 
-(test "syntax-parameters: should return default paramter when anaphoric variable is used outside"
+(test "syntax-parameters: should return default parameter when anaphoric variable is used outside"
       (lambda (t)
         (define-syntax-parameter it (syntax-rules () ((_) "default")))
 
