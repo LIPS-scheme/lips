@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sat, 27 Jan 2024 13:18:36 +0000
+ * build: Mon, 29 Jan 2024 10:58:12 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -9423,13 +9423,15 @@ Syntax.prototype.toString = function () {
   }
   return '#<syntax>';
 };
-Syntax.className = 'syntax';
 // ----------------------------------------------------------------------
 // :: SRFI-139
 // ----------------------------------------------------------------------
 var SyntaxParameter = /*#__PURE__*/_createClass(function SyntaxParameter(syntax) {
   _classCallCheck(this, SyntaxParameter);
   read_only(this, '_syntax', syntax, {
+    hidden: true
+  });
+  read_only(this._syntax, '_param', true, {
     hidden: true
   });
 });
@@ -9761,8 +9763,6 @@ function transform_syntax() {
     names = options.names,
     ellipsis_symbol = options.ellipsis;
   var gensyms = {};
-  // for SRFI-139
-  var syntax_parameters = [];
   function valid_symbol(symbol) {
     if (symbol instanceof LSymbol) {
       return true;
@@ -9795,20 +9795,14 @@ function transform_syntax() {
       }
     }
     if (symbols.includes(name)) {
-      return LSymbol(name);
-    }
-    if (syntax_parameters.includes(name)) {
-      return LSymbol(name);
-    }
-    if (!(symbol instanceof LSymbol)) {
-      console.trace();
+      return symbol;
     }
     return rename(name, symbol);
   }
   function rename(name, symbol) {
     if (!gensyms[name]) {
-      // nested syntax-rules needs original symbol to get renamed again
       var ref = scope.ref(name);
+      // nested syntax-rules needs original symbol to get renamed again
       if (_typeof$1(name) === 'symbol' && !ref) {
         name = symbol.literal();
       }
@@ -9973,13 +9967,6 @@ function transform_syntax() {
         return traverse(expr.car.cdr, {
           disabled: true
         });
-      }
-      // SRFI-139 - this need to be hardcoded
-      if (LSymbol.is(expr.car, 'syntax-parameterize') && is_pair(expr.cdr) && is_pair(expr.cdr.car)) {
-        var _names = expr.cdr.car.to_array(false).map(function (pair) {
-          return pair.car.valueOf();
-        });
-        syntax_parameters.push.apply(syntax_parameters, _toConsumableArray(_names));
       }
       if (expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
         log('>> 1');
@@ -14175,6 +14162,10 @@ var global_env = new Environment({
       env: env
     }, eval_args));
     typecheck('define-syntax-parameter', syntax, 'syntax', 2);
+    syntax.__name__ = name.valueOf();
+    if (syntax.__name__ instanceof LString) {
+      syntax.__name__ = syntax.__name__.valueOf();
+    }
     var __doc__;
     if (code.cdr.cdr instanceof Pair && LString.isString(code.cdr.cdr.car)) {
       __doc__ = code.cdr.cdr.car.valueOf();
@@ -14195,12 +14186,25 @@ var global_env = new Environment({
         env: this
       }));
       var name = pair.car;
-      typecheck('syntax-parameterize', syntax, 'syntax');
+      typecheck('syntax-parameterize', syntax, ['syntax']);
       typecheck('syntax-parameterize', name, 'symbol');
-      // allow to shadow the parameter #293
-      if (!this.ref(name)) {
-        env.set(pair.car, new SyntaxParameter(syntax));
+      syntax.__name__ = name.valueOf();
+      if (syntax.__name__ instanceof LString) {
+        syntax.__name__ = syntax.__name__.valueOf();
       }
+      var parameter = new SyntaxParameter(syntax);
+      // used inside syntax-rules
+      if (name.is_gensym()) {
+        var _symbol = name.literal();
+        var parent = this.get(_symbol, {
+          throwError: false
+        });
+        if (parent instanceof SyntaxParameter) {
+          // create anaphoric binding for literal symbol
+          env.set(_symbol, parameter);
+        }
+      }
+      env.set(name, parameter);
     }
     var body = new Pair(new LSymbol('begin'), code.cdr);
     return _evaluate(body, _objectSpread(_objectSpread({}, eval_args), {}, {
@@ -17293,10 +17297,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sat, 27 Jan 2024 13:18:36 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 29 Jan 2024 10:58:12 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sat, 27 Jan 2024 13:18:36 +0000').valueOf();
+  var date = LString('Mon, 29 Jan 2024 10:58:12 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17336,7 +17340,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sat, 27 Jan 2024 13:18:36 +0000';
+var date = 'Mon, 29 Jan 2024 10:58:12 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

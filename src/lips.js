@@ -3527,13 +3527,13 @@ Syntax.prototype.toString = function() {
     }
     return '#<syntax>';
 };
-Syntax.className = 'syntax';
 // ----------------------------------------------------------------------
 // :: SRFI-139
 // ----------------------------------------------------------------------
 class SyntaxParameter {
     constructor(syntax) {
         read_only(this, '_syntax', syntax, { hidden: true });
+        read_only(this._syntax, '_param', true, { hidden: true });
     }
 }
 Syntax.Parameter = SyntaxParameter;
@@ -3878,8 +3878,6 @@ function transform_syntax(options = {}) {
         names,
         ellipsis: ellipsis_symbol } = options;
     const gensyms = {};
-    // for SRFI-139
-    const syntax_parameters = [];
     function valid_symbol(symbol) {
         if (symbol instanceof LSymbol) {
             return true;
@@ -3913,20 +3911,14 @@ function transform_syntax(options = {}) {
             }
         }
         if (symbols.includes(name)) {
-            return LSymbol(name);
-        }
-        if (syntax_parameters.includes(name)) {
-            return LSymbol(name);
-        }
-        if (!(symbol instanceof LSymbol)) {
-            console.trace();
+            return symbol;
         }
         return rename(name, symbol);
     }
     function rename(name, symbol) {
         if (!gensyms[name]) {
-            // nested syntax-rules needs original symbol to get renamed again
             const ref = scope.ref(name);
+            // nested syntax-rules needs original symbol to get renamed again
             if (typeof name === 'symbol' && !ref) {
                 name = symbol.literal();
             }
@@ -4081,13 +4073,6 @@ function transform_syntax(options = {}) {
             if (!disabled && expr.car instanceof Pair &&
                 LSymbol.is(expr.car.car, ellipsis_symbol)) {
                 return traverse(expr.car.cdr, { disabled: true });
-            }
-            // SRFI-139 - this need to be hardcoded
-            if (LSymbol.is(expr.car, 'syntax-parameterize') &&
-                is_pair(expr.cdr) &&
-                is_pair(expr.cdr.car)) {
-                const names = expr.cdr.car.to_array(false).map(pair => pair.car.valueOf());
-                syntax_parameters.push(...names);
             }
             if (expr.cdr instanceof Pair &&
                 LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
@@ -4305,7 +4290,7 @@ function transform_syntax(options = {}) {
                 const msg = `missing ellipsis symbol next to name \`${name}'`;
                 throw new Error(`syntax-rules: ${msg}`);
             }
-            const value = transform(expr, { disabled });
+            const value = transform(expr);
             if (typeof value !== 'undefined') {
                 return value;
             }
@@ -7847,6 +7832,10 @@ var global_env = new Environment({
         }
         const syntax = evaluate(code.cdr.car, { env, ...eval_args });
         typecheck('define-syntax-parameter', syntax, 'syntax', 2);
+        syntax.__name__ = name.valueOf();
+        if (syntax.__name__ instanceof LString) {
+            syntax.__name__ = syntax.__name__.valueOf();
+        }
         let __doc__;
         if (code.cdr.cdr instanceof Pair &&
             LString.isString(code.cdr.cdr.car)) {
@@ -7869,14 +7858,25 @@ var global_env = new Environment({
                 const msg = `invalid syntax for syntax-parameterize: ${repr(code, true)}`;
                 throw new Error(`syntax-parameterize: ${msg}`);
             }
-            const syntax = evaluate(pair.cdr.car, { ...eval_args, env: this });
+            let syntax = evaluate(pair.cdr.car, { ...eval_args, env: this });
             const name = pair.car;
-            typecheck('syntax-parameterize', syntax, 'syntax');
+            typecheck('syntax-parameterize', syntax, ['syntax']);
             typecheck('syntax-parameterize', name, 'symbol');
-            // allow to shadow the parameter #293
-            if (!this.ref(name)) {
-                env.set(pair.car, new SyntaxParameter(syntax));
+            syntax.__name__ = name.valueOf();
+            if (syntax.__name__ instanceof LString) {
+                syntax.__name__ = syntax.__name__.valueOf();
             }
+            const parameter = new SyntaxParameter(syntax);
+            // used inside syntax-rules
+            if (name.is_gensym()) {
+                const symbol = name.literal();
+                const parent = this.get(symbol, { throwError: false });
+                if (parent instanceof SyntaxParameter) {
+                    // create anaphoric binding for literal symbol
+                    env.set(symbol, parameter);
+                }
+            }
+            env.set(name, parameter);
         }
         const body = new Pair(new LSymbol('begin'), code.cdr);
         return evaluate(body, { ...eval_args, env });
@@ -8235,6 +8235,7 @@ var global_env = new Environment({
             log(code);
             log(macro);
             const scope = env.inherit('syntax');
+
             const dynamic_env = scope;
             let var_scope = this;
             // for macros that define variables used in macro (2 levels nestting)

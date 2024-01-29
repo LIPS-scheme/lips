@@ -13,6 +13,7 @@
 
 (test "syntax-parameters: should create syntax-rules binding with syntax-parameterize"
       (lambda (t)
+        (define-syntax-parameter it (syntax-rules () ((_) "default")))
         (syntax-parameterize
          ((it (syntax-rules ()
                 ((_) "hello")))
@@ -22,6 +23,7 @@
                "hello world"))))
 (test "syntax-parameters: should create anaphofric macro"
       (lambda (t)
+        (define-syntax-parameter it (syntax-rules () ((_) "default")))
         (define-syntax foo
           (syntax-rules ()
             ((_ body ...)
@@ -33,8 +35,10 @@
         (t.is (foo (string-append (it) "!"))
               "hello, world!")))
 
-(test "syntax-parameters: should throw an error when anaphoric variable is used outside"
+(test "syntax-parameters: should return default paramter when anaphoric variable is used outside"
       (lambda (t)
+        (define-syntax-parameter it (syntax-rules () ((_) "default")))
+
         (define-syntax foo
           (syntax-rules ()
             ((_ body ...)
@@ -44,15 +48,13 @@
                        ((_) "hello world")))))
                body ...))))
 
-        (t.is (null? (--> (try (foo (it))
-                               (catch (e)
-                                      e.message))
-                          (match #/Unbound variable `it' in macro/)))
-              #f)))
+        (t.is (foo (it)) "default")))
 
 (test "syntax-parameters: parameters should be local"
       (lambda (t)
         (define void (if #f #f))
+
+        (define-syntax-parameter it (syntax-rules () ((_) "default")))
 
         (define-syntax foo
           (syntax-rules ()
@@ -74,6 +76,9 @@
 
 (test "syntax-parameters: user binding should shadow parameter"
       (lambda (t)
+
+        (define-syntax-parameter it (syntax-rules () ((_) "default")))
+
         (define-syntax foo
           (syntax-rules ()
             ((_ body ...)
@@ -90,3 +95,42 @@
         (t.is (let ((it 10))
                 (foo it))
               10)))
+
+(test "syntax-parameters: hygience without syntax-parameterize"
+      (lambda (t)
+        (t.plan 4)
+
+        (define-syntax-parameter it (syntax-rules () ((_) "default")))
+
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ body ...)
+             (begin
+               (t.is (it) "default")
+               body ...))))
+
+        (foo (t.is (it) "default"))
+
+        (let ((it 10))
+          (foo (t.is it 10)))))
+
+(test "syntax-parameters: hygience with syntax-parameterize"
+      (lambda (t)
+        (t.plan 4)
+
+        (define-syntax-parameter it (syntax-rules () ((_) "default")))
+
+        (define-syntax bar
+          (syntax-rules ()
+            ((_ body ...)
+             (begin
+               (syntax-parameterize
+                ((it (syntax-rules ()
+                       ((__) "hello world"))))
+                (t.is (it) "hello world")
+                body ...)))))
+
+        (bar (t.is (it) "hello world"))
+
+        (let ((it 10))
+          (bar (t.is it 10)))))
