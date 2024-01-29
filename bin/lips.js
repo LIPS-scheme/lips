@@ -297,7 +297,7 @@ if (options.version || options.V) {
         ["website", "https://lips.js.org"],
         ['languages', 'scheme', 'r5rs', 'r7rs'].map(LSymbol),
         ['encodings', 'utf-8'].map(LSymbol),
-        ["scheme.srfi", 0, 1, 2, 4, 6, 8, 10, 22, 23, 26, 46, 69, 98, 111, 139, 156, 176, 193, 210, 236],
+        ["scheme.srfi", 0, 1, 2, 4, 6, 8, 10, 22, 23, 26, 28, 46, 69, 98, 111, 139, 156, 176, 193, 210, 236],
         ["release", version],
         ["os.uname", os.platform(), os.release()],
         ["os.env.LANG", process.env.LANG],
