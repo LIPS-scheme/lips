@@ -266,8 +266,16 @@ They should be loaded as R7RS libraries in final 1.0.0 version
 | An interface to access environment variables | [SRFI-98](https://srfi.schemers.org/srfi-98/) |
 | Boxes | [SRFI-111](https://srfi.schemers.org/srfi-111/) |
 | Syntactic combiners for binary predicates | [SRFI-156](https://srfi.schemers.org/srfi-156/) |
+| Command line | [SRFI-193](https://srfi.schemers.org/srfi-193/) |
 | Multiple-value boxes | [SRFI-195](https://srfi.schemers.org/srfi-195) |
+| Procedures and Syntax for Multiple Values | [SRFI-210](https://srfi.schemers.org/srfi-210/) |
 | Evaluating expressions in an unspecified order | [SRFI-236](https://srfi.schemers.org/srfi-236) |
+
+in Web (e.g. in Web REPL) you can use URL:
+
+```scheme
+(load "https://cdn.jsdelivr.net/npm/@jcubic/lips@beta/lib/srfi/<NUMBER>.scm")
+```
 
 ## Links
 * [Gitter Chat for discussions](https://gitter.im/jcubic/lips)
