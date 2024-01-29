@@ -248,7 +248,7 @@ The issue with performance is tracked in [#197](https://github.com/jcubic/lips/i
 | Basic Format Strings | [SRFI-28](https://srfi.schemers.org/srfi-28/) |
 | Basic Syntax-rules Extensions | [SRFI-46](https://srfi.schemers.org/srfi-46/) |
 | Syntax parameters | [SRFI-139](https://srfi.schemers.org/srfi-139/) |
-| Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/)) |
+| Custom macro transformers | [SRFI-147](https://srfi.schemers.org/srfi-147/) |
 | Version flag | [SRFI-176](https://srfi.schemers.org/srfi-176/) |
 
 ### require `(load "./lib/srfi/<number>.scm")`
