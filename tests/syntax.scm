@@ -1373,6 +1373,40 @@
         (t.is (quux (1 2 3 4) (5 6 7 8) (9 10 11 12))
               '((1 2 4) (5 6 8) (9 10 12)))))
 
+(test "syntax: list as last element after ellipsis"
+      (lambda (t)
+        (define-syntax quux
+          (syntax-rules ()
+            ((_ (x ... (a ...)) ...)
+             '((a ...) ...))))
+
+        (t.is (quux (1 2 3 (1 2 3))
+                     (5 6 7 (8))
+                     (9 10 11 (12)))
+              '((1 2 3) (8) (12)))
+
+        (define-syntax quux
+          (syntax-rules ()
+            ((_ (x ... (a ...)) ...)
+             '(a ... ...))))
+
+        (t.is (quux (1 2 3 (1 2 3))
+                    (5 6 7 (8))
+                    (9 10 11 (12)))
+              '(1 2 3 8 12))))
+
+(test "syntax: helper macro pattern"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules (aux)
+            ((_ (x ... (a ...) (b ...)) ...)
+             (foo aux (a ... b ...) ...))
+            ((_ aux (a ...) (b ...))
+             '(a ... b ...))))
+
+        (t.is (foo (1 2 (a b) (c d)) (3 4 (e f) (g h)))
+              '(a b c d e f g h))))
+
 (test "syntax: vectors as symbols"
       (lambda (t)
         (define-syntax foo
@@ -1447,25 +1481,3 @@
 
         (t.is (quux #(1 2 3 4) #(5 6 7 8) #(9 10 11 12))
               #(4 8 12))))
-
-(test "syntax: list as last element after ellipsis"
-      (lambda (t)
-        (define-syntax quux
-          (syntax-rules ()
-            ((_ (x ... (a ...)) ...)
-             '((a ...) ...))))
-
-        (t.is (quux (1 2 3 (1 2 3))
-                     (5 6 7 (8))
-                     (9 10 11 (12)))
-              '((1 2 3) (8) (12)))
-
-        (define-syntax quux
-          (syntax-rules ()
-            ((_ (x ... (a ...)) ...)
-             '(a ... ...))))
-
-        (t.is (quux (1 2 3 (1 2 3))
-                    (5 6 7 (8))
-                    (9 10 11 (12)))
-              '(1 2 3 8 12))))
