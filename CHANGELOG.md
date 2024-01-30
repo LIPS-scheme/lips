@@ -25,6 +25,7 @@
 * fix `lips --help` screen
 * fix `cond-expand` to skip not-matched symbols
 * fix shadowing `syntax-rules` identifiers with let [#291](https://github.com/jcubic/lips/issues/291)
+* fix nested syntax rules with symbols after nested ellipsis
 
 ## 1.0.0-beta.18
 ### Breaking
