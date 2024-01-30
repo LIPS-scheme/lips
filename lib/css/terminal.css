@@ -51,6 +51,10 @@
     right: 0;
     height: 150px;
 }
+/* reverse the colors on Wikipedia with Dark Mode */
+html.client-dark-mode .shell-container {
+    filter: invert(1) hue-rotate(180deg);
+}
 .shell-wrapper nav {
     cursor: row-resize; color:#ccc;
     border-bottom: 1px solid #ccc;
