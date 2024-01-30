@@ -521,8 +521,6 @@
               ,@(vector->list result))))))
 
 ;; -----------------------------------------------------------------------------
-;; create scope for JavaScript value for macro
-;; -----------------------------------------------------------------------------
 (define-syntax syntax-error
   (syntax-rules ()
     ((_ "step" arg ...)
