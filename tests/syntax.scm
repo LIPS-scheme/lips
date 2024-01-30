@@ -1362,3 +1362,60 @@
         (t.is (to.throw (let ((else #f) (x 10))
                           (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))))
               #t)))
+
+(test "syntax: vectors as symbols"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ sym ...)
+             (list sym ...))))
+
+        (t.is (foo #(1 2) #(3 4)) '(#(1 2) #(3 4)))))
+
+(test "syntax: make-vector"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ #(x ...) ...)
+             (vector x ... ...))))
+
+        (t.is (foo #(1 2) #(3 4))
+              #(1 2 3 4))))
+
+(test "syntax: vector and symbol + rest"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ #(a b ...) ...)
+             (vector (list a b ...) ...))))
+
+        (t.is (foo #(1 2 3) #(4 5 6))
+              #((1 2 3) (4 5 6)))))
+
+(test "syntax: vector 3 ellipsis"
+      (lambda (t)
+        (define-syntax foo
+          (syntax-rules ()
+            ((_ #(#(a b ...) ...) ...)
+             (vector '(a b ...) ... ...))))
+
+          (t.is (foo #(#(1 2 3) #(4 5 6)) #(#(1 2)))
+                #((1 2 3) (4 5 6) (1 2)))))
+
+(test "syntax: vector ellipsis + symbols after"
+      (lambda (t)
+        (define-syntax quux
+          (syntax-rules ()
+            ((_ #(a b ... z) ...)
+             (vector 'z ...))))
+
+        (t.is (quux #(1 2 3) #(4 5 6) #(7 8 9))
+              #(3 6 9))
+
+        (define-syntax quux
+          (syntax-rules ()
+            ((_ #(x ... a b) ...)
+             (vector '(a b) ...))))
+
+        (t.is (quux #(1 2 3 4) #(5 6 7 8) #(9 10 11 12))
+              #((3 4) (7 8) (11 12)))))

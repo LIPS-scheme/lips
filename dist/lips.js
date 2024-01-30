@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 29 Jan 2024 15:42:06 +0000
+ * build: Tue, 30 Jan 2024 13:38:19 +0000
  */
 
 (function (global, factory) {
@@ -9486,6 +9486,55 @@
         var ref = expansion.ref(pattern);
         return !ref || ref === define || ref === global_env;
       }
+      if (Array.isArray(pattern) && Array.isArray(code)) {
+        log('<<< a 1');
+        if (pattern.length === 0 && code.length === 0) {
+          return true;
+        }
+        if (LSymbol.is(pattern[1], ellipsis_symbol)) {
+          if (pattern[0] instanceof LSymbol) {
+            var name = pattern[0].valueOf();
+            log('<<< a 2 ' + ellipsis);
+            if (ellipsis) {
+              var as_list = Pair.fromArray(code, false);
+              if (!bindings['...'].symbols[name]) {
+                bindings['...'].symbols[name] = new Pair(as_list, _nil);
+              } else {
+                bindings['...'].symbols[name].append(new Pair(as_list, _nil));
+              }
+            } else {
+              bindings['...'].symbols[name] = code;
+            }
+          } else if (Array.isArray(pattern[0])) {
+            log('<<< a 3');
+            var _names = _toConsumableArray(pattern_names);
+            if (!code.every(function (node) {
+              return traverse(pattern[0], node, _names, true);
+            })) {
+              return false;
+            }
+          }
+          if (pattern.length > 2) {
+            log('THERE IS MORE');
+            log(pattern);
+            var pat = pattern.slice(2);
+            return traverse(pat, code.slice(-pat.length), pattern_names, ellipsis);
+          }
+          return true;
+        }
+        var first = traverse(pattern[0], code[0], pattern_names, ellipsis);
+        log({
+          first: first,
+          pattern: pattern[0],
+          code: code[0]
+        });
+        var rest = traverse(pattern.slice(1), code.slice(1), pattern_names, ellipsis);
+        log({
+          first: first,
+          rest: rest
+        });
+        return first && rest;
+      }
       // pattern (a b (x ...)) and (x ...) match nil
       if (pattern instanceof Pair && pattern.car instanceof Pair && pattern.car.cdr instanceof Pair && LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
         log('>> 0');
@@ -9504,11 +9553,11 @@
                 return false;
               }
             }
-            var name = pattern.car.car.valueOf();
-            if (bindings['...'].symbols[name]) {
+            var _name3 = pattern.car.car.valueOf();
+            if (bindings['...'].symbols[_name3]) {
               throw new Error('syntax: named ellipsis can only ' + 'appear onces');
             }
-            bindings['...'].symbols[name] = code;
+            bindings['...'].symbols[_name3] = code;
           }
         }
       }
@@ -9527,16 +9576,16 @@
               list = list.cdr;
               code_len--;
             }
-            var rest = list.cdr;
+            var _rest5 = list.cdr;
             list.cdr = _nil;
-            if (!traverse(pattern.cdr.cdr, rest, pattern_names, ellipsis)) {
+            if (!traverse(pattern.cdr.cdr, _rest5, pattern_names, ellipsis)) {
               return false;
             }
           }
         }
         if (pattern.car instanceof LSymbol) {
-          var _name3 = pattern.car.__name__;
-          if (bindings['...'].symbols[_name3] && !pattern_names.includes(_name3) && !ellipsis) {
+          var _name4 = pattern.car.__name__;
+          if (bindings['...'].symbols[_name4] && !pattern_names.includes(_name4) && !ellipsis) {
             throw new Error('syntax: named ellipsis can only appear onces');
           }
           log('>> 1');
@@ -9544,28 +9593,28 @@
             log('>> 2');
             if (ellipsis) {
               log('NIL');
-              bindings['...'].symbols[_name3] = _nil;
+              bindings['...'].symbols[_name4] = _nil;
             } else {
               log('NULL');
-              bindings['...'].symbols[_name3] = null;
+              bindings['...'].symbols[_name4] = null;
             }
           } else if (code instanceof Pair && (code.car instanceof Pair || code.car === _nil)) {
             log('>> 3 ' + ellipsis);
             if (ellipsis) {
-              if (bindings['...'].symbols[_name3]) {
-                var node = bindings['...'].symbols[_name3];
-                if (node === _nil) {
-                  node = new Pair(_nil, new Pair(code, _nil));
+              if (bindings['...'].symbols[_name4]) {
+                var _node = bindings['...'].symbols[_name4];
+                if (_node === _nil) {
+                  _node = new Pair(_nil, new Pair(code, _nil));
                 } else {
-                  node = node.append(new Pair(code, _nil));
+                  _node = _node.append(new Pair(code, _nil));
                 }
-                bindings['...'].symbols[_name3] = node;
+                bindings['...'].symbols[_name4] = _node;
               } else {
-                bindings['...'].symbols[_name3] = new Pair(code, _nil);
+                bindings['...'].symbols[_name4] = new Pair(code, _nil);
               }
             } else {
               log('>> 4');
-              bindings['...'].symbols[_name3] = new Pair(code, _nil);
+              bindings['...'].symbols[_name4] = new Pair(code, _nil);
             }
           } else {
             log('>> 6');
@@ -9575,8 +9624,8 @@
                 log('>> 7 (b)');
                 if (pattern.cdr.cdr === _nil) {
                   return false;
-                } else if (!bindings['...'].symbols[_name3]) {
-                  bindings['...'].symbols[_name3] = new Pair(code.car, _nil);
+                } else if (!bindings['...'].symbols[_name4]) {
+                  bindings['...'].symbols[_name4] = new Pair(code.car, _nil);
                   return traverse(pattern.cdr.cdr, code.cdr);
                 }
               }
@@ -9590,25 +9639,25 @@
                   // case (a ... . b) for (a b . x)
                   var copy = code.clone();
                   copy.last_pair().cdr = _nil;
-                  bindings['...'].symbols[_name3] = copy;
+                  bindings['...'].symbols[_name4] = copy;
                   return traverse(pattern.cdr.cdr, last_pair.cdr);
                 }
               }
               log('>> 7 ' + ellipsis);
-              pattern_names.push(_name3);
-              if (!bindings['...'].symbols[_name3]) {
-                bindings['...'].symbols[_name3] = new Pair(code, _nil);
+              pattern_names.push(_name4);
+              if (!bindings['...'].symbols[_name4]) {
+                bindings['...'].symbols[_name4] = new Pair(code, _nil);
               } else {
-                var _node = bindings['...'].symbols[_name3];
-                bindings['...'].symbols[_name3] = _node.append(new Pair(code, _nil));
+                var _node2 = bindings['...'].symbols[_name4];
+                bindings['...'].symbols[_name4] = _node2.append(new Pair(code, _nil));
               }
               log({
-                IIIIII: bindings['...'].symbols[_name3]
+                IIIIII: bindings['...'].symbols[_name4]
               });
             } else if (pattern.car instanceof LSymbol && pattern.cdr instanceof Pair && LSymbol.is(pattern.cdr.car, ellipsis_symbol)) {
               // empty ellipsis with rest  (a b ... . d) #290
               log('>> 8');
-              bindings['...'].symbols[_name3] = null;
+              bindings['...'].symbols[_name4] = null;
               return traverse(pattern.cdr.cdr, code);
             } else {
               log('>> 9');
@@ -9625,12 +9674,23 @@
             return true;
           }
           log('>> 11');
-          var _node2 = code;
-          while (_node2 instanceof Pair) {
-            if (!traverse(pattern.car, _node2.car, names, true)) {
+          var _node3 = code;
+          while (_node3 instanceof Pair) {
+            if (!traverse(pattern.car, _node3.car, names, true)) {
               return false;
             }
-            _node2 = _node2.cdr;
+            _node3 = _node3.cdr;
+          }
+          return true;
+        }
+        if (Array.isArray(pattern.car)) {
+          var names = _toConsumableArray(pattern_names);
+          var _node4 = code;
+          while (_node4 instanceof Pair) {
+            if (!traverse(pattern.car, _node4.car, names, true)) {
+              return false;
+            }
+            _node4 = _node4.cdr;
           }
           return true;
         }
@@ -9641,16 +9701,17 @@
           throw new Error('syntax: invalid usage of ellipsis');
         }
         log('>> 12');
-        var _name4 = pattern.__name__;
-        if (symbols.includes(_name4)) {
+        var _name5 = pattern.__name__;
+        if (symbols.includes(_name5)) {
           return true;
         }
         if (ellipsis) {
-          bindings['...'].symbols[_name4] = bindings['...'].symbols[_name4] || [];
-          bindings['...'].symbols[_name4].push(code);
+          var _bindings$$symbols, _bindings$$symbols$_n;
+          log(bindings['...'].symbols[_name5]);
+          (_bindings$$symbols$_n = (_bindings$$symbols = bindings['...'].symbols)[_name5]) !== null && _bindings$$symbols$_n !== void 0 ? _bindings$$symbols$_n : _bindings$$symbols[_name5] = [];
+          bindings['...'].symbols[_name5].push(code);
         }
-        bindings.symbols[_name4] = code;
-        if (!bindings.symbols[_name4]) ;
+        bindings.symbols[_name5] = code;
         return true;
       }
       if (pattern instanceof Pair && code instanceof Pair) {
@@ -9672,13 +9733,13 @@
               return false;
             }
             log('>> 14');
-            var _name5 = pattern.cdr.valueOf();
-            if (!(_name5 in bindings.symbols)) {
-              bindings.symbols[_name5] = _nil;
+            var _name6 = pattern.cdr.valueOf();
+            if (!(_name6 in bindings.symbols)) {
+              bindings.symbols[_name6] = _nil;
             }
-            _name5 = pattern.car.valueOf();
-            if (!(_name5 in bindings.symbols)) {
-              bindings.symbols[_name5] = code.car;
+            _name6 = pattern.car.valueOf();
+            if (!(_name6 in bindings.symbols)) {
+              bindings.symbols[_name6] = code.car;
             }
             return true;
           }
@@ -9689,16 +9750,16 @@
         });
         // case (x y) ===> (var0 var1 ... warn) where var1 match nil
         if (pattern.cdr instanceof Pair && pattern.cdr.cdr instanceof Pair && pattern.cdr.car instanceof LSymbol && LSymbol.is(pattern.cdr.cdr.car, ellipsis_symbol) && pattern.cdr.cdr.cdr instanceof Pair && !LSymbol.is(pattern.cdr.cdr.cdr.car, ellipsis_symbol) && traverse(pattern.car, code.car, pattern_names, ellipsis) && traverse(pattern.cdr.cdr.cdr, code.cdr, pattern_names, ellipsis)) {
-          var _name6 = pattern.cdr.car.__name__;
+          var _name7 = pattern.cdr.car.__name__;
           log({
             pattern: pattern,
             code: code,
-            name: _name6
+            name: _name7
           });
-          if (symbols.includes(_name6)) {
+          if (symbols.includes(_name7)) {
             return true;
           }
-          bindings['...'].symbols[_name6] = null;
+          bindings['...'].symbols[_name7] = null;
           return true;
         }
         log('recur');
@@ -9893,13 +9954,13 @@
       if (expr instanceof Pair) {
         if (expr.car instanceof LSymbol && expr.cdr instanceof Pair && LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
           log('[t 2');
-          var _name7 = expr.car.valueOf();
-          var item = bindings[_name7];
+          var _name8 = expr.car.valueOf();
+          var item = bindings[_name8];
           if (item === null) {
             return;
           } else if (item) {
             log({
-              b: bindings[_name7]
+              b: bindings[_name8]
             });
             if (item instanceof Pair) {
               log('[t 2 Pair ' + nested);
@@ -9908,13 +9969,13 @@
               if (nested) {
                 if (_cdr !== _nil) {
                   log('|| next 1');
-                  next(_name7, _cdr);
+                  next(_name8, _cdr);
                 }
                 return _car;
               } else if (_car instanceof Pair) {
                 if (_car.cdr !== _nil) {
                   log('|| next 2');
-                  next(_name7, new Pair(_car.cdr, _cdr));
+                  next(_name8, new Pair(_car.cdr, _cdr));
                 }
                 return _car.car;
               } else if (_cdr === _nil) {
@@ -9923,19 +9984,19 @@
                 var last_pair = expr.last_pair();
                 if (last_pair.cdr instanceof LSymbol) {
                   log('|| next 3');
-                  next(_name7, item.last_pair());
+                  next(_name8, item.last_pair());
                   return _car;
                 }
               }
             } else if (item instanceof Array) {
               log('[t 2 Array ' + nested);
               if (nested) {
-                next(_name7, item.slice(1));
+                next(_name8, item.slice(1));
                 return Pair.fromArray(item);
               } else {
-                var _rest5 = item.slice(1);
-                if (_rest5.length) {
-                  next(_name7, _rest5);
+                var _rest6 = item.slice(1);
+                if (_rest6.length) {
+                  next(_name8, _rest6);
                 }
                 return item[0];
               }
@@ -10063,10 +10124,10 @@
               }
               // case of (list) ... (rest code)
               if (expr.cdr.cdr !== _nil && !LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
-                var _rest6 = traverse(expr.cdr.cdr, {
+                var _rest7 = traverse(expr.cdr.cdr, {
                   disabled: disabled
                 });
-                return result.append(_rest6);
+                return result.append(_rest7);
               }
               return result;
             } else {
@@ -10195,9 +10256,9 @@
           return expr;
         }
         var _symbols3 = Object.keys(bindings['...'].symbols);
-        var _name8 = expr.literal(); // TODO: slow
-        if (_symbols3.includes(_name8)) {
-          var msg = "missing ellipsis symbol next to name `".concat(_name8, "'");
+        var _name9 = expr.literal(); // TODO: slow
+        if (_symbols3.includes(_name9)) {
+          var msg = "missing ellipsis symbol next to name `".concat(_name9, "'");
           throw new Error("syntax-rules: ".concat(msg));
         }
         var _value2 = transform(expr);
@@ -10603,9 +10664,9 @@
               try {
                 for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
                   var _step10$value = _step10.value,
-                    _name9 = _step10$value.name,
+                    _name10 = _step10$value.name,
                     _value3 = _step10$value.value;
-                  env.set(_name9, _value3);
+                  env.set(_name10, _value3);
                 }
               } catch (err) {
                 _iterator10.e(err);
@@ -17315,10 +17376,10 @@
   // -------------------------------------------------------------------------
   var banner = function () {
     // Rollup tree-shaking is removing the variable if it's normal string because
-    // obviously 'Mon, 29 Jan 2024 15:42:06 +0000' == '{{' + 'DATE}}'; can be removed
+    // obviously 'Tue, 30 Jan 2024 13:38:19 +0000' == '{{' + 'DATE}}'; can be removed
     // but disabling Tree-shaking is adding lot of not used code so we use this
     // hack instead
-    var date = LString('Mon, 29 Jan 2024 15:42:06 +0000').valueOf();
+    var date = LString('Tue, 30 Jan 2024 13:38:19 +0000').valueOf();
     var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
     var _format = function _format(x) {
       return x.toString().padStart(2, '0');
@@ -17358,7 +17419,7 @@
   read_only(Parameter, '__class__', 'parameter');
   // -------------------------------------------------------------------------
   var version = 'DEV';
-  var date = 'Mon, 29 Jan 2024 15:42:06 +0000';
+  var date = 'Tue, 30 Jan 2024 13:38:19 +0000';
 
   // unwrap async generator into Promise<Array>
   var parse = compose(uniterate_async, _parse);

@@ -3575,6 +3575,47 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             const ref = expansion.ref(pattern);
             return !ref || ref === define || ref === global_env;
         }
+        if (Array.isArray(pattern) && Array.isArray(code)) {
+            log('<<< a 1');
+            if (pattern.length === 0 && code.length === 0) {
+                return true;
+            }
+            if (LSymbol.is(pattern[1], ellipsis_symbol)) {
+                if (pattern[0] instanceof LSymbol) {
+                    const name = pattern[0].valueOf();
+                    log('<<< a 2 ' + ellipsis);
+                    if (ellipsis) {
+                        const as_list = Pair.fromArray(code, false);
+                        if (!bindings['...'].symbols[name]) {
+                            bindings['...'].symbols[name] = new Pair(as_list, nil);
+                        } else {
+                            bindings['...'].symbols[name].append(new Pair(as_list, nil));
+                        }
+                    } else {
+                        bindings['...'].symbols[name] = code;
+                    }
+                } else if (Array.isArray(pattern[0])) {
+                    log('<<< a 3');
+                    const names = [...pattern_names];
+                    let node = code;
+                    if (!code.every(node => traverse(pattern[0], node, names, true))) {
+                        return false;
+                    }
+                }
+                if (pattern.length > 2) {
+                    log('THERE IS MORE');
+                    log(pattern);
+                    const pat = pattern.slice(2);
+                    return traverse(pat, code.slice(-pat.length), pattern_names, ellipsis);
+                }
+                return true;
+            }
+            const first = traverse(pattern[0], code[0], pattern_names, ellipsis);
+            log({first, pattern: pattern[0], code: code[0]});
+            const rest = traverse(pattern.slice(1), code.slice(1), pattern_names, ellipsis);
+            log({first, rest});
+            return first && rest;
+        }
         // pattern (a b (x ...)) and (x ...) match nil
         if (pattern instanceof Pair &&
             pattern.car instanceof Pair &&
@@ -3586,7 +3627,7 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 if (pattern.car.car instanceof LSymbol) {
                     if (pattern.car.cdr instanceof Pair &&
                         LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
-                        let name = pattern.car.car.valueOf();
+                        const name = pattern.car.car.valueOf();
                         const last = pattern.last_pair();
                         if (LSymbol.is(last.car, ellipsis_symbol)) {
                             bindings['...'].symbols[name] = null;
@@ -3738,6 +3779,16 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     node = node.cdr;
                 }
                 return true;
+            } if (Array.isArray(pattern.car) ) {
+                var names = [...pattern_names];
+                let node = code;
+                while (node instanceof Pair) {
+                    if (!traverse(pattern.car, node.car, names, true)) {
+                        return false;
+                    }
+                    node = node.cdr;
+                }
+                return true;
             }
             return false;
         }
@@ -3751,12 +3802,11 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 return true;
             }
             if (ellipsis) {
-                bindings['...'].symbols[name] = bindings['...'].symbols[name] || [];
+                log(bindings['...'].symbols[name]);
+                bindings['...'].symbols[name] ??= [];
                 bindings['...'].symbols[name].push(code);
             }
             bindings.symbols[name] = code;
-            if (!bindings.symbols[name]) {
-            }
             return true;
         }
         if (pattern instanceof Pair && code instanceof Pair) {
