@@ -1363,6 +1363,16 @@
                           (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2))))
               #t)))
 
+(test "syntax: nested spread + leftover"
+      (lambda (t)
+        (define-syntax quux
+          (syntax-rules ()
+            ((_ (x ... a b) ...)
+             '((x ... b) ...))))
+
+        (t.is (quux (1 2 3 4) (5 6 7 8) (9 10 11 12))
+              '((1 2 4) (5 6 8) (9 10 12)))))
+
 (test "syntax: vectors as symbols"
       (lambda (t)
         (define-syntax foo
@@ -1418,4 +1428,22 @@
              (vector '(a b) ...))))
 
         (t.is (quux #(1 2 3 4) #(5 6 7 8) #(9 10 11 12))
-              #((3 4) (7 8) (11 12)))))
+              #((3 4) (7 8) (11 12)))
+
+        (define-syntax quux
+          (syntax-rules ()
+            ((_ #(x ... a b) ...)
+             (vector '(x ...) ...))))
+
+        (t.is (quux #(1 2 3 4) #(5 6 7 8) #(9 10 11 12))
+              #((1 2) (5 6) (9 10)))))
+
+(test "syntax: simple vector spread"
+      (lambda (t)
+        (define-syntax quux
+          (syntax-rules ()
+            ((_ #(x ... a b) ...)
+             #(b ...))))
+
+        (t.is (quux #(1 2 3 4) #(5 6 7 8) #(9 10 11 12))
+              #(4 8 12))))

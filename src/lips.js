@@ -3585,14 +3585,16 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     const name = pattern[0].valueOf();
                     log('<<< a 2 ' + ellipsis);
                     if (ellipsis) {
-                        const as_list = Pair.fromArray(code, false);
+                        const count = code.length - 2;
+                        const array_head = count > 0 ? code.slice(0, count) : code;
+                        const as_list = Pair.fromArray(array_head, false);
                         if (!bindings['...'].symbols[name]) {
                             bindings['...'].symbols[name] = new Pair(as_list, nil);
                         } else {
                             bindings['...'].symbols[name].append(new Pair(as_list, nil));
                         }
                     } else {
-                        bindings['...'].symbols[name] = code;
+                        bindings['...'].symbols[name] = Pair.fromArray(code, false);
                     }
                 } else if (Array.isArray(pattern[0])) {
                     log('<<< a 3');
@@ -3603,8 +3605,6 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                     }
                 }
                 if (pattern.length > 2) {
-                    log('THERE IS MORE');
-                    log(pattern);
                     const pat = pattern.slice(2);
                     return traverse(pat, code.slice(-pat.length), pattern_names, ellipsis);
                 }
@@ -3805,8 +3805,9 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
                 log(bindings['...'].symbols[name]);
                 bindings['...'].symbols[name] ??= [];
                 bindings['...'].symbols[name].push(code);
+            } else {
+                bindings.symbols[name] = code;
             }
-            bindings.symbols[name] = code;
             return true;
         }
         if (pattern instanceof Pair && code instanceof Pair) {
@@ -4013,7 +4014,10 @@ function transform_syntax(options = {}) {
     }
     function transform_ellipsis_expr(expr, bindings, state, next = () => {}) {
         const { nested } = state;
-        log(bindings);
+        log({ bindings, expr });
+        if (Array.isArray(expr) && !expr.length) {
+            return expr;
+        }
         if (expr instanceof LSymbol) {
             let name = expr.valueOf();
             if (is_gensym(expr) && !bindings[name]) {
@@ -4041,24 +4045,38 @@ function transform_syntax(options = {}) {
             }
             return transform(expr);
         }
-        if (expr instanceof Pair) {
-            if (expr.car instanceof LSymbol &&
-                expr.cdr instanceof Pair &&
-                LSymbol.is(expr.cdr.car, ellipsis_symbol)) {
+        const is_array = Array.isArray(expr);
+        if (expr instanceof Pair || is_array) {
+            const first = is_array ? expr[0] : expr.car;
+            const second = is_array ? expr[1] : is_pair(expr.cdr) && expr.cdr.car;
+            if (first instanceof LSymbol &&
+                LSymbol.is(second, ellipsis_symbol)) {
+                let rest = is_array ? expr.slice(2) : expr.cdr.cdr;
                 log('[t 2');
-                const name = expr.car.valueOf();
+                const name = first.valueOf();
                 const item = bindings[name];
                 if (item === null) {
                     return;
                 } else if (item) {
-                    log({ b: bindings[name] });
+                    log({ name, binding: bindings[name] });
                     if (item instanceof Pair) {
                         log('[t 2 Pair ' + nested);
                         const { car, cdr } = item;
+                        const rest_expr = is_array ? expr.slice(2) : expr.cdr.cdr;
                         if (nested) {
                             if (cdr !== nil) {
                                 log('|| next 1');
                                 next(name, cdr);
+                            }
+                            if ((is_array && rest_expr.length) || (rest_expr !== nil && !is_array)) {
+                                const rest = transform_ellipsis_expr(rest_expr, bindings, state, next);
+                                if (is_array) {
+                                    return car.concat(rest);
+                                } else if (is_pair(car)) {
+                                    return car.append(rest);
+                                } else {
+                                    log('UNKNOWN');
+                                }
                             }
                             return car;
                         } else if (car instanceof Pair) {
@@ -4095,8 +4113,13 @@ function transform_syntax(options = {}) {
                 }
             }
             log('[t 3 recur ', expr);
-            const head = transform_ellipsis_expr(expr.car, bindings, state, next);
-            const rest = transform_ellipsis_expr(expr.cdr, bindings, state, next);
+            const rest_expr = is_array ? expr.slice(1) : expr.cdr;
+            const head = transform_ellipsis_expr(first, bindings, state, next);
+            const rest = transform_ellipsis_expr(rest_expr, bindings, state, next);
+            log( { head, rest });
+            if (is_array) {
+                return [head].concat(rest);
+            }
             return new Pair(
                 head,
                 rest
@@ -4123,15 +4146,28 @@ function transform_syntax(options = {}) {
     }
     /* eslint-disable complexity */
     function traverse(expr, { disabled } = {}) {
-        log('traverse>> ' + toString(expr));
-        if (expr instanceof Pair) {
-            // escape ellispsis from R7RS e.g. (... ...)
-            if (!disabled && expr.car instanceof Pair &&
-                LSymbol.is(expr.car.car, ellipsis_symbol)) {
-                return traverse(expr.car.cdr, { disabled: true });
+        log('traverse>> ', expr);
+        const is_array = Array.isArray(expr);
+        if (is_array && expr.length === 0) {
+            return expr;
+        }
+        if (expr instanceof Pair || is_array) {
+            const first = is_array ? expr[0] : expr.car;
+            let second, rest_second;
+            if (is_array) {
+                second = expr[1];
+                rest_second = expr.slice(2);
+            } else if (is_pair(expr.cdr)) {
+                second = expr.cdr.car;
+                rest_second = expr.cdr.cdr;
             }
-            if (expr.cdr instanceof Pair &&
-                LSymbol.is(expr.cdr.car, ellipsis_symbol) && !disabled) {
+            log({ first, second, rest_second });
+            // escape ellispsis from R7RS e.g. (... ...)
+            if (!disabled && is_pair(first) &&
+                LSymbol.is(first.car, ellipsis_symbol)) {
+                return traverse(first.cdr, { disabled: true });
+            }
+            if (second && LSymbol.is(second, ellipsis_symbol) && !disabled) {
                 log('>> 1');
                 const symbols = bindings['...'].symbols;
                 // skip expand list of pattern was (x y ... z)
@@ -4139,7 +4175,7 @@ function transform_syntax(options = {}) {
                 const values = Object.values(symbols);
                 if (values.length && values.every(x => x === null)) {
                     log('>>> 1 (a)');
-                    return traverse(expr.cdr.cdr, { disabled });
+                    return traverse(rest_second, { disabled });
                 }
                 var keys = get_names(symbols);
                 // case of list as first argument ((x . y) ...) or (x ... ...)
@@ -4148,41 +4184,45 @@ function transform_syntax(options = {}) {
                 // x an y will be arrays of [1 1] and [2 2] and z will be array
                 // of rest, x will also have it's own mapping to 1 and y to 2
                 // in case of usage outside of ellipsis list e.g.: (x y)
-                var is_spread = expr.car instanceof LSymbol &&
-                    LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol);
-                if (expr.car instanceof Pair || is_spread) {
+                var is_spread = first instanceof LSymbol &&
+                    LSymbol.is(rest_second.car, ellipsis_symbol);
+                if (is_pair(first) || is_spread) {
                     log('>>> 1 (b)');
                     // lists is free ellipsis on pairs ((???) ...)
                     // TODO: will this work in every case? Do we need to handle
                     // nesting here?
                     if (bindings['...'].lists[0] === nil) {
                         if (!is_spread) {
-                            return traverse(expr.cdr.cdr, { disabled });
+                            return traverse(rest_second, { disabled });
                         }
-                        log(expr.cdr.cdr);
+                        log(rest_second);
                         return nil;
                     }
-                    var new_expr = expr.car;
+                    var new_expr = first;
                     if (is_spread) {
+                        log('>>> 1 (c)'); // TODO: array
                         new_expr = new Pair(
-                            expr.car,
+                            first,
                             new Pair(
-                                expr.cdr.car,
-                                nil));
+                                second,
+                                nil
+                            )
+                        );
                     }
                     log('>> 2');
                     let result;
                     if (keys.length) {
                         log('>> 2 (a)');
                         let bind = { ...symbols };
-                        result = nil;
+                        result = is_array ? [] : nil;
                         while (true) {
+                            log({ bind });
                             if (!have_binding(bind)) {
                                 break;
                             }
                             const new_bind = {};
                             const next = (key, value) => {
-                                // ellipsis decide it what should be the next value
+                                // ellipsis decide if what should be the next value
                                 // there are two cases ((a . b) ...) and (a ...)
                                 new_bind[key] = value;
                             };
@@ -4196,11 +4236,21 @@ function transform_syntax(options = {}) {
                             // on empty ellipsis
                             if (car !== undefined) {
                                 if (is_spread) {
-                                    if (result === nil) {
-                                        result = car;
+                                    if (is_array) {
+                                        if (Array.isArray(car)) {
+                                            result.push(...car);
+                                        } else {
+                                            log('ZONK {1}');
+                                        }
                                     } else {
-                                        result = result.append(car);
+                                        if (result === nil) {
+                                            result = car;
+                                        } else {
+                                            result = result.append(car);
+                                        }
                                     }
+                                } else if (is_array) {
+                                    result.push(car);
                                 } else {
                                     result = new Pair(
                                         car,
@@ -4210,10 +4260,18 @@ function transform_syntax(options = {}) {
                             }
                             bind = new_bind;
                         }
-                        if (result !== nil && !is_spread) {
+                        if (result !== nil && !is_spread && !is_array) {
                             result = result.reverse();
                         }
                         // case of (list) ... (rest code)
+                        if (is_array) {
+                            if (rest_second) {
+                                log({ rest_second, expr });
+                                const rest = traverse(rest_second, { disabled });
+                                return result.concat(rest);
+                            }
+                            return result;
+                        }
                         if (expr.cdr.cdr !== nil &&
                             !LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
                             const rest = traverse(expr.cdr.cdr, { disabled });
@@ -4222,7 +4280,7 @@ function transform_syntax(options = {}) {
                         return result;
                     } else {
                         log('>> 3');
-                        const car = transform_ellipsis_expr(expr.car, symbols, {
+                        const car = transform_ellipsis_expr(first, symbols, {
                             nested: true
                         });
                         if (car) {
@@ -4233,20 +4291,20 @@ function transform_syntax(options = {}) {
                         }
                         return nil;
                     }
-                } else if (expr.car instanceof LSymbol) {
+                } else if (first instanceof LSymbol) {
                     log('>> 4');
-                    if (LSymbol.is(expr.cdr.cdr.car, ellipsis_symbol)) {
+                    if (LSymbol.is(rest_second.car, ellipsis_symbol)) {
                         // case (x ... ...)
                         log('>> 4 (a)');
                     } else {
                         log('>> 4 (b)');
                     }
                     // case: (x ...)
-                    let name = expr.car.__name__;
+                    let name = first.__name__;
                     let bind = { [name]: symbols[name] };
                     log({bind});
                     const is_null = symbols[name] === null;
-                    let result = nil;
+                    let result = is_array ? [] : nil;
                     while (true) {
                         if (!have_binding(bind, true)) {
                             log({ bind });
@@ -4264,14 +4322,18 @@ function transform_syntax(options = {}) {
                         );
                         log({ value });
                         if (typeof value !== 'undefined') {
-                            result = new Pair(
-                                value,
-                                result
-                            );
+                            if (is_array) {
+                                result.push(value);
+                            } else {
+                                result = new Pair(
+                                    value,
+                                    result
+                                );
+                            }
                         }
                         bind = new_bind;
                     }
-                    if (result !== nil) {
+                    if (result !== nil && !is_array) {
                         result = result.reverse();
                     }
                     // case if (x ... y ...) second spread is not processed
@@ -4297,11 +4359,11 @@ function transform_syntax(options = {}) {
                     return result;
                 }
             }
-            const head = traverse(expr.car, { disabled });
+            const head = traverse(first, { disabled });
             let rest;
             let is_syntax;
-            if ((expr.car instanceof LSymbol)) {
-                const value = scope.get(expr.car, { throwError: false });
+            if ((first instanceof LSymbol)) {
+                const value = scope.get(first, { throwError: false });
                 is_syntax = value instanceof Macro &&
                     value.__name__ === 'syntax-rules';
             }
