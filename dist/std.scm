@@ -103,9 +103,11 @@
     `(let* ((,obj ,expr))
        ,@(map (lambda (code)
                 (let* ((value (gensym "value"))
-                       (name (cond ((quoted-symbol? code) (symbol->string (cadr code)))
-                                   ((pair? code) (symbol->string (car code)))
-                                   (true code)))
+                       (name (if (quoted-symbol? code)
+                                 (symbol->string (cadr code))
+                                 (if (pair? code)
+                                     (symbol->string (car code))
+                                     code)))
                        (accessor (if (string? name)
                                      `(. ,obj ,@(split "." name))
                                      `(. ,obj ,name)))
@@ -494,7 +496,7 @@
 ;;       unit tests run from 1min to 6min.
 ;; TODO: test this when syntax macros are compiled before evaluation
 ;; -----------------------------------------------------------------------------
-(define-syntax cond
+#;(define-syntax cond
   (syntax-rules (=> else)
 
     ((cond (else else1 else2 ...))
@@ -533,7 +535,7 @@
    Macro for condition checks. For usage instead of nested ifs.")
 
 ;; -----------------------------------------------------------------------------
-(define-syntax cond/maybe-more
+#;(define-syntax cond/maybe-more
   (syntax-rules ()
     ((cond/maybe-more test consequent)
      (if test
