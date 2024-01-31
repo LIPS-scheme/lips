@@ -576,8 +576,11 @@
                     `(begin
                        ,@expression))
                ,(if (and (pair? rest)
-                         (or (eq? (caar rest) true)
-                             (eq? (caar rest) 'else)))
+                         (let ((x (caar rest)))
+                           (or (eq? x true)
+                               (and (symbol? x)
+                                    (or (eq? x 'else)
+                                        (eq? (--> (new lips.LString (x.literal)) (cmp "else")) 0))))))
                     `(begin
                        ,@(cdar rest))
                     (if (not (null? rest))

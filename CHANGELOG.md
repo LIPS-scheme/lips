@@ -27,6 +27,7 @@
 * fix shadowing `syntax-rules` identifiers with let [#291](https://github.com/jcubic/lips/issues/291)
 * fix nested syntax rules with symbols after nested ellipsis
 * fix Dark Mode colors and scrolling of the page when using Bookmarklet on English Wikipedia
+* remove dependencies on `cond` from `-->` macro so you can use use `-->` inside `cond`
 
 ## 1.0.0-beta.18
 ### Breaking
