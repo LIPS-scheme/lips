@@ -1,4 +1,4 @@
-(test.failing "continuations: base"
+(test.failing "continuations: don't call after call continuation"
       (lambda (t)
         (let ((x #f))
           (let ((val (call/cc (lambda (cont)
@@ -6,6 +6,16 @@
                                 (set! x #t)))))
             (t.is val 5)
             (t.is x #f)))))
+
+(test.failing "continuations: calling continuation"
+      (lambda (t)
+        (t.plan 1)
+        (let ((x #f))
+          (let ((value (call/cc identity)))
+            (if (procedure? value)
+                (value #t)
+                (t.is value #t))))))
+
 
 (test.failing "continuations: make-range"
               (lambda (t)
