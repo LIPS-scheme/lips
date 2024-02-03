@@ -4364,8 +4364,8 @@
     #f))
 
 ;; -----------------------------------------------------------------------------
-(define (%char-cmp name vals)
-  "(%char-cmp name vector)
+(define (%char-cmp-vector name vals)
+  "(%char-cmp-vector name vector)
 
    Function iterate over a vector and compares each pair of two characters
    and return 0 if they are equal, -1 second is smaller and 1 if is larger.
@@ -4393,35 +4393,35 @@
   "(char=? chr1 chr2 ...)
 
    Checks if all characters are equal."
-  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 0)))))
+  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (= a 0)))))
 
 ;; -----------------------------------------------------------------------------
 (define (char<? . chars)
   "(char<? chr1 chr2 ...)
 
    Returns true characters are monotonically increasing."
-  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a -1)))))
+  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (= a -1)))))
 
 ;; -----------------------------------------------------------------------------
 (define (char>? . chars)
   "(char<? chr1 chr2 ...)
 
    Returns true if characters are monotonically decreasing."
-  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 1)))))
+  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (= a 1)))))
 
 ;; -----------------------------------------------------------------------------
 (define (char<=? . chars)
   "(char<? chr1 chr2 ...)
 
    Returns true characters monotonically non-decreasing."
-  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (< a 1)))))
+  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (< a 1)))))
 
 ;; -----------------------------------------------------------------------------
 (define (char>=? . chars)
   "(char<? chr1 chr2 ...)
 
    Returns true characters monotonically non-increasing."
-  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (> a -1)))))
+  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (> a -1)))))
 
 ;; -----------------------------------------------------------------------------
 (define make-bytevector make-u8vector)
