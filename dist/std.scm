@@ -4364,6 +4364,66 @@
     #f))
 
 ;; -----------------------------------------------------------------------------
+(define (%char-cmp name vals)
+  "(%char-cmp name vector)
+
+   Function iterate over a vector and compares each pair of two characters
+   and return 0 if they are equal, -1 second is smaller and 1 if is larger.
+   The function compare the codepoints of the character."
+  (let* ((len (vector-length vals))
+         (max (- len 1))
+         (result (vector))
+         (i 0))
+    (while (< i max)
+      (let* ((chr1 (vector-ref vals i))
+             (j (+ i 1))
+             (chr2 (vector-ref vals j)))
+        (typecheck name chr1 "character" i)
+        (typecheck name chr2 "character" j)
+        (let ((a (char->integer chr1))
+              (b (char->integer chr2)))
+          (result.push (cond ((= a b) 0)
+                             ((< a b) -1)
+                             (else 1)))))
+      (set! i (+ i 1)))
+    result))
+
+;; -----------------------------------------------------------------------------
+(define (char=? . chars)
+  "(char=? chr1 chr2 ...)
+
+   Checks if all characters are equal."
+  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (char<? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true characters are monotonically increasing."
+  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char>? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically decreasing."
+  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char<=? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true characters monotonically non-decreasing."
+  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char>=? . chars)
+  "(char<? chr1 chr2 ...)
+
+   Returns true characters monotonically non-increasing."
+  (--> (%char-cmp "char>=?" (list->vector chars)) (every (lambda (a) (> a -1)))))
+
+;; -----------------------------------------------------------------------------
 (define make-bytevector make-u8vector)
 (define bytevector u8vector)
 (define bytevector? u8vector?)

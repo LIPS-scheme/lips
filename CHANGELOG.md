@@ -12,6 +12,7 @@
 * add `continuations?` function
 * add `iterator->array` function
 * add immutable strings as in R7RS spec [#285](https://github.com/jcubic/lips/issues/285)
+* add R7RS compatible `char<...>?` functions [#298](https://github.com/jcubic/lips/issues/298)
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
