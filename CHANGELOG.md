@@ -13,6 +13,7 @@
 * add `iterator->array` function
 * add immutable strings as in R7RS spec [#285](https://github.com/jcubic/lips/issues/285)
 * add R7RS compatible `char<...>?` functions [#298](https://github.com/jcubic/lips/issues/298)
+* improve syntax-rule exception message (appending macro code)
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
@@ -30,7 +31,7 @@
 * fix Dark Mode colors and scrolling of the page when using Bookmarklet on English Wikipedia
 * remove dependencies on `cond` from `-->` macro so you can use use `-->` inside `cond`
 * fix handling of recursive `flatten` `syntax-rules` macro [#304](https://github.com/jcubic/lips/issues/304)
-* fix macro that manipulate code (see tests/syntax.scm and undswap macro)
+* fix syntax-rules macro that manipulate code (see tests/syntax.scm and undswap macro)
 
 ## 1.0.0-beta.18
 ### Breaking

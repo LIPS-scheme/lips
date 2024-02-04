@@ -4438,7 +4438,7 @@ function is_env(o) {
 }
 // ----------------------------------------------------------------------
 function is_callable(o) {
-    return is_function(o) || is_continuation(o) || is_parameter(o) || is_macro(o);
+    return is_function(o) || is_continuation(o) || is_parameter(o) || is_macro(o);s
 }
 // ----------------------------------------------------------------------
 function is_macro(o) {
@@ -8434,7 +8434,7 @@ var global_env = new Environment({
                     rules = rules.cdr;
                 }
             } catch (e) {
-                e.message += ` in macro: ${macro.toString(true)}`;
+                e.message += `\nin macro:\n  ${macro.toString(true)}`;
                 throw e;
             }
             throw new Error(`syntax-rules: no matching syntax in macro ${code.toString(true)}`);
