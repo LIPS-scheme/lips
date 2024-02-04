@@ -1556,5 +1556,5 @@
              (alist alist-builder (rest ...) (results ... (a . b))))
             ((_ a ...) (alist alist-builder (a ...) ()))))
 
-        (t.is (alist 'foo 10 'bar 20 'baz 30)
+        (t.is (alist foo 10 bar 20 baz 30)
               '((foo . 10) (bar . 20) (baz . 30)))))
