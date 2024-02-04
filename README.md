@@ -205,6 +205,8 @@ Executables also return a S-Expression according to SRFI-176 use `lips --version
 [![FOSDEM 2023 - LIPS Scheme: Powerful introspection and extensibility](https://github.com/jcubic/lips/blob/devel/assets/fosdem-intro.png?raw=true)](https://fosdem.org/2023/schedule/event/lipsscheme/)
 
 ## Limitations
+
+### Performance
 Because LIPS is tree walking interpreter sometimes it may be slow. Especially if you want to
 process long arrays and use callback function. If the array is quite large each piece of code
 inside the callback may slow down the processing. For example see:
@@ -233,6 +235,13 @@ Examples:
 * [React with Hooks](https://codepen.io/jcubic/pen/PoKQmpq?editors=1000) - on click the UI freezes for ~300ms, you can see warnings in dev tools.
 
 The issue with performance is tracked in [#197](https://github.com/jcubic/lips/issues/197).
+
+### JavaScript callbacks
+
+Another limitation is when using JavaScript libraries that require normal values but get a Promise instead.
+This can happen with React/Preact and when the component returns a Promise. Some macros can be async
+(return a Promise), which will break the React app when used in components. An example of a macro that is async is
+`do` macro. So when using React/Preact and when you need to use a promise use promise quotation and `useEffect`.
 
 ## Supported SRFI
 
