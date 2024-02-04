@@ -1092,17 +1092,6 @@
   (* x (/ 180 Math.PI)))
 
 ;; -----------------------------------------------------------------------------
-(define-syntax while
-  (syntax-rules ()
-    ((_ predicate body ...)
-     (do ()
-       ((not predicate))
-       body ...)))
-  "(while cond . body)
-
-   Creates a loop, it executes cond and body until cond expression is false.")
-
-;; -----------------------------------------------------------------------------
 (define-syntax ++
   (syntax-rules ()
     ((++ x)

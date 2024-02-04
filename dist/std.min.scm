@@ -80,7 +80,6 @@
 (define (gensym? value) "(gensym? value)\u000A\u000AReturns #t if value is a symbol created by gensym. It returns #f otherwise." (and (symbol? value) (--> value (is_gensym))))
 (define (degree->radians x) "(degree->radians x)\u000A\u000AConvert degrees to radians." (* x (/ Math.PI 180)))
 (define (radians->degree x) "(radians->degree x)\u000A\u000AConvert radians to degrees." (* x (/ 180 Math.PI)))
-(define-syntax while (syntax-rules () ((_ predicate body ...) (do () ((not predicate)) body ...))) "(while cond . body)\u000A\u000ACreates a loop, it executes cond and body until cond expression is false.")
 (define-syntax ++ (syntax-rules () ((++ x) (let ((tmp (+ x 1))) (set! x tmp) tmp))) "(++ variable)\u000A\u000AWorks only on variables and increment the value by one.")
 (define-syntax -- (syntax-rules () ((-- x) (let ((tmp (- x 1))) (set! x tmp) tmp))) "(-- variable)\u000A\u000AWorks only on variables and decrements the value by one.")
 (define (pretty-format . lists) "(pretty-format pair)\u000A\u000AReturns a pretty printed string from pair expression." (let ((code (--> (list->vector lists) (map (lambda (pair i) (typecheck "pretty-pair" pair "pair" i) (repr pair true))) (join "")))) (--> (new lips.Formatter code) (break) (format))))

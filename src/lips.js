@@ -7701,6 +7701,21 @@ var global_env = new Environment({
         If the second argument is provided and it's an environment the evaluation
         will happen in that environment.`),
     // ------------------------------------------------------------------
+    'while': doc(new Macro('while', function(code, args) {
+        const test = code.car;
+        const eval_args = { ...args, env: this };
+        const body = new Pair(new LSymbol('begin'), code.cdr);
+        (function loop() {
+            unpromise(evaluate(test, eval_args), test => {
+                if (test) {
+                    unpromise(evaluate(body, eval_args), loop);
+                }
+            });
+        })();
+    }), `(while cond body)
+
+         Creates a loop, it executes cond and body until cond expression is false.`),
+    // ------------------------------------------------------------------
     'do': doc(new Macro('do', async function(code, { use_dynamic, error }) {
         const self = this;
         const dynamic_env = self;
