@@ -1517,3 +1517,16 @@
         (t.is (let-slim (x 10 y 20)
                         (+ x y))
               30)))
+
+(test "syntax: undswap"
+      (lambda (t)
+        ;; ref: https://stackoverflow.com/a/58965190/387194
+        (define-syntax undswap
+          (syntax-rules (_)
+            ((undswap val (e ...))
+             ((undswap val e) ...))
+            ((undswap val _) val)
+            ((undswap val e) e)))
+
+        (t.is (undswap 3 (if _ (+ 3 _ )))
+              6)))

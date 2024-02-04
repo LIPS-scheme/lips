@@ -4438,7 +4438,11 @@ function is_env(o) {
 }
 // ----------------------------------------------------------------------
 function is_callable(o) {
-    return is_function(o) || is_continuation(o) || is_parameter(o);
+    return is_function(o) || is_continuation(o) || is_parameter(o) || is_macro(o);
+}
+// ----------------------------------------------------------------------
+function is_macro(o) {
+    return o instanceof Macro || o instanceof SyntaxParameter;
 }
 // ----------------------------------------------------------------------
 function is_promise(o) {

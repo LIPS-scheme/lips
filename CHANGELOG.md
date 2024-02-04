@@ -30,6 +30,7 @@
 * fix Dark Mode colors and scrolling of the page when using Bookmarklet on English Wikipedia
 * remove dependencies on `cond` from `-->` macro so you can use use `-->` inside `cond`
 * fix handling of recursive `flatten` `syntax-rules` macro [#304](https://github.com/jcubic/lips/issues/304)
+* fix macro that manipulate code (see tests/syntax.scm and undswap macro)
 
 ## 1.0.0-beta.18
 ### Breaking
