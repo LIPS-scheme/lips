@@ -1530,3 +1530,31 @@
 
         (t.is (undswap 3 (if _ (+ 3 _ )))
               6)))
+
+(test "syntax: alist into code"
+      (lambda (t)
+        (define-syntax alist
+          (syntax-rules ()
+            ((_)
+             '())
+            ((_ key value . rest)
+             (cons (cons key value) (alist . rest)))))
+
+        (t.is (alist 'foo 10 'bar 20 'baz 30)
+              '((foo . 10) (bar . 20) (baz . 30)))))
+
+(test "syntax: alist literal"
+      (lambda (t)
+        ;; ref: https://stackoverflow.com/a/64672095/387194
+        (define-syntax alist
+          (syntax-rules (alist-builder)
+            ((_ alist-builder () (results ...))
+             '(results ...))
+            ((_ alist-builder (a) . rest)
+             (raise 'bad-alist))
+            ((_ alist-builder (a b rest ...) (results ...))
+             (alist alist-builder (rest ...) (results ... (a . b))))
+            ((_ a ...) (alist alist-builder (a ...) ()))))
+
+        (t.is (alist 'foo 10 'bar 20 'baz 30)
+              '((foo . 10) (bar . 20) (baz . 30)))))
