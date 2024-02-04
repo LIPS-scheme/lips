@@ -1481,3 +1481,39 @@
 
         (t.is (quux #(1 2 3 4) #(5 6 7 8) #(9 10 11 12))
               #(4 8 12))))
+
+(test "syntax: recursive flatten"
+      (lambda (t)
+        (define-syntax flatten
+          (syntax-rules (aux reverse)
+            ((_ xs)
+             (flatten aux xs ()))
+            ((_ aux ((xs ...) ys ...) (result ...))
+             (flatten aux (xs ... ys ...) (result ...)))
+            ((_ aux (x xs ...) (result ...))
+             (flatten aux (xs ...) (x result ...)))
+            ((_ aux () (result ...))
+             (flatten reverse (result ...) ()))
+            ((_ reverse () (result ...))
+             '(result ...))
+            ((_ reverse (x xs ...) (result ...))
+             (flatten reverse (xs ...) (x result ...)))))
+
+        (t.is (flatten ((1 2 (a b) (c d)) (3 4 (e f) (g h))))
+              '(1 2 a b c d 3 4 e f g h))))
+
+(test "syntax: let-slim"
+      (lambda (t)
+        ;; ref https://stackoverflow.com/a/56419718/387194
+        (define-syntax let-slim
+          (syntax-rules (pair)
+            ((_ pair bindings () body)
+             (let bindings . body))
+            ((_ pair (acc ...) (k v . rest) body)
+             (let-slim pair (acc ... (k v)) rest body))
+            ((_ (elements ...) . body)
+             (let-slim pair () (elements ...) body))))
+
+        (t.is (let-slim (x 10 y 20)
+                        (+ x y))
+              30)))

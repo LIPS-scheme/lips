@@ -3625,17 +3625,6 @@ function extract_patterns(pattern, code, symbols, ellipsis_symbol, scope = {}) {
             if (code === nil) {
                 log({ pattern });
                 if (pattern.car.car instanceof LSymbol) {
-                    if (pattern.car.cdr instanceof Pair &&
-                        LSymbol.is(pattern.car.cdr.car, ellipsis_symbol)) {
-                        const name = pattern.car.car.valueOf();
-                        const last = pattern.last_pair();
-                        if (LSymbol.is(last.car, ellipsis_symbol)) {
-                            bindings['...'].symbols[name] = null;
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
                     let name = pattern.car.car.valueOf();
                     if (bindings['...'].symbols[name]) {
                         throw new Error('syntax: named ellipsis can only ' +
