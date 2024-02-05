@@ -4462,6 +4462,126 @@
                                                                        (> a -1)))))
 
 ;; -----------------------------------------------------------------------------
+(define (%string-vector-cmp name strings)
+  "(%string-cmp name chars)
+
+   Function that compares each pair of strings from vector chars and a vector
+   of numbers. 0 if they are equal, -1 if it is smaller and 1 if is larger.
+   The function compares the codepoints of the character."
+  (let* ((len (vector-length strings))
+         (max (- len 1))
+         (result (vector))
+         (i 0))
+    (while (< i max)
+      (let* ((str1 (vector-ref strings i))
+             (j (+ i 1))
+             (str2 (vector-ref strings j)))
+        (typecheck name str1 "string" i)
+        (typecheck name str2 "string" j)
+        (result.push (--> str1 (cmp str2))))
+      (set! i (+ i 1)))
+    result))
+
+;; -----------------------------------------------------------------------------
+(define (string=? . strings)
+  "(string=? string1 string2 ...)
+
+   Checks if all strings are equal."
+  (--> (%string-vector-cmp "string=?" (list->vector strings))
+       (every (lambda (a)
+                (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (string<? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically increasing."
+  (--> (%string-vector-cmp "string<?" (list->vector strings))
+       (every (lambda (a)
+                (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string>? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically decreasing."
+  (--> (%string-vector-cmp "string>?" (list->vector strings))
+       (every (lambda (a)
+                (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string<=? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically non-decreasing."
+  (--> (%string-vector-cmp "string<=?" (list->vector strings))
+       (every (lambda (a)
+                (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string>=? . strings)
+  "(string<? string1 string2 ...)
+
+   Returns true if strings are monotonically non-increasing."
+  (--> (%string-vector-cmp "string>=?" (list->vector strings))
+       (every (lambda (a)
+                (> a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (%string-ci-vector-cmp name strings)
+  "(%string-ci-cmp name strings)
+
+   Function that compares each pair from vector of strings ignoring case and
+   returns array of numbers 0 if they are equal, -1 if it is smaller and 1 if is larger.
+   The function compares the codepoints of the character."
+  (%string-vector-cmp name (--> strings (map string-downcase))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci=? . strings)
+  "(string-ci=? string1 string2 ...)
+
+   Checks if all strings are equal, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci=?" (list->vector strings))
+       (every (lambda (a)
+                (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci<? . strings)
+  "(string-ci<? string1 string2 ...)
+
+   Returns true if strings are monotonically increasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<?" (list->vector strings))
+       (every (lambda (a)
+                (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci>? . strings)
+  "(string-ci>? string1 string2 ...)
+
+   Returns true if strings are monotonically decreasing, ignoring the case"
+  (--> (%string-ci-vector-cmp "string-ci>?" (list->vector strings))
+       (every (lambda (a)
+                (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci<=? . strings)
+  "(string-ci<=? string1 string2 ...)
+
+   Returns true if strings are monotonically non-decreasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<=?" (list->vector strings))
+       (every (lambda (a)
+                (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (string-ci>=? . strings)
+  "(string-ci>=? string1 string2 ...)
+
+   Returns true if strings are monotonically non-increasing, ignoring the case."
+  (--> (%string-ci-vector-cmp "string-ci<=?" (list->vector strings))
+       (every (lambda (a)
+                (> a -1)))))
+
+;; -----------------------------------------------------------------------------
 (define make-bytevector make-u8vector)
 (define bytevector u8vector)
 (define bytevector? u8vector?)
