@@ -4353,8 +4353,8 @@
     #f))
 
 ;; -----------------------------------------------------------------------------
-(define (%char-cmp-vector name vals)
-  "(%char-cmp-vector name vector)
+(define (%char-vector-cmp name vals)
+  "(%char-vector-cmp name vector)
 
    Function iterate over a vector and compares each pair of two characters
    and return 0 if they are equal, -1 second is smaller and 1 if is larger.
@@ -4382,35 +4382,84 @@
   "(char=? chr1 chr2 ...)
 
    Checks if all characters are equal."
-  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (= a 0)))))
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 0)))))
 
 ;; -----------------------------------------------------------------------------
 (define (char<? . chars)
   "(char<? chr1 chr2 ...)
 
-   Returns true characters are monotonically increasing."
-  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (= a -1)))))
+   Returns true if characters are monotonically increasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a -1)))))
 
 ;; -----------------------------------------------------------------------------
 (define (char>? . chars)
   "(char<? chr1 chr2 ...)
 
    Returns true if characters are monotonically decreasing."
-  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (= a 1)))))
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (= a 1)))))
 
 ;; -----------------------------------------------------------------------------
 (define (char<=? . chars)
   "(char<? chr1 chr2 ...)
 
-   Returns true characters monotonically non-decreasing."
-  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (< a 1)))))
+   Returns true if characters are monotonically non-decreasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (< a 1)))))
 
 ;; -----------------------------------------------------------------------------
 (define (char>=? . chars)
   "(char<? chr1 chr2 ...)
 
-   Returns true characters monotonically non-increasing."
-  (--> (%char-cmp-vector "char>=?" (list->vector chars)) (every (lambda (a) (> a -1)))))
+   Returns true if characters are monotonically non-increasing."
+  (--> (%char-vector-cmp "char>=?" (list->vector chars)) (every (lambda (a) (> a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (%char-ci-vector-cmp name chars)
+  "(%char-cmp name chars)
+
+   Function that compares each pair of a vector of characters and return a vector
+   of numbers, where 0 if they are equal, -1 second is smaller and 1 if is larger.
+   The function compare the codepoints of the character."
+  (%char-vector-cmp name (--> chars (map char-downcase))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci=? . chars)
+  "(char-ci=? chr1 chr2 ...)
+
+   Checks if all characters are equal, case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci=?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a 0)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci<? . chars)
+  "(char-ci<? chr1 chr2)
+
+   Returns true if characters are monotonically increasing case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a -1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci>? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically decreasing case insenstive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (= a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci<=? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-decreasing, case insensitive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (< a 1)))))
+
+;; -----------------------------------------------------------------------------
+(define (char-ci>=? . chars)
+  "(char-ci<? chr1 chr2 ...)
+
+   Returns true if characters are monotonically non-increasing, case insenstive."
+  (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
+                                                                       (> a -1)))))
 
 ;; -----------------------------------------------------------------------------
 (define make-bytevector make-u8vector)
