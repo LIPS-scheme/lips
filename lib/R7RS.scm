@@ -1133,7 +1133,7 @@
 (define (char-ci>? . chars)
   "(char-ci<? chr1 chr2 ...)
 
-   Returns true if characters are monotonically decreasing case insenstive."
+   Returns true if characters are monotonically decreasing case insensitive."
   (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
                                                                        (= a 1)))))
 
@@ -1149,7 +1149,7 @@
 (define (char-ci>=? . chars)
   "(char-ci<? chr1 chr2 ...)
 
-   Returns true if characters are monotonically non-increasing, case insenstive."
+   Returns true if characters are monotonically non-increasing, case insensitive."
   (--> (%char-ci-vector-cmp "char-ci<?" (list->vector chars)) (every (lambda (a)
                                                                        (> a -1)))))
 
