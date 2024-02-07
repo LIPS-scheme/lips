@@ -33,6 +33,7 @@
 * fix handling of recursive `flatten` `syntax-rules` macro [#304](https://github.com/jcubic/lips/issues/304)
 * fix syntax-rules macro that manipulate code (see tests/syntax.scm and undswap macro)
 * fix `(read)` in the Web REPL
+* fix Node REPL with `npm install` [#305](https://github.com/jcubic/lips/issues/305)
 
 ## 1.0.0-beta.18
 ### Breaking
