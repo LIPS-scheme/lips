@@ -245,6 +245,31 @@
 (define (truncate-quotient x y)  (quotient x y))
 (define (truncate-remainder x y) (remainder x y))
 
+(define (log z . rest)
+  "(log z)
+   (log z1 z2)
+
+   Function that calculates natural logarithm (base e) of z. Where the argument
+   can be any number (including complex negative and rational). If the value is 0
+   it returns NaN. It two arguments are provided it will calculate logarithm
+   of z1 with given base z2."
+  (if (not (null? rest))
+      (let ((base (car rest)))
+        (/ (log z) (log base)))
+      (cond ((real? z)
+             (cond ((zero? z) NaN)
+                   ((> z 0) (Math.log z))
+                   (else
+                    (+ (Math.log (abs z))
+                       (* Math.PI +i)))))
+            ((complex? z)
+             (let ((arg (Math.atan2 (imag-part z)
+                                    (real-part z))))
+               (+ (Math.log (z.modulus))
+                  (* +i arg))))
+            ((rational? z)
+             (log (exact->inexact z))))))
+
 ;; -----------------------------------------------------------------------------
 (define-syntax case-lambda
   (syntax-rules ()

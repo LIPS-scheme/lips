@@ -14,6 +14,7 @@
 * add immutable strings as in R7RS spec [#285](https://github.com/jcubic/lips/issues/285)
 * add R7RS `char<...>?` and `string<...>?` functions [#298](https://github.com/jcubic/lips/issues/298)
 * improve syntax-rule exception message (appending macro code)
+* update `log` to accept two arguments [#301](https://github.com/jcubic/lips/issues/301)
 ### Bugfix
 * fix `let-values` to allow binding to list [#281](https://github.com/jcubic/lips/issues/281)
 * fix wrong strings in `string-fill!`
