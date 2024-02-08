@@ -433,10 +433,28 @@ function parse_big_int(str) {
     }
     return { exponent, mantisa };
 }
+
+// ----------------------------------------------------------------------
+function string_to_float(str) {
+    if (str.match(/e/i)) {
+        const [coefficient, exponent] = str.split('e');
+        const decimal_places = Math.abs(parseInt(exponent));
+        if (decimal_places < 7 && exponent < 0) {
+            const zeros = '0'.repeat(decimal_places - 1);
+            const sign = coefficient[0] === '-' ? '-' : '';
+            const digits = coefficient.replace(/(^-)|\./g, '');
+            const float_str = `${sign}0.${zeros}${digits}`;
+
+            return parseFloat(float_str);
+        }
+    }
+    return parseFloat(str);
+}
+
 // ----------------------------------------------------------------------
 function parse_float(arg) {
     var parse = num_pre_parse(arg);
-    var value = parseFloat(parse.number);
+    var value = string_to_float(parse.number);
     var simple_number = (parse.number.match(/\.0$/) ||
                          !parse.number.match(/\./)) && !parse.number.match(/e/i);
     if (!parse.inexact) {
@@ -5932,9 +5950,21 @@ LFloat.prototype.toString = function() {
         return '+nan.0';
     }
     var str = this.__value__.toString();
-    if (!LNumber.isFloat(this.__value__) && !str.match(/e/i)) {
-        var result = str + '.0';
-        return this._minus ? ('-' + result) : result;
+    if (!str.match(/e/i)) {
+        // compatibility with other scheme implementation
+        // In JavaScript scientific notation starts from 6 zeros
+        // in Kawa and Gauche it starts from 3 zeros
+        if (str.match(/0\.000/)) {
+            let number = this.__value__.toString();
+            const sign = this.__value__ < 0 ? '-' : '';
+            const exponent = number.match(/[.0]+/g)[0].length - 1;
+            const value = number.replace(/^[-.0]+/, '').replace(/^([0-9])/, '$1.');
+            return `${sign}${value}e-${exponent}`;
+        }
+        if (!LNumber.isFloat(this.__value__)) {
+            var result = str + '.0';
+            return this._minus ? ('-' + result) : result;
+        }
     }
     return str.replace(/^([0-9]+)e/, '$1.0e');
 };
