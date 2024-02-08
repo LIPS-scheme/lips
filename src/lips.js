@@ -5282,8 +5282,8 @@ LNumber.isComplex = function(n) {
         return false;
     }
     var ret = n instanceof LComplex ||
-        ((LNumber.isNumber(n.im) || Number.isNaN(n.im)) &&
-         (LNumber.isNumber(n.re) || Number.isNaN(n.re)));
+        ((LNumber.isNumber(n.im) || LNumber.isRational(n.im) || Number.isNaN(n.im)) &&
+         (LNumber.isNumber(n.re) || LNumber.isRational(n.re) || Number.isNaN(n.re)));
     return ret;
 };
 // -------------------------------------------------------------------------
@@ -5581,8 +5581,7 @@ LNumber.prototype.sqrt = function() {
 };
 // -------------------------------------------------------------------------
 var pow = function(a, b) {
-    var e = typeof a === 'bigint' ? BigInt(1) : 1;
-    return new Array(Number(b)).fill(0).reduce(x => x * a, e);
+    return Math.pow(a, b);
 };
 // -------------------------------------------------------------------------
 // use native exponential operator if possible (it's way faster)
@@ -5721,7 +5720,28 @@ LComplex.prototype.toRational = function(n) {
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.pow = function(n) {
-    throw new Error('Not yet implemented');
+    const cmp = n.cmp(0);
+    if (n === 0) {
+        return LNumber(1);
+    }
+    const angle = LNumber(Math.atan2(this.__im__.valueOf(), this.__re__.valueOf()));
+    const magnitude = LNumber(this.modulus());
+    if (LNumber.isComplex(n) && n.__im__.cmp(0) !== 0) {
+        // Complex exponent of a complex numbers
+        // equation taken from https://math.stackexchange.com/a/476998/31117
+        let p = n.mul(Math.log(magnitude.valueOf())).add(LComplex.i.mul(angle).mul(n));
+        const e = LNumber(Math.E).pow(p.__re__.valueOf());
+        return LComplex({
+            re: e.mul(Math.cos(p.__im__.valueOf())),
+            im: e.mul(Math.sin(p.__re__.valueOf()))
+        });
+    }
+    n = n.__re__.valueOf();
+    // equation taken from Wikipedia:
+    // https://w.wiki/97V3#Integer_and_fractional_exponents
+    const r = magnitude.pow(n);
+    const a = angle.mul(n);
+    return LComplex({ re: r.mul(Math.cos(a)), im: r.mul(Math.sin(a)) });
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.add = function(n) {
@@ -6113,6 +6133,10 @@ LRational.prototype.serialize = function() {
 };
 // -------------------------------------------------------------------------
 LRational.prototype.pow = function(n) {
+    if (LNumber.isRational(n)) {
+        // nth root
+        return pow(this.valueOf(), n.valueOf());
+    }
     var cmp = n.cmp(0);
     if (cmp === 0) {
         return LNumber(1);
@@ -6350,6 +6374,7 @@ LBigInteger.prototype.sqrt = function() {
 };
 // -------------------------------------------------------------------------
 LNumber.NaN = LNumber(NaN);
+LComplex.i = LComplex({ im: 1, re: 0 });
 // -------------------------------------------------------------------------
 // :: Port abstraction - read should be a function that return next line
 // -------------------------------------------------------------------------
@@ -9753,9 +9778,10 @@ var global_env = new Environment({
     '**': doc('**', binary_math_op(function(a, b) {
         a = LNumber(a);
         b = LNumber(b);
-        if (b.cmp(0) === -1) {
-            return LFloat(1).div(a).pow(b.sub());
+        if (b.cmp(0) === -1 && LNumber.isInteger(b)) {
+            return LRational({ num: 1, denom: a.pow(b.sub()) });
         }
+        [a, b] = a.coerce(b);
         return a.pow(b);
     }), `(** a b)
 

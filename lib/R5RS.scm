@@ -1289,6 +1289,7 @@
   "(angle x)
 
    Returns angle of the complex number in polar coordinate system."
+  ;; TODO: replace %number-type with typechecking
   (if (not (%number-type "complex" x))
       (error "angle: number need to be complex")
       (Math.atan2 x.__im__ x.__re__)))

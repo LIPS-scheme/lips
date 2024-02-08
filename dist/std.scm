@@ -2902,6 +2902,7 @@
   "(angle x)
 
    Returns angle of the complex number in polar coordinate system."
+  ;; TODO: replace %number-type with typechecking
   (if (not (%number-type "complex" x))
       (error "angle: number need to be complex")
       (Math.atan2 x.__im__ x.__re__)))
@@ -3557,10 +3558,10 @@
   "(log z)
    (log z1 z2)
 
-   Function that calculates natural logarithm of z where the argument can be
-   any number (including complex negative and rational). If the value is 0
+   Function that calculates natural logarithm (base e) of z. Where the argument
+   can be any number (including complex negative and rational). If the value is 0
    it returns NaN. It two arguments are provided it will calculate logarithm
-   of z1 with given base-z2."
+   of z1 with given base z2."
   (if (not (null? rest))
       (let ((base (car rest)))
         (/ (log z) (log base)))

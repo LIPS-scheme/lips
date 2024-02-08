@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 04 Feb 2024 15:36:04 +0000
+ * build: Thu, 08 Feb 2024 20:32:52 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -5805,10 +5805,30 @@ function parse_big_int(str) {
     mantisa: mantisa
   };
 }
+
+// ----------------------------------------------------------------------
+function string_to_float(str) {
+  if (str.match(/e/i)) {
+    var _str$split = str.split('e'),
+      _str$split2 = _slicedToArray(_str$split, 2),
+      coefficient = _str$split2[0],
+      exponent = _str$split2[1];
+    var decimal_places = Math.abs(parseInt(exponent));
+    if (decimal_places < 7 && exponent < 0) {
+      var zeros = '0'.repeat(decimal_places - 1);
+      var sign = coefficient[0] === '-' ? '-' : '';
+      var digits = coefficient.replace(/(^-)|\./g, '');
+      var float_str = "".concat(sign, "0.").concat(zeros).concat(digits);
+      return parseFloat(float_str);
+    }
+  }
+  return parseFloat(str);
+}
+
 // ----------------------------------------------------------------------
 function parse_float(arg) {
   var parse = num_pre_parse(arg);
-  var value = parseFloat(parse.number);
+  var value = string_to_float(parse.number);
   var simple_number = (parse.number.match(/\.0$/) || !parse.number.match(/\./)) && !parse.number.match(/e/i);
   if (!parse.inexact) {
     if (parse.exact && simple_number) {
@@ -11286,7 +11306,7 @@ LNumber.isComplex = function (n) {
   if (!n) {
     return false;
   }
-  var ret = n instanceof LComplex || (LNumber.isNumber(n.im) || Number.isNaN(n.im)) && (LNumber.isNumber(n.re) || Number.isNaN(n.re));
+  var ret = n instanceof LComplex || (LNumber.isNumber(n.im) || LNumber.isRational(n.im) || Number.isNaN(n.im)) && (LNumber.isNumber(n.re) || LNumber.isRational(n.re) || Number.isNaN(n.re));
   return ret;
 };
 // -------------------------------------------------------------------------
@@ -11639,10 +11659,7 @@ LNumber.prototype.sqrt = function () {
 };
 // -------------------------------------------------------------------------
 var pow = function pow(a, b) {
-  var e = typeof a === 'bigint' ? BigInt(1) : 1;
-  return new Array(Number(b)).fill(0).reduce(function (x) {
-    return x * a;
-  }, e);
+  return Math.pow(a, b);
 };
 // -------------------------------------------------------------------------
 // use native exponential operator if possible (it's way faster)
@@ -11792,7 +11809,31 @@ LComplex.prototype.toRational = function (n) {
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.pow = function (n) {
-  throw new Error('Not yet implemented');
+  n.cmp(0);
+  if (n === 0) {
+    return LNumber(1);
+  }
+  var angle = LNumber(Math.atan2(this.__im__.valueOf(), this.__re__.valueOf()));
+  var magnitude = LNumber(this.modulus());
+  if (LNumber.isComplex(n) && n.__im__.cmp(0) !== 0) {
+    // Complex exponent of a complex numbers
+    // equation taken from https://math.stackexchange.com/a/476998/31117
+    var p = n.mul(Math.log(magnitude.valueOf())).add(LComplex.i.mul(angle).mul(n));
+    var e = LNumber(Math.E).pow(p.__re__.valueOf());
+    return LComplex({
+      re: e.mul(Math.cos(p.__im__.valueOf())),
+      im: e.mul(Math.sin(p.__re__.valueOf()))
+    });
+  }
+  n = n.__re__.valueOf();
+  // equation taken from Wikipedia:
+  // https://w.wiki/97V3#Integer_and_fractional_exponents
+  var r = magnitude.pow(n);
+  var a = angle.mul(n);
+  return LComplex({
+    re: r.mul(Math.cos(a)),
+    im: r.mul(Math.sin(a))
+  });
 };
 // -------------------------------------------------------------------------
 LComplex.prototype.add = function (n) {
@@ -12054,9 +12095,21 @@ LFloat.prototype.toString = function () {
     return '+nan.0';
   }
   var str = this.__value__.toString();
-  if (!LNumber.isFloat(this.__value__) && !str.match(/e/i)) {
-    var result = str + '.0';
-    return this._minus ? '-' + result : result;
+  if (!str.match(/e/i)) {
+    // compatibility with other scheme implementation
+    // In JavaScript scientific notation starts from 6 zeros
+    // in Kawa and Gauche it starts from 3 zeros
+    if (str.match(/0\.000/)) {
+      var number = this.__value__.toString();
+      var sign = this.__value__ < 0 ? '-' : '';
+      var exponent = number.match(/[.0]+/g)[0].length - 1;
+      var value = number.replace(/^[-.0]+/, '').replace(/^([0-9])/, '$1.');
+      return "".concat(sign).concat(value, "e-").concat(exponent);
+    }
+    if (!LNumber.isFloat(this.__value__)) {
+      var result = str + '.0';
+      return this._minus ? '-' + result : result;
+    }
   }
   return str.replace(/^([0-9]+)e/, '$1.0e');
 };
@@ -12214,6 +12267,10 @@ LRational.prototype.serialize = function () {
 };
 // -------------------------------------------------------------------------
 LRational.prototype.pow = function (n) {
+  if (LNumber.isRational(n)) {
+    // nth root
+    return pow(this.valueOf(), n.valueOf());
+  }
   var cmp = n.cmp(0);
   if (cmp === 0) {
     return LNumber(1);
@@ -12489,6 +12546,10 @@ LBigInteger.prototype.sqrt = function () {
 };
 // -------------------------------------------------------------------------
 LNumber.NaN = LNumber(NaN);
+LComplex.i = LComplex({
+  im: 1,
+  re: 0
+});
 // -------------------------------------------------------------------------
 // :: Port abstraction - read should be a function that return next line
 // -------------------------------------------------------------------------
@@ -15809,9 +15870,16 @@ var global_env = new Environment({
   '**': doc('**', binary_math_op(function (a, b) {
     a = LNumber(a);
     b = LNumber(b);
-    if (b.cmp(0) === -1) {
-      return LFloat(1).div(a).pow(b.sub());
+    if (b.cmp(0) === -1 && LNumber.isInteger(b)) {
+      return LRational({
+        num: 1,
+        denom: a.pow(b.sub())
+      });
     }
+    var _a$coerce = a.coerce(b);
+    var _a$coerce2 = _slicedToArray(_a$coerce, 2);
+    a = _a$coerce2[0];
+    b = _a$coerce2[1];
     return a.pow(b);
   }), "(** a b)\n\n         Function that calculates number a to to the power of b."),
   // ------------------------------------------------------------------
@@ -17459,10 +17527,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 04 Feb 2024 15:36:04 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Thu, 08 Feb 2024 20:32:52 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 04 Feb 2024 15:36:04 +0000').valueOf();
+  var date = LString('Thu, 08 Feb 2024 20:32:52 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17502,7 +17570,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sun, 04 Feb 2024 15:36:04 +0000';
+var date = 'Thu, 08 Feb 2024 20:32:52 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
