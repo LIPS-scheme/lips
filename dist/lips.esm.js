@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Thu, 08 Feb 2024 20:32:52 +0000
+ * build: Fri, 09 Feb 2024 15:49:45 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -5816,8 +5816,8 @@ function string_to_float(str) {
     var decimal_places = Math.abs(parseInt(exponent));
     if (decimal_places < 7 && exponent < 0) {
       var zeros = '0'.repeat(decimal_places - 1);
-      var sign = coefficient[0] === '-' ? '-' : '';
-      var digits = coefficient.replace(/(^-)|\./g, '');
+      var sign = coefficient[0] === '-' ? '-' : '+';
+      var digits = coefficient.replace(/(^[-+])|\./g, '');
       var float_str = "".concat(sign, "0.").concat(zeros).concat(digits);
       return parseFloat(float_str);
     }
@@ -5835,7 +5835,7 @@ function parse_float(arg) {
       return LNumber(value);
     }
     // positive big num that eval to int e.g.: 1.2e+20
-    if (is_int(value) && parse.number.match(/e\+?[0-9]/i)) {
+    if (is_int(value) && Number.isSafeInteger(value) && parse.number.match(/e\+?[0-9]/i)) {
       return LNumber(value);
     }
     // calculate big int and big fraction by hand - it don't fit into JS float
@@ -5849,7 +5849,7 @@ function parse_float(arg) {
           num: mantisa,
           denom: factor
         });
-      } else if (exponent > 0) {
+      } else if (exponent > 0 && (parse.exact || !parse.number.match(/\./))) {
         return LNumber(mantisa).mul(factor);
       }
     }
@@ -11819,10 +11819,10 @@ LComplex.prototype.pow = function (n) {
     // Complex exponent of a complex numbers
     // equation taken from https://math.stackexchange.com/a/476998/31117
     var p = n.mul(Math.log(magnitude.valueOf())).add(LComplex.i.mul(angle).mul(n));
-    var e = LNumber(Math.E).pow(p.__re__.valueOf());
+    var e = LFloat(Math.E).pow(p.__re__.valueOf());
     return LComplex({
       re: e.mul(Math.cos(p.__im__.valueOf())),
-      im: e.mul(Math.sin(p.__re__.valueOf()))
+      im: e.mul(Math.sin(p.__im__.valueOf()))
     });
   }
   n = n.__re__.valueOf();
@@ -12099,12 +12099,19 @@ LFloat.prototype.toString = function () {
     // compatibility with other scheme implementation
     // In JavaScript scientific notation starts from 6 zeros
     // in Kawa and Gauche it starts from 3 zeros
-    if (str.match(/0\.000/)) {
-      var number = this.__value__.toString();
-      var sign = this.__value__ < 0 ? '-' : '';
-      var exponent = number.match(/[.0]+/g)[0].length - 1;
-      var value = number.replace(/^[-.0]+/, '').replace(/^([0-9])/, '$1.');
+    var number = this.__value__.toString().replace(/^-/, '');
+    var sign = this.__value__ < 0 ? '-' : '';
+    if (str.match(/^-?0\.0{3}/)) {
+      var exponent = number.match(/^[.0]+/g)[0].length - 1;
+      var value = number.replace(/^[.0]+/, '').replace(/^([0-9])/, '$1.');
       return "".concat(sign).concat(value, "e-").concat(exponent);
+    }
+    // big numbers need decimal point shift to have on number
+    // before the decimal point
+    if (str.match(/^-?[0-9]{7,}\.?/)) {
+      var _exponent = number.match(/^[0-9]+/g)[0].length - 1;
+      var _value4 = number.replace(/\./, '').replace(/^([0-9])/, '$1.').replace(/0+$/, '').replace(/\.$/, '.0');
+      return "".concat(sign).concat(_value4, "e").concat(_exponent);
     }
     if (!LNumber.isFloat(this.__value__)) {
       var result = str + '.0';
@@ -14494,9 +14501,9 @@ var global_env = new Environment({
       obj[key] = value && !is_prototype(value) ? value.valueOf() : value;
     }
     if (props) {
-      var _value4 = obj[key];
+      var _value5 = obj[key];
       Object.defineProperty(obj, key, _objectSpread(_objectSpread({}, options), {}, {
-        value: _value4
+        value: _value5
       }));
     }
   }, "(set-obj! obj key value)\n        (set-obj! obj key value props)\n\n        Function set a property of a JavaScript object. props should be a vector of pairs,\n        passed to Object.defineProperty."),
@@ -14614,8 +14621,8 @@ var global_env = new Environment({
               set(name, value);
               break;
             } else if (is_pair(name)) {
-              var _value5 = args[i];
-              set(name.car, _value5);
+              var _value6 = args[i];
+              set(name.car, _value6);
             }
           }
           if (name.cdr === _nil) {
@@ -15541,8 +15548,8 @@ var global_env = new Environment({
                 throw new IgnoreException('[CATCH]');
               }
             };
-            var _value6 = _evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), catch_args);
-            unpromise(_value6, function handler(result) {
+            var _value7 = _evaluate(new Pair(new LSymbol('begin'), catch_clause.cdr.cdr), catch_args);
+            unpromise(_value7, function handler(result) {
               if (!catch_error) {
                 _next2(result, finalize);
               }
@@ -17527,10 +17534,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Thu, 08 Feb 2024 20:32:52 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Fri, 09 Feb 2024 15:49:46 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Thu, 08 Feb 2024 20:32:52 +0000').valueOf();
+  var date = LString('Fri, 09 Feb 2024 15:49:46 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17570,7 +17577,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Thu, 08 Feb 2024 20:32:52 +0000';
+var date = 'Fri, 09 Feb 2024 15:49:46 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

@@ -441,10 +441,9 @@ function string_to_float(str) {
         const decimal_places = Math.abs(parseInt(exponent));
         if (decimal_places < 7 && exponent < 0) {
             const zeros = '0'.repeat(decimal_places - 1);
-            const sign = coefficient[0] === '-' ? '-' : '';
-            const digits = coefficient.replace(/(^-)|\./g, '');
+            const sign = coefficient[0] === '-' ? '-' : '+';
+            const digits = coefficient.replace(/(^[-+])|\./g, '');
             const float_str = `${sign}0.${zeros}${digits}`;
-
             return parseFloat(float_str);
         }
     }
@@ -453,25 +452,27 @@ function string_to_float(str) {
 
 // ----------------------------------------------------------------------
 function parse_float(arg) {
-    var parse = num_pre_parse(arg);
-    var value = string_to_float(parse.number);
-    var simple_number = (parse.number.match(/\.0$/) ||
+    const parse = num_pre_parse(arg);
+    let value = string_to_float(parse.number);
+    const simple_number = (parse.number.match(/\.0$/) ||
                          !parse.number.match(/\./)) && !parse.number.match(/e/i);
     if (!parse.inexact) {
         if (parse.exact && simple_number) {
             return LNumber(value);
         }
         // positive big num that eval to int e.g.: 1.2e+20
-        if (is_int(value) && parse.number.match(/e\+?[0-9]/i)) {
+        if (is_int(value) &&
+            Number.isSafeInteger(value) &&
+            parse.number.match(/e\+?[0-9]/i)) {
             return LNumber(value);
         }
         // calculate big int and big fraction by hand - it don't fit into JS float
-        var { mantisa, exponent } = parse_big_int(parse.number);
+        const { mantisa, exponent } = parse_big_int(parse.number);
         if (mantisa !== undefined && exponent !== undefined) {
-            var factor = LNumber(10).pow(LNumber(Math.abs(exponent)));
+            const factor = LNumber(10).pow(LNumber(Math.abs(exponent)));
             if (parse.exact && exponent < 0) {
                 return LRational({ num: mantisa, denom: factor });
-            } else if (exponent > 0) {
+            } else if (exponent > 0 && (parse.exact || !parse.number.match(/\./))) {
                 return LNumber(mantisa).mul(factor);
             }
         }
@@ -5730,10 +5731,10 @@ LComplex.prototype.pow = function(n) {
         // Complex exponent of a complex numbers
         // equation taken from https://math.stackexchange.com/a/476998/31117
         let p = n.mul(Math.log(magnitude.valueOf())).add(LComplex.i.mul(angle).mul(n));
-        const e = LNumber(Math.E).pow(p.__re__.valueOf());
+        const e = LFloat(Math.E).pow(p.__re__.valueOf());
         return LComplex({
             re: e.mul(Math.cos(p.__im__.valueOf())),
-            im: e.mul(Math.sin(p.__re__.valueOf()))
+            im: e.mul(Math.sin(p.__im__.valueOf()))
         });
     }
     n = n.__re__.valueOf();
@@ -5974,12 +5975,23 @@ LFloat.prototype.toString = function() {
         // compatibility with other scheme implementation
         // In JavaScript scientific notation starts from 6 zeros
         // in Kawa and Gauche it starts from 3 zeros
-        if (str.match(/0\.000/)) {
-            let number = this.__value__.toString();
-            const sign = this.__value__ < 0 ? '-' : '';
-            const exponent = number.match(/[.0]+/g)[0].length - 1;
-            const value = number.replace(/^[-.0]+/, '').replace(/^([0-9])/, '$1.');
+        const number = this.__value__.toString().replace(/^-/, '');
+        const sign = this.__value__ < 0 ? '-' : '';
+        if (str.match(/^-?0\.0{3}/)) {
+            const exponent = number.match(/^[.0]+/g)[0].length - 1;
+            const value = number.replace(/^[.0]+/, '').replace(/^([0-9])/, '$1.');
             return `${sign}${value}e-${exponent}`;
+        }
+        // big numbers need decimal point shift to have on number
+        // before the decimal point
+        if (str.match(/^-?[0-9]{7,}\.?/)) {
+            const exponent = number.match(/^[0-9]+/g)[0].length - 1;
+            const value = number
+                  .replace(/\./, '')
+                  .replace(/^([0-9])/, '$1.')
+                  .replace(/0+$/, '')
+                  .replace(/\.$/, '.0');
+            return `${sign}${value}e${exponent}`;
         }
         if (!LNumber.isFloat(this.__value__)) {
             var result = str + '.0';
