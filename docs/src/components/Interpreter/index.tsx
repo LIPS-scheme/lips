@@ -89,7 +89,7 @@ const examples = [
     },
     {
         description: 'Fibonacci Closure with swap! lisp style macro.',
-        code: `;; macro that swap first two arguments
+        code: `;; macro that swap first two variables
 ;; with the last two expressions
 (define-macro (swap! a b x y)
   (let ((g_b (gensym)))
@@ -111,7 +111,7 @@ const examples = [
     },
     {
         description: 'Scheme hygienic macro that creates an assoc list, with macroexpand.',
-        code: `;; recursive syntax rules macro
+        code: `;; recursive hygienic syntax-rules macro
 (define-syntax alist
   (syntax-rules ()
      ((_) ())
