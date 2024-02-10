@@ -14,6 +14,21 @@ const examples = [
 ;; ==> (foo bar)`
     },
     {
+        description: 'Mixing Scheme and JavaScript',
+        code: `;; &() is object literal used with quasiquote
+(let ((object \`&(:name "LIPS Scheme"
+                 :version ,lips.version)))
+  ;; you can access JavaScript properties
+  ;; with dot notation
+  (print (string-append object.name
+                        " "
+                        object.version))
+  ;; you can mix scheme and JavaScript
+  (ignore (setTimeout (lambda ()
+                (alert (JSON.stringify object)))
+               1000)))`
+    },
+    {
         description: 'Automagic async/await like resolving of promises and explicit promise quotation.',
         code: `(define h1-re #/<h1>([^>]+)<\\/h1>/)
 ;; automagic promise resolving
