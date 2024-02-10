@@ -32,6 +32,24 @@ const examples = [
   (print (await promise)))`
     },
     {
+        description: 'Fibonacci Closure with swap! macro',
+        code: `(define-macro (swap! a b x y)
+  (let ((g_b (gensym)))
+    \`(let ((,g_b ,y))
+       (set! ,a ,b)
+       (set! ,b ,g_b))))
+
+;; example taken from Go website
+(define (fib)
+   (let ((a 0) (b 1))
+     (lambda ()
+        (swap! a b b (+ a b))
+        a)))
+
+(let ((f (fib)))
+  (list (f) (f) (f) (f) (f)))`
+    },
+    {
         description: 'Scheme hygienic macro that creates assoc list, with macroexpand.',
         code: `(define-syntax alist
   (syntax-rules ()
