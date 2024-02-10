@@ -73,6 +73,21 @@ const examples = [
 ;; ==> "jon"`
     },
     {
+        description: 'Interaction with JavaScript DOM and jQuery Terminal (REPL).',
+        code: `;; this will query the DOM and ivoke click method
+(let ((selector "button[class*=\\"ColorModeToggle\\"]"))
+  (--> (document.querySelector selector)
+       (click)))
+
+;; accessing jQuery Terminal, ignore works like begin
+;; but the return value is ignored so the terminal
+;; is not paused when it find a Promise from
+;; Terminal typing animation
+(ignore
+  (term.css "--background" "#2E2E2E")
+  (term.echo "This is LIPS Scheme" &(:typing #t)))`
+    },
+    {
         description: 'Fibonacci Closure with swap! lisp style macro.',
         code: `;; macro that swap first two arguments
 ;; with the last two expressions
