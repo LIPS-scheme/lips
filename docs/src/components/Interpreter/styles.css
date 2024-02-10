@@ -103,6 +103,9 @@
     --color: black;
     color: var(--color);
 }
+.example .token {
+  background: transparent;
+}
 .example {
     width: 60%;
 }
