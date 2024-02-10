@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Fri, 09 Feb 2024 15:49:45 +0000
+ * build: Sat, 10 Feb 2024 19:59:15 +0000
  */
 
 'use strict';
@@ -6064,6 +6064,7 @@ var symbol = new Pattern([Symbol["for"]('symbol')], '?');
 var symbols = new Pattern([Symbol["for"]('symbol')], '*');
 var identifiers = [p_o, symbols, p_e];
 var let_value = new Pattern([p_o, Symbol["for"]('symbol'), glob, p_e], '+');
+var syntax_rules = keywords_re('syntax-rules');
 // rules for breaking S-Expressions into lines
 var def_lambda_re = keywords_re('define', 'lambda', 'define-macro', 'syntax-rules');
 /* eslint-disable max-len */
@@ -6078,9 +6079,7 @@ function keywords_re() {
   return new RegExp("^(?:#:)?(?:".concat(args.join('|'), ")$"));
 }
 // line breaking rules
-Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close],
-//--[[p_o, keywords_re('define-syntax'), /.+/], 1],
-[[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]];
+Formatter.rules = [[[sexp], 0, not_close], [[p_o, keywords_re('begin', 'cond-expand')], 1], [[p_o, let_re, symbol, p_o, let_value, p_e], 1], [[p_o, let_re, symbol, sexp_or_atom], 1, not_close], [[p_o, let_re, p_o, let_value], 1, not_close], [[p_o, keywords_re('define-syntax'), /.+/], 1], [[p_o, syntax_rules, not_p, identifiers], 1], [[p_o, syntax_rules, not_p, identifiers, sexp], 1, not_close], [[p_o, syntax_rules, identifiers], 1], [[p_o, syntax_rules, identifiers, sexp], 1, not_close], [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close], [[p_o, sexp], 1, not_close], [[p_o, not_p, sexp], 1, not_close], [[p_o, keywords_re('lambda', 'if'), not_p], 1, not_close], [[p_o, keywords_re('while'), not_p, sexp], 1, not_close], [[p_o, keywords_re('if'), not_p, glob], 1], [[p_o, def_lambda_re, identifiers], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re], 0, not_close], [[p_o, def_lambda_re, identifiers, string_re, sexp], 0, not_close], [[p_o, def_lambda_re, identifiers, sexp], 0, not_close]];
 // ----------------------------------------------------------------------
 Formatter.prototype["break"] = function () {
   var code = this.__code__.replace(/\n[ \t]*/g, '\n ').replace(/^\s+/, '');
@@ -15560,10 +15559,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Fri, 09 Feb 2024 15:49:46 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sat, 10 Feb 2024 19:59:15 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Fri, 09 Feb 2024 15:49:46 +0000').valueOf();
+  var date = LString('Sat, 10 Feb 2024 19:59:15 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15603,7 +15602,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Fri, 09 Feb 2024 15:49:46 +0000';
+var date = 'Sat, 10 Feb 2024 19:59:15 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

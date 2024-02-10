@@ -2215,6 +2215,7 @@ const symbol = new Pattern([Symbol.for('symbol')], '?');
 const symbols = new Pattern([Symbol.for('symbol')], '*');
 const identifiers = [p_o, symbols, p_e];
 const let_value = new Pattern([p_o, Symbol.for('symbol'), glob, p_e], '+');
+const syntax_rules = keywords_re('syntax-rules');
 // rules for breaking S-Expressions into lines
 var def_lambda_re = keywords_re('define', 'lambda', 'define-macro', 'syntax-rules');
 /* eslint-disable max-len */
@@ -2232,7 +2233,11 @@ Formatter.rules = [
     [[p_o, let_re, symbol, p_o, let_value, p_e], 1],
     [[p_o, let_re, symbol, sexp_or_atom], 1, not_close],
     [[p_o, let_re, p_o, let_value], 1, not_close],
-    //--[[p_o, keywords_re('define-syntax'), /.+/], 1],
+    [[p_o, keywords_re('define-syntax'), /.+/], 1],
+    [[p_o, syntax_rules, not_p, identifiers], 1],
+    [[p_o, syntax_rules, not_p, identifiers, sexp], 1, not_close],
+    [[p_o, syntax_rules, identifiers], 1],
+    [[p_o, syntax_rules, identifiers, sexp], 1, not_close],
     [[p_o, non_def, new Pattern([/[^()[\]]/], '+'), sexp], 1, not_close],
     [[p_o, sexp], 1, not_close],
     [[p_o, not_p, sexp], 1, not_close],
