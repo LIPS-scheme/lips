@@ -103,7 +103,7 @@
     --color: black;
     color: var(--color);
 }
-.example .token {
+.example pre .token {
   background: transparent;
 }
 .example {
