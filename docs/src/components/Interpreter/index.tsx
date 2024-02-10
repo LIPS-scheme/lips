@@ -98,7 +98,7 @@ const examples = [
        (set! ,b ,g_b))))
 
 ;; example taken from Go website
-;; fib crates a function
+;; fib creates a function
 ;; that return fibonacci numbers
 (define (fib)
    (let ((a 0) (b 1))
