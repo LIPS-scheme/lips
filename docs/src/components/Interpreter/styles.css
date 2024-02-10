@@ -123,6 +123,10 @@
     background: #eee;
     border-radius: 5px;
 }
+.example pre {
+    --color: black;
+    color: var(--color);
+}
 .example, .description {
     width: 50%;
 }
