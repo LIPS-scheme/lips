@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="100mm" height="40mm" viewBox="0 0 99.999997 40.000003" version="1.1" id="svg8" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs id="defs2" />
+  <metadata id="metadata5">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g id="layer1" transform="translate(200.43202,-188.8835)" style="fill:#ffffff">
+    <g transform="translate(-40.528935,22.490326)" id="g853" style="fill:#ffffff">
+      <g transform="matrix(2.1262604,0,0,2.1262604,-271.1845,14.37152)" id="g851" style="fill:#ffffff">
+        <text xml:space="preserve" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.7062px;line-height:1.25;font-family:Telegrafico;-inkscape-font-specification:Telegrafico;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.292656" x="71.152718" y="84.767357" id="text4520"><tspan id="tspan4518" x="71.152718" y="84.767357" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Telegrafico;-inkscape-font-specification:Telegrafico;stroke-width:0.292656;fill:#ffffff">LIPS</tspan></text>
+        <g id="text4537" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:19.5137px;line-height:1.25;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.487843" aria-label="λ">
+          <path id="path853" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Times New Roman';-inkscape-font-specification:'Times New Roman, ';stroke-width:0.487843;fill:#ffffff" d="m 67.841419,84.852808 h 0.343015 q 0,1.505453 -0.495466,2.191481 -0.485937,0.686029 -1.219607,0.686029 -0.600275,0 -1.152909,-0.447824 -0.552635,-0.457353 -0.990931,-2.429686 l -0.819423,-3.696933 -2.839397,6.441049 h -1.800826 l 4.07806,-8.784981 q -0.323958,-1.705544 -0.78131,-2.524967 -0.457353,-0.819424 -1.133854,-0.819424 -0.543106,0 -0.952818,0.41924 -0.400183,0.409712 -0.447824,1.276776 h -0.343014 q 0.02858,-1.400642 0.562162,-2.239122 0.533578,-0.848008 1.333945,-0.848008 0.514522,0 0.971874,0.428768 0.466881,0.41924 0.800367,1.448283 0.343015,1.019516 1.057628,4.24004 l 0.676501,3.020433 q 0.409712,1.877051 0.857536,2.515439 0.457353,0.62886 1.086212,0.62886 1.067156,0 1.210079,-1.505453 z" />
+        </g>
+        <path id="path826" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583" d="m 56.620391,86.237672 q -0.769979,-0.971517 -1.302246,-2.273763 -0.532267,-1.302246 -0.532267,-2.697509 0,-1.229899 0.397908,-2.356446 0.465088,-1.307413 1.436605,-2.604492 h 0.666626 q -0.625285,1.07487 -0.826823,1.53479 -0.315226,0.713135 -0.496094,1.488282 -0.222208,0.966349 -0.222208,1.943033 0,2.485637 1.545125,4.966105 z" />
+        <path id="path828" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583" d="m 95.083899,86.237672 h -0.66663 q 1.54513,-2.480468 1.54513,-4.966105 0,-0.971517 -0.22221,-1.92753 -0.1757,-0.775147 -0.49093,-1.488282 -0.20153,-0.465088 -0.83199,-1.550293 h 0.66663 q 0.97152,1.297079 1.4366,2.604492 0.39791,1.126547 0.39791,2.356446 0,1.395263 -0.53743,2.697509 -0.53227,1.302246 -1.29708,2.273763 z" />
+      </g>
+    </g>
+  </g>
+</svg>

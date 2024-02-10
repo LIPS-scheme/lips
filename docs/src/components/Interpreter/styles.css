@@ -1,0 +1,172 @@
+.intro .terminal {
+    --background: #14232d;
+    --color: white;
+    height: calc((var(--size, 1) * 14 * 14px) + 20px);
+}
+.example {
+    --background: transparent;
+}
+.intro {
+    position: relative;
+}
+.full-screen  .intro {
+    position: initial;
+}
+.intro .terminal,
+.intro .actions-wrapper,
+.intro .examples {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+}
+.actions-wrapper {
+    position: relative;
+}
+.full-screen .intro .actions-wrapper {
+    max-width: initial;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.intro .actions {
+    padding: 0;
+    maring: 0;
+    list-style: none;
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 100;
+}
+.intro .actions li.icon {
+    margin: 10px;
+    width: 52px;
+    height: 52px;
+    overflow: hidden;
+    cursor: pointer;
+}
+.intro .actions a {
+    display: block;
+    text-indent: -99999px;
+}
+.intro .actions > li.full-screen {
+    position: relative;
+    margin: 10px;
+    width: 52px;
+    height: 52px;
+}
+.intro .actions > li.full-screen li {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin: 0;
+}
+.exit-full-screen,
+.full-screen li .full-screen {
+    display: none;
+}
+.intro .actions .icon,
+.top-bar .icons a {
+    background-image: url(/img/icons.svg);
+}
+.full-screen .exit-full-screen {
+    display: block;
+    background-position: -64px 0;
+}
+.intro .actions li .full-screen {
+    background-position: -116px 0;
+}
+.intro .actions > li.zoom-in {
+    background-position: -168px 0;
+}
+.intro .actions > li.zoom-out {
+    background-position: -220px 0;
+}
+.list li {
+    padding: 20px;
+    display: flex;
+}
+.examples {
+    position: relative;
+}
+.terminal, .examples, .pagination {
+    text-align: left;
+}
+.run,
+.examples {
+    background: #4d4d4d;
+}
+.run {
+    border: none;
+    border-radius: 3px;
+    padding: 5px 10px;
+    color: white;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-100%);
+    margin-top: 30px;
+    display: block;
+    font-size: 20px;
+    margin-left: -10px;
+    cursor: pointer;
+}
+.run:active {
+    margin-top: 31px;
+    margin-left: -9px;
+}
+.examples ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.example {
+    background: #eee;
+    border-radius: 5px;
+}
+.example, .description {
+    width: 50%;
+}
+.description {
+    color: white;
+    font-size: 20px;
+    box-sizing: border-box;
+    padding: 0 20px;
+}
+.examples .list > li {
+    display: none;
+}
+.examples .list > li.active {
+    display: flex;
+}
+.examples .pagination {
+    display: flex;
+    position: absolute;
+    top: calc(100% - 10px);
+    right: 25%;
+    transform: translate(50%, -100%);
+}
+.examples .pagination li {
+    width: 26px;
+    height: 26px;
+    text-align: center;
+    border-radius: 3px;
+}
+.examples .pagination li:active {
+    cursor: pointer;
+}
+.examples .pagination li + li {
+    margin-left: 10px;
+}
+.examples .pagination a {
+    display: block;
+    height: 100%;
+    padding: 2px;
+    box-sizing: border-box;
+}
+.examples .pagination li,
+.examples .pagination a,
+.examples .pagination a:visited {
+    background: #1d6aa1;
+    color: white;
+    text-decoration: none;
+}
