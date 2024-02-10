@@ -30,6 +30,7 @@ $('.examples .run').on('click', function() {
     const code = $('.example:visible').text();
     term.echo(term.get_prompt(), { formatters: false });
     term.exec(code, true);
+    setTimeout(() => term.focus(), 0);
 });
 
 function make_active($list, index) {
