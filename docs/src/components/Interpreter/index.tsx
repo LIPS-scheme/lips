@@ -47,6 +47,32 @@ const examples = [
   (print (await promise)))`
     },
     {
+        description: 'Syntax extensions and custom repr allow to create new homoiconic data types.',
+        code: `;; Create new class using define-class macro
+(define-class Person Object
+   (constructor (lambda (self name)
+                   (set! self.name name))))
+
+;; add syntax extension
+(set-special! "P:" 'make-person lips.specials.SPLICE)
+
+;; add class representation
+(set-repr! Person
+  (lambda (x q)
+    (string-append "P:(" (repr x.name q) ")")))
+
+;; function that create new object
+;; for the syntax extension
+(define (make-person name)
+   (new Person name))
+
+;; we can use new syntax
+(print P:("jon"))
+;; ==> P:("jon")
+(print (. P:("jon") 'name))
+;; ==> "jon"`
+    },
+    {
         description: 'Fibonacci Closure with swap! lisp style macro.',
         code: `;; macro that swap first two arguments
 ;; with the last two expressions
