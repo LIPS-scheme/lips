@@ -82,9 +82,36 @@
 .intro .actions > li.zoom-out {
     background-position: -220px 0;
 }
+.examples .list {
+    padding-top: 30px;
+}
 .list li {
     padding: 20px;
     display: flex;
+}
+.examples .list > li {
+    display: none;
+}
+.examples .list > li.active {
+    display: flex;
+}
+.example {
+    background: #eee;
+    border-radius: 5px;
+}
+.example pre {
+    --color: black;
+    color: var(--color);
+}
+.example {
+    width: 60%;
+}
+.description {
+    width: 40%;
+    color: white;
+    font-size: 20px;
+    box-sizing: border-box;
+    padding: 0 20px;
 }
 .examples {
     position: relative;
@@ -102,9 +129,9 @@
     padding: 5px 10px;
     color: white;
     position: absolute;
-    left: 50%;
+    left: 60%;
     transform: translateX(-100%);
-    margin-top: 30px;
+    top: 60px;
     display: block;
     font-size: 20px;
     margin-left: -10px;
@@ -119,35 +146,11 @@
     margin: 0;
     padding: 0;
 }
-.example {
-    background: #eee;
-    border-radius: 5px;
-}
-.example pre {
-    --color: black;
-    color: var(--color);
-}
-.example, .description {
-    width: 50%;
-}
-.description {
-    color: white;
-    font-size: 20px;
-    box-sizing: border-box;
-    padding: 0 20px;
-}
-.examples .list > li {
-    display: none;
-}
-.examples .list > li.active {
-    display: flex;
-}
 .examples .pagination {
     display: flex;
     position: absolute;
-    top: calc(100% - 10px);
-    right: 25%;
-    transform: translate(50%, -100%);
+    top: 10px;
+    left: 20px;
 }
 .examples .pagination li {
     width: 26px;
@@ -164,13 +167,21 @@
 .examples .pagination a {
     display: block;
     height: 100%;
-    padding: 2px;
+    padding: 1px 2px 2px 2px;
+    border-radius: 5px;
     box-sizing: border-box;
 }
-.examples .pagination li,
 .examples .pagination a,
 .examples .pagination a:visited {
     background: #1d6aa1;
     color: white;
     text-decoration: none;
+}
+.examples .pagination a {
+    transition: all 100ms linear;
+}
+.examples .pagination li.active a {
+  color: #1d6aa1;
+  background: white;
+  font-weight: bold;
 }
