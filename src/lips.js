@@ -10691,55 +10691,56 @@ function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest }
     }
 }
 // -------------------------------------------------------------------------
-const compile = exec_collect(function(code) {
-    return code;
-});
+function compile(arg) {
+    return Array.from(_parse(arg));
+}
 // -------------------------------------------------------------------------
-const exec = exec_collect(function(code, value) {
-    return value;
-});
-// -------------------------------------------------------------------------
-function exec_collect(collect_callback) {
-    return async function exec_lambda(arg, { env, dynamic_env, use_dynamic } = {}) {
-        if (!is_env(dynamic_env)) {
-            dynamic_env = env === true ? user_env : env || user_env;
-        }
-        if (env === true) {
-            env = user_env;
-        } else {
-            env = env || user_env;
-        }
-        var results = [];
-        var input = Array.isArray(arg) ? arg : _parse(arg);
-        for await (let code of input) {
-            const value = evaluate(code, {
-                env,
-                dynamic_env,
-                use_dynamic,
-                error: (e, code) => {
-                    if (e && e.message) {
-                        if (e.message.match(/^Error:/)) {
-                            var re = /^(Error:)\s*([^:]+:\s*)/;
-                            // clean duplicated Error: added by JS
-                            e.message = e.message.replace(re, '$1 $2');
-                        }
-                        if (code) {
-                            // LIPS stack trace
-                            if (!(e.__code__ instanceof Array)) {
-                                e.__code__ = [];
-                            }
-                            e.__code__.push(code.toString(true));
-                        }
-                    }
-                    if (!(e instanceof IgnoreException)) {
-                        throw e;
-                    }
+function exec_with_stacktrace(code, { env, dynamic_env, use_dynamic } = {}) {
+    return evaluate(code, {
+        env,
+        dynamic_env,
+        use_dynamic,
+        error: (e, code) => {
+            if (e && e.message) {
+                if (e.message.match(/^Error:/)) {
+                    var re = /^(Error:)\s*([^:]+:\s*)/;
+                    // clean duplicated Error: added by JS
+                    e.message = e.message.replace(re, '$1 $2');
                 }
-            });
-            results.push(collect_callback(code, await value));
+                if (code) {
+                    // LIPS stack trace
+                    if (!(e.__code__ instanceof Array)) {
+                        e.__code__ = [];
+                    }
+                    e.__code__.push(code.toString(true));
+                }
+            }
+            if (!(e instanceof IgnoreException)) {
+                throw e;
+            }
         }
-        return results;
-    };
+    });
+}
+// -------------------------------------------------------------------------
+async function exec(arg, { env, dynamic_env, use_dynamic } = {}) {
+    if (!is_env(dynamic_env)) {
+        dynamic_env = env === true ? user_env : env || user_env;
+    }
+    if (env === true) {
+        env = user_env;
+    } else {
+        env = env || user_env;
+    }
+    const results = [];
+    if (is_pair(arg)) {
+        return [await exec_with_stacktrace(code, { env, dynamic_env, use_dynamic })];
+    }
+    const input = Array.isArray(arg) ? arg : _parse(arg);
+    for await (let code of input) {
+        const value = await exec_with_stacktrace(code, { env, dynamic_env, use_dynamic });
+        results.push(value);
+    }
+    return results;
 }
 // -------------------------------------------------------------------------
 function balanced(code) {
