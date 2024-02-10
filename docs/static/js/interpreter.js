@@ -10,7 +10,6 @@ var term = terminal({
 const intro = `LIPS version ${lips.version}
 Copyright (c) 2018-${new Date().getFullYear()} [[!;;;;https://jcubic.pl/me]Jakub T. Jankiewicz]
 
-
 Type (env) to see environment with functions macros and variables
 You can also use (help obj)to display help for specic function or macro.
 Use (dir name) to get list of JavaScript properties and (apropos name)
