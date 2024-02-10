@@ -28,22 +28,8 @@ function pretty(code, options = {}) {
 
 $('.examples .run').on('click', function() {
     const code = $('.example:visible').text();
-    lips.parse(code).then(expressions => {
-        (function loop() {
-            if (!expressions.length) {
-                return;
-            }
-            const code = expressions.shift();
-            const offset = term.get_prompt().length;
-            term.echo('lips> ' + pretty(code, { offset }), { formatters: false });
-            lips.exec([code]).then(([result]) => {
-                if (result !== undefined) {
-                    term.echo(result);
-                }
-                loop();
-            });
-        })();
-    });
+    term.echo(term.get_prompt(), { formatters: false });
+    term.exec(code, true);
 });
 
 function make_active($list, index) {
