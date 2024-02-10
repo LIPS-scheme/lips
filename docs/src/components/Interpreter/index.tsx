@@ -111,6 +111,32 @@ const examples = [
 ;;                     ()))`
     },
     {
+        description: 'SRFI-139 syntax-parameterize allows creating anamorphic hygienic macros.',
+        code: `;; define new syntax parameter
+(define-syntax-parameter it
+   (syntax-rules ()
+     ((_ . _)
+      (syntax-error "abort used outside of a loop"))))
+
+;; syntax-rules macro aif adds (it) parameter
+;; to access tested value.
+(define-syntax aif
+  (syntax-rules ()
+    ((_ cond rest ...)
+     (let ((test cond))
+       (syntax-parameterize
+        ((it (syntax-rules ()
+               ((_) test))))
+        (if test
+            rest ...))))))
+
+;; no need to use assoc two times
+;; or using a variable to hold the value
+(let ((alist '((a . 10) (b . 20))))
+  (aif (assoc 'a alist)
+      (print (cdr (it)))))`
+    },
+    {
         description: 'Y Combinator and inline factorial function.',
         code: `(define Y
   (lambda (h)
