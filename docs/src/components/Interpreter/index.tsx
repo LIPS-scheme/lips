@@ -4,16 +4,6 @@ import './styles.css';
 
 const examples = [
     {
-        description: 'Filter function accept, regex or function. Curry is higher order function that create new function with defaults.',
-        code: `(print (filter number? '(foo 10 bar 20 baz 30)))
-;; ==> (10 20 30)
-(print (filter #/foo|bar/ '(foo bar baz quux)))
-;; ==> (foo bar)
-(define foo_or_bar (curry filter #/foo|bar/))
-(print (foo_or_bar '(foo bar baz)))
-;; ==> (foo bar)`
-    },
-    {
         description: 'Mixing Scheme and JavaScript',
         code: `;; &() is object literal used with quasiquote
 (let ((object \`&(:name "LIPS Scheme"
@@ -27,6 +17,16 @@ const examples = [
   (ignore (setTimeout (lambda ()
                 (alert (JSON.stringify object)))
                1000)))`
+    },
+    {
+        description: 'Filter function accept, regex or function. Curry is higher order function that create new function with defaults.',
+        code: `(print (filter number? '(foo 10 bar 20 baz 30)))
+;; ==> (10 20 30)
+(print (filter #/foo|bar/ '(foo bar baz quux)))
+;; ==> (foo bar)
+(define foo_or_bar (curry filter #/foo|bar/))
+(print (foo_or_bar '(foo bar baz)))
+;; ==> (foo bar)`
     },
     {
         description: 'Automagic async/await like resolving of promises and explicit promise quotation.',
