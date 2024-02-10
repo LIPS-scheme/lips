@@ -133,16 +133,16 @@
     color: white;
     position: absolute;
     left: 60%;
-    transform: translateX(-100%);
+    transform: translate(-100%, 0);
     top: 60px;
     display: block;
     font-size: 20px;
     margin-left: -10px;
     cursor: pointer;
+    transition: transform 100ms linear;
 }
 .run:active {
-    margin-top: 31px;
-    margin-left: -9px;
+    transform: translate(-100%, 1px);
 }
 .examples ul {
     list-style: none;
