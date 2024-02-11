@@ -176,6 +176,33 @@ const examples = [
       (print (cdr (it)))))`
     },
     {
+        description: 'JavaScript generators (objects that implment iterator protocol)',
+        code: `;; JavaScript generator create using JS eval
+(define gen (self.eval "
+    (async function* gen(time, ...args) {
+               function delay(time) {
+                 return new Promise((resolve) => {
+                   setTimeout(resolve, time);
+                 });
+               }
+               for (let x of args) {
+                 await delay(time);
+                 yield x;
+               }
+             })"))
+
+;; iteration over iterator/generator
+(do-iterator
+  (i (apply gen 100 (range 10)))
+  ()
+  (print i))
+(print (iterator->array (gen 100 1 2 3 4 5)))
+;; strings and lists are JavaScript iterators
+(write (iterator->array "hello"))
+(newline)
+(print (iterator->array '(1 2 3 4)))`
+    },
+    {
         description: 'Y Combinator and inline factorial function.',
         code: `(define Y
   (lambda (h)
