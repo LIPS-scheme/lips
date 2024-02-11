@@ -10691,9 +10691,13 @@ function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest }
     }
 }
 // -------------------------------------------------------------------------
-function compile(arg) {
-    return Promise.resolve(Array.from(_parse(arg)));
-}
+const compile = exec_collect(function(code) {
+    return code;
+});
+// -------------------------------------------------------------------------
+const exec = exec_collect(function(code, value) {
+    return value;
+});
 // -------------------------------------------------------------------------
 function exec_with_stacktrace(code, { env, dynamic_env, use_dynamic } = {}) {
     return evaluate(code, {
@@ -10722,25 +10726,27 @@ function exec_with_stacktrace(code, { env, dynamic_env, use_dynamic } = {}) {
     });
 }
 // -------------------------------------------------------------------------
-async function exec(arg, { env, dynamic_env, use_dynamic } = {}) {
-    if (!is_env(dynamic_env)) {
-        dynamic_env = env === true ? user_env : env || user_env;
-    }
-    if (env === true) {
+function exec_collect(collect_callback) {
+    return async function exec_lambda(arg, { env, dynamic_env, use_dynamic } = {}) {
+        if (!is_env(dynamic_env)) {
+            dynamic_env = env === true ? user_env : env || user_env;
+        }
+        if (env === true) {
         env = user_env;
-    } else {
-        env = env || user_env;
-    }
-    const results = [];
-    if (is_pair(arg)) {
-        return [await exec_with_stacktrace(code, { env, dynamic_env, use_dynamic })];
-    }
-    const input = Array.isArray(arg) ? arg : _parse(arg);
-    for await (let code of input) {
-        const value = await exec_with_stacktrace(code, { env, dynamic_env, use_dynamic });
-        results.push(value);
-    }
-    return results;
+        } else {
+            env = env || user_env;
+        }
+        const results = [];
+        if (is_pair(arg)) {
+            return [await exec_with_stacktrace(code, { env, dynamic_env, use_dynamic })];
+        }
+        const input = Array.isArray(arg) ? arg : _parse(arg);
+        for await (let code of input) {
+            const value = await exec_with_stacktrace(code, { env, dynamic_env, use_dynamic });
+            results.push(collect_callback(code, await value));
+        }
+        return results;
+    };
 }
 // -------------------------------------------------------------------------
 function balanced(code) {
