@@ -47,6 +47,30 @@ const examples = [
   (print (await promise)))`
     },
     {
+        description: 'Hygienic syntax-rules macro and few examples of Numeric Tower.',
+        code: `;; show hygienic macro prints expression
+;; and the result value
+(define-syntax show
+  (syntax-rules ()
+    [(_ expr ...)
+     (begin
+       (begin
+         (write 'expr)
+         (display " = ")
+         (write expr)
+         (newline))
+         ...)]))
+
+;; few example of Numeric Tower
+(show (/ 1 2)
+      (expt 1/4 1/2)
+      (expt 10+10i 1/2)
+      (log 2+1/2i)
+      (acos -1)
+      (+ 1/2 1/4)
+      (* 3/4 1/10))`
+    },
+    {
         description: 'Syntax extensions and custom repr allow to create new homoiconic data types.',
         code: `;; Create new class using define-class macro
 (define-class Person Object
