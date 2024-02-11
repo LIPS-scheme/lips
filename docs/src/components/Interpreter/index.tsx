@@ -188,7 +188,7 @@ const examples = [
       (print (cdr (it)))))`
     },
     {
-        description: 'JavaScript generators (objects that implment iterator protocol)',
+        description: 'JavaScript generators (objects that implement iterator protocol)',
         code: `;; JavaScript generator create using JS eval
 (define gen (self.eval "
     (async function* gen(time, ...args) {
