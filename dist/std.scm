@@ -2080,7 +2080,7 @@
 
 ;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
-(define _maths (list "sin" "cos" "tan" "asin" "acos" "atan"))
+(define _maths (list "asin" "acos"))
 
 ;; -----------------------------------------------------------------------------
 (define _this_env (current-environment))
@@ -2145,6 +2145,25 @@
                                       (+ (Math.cos re2)
                                          (Math.cosh im2))))))
       (Math.tan n)))
+
+;; -----------------------------------------------------------------------------
+(define (atan z . rest)
+  "(atan z)
+   (atan x y)
+
+   Function calculates arcus tangent of a complex number.
+   If two argumets are passed and they are not complex numbers
+   it calulates Math.atan2 on those arguments."
+  (if (and (null? rest) (complex? z))
+      (let ((iz (* +i z)))
+        (* (/ 1 +2i)
+           (log (/ (+ 1 iz)
+                   (- 1 iz)))))
+      (let ((x z) (y (car rest)))
+        (if (and (zero? (imag-part x))
+                 (zero? (imag-part y)))
+            (Math.atan2 x y)
+            (error "atan: can't call with two complex numbers")))))
 
 ;; -----------------------------------------------------------------------------
 (define (exp n)
