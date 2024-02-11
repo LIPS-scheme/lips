@@ -192,16 +192,16 @@ const examples = [
         code: `;; JavaScript generator create using JS eval
 (define gen (self.eval "
     (async function* gen(time, ...args) {
-               function delay(time) {
-                 return new Promise((resolve) => {
-                   setTimeout(resolve, time);
-                 });
-               }
-               for (let x of args) {
-                 await delay(time);
-                 yield x;
-               }
-             })"))
+        function delay(time) {
+            return new Promise((resolve) => {
+                setTimeout(resolve, time);
+            });
+        }
+        for (let x of args) {
+            await delay(time);
+            yield x;
+        }
+    })"))
 
 ;; iteration over iterator/generator
 (do-iterator
