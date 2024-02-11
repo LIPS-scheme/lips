@@ -539,8 +539,8 @@
    (atan x y)
 
    Function calculates arcus tangent of a complex number.
-   If two argumets are passed and they are not complex numbers
-   it calulates Math.atan2 on those arguments."
+   If two arguments are passed and they are not complex numbers
+   it calculate Math.atan2 on those arguments."
   (if (and (null? rest) (complex? z))
       (cond ((nan? z) +nan.0)
             ((infinite? z)
