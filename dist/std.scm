@@ -2155,10 +2155,18 @@
    If two argumets are passed and they are not complex numbers
    it calulates Math.atan2 on those arguments."
   (if (and (null? rest) (complex? z))
-      (let ((iz (* +i z)))
-        (* (/ 1 +2i)
-           (log (/ (+ 1 iz)
-                   (- 1 iz)))))
+      (cond ((nan? z) +nan.0)
+            ((infinite? z)
+             (let ((atan (/ Math.PI 2)))
+               (if (< z 0)
+                   (- atan)
+                   atan)))
+            (else
+             ;; ref: https://youtu.be/d93AarE0lKg
+             (let ((iz (* +i z)))
+               (* (/ 1 +2i)
+                  (log (/ (+ 1 iz)
+                          (- 1 iz)))))))
       (let ((x z) (y (car rest)))
         (if (and (zero? (imag-part x))
                  (zero? (imag-part y)))
