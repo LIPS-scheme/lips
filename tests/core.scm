@@ -684,9 +684,26 @@
 
 (test "core: iterator->array"
       (lambda (t)
-        (let ((async (self.eval "(async function*() { yield 1; yield 2; })")))
-          (t.is (iterator->array (async)) #(1 2)))
+        (t.is (iterator->array '(1 2 3 4)) #(1 2 3 4))
         (t.is (iterator->array "hello") #(#\h #\e #\l #\l #\o))))
+
+(test "core: async iterator->array"
+      (lambda (t)
+        (define gen (self.eval "
+          (async function* gen(time, ...args) {
+              function delay(time) {
+                  return new Promise((resolve) => {
+                      setTimeout(resolve, time);
+                  });
+              }
+              for (let x of args) {
+                  await delay(time);
+                  yield x;
+              }
+          })"))
+
+        (t.is (iterator->array (gen 100 1 2 3 4 5))
+              #(1 2 3 4 5))))
 
 ;; TODO
 ;; begin*
