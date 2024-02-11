@@ -43,8 +43,12 @@ const examples = [
     },
     {
         description: 'Automagic async/await like resolving of promises and explicit promise quotation.',
-        code: `(define re #/<h1>([^>]+)<\\/h1>/)
-;; automagic promise resolving
+        code: `;; JavaScript regular expression literal
+(define re #/<h1>([^>]+)<\\/h1>/)
+;; --> is a macro that allow chaining
+;; of JavaScript methods calls
+;; no need to use Promises becasue of automagic
+;; promise resolving
 (let ((msg (--> (fetch "https://scheme.org.pl")
                 (text)
                 (match re)
