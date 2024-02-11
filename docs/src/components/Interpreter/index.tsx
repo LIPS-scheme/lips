@@ -19,14 +19,26 @@ const examples = [
                1000)))`
     },
     {
-        description: 'Filter function accept, regex or function. Curry is higher order function that create new function with defaults.',
+        description: 'Filter function accept, regex or function. Curry is higher order function that create new function with defaults. Pluck return a function that extract fields from an object.',
         code: `(print (filter number? '(foo 10 bar 20 baz 30)))
 ;; ==> (10 20 30)
 (print (filter #/foo|bar/ '(foo bar baz quux)))
 ;; ==> (foo bar)
 (define foo_or_bar (curry filter #/foo|bar/))
 (print (foo_or_bar '(foo bar baz)))
-;; ==> (foo bar)`
+;; ==> (foo bar)
+
+(define (make-person first last)
+        \`&(:fist ,first :last ,last))
+
+(define beatles (map make-person
+                    '("John" "Paul" "Ringo" "George")
+                    '("Lennon" "McCartney"
+                      "Starr" "Harrison")))
+;; pluck will extract properties from objects
+(write (map (pluck "fist") beatles))
+(newline)
+;; ==> ("John" "Paul" "Ringo" "George")`
     },
     {
         description: 'Automagic async/await like resolving of promises and explicit promise quotation.',
