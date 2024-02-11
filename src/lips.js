@@ -7770,10 +7770,10 @@ var global_env = new Environment({
         const test = code.car;
         const eval_args = { ...args, env: this };
         const body = new Pair(new LSymbol('begin'), code.cdr);
-        (function loop() {
-            unpromise(evaluate(test, eval_args), test => {
+        return (function loop() {
+            return unpromise(evaluate(test, eval_args), test => {
                 if (test) {
-                    unpromise(evaluate(body, eval_args), loop);
+                    return unpromise(evaluate(body, eval_args), loop);
                 }
             });
         })();
