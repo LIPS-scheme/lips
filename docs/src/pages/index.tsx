@@ -28,6 +28,7 @@ function HomepageHeader() {
         <Heading as="h1" className="hero__title">
           {siteConfig.title} v.<span ref={ref}></span>
         </Heading>
+        <p className="hero__subtitle">{siteConfig.tagline}</p>
         <Interpreter/>
       </div>
     </header>
