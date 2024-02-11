@@ -1,5 +1,5 @@
 import Head from '@docusaurus/Head';
-import { useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 import './styles.css';
 
 const examples = [
@@ -244,7 +244,7 @@ function getScript(script: string) {
 }
 
 function useScripts(scripts: string[]) {
-    useLayoutEffect(() => {
+    useEffect(() => {
         (function loop() {
             if (scripts.length) {
                 const script = scripts.shift();
