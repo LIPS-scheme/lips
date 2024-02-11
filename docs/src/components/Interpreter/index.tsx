@@ -43,20 +43,20 @@ const examples = [
     },
     {
         description: 'Automagic async/await like resolving of promises and explicit promise quotation.',
-        code: `(define h1-re #/<h1>([^>]+)<\\/h1>/)
+        code: `(define re #/<h1>([^>]+)<\\/h1>/)
 ;; automagic promise resolving
-(let ((msg (--> (fetch "https://api.scheme.org/")
+(let ((msg (--> (fetch "https://scheme.org.pl")
                 (text)
-                (match h1-re)
+                (match re)
                 1)))
   (print msg))
 
 ;; explicit promise handling with quotation
-(let ((promise (--> '>(fetch "https://api.scheme.org/")
+(let ((promise (--> '>(fetch "https://scheme.org.pl")
                     (then (lambda (res)
                             (res.text)))
                     (then (lambda (x)
-                            (. (x.match h1-re) 1))))))
+                            (. (x.match re) 1))))))
   (print (await promise)))`
     },
     {
