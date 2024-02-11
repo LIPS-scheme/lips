@@ -10692,7 +10692,7 @@ function evaluate(code, { env, dynamic_env, use_dynamic, error = noop, ...rest }
 }
 // -------------------------------------------------------------------------
 function compile(arg) {
-    return Array.from(_parse(arg));
+    return Promise.resolve(Array.from(_parse(arg)));
 }
 // -------------------------------------------------------------------------
 function exec_with_stacktrace(code, { env, dynamic_env, use_dynamic } = {}) {

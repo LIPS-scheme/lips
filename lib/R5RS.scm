@@ -467,7 +467,7 @@
 
 ;; -----------------------------------------------------------------------------
 ;; generate Math functions with documentation
-(define _maths (list "sin" "cos" "tan" "asin" "acos" "atan" "atan"))
+(define _maths (list "sin" "cos" "tan" "asin" "acos" "atan"))
 
 ;; -----------------------------------------------------------------------------
 (define _this_env (current-environment))
