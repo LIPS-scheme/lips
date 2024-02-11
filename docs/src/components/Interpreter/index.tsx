@@ -310,7 +310,7 @@ export default function Interpreter(): JSX.Element {
               <ul className="list">
                 {examples.map((example, index) => {
                     return (
-                        <li key={index}>
+                        <li key={index} className={index === 0 ? 'active' : undefined}>
                           <div className="example">
                             <pre>{example.code}</pre>
                           </div>
@@ -321,7 +321,11 @@ export default function Interpreter(): JSX.Element {
               </ul>
               <ul className="pagination">
                 {examples.map((_, index) => {
-                    return <li key={index}><a href="#">{ index + 1 }</a></li>;
+                    return (
+                        <li key={index} className={index === 0 ? 'active' : undefined}>
+                          <a href="#">{ index + 1 }</a>
+                        </li>
+                    );
                 })}
               </ul>
             </div>
