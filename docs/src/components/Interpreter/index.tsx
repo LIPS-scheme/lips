@@ -167,7 +167,7 @@ const examples = [
 ;;                     ()))`
     },
     {
-        description: 'SRFI-139 syntax-parameterize allows creating anamorphic hygienic macros.',
+        description: 'Built in SRFI-139 syntax-parameterize allows creating anamorphic hygienic macros.',
         code: `;; define new syntax parameter
 (define-syntax-parameter it
    (syntax-rules ()
