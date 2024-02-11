@@ -5742,7 +5742,15 @@ LComplex.prototype.pow = function(n) {
             im: e.mul(Math.sin(p.__im__.valueOf()))
         });
     }
+    const positive = n.__re__.cmp(0) > 0;
     n = n.__re__.valueOf();
+    if (LNumber.isInteger(n) && positive) {
+        let result = this;
+        while (--n) {
+            result = result.mul(this);
+        }
+        return result;
+    }
     // equation taken from Wikipedia:
     // https://w.wiki/97V3#Integer_and_fractional_exponents
     const r = magnitude.pow(n);

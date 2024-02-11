@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 11 Feb 2024 20:06:48 +0000
+ * build: Sun, 11 Feb 2024 23:01:55 +0000
  */
 
 'use strict';
@@ -9850,7 +9850,15 @@ LComplex.prototype.pow = function (n) {
       im: e.mul(Math.sin(p.__im__.valueOf()))
     });
   }
+  var positive = n.__re__.cmp(0) > 0;
   n = n.__re__.valueOf();
+  if (LNumber.isInteger(n) && positive) {
+    var result = this;
+    while (--n) {
+      result = result.mul(this);
+    }
+    return result;
+  }
   // equation taken from Wikipedia:
   // https://w.wiki/97V3#Integer_and_fractional_exponents
   var r = magnitude.pow(n);
@@ -15588,10 +15596,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 11 Feb 2024 20:06:48 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Sun, 11 Feb 2024 23:01:55 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 11 Feb 2024 20:06:48 +0000').valueOf();
+  var date = LString('Sun, 11 Feb 2024 23:01:55 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15631,7 +15639,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sun, 11 Feb 2024 20:06:48 +0000';
+var date = 'Sun, 11 Feb 2024 23:01:55 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
