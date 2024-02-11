@@ -28,6 +28,7 @@ const examples = [
 (print (foo_or_bar '(foo bar baz)))
 ;; ==> (foo bar)
 
+;; &() is object literal used with quasiquote
 (define (make-person first last)
         \`&(:fist ,first :last ,last))
 
