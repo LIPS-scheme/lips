@@ -38,6 +38,8 @@
 * fix `(read)` in the Web REPL
 * fix Node REPL with `npm install` [#305](https://github.com/jcubic/lips/issues/305)
 * fix formatting `syntax-rules`
+* improve floating point representation and parsing
+* fix bookmark when hovering over boolean values
 
 ## 1.0.0-beta.18
 ### Breaking
