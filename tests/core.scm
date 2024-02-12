@@ -714,6 +714,13 @@
           (append! x () (list 3 4) ())
           (t.is x '(1 2 3 4)))))
 
+(test "core: number->string"
+      (lambda (t)
+        (t.is (number->string 0.1 16) "0.1999999999999a")
+        (t.is (number->string 1.0e-27 16) "4.f3a68dbc8f04e-17")
+        (t.is (number->string 1e+27.0 16) "3.3b2e3c9fd0804e16")
+        (t.is (number->string 1000000000000000000000000000 16) "33b2e3c9fd0803ce8000000")))
+
 ;; TODO
 ;; begin*
 ;; set-obj! throws with null or boolean

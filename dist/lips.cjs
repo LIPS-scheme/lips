@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Mon, 12 Feb 2024 14:25:33 +0000
+ * build: Mon, 12 Feb 2024 16:26:48 +0000
  */
 
 'use strict';
@@ -6719,7 +6719,7 @@ var instances = new Map();
   instances.set(cls, fn);
 });
 // ----------------------------------------------------------------------
-var native_types = [LSymbol, LNumber, Macro, Values, InputPort, OutputPort, Environment, QuotedPromise];
+var native_types = [LSymbol, Macro, Values, InputPort, OutputPort, Environment, QuotedPromise];
 // ----------------------------------------------------------------------
 function toString(obj, quote, skip_cycles) {
   if (typeof jQuery !== 'undefined' && obj instanceof jQuery.fn.init) {
@@ -6754,12 +6754,15 @@ function toString(obj, quote, skip_cycles) {
         return obj.toString(quote);
       }
     }
-    // constants
   } catch (err) {
     _iterator8.e(err);
   } finally {
     _iterator8.f();
   }
+  if (obj instanceof LNumber) {
+    return obj.toString();
+  }
+  // constants
   if ([_nil, eof].includes(obj)) {
     return obj.toString();
   }
@@ -10121,7 +10124,7 @@ function LFloat(n) {
 LFloat.prototype = Object.create(LNumber.prototype);
 LFloat.prototype.constructor = LFloat;
 // -------------------------------------------------------------------------
-LFloat.prototype.toString = function () {
+LFloat.prototype.toString = function (radix) {
   if (this.__value__ === Number.NEGATIVE_INFINITY) {
     return '-inf.0';
   }
@@ -10131,24 +10134,25 @@ LFloat.prototype.toString = function () {
   if (Number.isNaN(this.__value__)) {
     return '+nan.0';
   }
-  var str = this.__value__.toString();
-  if (!str.match(/e/i)) {
+  radix && (radix = radix.valueOf());
+  var str = this.__value__.toString(radix);
+  if (!str.match(/e[0-9]+$/i)) {
     // compatibility with other scheme implementation
     // In JavaScript scientific notation starts from 6 zeros
     // in Kawa and Gauche it starts from 3 zeros
-    var number = this.__value__.toString().replace(/^-/, '');
+    var number = str.replace(/^-/, '');
     var sign = this.__value__ < 0 ? '-' : '';
     if (str.match(/^-?0\.0{3}/)) {
       var exponent = number.match(/^[.0]+/g)[0].length - 1;
-      var value = number.replace(/^[.0]+/, '').replace(/^([0-9])/, '$1.');
-      return "".concat(sign).concat(value, "e-").concat(exponent);
+      var value = number.replace(/^[.0]+/, '').replace(/^([0-9a-f])/i, '$1.');
+      return "".concat(sign).concat(value, "e-").concat(exponent.toString(radix));
     }
     // big numbers need decimal point shift to have on number
     // before the decimal point
-    if (str.match(/^-?[0-9]{7,}\.?/)) {
-      var _exponent = number.match(/^[0-9]+/g)[0].length - 1;
-      var _value4 = number.replace(/\./, '').replace(/^([0-9])/, '$1.').replace(/0+$/, '').replace(/\.$/, '.0');
-      return "".concat(sign).concat(_value4, "e").concat(_exponent);
+    if (str.match(/^-?[0-9a-f]{7,}\.?/i)) {
+      var _exponent = number.match(/^[0-9a-f]+/ig)[0].length - 1;
+      var _value4 = number.replace(/\./, '').replace(/^([0-9a-f])/i, '$1.').replace(/0+$/, '').replace(/\.$/, '.0');
+      return "".concat(sign).concat(_value4, "e").concat(_exponent.toString(radix));
     }
     if (!LNumber.isFloat(this.__value__)) {
       var result = str + '.0';
@@ -15583,10 +15587,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Mon, 12 Feb 2024 14:25:33 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 12 Feb 2024 16:26:48 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Mon, 12 Feb 2024 14:25:33 +0000').valueOf();
+  var date = LString('Mon, 12 Feb 2024 16:26:48 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -15626,7 +15630,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Mon, 12 Feb 2024 14:25:33 +0000';
+var date = 'Mon, 12 Feb 2024 16:26:48 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);

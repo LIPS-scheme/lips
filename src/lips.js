@@ -2882,7 +2882,6 @@ const instances = new Map();
 // ----------------------------------------------------------------------
 const native_types = [
     LSymbol,
-    LNumber,
     Macro,
     Values,
     InputPort,
@@ -2913,6 +2912,9 @@ function toString(obj, quote, skip_cycles, ...pair_args) {
         if (obj instanceof type) {
             return obj.toString(quote);
         }
+    }
+    if (obj instanceof LNumber) {
+        return obj.toString();
     }
     // constants
     if ([nil, eof].includes(obj)) {
@@ -5974,7 +5976,7 @@ function LFloat(n) {
 LFloat.prototype = Object.create(LNumber.prototype);
 LFloat.prototype.constructor = LFloat;
 // -------------------------------------------------------------------------
-LFloat.prototype.toString = function() {
+LFloat.prototype.toString = function(radix) {
     if (this.__value__ === Number.NEGATIVE_INFINITY) {
         return '-inf.0';
     }
@@ -5984,28 +5986,29 @@ LFloat.prototype.toString = function() {
     if (Number.isNaN(this.__value__)) {
         return '+nan.0';
     }
-    var str = this.__value__.toString();
-    if (!str.match(/e/i)) {
+    radix &&= radix.valueOf();
+    var str = this.__value__.toString(radix);
+    if (!str.match(/e[0-9]+$/i)) {
         // compatibility with other scheme implementation
         // In JavaScript scientific notation starts from 6 zeros
         // in Kawa and Gauche it starts from 3 zeros
-        const number = this.__value__.toString().replace(/^-/, '');
+        const number = str.replace(/^-/, '');
         const sign = this.__value__ < 0 ? '-' : '';
         if (str.match(/^-?0\.0{3}/)) {
             const exponent = number.match(/^[.0]+/g)[0].length - 1;
-            const value = number.replace(/^[.0]+/, '').replace(/^([0-9])/, '$1.');
-            return `${sign}${value}e-${exponent}`;
+            const value = number.replace(/^[.0]+/, '').replace(/^([0-9a-f])/i, '$1.');
+            return `${sign}${value}e-${exponent.toString(radix)}`;
         }
         // big numbers need decimal point shift to have on number
         // before the decimal point
-        if (str.match(/^-?[0-9]{7,}\.?/)) {
-            const exponent = number.match(/^[0-9]+/g)[0].length - 1;
+        if (str.match(/^-?[0-9a-f]{7,}\.?/i)) {
+            const exponent = number.match(/^[0-9a-f]+/ig)[0].length - 1;
             const value = number
                   .replace(/\./, '')
-                  .replace(/^([0-9])/, '$1.')
+                  .replace(/^([0-9a-f])/i, '$1.')
                   .replace(/0+$/, '')
                   .replace(/\.$/, '.0');
-            return `${sign}${value}e${exponent}`;
+            return `${sign}${value}e${exponent.toString(radix)}`;
         }
         if (!LNumber.isFloat(this.__value__)) {
             var result = str + '.0';
