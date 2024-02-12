@@ -31,7 +31,7 @@
  * Copyright (c) 2014-present, Facebook, Inc.
  * released under MIT license
  *
- * build: Sun, 11 Feb 2024 23:01:55 +0000
+ * build: Mon, 12 Feb 2024 12:58:05 +0000
  */
 
 function _classApplyDescriptorGet(receiver, descriptor) {
@@ -13894,18 +13894,8 @@ var global_env = new Environment({
     if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
       var second = code.car.cdr.car;
       var third = code.car.cdr.cdr.car;
-      var object = _evaluate(second, {
-        env: this,
-        dynamic_env: dynamic_env,
-        use_dynamic: use_dynamic,
-        error: error
-      });
-      var key = _evaluate(third, {
-        env: this,
-        dynamic_env: dynamic_env,
-        use_dynamic: use_dynamic,
-        error: error
-      });
+      var object = _evaluate(second, eval_args);
+      var key = _evaluate(third, eval_args);
       return set(object, key, value);
     }
     if (!(code.car instanceof LSymbol)) {
@@ -15193,14 +15183,14 @@ var global_env = new Environment({
       if ((item instanceof Pair || item === _nil) && !is_list(item)) {
         throw new Error('append!: Invalid argument, value is not a list');
       }
-      if (is_null(item)) {
-        return acc;
-      }
       if (acc === _nil) {
         if (item === _nil) {
           return _nil;
         }
         return item;
+      }
+      if (is_null(item)) {
+        return acc;
       }
       return acc.append(item);
     }, _nil);
@@ -17531,7 +17521,8 @@ function init() {
         } else {
           var type = script.getAttribute('type');
           if (lips_mimes.includes(type)) {
-            var _bootstrap_attr = script.getAttribute('bootstrap') || script.getAttribute('data-bootstrap');
+            var _script$getAttribute;
+            var _bootstrap_attr = (_script$getAttribute = script.getAttribute('bootstrap')) !== null && _script$getAttribute !== void 0 ? _script$getAttribute : script.getAttribute('data-bootstrap');
             if (!bootstrapped && typeof _bootstrap_attr === 'string') {
               return bootstrap(_bootstrap_attr).then(function () {
                 return load(script);
@@ -17570,10 +17561,10 @@ if (typeof window !== 'undefined') {
 // -------------------------------------------------------------------------
 var banner = function () {
   // Rollup tree-shaking is removing the variable if it's normal string because
-  // obviously 'Sun, 11 Feb 2024 23:01:55 +0000' == '{{' + 'DATE}}'; can be removed
+  // obviously 'Mon, 12 Feb 2024 12:58:05 +0000' == '{{' + 'DATE}}'; can be removed
   // but disabling Tree-shaking is adding lot of not used code so we use this
   // hack instead
-  var date = LString('Sun, 11 Feb 2024 23:01:55 +0000').valueOf();
+  var date = LString('Mon, 12 Feb 2024 12:58:05 +0000').valueOf();
   var _date = date === '{{' + 'DATE}}' ? new Date() : new Date(date);
   var _format = function _format(x) {
     return x.toString().padStart(2, '0');
@@ -17613,7 +17604,7 @@ read_only(QuotedPromise, '__class__', 'promise');
 read_only(Parameter, '__class__', 'parameter');
 // -------------------------------------------------------------------------
 var version = 'DEV';
-var date = 'Sun, 11 Feb 2024 23:01:55 +0000';
+var date = 'Mon, 12 Feb 2024 12:58:05 +0000';
 
 // unwrap async generator into Promise<Array>
 var parse = compose(uniterate_async, _parse);
