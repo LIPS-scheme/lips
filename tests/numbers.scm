@@ -260,8 +260,8 @@
 (test "numbers: literals"
       (lambda (t)
 
-        (t.is (number->string (. (lips.parse "#i1e10") 0)) "1.0e10")
-        (t.is (number->string (. (lips.parse "#i1e+10") 0)) "1.0e10")
+        (t.is (number->string (. (lips.parse "#i1e10") 0)) "1.0e+10")
+        (t.is (number->string (. (lips.parse "#i1e+10") 0)) "1.0e+10")
         (t.is (number->string (. (lips.parse "1e10") 0)) "10000000000")
         (t.is (number->string (. (lips.parse "#e1e10") 0)) "10000000000")
         (t.is (number->string (. (lips.parse "#e1e+10") 0)) "10000000000")

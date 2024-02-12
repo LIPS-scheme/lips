@@ -5988,7 +5988,7 @@ LFloat.prototype.toString = function(radix) {
     }
     radix &&= radix.valueOf();
     var str = this.__value__.toString(radix);
-    if (!str.match(/e[0-9]+$/i)) {
+    if (!str.match(/e[+-]?[0-9]+$/i)) {
         // compatibility with other scheme implementation
         // In JavaScript scientific notation starts from 6 zeros
         // in Kawa and Gauche it starts from 3 zeros
@@ -6008,7 +6008,7 @@ LFloat.prototype.toString = function(radix) {
                   .replace(/^([0-9a-f])/i, '$1.')
                   .replace(/0+$/, '')
                   .replace(/\.$/, '.0');
-            return `${sign}${value}e${exponent.toString(radix)}`;
+            return `${sign}${value}e+${exponent.toString(radix)}`;
         }
         if (!LNumber.isFloat(this.__value__)) {
             var result = str + '.0';
