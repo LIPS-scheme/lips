@@ -11186,7 +11186,7 @@ function init() {
                 } else {
                     var type = script.getAttribute('type');
                     if (lips_mimes.includes(type)) {
-                        const bootstrap_attr = script.getAttribute('bootstrap') ||
+                        const bootstrap_attr = script.getAttribute('bootstrap') ??
                               script.getAttribute('data-bootstrap');
                         if (!bootstrapped && typeof bootstrap_attr === 'string') {
                             return bootstrap(bootstrap_attr).then(function() {
