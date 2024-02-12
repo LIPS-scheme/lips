@@ -8920,14 +8920,14 @@ var global_env = new Environment({
             if ((item instanceof Pair || item === nil) && !is_list(item)) {
                 throw new Error('append!: Invalid argument, value is not a list');
             }
-            if (is_null(item)) {
-                return acc;
-            }
             if (acc === nil) {
                 if (item === nil) {
                     return nil;
                 }
                 return item;
+            }
+            if (is_null(item)) {
+                return acc;
             }
             return acc.append(item);
         }, nil);
