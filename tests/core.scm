@@ -705,13 +705,13 @@
         (t.is (iterator->array (gen 100 1 2 3 4 5))
               #(1 2 3 4 5))))
 
-(test.failing "core: append!"
+(test "core: append!"
       (lambda (t)
         (let ((x ()))
-          (append! x (list 10) (list 20))
+          (set! x (append! x (list 10) () (list 20)))
           (t.is x '(10 20)))
         (let ((x '(1 2)))
-          (append! x (list 3 4))
+          (append! x () (list 3 4) ())
           (t.is x '(1 2 3 4)))))
 
 ;; TODO
