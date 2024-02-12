@@ -25,7 +25,7 @@
 (define (find-todo element)
   "return single todo representation of a given element"
   (let ((id (element-id element)))
-    (find (lambda (item) (eq? (cdr (assoc 'id item)) id)) todos)))
+    (find (lambda (item) (string=? (cdr (assoc 'id item)) id)) todos)))
 
 
 (define (on-todo fn element)
@@ -37,15 +37,17 @@
 
 (define (get-todos)
   "return selected todo"
-  (if (eq? selected-filter "active")
+  (if (string=? selected-filter "active")
     (filter-todos false)
-    (if (eq? selected-filter "completed")
+    (if (string=? selected-filter "completed")
       (filter-todos true)
       todos)))
 
 
 (define (uuid)
-  "Generatates unique ID (comments are because of scheme highlighting in emacs (| |) is comment)"
+  "(uuid)
+
+   Generatates unique ID"
   (let ((i 0) (rnd) (uuid ""))
     (while (< i 32)
       (set! rnd (|\|| (* (--> Math (random)) 16) 0))
@@ -56,7 +58,7 @@
                            (if (== i 16)
                              (|\|| (|&| rnd 3) 8)
                              rnd))))
-              (set! uuid (concat uuid (-->  value (toString 16)))))
+              (set! uuid (concat uuid (number->string (inexact->exact value) 16))))
             (++ i))
       uuid))
 
@@ -78,7 +80,7 @@
 (define (contains x list)
   (if (not list)
       false
-      (if (eq? (car list) x)
+      (if (equal? (car list) x)
           true
           (contains x (cdr list)))))
 
@@ -128,11 +130,13 @@
          (val (--> (input.val) (trim))))
     (if (and (not (string=? val "")) (= e.which ENTER_KEY))
       (begin
-        (append! todos (list `((id . ,(uuid))
-                               (title . ,val)
-                               (completed . false))))
+        (set! todos (append! todos
+                             (list `((id . ,(uuid))
+                                     (title . ,val)
+                                     (completed . false)))))
         (input.val "")
-        (print todos)
+        (write todos)
+        (newline)
         (render)))))
 
 
@@ -140,7 +144,7 @@
   "remove todo"
   (let ((id (element-id (. event "target"))))
     (set! todos (filter (lambda (item)
-                          (not (eq? (cdr (assoc 'id item)) id))) todos))
+                          (not (string=? (cdr (assoc 'id item)) id))) todos))
     (render)))
 
 
