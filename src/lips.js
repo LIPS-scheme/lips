@@ -7595,8 +7595,8 @@ var global_env = new Environment({
         if (code.car instanceof Pair && LSymbol.is(code.car.car, '.')) {
             var second = code.car.cdr.car;
             var third = code.car.cdr.cdr.car;
-            var object = evaluate(second, { env: this, dynamic_env, use_dynamic, error });
-            var key = evaluate(third, { env: this, dynamic_env, use_dynamic, error });
+            var object = evaluate(second, eval_args);
+            var key = evaluate(third, eval_args);
             return set(object, key, value);
         }
         if (!(code.car instanceof LSymbol)) {
