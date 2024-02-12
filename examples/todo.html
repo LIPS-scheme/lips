@@ -3,16 +3,14 @@
   <head>
     <title>TODO lips</title>
     <meta name="description" content="Example app for LIPS programming language - Simple Lisp in JavaScript"/>
-    <script src="dist/lips.js"></script>
+    <script src="../dist/lips.js"></script>
     <link rel="shortcut icon" href="favicon.ico">
     <script src="https://unpkg.com/handlebars/dist/handlebars.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
     <script src="https://unpkg.com/director@1.2.8/build/director.min.js"></script>
-    <script src="https://codepen.io/jcubic/pen/WZjbgq.js?v=5"></script>
-    <link href="https://rawgit.com/tastejs/todomvc/gh-pages/examples/jquery/node_modules/todomvc-app-css/index.css"
-          rel="stylesheet"/>
-    <link href="https://rawgit.com/tastejs/todomvc/gh-pages/examples/jquery/node_modules/todomvc-common/base.css"
-          rel="stylesheet"/>
+    <link rel="stylesheet" href="https://todomvc.com/examples/jquery/dist/base.css">
+    <link rel="stylesheet" href="https://todomvc.com/examples/jquery/dist/index.css">
+    <link rel="stylesheet" href="https://todomvc.com/examples/jquery/dist/app.css">
     <script id="todo-template" type="text/x-handlebars-template">
       {{#this}}
       <li {{#if completed}}class="completed"{{/if}} data-id="{{id}}">
@@ -45,7 +43,6 @@
      Handlebars.registerHelper('eq', function (a, b, options) {
          return a === b ? options.fn(this) : options.inverse(this);
      });
-     github('jcubic/lips');
     </script>
     <style>
      .learn-bar .learn {
@@ -59,7 +56,7 @@
       <p>source:
         <ul>
           <li><a href="https://github.com/jcubic/lips/blob/master/todo.html">todo.html</a></li>
-          <li><a href="https://github.com/jcubic/lips/blob/master/todo.lips">todo.lips</a></li>
+          <li><a href="https://github.com/jcubic/lips/blob/master/todo.scm">todo.scm</a></li>
         </ul>
       </p>
       <hr/>
@@ -80,7 +77,6 @@
       <p>Double-click to edit a todo</p>
       <p>Author <a href="https://jcubic.pl/jakub-jankiewicz">Jakub T. Jankiewicz</a> based on jQuery <a href="http://todomvc.com">TodoMVC</a> by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
     </footer>
-    <script type="text/x-lips" src="examples/helpers.lips"></script>
-    <script type="text/x-lips" src="todo.lips"></script>
+    <script type="text/x-scheme" src="todo.scm" bootstrap></script>
   </body>
 </html>

@@ -48,13 +48,13 @@
   "Generatates unique ID (comments are because of scheme highlighting in emacs (| |) is comment)"
   (let ((i 0) (rnd) (uuid ""))
     (while (< i 32)
-      (set! rnd (| (* (--> Math (random)) 16) 0))                       ;;|)
+      (set! rnd (|\|| (* (--> Math (random)) 16) 0))
             (if (or (== i 8) (== i 12) (== i 16) (== i 20))
               (set! uuid (concat uuid "-")))
             (let ((value (if (== i 1)
                            4
                            (if (== i 16)
-                             (| (& rnd 3) 8)                     ;;|)
+                             (|\|| (|&| rnd 3) 8)
                              rnd))))
               (set! uuid (concat uuid (-->  value (toString 16)))))
             (++ i))
@@ -124,15 +124,15 @@
 
 (define (add-todo e)
   "create new todo"
-  (let* ((input (. e "target"))
-         (which (. e "which"))
-         (val (--> (. input "value") (trim))))
-    (if (and (not (eq? val "")) (eq? which ENTER_KEY))
+  (let* ((input ($ ".new-todo"))
+         (val (--> (input.val) (trim))))
+    (if (and (not (string=? val "")) (= e.which ENTER_KEY))
       (begin
         (append! todos (list `((id . ,(uuid))
                                (title . ,val)
                                (completed . false))))
-        (set! (. input "value") "")
+        (input.val "")
+        (print todos)
         (render)))))
 
 
