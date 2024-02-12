@@ -9,3 +9,4 @@ tests/snapshots/* binary
 *.xcb binary
 dist/** linguist-generated
 *config.js linguist-vendored
+**/*.lips linguist-language=scheme
