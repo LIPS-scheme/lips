@@ -8,3 +8,4 @@ tests/snapshots/* binary
 *.xcm binary
 *.xcb binary
 dist/** linguist-generated
+*config.js linguist-vendored
